@@ -37,8 +37,9 @@ func httptestRecord(router *gin.Engine, r *http.Request) *httptest.ResponseRecor
 }
 
 // uploadMultipartParts builds a multipart body with explicit named parts so the
-// alternate part-resolution branches (uploaded sha256 / signature / pubkey
-// parts) are exercised.
+// alternate part-resolution branches (uploaded sha256 / signature parts) are
+// exercised. Note: the verification key is NEVER taken from the request — a
+// "pubkey" part is ignored by the server (trust-boundary).
 func uploadMultipartParts(t *testing.T, file []byte, meta ArtifactUploadMetadata, extra map[string][]byte) (body []byte, ct string) {
 	t.Helper()
 	var buf bytes.Buffer
@@ -65,13 +66,44 @@ func TestArtifactUploadWithExplicitParts(t *testing.T) {
 	extra := map[string][]byte{
 		"sha256":    []byte(digest + "  ota.zip\n"), // coreutils-form hash file
 		"signature": []byte(base64.StdEncoding.EncodeToString(rawSig)),
-		"pubkey":    []byte(base64.StdEncoding.EncodeToString(env.pubKey)),
 	}
 	meta := env.validMeta(file, "1.1.0")
 	body, ct := uploadMultipartParts(t, file, meta, extra)
 	w := env.do(http.MethodPost, "/api/v1/artifacts/upload", env.adminToken(), body, ct)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("upload with explicit parts want 201, got %d (%s)", w.Code, w.Body.String())
+	}
+}
+
+// TestArtifactUploadIgnoresRequestSuppliedPubkey is a security regression test
+// for the signature-verification-bypass finding: a request-supplied "pubkey"
+// part MUST be ignored. Here the artifact is signed with an ATTACKER key and the
+// attacker's public key is supplied as a part; the server must still verify
+// against its CONFIGURED trusted key and reject (422 SIGNATURE_INVALID).
+func TestArtifactUploadIgnoresRequestSuppliedPubkey(t *testing.T) {
+	env := newTestEnv(t)
+	payload := []byte("attacker payload")
+	file := zipStored(t, payload)
+	digest := sha256Hex(file)
+
+	// Attacker keypair — NOT the server's trusted key.
+	attackerPub, attackerPriv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatalf("gen attacker key: %v", err)
+	}
+	attackerSig := ed25519.Sign(attackerPriv, mustHex(t, digest))
+
+	extra := map[string][]byte{
+		"sha256":    []byte(digest + "  ota.zip\n"),
+		"signature": []byte(base64.StdEncoding.EncodeToString(attackerSig)),
+		"pubkey":    []byte(base64.StdEncoding.EncodeToString(attackerPub)), // must be IGNORED
+	}
+	meta := env.validMeta(file, "1.1.0")
+	body, ct := uploadMultipartParts(t, file, meta, extra)
+	w := env.do(http.MethodPost, "/api/v1/artifacts/upload", env.adminToken(), body, ct)
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("attacker-signed artifact with supplied pubkey MUST be rejected (422), got %d (%s)",
+			w.Code, w.Body.String())
 	}
 }
 
