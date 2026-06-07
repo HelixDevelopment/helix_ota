@@ -1,0 +1,34 @@
+// Helix OTA — Soong build for the agent as a SYSTEM app in the AOSP tree.
+// platform_apis unlocks the @SystemApi android.os.UpdateEngine surface; platform
+// signing + system-UID/priv-app placement grant runtime access
+// (android-update-engine-api §10). Exact certificate/privileged fields for the
+// RK3588 / Orange Pi 5 Max target are UNVERIFIED (build_integration.md §4, §10).
+
+android_app {
+    name: "HelixOtaAgent",
+
+    srcs: ["src/**/*.kt"],
+    static_libs: [
+        "kotlin-stdlib",
+        "kotlinx-coroutines-android",
+        "androidx.work_work-runtime-ktx",
+        // KMP outputs consumed as the agent's dependencies:
+        // ota-protocol, ota-update-engine-bridge, ota-telemetry-schema,
+        // Auth-KMP, Security-KMP, Storage-KMP, Config-KMP.
+    ],
+
+    // Resolve @SystemApi (android.os.UpdateEngine / UpdateEngineCallback).
+    platform_apis: true,
+
+    // Platform signing path (system-UID). For the privileged-app path instead,
+    // set privileged: true and place under priv-app with an allowlist entry.
+    certificate: "platform",
+    // privileged: true,
+
+    optimize: {
+        proguard_flags_files: ["proguard.flags"],
+    },
+
+    // Placed on the system image; not a Play-Store app.
+    system_ext_specific: false,
+}
