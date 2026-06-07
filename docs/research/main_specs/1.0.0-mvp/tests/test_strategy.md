@@ -2,14 +2,14 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | The four-layer test strategy for the Helix OTA 1.0.0-MVP, derived from HelixConstitution §1 (source-presence gate, artifact gate, runtime/integration) and §1.1 (mutation meta-test). Maps each test layer to every MVP component (server, artifact-validator, signing, rollout [deferred], Android agent, database, API) and specifies unit, integration, contract, e2e (on the Orange Pi 5 Max), security, and load testing, plus a mutation-testing meta-test. Anchored to the already-performed physical validation recorded in [`VALIDATION_EVIDENCE.md`](../VALIDATION_EVIDENCE.md). |
-| Issues | HelixConstitution clause numbers (§1, §1.1, §7.1, §11.4.6, §11.4.61, §11.4.123) are UNVERIFIED against the authoritative constitution text. The six NEW `ota-*` submodules do not yet exist as repos, so no test code has been written or executed against them; all per-module unit/integration/mutation claims are forward-looking test *plans*, not executed results (UNVERIFIED until the repos and CI exist). On-board e2e on the Orange Pi 5 Max / RK3588 has not been run; the board's AOSP A/B + Virtual A/B + AVB enablement is itself UNVERIFIED and is the top-priority hardware gate carried from [`integration_guide.md`](../client_android/integration_guide.md). |
+| Issues | The six NEW `ota-*` submodules do not yet exist as repos, so no test code has been written or executed against them; all per-module unit/integration/mutation claims are forward-looking test *plans*, not executed results (UNVERIFIED until the repos and CI exist). On-board e2e on the Orange Pi 5 Max / RK3588 has not been run; the board's AOSP A/B + Virtual A/B + AVB enablement is itself UNVERIFIED and is the top-priority hardware gate carried from [`integration_guide.md`](../client_android/integration_guide.md). (The HelixConstitution clause numbers §1, §1.1, §7.1, §11.4.6, §11.4.61, §11.4.123 are now VERIFIED against the authoritative constitution text at [`HelixConstitution/Constitution.md`](../../../../HelixConstitution/Constitution.md) — see §2 and §13; this resolves the prior-revision UNVERIFIED tag on the clause numbers.) |
 | Issues summary | The only *executed* validation to date is the artifact gate captured in [`VALIDATION_EVIDENCE.md`](../VALIDATION_EVIDENCE.md) (OpenAPI redocly-valid, SQL migrations applied up+down on live Postgres, k8s kubeconform-valid). Everything else here is a plan to be implemented in CI and on hardware. |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2: verified the six cited HelixConstitution clause numbers (§1, §1.1, §7.1, §11.4.6, §11.4.61, §11.4.123) against the live [`Constitution.md`](../../../../HelixConstitution/Constitution.md) and removed the blanket "clause numbers UNVERIFIED" tag — the numbers are now confirmed FACT (§13). Rev 1: initial revision. |
 | Continuation | Stand up the six NEW `ota-*` repos and wire a CI matrix that runs: the §1 artifact gate (redocly, Postgres up/down migration service, kubeconform, `docker compose config`) exactly as in [`VALIDATION_EVIDENCE.md`](../VALIDATION_EVIDENCE.md); Go unit (`go test`) + testcontainers-go integration; Kotlin/KMP unit; OpenAPI contract conformance; mutation testing (`go-mutesting` / `gremlins` for Go, `pitest` for Kotlin/JVM). Execute the on-board e2e + corrupt-slot A/B rollback runbook on the Orange Pi 5 Max once the board's A/B/VAB/AVB enablement is confirmed. Compile the Kotlin snippets once the AOSP/Android-SDK toolchain is wired (carried from [`VALIDATION_EVIDENCE.md`](../VALIDATION_EVIDENCE.md) Issues). |
 
 ## Table of contents
@@ -28,7 +28,7 @@
 12. [Already-performed validation (evidence)](#12-already-performed-validation-evidence)
 13. [Anti-bluff notes](#13-anti-bluff-notes)
 
-> The table-of-contents requirement is mandated by HelixConstitution §11.4.61 (UNVERIFIED clause number). This document carries its ToC immediately after the metadata table, per [`documentation_standards.md` §3](../../00-master/documentation_standards.md#3-table-of-contents-requirement).
+> The metadata-table + table-of-contents requirement is mandated by HelixConstitution **§11.4.61** ("Mandatory Markdown metadata table + structured-doc ToC", User mandate 2026-05-19 — VERIFIED at [`Constitution.md`](../../../../HelixConstitution/Constitution.md) line ~5687). This document carries its metadata table first, then its ToC immediately after, per that clause and [`documentation_standards.md` §3](../../00-master/documentation_standards.md#3-table-of-contents-requirement).
 
 ---
 
@@ -37,7 +37,8 @@
 This document defines the **test strategy** for the Helix OTA **1.0.0-MVP** release. It is
 normative for how the MVP is verified before it is considered done. It binds the four-layer
 testing model mandated by HelixConstitution §1 (source-presence gate, artifact gate,
-runtime/integration) and §1.1 (mutation meta-test) — clause numbers UNVERIFIED — to each MVP
+runtime/integration) and §1.1 (mutation meta-test) — clause numbers VERIFIED against the live
+[`Constitution.md`](../../../../HelixConstitution/Constitution.md) (see §2) — to each MVP
 component, and it specifies the concrete test types (unit, integration, contract, e2e,
 security, load) plus the mutation meta-test.
 
@@ -62,7 +63,18 @@ in this document is a **test plan**, not an executed outcome (see §13).
 
 ## 2. The four test layers (HelixConstitution §1 / §1.1)
 
-The strategy implements four layers (clause numbers UNVERIFIED):
+The four layers below are a **direct map** of HelixConstitution **§1** ("Test coverage is
+mandatory for every change") — VERIFIED at [`Constitution.md`](../../../../HelixConstitution/Constitution.md)
+line ~133. §1's own four-row invariant table reads, verbatim: (i) *"The change is present in
+source"* → source-presence gate; (ii) *"The change survives compilation / packaging … inspects
+the produced artifact … verifies the change actually shipped"* → artifact gate; (iii) *"The
+change behaves correctly at runtime … runtime / integration / on-device test"* → runtime/
+integration; (iv) *"The gate itself is not bluffing → meta-test (mutation) entry that mutates
+the asserted condition and proves the gate catches the break"* → the mutation meta-test, further
+specified by **§1.1** ("False-positive immunity is an invariant", VERIFIED line ~147). The
+clause numbers are therefore confirmed FACT, not assumptions.
+
+The strategy implements those four layers:
 
 1. **Source-presence gate (§1).** Before anything is claimed to exist, the *source* that
    implements it must be present and identifiable. For MVP this means: the component's source
@@ -80,7 +92,11 @@ The strategy implements four layers (clause numbers UNVERIFIED):
    payload; and the on-board e2e on the Orange Pi 5 Max.
 4. **Mutation meta-test (§1.1).** A meta-test that *tests the tests*: seed faults (mutants)
    into the code under test and confirm the suite kills them. This guards against vacuous or
-   assertion-free tests that pass without exercising behavior. See §11.
+   assertion-free tests that pass without exercising behavior. §1.1 is explicit: *"Every new
+   gate MUST be paired with a mutation entry … (1) Temporarily breaks the assertion … (3)
+   Asserts the gate now reports FAIL … If the mutation round does not turn PASS → FAIL, the
+   gate is a sham and must be rewritten."* The constitution also carries **Appendix A —
+   Mutation testing — academic and industrial foundations** (VERIFIED, line ~8994). See §11.
 
 These layers are cumulative: a component is not "done" until its source is present (§1), its
 artifacts pass the gate (§1), it runs in integration (§1), and its suite survives the mutation
@@ -300,9 +316,10 @@ integration (server-side) and in the e2e (device-side re-verification).
 
 ## 11. Mutation testing (meta-test, §1.1)
 
-The mutation meta-test (HelixConstitution §1.1, UNVERIFIED clause number) tests the tests:
-it seeds faults into the code under test and asserts the suite **kills** them (a surviving
-mutant means the suite has a blind spot).
+The mutation meta-test (HelixConstitution **§1.1**, VERIFIED — "False-positive immunity is an
+invariant", plus **Appendix A** "Mutation testing — academic and industrial foundations")
+tests the tests: it seeds faults into the code under test and asserts the suite **kills** them
+(a surviving mutant means the suite has a blind spot).
 
 - **Go modules** (`ota-protocol`, `ota-artifact-validator`, `ota-rollout-engine` [deferred],
   server handlers, signing helpers): run a Go mutation engine — **`gremlins`** and/or
@@ -342,8 +359,11 @@ on host) — both are UNVERIFIED and tracked in Continuation here and in
 
 ## 13. Anti-bluff notes
 
-Per HelixConstitution §7.1, §11.4.6, §11.4.123 (UNVERIFIED clause numbers) and
-[`documentation_standards.md` §8](../../00-master/documentation_standards.md#8-anti-bluff-and-unverified-convention):
+Per HelixConstitution **§7.1** ("NO BLUFF — positive-evidence-only validation"), **§11.4.6**
+("No-guessing mandate") and **§11.4.123** ("Rock-solid-proof-or-deep-research mandate") — all
+three clause numbers VERIFIED against the live [`Constitution.md`](../../../../HelixConstitution/Constitution.md)
+(§7.1 line ~282, §11.4.6 "No-guessing mandate" line ~630, §11.4.123 the 2026-06-03 user
+mandate line ~8694) — and [`documentation_standards.md` §8](../../00-master/documentation_standards.md#8-anti-bluff-and-unverified-convention):
 
 - **No fabricated results.** The only *executed* test results referenced here are those in
   [`VALIDATION_EVIDENCE.md`](../VALIDATION_EVIDENCE.md) (§12). Every unit/integration/contract/
@@ -355,8 +375,12 @@ Per HelixConstitution §7.1, §11.4.6, §11.4.123 (UNVERIFIED clause numbers) an
   [`submodule_reuse_map.md` §4](../../00-master/submodule_reuse_map.md#4-new-submodules-decoupled-boundaries).
   No submodule name is invented.
 - **UNVERIFIED tagged.** The Orange Pi 5 Max board's A/B/VAB/AVB enablement, the Kotlin
-  snippet compilation, the mutation-tool availability, the load SLO thresholds, the
-  `Storage` range-get capability, and all HelixConstitution clause numbers are tagged
-  UNVERIFIED inline where used.
+  snippet compilation, the mutation-tool availability (`gremlins`/`go-mutesting`/`pitest` not
+  confirmed on the build host), the load SLO thresholds, and the `Storage` range-get capability
+  remain tagged UNVERIFIED inline where used. **Resolved this revision:** the HelixConstitution
+  clause numbers (§1, §1.1, §7.1, §11.4.6, §11.4.61, §11.4.123) are now VERIFIED against the
+  live [`Constitution.md`](../../../../HelixConstitution/Constitution.md) and are no longer
+  UNVERIFIED — leaving a verifiable fact tagged UNVERIFIED would itself be a §11.4.6 (no-
+  guessing) / §7.1 deviation, so the tags were corrected after reading the source.
 - **Open work in Continuation.** Standing up the NEW repos, the CI matrix, the on-board e2e,
   and the mutation gate all live in the `Continuation` row, not as completed claims.

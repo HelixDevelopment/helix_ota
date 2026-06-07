@@ -12,7 +12,7 @@ sequenceDiagram
     participant TEL as Telemetry ingest
 
     Note over AG,API: Poll cadence 15 min + jitter (configurable, D7)
-    AG->>API: GET /api/v1/client/update (device bearer; ?current_version)
+    AG->>API: GET /api/v1/client/update [device bearer, current_version]
 
     alt 204 No Content (already on target version)
         API-->>AG: 204 No Content (no body)
@@ -29,7 +29,7 @@ sequenceDiagram
 
         alt verification fails (hash/signature)
             AG->>TEL: POST /client/telemetry event=failure (HASH_MISMATCH / SIGNATURE_INVALID)
-            Note over AG: Abort before apply; no slot touched
+            Note over AG: Abort before apply — no slot touched
         else verified local artifact
             AG->>UE: applyPayload(file://verified, offset, size, payload_properties)
             AG->>TEL: POST /client/telemetry event=installing
