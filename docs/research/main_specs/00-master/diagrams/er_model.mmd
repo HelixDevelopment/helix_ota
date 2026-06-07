@@ -1,0 +1,121 @@
+%% Helix OTA — 1.0.0-MVP relational data model (canonical)
+%% Source of truth: 1.0.0-mvp/database/schema.md §4 (entity-relationship description) + §5 (table rationale)
+%% 12 MVP tables in 4 clusters: identity/access, fleet, supply-chain, observability.
+%% Deferred to 1.0.1 (NOT shown): deployment_phases, rollouts, rollback_history, TUF metadata.
+erDiagram
+    users {
+        uuid id PK
+        text username UK
+        text email UK
+        text password_hash
+        text role "admin|operator|viewer"
+        bool is_active
+    }
+    api_keys {
+        uuid id PK
+        uuid user_id FK
+        text key_hash UK
+        jsonb permissions
+        timestamptz expires_at
+        timestamptz revoked_at
+    }
+    devices {
+        uuid id PK
+        text device_id UK "hardware-bound identity"
+        text os_type "android|linux|windows|other"
+        text status "active|inactive|blocked"
+        timestamptz last_seen_at
+        jsonb metadata
+    }
+    device_groups {
+        uuid id PK
+        text name UK
+        jsonb filter_criteria "dynamic selector"
+    }
+    device_group_members {
+        uuid group_id PK,FK
+        uuid device_id PK,FK
+    }
+    artifacts {
+        uuid id PK
+        text name
+        text os_type
+        text version
+        text file_path "Storage object key"
+        char checksum_sha256 "NOT NULL, ^[0-9a-f]{64}$"
+        char checksum_sha512 "nullable"
+        text signature "detached"
+        text artifact_type "full|incremental|delta"
+        text upload_status "pending|validating|validated|failed"
+        uuid uploaded_by FK
+    }
+    artifact_versions {
+        uuid id PK
+        uuid artifact_id FK
+        text version
+        text changelog
+        bool is_latest "partial unique WHERE is_latest"
+    }
+    releases {
+        uuid id PK
+        uuid artifact_id FK
+        text channel "stable|beta|canary|internal"
+        text version
+        text status "draft|published|superseded|withdrawn"
+        timestamptz published_at
+        uuid published_by FK
+    }
+    deployments {
+        uuid id PK
+        uuid release_id FK
+        text target_type "all|group|device"
+        uuid target_group_id FK
+        uuid target_device_id FK
+        jsonb rollout_strategy "all_at_once (MVP)"
+        text status "draft|active|paused|completed|failed|cancelled"
+        uuid created_by FK
+    }
+    device_deployments {
+        uuid id PK
+        uuid deployment_id FK
+        uuid device_id FK
+        text status "pending|downloading|installing|verifying|success|failed|rolled_back"
+        numeric progress "0.00-100.00"
+        int retry_count
+    }
+    telemetry_events {
+        uuid id PK
+        uuid device_id FK
+        uuid deployment_id FK
+        text event_type "download_started|download_complete|installing|installed|verifying|success|failure|rollback"
+        bigint duration_ms
+        bigint bytes_transferred
+        timestamptz created_at
+    }
+    audit_logs {
+        uuid id PK
+        uuid user_id FK
+        text action
+        text resource_type
+        uuid resource_id
+        jsonb details
+        inet ip_address
+        timestamptz created_at
+    }
+
+    users ||--o{ api_keys : "owns (CASCADE)"
+    users ||--o{ artifacts : "uploaded_by (SET NULL)"
+    users ||--o{ releases : "published_by (SET NULL)"
+    users ||--o{ deployments : "created_by (SET NULL)"
+    users ||--o{ audit_logs : "actor (SET NULL)"
+    devices ||--o{ device_group_members : "membership (CASCADE)"
+    device_groups ||--o{ device_group_members : "membership (CASCADE)"
+    artifacts ||--o{ artifact_versions : "versions (CASCADE)"
+    artifacts ||--o{ releases : "published as (RESTRICT)"
+    releases ||--o{ deployments : "delivered by (RESTRICT)"
+    deployments ||--o{ device_deployments : "per-device state (CASCADE)"
+    devices ||--o{ device_deployments : "target (CASCADE)"
+    devices ||--o{ telemetry_events : "reports (SET NULL)"
+    deployments ||--o{ telemetry_events : "about (SET NULL)"
+    device_groups ||--o{ deployments : "target group (SET NULL)"
+    devices ||--o{ deployments : "target device (SET NULL)"

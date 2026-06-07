@@ -1,0 +1,66 @@
+%% Helix OTA — System Architecture (canonical)
+%% Source of truth: 00-master/2026-06-07-helix-ota-design.md §4 (three planes + infra + seams)
+%% Consistent with: 1.0.0-mvp/deployment/overview.md §3-§4, 1.0.0-mvp/api/endpoints.md §15
+%% Three planes (Dashboard / Control / Device) + Data-plane infra + two extractable seams.
+graph TB
+    subgraph Dashboard["Dashboard plane (React)"]
+        UI["Helix OTA Dashboard<br/>login, upload, deploy, fleet health"]
+    end
+
+    subgraph Control["Control plane (Go + Gin, HTTP/3 to HTTP/2, Brotli)"]
+        API["REST API /api/v1<br/>(+ optional internal gRPC)"]
+        AUTH["Auth (OAuth2/JWT + RBAC)"]
+        ART["Artifact intake + validation + signing-verify"]
+        ROLL["Rollout engine (all-targets MVP; staged % halt-on-failure 1.0.1)"]
+        DEV["Device registry + inventory"]
+        TEL["Telemetry ingest + health"]
+    end
+
+    subgraph Device["Device plane — Android 15 (Orange Pi 5 Max / RK3588)"]
+        AGENT["OTA agent (ota-android-agent, KMP)<br/>poll, download, re-verify, report"]
+        BRIDGE["ota-update-engine-bridge"]
+        UE["update_engine (Virtual A/B + compression)"]
+        AVB["AVB / dm-verity + boot_control (auto-rollback)"]
+    end
+
+    subgraph Data["Data plane / infra (containers substrate)"]
+        PG[("PostgreSQL — helix_ota schema")]
+        OBJ[("MinIO / S3 — artifact blobs")]
+        OTEL[("OpenTelemetry / Prometheus / Grafana")]
+    end
+
+    %% NEW ota-* modules (shared contracts and engines)
+    subgraph New["NEW ota-* modules"]
+        PROTO["ota-protocol (wire/manifest types)"]
+        VAL["ota-artifact-validator"]
+        RENG["ota-rollout-engine"]
+        TSCHEMA["ota-telemetry-schema"]
+    end
+
+    UI -->|HTTP/2 TLS| API
+    API --> AUTH
+    API --> ART
+    API --> ROLL
+    API --> DEV
+    API --> TEL
+
+    ART -->|blobs| OBJ
+    ART -.uses.-> VAL
+    ROLL --> PG
+    ROLL -.uses.-> RENG
+    DEV --> PG
+    TEL --> OTEL
+    TEL -.uses.-> TSCHEMA
+    API -.contracts.-> PROTO
+
+    AGENT -->|HTTPS poll/report| API
+    AGENT -.contracts.-> PROTO
+    AGENT --> BRIDGE --> UE --> AVB
+
+    %% Two deliberately extractable seams
+    SEAM1{{"SEAM: OS-adapter (universality)"}}
+    SEAM2{{"SEAM: rollout-engine (OS-agnostic campaigns)"}}
+    DEV -.- SEAM1
+    BRIDGE -.- SEAM1
+    ROLL -.- SEAM2
+    RENG -.- SEAM2
