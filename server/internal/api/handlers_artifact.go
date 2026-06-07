@@ -30,9 +30,11 @@ import (
 //     synthesize the hash-file content so the pipeline still runs S2.
 //   - signature: optional raw detached signature part; if absent the base64
 //     metadata.signature is used (S3).
-//   - pubkey:    optional ed25519 public-key part (raw or base64); if absent the
-//     server's configured trusted key is used (S3).
 //   - metadata:  the JSON ArtifactUploadMetadata part.
+//
+// The S3 verification key is NOT accepted from the request — it comes solely
+// from server configuration (resolvePublicKey). A request-supplied key would be
+// a signature-verification bypass.
 //
 // Reject codes map per artifact_validation.md §5 / endpoints.md §13:
 //
@@ -110,8 +112,8 @@ func (s *Server) handleUploadArtifact(c *gin.Context) {
 		return
 	}
 
-	// --- resolve the trusted public key (S3) ---
-	pubKey, ok := s.resolvePublicKey(form)
+	// --- resolve the trusted public key (S3) — server config ONLY ---
+	pubKey, ok := s.resolvePublicKey()
 	if !ok {
 		respondError(c, http.StatusUnprocessableEntity, CodeSignatureInvalid,
 			"no trusted signing key configured to verify the artifact signature")
@@ -250,19 +252,16 @@ func validateStructure(file []byte) structureVerdict {
 	return structureVerdict{}
 }
 
-// resolvePublicKey returns the trusted ed25519 public key: an uploaded pubkey
-// part (raw or base64) takes precedence, else the server's configured key.
-func (s *Server) resolvePublicKey(form *multipartForm) (ed25519.PublicKey, bool) {
-	if raw, ok := readFilePart(form, "pubkey"); ok {
-		if key, kok := parseEd25519PublicKey(raw); kok {
-			return key, true
-		}
-	}
-	if val, ok := readValuePart(form, "pubkey"); ok {
-		if key, kok := parseEd25519PublicKey([]byte(val)); kok {
-			return key, true
-		}
-	}
+// resolvePublicKey returns the trusted ed25519 artifact-signing public key.
+//
+// SECURITY (trust boundary): the verification key MUST come exclusively from
+// server configuration (the trusted key loaded from HELIX_ARTIFACT_PUBKEY / the
+// security brick). A request-supplied key is NEVER trusted — accepting one would
+// let an attacker sign a malicious artifact with their own key and present that
+// key, defeating signature verification entirely (signing_verification.md §3/§4;
+// threat_model §forged-artifact / key-compromise). There is deliberately no
+// request path into this function.
+func (s *Server) resolvePublicKey() (ed25519.PublicKey, bool) {
 	if len(s.pubKey) == ed25519.PublicKeySize {
 		return s.pubKey, true
 	}
@@ -302,17 +301,6 @@ func resolveHashFile(form *multipartForm, metaSHA string) string {
 		return val
 	}
 	return metaSHA
-}
-
-// parseEd25519PublicKey parses a raw or base64-encoded ed25519 public key.
-func parseEd25519PublicKey(b []byte) (ed25519.PublicKey, bool) {
-	if len(b) == ed25519.PublicKeySize {
-		return ed25519.PublicKey(append([]byte(nil), b...)), true
-	}
-	if decoded := decodeMaybeBase64(b); len(decoded) == ed25519.PublicKeySize {
-		return ed25519.PublicKey(decoded), true
-	}
-	return nil, false
 }
 
 // decodeMaybeBase64 returns the base64-decoded bytes if the input is valid
