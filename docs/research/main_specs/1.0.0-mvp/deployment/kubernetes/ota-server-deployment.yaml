@@ -6,6 +6,9 @@
 #
 # UNVERIFIED: image digest, resource requests/limits, and replica count must be set from
 # MVP load tests before production (ADR-0003 §3.2, §7).
+#
+# Rev 2 review fix: HELIX_S3_ENDPOINT flagged as a PLACEHOLDER that MUST be overridden — the
+# MVP k8s manifests omit in-cluster MinIO, so no `minio` Service resolves this value.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,7 +77,10 @@ spec:
                   name: helix-ota-db
                   key: password
             - name: HELIX_S3_ENDPOINT
-              value: "http://minio:9000"      # managed/operator S3 in k8s (overview §6)
+              # PLACEHOLDER — MUST be overridden per environment. The MVP k8s manifests OMIT
+              # in-cluster MinIO (overview §6), so there is no `minio` Service to resolve here;
+              # set this to the managed/operator S3 (or MinIO) endpoint for the target cluster.
+              value: "http://minio:9000"
             - name: HELIX_S3_BUCKET
               value: "helix-ota-artifacts"
             - name: HELIX_S3_ACCESS_KEY

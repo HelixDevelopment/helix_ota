@@ -2,13 +2,13 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Canonical 1.0.0-MVP relational data model for the Helix OTA Go control plane: the `helix_ota` PostgreSQL schema, entity-relationship description, table-by-table rationale, constraints, indexes, and the four-layer testing plan. Backed by real, executed migration DDL (`migrations/001_initial_schema.{up,down}.sql`). |
 | Issues | Relative telemetry-vs-rollout volume is UNVERIFIED (ADR-0003 §3.2); HelixConstitution clause numbers (§11.4.x) are carried from the corpus convention and are UNVERIFIED; precise public surfaces of the `database`/`auth`/`security`/`Storage` catalogue submodules are UNVERIFIED (submodule_reuse_map.md). |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2: clarified §5.6 version monotonicity is app-layer (Go publish-time), not a DB constraint; reworded §5.9 event vocabulary as derived/extended from master §9; added PII handling note; aligned §6/§10 constraint count ordering. |
 | Continuation | When ADR-0001 (hawkBit) is un-gated, add the deferred `rollouts` bridge table in a later migration; when the staged-rollout engine lands (1.0.1) add `deployment_phases` + `device_deployments.phase_id`; when end-user/multi-version rollback lands (1.0.1) add `rollback_history`. Set numeric partition/retention policy for `telemetry_events` and `audit_logs` from MVP load-test data (currently UNVERIFIED). Confirm the `database` submodule migration runner is the one driving these files. |
 
 ## Table of contents
@@ -203,8 +203,11 @@ artifact. `(artifact_id, version)` is unique.
 The master design §7 lists `releases` as a **first-class entity distinct from deployments**: a
 *release* is the published, deployable unit an admin creates from a validated artifact before
 deploying. Separating release (publish) from deployment (deliver) lets one release feed multiple
-deployments (e.g. group A now, group B later) and is where **version monotonicity / channel**
-policy is enforced. `channel ('stable','beta','canary','internal')` + `version` is unique.
+deployments (e.g. group A now, group B later). **Version monotonicity is enforced at publish time
+in the Go control plane (application layer), NOT by a database constraint** — the DB only enforces
+uniqueness via `releases_channel_version_uniq` (`channel` + `version`) and
+`artifacts_name_os_version_uniq` (`(name, os_type, version)`).
+`channel ('stable','beta','canary','internal')` + `version` is unique.
 `status ('draft','published','superseded','withdrawn')` with a CHECK that a `published` release has
 `published_at` set. FK to `artifacts` is `ON DELETE RESTRICT` (cannot delete an artifact that has
 releases). [master design §5, §7]
@@ -236,8 +239,8 @@ deployment/device deletion. [master design §1 (auto-rollback in MVP), §5]
 Device-reported event stream (master §9). **Renamed from draft 02's `update_metrics` to the
 master's canonical `telemetry_events`.** This is the higher-volume, append-mostly table and the
 first scale-split candidate after the rollout engine (ADR-0003 §3.2 trigger #1 — relative volume is
-**UNVERIFIED**, to be set from MVP load tests). `event_type` is CHECK-constrained to the canonical
-device vocabulary from master §9:
+**UNVERIFIED**, to be set from MVP load tests). `event_type` is CHECK-constrained to a device
+vocabulary derived from master §9, extended with `download_complete` and `rollback`:
 `('download_started','download_complete','installing','installed','verifying','success','failure','rollback')`.
 `duration_ms`/`bytes_transferred` are CHECK `>= 0` when present. `device_id`/`deployment_id` FKs are
 `ON DELETE SET NULL` so telemetry history survives device/deployment deletion. Metrics from this
@@ -250,6 +253,11 @@ Every admin/operator action — master §6 mandates "every admin action logged".
 `action`, `resource_type`, nullable `resource_id`, `details` JSONB, `ip_address INET`, `user_agent`.
 `user_id` FK is `ON DELETE SET NULL` so the audit record outlives the actor (a security
 requirement). Indexed by user, action, `(resource_type, resource_id)`, and time. [master design §6]
+
+**PII handling note:** `users.email`, `audit_logs.ip_address`, and `audit_logs.user_agent` are
+stored in **plaintext**; `users.password_hash` and `api_keys.key_hash` are **hashed** (never stored
+in cleartext). Encryption-at-rest and a retention/erasure policy for these fields are **UNVERIFIED /
+future** (not specified or implemented at MVP).
 
 ## 6. Constraints summary
 
@@ -326,7 +334,7 @@ Per catalogue-first (§11.4.74, UNVERIFIED) and [`submodule_reuse_map.md`](../..
 | [`migrations/001_initial_schema.down.sql`](migrations/001_initial_schema.down.sql) | Drops all tables in **strict reverse dependency order**, then drops the schema with `RESTRICT`. Does not drop the shared `pgcrypto` extension. |
 
 **Validation performed (not asserted — executed):** both migrations were applied to a throwaway
-**PostgreSQL 16.14** cluster. Result: 12 tables, 23 CHECK + 16 FK + 12 PK + 9 UNIQUE constraints,
+**PostgreSQL 16.14** cluster. Result: 12 tables, 12 PK + 16 FK + 23 CHECK + 9 UNIQUE constraints,
 45 indexes; a bad-SHA-256 insert was correctly rejected by `artifacts_sha256_chk`; the down
 migration left zero `helix_ota` objects; and a clean re-apply of the up migration succeeded. This is
 the artifact gate of §11.

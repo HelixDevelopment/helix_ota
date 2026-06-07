@@ -2,13 +2,13 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Specifies the mandatory server-side upload validation pipeline for OTA artifacts as an ordered decision table: structure → SHA-256 vs hash file → signature → version monotonicity → target compatibility → metadata extraction, with explicit reject/accept paths. Server-side validation is defense-in-depth alongside device-side verify-before-apply; it is the "safe upload" hard guarantee. Implements ADR-0002 (plain signing for MVP, Uptane-ready interfaces) and preserves the ADR-0004 byte-identity rule. |
 | Issues | Whether the `security` brick exposes the SHA-256/512 + signature-verify primitives the validator needs is UNVERIFIED. Exact Android OTA metadata field names / custom-metadata location are partially from the operator drafts and UNVERIFIED against AOSP. `ZIP_STORED` enforcement interacts with ADR-0004's artifact serving and must not be bypassed. HelixConstitution clause numbers are UNVERIFIED. |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2: resolved S4↔S6 ordering circularity (version/target identifiers parsed by an S1/manifest-read precursor so they precede S4/S5 gating; full metadata extraction stays at S6); corrected the S2 "constant-time compare" claim (public-digest compare gains nothing from timing-safety — integrity = digest match + S3 signature); added explicit NON-GOAL that the server does not re-validate the artifact's retained AOSP/payload signature at intake (device re-verifies before apply). |
 | Continuation | Confirm the `security`/`Security-KMP` crypto primitive surface; pin the exact OTA metadata schema (`ota-protocol` manifest) against AOSP `META-INF/com/android/metadata`; wire the signer abstraction to `go-securesystemslib` `signature.Signer` so TUF drops in later (ADR-0002 §4.2); finalize `ota-artifact-validator` repo before creation. |
 
 ## Table of contents
@@ -47,6 +47,8 @@ For **1.0.0-MVP the trust model is plain per-artifact signing** (SHA-256 + detac
 
 This logic lives in the `artifact-validator` seam (NEW submodule `ota-artifact-validator`), which is **OS-aware via plugins and carries no transport**. [architecture §4; submodule-reuse-map §4]
 
+**NON-GOAL (intake):** the server does **not** validate the artifact's retained AOSP/payload signature at intake. S3 verifies only the **Helix-layer** detached signature (additive to the AOSP signature); the artifact's own AOSP/payload signature is carried through byte-identically and is **re-verified by the device** (AOSP/payload signature + AVB/dm-verity) before apply. Re-validating the AOSP signature server-side is out of scope for MVP. [adr-0002 §4.2; adr-0004 §4.2]
+
 ## 2. Position in the system (where this runs)
 
 ```mermaid
@@ -80,6 +82,8 @@ A rejected artifact is **never staged in object storage as deployable, never rec
 ## 3. Pipeline overview
 
 The pipeline is an **ordered, fail-fast sequence**. Stages run in the order S1→S6. The **first failing stage** terminates the pipeline and returns the reject contract (§7); later stages do not run. A staged artifact that later fails a re-validation is quarantined, not deployed.
+
+The S1 structure stage includes a **manifest-read precursor**: as part of parsing the package structure, S1 reads the `ota-protocol` manifest and parses the lightweight identifiers needed for gating — the **version identifier** (used by S4 monotonicity) and the **declared target identifiers** (used by S5 target compatibility). These identifiers are therefore available to the gating stages **before** S4 runs; this resolves the apparent S4↔S6 ordering circularity. **Full** release metadata extraction (sizes, hashes, build fingerprint, the complete release record) still happens at S6 — S1 only parses the minimal identifiers required to gate.
 
 | # | Stage | Question answered | Brick / source |
 |---|---|---|---|
@@ -123,10 +127,10 @@ Rationale: `update_engine` byte-range-fetches `payload.bin` by `offset`/`size` f
 | Condition | PASS → | FAIL → |
 |---|---|---|
 | Mandatory hash file is present and parseable | continue | REJECT `S2_HASH_FILE_MISSING` |
-| Server-computed SHA-256 over the artifact **equals** the hash-file value (constant-time compare) | continue | REJECT `S2_HASH_MISMATCH` |
+| Server-computed SHA-256 over the artifact **equals** the hash-file value (plain byte-for-byte digest comparison) | continue | REJECT `S2_HASH_MISMATCH` |
 | SHA-512 computed and recorded where available (defense-in-depth; absence is not a fail at MVP) | continue to S3 | — |
 
-Integrity is SHA-256 (and SHA-512 where available) over the artifact + the mandatory hash file. [master §6] A mismatch means corruption or tampering: hard reject. Hashes computed here are also persisted for the release record (S6) and the device download contract (`FILE_HASH`). [adr-0004 §4.3]
+Integrity is SHA-256 (and SHA-512 where available) over the artifact + the mandatory hash file. [master §6] A mismatch means corruption or tampering: hard reject. The hash-file value is a **public, attacker-known digest**, so a constant-time comparison buys nothing here (there is no secret to leak via timing); a plain comparison is sufficient. The integrity guarantee comes from the **digest match (S2) plus the S3 signature** over the same bytes, not from the comparison being timing-safe. Hashes computed here are also persisted for the release record (S6) and the device download contract (`FILE_HASH`). [adr-0004 §4.3]
 
 ### 5.3 Stage S3 — Signature
 
@@ -142,7 +146,7 @@ The build-pipeline private key signs; the public key is in server config and the
 
 | Condition | PASS → | FAIL → |
 |---|---|---|
-| A comparable version identifier is parseable from S6 metadata / manifest | continue | REJECT `S4_VERSION_UNPARSEABLE` |
+| A comparable version identifier is parseable (parsed by the S1/manifest-read precursor, before S4) | continue | REJECT `S4_VERSION_UNPARSEABLE` |
 | Version is **strictly greater** than the latest published version for the same target | continue | REJECT `S4_NOT_MONOTONIC` (downgrade/equal) |
 | No published release already exists with the same `{target, version}` (idempotency / no clobber) | continue to S5 | REJECT `S4_DUPLICATE_VERSION` |
 

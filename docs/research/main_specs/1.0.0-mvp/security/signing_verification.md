@@ -2,14 +2,14 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Normative MVP specification for OTA artifact signing and verification: build-pipeline key signs each release; the Go control plane verifies on upload; the Android device re-verifies before apply; integrity is SHA-256 + detached signature; this composes with (does not replace) AVB/dm-verity and the `update_engine` payload check. Interfaces are designed MVP-forward so TUF/Uptane drops in per ADR-0002 without artifact rework. |
-| Issues | HelixConstitution clause numbers (§11.4.61, §7.1, §11.4.6, §11.4.74, §11.4.28, §11.4.123, §11.4.125, §1) are UNVERIFIED against the authoritative constitution text. The exact signature scheme (ED25519 vs ECDSA-P256 vs RSA) is not yet pinned by any ADR and is recorded here as a decision-to-make, not an asserted fact. The `security` / `Security-KMP` catalogue submodules' precise public crypto surface has not been inspected and is UNVERIFIED (carried from ADR-0002 §8 item 9 and the reuse map). The Android-15 / RK3588 `update_engine` `FILE_HASH`/`METADATA_HASH` constants the device verify-gate integrates against are UNVERIFIED (carried from ADR-0004 §6). |
-| Fixed | N/A (initial revision). |
-| Continuation | Pin the MVP signature scheme via an addendum or ADR once `security`'s exposed primitives are inspected; confirm `ota-artifact-validator` reuses `security` SHA-256/512 + signature-verify primitives rather than hand-rolling crypto; confirm the `ota-update-engine-bridge` device re-verify hook against the real Android-15 `IUpdateEngine` constants; close the ADR-0002 §4.3 sequencing items before any TUF device-side enforcement is made mandatory. |
+| Issues | HelixConstitution clause numbers (§11.4.61, §7.1, §11.4.6, §11.4.74, §11.4.28, §11.4.123, §11.4.125, §1) are UNVERIFIED against the authoritative constitution text. The MVP DEFAULT signature scheme is now pinned to ED25519 with `key_id`-based algorithm agility for ECDSA-P256 / RSA-PSS fallback (§3); the residual is only the tracked confirm-against-the-`security`-brick item that these primitives are exposed. The `security` / `Security-KMP` catalogue submodules' precise public crypto surface has not been inspected and is UNVERIFIED (carried from ADR-0002 §8 item 9 and the reuse map). The Android-15 / RK3588 `update_engine` `FILE_HASH`/`METADATA_HASH` constants the device verify-gate integrates against are UNVERIFIED (carried from ADR-0004 §6). |
+| Fixed | Rev 2: pinned ED25519 as the MVP DEFAULT signature scheme with `key_id`-based algorithm agility for ECDSA-P256 / RSA-PSS fallback (§3, §11), keeping the final confirm-against-the-`security`-brick as a tracked item. |
+| Continuation | Confirm the pinned ED25519 DEFAULT (and the ECDSA-P256 / RSA-PSS fallbacks) against `security`'s exposed primitives (the only remaining signature-scheme item now the default is pinned in §3); confirm `ota-artifact-validator` reuses `security` SHA-256/512 + signature-verify primitives rather than hand-rolling crypto; confirm the `ota-update-engine-bridge` device re-verify hook against the real Android-15 `IUpdateEngine` constants; close the ADR-0002 §4.3 sequencing items before any TUF device-side enforcement is made mandatory. |
 
 ## Table of contents
 
@@ -83,11 +83,18 @@ key-compromise recovery; those attack classes are closed by the TUF layer in 1.0
   `ZIP_STORED` + HTTP-Range streaming contract (ADR-0004 §3.2) and for a future TUF `targets` entry
   to layer over the same bytes (ADR-0002 §4.2). The signed digest is SHA-256 of the artifact;
   signing the digest (not the raw blob) keeps the operation streaming-friendly for large payloads.
-- **Signature scheme:** the concrete algorithm (ED25519, ECDSA-P256, or RSA-PSS) is **not yet
-  pinned** by any ADR and MUST be selected from the primitives exposed by the `security` catalogue
-  submodule (UNVERIFIED which it exposes). go-tuf/v2 supports ED25519/RSA/ECDSA (ADR-0002 §3.2), so
-  any of these keeps the 1.0.1+ TUF path open; the choice is recorded as a decision-to-make
-  (Continuation), not asserted here.
+- **Signature scheme (DEFAULT pinned for MVP = ED25519, with `key_id`-based algorithm agility):**
+  the MVP **DEFAULT** signature scheme is **ED25519** — it is the central authenticity primitive and
+  is no longer left fully open. ED25519 is chosen as the default because it is compact, fast to verify
+  on-device, has no parameter-choice footguns, and is one of the schemes go-tuf/v2 supports
+  (ADR-0002 §3.2), keeping the 1.0.1+ TUF path open. **Algorithm agility** is provided through
+  `key_id`: each trust-store entry binds a `key_id` to *both* a public key *and* its algorithm, so a
+  fallback to **ECDSA-P256** or **RSA-PSS** is available per-`key_id` without re-packaging artifacts
+  (the verifier dispatches on the `key_id`'s recorded algorithm). This pins the default while
+  preserving forward agility for the 1.0.1+ TUF path, which supports all three (ADR-0002 §3.2). The
+  final confirmation that ED25519 (and the ECDSA-P256 / RSA-PSS fallbacks) are exposed by the
+  `security` catalogue submodule remains a tracked confirm-against-the-`security`-brick item
+  (UNVERIFIED which primitives it exposes; Continuation), but the default is decided, not deferred.
 - **What the signature covers:** the artifact bytes (via their SHA-256 digest). It does **not**
   cover freshness, version monotonicity, or per-device targeting — those are enforced separately by
   the server validation pipeline (version monotonicity, target compatibility; master §5) in the MVP,
@@ -257,8 +264,11 @@ evidence (§7.1):
 
 ## 11. Open / UNVERIFIED items
 
-1. **Signature scheme not pinned.** ED25519 vs ECDSA-P256 vs RSA-PSS is a decision-to-make against
-   `security`'s exposed primitives. **UNVERIFIED.** (Continuation.)
+1. **Signature scheme: DEFAULT pinned (ED25519), final brick-confirmation tracked.** The MVP DEFAULT
+   is **ED25519**, with `key_id`-based algorithm agility for ECDSA-P256 / RSA-PSS fallback (§3). What
+   remains is the tracked **confirm-against-the-`security`-brick** item: that the `security` /
+   `Security-KMP` submodules actually expose ED25519 (and the fallback primitives). **UNVERIFIED**
+   surface only. (Continuation.)
 2. **`security` / `Security-KMP` crypto surface.** That these submodules expose the required
    SHA-256/512 + signature primitives is **UNVERIFIED** (ADR-0002 §8 item 9; reuse map §3).
 3. **Android-15 / RK3588 `update_engine` constants** (`FILE_HASH`, `METADATA_HASH`, payload-signature
@@ -275,7 +285,7 @@ evidence (§7.1):
 | Clause (UNVERIFIED numbers) | How this spec complies |
 | --- | --- |
 | §11.4.61 (ToC) | ToC present immediately after the metadata table. |
-| §7.1 / §11.4.6 (no-bluff / no-guessing) | Every claim cites an ADR, the master design, or the threat model; the signature scheme, submodule crypto surface, and Android-15 constants are carried as **UNVERIFIED** rather than asserted. |
+| §7.1 / §11.4.6 (no-bluff / no-guessing) | Every claim cites an ADR, the master design, or the threat model; the signature scheme has a pinned MVP DEFAULT (ED25519) with only its `security`-brick exposure left as a tracked confirm item; the submodule crypto surface and Android-15 constants are carried as **UNVERIFIED** rather than asserted. |
 | §11.4.74 (catalogue-first reuse) | Crypto routed through `security` / `Security-KMP`; validation/bridge/contracts in the justified NEW submodules; no bespoke crypto invented (§9). |
 | §11.4.28 (decoupling) | Signer abstraction + distinct verify-gate + validator + bridge are independently testable and Uptane-swappable (§8, §9). |
 | §1 / §1.1 (four-layer + mutation) | §10 specifies all four layers on the ≥90% safety-critical signing/verify path. |

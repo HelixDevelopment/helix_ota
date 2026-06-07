@@ -2,13 +2,13 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Deployment topology for the Helix OTA 1.0.0-MVP control plane. Defines the containerized service set (ota-server, postgres, minio, reverse proxy, dashboard), the container substrate (`vasic-digital/containers` submodule), secrets handling (security brick + container secrets), and the four-layer testing gates for deployment artifacts. Honors the LOCKED stack (Go + Gin + Brotli + HTTP/3→HTTP/2, REST-primary; PostgreSQL + MinIO) and the LOCKED strategy (native Android A/B + custom Go modular-monolith control plane per ADR-0003). |
 | Issues | HelixConstitution clause numbers are UNVERIFIED (carried from corpus convention). Exact public surface of the `containers`, `security`, `config`, and `observability` catalogue submodules has not been inspected; "satisfies" claims are UNVERIFIED where so marked. Concrete resource sizing (CPU/RAM/replica counts) and load-derived scale thresholds are UNVERIFIED — to be set from MVP load tests (ADR-0003 §3.2, §7). Reverse-proxy and dashboard images are placeholders pending build-pipeline confirmation. |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2 (anti-bluff review): minio dropped `:latest` for a placeholder pinned version tag (digest TBD) per the digest-pinning rule; k8s postgres probes now derive the user/db from `$POSTGRES_USER`/`$POSTGRES_DB` (Secret-sourced, not hardcoded `helix`) and the minio `mc` `helix` token is documented as an alias name, not a user; compose healthcheck `wget` flagged as Dockerfile-dependent (distroless/read-only bases); caddy `/healthz` flagged as dependent on the out-of-band Caddyfile (pending ADR-0004 QUIC spike); k8s `HELIX_S3_ENDPOINT=http://minio:9000` flagged as a placeholder that MUST be overridden (k8s omits in-cluster minio). |
 | Continuation | Inspect the `containers`/`security`/`config` submodule surfaces and remove UNVERIFIED tags; confirm reverse-proxy choice (Caddy vs nginx vs `http3`-fronted Go) once the QUIC/UDP-443 spike (ADR-0004) closes; pin all image digests before any deploy; derive resource requests/limits and HPA thresholds from load tests; wire the dashboard build target. |
 
 ## Table of contents
@@ -88,7 +88,7 @@ build + substrate per the reuse map.
 |---|---|---|---|---|
 | **ota-server** | built from repo (`vasic-digital` Go build) | Go modular-monolith control plane (REST `/api/v1`, rollout engine, artifact intake, telemetry ingest) | internal `:8080` (HTTP/2 fallback) + `:8443/udp` (HTTP/3) behind proxy | no (stateless; state in postgres/minio) |
 | **postgres** | `postgres:16` | Relational state (releases, deployments, devices, rollout phase/cohort state) | internal `:5432` | volume `pgdata` |
-| **minio** | `minio/minio` (pinned digest before deploy) | S3-compatible artifact blob store (`payload.bin` + manifests) | internal `:9000` (S3) + `:9001` (console) | volume `minio-data` |
+| **minio** | `minio/minio` (placeholder pinned version tag, never `:latest`; digest before deploy) | S3-compatible artifact blob store (`payload.bin` + manifests) | internal `:9000` (S3) + `:9001` (console) | volume `minio-data` |
 | **reverse proxy** | `caddy:2` (placeholder, UNVERIFIED) | TLS termination, HTTP/3↔HTTP/2 fronting, routing to ota-server + dashboard | public `:80`, `:443` (TCP+UDP) | no |
 | **dashboard** | built from repo (placeholder, UNVERIFIED) | Operator web UI consuming ota-server REST | internal, via proxy `/` | no |
 

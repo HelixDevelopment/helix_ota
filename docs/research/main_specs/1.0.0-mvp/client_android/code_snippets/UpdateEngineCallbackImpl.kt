@@ -73,7 +73,9 @@ class AndroidUpdateEngineBridge : UpdateEngineBridge {
             }
         }
         engine.bind(cb)
-        awaitClose { /* engine.unbind() if available on the target API */ }
+        // unbind() is a real @SystemApi method on android.os.UpdateEngine;
+        // call it directly to detach the callback when the flow is cancelled.
+        awaitClose { engine.unbind() }
     }
 
     // Read-only observers for telemetry (never mutate slot state).
