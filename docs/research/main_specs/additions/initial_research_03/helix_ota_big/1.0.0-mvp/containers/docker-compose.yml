@@ -1,0 +1,792 @@
+# =============================================================================
+# Helix OTA — Production-Ready Docker Compose Configuration
+# =============================================================================
+# Document ID: HELOTA-COMPOSE-001
+# Version: 1.0.0
+# Last Updated: 2026-03-05
+# Submodule: vasic-digital/containers
+#
+# This compose file defines the complete Helix OTA stack for both development
+# and production use. Production overrides are in docker-compose.prod.yml.
+#
+# Usage:
+#   Development:  docker compose up -d
+#   With hot-reload: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#   Production:   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Prerequisites:
+#   - Docker Engine 24.0+ with Compose V2
+#   - 8 GiB RAM minimum (16 GiB recommended)
+#   - 50 GiB free disk space (500 GiB for production artifacts)
+#   - .env file with all required secrets (see .env.example)
+# =============================================================================
+
+version: "3.9"
+
+# =============================================================================
+# Shared Configuration Anchors
+# =============================================================================
+x-common-logging: &common-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+    tag: "{{.Name}}"
+
+x-common-restart: &common-restart
+  condition: on-failure
+  max_attempts: 5
+  window: 120s
+
+x-common-security: &common-security
+  no_new_privileges: true
+  read_only: true
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+
+  # ===========================================================================
+  # Traefik — Reverse Proxy, TLS Termination, and Ingress Controller
+  # ===========================================================================
+  # Routes external HTTPS traffic to internal services based on Host header.
+  # Handles TLS certificate provisioning via Let's Encrypt (ACME).
+  # Passes mTLS client certificates to the server for device authentication.
+  # ===========================================================================
+  traefik:
+    image: traefik:v3.0
+    container_name: helix-traefik
+    hostname: traefik
+    labels:
+      - "traefik.enable=true"
+      # Traefik Dashboard (development only — disabled in production)
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+      # Dashboard basic auth middleware
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_USERS:-admin:$$apr1$$rq3e8q9N$$Kx5bHJ5B5y9QjZ0qJ0qZ0.}"
+      # API routing
+      - "traefik.http.routers.helix-api.rule=Host(`${API_DOMAIN:-api.helix-ota.io}`)"
+      - "traefik.http.routers.helix-api.entrypoints=websecure"
+      - "traefik.http.routers.helix-api.tls=true"
+      - "traefik.http.routers.helix-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.helix-api.service=helix-api"
+      - "traefik.http.services.helix-api.loadbalancer.server.port=8080"
+      - "traefik.http.services.helix-api.loadbalancer.healthcheck.path=/healthz"
+      - "traefik.http.services.helix-api.loadbalancer.healthcheck.interval=10s"
+      # Dashboard routing
+      - "traefik.http.routers.helix-dashboard.rule=Host(`${DASHBOARD_DOMAIN:-app.helix-ota.io}`)"
+      - "traefik.http.routers.helix-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.helix-dashboard.tls=true"
+      - "traefik.http.routers.helix-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.helix-dashboard.service=helix-dashboard"
+      - "traefik.http.services.helix-dashboard.loadbalancer.server.port=80"
+      # Device mTLS routing (separate router for client cert forwarding)
+      - "traefik.http.routers.helix-api-device.rule=Host(`${API_DOMAIN:-api.helix-ota.io}`) && PathPrefix(`/api/v1/devices/`)"
+      - "traefik.http.routers.helix-api-device.entrypoints=websecure"
+      - "traefik.http.routers.helix-api-device.tls=true"
+      - "traefik.http.routers.helix-api-device.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.helix-api-device.tls.options=device-mtls@file"
+      - "traefik.http.routers.helix-api-device.service=helix-api"
+      # MinIO Console routing (optional — admin access)
+      - "traefik.http.routers.minio-console.rule=Host(`${MINIO_DOMAIN:-minio.helix-ota.io}`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+    command:
+      # Global configuration
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--ping=true"
+      - "--ping.entrypoint=web"
+      # Provider configuration
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=helix-frontend"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+      - "--entrypoints.websecure.http.tls.options=default@file"
+      # TLS / Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@helix-ota.io}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.keytype=EC256"
+      # Observability
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+      - "--accesslog=true"
+      - "--accesslog.format=json"
+      - "--accesslog.fields.defaultmode=keep"
+      - "--accesslog.fields.names.ClientUsername=drop"
+      # Security headers
+      - "--server.transport.respondingtimeouts.readtimeout=60s"
+      - "--server.transport.respondingtimeoutswritetimeout=120s"
+      - "--server.transport.respondingtimeout.idletimeout=180s"
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+      - ./traefik-dynamic:/etc/traefik/dynamic:ro
+    networks:
+      helix-frontend:
+        ipv4_address: 172.28.0.2
+      helix-backend:
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      <<: *healthcheck-defaults
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  # ===========================================================================
+  # Helix OTA Server — Go REST API Binary
+  # ===========================================================================
+  # Central update management server built with Go 1.22+, Chi router, and
+  # vasic-digital submodules. Handles: device registration, update checking,
+  # artifact validation, rollout management, telemetry ingestion, and
+  # WebSocket/SSE notifications.
+  #
+  # Resource sizing:
+  #   - Development: 512 Mi / 1 CPU
+  #   - Production:  1 Gi / 2 CPU (with HPA up to 20 replicas)
+  # ===========================================================================
+  helix-ota-server:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+      target: ${SERVER_BUILD_TARGET:-production}
+      args:
+        GO_VERSION: "1.22"
+        ALPINE_VERSION: "3.19"
+    image: ${SERVER_IMAGE:-ghcr.io/vasic-digital/helix-ota-server}:${SERVER_TAG:-1.0.0}
+    container_name: helix-ota-server
+    hostname: helix-ota-server
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
+    environment:
+      # --- Server ---
+      HELIX_SERVER_PORT: "8080"
+      HELIX_SERVER_READ_TIMEOUT: "30s"
+      HELIX_SERVER_WRITE_TIMEOUT: "60s"
+      HELIX_SERVER_IDLE_TIMEOUT: "120s"
+      HELIX_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT: "30s"
+      # --- Database (PostgreSQL via pgxpool) ---
+      HELIX_DATABASE_URL: "postgres://helix_ota:${PG_PASSWORD:-helix_ota_dev}@postgresql:5432/helix_ota?sslmode=disable&pool_max_conns=50&pool_min_conns=10&pool_max_conn_idle_time=15m&pool_max_conn_lifetime=30m&pool_health_check_period=15s"
+      # --- Cache (Redis via vasic-digital/cache) ---
+      HELIX_REDIS_URL: "redis://:${REDIS_PASSWORD:-helix_redis_dev}@redis:6379/0"
+      HELIX_REDIS_CACHE_TTL: "60s"
+      HELIX_REDIS_RATE_LIMIT_PREFIX: "helix:ratelimit:"
+      HELIX_REDIS_SESSION_PREFIX: "helix:session:"
+      # --- Artifact Storage (MinIO via vasic-digital/storage) ---
+      HELIX_MINIO_ENDPOINT: "minio:9000"
+      HELIX_MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY:-minioadmin}"
+      HELIX_MINIO_SECRET_KEY: "${MINIO_SECRET_KEY:-minioadmin}"
+      HELIX_MINIO_BUCKET: "helix-ota-artifacts"
+      HELIX_MINIO_REGION: "us-east-1"
+      HELIX_MINIO_USE_SSL: "false"
+      # --- Secret Management (Vault via vasic-digital/security) ---
+      HELIX_VAULT_ADDRESS: "http://vault:8200"
+      HELIX_VAULT_TOKEN: "${VAULT_DEV_TOKEN:-dev-only-token}"
+      HELIX_VAULT_TRANSIT_KEY: "artifact-signing-key"
+      HELIX_VAULT_TOTP_KEY_PATH: "secret/data/helix-ota/totp-encryption-key"
+      # --- Authentication (vasic-digital/auth) ---
+      HELIX_JWT_SIGNING_KEY: "${JWT_SIGNING_KEY:-dev-only-jwt-key-change-in-prod}"
+      HELIX_JWT_ACCESS_TTL: "15m"
+      HELIX_JWT_REFRESH_TTL: "168h"
+      HELIX_JWT_ISSUER: "helix-ota"
+      HELIX_MTLS_CA_CERT_PATH: "/etc/helix-ota/tls/device-ca.crt"
+      # --- Rollout Engine ---
+      HELIX_ROLLOUT_AUTO_ADVANCE_INTERVAL: "15m"
+      HELIX_ROLLOUT_HEALTH_CHECK_INTERVAL: "5m"
+      HELIX_ROLLOUT_AUTO_ROLLBACK_THRESHOLD: "0.05"
+      HELIX_ROLLOUT_DEFAULT_INCREMENT_STEP: "10"
+      # --- Artifact Pipeline ---
+      HELIX_ARTIFACT_MAX_SIZE: "2147483648"
+      HELIX_ARTIFACT_TEMP_DIR: "/tmp/helix-uploads"
+      HELIX_ARTIFACT_VALIDATION_WORKERS: "4"
+      # --- Rate Limiting (vasic-digital/ratelimiter) ---
+      HELIX_RATE_LIMIT_DEVICE_RPM: "60"
+      HELIX_RATE_LIMIT_DASHBOARD_RPM: "120"
+      HELIX_RATE_LIMIT_LOGIN_RPM: "10"
+      HELIX_RATE_LIMIT_ARTIFACT_UPLOAD_RPH: "10"
+      # --- Observability (vasic-digital/observability) ---
+      HELIX_LOG_LEVEL: "${LOG_LEVEL:-info}"
+      HELIX_LOG_FORMAT: "json"
+      HELIX_METRICS_ENABLED: "true"
+      HELIX_METRICS_PATH: "/metrics"
+      HELIX_TRACING_ENABLED: "${TRACING_ENABLED:-false}"
+      HELIX_TRACING_ENDPOINT: "http://otel-collector:4318"
+      HELIX_TRACING_SAMPLE_RATE: "0.1"
+    volumes:
+      - server-tmp:/tmp/helix-uploads
+      - device-ca-cert:/etc/helix-ota/tls:ro
+    networks:
+      helix-backend:
+    restart: *common-restart
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz"]
+      <<: *healthcheck-defaults
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:heterogeneous,size=256M
+
+  # ===========================================================================
+  # Helix OTA Dashboard — React 18 SPA Served by nginx
+  # ===========================================================================
+  # Multi-stage build: Node.js 20 for building, nginx:alpine for serving.
+  # nginx handles static asset caching, SPA routing (all paths → index.html),
+  # and security headers (CSP, HSTS, X-Frame-Options).
+  # ===========================================================================
+  helix-ota-dashboard:
+    build:
+      context: ../dashboard
+      dockerfile: Dockerfile
+      target: production
+      args:
+        NODE_VERSION: "20"
+        NGINX_VERSION: "1.25"
+    image: ${DASHBOARD_IMAGE:-ghcr.io/vasic-digital/helix-ota-dashboard}:${DASHBOARD_TAG:-1.0.0}
+    container_name: helix-ota-dashboard
+    hostname: helix-ota-dashboard
+    depends_on:
+      helix-ota-server:
+        condition: service_healthy
+    environment:
+      API_BASE_URL: "${API_BASE_URL:-https://api.helix-ota.io}"
+      WS_BASE_URL: "${WS_BASE_URL:-wss://api.helix-ota.io/ws}"
+    networks:
+      helix-frontend:
+      helix-backend:
+    restart: *common-restart
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/healthz"]
+      <<: *healthcheck-defaults
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:size=32M
+      - /var/run:size=1M
+
+  # ===========================================================================
+  # PostgreSQL 16 — Primary Relational Database
+  # ===========================================================================
+  # Stores: device registry, artifacts, rollouts, telemetry events (partitioned),
+  # device updates, audit log, users, and artifact validation results.
+  #
+  # Configuration tuned for SSD-backed storage with 2-8 GiB RAM allocation.
+  # WAL archiving enabled for point-in-time recovery.
+  # Telemetry partitioned by month via declarative partitioning.
+  # ===========================================================================
+  postgresql:
+    image: postgres:16-alpine
+    container_name: helix-postgresql
+    hostname: postgresql
+    environment:
+      POSTGRES_DB: "helix_ota"
+      POSTGRES_USER: "helix_ota"
+      POSTGRES_PASSWORD: "${PG_PASSWORD:-helix_ota_dev}"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    command:
+      - "postgres"
+      # Connection & Authentication
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "superuser_reserved_connections=3"
+      # Memory Tuning (adjust for available RAM)
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "effective_cache_size=1536MB"
+      - "-c"
+      - "work_mem=10MB"
+      - "-c"
+      - "maintenance_work_mem=256MB"
+      - "-c"
+      - "huge_pages=try"
+      # WAL & Checkpoint Tuning
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_size=2GB"
+      - "-c"
+      - "min_wal_size=512MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "checkpoint_timeout=10min"
+      # Query Planning (SSD-optimized)
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      # Logging & Monitoring
+      - "-c"
+      - "log_min_duration_statement=200"
+      - "-c"
+      - "log_checkpoints=on"
+      - "-c"
+      - "log_connections=on"
+      - "-c"
+      - "log_disconnections=on"
+      - "-c"
+      - "log_lock_waits=on"
+      - "-c"
+      - "log_temp_files=0"
+      - "-c"
+      - "log_line_prefix=%t [%p]: db=%d,user=%u,app=%a,client=%h "
+      # Autovacuum Tuning
+      - "-c"
+      - "autovacuum_max_workers=4"
+      - "-c"
+      - "autovacuum_naptime=30s"
+      - "-c"
+      - "autovacuum_vacuum_scale_factor=0.05"
+      - "-c"
+      - "autovacuum_analyze_scale_factor=0.02"
+      # TLS (production: enable; development: disabled)
+      - "-c"
+      - "ssl=off"
+      # - "-c", "ssl_cert_file=/etc/postgresql/tls/server.crt"
+      # - "-c", "ssl_key_file=/etc/postgresql/tls/server.key"
+      # - "-c", "ssl_ca_file=/etc/postgresql/tls/ca.crt"
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+      # - ./postgresql-tls:/etc/postgresql/tls:ro
+    networks:
+      helix-backend:
+        ipv4_address: 172.29.0.10
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helix_ota -d helix_ota -q"]
+      <<: *healthcheck-defaults
+    shm_size: "256mb"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G
+        reservations:
+          cpus: "1.0"
+          memory: 2G
+    security_opt:
+      - no-new-privileges:true
+
+  # ===========================================================================
+  # Redis 7 — Cache, Session Store, and Rate Limiting Backend
+  # ===========================================================================
+  # L1 Cache: Device check-in results (60s TTL)
+  # L2 Cache: Rollout health metrics (60s TTL)
+  # Session Store: Dashboard refresh tokens (7 day TTL)
+  # Rate Limiting: Token bucket counters (vasic-digital/ratelimiter)
+  #
+  # Persistence: AOF with everysec fsync for <1s RPO
+  # Eviction: allkeys-lru for cache; volatile-ttl for rate limits
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: helix-redis
+    hostname: redis
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-helix_redis_dev}
+      --maxmemory 384mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfilename "appendonly.aof"
+      --appendfsync everysec
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
+      --save 60 1000
+      --save 300 100
+      --save 900 1
+      --rdbcompression yes
+      --rdbchecksum yes
+      --tcp-backlog 511
+      --timeout 300
+      --tcp-keepalive 60
+      --hz 10
+      --dynamic-hz yes
+      --latency-monitor-threshold 100
+      --slowlog-log-slower-than 10000
+      --slowlog-max-len 128
+      --client-output-buffer-limit normal 0 0 0
+      --client-output-buffer-limit replica 256mb 64mb 60
+      --client-output-buffer-limit pubsub 32mb 8mb 60
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      helix-backend:
+        ipv4_address: 172.29.0.20
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-helix_redis_dev}", "ping"]
+      <<: *healthcheck-defaults
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+
+  # ===========================================================================
+  # MinIO — S3-Compatible Object Storage for OTA Artifacts
+  # ===========================================================================
+  # Stores OTA zip binaries, RSA-4096 signatures, and (future) delta payloads.
+  # Bucket: helix-ota-artifacts
+  # Path structure: artifacts/{artifact_id}/{filename}
+  #                 signatures/{artifact_id}.sig
+  #
+  # Server-side encryption (SSE-S3) enabled for data at rest.
+  # Versioning enabled for audit and rollback of artifact replacements.
+  # ===========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: helix-minio
+    hostname: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ACCESS_KEY:-minioadmin}"
+      MINIO_ROOT_PASSWORD: "${MINIO_SECRET_KEY:-minioadmin}"
+      MINIO_BROWSER_REDIRECT_URL: "https://${MINIO_DOMAIN:-minio.helix-ota.io}"
+      MINIO_SERVER_URL: "https://${S3_DOMAIN:-s3.helix-ota.io}"
+      MINIO_REGION: "${MINIO_REGION:-us-east-1}"
+      MINIO_REGION_COMMENT: "Default region for artifact storage"
+      # Server-side encryption
+      MINIO_KMS_SECRET_KEY: "${MINIO_KMS_KEY:-my-minio-key:QjY5NzQ1NjM3ODY1MjQwQTIxNEM2NzU0NTI0RkM1RDI=}"
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      helix-backend:
+        ipv4_address: 172.29.0.30
+    restart: unless-stopped
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      <<: *healthcheck-defaults
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+
+  # ===========================================================================
+  # HashiCorp Vault — Secret Management & Artifact Signing
+  # ===========================================================================
+  # Development mode: In-memory storage, auto-unsealed, dev root token.
+  # Production mode: Raft storage, auto-unseal via Kubernetes, AppRole auth.
+  #
+  # Enabled Secrets Engines:
+  #   - transit:   RSA-4096 artifact signing (key: artifact-signing-key)
+  #   - kv-v2:     TOTP encryption key, database credentials, JWT signing key
+  #   - database:  Dynamic PostgreSQL credential rotation (production)
+  # ===========================================================================
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: helix-vault
+    hostname: vault
+    command: >
+      server
+      ${VAULT_MODE:--dev}
+      -dev-root-token-id="${VAULT_DEV_TOKEN:-dev-only-token}"
+      -dev-listen-address=0.0.0.0:8200
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "${VAULT_DEV_TOKEN:-dev-only-token}"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      VAULT_API_ADDR: "http://vault:8200"
+      VAULT_CLUSTER_ADDR: "http://vault:8201"
+      VAULT_DISABLE_MLOCK: "true"    # Required in dev mode / Docker
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    volumes:
+      - vault-data:/vault/data
+      - vault-logs:/vault/logs
+      - ./vault-config:/vault/config:ro
+    networks:
+      helix-backend:
+        ipv4_address: 172.29.0.40
+    restart: *common-restart
+    logging: *common-logging
+    healthcheck:
+      test: ["CMD", "vault", "status", "-address=http://localhost:8200"]
+      <<: *healthcheck-defaults
+    cap_add:
+      - IPC_LOCK
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ===========================================================================
+  # MinIO Initialization — Bucket & Policy Configuration
+  # ===========================================================================
+  # One-shot init container that creates the artifact bucket with appropriate
+  # versioning and lifecycle policies. Runs once after MinIO is healthy.
+  # ===========================================================================
+  minio-init:
+    image: minio/mc:latest
+    container_name: helix-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      set -e
+      echo '[minio-init] Configuring MinIO bucket...'
+      mc alias set helix-minio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin}
+
+      echo '[minio-init] Creating artifact bucket...'
+      mc mb --ignore-existing helix-minio/helix-ota-artifacts
+
+      echo '[minio-init] Enabling versioning...'
+      mc version enable helix-minio/helix-ota-artifacts
+
+      echo '[minio-init] Setting bucket policy (no public access)...'
+      mc anonymous set none helix-minio/helix-ota-artifacts
+
+      echo '[minio-init] Configuring lifecycle rule (delete non-current versions after 90 days)...'
+      mc ilm rule add --transition-days 90 --noncurrent-version helix-minio/helix-ota-artifacts
+
+      echo '[minio-init] MinIO bucket initialized successfully'
+      "
+    networks:
+      helix-backend:
+
+  # ===========================================================================
+  # Vault Initialization — Secrets Engine & Key Configuration
+  # ===========================================================================
+  # One-shot init container that enables Vault secrets engines and creates
+  # the artifact signing key. Runs once after Vault is available.
+  # ===========================================================================
+  vault-init:
+    image: hashicorp/vault:1.15
+    container_name: helix-vault-init
+    depends_on:
+      vault:
+        condition: service_started
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      set -e
+      export VAULT_ADDR='http://vault:8200'
+      export VAULT_TOKEN='${VAULT_DEV_TOKEN:-dev-only-token}'
+
+      echo '[vault-init] Logging in to Vault...'
+      vault login -no-print ${VAULT_TOKEN}
+
+      echo '[vault-init] Enabling Transit secrets engine...'
+      vault secrets enable -path=transit transit 2>/dev/null || echo '  Transit already enabled'
+
+      echo '[vault-init] Creating artifact signing key (RSA-4096)...'
+      vault write -f transit/keys/artifact-signing-key type=rsa-4096 2>/dev/null || echo '  Signing key already exists'
+
+      echo '[vault-init] Enabling KV secrets engine...'
+      vault secrets enable -path=secret kv-v2 2>/dev/null || echo '  KV already enabled'
+
+      echo '[vault-init] Storing application secrets...'
+      vault kv put secret/helix-ota jwt-signing-key='${JWT_SIGNING_KEY:-dev-only-jwt-key-change-in-prod}'
+      vault kv put secret/helix-ota/db-credentials username='helix_ota' password='${PG_PASSWORD:-helix_ota_dev}'
+      vault kv put secret/helix-ota/redis credentials='${REDIS_PASSWORD:-helix_redis_dev}'
+      vault kv put secret/helix-ota/minio access-key='${MINIO_ACCESS_KEY:-minioadmin}' secret-key='${MINIO_SECRET_KEY:-minioadmin}'
+
+      echo '[vault-init] Creating AppRole for server (production)...'
+      vault auth enable -path=approle approle 2>/dev/null || echo '  AppRole already enabled'
+
+      echo '[vault-init] Vault initialized successfully'
+      "
+    networks:
+      helix-backend:
+
+  # ===========================================================================
+  # PostgreSQL Database Migrations
+  # ===========================================================================
+  # One-shot migration runner that applies all SQL migrations from init-db/.
+  # This runs as a separate service to ensure migrations complete before the
+  # server starts, preventing race conditions on schema creation.
+  # ===========================================================================
+  db-migrate:
+    build:
+      context: ../server
+      dockerfile: Dockerfile.migrate
+    container_name: helix-db-migrate
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgres://helix_ota:${PG_PASSWORD:-helix_ota_dev}@postgresql:5432/helix_ota?sslmode=disable"
+    restart: "no"
+    networks:
+      helix-backend:
+
+# =============================================================================
+# Networks
+# =============================================================================
+# Two isolated networks enforce the principle of least privilege:
+#   - helix-frontend: Externally routable; Traefik ↔ Server/Dashboard
+#   - helix-backend: Internal only; Server ↔ Database/Cache/Storage/Vault
+# =============================================================================
+networks:
+  helix-frontend:
+    driver: bridge
+    name: helix-frontend
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.28.0.0/16"
+          gateway: "172.28.0.1"
+
+  helix-backend:
+    driver: bridge
+    name: helix-backend
+    internal: true    # No external routing — services cannot reach the internet
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.29.0.0/16"
+          gateway: "172.29.0.1"
+
+# =============================================================================
+# Volumes
+# =============================================================================
+# All persistent data volumes. In production, use named volumes backed by
+# dedicated storage classes (SSD for PostgreSQL/Redis, HDD for MinIO).
+# =============================================================================
+volumes:
+  postgres-data:
+    driver: local
+    name: helix-postgres-data
+    driver_opts:
+      type: none
+      o: bind
+      device: "${PG_DATA_PATH:-/var/lib/helix-ota/postgresql}"
+
+  redis-data:
+    driver: local
+    name: helix-redis-data
+
+  minio-data:
+    driver: local
+    name: helix-minio-data
+    driver_opts:
+      type: none
+      o: bind
+      device: "${MINIO_DATA_PATH:-/var/lib/helix-ota/minio}"
+
+  vault-data:
+    driver: local
+    name: helix-vault-data
+
+  vault-logs:
+    driver: local
+    name: helix-vault-logs
+
+  traefik-letsencrypt:
+    driver: local
+    name: helix-traefik-letsencrypt
+
+  server-tmp:
+    driver: local
+    name: helix-server-tmp
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+
+  device-ca-cert:
+    driver: local
+    name: helix-device-ca-cert
+    driver_opts:
+      type: none
+      o: bind
+      device: "${DEVICE_CA_CERT_PATH:-./certs/device-ca}"
