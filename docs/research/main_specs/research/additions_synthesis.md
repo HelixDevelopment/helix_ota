@@ -63,7 +63,7 @@ Both drafts independently converge on these — treated as high-confidence (stil
 | Phased-rollout JSON + Go rollout-engine loop (02 §6) | Accept as design seed for the rollout engine | `1.0.1-staged-rollout/rollout_engine.md` (engine is OS-agnostic submodule) |
 | go-tuf/v2 signing/verify sketch (02 §7.1) | Accept as the trust-model candidate | `research/supply_chain_trust_adr.md` (ADR-0002 Uptane/TUF), `security/` specs |
 | Kotlin client + foreground service (02 §10) | Accept as reference; rework to KMP + WorkManager + jitter | `1.0.0-mvp/client_android/` code snippets |
-| OS-adapter interface (02 §11.3) | Accept as the universality seam | `00-master/architecture.md` + future-OS phase dirs |
+| OS-adapter interface (02 §11.3) | Accept as the universality seam | `00-master/2026-06-07-helix-ota-design.md` (§4 architecture) + future-OS phase dirs |
 | docker-compose + k8s manifests (02 §9) | Accept, re-base on the `containers` submodule | `1.0.0-mvp/deployment/` |
 | Mermaid diagrams (01 §3.1/§8) | Accept | `1.0.0-mvp/architecture/diagrams/*.mmd` |
 | Per-phase directory tree + export plan (01 §7/§12) | Accept, re-root under `docs/research/main_specs/` | `00-master/` + export pipeline spec |
