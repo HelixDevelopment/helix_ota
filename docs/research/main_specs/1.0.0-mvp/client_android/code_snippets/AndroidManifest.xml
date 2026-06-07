@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Helix OTA — Android agent manifest (system-UID path).
+  System-UID + platform signing is what unlocks the @SystemApi UpdateEngine
+  (android-update-engine-api §10). Alternative: drop sharedUserId and ship as a
+  privileged app under /system/priv-app (still platform/OEM-signed).
+  WorkManager runs the periodic poll (PollScheduler.kt).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="digital.vasic.helix.ota.agent"
+    android:sharedUserId="android.uid.system">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--
+      No third-party permission grants UpdateEngine access; it is gated by
+      @SystemApi + system-UID/priv-app + SELinux + /data/ota_package access.
+    -->
+
+    <application
+        android:label="Helix OTA Agent"
+        android:persistent="true"
+        android:directBootAware="true">
+
+        <!-- Re-arm the WorkManager poll after boot. -->
+        <receiver
+            android:name=".boot.BootCompletedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

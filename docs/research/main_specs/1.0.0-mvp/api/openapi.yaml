@@ -1,0 +1,787 @@
+# Helix OTA 1.0.0-MVP REST API — OpenAPI 3.1 contract.
+# Companion prose: ./endpoints.md  (authoritative for behavior, ADR citations, UNVERIFIED notes).
+# LOCKED stack: Go + Gin + Brotli + HTTP/3(QUIC) via vasic-digital/http3 (HTTP/2 + gzip fallback);
+# REST primary (/api/v1); gRPC optional/internal only (out of scope here).
+# Trust (MVP): per-artifact SHA-256 + detached signature + AVB; TUF device-side deferred to 1.0.1 (ADR-0002).
+# Deployments: all-targets only for MVP (staged rollout 1.0.1, ADR-0003).
+# UNVERIFIED: AOSP optional payload_properties headers on Android 15; Range-over-HTTP/3 semantics (ADR-0004 §6).
+openapi: 3.1.0
+info:
+  title: Helix OTA Control Plane API
+  version: 1.0.0-MVP
+  summary: REST API for the Helix OTA modular-monolith control plane (Android 15 first).
+  description: >
+    Control-plane endpoints (auth, devices, artifacts, releases, deployments, client
+    update-check + telemetry). JSON responses negotiate Brotli/gzip; the referenced
+    artifact-byte path is served identity-encoded, ZIP_STORED, with HTTP Range support.
+  contact:
+    name: Helix OTA control-plane team
+  # license: intentionally omitted — project license is UNVERIFIED in this revision.
+servers:
+  - url: https://{host}/api/v1
+    description: Helix OTA control plane (HTTP/3 primary, HTTP/2 fallback).
+    variables:
+      host:
+        default: helix.example
+tags:
+  - name: auth
+    description: OAuth2/JWT login and refresh.
+  - name: devices
+    description: Device registry and status.
+  - name: artifacts
+    description: OTA artifact intake and metadata.
+  - name: releases
+    description: Published, deployable versions.
+  - name: deployments
+    description: Release-to-target assignment (all-targets for MVP).
+  - name: client
+    description: Android-agent-facing update-check and telemetry.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      operationId: authLogin
+      summary: Exchange username/password for an access/refresh token pair (OAuth2 ROPC).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Token pair issued.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Vary: { $ref: '#/components/headers/Vary' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      operationId: authRefresh
+      summary: Rotate a refresh token into a new access/refresh pair.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: New token pair (old refresh token invalidated).
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /devices/register:
+    post:
+      tags: [devices]
+      operationId: registerDevice
+      summary: Provision a device and mint its device-scoped bearer token.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeviceRegistration' }
+      responses:
+        '201':
+          description: Device registered.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceRegistered' }
+        '200':
+          description: Idempotent replay of a prior registration (same Idempotency-Key).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceRegistered' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /devices/{deviceId}/status:
+    get:
+      tags: [devices]
+      operationId: getDeviceStatus
+      summary: Current registry + last-known runtime status of a device.
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Device status.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceStatus' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /artifacts/upload:
+    post:
+      tags: [artifacts]
+      operationId: uploadArtifact
+      summary: Upload an OTA artifact; runs server-side SHA-256 + signature validation.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, metadata]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: OTA package bytes (ZIP_STORED), served byte-identical later.
+                metadata:
+                  $ref: '#/components/schemas/ArtifactUploadMetadata'
+      responses:
+        '201':
+          description: Artifact stored and verified.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artifact' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/UnprocessableArtifact' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /artifacts/{artifactId}:
+    get:
+      tags: [artifacts]
+      operationId: getArtifact
+      summary: Artifact metadata (not the bytes; bytes are referenced from the update-check).
+      parameters:
+        - $ref: '#/components/parameters/ArtifactId'
+      responses:
+        '200':
+          description: Artifact metadata.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artifact' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /releases:
+    post:
+      tags: [releases]
+      operationId: createRelease
+      summary: Publish a validated artifact as a deployable version (monotonicity enforced).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReleaseCreate' }
+      responses:
+        '201':
+          description: Release published.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Release' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    get:
+      tags: [releases]
+      operationId: listReleases
+      summary: List releases (paginated, filterable).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - { name: os, in: query, required: false, schema: { $ref: '#/components/schemas/Os' } }
+        - { name: target_model, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Page of releases.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReleaseList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /releases/{releaseId}:
+    get:
+      tags: [releases]
+      operationId: getRelease
+      summary: Read a single release.
+      parameters:
+        - $ref: '#/components/parameters/ReleaseId'
+      responses:
+        '200':
+          description: Release.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Release' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /deployments:
+    post:
+      tags: [deployments]
+      operationId: createDeployment
+      summary: Assign a release to a target set. MVP supports strategy=all-targets only.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeploymentCreate' }
+      responses:
+        '201':
+          description: Deployment created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Deployment' }
+        '200':
+          description: Idempotent replay of a prior deployment (same Idempotency-Key).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Deployment' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /deployments/{deploymentId}:
+    get:
+      tags: [deployments]
+      operationId: getDeployment
+      summary: Read a deployment with aggregate progress.
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      responses:
+        '200':
+          description: Deployment status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeploymentStatus' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /client/update:
+    get:
+      tags: [client]
+      operationId: clientUpdateCheck
+      summary: Device update check. 204 when up to date; 200 with apply instructions otherwise.
+      description: >
+        The device id is taken from the bearer token subject. Returns 204 No Content when the
+        device is already on target, or 200 with {url, offset, size, sha256, signature,
+        payload_properties} matching update_engine.applyPayload(url, offset, size, headers).
+      parameters:
+        - name: current_version
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/SemVer' }
+          description: Optional client-reported version to let the server short-circuit.
+      responses:
+        '200':
+          description: Update available.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UpdateAvailable' }
+        '204':
+          description: Device already on target version (no body).
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /client/telemetry:
+    post:
+      tags: [client]
+      operationId: clientTelemetryReport
+      summary: Device reports a batch of lifecycle events and health (async ingest).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TelemetryReport' }
+      responses:
+        '202':
+          description: Batch accepted for asynchronous ingestion.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TelemetryAck' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        OAuth2/JWT access token (admin/operator/viewer) or device-scoped token (role=device).
+        RBAC enforced per-route; device tokens may act only on their own deviceId.
+
+  headers:
+    XRequestId:
+      description: Correlation id; mirrors error.request_id.
+      schema: { type: string }
+    Vary:
+      description: Always 'Accept-Encoding' for negotiated JSON responses.
+      schema: { type: string, const: Accept-Encoding }
+    RetryAfter:
+      description: Seconds to wait before retrying (on 429).
+      schema: { type: integer, minimum: 0 }
+
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ArtifactId:
+      name: artifactId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ReleaseId:
+      name: releaseId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    DeploymentId:
+      name: deploymentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 255 }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema: { type: string }
+
+  responses:
+    ValidationFailed:
+      description: Request failed validation.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthenticated:
+      description: Missing, invalid, or expired credentials.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but lacks the required role or resource ownership.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: State conflict (duplicate, non-monotonic version, overlapping deployment).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PayloadTooLarge:
+      description: Body exceeds the configured size cap.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnsupportedMediaType:
+      description: Unsupported media type for upload.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnprocessableArtifact:
+      description: Hash mismatch or signature invalid (HASH_MISMATCH / SIGNATURE_INVALID).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After: { $ref: '#/components/headers/RetryAfter' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    SemVer:
+      type: string
+      pattern: '^\d+\.\d+\.\d+$'
+      examples: ['1.1.0']
+    Os:
+      type: string
+      enum: [android]
+      description: MVP targets Android 15 first; Linux/universal is a later phase.
+    Sha256Hex:
+      type: string
+      pattern: '^[a-f0-9]{64}$'
+      description: Lowercase-hex SHA-256.
+
+    Error:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              enum:
+                - UNAUTHENTICATED
+                - FORBIDDEN
+                - NOT_FOUND
+                - VALIDATION_FAILED
+                - CONFLICT
+                - UNSUPPORTED_MEDIA_TYPE
+                - PAYLOAD_TOO_LARGE
+                - RATE_LIMITED
+                - SIGNATURE_INVALID
+                - HASH_MISMATCH
+                - VERSION_NOT_MONOTONIC
+                - INTERNAL
+            message: { type: string }
+            request_id: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  field: { type: string }
+                  issue: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      additionalProperties: false
+      properties:
+        username: { type: string, format: email }
+        password: { type: string, format: password, minLength: 1 }
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      additionalProperties: false
+      properties:
+        refresh_token: { type: string }
+
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in, refresh_token]
+      additionalProperties: false
+      properties:
+        access_token: { type: string, description: JWT access token. }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer, description: Access-token TTL in seconds. }
+        refresh_token: { type: string }
+        roles:
+          type: array
+          items: { type: string, enum: [admin, operator, viewer, device] }
+
+    DeviceRegistration:
+      type: object
+      required: [hardware_id, model, os]
+      additionalProperties: false
+      properties:
+        hardware_id: { type: string }
+        model: { type: string }
+        os: { $ref: '#/components/schemas/Os' }
+        os_version: { type: string }
+        current_version: { $ref: '#/components/schemas/SemVer' }
+        group: { type: string }
+        metadata:
+          type: object
+          additionalProperties: { type: string }
+
+    DeviceRegistered:
+      type: object
+      required: [device_id, hardware_id, device_token, token_type, expires_in, registered_at]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        hardware_id: { type: string }
+        device_token: { type: string, description: Device-scoped bearer JWT (role=device). }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer }
+        registered_at: { type: string, format: date-time }
+
+    DeviceStatus:
+      type: object
+      required: [device_id, hardware_id, update_state]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        hardware_id: { type: string }
+        current_version: { $ref: '#/components/schemas/SemVer' }
+        target_version:
+          oneOf:
+            - { $ref: '#/components/schemas/SemVer' }
+            - { type: 'null' }
+        last_seen: { type: string, format: date-time }
+        update_state: { $ref: '#/components/schemas/UpdateState' }
+        active_slot: { type: string, enum: [a, b] }
+        health:
+          type: object
+          additionalProperties: false
+          properties:
+            ok: { type: boolean }
+            last_error_code:
+              oneOf:
+                - { type: string }
+                - { type: 'null' }
+
+    UpdateState:
+      type: string
+      enum: [idle, download_started, installing, installed, verifying, success, failure]
+
+    ArtifactUploadMetadata:
+      type: object
+      required: [sha256, signature, version, os, target_model]
+      additionalProperties: false
+      properties:
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        signature: { type: string, contentEncoding: base64, description: Detached signature. }
+        version: { $ref: '#/components/schemas/SemVer' }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        file_hash: { type: string, description: AOSP payload_properties FILE_HASH (base64). }
+        file_size: { type: integer, format: int64 }
+        metadata_hash: { type: string, description: AOSP payload_properties METADATA_HASH (base64). }
+        metadata_size: { type: integer, format: int64 }
+        payload_offset:
+          type: integer
+          format: int64
+          description: Offset of payload.bin within the uncompressed (ZIP_STORED) ZIP.
+        payload_size: { type: integer, format: int64 }
+
+    Artifact:
+      type: object
+      required: [artifact_id, sha256, size, os, target_model, version, verified, uploaded_at]
+      additionalProperties: false
+      properties:
+        artifact_id: { type: string, format: uuid }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        size: { type: integer, format: int64 }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        version: { $ref: '#/components/schemas/SemVer' }
+        storage_ref: { type: string, description: Opaque object-store reference (MinIO/S3). }
+        verified: { type: boolean }
+        uploaded_at: { type: string, format: date-time }
+
+    ReleaseCreate:
+      type: object
+      required: [artifact_id, version, os, target_model]
+      additionalProperties: false
+      properties:
+        artifact_id: { type: string, format: uuid }
+        version: { $ref: '#/components/schemas/SemVer' }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        notes: { type: string }
+        min_current_version: { $ref: '#/components/schemas/SemVer' }
+
+    Release:
+      type: object
+      required: [release_id, artifact_id, version, os, target_model, status, created_at]
+      additionalProperties: false
+      properties:
+        release_id: { type: string, format: uuid }
+        artifact_id: { type: string, format: uuid }
+        version: { $ref: '#/components/schemas/SemVer' }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        status: { type: string, enum: [published, archived] }
+        notes: { type: string }
+        created_at: { type: string, format: date-time }
+
+    ReleaseList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Release' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    DeploymentCreate:
+      type: object
+      required: [release_id, strategy]
+      additionalProperties: false
+      properties:
+        release_id: { type: string, format: uuid }
+        strategy:
+          type: string
+          const: all-targets
+          description: MVP supports only 'all-targets'; staged rollout is 1.0.1 (ADR-0003).
+        group: { type: string, description: Optional narrowing to a device group. }
+
+    Deployment:
+      type: object
+      required: [deployment_id, release_id, strategy, status, created_at]
+      additionalProperties: false
+      properties:
+        deployment_id: { type: string, format: uuid }
+        release_id: { type: string, format: uuid }
+        strategy: { type: string, const: all-targets }
+        group: { type: string }
+        status: { type: string, enum: [active, completed, halted] }
+        target_count: { type: integer, minimum: 0 }
+        created_at: { type: string, format: date-time }
+
+    DeploymentStatus:
+      allOf:
+        - { $ref: '#/components/schemas/Deployment' }
+        - type: object
+          additionalProperties: false
+          properties:
+            progress:
+              type: object
+              additionalProperties: false
+              properties:
+                pending: { type: integer, minimum: 0 }
+                downloading: { type: integer, minimum: 0 }
+                installed: { type: integer, minimum: 0 }
+                succeeded: { type: integer, minimum: 0 }
+                failed: { type: integer, minimum: 0 }
+
+    PayloadProperties:
+      type: object
+      description: >
+        AOSP payload_properties.txt headers passed straight to applyPayload keyValuePairHeaders.
+        Optional headers (SWITCH_SLOT_ON_REBOOT, RUN_POST_INSTALL, DISABLE_DOWNLOAD_RESUME) are
+        UNVERIFIED on Android 15 and intentionally omitted by default (ADR-0004 §4).
+      required: [FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE]
+      additionalProperties: false
+      properties:
+        FILE_HASH: { type: string, description: base64 hash of payload.bin. }
+        FILE_SIZE: { type: integer, format: int64 }
+        METADATA_HASH: { type: string, description: base64 hash of payload metadata. }
+        METADATA_SIZE: { type: integer, format: int64 }
+
+    UpdateAvailable:
+      type: object
+      description: >
+        Apply instructions for update_engine.applyPayload(url, offset, size, headers).
+        url is Range-served, Content-Encoding identity, ZIP_STORED.
+      required: [release_id, version, url, offset, size, sha256, signature, payload_properties]
+      additionalProperties: false
+      properties:
+        release_id: { type: string, format: uuid }
+        version: { $ref: '#/components/schemas/SemVer' }
+        url: { type: string, format: uri }
+        offset:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Offset of payload.bin within the uncompressed ZIP.
+        size: { type: integer, format: int64, minimum: 0 }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        signature: { type: string, contentEncoding: base64 }
+        payload_properties: { $ref: '#/components/schemas/PayloadProperties' }
+
+    TelemetryEvent:
+      type: object
+      required: [event, timestamp]
+      additionalProperties: false
+      properties:
+        event: { $ref: '#/components/schemas/UpdateState' }
+        version: { $ref: '#/components/schemas/SemVer' }
+        timestamp: { type: string, format: date-time }
+        error_code:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+        detail:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    TelemetryReport:
+      type: object
+      required: [device_id, events]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        deployment_id: { type: string, format: uuid }
+        events:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/TelemetryEvent' }
+        health:
+          type: object
+          additionalProperties: false
+          properties:
+            battery_pct: { type: integer, minimum: 0, maximum: 100 }
+            storage_free_mb: { type: integer, minimum: 0 }
+            active_slot: { type: string, enum: [a, b] }
+
+    TelemetryAck:
+      type: object
+      required: [accepted, rejected]
+      additionalProperties: false
+      properties:
+        accepted: { type: integer, minimum: 0 }
+        rejected: { type: integer, minimum: 0 }
+        request_id: { type: string }

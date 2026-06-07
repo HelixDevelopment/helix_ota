@@ -1,0 +1,126 @@
+# Helix OTA 1.0.0-MVP — ota-server Deployment.
+#
+# The single Helix-authored deployable: the Go modular monolith (ADR-0003 §3). Stateless;
+# all state in postgres + minio. REST /api/v1 primary; HTTP/3(QUIC) via vasic-digital/http3
+# with HTTP/2 fallback (ADR-0004). Secrets referenced by name only — no literal values.
+#
+# UNVERIFIED: image digest, resource requests/limits, and replica count must be set from
+# MVP load tests before production (ADR-0003 §3.2, §7).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ota-server
+  namespace: helix-ota
+  labels:
+    app.kubernetes.io/name: ota-server
+    app.kubernetes.io/part-of: helix-ota
+    app.kubernetes.io/component: control-plane
+    app.kubernetes.io/version: 1.0.0-mvp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ota-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ota-server
+        app.kubernetes.io/part-of: helix-ota
+        app.kubernetes.io/component: control-plane
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: ota-server
+          image: helix-ota/ota-server:1.0.0-mvp   # UNVERIFIED: pin to digest before deploy
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http2
+              containerPort: 8080
+              protocol: TCP
+            - name: http3-quic
+              containerPort: 8443
+              protocol: UDP
+          env:
+            - name: HELIX_HTTP_ADDR
+              value: ":8080"
+            - name: HELIX_HTTP3_ADDR
+              value: ":8443"
+            - name: HELIX_API_BASE_PATH
+              value: "/api/v1"
+            - name: HELIX_COMPRESSION
+              value: "brotli,gzip"   # control-plane only; artifact path NEVER compressed
+            - name: HELIX_DB_HOST
+              value: "postgres"      # headless Service (postgres-statefulset.yaml)
+            - name: HELIX_DB_PORT
+              value: "5432"
+            - name: HELIX_DB_NAME
+              value: "helix_ota"
+            - name: HELIX_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: helix-ota-db          # Secret created out-of-band; values not in VCS
+                  key: username
+            - name: HELIX_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: helix-ota-db
+                  key: password
+            - name: HELIX_S3_ENDPOINT
+              value: "http://minio:9000"      # managed/operator S3 in k8s (overview §6)
+            - name: HELIX_S3_BUCKET
+              value: "helix-ota-artifacts"
+            - name: HELIX_S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: helix-ota-minio
+                  key: access-key
+            - name: HELIX_S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: helix-ota-minio
+                  key: secret-key
+          volumeMounts:
+            - name: artifact-verify-pubkey
+              mountPath: /etc/helix/keys     # PUBLIC verify key (ADR-0002 MVP trust model)
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http2
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http2
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:                  # UNVERIFIED: derive from load tests (ADR-0003 §7)
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: artifact-verify-pubkey
+          secret:
+            secretName: helix-ota-artifact-verify   # Secret name only; no literal value
