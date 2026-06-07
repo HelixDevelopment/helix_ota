@@ -2,13 +2,13 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
+| Last modified | 2026-06-07 (rev 2) |
 | Status | active |
 | Status summary | Full prose specification of every `/api/v1` REST endpoint for the Helix OTA 1.0.0-MVP control plane: authentication, device registry, artifact intake, releases, deployments (all-targets for MVP), the device update-check + telemetry surface, and the cross-cutting concerns (OAuth2/JWT + RBAC, rate limiting, Brotli/HTTP3 negotiation, error model). Companion machine-readable contract is [`openapi.yaml`](openapi.yaml). |
 | Issues | HelixConstitution clause numbers (§11.4.61, §7.1, §11.4.6, §11.4.123, §11.4.74, §11.4.28) are carried from corpus convention and are UNVERIFIED against the authoritative Constitution text. The exact AOSP `payload_properties.txt` optional-header set (`SWITCH_SLOT_ON_REBOOT`, `RUN_POST_INSTALL`, `DISABLE_DOWNLOAD_RESUME`) on Android 15 is UNVERIFIED (carried from ADR-0004 §6 / aosp-update-engine open items). Range/HTTP-3 semantics for the artifact path are UNVERIFIED pending the ADR-0004 §6 spike. Catalogue-submodule public surfaces (`auth`, `ratelimiter`, `middleware`, `http3`, `Storage`) are reused but their exact API was not inspected in this revision (UNVERIFIED). |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2: gave telemetry its own 6-value `TelemetryEventType` enum (no `idle`) distinct from the 7-value `UpdateState` and made §8.2/§12.2/openapi agree; added explicit own-`deviceId` resource-ownership notes to `/client/update`, `/client/telemetry`, `/devices/{deviceId}/status`; added `RateLimit-Limit`/`-Remaining`/`-Reset` response headers to the rate-limited routes in openapi; documented `Vary: Accept-Encoding` as a global JSON-response convention (resolving the login-only omission); modelled the `/devices/register` provisioning-token alternative as a second `provisioningToken` security scheme. |
 | Continuation | Confirm the `auth` brick exposes OAuth2 password + refresh + RBAC as specified (§4); close the ADR-0004 §6 transport spikes (Range over HTTP/3, Android-15 resume headers); finalize concrete rate-limit numbers from MVP load tests; add per-endpoint OpenTelemetry span names; bind the device-identity-token-to-hardware-id option if `security`/`Security-KMP` lacks it (per submodule_reuse_map.md §5). |
 | Owner | Helix OTA control-plane team |
 | Related | [`openapi.yaml`](openapi.yaml); [`../../research/adr/adr-0003-server-topology.md`](../../research/adr/adr-0003-server-topology.md); [`../../research/adr/adr-0004-transport.md`](../../research/adr/adr-0004-transport.md); [`../../research/adr/adr-0002-supply-chain-trust.md`](../../research/adr/adr-0002-supply-chain-trust.md); [`../../00-master/submodule_reuse_map.md`](../../00-master/submodule_reuse_map.md) |
@@ -330,8 +330,11 @@ Returns the current registry + last-known runtime status of a device.
 }
 ```
 
-`update_state` enumerates the device lifecycle (mirrors telemetry events, master §9):
-`idle`, `download_started`, `installing`, `installed`, `verifying`, `success`, `failure`.
+`update_state` enumerates the device lifecycle (master §9): `idle`, `download_started`,
+`installing`, `installed`, `verifying`, `success`, `failure` (7 values; `UpdateState` schema).
+The telemetry `event` set (`§12.2`) is the same lifecycle **minus `idle`** (an idle device emits
+no event), so it is a distinct 6-value enum (`TelemetryEventType` schema) — the two are
+intentionally not the same type.
 
 - **Status codes:** `200` OK; `401`/`403`; `404 NOT_FOUND`.
 
@@ -588,8 +591,10 @@ halt/advance logic (master §9).
 }
 ```
 
-`event` enumerates the device lifecycle (master §9): `download_started`, `installing`,
-`installed`, `verifying`, `success`, `failure`.
+`event` enumerates the telemetry lifecycle events (master §9): `download_started`, `installing`,
+`installed`, `verifying`, `success`, `failure` — exactly 6 values (the `TelemetryEventType` schema).
+This is **not** the 7-value `UpdateState` used by `§8.2`; `idle` is deliberately excluded because an
+idle device emits no telemetry event.
 
 - **Response 202 Accepted** (`TelemetryAck`):
 

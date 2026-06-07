@@ -2,13 +2,13 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Integration guide for the 1.0.0-MVP Helix OTA Android device agent (`ota-android-agent`, KMP): registration, WorkManager-driven polling (15 min + configurable jitter), download-to-local, verify-before-apply (SHA-256 + signature) prior to `UpdateEngine.applyPayload`, telemetry reporting, and the system-UID / privileged-app deployment requirement. Reuses the catalogue KMP submodules `Auth-KMP`, `Security-KMP`, `Storage-KMP`, `Config-KMP` and the NEW submodules `ota-protocol`, `ota-update-engine-bridge`, `ota-telemetry-schema`. |
 | Issues | Several AOSP constants/behaviours are carried as UNVERIFIED from the research notes (e.g. `CLEANUP_PREVIOUS_UPDATE` value, full Android-15 `ErrorCodeConstants` table, RK3588/Orange Pi 5 Max A/B + VAB enablement). The exact public API surface of the KMP catalogue submodules has not been inspected; capability claims about them are tagged UNVERIFIED. HelixConstitution clause numbers are UNVERIFIED against the authoritative text. |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2: corrected §6 jitter mechanism — `setInitialDelay` offsets only the first run, so per-cycle jitter needs a flex-interval window or a self-rescheduling `OneTimeWorkRequest` (no new unverified claims introduced). |
 | Continuation | Confirm KMP submodule public APIs (`Auth-KMP` device-token issue/verify, `Security-KMP` SHA-256 + signature primitives, `Storage-KMP` blob/range, `Config-KMP` runtime config); pin the Android-15 `update_engine` AIDL surface (stable vs `IUpdateEngine`); validate the agent runs platform-signed as `android.uid.system` on the target image; close all UNVERIFIED hardware items in [`build_integration.md`](build_integration.md) and [`update_engine_integration.md`](update_engine_integration.md). |
 
 ## Table of contents
@@ -116,7 +116,7 @@ The agent polls the control plane for an assigned update on a periodic schedule.
 Design constraints:
 
 - **WorkManager `PeriodicWorkRequest`** is the Android scheduler. Note: WorkManager enforces a **minimum periodic interval of 15 minutes** (`PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS`), which matches the locked 15-min cadence. (UNVERIFIED exact constant value against the target AndroidX version.)
-- **Jitter** spreads fleet poll times so millions of devices do not stampede the control plane at the same instant — directly serving the single-board→millions scalability guarantee (master §1). Jitter is applied as a `setInitialDelay(...)` per scheduled run, drawn uniformly from `[0, jitterMaxMillis]` where `jitterMaxMillis` comes from `Config-KMP`.
+- **Jitter** spreads fleet poll times so millions of devices do not stampede the control plane at the same instant — directly serving the single-board→millions scalability guarantee (master §1). The `jitterMaxMillis` value comes from `Config-KMP` (uniform draw over `[0, jitterMaxMillis]`). Note on mechanism: `PeriodicWorkRequest.setInitialDelay(...)` only offsets the **first** run after a (re)schedule — it does **not** re-randomize each periodic cycle, so a single jitter value applied at schedule time does not produce ongoing per-cycle spread. To achieve per-cycle jitter use one of: (a) a **flex-interval** `PeriodicWorkRequest` (the worker may run anywhere within the flex window each period), or (b) a **`OneTimeWorkRequest` that self-reschedules** at the end of each run with a freshly drawn delay. The MVP applies jitter at schedule time via `setInitialDelay(...)`; the per-cycle flex/self-reschedule option is a follow-up if uniform per-cycle spread is required (UNVERIFIED requirement).
 - **Constraints**: require network connectivity; optionally require charging / unmetered network for large downloads (configurable via `Config-KMP`). HTTP/3's QUIC connection-migration tolerates network changes across the poll window [ADR-0004 §65].
 - **Backoff**: transient poll failures use WorkManager's exponential backoff; the agent never busy-loops.
 

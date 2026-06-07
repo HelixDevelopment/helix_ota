@@ -37,10 +37,20 @@ class UpdateApplier(
                     telemetry.report(AgentState.APPLIED_PENDING_REBOOT)
                     // Reboot to switch slots; update_verifier + AVB + framework
                     // markBootSuccessful take over. Merge completes post-boot.
+                    // rebootToNewSlot is PowerManager.reboot(null) behind the
+                    // bridge — UpdateEngine has NO reboot API; the engine only
+                    // stages the slot, the caller triggers the actual reboot.
+                    // NOTE: this call tears down the process, so the flow will
+                    // NOT emit a subsequent Complete here; control does not
+                    // return past this point on the new-reboot path.
                     bridge.rebootToNewSlot(handle)
                 }
                 is EngineStatus.Complete ->
-                    if (status.errorCode == 0) telemetry.report(AgentState.APPLIED_PENDING_REBOOT)
+                    // Distinguish terminal success from the need-reboot path to
+                    // avoid emitting APPLIED_PENDING_REBOOT twice (NeedReboot
+                    // already reported it above). A bare success arriving here
+                    // without a preceding NeedReboot is treated as terminal.
+                    if (status.errorCode == 0) telemetry.report(AgentState.SUCCESSFUL)
                     else telemetry.reportEngineError(status.errorCode)
             }
         }

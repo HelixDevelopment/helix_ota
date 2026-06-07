@@ -2,13 +2,13 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Specifies the server-side telemetry pipeline for 1.0.0-MVP: device event ingest → OpenTelemetry/Prometheus → fleet health, the halt-on-failure inputs the rollout-engine consumes, and the post-boot health window + auto canary-abort concept carried forward from the research (active in 1.0.1 staged rollout). Composes from the `observability`/`Herald` catalogue bricks and the NEW `ota-telemetry-schema` module; runs inside the modular-monolith binary (ADR-0003). |
 | Issues | Staged rollout (and thus auto canary-abort) lands in 1.0.1, not MVP — MVP ingests and surfaces health and supports one-click manual abort; auto-abort is the forward concept. Post-boot health-window duration/criteria are operator-configurable and UNVERIFIED (no fixed figure in sources; draft phase durations are non-binding). `observability`/`Herald` public surfaces are UNVERIFIED. HelixConstitution clause numbers are UNVERIFIED. |
-| Fixed | N/A (initial revision). |
+| Fixed | Rev 2: added the safety invariant that **halt wins over advance** when both error- and success-thresholds could trigger in the same window (safety-critical rollout-gate; guarded by the §10 mutation meta-test). |
 | Continuation | Pin the `ota-telemetry-schema` event/metric enums + codecs before repo creation; confirm `observability` (OpenTelemetry/Prometheus) and `Herald` (alert channels) public surfaces; set health-window duration + canary success/error thresholds from MVP/1.0.1 data and record them; wire the rollout-engine telemetry-signal port (see architecture §5.1) to the health-signal output here. |
 
 ## Table of contents
@@ -103,6 +103,8 @@ Signals supplied to the engine's telemetry-signal port:
 | `success_rate ≥ success_threshold` within `duration` | phase met its bar in time | **advance** to next phase |
 | `success_rate < success_threshold` at `duration` expiry | phase did not meet its bar | **hold/pause** (operator decision) |
 | `post_boot_health_failed` (cohort, within window §6) | canary devices unhealthy after boot | **abort** (auto in 1.0.1; manual at MVP) |
+
+**Safety invariant — halt wins over advance.** If, within the same evaluation window, both the error-threshold (`error_rate ≥ error_threshold`) and the success-threshold (`success_rate ≥ success_threshold`) conditions could trigger, the engine MUST take the **halt/pause** decision, never **advance**. The rollout-gate is safety-critical: when in doubt, stop. This precedence is a hard rule the gate enforces and the mutation meta-test (§10 layer 4) guards — an implementation that advances despite a concurrent error-threshold breach is a failure.
 
 The signal contract is identical whether the rollout-engine fronts hawkBit (wrap) or is the Go-native engine (fallback) — the wrap/fallback choice (ADR-0001) does not change what telemetry must supply. [architecture §5.1; adr-0001 §4] The rollout-gate is **safety-critical (≥90% coverage)**, so these signals and their thresholds are deterministically testable (fake clock + fake telemetry). [master §8, §13; adr-0003 §6]
 

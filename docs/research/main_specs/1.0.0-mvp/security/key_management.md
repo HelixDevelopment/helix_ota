@@ -2,14 +2,14 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-07 |
 | Status | active |
 | Status summary | Normative MVP specification for cryptographic key management: custody of the build-pipeline artifact-signing key, key rotation (overlap via `key_id`), the on-device trust store of signing public keys, and the forward path to an offline signing ceremony (HSM/KMS, threshold, timestamp re-signing) when TUF/Uptane lands in 1.0.1+ per ADR-0002. Routes signing/verify custody through the `security` / `Security-KMP` catalogue submodules. |
-| Issues | HelixConstitution clause numbers are UNVERIFIED against the authoritative text. The MVP has **no threshold signing and no offline-key custody** — the build-pipeline signing key is a single key whose compromise is a fleet-wide event until rotation (threat_model §171–182; ADR-0002 §5.2). The `security` / `Security-KMP` catalogue submodules' actual fit for key-custody / rotation / (future) threshold + offline-key primitives is UNVERIFIED (ADR-0002 §8 item 9; reuse map §3). The strength of Android-KeyStore device-key binding on the RK3588 / Orange Pi 5 Max board is UNVERIFIED. The concrete HSM/KMS product is not selected. |
-| Fixed | N/A (initial revision). |
-| Continuation | Inspect `security` / `Security-KMP` to confirm they host key custody + rotation (and can later host threshold/offline-key primitives) and remove UNVERIFIED tags; define and dry-run the offline signing-ceremony runbook before any TUF root/targets keys are generated (ADR-0002 §4.3 step 3); select the HSM/KMS; specify the on-device trust-store update mechanism (how a new public key reaches devices) and its own integrity protection; produce the mTLS/device-cert provisioning plan if mTLS is adopted in 1.0.1+ (see transport_security.md §6). |
+| Issues | HelixConstitution clause numbers are UNVERIFIED against the authoritative text. The MVP has **no threshold signing, no offline-key custody, and no signed revocation** — the build-pipeline signing key is a single key whose compromise cannot be actively invalidated fleet-wide except via the §5 signed trust-store-update push, which is the **highest MVP residual risk** (threat_model §171–182; ADR-0002 §5.2). The `security` / `Security-KMP` catalogue submodules' actual fit for key-custody / rotation / (future) threshold + offline-key primitives is UNVERIFIED (ADR-0002 §8 item 9; reuse map §3). The strength of Android-KeyStore device-key binding on the RK3588 / Orange Pi 5 Max board is UNVERIFIED. The concrete HSM/KMS product is not selected. |
+| Fixed | Rev 2: committed the on-device trust-store UPDATE mechanism as MVP design (trust-store changes ship inside a signed OTA verified by the currently-trusted key; the only MVP rotation/recovery path) (§5, §9); sharpened "rotation is not revocation" — a compromised key cannot be actively invalidated fleet-wide except via that trust-store push, marked as the highest MVP residual risk (§4, §9); reflected the ED25519 DEFAULT signature scheme with `key_id` agility from signing_verification.md §3 (§2). |
+| Continuation | Inspect `security` / `Security-KMP` to confirm they host key custody + rotation (and can later host threshold/offline-key primitives) and remove UNVERIFIED tags; define and dry-run the offline signing-ceremony runbook before any TUF root/targets keys are generated (ADR-0002 §4.3 step 3); select the HSM/KMS; produce the mTLS/device-cert provisioning plan if mTLS is adopted in 1.0.1+ (see transport_security.md §6). |
 
 ## Table of contents
 
@@ -50,7 +50,7 @@ compromise of one does not cascade:
 
 | Key / anchor | Type | Held by | Verified against | Specified in |
 | --- | --- | --- | --- | --- |
-| **Build-pipeline artifact-signing key** | Asymmetric private (scheme UNVERIFIED — ED25519 / ECDSA-P256 / RSA, see [signing_verification.md §3](signing_verification.md)) | Build pipeline (**not** the online control plane) | Public key in the server trust store (upload) + on-device trust store (apply) | This document §3–§5 |
+| **Build-pipeline artifact-signing key** | Asymmetric private (MVP DEFAULT = **ED25519**, with `key_id`-based algorithm agility for ECDSA-P256 / RSA-PSS fallback, see [signing_verification.md §3](signing_verification.md)) | Build pipeline (**not** the online control plane) | Public key in the server trust store (upload) + on-device trust store (apply) | This document §3–§5 |
 | **TLS server certificate(s)** | X.509 (TLS 1.3) | Control-plane edge | Device/client TLS trust roots | [transport_security.md §5](transport_security.md) |
 | **Device-identity key/token** | Hardware-bound (Android KeyStore) | Each device | `auth` (server) via the device token | master §6; threat_model §4.7; this doc §5 (relationship only) |
 
@@ -99,11 +99,17 @@ is retired, avoiding a flag-day:
   3. Switch the build pipeline to sign with the new key (`key_id` = new).
   4. After the fleet has converged on the new public key and no old-key releases remain in flight,
      **retire the old public key** from both trust stores (overlap ends).
-- **Rotation is not revocation.** The MVP can *retire* an old key from trust stores, but it has **no
-  signed, freshness-checked revocation metadata** to actively invalidate a *compromised* key across an
-  untrusted fleet — that is a TUF key-compromise-recovery property deferred to 1.0.1+ (ADR-0002 §3.2,
-  §5; threat_model §179–182). Emergency rotation in the MVP therefore depends on pushing an updated
-  trust store to devices (§5), which is itself the gating mechanism and must be integrity-protected.
+- **Rotation is not revocation (highest MVP residual risk).** Rotation *retires* an old key from
+  trust stores on the next trust-store push; it does **not** actively invalidate a key. **Explicitly:
+  a compromised signing key cannot be actively invalidated fleet-wide in the MVP except via a
+  trust-store-update push (§5) that removes it** — there is **no signed, freshness-checked revocation
+  metadata** that would let a device reject the compromised key on its own before that push reaches it
+  (that is a TUF key-compromise-recovery property deferred to 1.0.1+; ADR-0002 §3.2, §5; threat_model
+  §179–182). Until the trust-store-removal push lands on a given device, that device will still trust
+  artifacts signed by the compromised key. This is the **highest residual risk of the MVP key
+  posture**: the recovery window is bounded only by how fast the signed trust-store update converges
+  across the fleet. Emergency rotation therefore depends entirely on the §5 trust-store-update push,
+  which is itself the gating mechanism and must be integrity-protected.
 - **TLS certificate rotation and device-token rotation** are separate processes
   ([transport_security.md §5](transport_security.md); master §6) and do not interact with signing-key
   rotation.
@@ -118,13 +124,18 @@ is retired, avoiding a flag-day:
   public key is embedded), so a freshly imaged device can verify the first OTA. Device transport/trust
   config is carried via `Config-KMP` (master §6); the signing public keys themselves are consumed by
   the `Security-KMP` verify path.
-- **Update mechanism (UNDER-SPECIFIED, MVP):** introducing or retiring a signing public key (§4)
-  requires updating the on-device trust store. The **exact mechanism by which a new public key reaches
-  devices, and how that update is itself integrity-protected**, is not fully specified in this revision
-  and is a Continuation item. A trust-store update must itself be authenticated (otherwise it becomes
-  the new single point of forgery); in the MVP the safest pattern is to embed trust-store changes in a
-  signed OTA verified by the *currently trusted* key before the new key becomes authoritative. This
-  pattern is recorded as the intended approach, not asserted as implemented.
+- **Update mechanism (COMMITTED MVP design):** introducing or retiring a signing public key (§4)
+  requires updating the on-device trust store. The **MVP design is committed, not deferred**:
+  trust-store changes **ship inside a signed OTA that is verified by the currently-trusted signing
+  key** (the existing device re-verify-before-apply gate; [signing_verification.md §6](signing_verification.md))
+  before any new key becomes authoritative. A trust-store update must itself be authenticated —
+  otherwise it becomes the new single point of forgery — and binding it to a signed OTA reuses the
+  exact authenticity gate already enforced for every artifact, adding no new trust root. **Because the
+  MVP has no signed revocation metadata until TUF (§4, 1.0.1+), this OTA-delivered trust-store push is
+  the only rotation/recovery path, so it must be specified now rather than left open.** It is
+  therefore specified here as the committed MVP mechanism. (The `security`/`Security-KMP` primitives
+  that apply the trust-store change on-device remain a tracked confirm-against-the-brick item — §7, §9
+  — but the delivery design itself is decided.)
 - **Relationship to device identity:** the device-identity key (Android KeyStore, hardware-bound token;
   master §6; threat_model §4.7) is **separate** from the signing trust store — it authenticates the
   device *to the server*, not artifacts *to the device*. Its binding strength on the RK3588 / Orange Pi
@@ -208,12 +219,16 @@ items.
 
 1. **`security` / `Security-KMP` host key custody + rotation** (and can later host threshold/offline-key
    primitives) — **UNVERIFIED** (ADR-0002 §8 item 9; reuse map §3).
-2. **Signature scheme not pinned** (ED25519 / ECDSA-P256 / RSA) — **UNVERIFIED**, decided in
-   [signing_verification.md §3](signing_verification.md) (Continuation there).
-3. **On-device trust-store update mechanism** (how a new public key reaches devices, and how that update
-   is itself authenticated) — **under-specified / UNVERIFIED** (§5; Continuation).
+2. **Signature scheme: DEFAULT pinned (ED25519)**, with `key_id`-based algorithm agility for
+   ECDSA-P256 / RSA-PSS fallback — decided in [signing_verification.md §3](signing_verification.md);
+   only the confirm-against-the-`security`-brick (primitives exposed) remains tracked there.
+3. **On-device trust-store update mechanism — COMMITTED MVP design** (trust-store changes ship inside a
+   signed OTA verified by the currently-trusted key; the only MVP rotation/recovery path) (§5). Only the
+   `security`/`Security-KMP` on-device apply primitive remains a confirm-against-the-brick item.
 4. **No threshold signing, no offline-key custody, no signed revocation in the MVP** — single-signing-key
-   exposure is an accepted MVP residual until 1.0.1+ TUF (ADR-0002 §5.2; threat_model §179–182).
+   exposure is an accepted MVP residual until 1.0.1+ TUF; a compromised key can only be invalidated
+   fleet-wide via the §5 trust-store-update push, the **highest MVP residual risk** (ADR-0002 §5.2;
+   threat_model §179–182).
 5. **HSM/KMS product not selected**; offline signing-ceremony runbook not yet defined/dry-run (ADR-0002
    §4.3 step 3) — forward item.
 6. **Android-KeyStore device-key binding strength on RK3588 / Orange Pi 5 Max** — **UNVERIFIED**
@@ -225,7 +240,7 @@ items.
 | Clause (UNVERIFIED numbers) | How this spec complies |
 | --- | --- |
 | §11.4.61 (ToC) | ToC present immediately after the metadata table. |
-| §7.1 / §11.4.6 (no-bluff / no-guessing) | Every claim cites an ADR, master §6, or the threat model; submodule custody fit, signature scheme, trust-store update mechanism, HSM/KMS, and KeyStore binding are carried as **UNVERIFIED**, not asserted. The MVP single-key residual is stated, not hidden. |
+| §7.1 / §11.4.6 (no-bluff / no-guessing) | Every claim cites an ADR, master §6, or the threat model; the signature-scheme DEFAULT (ED25519) and the trust-store-update mechanism are now decided MVP design with only their `security`/`Security-KMP` primitive fit carried as **UNVERIFIED**; submodule custody fit, HSM/KMS, and KeyStore binding remain **UNVERIFIED**, not asserted. The MVP single-key residual — and that a compromised key is only recoverable via the §5 trust-store push — is stated, not hidden. |
 | §11.4.74 (catalogue-first reuse) | Key custody routed through `security` / `Security-KMP` / `Config-KMP` / `Auth-KMP`; no bespoke key brick invented (§7). |
 | §11.4.28 (decoupling) | Three trust anchors managed independently; signing key used only via the signer abstraction seam (§2, §3, §7). |
 | §1 / §1.1 (four-layer + mutation) | §8 specifies all four layers, including rotation-overlap and verify-failure-abort mutations. |

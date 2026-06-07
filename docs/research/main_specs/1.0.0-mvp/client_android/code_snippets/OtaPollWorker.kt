@@ -59,6 +59,9 @@ class OtaPollWorker(
         // 3) hand the VERIFIED local file to update_engine via the bridge
         return try {
             applier.applyVerified(verified)   // emits APPLYING.. APPLIED_PENDING_REBOOT
+            // NOTE: on the NeedReboot path applyVerified triggers a reboot that
+            // tears down this process, so this Result.success() is effectively
+            // moot — it is only reached if apply completes without a reboot.
             Result.success()
         } catch (t: Throwable) {
             telemetry.reportError(AgentState.APPLYING, t)

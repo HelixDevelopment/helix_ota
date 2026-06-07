@@ -4,6 +4,10 @@
 # (HA/replication deferred). Credentials referenced by Secret name only — no literal values.
 #
 # UNVERIFIED: image digest, storageClassName, and storage size must be set per environment.
+#
+# Rev 2 review fix: pg_isready probes now derive the user/db from $POSTGRES_USER/$POSTGRES_DB
+# (sourced from the helix-ota-db Secret) instead of hardcoding `helix`, so the operator secret
+# username is not required to be `helix`.
 ---
 apiVersion: v1
 kind: Service
@@ -76,16 +80,19 @@ spec:
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+          # NOTE: POSTGRES_USER/POSTGRES_DB come from the helix-ota-db Secret, so the probes
+          # derive the user/db from $POSTGRES_USER/$POSTGRES_DB rather than hardcoding `helix`.
+          # (The operator-provided Secret username need NOT be `helix`; the probe follows it.)
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "helix", "-d", "helix_ota"]
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "helix", "-d", "helix_ota"]
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
             initialDelaySeconds: 20
             periodSeconds: 15
             timeoutSeconds: 5

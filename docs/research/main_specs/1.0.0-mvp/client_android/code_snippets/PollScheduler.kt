@@ -4,6 +4,12 @@
  * NOTE: WorkManager enforces a 15-min minimum periodic interval, which
  * matches the locked cadence (master §5 / D7). Constant value UNVERIFIED
  * against the target AndroidX version.
+ *
+ * JITTER NOTE: setInitialDelay(...) below only offsets the FIRST run after
+ * this (re)schedule — it does NOT re-randomize each periodic cycle. So a
+ * single jitter value here does not produce ongoing per-cycle spread. For
+ * uniform per-cycle jitter use a flex-interval PeriodicWorkRequest, or a
+ * OneTimeWorkRequest that self-reschedules with a fresh delay each run.
  */
 package digital.vasic.helix.ota.agent.poll
 
@@ -56,7 +62,9 @@ object PollScheduler {
 
         wm.enqueueUniquePeriodicWork(
             WORK_NAME,
-            // KEEP so a reschedule with new jitter does not duplicate work.
+            // UPDATE: replace the existing unique work in place so a reschedule
+            // applies new jitter/config without duplicating or dropping the work
+            // (KEEP would ignore the new request and retain the old parameters).
             ExistingPeriodicWorkPolicy.UPDATE,
             request,
         )
