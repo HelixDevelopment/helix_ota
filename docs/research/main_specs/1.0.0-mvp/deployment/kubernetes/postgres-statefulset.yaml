@@ -1,0 +1,120 @@
+# Helix OTA 1.0.0-MVP — postgres StatefulSet + headless Service.
+#
+# Relational state for the Go modular monolith (ADR-0003 §3). Single replica at MVP
+# (HA/replication deferred). Credentials referenced by Secret name only — no literal values.
+#
+# UNVERIFIED: image digest, storageClassName, and storage size must be set per environment.
+#
+# Rev 2 review fix: pg_isready probes now derive the user/db from $POSTGRES_USER/$POSTGRES_DB
+# (sourced from the helix-ota-db Secret) instead of hardcoding `helix`, so the operator secret
+# username is not required to be `helix`.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: helix-ota
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: helix-ota
+    app.kubernetes.io/component: database
+spec:
+  clusterIP: None        # headless: stable DNS postgres-0.postgres.helix-ota.svc
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: helix-ota
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: helix-ota
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/part-of: helix-ota
+        app.kubernetes.io/component: database
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: postgres
+          image: postgres:16   # UNVERIFIED: pin to digest before deploy
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: "helix_ota"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: helix-ota-db      # Secret created out-of-band; values not in VCS
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: helix-ota-db
+                  key: password
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+          # NOTE: POSTGRES_USER/POSTGRES_DB come from the helix-ota-db Secret, so the probes
+          # derive the user/db from $POSTGRES_USER/$POSTGRES_DB rather than hardcoding `helix`.
+          # (The operator-provided Secret username need NOT be `helix`; the probe follows it.)
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:                  # UNVERIFIED: derive from load tests (ADR-0003 §7)
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        # storageClassName: ""   # UNVERIFIED: set per cluster
+        resources:
+          requests:
+            storage: 10Gi   # UNVERIFIED: size per environment

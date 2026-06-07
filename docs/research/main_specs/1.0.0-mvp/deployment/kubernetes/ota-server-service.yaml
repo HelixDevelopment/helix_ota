@@ -1,0 +1,25 @@
+# Helix OTA 1.0.0-MVP — ota-server Service.
+# Internal ClusterIP; public ingress is handled by the reverse proxy / ingress controller
+# (overview §3.4). Exposes HTTP/2 (TCP) and HTTP/3 (QUIC, UDP).
+apiVersion: v1
+kind: Service
+metadata:
+  name: ota-server
+  namespace: helix-ota
+  labels:
+    app.kubernetes.io/name: ota-server
+    app.kubernetes.io/part-of: helix-ota
+    app.kubernetes.io/component: control-plane
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ota-server
+  ports:
+    - name: http2
+      port: 8080
+      targetPort: http2
+      protocol: TCP
+    - name: http3-quic
+      port: 8443
+      targetPort: http3-quic
+      protocol: UDP

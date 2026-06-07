@@ -1,0 +1,49 @@
+%% Helix OTA — 1.0.0-MVP deployment topology (canonical)
+%% Source of truth: 1.0.0-mvp/deployment/overview.md §3 (service set) + §4 (topology) + §6 (compose vs k8s)
+%% compose/k8s services + networks. Substrate: vasic-digital/containers.
+%% UNVERIFIED items per overview.md §8: reverse-proxy choice (caddy:2 placeholder), dashboard image,
+%% image digests, resource sizing; k8s omits in-cluster minio (managed/operator path).
+flowchart TB
+    subgraph Clients["Clients (public)"]
+        DEVS["Devices<br/>HTTP/3 QUIC :443/udp"]
+        OPS["Operators<br/>HTTP/2 TLS :443/tcp"]
+    end
+
+    subgraph Edge["Edge network (public)"]
+        PROXY["reverse proxy (caddy:2 placeholder, UNVERIFIED)<br/>TLS 1.3, HTTP/3 to HTTP/2, routing<br/>:80 :443 tcp+udp"]
+    end
+
+    subgraph App["App network (internal)"]
+        SRV["ota-server (Go modular monolith)<br/>REST /api/v1, rollout, intake, telemetry<br/>:8080 (HTTP/2) + :8443/udp (HTTP/3)"]
+        DASH["dashboard (built from repo, UNVERIFIED)<br/>static SPA, REST consumer"]
+    end
+
+    subgraph DataNet["Data network (internal, stateful)"]
+        PG[("postgres:16<br/>:5432 — volume pgdata / PVC")]
+        MINIO[("minio (pinned tag, never :latest)<br/>:9000 S3 / :9001 console — volume minio-data")]
+    end
+
+    DEVS -->|QUIC| PROXY
+    OPS -->|TLS| PROXY
+    PROXY -->|/api/*| SRV
+    PROXY -->|/ dashboard| DASH
+    DASH -->|REST /api/v1| SRV
+
+    SRV -->|relational state| PG
+    SRV -->|blobs: range GET, byte-identical, no compression| MINIO
+
+    %% Environment split (overview.md §6)
+    subgraph Compose["Compose (local / single host)"]
+        C1["docker-compose.mvp.yml: ota-server build + postgres + minio + proxy + dashboard"]
+        C2["secrets: Docker secrets / env file (no literal values committed)"]
+    end
+    subgraph K8s["Kubernetes (staging / production)"]
+        K1["namespace + ota-server Deployment + Service"]
+        K2["postgres StatefulSet + PVC + headless Service"]
+        K3["minio: managed/operator path (out of MVP manifests)"]
+        K4["secrets: Secret objects (referenced by name)"]
+    end
+
+    SUBSTRATE[["Container substrate: vasic-digital/containers"]]
+    SUBSTRATE -.orchestrates.-> Compose
+    SUBSTRATE -.orchestrates.-> K8s

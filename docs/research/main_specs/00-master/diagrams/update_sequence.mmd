@@ -1,0 +1,53 @@
+%% Helix OTA — Device update sequence (canonical)
+%% Source of truth: 00-master/2026-06-07-helix-ota-design.md §5 (MVP happy path)
+%% Consistent with: 1.0.0-mvp/api/endpoints.md §12.1 (204/200 branch), §12.2 (telemetry),
+%%                   1.0.0-mvp/security/signing_verification.md §6 (device re-verify before apply)
+%% poll -> update -> apply -> reboot -> verify -> telemetry, with the 204/200 update-check branch.
+sequenceDiagram
+    autonumber
+    participant AG as OTA agent (ota-android-agent)
+    participant API as Control plane (Gin /api/v1)
+    participant OBJ as Storage (MinIO/S3)
+    participant UE as update_engine + boot_control
+    participant TEL as Telemetry ingest
+
+    Note over AG,API: Poll cadence 15 min + jitter (configurable, D7)
+    AG->>API: GET /api/v1/client/update [device bearer, current_version]
+
+    alt 204 No Content (already on target version)
+        API-->>AG: 204 No Content (no body)
+        Note over AG: Idle until next poll
+    else 200 OK (update assigned)
+        API-->>AG: 200 OK UpdateAvailable {url, offset, size, sha256, signature, payload_properties}
+        AG->>TEL: POST /client/telemetry event=download_started
+        AG->>OBJ: Range GET artifact (Content-Encoding: identity, ZIP_STORED, byte-identical)
+        OBJ-->>AG: 206 Partial Content (payload bytes)
+        AG->>TEL: POST /client/telemetry event=download_complete
+
+        Note over AG: GATE 2 — device re-verify before apply
+        AG->>AG: recompute SHA-256 (+SHA-512) and verify detached signature by key_id
+
+        alt verification fails (hash/signature)
+            AG->>TEL: POST /client/telemetry event=failure (HASH_MISMATCH / SIGNATURE_INVALID)
+            Note over AG: Abort before apply — no slot touched
+        else verified local artifact
+            AG->>UE: applyPayload(file://verified, offset, size, payload_properties)
+            AG->>TEL: POST /client/telemetry event=installing
+            Note over UE: GATE 3 — FILE_HASH / METADATA_HASH + payload signature
+            UE-->>AG: applied to inactive slot
+            AG->>TEL: POST /client/telemetry event=installed
+            AG->>UE: mark inactive slot active + reboot
+            Note over UE: Reboot into new slot
+
+            alt boot success (update_verifier confirms)
+                Note over UE: GATE 4 — AVB / dm-verity verified boot OK
+                AG->>TEL: POST /client/telemetry event=verifying
+                AG->>TEL: POST /client/telemetry event=success
+            else boot failure
+                Note over UE: Automatic A/B rollback to last-good slot (native, no Helix metadata)
+                AG->>TEL: POST /client/telemetry event=rollback
+                AG->>TEL: POST /client/telemetry event=failure
+            end
+        end
+    end
+    TEL-->>AG: 202 Accepted (async ingest)

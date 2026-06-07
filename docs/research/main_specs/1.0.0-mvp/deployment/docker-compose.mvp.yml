@@ -1,0 +1,197 @@
+# Helix OTA 1.0.0-MVP — local / single-host topology.
+#
+# Honors LOCKED stack: Go + Gin + Brotli + HTTP/3(QUIC) via vasic-digital/http3 with
+# HTTP/2 + gzip fallback; REST-primary (/api/v1). Honors LOCKED strategy: custom Go
+# modular-monolith control plane (ADR-0003) + PostgreSQL + MinIO. Secrets via
+# container secrets / env placeholders ONLY — no real credentials are committed here.
+#
+# Validate (Layer 2 artifact gate):  docker compose -f docker-compose.mvp.yml config -q
+#
+# UNVERIFIED: image digests must be pinned before any real deploy; reverse-proxy choice
+# (caddy) and dashboard build target are placeholders pending ADR-0004 spike confirmation.
+#
+# Rev 2 review fixes: minio image no longer uses ':latest' (placeholder pinned version tag,
+# digest TBD); healthcheck `wget` flagged as Dockerfile-dependent (distroless/read-only bases);
+# postgres probe-user note (literal here vs Secret-derived in k8s); reverse-proxy /healthz noted
+# as out-of-band-Caddyfile-dependent (pending ADR-0004 QUIC spike).
+
+name: helix-ota-mvp
+
+services:
+  ota-server:
+    # Helix-authored Go modular monolith (the single deployable, ADR-0003 §3).
+    build:
+      context: ../../../../..
+      dockerfile: deploy/ota-server.Dockerfile   # UNVERIFIED path; built via vasic-digital/containers
+    image: helix-ota/ota-server:1.0.0-mvp
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      # --- transport (LOCKED: HTTP/3 primary, HTTP/2 fallback, REST /api/v1) ---
+      HELIX_HTTP_ADDR: ":8080"          # HTTP/2 + gzip fallback listener
+      HELIX_HTTP3_ADDR: ":8443"         # HTTP/3 (QUIC, UDP) via vasic-digital/http3
+      HELIX_API_BASE_PATH: "/api/v1"
+      HELIX_COMPRESSION: "brotli,gzip"  # control-plane only; artifact path NEVER compressed
+      # --- postgres (relational state) ---
+      HELIX_DB_HOST: postgres
+      HELIX_DB_PORT: "5432"
+      HELIX_DB_NAME: helix_ota
+      HELIX_DB_USER: helix
+      HELIX_DB_PASSWORD_FILE: /run/secrets/postgres_password
+      # --- minio (artifact blobs, via Storage brick) ---
+      HELIX_S3_ENDPOINT: "http://minio:9000"
+      HELIX_S3_BUCKET: helix-ota-artifacts
+      HELIX_S3_ACCESS_KEY_FILE: /run/secrets/minio_access_key
+      HELIX_S3_SECRET_KEY_FILE: /run/secrets/minio_secret_key
+      # --- supply-chain trust (MVP: signing + SHA-256 + AVB; TUF deferred to 1.0.1) ---
+      HELIX_ARTIFACT_SIGNING_PUBKEY_FILE: /run/secrets/artifact_verify_pubkey
+    secrets:
+      - postgres_password
+      - minio_access_key
+      - minio_secret_key
+      - artifact_verify_pubkey
+    expose:
+      - "8080"
+      - "8443"
+    healthcheck:
+      # NOTE (Dockerfile-dependent, UNVERIFIED): this `wget` may be ABSENT under a
+      # distroless/scratch base or readOnlyRootFilesystem. Either ensure the binary exists in
+      # the ota-server image, or mirror the k8s httpGet probe pattern (ota-server-deployment.yaml).
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - helix-internal
+      - helix-edge
+
+  postgres:
+    image: postgres:16   # UNVERIFIED: pin to digest before deploy
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: helix_ota
+      POSTGRES_USER: helix
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      # NOTE: `-U helix` MUST match POSTGRES_USER above (here the literal `helix`). In k8s
+      # POSTGRES_USER comes from a Secret, so the probe user is derived from $POSTGRES_USER
+      # there (see postgres-statefulset.yaml) rather than hardcoded.
+      test: ["CMD-SHELL", "pg_isready -U helix -d helix_ota"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - helix-internal
+
+  minio:
+    image: minio/minio:RELEASE.2024-01-01T00-00-00Z   # PLACEHOLDER pinned version tag (no ':latest'); replace with a real released tag + digest before deploy (overview digest-pinning rule §8). UNVERIFIED tag value.
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/minio_access_key
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_secret_key
+    secrets:
+      - minio_access_key
+      - minio_secret_key
+    volumes:
+      - minio-data:/data
+    expose:
+      - "9000"
+      - "9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - helix-internal
+
+  reverse-proxy:
+    # Placeholder (UNVERIFIED): first-class HTTP/3; final choice pending ADR-0004 spike.
+    # TLS termination, HTTP/3<->HTTP/2 fronting; routes /api/* -> ota-server, / -> dashboard.
+    # Artifact path is proxied byte-identical (no compression) per ADR-0004.
+    image: caddy:2   # UNVERIFIED: pin to digest before deploy
+    restart: unless-stopped
+    depends_on:
+      ota-server:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"        # HTTP/2 (TCP)
+      - "443:443/udp"    # HTTP/3 (QUIC, UDP)
+    volumes:
+      - ./reverse-proxy/Caddyfile:/etc/caddy/Caddyfile:ro   # UNVERIFIED: provided out-of-band
+      - caddy-data:/data
+      - caddy-config:/config
+    healthcheck:
+      # NOTE (UNVERIFIED): `/healthz` here depends on an OUT-OF-BAND Caddyfile (mounted at
+      # ./reverse-proxy/Caddyfile, provided out-of-band) defining that endpoint; the Caddyfile
+      # itself is a placeholder pending the ADR-0004 QUIC spike. `wget` is also image-dependent
+      # (see ota-server note) — distroless/read-only bases may lack it.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - helix-edge
+
+  dashboard:
+    # Operator web UI (UNVERIFIED build target); thin REST consumer of ota-server /api/v1.
+    build:
+      context: ../../../../..
+      dockerfile: deploy/dashboard.Dockerfile   # UNVERIFIED path
+    image: helix-ota/dashboard:1.0.0-mvp
+    restart: unless-stopped
+    depends_on:
+      ota-server:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      # NOTE (Dockerfile-dependent, UNVERIFIED): `wget` may be absent under a distroless/
+      # read-only base; ensure the binary exists in the dashboard image or use an httpGet-style
+      # probe in orchestrated environments.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - helix-edge
+
+# Secrets are file-mounted under /run/secrets/* — values live OUTSIDE version control.
+# These files are NOT committed; create them locally before `up`. No literal secret here.
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt        # gitignored; placeholder path
+  minio_access_key:
+    file: ./secrets/minio_access_key.txt          # gitignored; placeholder path
+  minio_secret_key:
+    file: ./secrets/minio_secret_key.txt          # gitignored; placeholder path
+  artifact_verify_pubkey:
+    file: ./secrets/artifact_verify_pubkey.pem    # gitignored; PUBLIC verify key (ADR-0002)
+
+volumes:
+  pgdata:
+  minio-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  helix-internal:   # ota-server <-> postgres/minio; not reachable from the edge
+    internal: true
+  helix-edge:       # reverse-proxy <-> ota-server/dashboard; public ingress lands here
