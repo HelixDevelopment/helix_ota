@@ -57,6 +57,9 @@ type Config struct {
 	DeviceTokenTTL time.Duration
 	// MaxUploadBytes caps the artifact upload body size.
 	MaxUploadBytes int64
+	// MaxInflight bounds concurrent in-flight requests (DoS protection); excess
+	// requests are shed with 429 RATE_LIMITED. 0 (default) disables the cap.
+	MaxInflight int64
 	// ArtifactBaseURL is the base of the artifact download reference.
 	ArtifactBaseURL string
 
@@ -118,6 +121,9 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 	if c.DeviceTokenTTL, err = getDuration("HELIX_DEVICE_TOKEN_TTL", DefaultDeviceTokenTTL); err != nil {
+		return Config{}, err
+	}
+	if c.MaxInflight, err = getInt64("HELIX_MAX_INFLIGHT", 0); err != nil {
 		return Config{}, err
 	}
 	if c.MaxUploadBytes, err = getInt64("HELIX_MAX_UPLOAD_BYTES", DefaultMaxUploadBytes); err != nil {
