@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>spec_impl_alignment</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="helix-ota-spec-vs-implementation-alignment-decision-memo-operational-apiv1">Helix
+OTA — Spec-vs-Implementation Alignment Decision Memo (operational
+<code>/api/v1</code>)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08T00:00:00Z</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active (decision memo — recommendations, no code changed)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>A per-divergence decision memo over the eight spec-vs-implementation
+gaps recorded in <a
+href="implemented_endpoints.md"><code>implemented_endpoints.md</code></a>
+§10 for the audit-read, telemetry-read, and device-group operational
+surfaces. For each gap it recommends <strong>WIDEN-impl</strong> (bring
+the handler up to the fuller <a
+href="operational_endpoints.md"><code>operational_endpoints.md</code></a>
+spec) or <strong>TRIM-spec</strong> (accept the leaner as-built shape as
+canonical and amend the prose spec), with rationale, effort, risk, and
+the blast radius (tests / e2e / HelixQA bank). It is a MEMO only — it
+recommends; it changes no <code>server/</code> code, no
+<code>go.mod</code>, no tests, no existing file.</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Recommendations are advisory. The operator decides WIDEN-vs-TRIM per
+row (Constitution §11.4.66 — closed-set decisions belong to the
+operator; §11.4.122 — no silent removal of a shipped capability).</td>
+</tr>
+<tr>
+<td>Anti-bluff</td>
+<td>Per Constitution §11.4.6 (no-guessing): every “impl does” cell was
+confirmed by direct read of the cited handler function in
+<code>server/internal/api/</code>; every “spec wants” cell was confirmed
+by direct read of <code>operational_endpoints.md</code>. The §10
+register at the foot of this memo lists what is
+<strong>UNVERIFIED</strong> (effort/risk estimates, NFR numbers,
+store-method availability) and is not asserted as fact.</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Helix OTA control-plane / API team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><a
+href="implemented_endpoints.md"><code>implemented_endpoints.md</code></a>
+(as-built §10 gap list — source of this memo); <a
+href="operational_endpoints.md"><code>operational_endpoints.md</code></a>
+(fuller prose spec); <a
+href="endpoints.md"><code>endpoints.md</code></a>
+(conventions/error-model/RBAC/pagination); <a
+href="openapi.yaml"><code>openapi.yaml</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table_of_contents">table_of_contents</h2>
+<ol type="1">
+<li><a href="#1-purpose_and_scope">purpose_and_scope</a></li>
+<li><a href="#2-how_to_read_this_memo">how_to_read_this_memo</a></li>
+<li><a
+href="#3-evidence_basis_confirmed_against_code">evidence_basis_confirmed_against_code</a></li>
+<li><a href="#4-decision_table">decision_table</a></li>
+<li><a
+href="#5-per_divergence_rationale">per_divergence_rationale</a></li>
+<li><a
+href="#6-overall_recommendation_first_things_first">overall_recommendation_first_things_first</a></li>
+<li><a href="#7-blast_radius_summary">blast_radius_summary</a></li>
+<li><a
+href="#8-doc_sync_actions_if_trim_chosen">doc_sync_actions_if_trim_chosen</a></li>
+<li><a
+href="#9-anti_bluff_unverified_register">anti_bluff_unverified_register</a></li>
+</ol>
+<hr />
+<h2 id="purpose_and_scope">1. purpose_and_scope</h2>
+<p><code>implemented_endpoints.md</code> §10 records eight concrete
+shape divergences between the prose operational spec
+(<code>operational_endpoints.md</code>) and the code that actually
+shipped (<code>handlers_audit.go</code>,
+<code>handlers_telemetry.go</code>, <code>handlers_group.go</code>). The
+as-built doc states the <strong>code is authoritative</strong> but does
+not decide which side <em>should</em> win going forward. This memo makes
+that decision per gap:</p>
+<ul>
+<li><strong>WIDEN-impl</strong> — the spec’s fuller shape carries real
+operational value; raise the handler to it (the as-built doc becomes a
+transient under-build state, the prose spec stays the target).</li>
+<li><strong>TRIM-spec</strong> — the leaner as-built shape is sufficient
+for the 1.0.0-MVP; adopt it as canonical and amend
+<code>operational_endpoints.md</code> + <code>openapi.yaml</code> to
+match (no code churn; doc-sync only).</li>
+</ul>
+<p>Scope is exactly the eight §10 gaps across audit / telemetry /
+groups. Out of scope: rollout (<code>implemented_endpoints.md</code> §10
+marks it <em>consistent</em> with the brick), roles (also
+<em>consistent</em>), and the PLANNED recall endpoint (§8 — a missing
+feature, not a shape divergence).</p>
+<h2 id="how_to_read_this_memo">2. how_to_read_this_memo</h2>
+<ul>
+<li><strong><code>impl does</code> cites <code>file:func</code></strong>
+— the exact handler confirmed by reading the source this pass.</li>
+<li><strong>WIDEN/TRIM</strong> is the recommendation; the operator owns
+the final call (§11.4.66).</li>
+<li><strong>Effort</strong> is a relative T-shirt size (S / M / L) for
+the handler+store+test work; the absolute hours are UNVERIFIED (§9)
+because the pgx store-method availability for the wider shapes is not
+confirmed in this memo.</li>
+<li><strong>Risk</strong> is the chance the change breaks an existing
+green test or an as-built consumer.</li>
+<li><strong>Blast radius</strong> names the test layers and HelixQA bank
+entries that would change. The HelixQA bank path
+(<code>tools/helixqa/banks/atmosphere.yaml</code>) is the constitutional
+convention (§11.4.58); whether that exact file exists in this repo is
+UNVERIFIED (§9) — treat it as “the project’s Challenge bank, wherever it
+lives”.</li>
+</ul>
+<h2 id="evidence_basis_confirmed_against_code">3.
+evidence_basis_confirmed_against_code</h2>
+<p>Each divergence below was re-confirmed against source this pass (not
+taken on trust from §10):</p>
+<ul>
+<li><strong>Audit actor flat-string</strong> —
+<code>handlers_telemetry.go</code> aside, the audit entry is built in
+<code>handlers_audit.go:auditMiddleware</code>
+(<code>store.AuditEntry{ActorSubject: claims.Subject, ...}</code>,
+L36–45) and rendered by <code>toAuditLogEntry</code> into
+<code>AuditLogEntry</code>; the wire <code>actor</code> is a single
+string, never a <code>{user_id, subject}</code> object. Spec
+<code>operational_endpoints.md</code> §4.3 shows
+<code>"actor": { "user_id": ..., "subject": ... }</code> (L234).</li>
+<li><strong>Audit query params</strong> —
+<code>handlers_audit.go:handleListAudit</code> reads only
+<code>action</code>, <code>resource_type</code>, <code>cursor</code>,
+<code>limit</code> (L133–147). Spec §4.3 (L224–226) lists additionally
+<code>?actor</code>, <code>?resource_id</code>, <code>?since</code>,
+<code>?until</code>.</li>
+<li><strong>Audit response type name</strong> — code emits
+<code>AuditLogList</code> (<code>handleListAudit</code>, L157); spec
+§4.3 calls it <code>AuditList</code> (L227).</li>
+<li><strong>Telemetry per-device</strong> —
+<code>handlers_telemetry.go:handleDeviceTelemetry</code> consumes no
+query params, returns full history in store order under
+<code>events</code> (L51–67); per-event <code>TelemetryEventView</code>
+(L14–22) has no
+<code>id</code>/<code>success</code>/<code>duration_ms</code>/<code>bytes_transferred</code>.
+Spec §5.1 (L270–292) wants
+<code>?limit/?cursor/?event_type/?since/?until/?deployment_id</code>,
+newest-first, an <code>items</code> array, and those richer fields.</li>
+<li><strong>Telemetry overview</strong> —
+<code>handlers_telemetry.go:handleTelemetryOverview</code> (L71–82)
+returns the minimal <code>TelemetryOverview{EventCounts, Total}</code>
+(L32–35), no scoping. Spec §5.2 (L308–342) wants <code>scope</code>,
+<code>devices_total</code>, <code>devices_reporting</code>,
+<code>by_state</code> (latest-per-device), <code>failure_rate</code>,
+<code>generated_at</code>, plus
+<code>?deployment_id/?os/?since/?until</code>.</li>
+<li><strong>Group view fields + id key</strong> —
+<code>handlers_group.go:GroupView</code> (L28–33) is
+<code>{id, name, description, created_at}</code>; no
+<code>filter_criteria</code>, no <code>member_count</code>, id key is
+<code>id</code>. Spec §6.1 (L39–44) shows <code>group_id</code>,
+<code>filter_criteria</code>, <code>member_count</code>.</li>
+<li><strong>Group list pagination</strong> —
+<code>handlers_group.go:handleListGroups</code> (L79–90) returns all
+groups, <code>GroupList{Items}</code> (L36–38), no
+<code>?name/?limit/?cursor</code>, no <code>next_cursor</code>. Spec
+§6.2 (L53–54) wants paginated <code>{items, next_cursor}</code> +
+<code>?name=</code> prefix.</li>
+<li><strong>Group member add semantics</strong> —
+<code>handlers_group.go:handleAddGroupMember</code> (L152–171) takes a
+single <code>MemberAdd{DeviceID}</code> (L41–43) and returns
+<code>204</code>. Spec §6.4 (L89–98) wants a batch
+<code>{device_ids:[...]}</code> returning <code>200</code> with
+<code>GroupMemberAddResult{added, already_member, not_found}</code>.</li>
+<li><strong>Group member list shape</strong> —
+<code>handlers_group.go:handleListGroupMembers</code> (L139–150) returns
+<code>GroupMembers{group_id, device_ids:[string]}</code>. Spec §6.4
+(L76–85) wants paginated <code>items</code> of
+<code>{device_id, added_at}</code>.</li>
+</ul>
+<h2 id="decision_table">4. decision_table</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>divergence</th>
+<th>spec wants</th>
+<th>impl does (file:func)</th>
+<th>recommendation</th>
+<th>rationale (1-line)</th>
+<th>blast radius (tests / e2e / bank)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>audit <code>actor</code> shape</td>
+<td>nested <code>{user_id, subject}</code></td>
+<td>flat string = subject→user-id fallback
+(<code>handlers_audit.go:auditMiddleware</code> +
+<code>toAuditLogEntry</code>)</td>
+<td><strong>WIDEN-impl</strong></td>
+<td><code>user_id</code> is the durable join key for an actor whose
+token subject rotates; a flat string loses the audit→users FK the schema
+already models (<code>user_id ON DELETE SET NULL</code>).</td>
+<td>audit wire unit test (actor JSON shape); audit-read integration
+test; e2e audit-trail bank entry</td>
+</tr>
+<tr>
+<td>2</td>
+<td>audit query filters</td>
+<td><code>?actor</code>,<code>?resource_id</code>,<code>?since</code>,<code>?until</code>
+(+ existing)</td>
+<td>only
+<code>?action</code>,<code>?resource_type</code>,<code>?cursor</code>,<code>?limit</code>
+(<code>handlers_audit.go:handleListAudit</code>)</td>
+<td><strong>WIDEN-impl</strong></td>
+<td>Audit’s primary forensic use is time-window + per-actor +
+per-resource queries; without <code>?since/?until</code> an admin cannot
+scope an incident review — this is the audit feature’s reason to
+exist.</td>
+<td><code>handleListAudit</code> filter unit tests;
+<code>store.AuditFilter</code> store tests; integration query-param
+matrix; bank: audit-filter Challenge</td>
+</tr>
+<tr>
+<td>3</td>
+<td>audit response type name</td>
+<td><code>AuditList</code></td>
+<td><code>AuditLogList</code>
+(<code>handlers_audit.go:handleListAudit</code>)</td>
+<td><strong>TRIM-spec</strong></td>
+<td>Pure naming; the wire JSON keys
+(<code>items</code>/<code>next_cursor</code>) already match. Renaming
+the Go type churns code + tests for zero behavioural value.</td>
+<td>none in code; doc/openapi rename only</td>
+</tr>
+<tr>
+<td>4</td>
+<td>per-device telemetry: pagination + newest-first + filters + richer
+fields</td>
+<td><code>?limit/?cursor/?event_type/?since/?until/?deployment_id</code>,
+newest-first, <code>items[]</code> with
+<code>id/success/duration_ms/bytes_transferred</code></td>
+<td>no params, full history in store order under <code>events[]</code>,
+lean per-event view
+(<code>handlers_telemetry.go:handleDeviceTelemetry</code>/<code>TelemetryEventView</code>)</td>
+<td><strong>WIDEN-impl (phased)</strong></td>
+<td>A device’s history grows unbounded; an un-paginated, store-order
+dump is an O(n) latency + payload cliff and gives operators no “what
+failed last” view. Newest-first + pagination is load-bearing.
+<code>duration_ms/bytes_transferred</code> depend on the telemetry
+ingest carrying them (UNVERIFIED §9) — defer those fields if the event
+source lacks them.</td>
+<td><code>TelemetryEventView</code> wire unit test;
+<code>handleDeviceTelemetry</code> param/order tests;
+<code>store.TelemetryForDevice</code> → paginated/filtered store test;
+integration newest-first + filter test; bank: device-telemetry-history
+Challenge</td>
+</tr>
+<tr>
+<td>5</td>
+<td>telemetry overview: richer fields + scoping</td>
+<td><code>scope</code>,<code>devices_total</code>,<code>devices_reporting</code>,<code>by_state</code>
+(latest-per-device),<code>failure_rate</code>,<code>generated_at</code>
++ <code>?deployment_id/?os/?since/?until</code></td>
+<td>minimal <code>{event_counts, total}</code>
+(<code>handlers_telemetry.go:handleTelemetryOverview</code>/<code>TelemetryOverview</code>)</td>
+<td><strong>WIDEN-impl (core fields) + TRIM-spec (drop <code>?os</code>
+for MVP)</strong></td>
+<td><code>failure_rate</code> + <code>by_state</code> (one-device-once)
+is the fleet-health number operators actually watch; raw
+<code>event_counts</code> over-counts chatty devices. Keep it.
+<code>?os</code> scoping + <code>devices_total/reporting</code> need a
+per-device latest-state query (<code>DISTINCT ON</code>) — valuable but
+heavier; <code>?os</code> specifically is low-MVP-value, TRIM it.</td>
+<td><code>TelemetryOverview</code> wire unit test;
+<code>handleTelemetryOverview</code> aggregate test; new
+<code>store.TelemetryOverview</code>/latest-per-device store test;
+integration scoping test; bank: fleet-health Challenge</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>GroupView</code> fields + id key</td>
+<td><code>group_id</code>, <code>filter_criteria</code>,
+<code>member_count</code></td>
+<td><code>id</code>, no <code>filter_criteria</code>, no
+<code>member_count</code>
+(<code>handlers_group.go:GroupView</code>/<code>toGroupView</code>)</td>
+<td><strong>split: TRIM-spec on id key (<code>id</code>); WIDEN-impl on
+<code>member_count</code>; TRIM-spec on <code>filter_criteria</code> for
+MVP</strong></td>
+<td><code>id</code> vs <code>group_id</code> is cosmetic and
+<code>id</code> matches the rest of the API’s resource-id convention —
+TRIM the spec to <code>id</code>. <code>member_count</code> is a cheap,
+high-value list affordance — WIDEN. <code>filter_criteria</code>
+(dynamic membership) is explicitly UNVERIFIED/unevaluated in the spec
+itself (§6 intro) and MVP supports static membership only — TRIM to
+“static-only” for 1.0.0, defer dynamic.</td>
+<td><code>GroupView</code> wire unit test;
+<code>handleCreateGroup</code>/<code>handleGetGroup</code>/<code>handleUpdateGroup</code>
+tests; <code>store.Group</code> + count query; integration group-CRUD
+test; bank: group-CRUD Challenge</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>GET /groups</code> pagination</td>
+<td>paginated <code>{items, next_cursor}</code> + <code>?name=</code>
+prefix</td>
+<td>all groups, no params
+(<code>handlers_group.go:handleListGroups</code>/<code>GroupList</code>)</td>
+<td><strong>TRIM-spec (defer)</strong></td>
+<td>Group count is bounded and small (operator-curated cohorts, not
+per-device rows); an un-paginated list is fine at MVP scale. Keep the
+wider spec as a documented future, but adopt the lean shape as 1.0.0
+canonical. Revisit if a deployment ever creates groups
+programmatically.</td>
+<td>none if TRIM; if later WIDEN: <code>handleListGroups</code> param
+test + <code>store.ListGroups</code> filter/cursor test + integration;
+bank unchanged</td>
+</tr>
+<tr>
+<td>8</td>
+<td>group member add: single+<code>204</code> vs
+batch+<code>200</code>+result</td>
+<td>batch <code>{device_ids:[...]}</code> → <code>200</code>
+<code>{added, already_member, not_found}</code></td>
+<td>single <code>{device_id}</code> → <code>204</code>, no
+partial-success report
+(<code>handlers_group.go:handleAddGroupMember</code>/<code>MemberAdd</code>)</td>
+<td><strong>WIDEN-impl</strong></td>
+<td>Cohort building is inherently bulk; one-device-per-round-trip is N
+calls + N audit rows for a fleet add, and the
+<code>not_found</code>/<code>already_member</code> report is exactly the
+partial-success feedback an operator needs. The store method the spec
+names (<code>AddGroupMembers</code>) is plural by design.</td>
+<td><code>MemberAdd</code>→batch wire unit test;
+<code>handleAddGroupMember</code> batch + idempotency + not-found tests;
+<code>store.AddGroupMember</code>→<code>AddGroupMembers</code> store
+test; integration batch-add test; <strong>audit impact:</strong>
+<code>deriveAuditAction</code> <code>group_member</code> verb already
+covers it (<code>handlers_audit.go</code>); bank: group-membership
+Challenge</td>
+</tr>
+</tbody>
+</table>
+<h2 id="per_divergence_rationale">5. per_divergence_rationale</h2>
+<h3 id="audit-rows-13">5.1 audit (rows 1–3)</h3>
+<p>The audit subsystem’s only purpose is forensic reconstruction. Two of
+its three gaps directly defeat that purpose:</p>
+<ul>
+<li><strong>Row 1 (WIDEN).</strong> The schema keeps a nullable
+<code>user_id</code> precisely so a record outlives the actor
+(<code>operational_endpoints.md</code> §4 intro,
+<code>ON DELETE SET NULL</code>). The handler currently flattens to a
+single subject string. Surfacing <code>{user_id, subject}</code>
+restores the durable join key for cross-actor queries; effort is small
+because both values already exist at write time
+(<code>claims.Subject</code> is captured; the <code>users.id</code>
+resolution the spec describes in §4.1 L140 is the only new lookup).
+<strong>Effort S–M. Risk LOW</strong> — additive JSON field; existing
+string consumers break only if they assumed <code>actor</code> is a
+string (the as-built doc says it is, so an as-built consumer would break
+— gate this behind the operator’s WIDEN decision).</li>
+<li><strong>Row 2 (WIDEN).</strong> <code>?since/?until</code>
+time-window scoping is the single most-used audit query in incident
+response; <code>?actor</code>/<code>?resource_id</code> complete the
+“who touched what” triad. The store seam
+(<code>store.AuditFilter</code>) is already the extension point — adding
+fields there + parsing+validating the RFC-3339 params in
+<code>handleListAudit</code> is the bulk of the work. <strong>Effort M.
+Risk LOW-MED</strong> — new validation paths (malformed
+<code>since/until</code> → <code>400</code>) must be tested to avoid
+§11.4.1 FAIL-bluffs.</li>
+<li><strong>Row 3 (TRIM).</strong> Type <em>name</em> only; the wire
+contract (<code>items</code>, <code>next_cursor</code>) is identical.
+Renaming <code>AuditLogList</code>→<code>AuditList</code> is pure churn.
+Adopt <code>AuditLogList</code> as canonical; fix the prose + openapi.
+<strong>Effort S (doc only). Risk NONE.</strong></li>
+</ul>
+<h3 id="telemetry-rows-45">5.2 telemetry (rows 4–5)</h3>
+<ul>
+<li><strong>Row 4 (WIDEN, phased).</strong> Per-device history is
+unbounded and the handler returns <em>all of it in insertion order</em>.
+At any real device age this is a latency/payload problem and gives no
+“most-recent-first” affordance. Pagination + newest-first +
+<code>?event_type</code>/<code>?since</code>/<code>?until</code>
+filtering are load-bearing and should be widened. The richer fields
+split: <code>id</code> and <code>success</code> are cheap derivations;
+<code>duration_ms</code>/<code>bytes_transferred</code> require the
+telemetry ingest to <em>carry</em> those values — whether
+<code>store.TelemetryRecord</code> / the <code>ota-protocol</code> event
+already has them is <strong>UNVERIFIED (§9)</strong>. Phase: ship
+pagination+order+filters first; add the rich numeric fields only once
+the ingest is confirmed to supply them (else they would be a §11.4-bluff
+of always-zero fields). <strong>Effort M–L. Risk MED</strong> — touches
+the store query contract (<code>TelemetryForDevice</code> gains
+filter/cursor params) and changes the response <em>key</em>
+(<code>events</code>→<code>items</code>), which is a breaking wire
+change an as-built consumer would feel; gate behind the operator
+decision.</li>
+<li><strong>Row 5 (WIDEN core / TRIM <code>?os</code>).</strong>
+<code>failure_rate</code> + <code>by_state</code> computed as
+<em>latest-event-per-device</em> is the honest fleet-health number; the
+current raw <code>event_counts</code> over-weights chatty devices and
+has no health ratio at all. Widen to
+<code>by_state</code>/<code>failure_rate</code>/<code>devices_total</code>/<code>devices_reporting</code>/
+<code>generated_at</code>. The latest-per-device aggregate is a
+<code>DISTINCT ON (device_id)</code> query (spec §5.3 alludes to it) —
+real work in the store. <code>?os</code> scoping is the weakest item
+(needs a device-OS join, low MVP demand) — TRIM it for 1.0.0, keep
+<code>?deployment_id</code> + time window. <strong>Effort L. Risk
+MED</strong> — additive response fields are safe; the new store
+aggregate must be tested for the zero-devices edge
+(<code>failure_rate</code> = 0 when <code>devices_reporting</code> = 0,
+per spec §5.2 L345).</li>
+</ul>
+<h3 id="groups-rows-68">5.3 groups (rows 6–8)</h3>
+<ul>
+<li><strong>Row 6 (split).</strong> Three sub-decisions: <strong>id
+key</strong> <code>id</code> (TRIM — matches the rest of the API,
+renaming to <code>group_id</code> churns every group test for
+cosmetics); <strong><code>member_count</code></strong> (WIDEN — a cheap
+COUNT, high-value in list/detail UIs);
+<strong><code>filter_criteria</code></strong> (TRIM for MVP — the spec
+<em>itself</em> flags dynamic-membership evaluation as UNVERIFIED and
+MVP as static-only, §6 intro L13–14; storing+returning an un-evaluated
+selector is a latent §11.4-bluff “feature that doesn’t work”, so defer
+until the evaluator lands). <strong>Effort S–M. Risk LOW.</strong></li>
+<li><strong>Row 7 (TRIM, defer).</strong> Groups are operator-curated
+and bounded (not per-device rows), so an un-paginated list is acceptable
+at MVP scale. Adopt the lean shape as canonical now; document the
+paginated <code>{items, next_cursor}</code> + <code>?name=</code> as a
+future widen triggered if groups ever get created programmatically.
+<strong>Effort S (doc). Risk LOW.</strong></li>
+<li><strong>Row 8 (WIDEN).</strong> Membership is inherently bulk (build
+a cohort = add many devices). Single-add forces N round-trips + N audit
+rows and gives no partial-success feedback; the spec’s
+<code>{added, already_member, not_found}</code> is precisely the report
+an operator needs, and the store method is plural by design
+(<code>AddGroupMembers</code>). The
+<code>204</code>→<code>200</code>+body and
+<code>device_id</code>→<code>device_ids</code> changes are breaking for
+an as-built single-add consumer — gate behind the operator decision.
+<strong>Effort M. Risk MED</strong> — must test idempotent re-add
+(counted, not error) and unknown-device (<code>not_found</code>, partial
+success) to avoid a §11.4.1 FAIL-bluff on the partial path.</li>
+</ul>
+<h2 id="overall_recommendation_first_things_first">6.
+overall_recommendation_first_things_first</h2>
+<p>Order by (operational-harm-if-left-lean) × (low effort/risk first),
+and honor §11.4.72 only where applicable (no audio surface here, so pure
+operational priority):</p>
+<ol type="1">
+<li><strong>Audit query filters (row 2) — FIRST.</strong> Highest harm:
+without <code>?since/?until/?actor/?resource_id</code> the audit trail
+cannot answer the incident question it exists for. Medium effort,
+low-med risk, purely additive query params (no breaking wire change).
+Biggest forensic value per unit work.</li>
+<li><strong>Telemetry overview core fields (row 5, minus
+<code>?os</code>) — SECOND.</strong> <code>failure_rate</code> +
+<code>by_state</code> is the fleet-health number operators watch during
+a rollout; additive response fields are non-breaking. Pairs naturally
+with the rollout/telemetry story.</li>
+<li><strong>Per-device telemetry pagination + newest-first + filters
+(row 4, fields phase-2) — THIRD.</strong> Prevents the unbounded-history
+payload cliff; defer
+<code>duration_ms</code>/<code>bytes_transferred</code> until the ingest
+is confirmed to supply them. Breaking key change
+(<code>events</code>→<code>items</code>) means it needs the operator
+decision + a consumer sweep, so it sits behind the additive wins.</li>
+<li><strong>Group member batch-add (row 8) — FOURTH.</strong> Real
+ergonomics win for cohort building; breaking shape change so it rides
+with row 4 under the operator decision.</li>
+<li><strong>Audit actor object (row 1) — FIFTH.</strong> Restores the
+durable <code>user_id</code> join key; additive but needs the
+<code>users</code> resolution lookup; lower urgency than time-window
+filtering.</li>
+<li><strong><code>member_count</code> on <code>GroupView</code> (row 6
+partial) — SIXTH.</strong> Cheap UI affordance; do it alongside any
+group-handler touch.</li>
+<li><strong>TRIM-spec items (rows 3, 7, and the <code>id</code>-key +
+<code>filter_criteria</code> + <code>?os</code> sub-parts of 5/6) —
+ANYTIME, doc-only.</strong> No code; amend
+<code>operational_endpoints.md</code> + <code>openapi.yaml</code> so the
+prose stops disagreeing with the shipped code (§11.4.6 — divergences
+must not sit silently). Land these as a single doc-sync change because
+they cost nothing and immediately stop the spec from lying.</li>
+</ol>
+<p><strong>Net:</strong> do the three TRIM doc-syncs immediately (zero
+code, removes the standing divergence), then work the WIDEN list in the
+1→6 order above behind a single operator WIDEN/TRIM ruling per breaking
+row (§11.4.66). Rows 1, 2, 5 are additive/non-breaking and can land
+without consumer coordination; rows 4, 8 (and the actor-object
+visibility change in 1) are breaking wire changes that need the as-built
+consumer sweep first.</p>
+<h2 id="blast_radius_summary">7. blast_radius_summary</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>layer</th>
+<th>rows that touch it</th>
+<th>what changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wire-struct unit tests</td>
+<td>1,3,4,5,6,8</td>
+<td>JSON tag / field-set assertions for <code>AuditLogEntry</code>,
+<code>TelemetryEventView</code>, <code>TelemetryOverview</code>,
+<code>GroupView</code>, <code>MemberAdd</code>→batch,
+<code>AuditLogList</code>/<code>AuditList</code> name</td>
+</tr>
+<tr>
+<td>handler unit/integration tests</td>
+<td>1,2,4,5,8</td>
+<td>query-param parsing + validation (<code>400</code> on bad
+<code>since/until/limit</code>), newest-first ordering, batch
+idempotency + <code>not_found</code> partial success, aggregate edge
+(<code>failure_rate</code> at 0 devices)</td>
+</tr>
+<tr>
+<td>store seam tests</td>
+<td>1,2,4,5,8</td>
+<td><code>AuditFilter</code> (actor/resource/time),
+<code>TelemetryForDevice</code> (filter+cursor), new latest-per-device
+overview aggregate,
+<code>AddGroupMember</code>→<code>AddGroupMembers</code>,
+<code>member_count</code> query</td>
+</tr>
+<tr>
+<td>e2e / HelixQA Challenge bank</td>
+<td>1,2,4,5,6,8</td>
+<td>audit-filter, fleet-health, device-history, group-CRUD,
+group-membership Challenges each re-assert the new shape with captured
+evidence (§11.4.69 / §11.4.83)</td>
+</tr>
+<tr>
+<td>openapi.yaml</td>
+<td>all 8</td>
+<td>path/schema definitions re-aligned to whichever side wins each
+row</td>
+</tr>
+<tr>
+<td>audit middleware</td>
+<td>8</td>
+<td>none — <code>deriveAuditAction</code> already emits
+<code>group_member</code> verbs for the members sub-routes
+(<code>handlers_audit.go</code>), so batch-add stays correctly
+audited</td>
+</tr>
+</tbody>
+</table>
+<h2 id="doc_sync_actions_if_trim_chosen">8.
+doc_sync_actions_if_trim_chosen</h2>
+<p>For every row the operator rules TRIM-spec, the prose spec and
+openapi MUST be amended in the same change so they stop disagreeing with
+the shipped code (Constitution §11.4.6 — no silent divergence; §11.4.65
+— keep <code>.md</code>/<code>.html</code>/<code>.pdf</code> siblings in
+sync):</p>
+<ul>
+<li>Row 3 → <code>operational_endpoints.md</code> §4.3: rename response
+model <code>AuditList</code> → <code>AuditLogList</code>.</li>
+<li>Row 6 (id) → §6.1/§6.2: change <code>group_id</code> →
+<code>id</code> in the <code>Group</code>/<code>GroupView</code>
+examples.</li>
+<li>Row 6 (<code>filter_criteria</code>) → §6.1/§6.3: mark
+<code>filter_criteria</code> as “stored, MVP returns it but evaluation
+is deferred — static membership only” (the spec already half-says this
+at §6 intro).</li>
+<li>Row 7 → §6.2: note <code>GET /groups</code> is un-paginated in 1.0.0
+(lean shape canonical); keep the paginated form as a documented
+future-widen.</li>
+<li>Row 5 (<code>?os</code>) → §5.2: drop <code>?os</code> from the
+1.0.0 scope set (keep <code>?deployment_id</code> + time window).</li>
+</ul>
+<p>This memo does <strong>not</strong> perform those edits — it
+recommends them pending the operator’s per-row ruling.</p>
+<h2 id="anti_bluff_unverified_register">9.
+anti_bluff_unverified_register</h2>
+<p>Per Constitution §11.4.6, the following are explicitly <strong>not
+asserted as fact</strong> in this memo:</p>
+<ul>
+<li><strong>UNVERIFIED — effort/risk sizes.</strong> The S/M/L sizes and
+LOW/MED risk labels are estimates from reading the handlers + store
+seam, not from a spiked implementation. Absolute hours are not
+claimed.</li>
+<li><strong>UNVERIFIED — telemetry rich fields availability (row
+4).</strong> Whether <code>store.TelemetryRecord</code> / the
+<code>ota-protocol</code> telemetry event already carries
+<code>duration_ms</code> / <code>bytes_transferred</code> (and
+<code>success</code> as a first-class field) was <strong>not</strong>
+confirmed; <code>handlers_telemetry.go</code>
+<code>TelemetryEventView</code> does not expose them, and the store
+record type was not read this pass. If the ingest does not supply them,
+widening to those fields would produce always-zero columns (a
+§11.4-bluff) — hence the “phase-2 / defer” qualifier on row 4.</li>
+<li><strong>UNVERIFIED — store-method availability for wider
+shapes.</strong> The wider audit filter, paginated telemetry query,
+latest-per-device overview aggregate (<code>DISTINCT ON</code>),
+<code>member_count</code> count, and <code>AddGroupMembers</code> plural
+method are named by the spec (<code>operational_endpoints.md</code>
+§4.2/§5.3/§6.5) but their <em>existence in the pgx/in-memory
+<code>store.Repository</code></em> was not verified here. Effort rises
+if these must be added to the store.</li>
+<li><strong>UNVERIFIED — HelixQA bank path.</strong>
+<code>tools/helixqa/banks/atmosphere.yaml</code> is the constitutional
+convention (§11.4.58); its presence in <em>this</em> repo was not
+confirmed. “Bank” in §4/§7 means the project’s Challenge bank wherever
+it lives.</li>
+<li><strong>UNVERIFIED — as-built external consumers.</strong> The
+“breaking wire change” risk on rows 1/4/8 assumes a consumer that
+already depends on the lean as-built shape. Whether such a consumer
+(dashboard, device agent) exists and is pinned to the lean shape was not
+confirmed; the breaking qualifier is a conservative §11.4.6 default
+(treat as breaking unless proven otherwise), and is exactly why those
+rows are gated behind an operator §11.4.66 decision and a consumer
+sweep.</li>
+<li><strong>FACT (confirmed this pass).</strong> Every “impl does” cell
+and its <code>file:func</code> citation, and every “spec wants” cell,
+were read directly from the cited source files in
+<code>server/internal/api/</code> and
+<code>operational_endpoints.md</code> during this memo’s preparation
+(see §3).</li>
+</ul>
+</body>
+</html>
