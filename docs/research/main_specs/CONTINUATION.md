@@ -95,6 +95,9 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **Performance/NFR + scaling** (7b75212): real memory-vs-pgx concurrency sweep — in-mem 20.5k RPS @ c=128 p99 30.6ms; pgx ~6.2k plateau (2-CPU container). `docs/research/main_specs/1.0.0-mvp/nfr/performance_baseline.md`.
 - **Dashboard build-out + Playwright** (just landed): functional Fleet/Deployments+Recall/Groups/Audit screens on the real API; tsc+build exit 0; **Playwright 5/5** vs a live server.
 - **Coverage ledger** (§11.4.25) + **HelixQA bank** now 8 challenges (incl. signed-pipeline + security).
+- **Benchmarking** (§11.4.27, bbc97e4): Go `testing.B` suite — healthz 2.5µs, group-create 8.5µs, update-check 4.9µs, FindDelta 160ns/0-alloc, etc. `docs/qa/20260608-benchmarks/`.
+- **DDoS/flood probe** (§11.4.27, 6d29fb8): 5,952-req burst served, responsive post-flood; surfaced the honest "no rate-limiter" finding.
+- **Rate-limit FEATURE** (1b97fc7): implemented the finding's fix — in-flight cap middleware (`HELIX_MAX_INFLIGHT`, default-off) sheds 429 RATE_LIMITED; proven cap=1/300-concurrent → 244 shed / 56 served / recovers. **§11.4.27 test-type matrix now complete** for the operational surface (unit/integration/e2e/security/ddos/scaling/chaos/stress/performance/benchmarking/ui/Challenges). Full rebuild+validate sweep green (`docs/qa/20260608-full-rebuild/`).
 
 ### NEXT wave (still open — all hardware/ingest-gated)
 1. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware.

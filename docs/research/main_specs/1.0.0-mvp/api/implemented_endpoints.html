@@ -1164,6 +1164,18 @@ audit_write_middleware_cross_cutting</h2>
 source of every <code>GET /audit</code> row, so it is recorded here for
 completeness (<code>handlers_audit.go:auditMiddleware</code>, wired on
 the protected group at <code>server.go:130</code>).</p>
+<p><strong>In-flight cap (DoS protection, cross-cutting).</strong>
+<code>maxInflightMiddleware</code> (<code>rate_limit.go</code>, wired
+router-wide at <code>server.go:115</code>) bounds concurrent in-flight
+requests to <code>HELIX_MAX_INFLIGHT</code> (default <code>0</code> =
+disabled). When the cap is reached, excess requests are shed
+<strong>before</strong> any handler work with
+<code>429 RATE_LIMITED</code> + <code>Retry-After: 1</code>. Default-off
+preserves existing behaviour; enabling it is the recommended
+pre-production DoS protection (proven by
+<code>TestMaxInflightShedsUnderFlood</code>). Any endpoint below may
+therefore additionally return <code>429</code> when the cap is
+enabled.</p>
 <ul>
 <li><strong>Placement (load-bearing):</strong> mounted on the
 <code>auth</code> group <strong>with</strong>
