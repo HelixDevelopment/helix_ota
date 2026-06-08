@@ -38,11 +38,16 @@ Type **`continue`** in a new session. Read this file + the memory index first. A
 ### Parallel-wave deliverables — DONE this session (commit 8efb6b8)
 6 subagents closed additions gaps: **G2** validator hash-before-signature VERIFIED (FACT, file:line); **G7** staged-rollout engine spec + migration_002 design; **G6** dashboard design; **G3/G4/G5** operational endpoints spec (audit/telemetry-reads/group CRUD + proposed repo methods); **G10** CI (`.github/workflows/ci.yml` + CODEOWNERS + dependabot); **§11** future-phase folding (1.0.2-rollback, 1.0.3-delta-updates created; 1.X-linux/windows/other-os extended).
 
-### NEXT wave (specced, not yet implemented)
-1. **Implement** the specced operational endpoints (audit middleware + `GET /audit`; telemetry history + `/telemetry/overview`; device-group CRUD) with TDD against BOTH memory + pgx repos (new `store.Repository` methods per `1.0.0-mvp/api/operational_endpoints.md`).
-2. **Implement** the staged-rollout engine + migration `002_*` (per `1.0.1-staged-rollout/`).
-3. **Ratify** the 1.0.1↔1.0.2 boundary: 1.0.1 outline still lists "end-user rollback" which now collides with rollback LOCKED at 1.0.2 — operator decision needed.
-4. **Dashboard repo** scaffold (G6); **G12** NFR/load harness; **G11** verify/create ota-* public repos; confirm CODEOWNERS GitHub handle.
+### Operational endpoints — DONE this session (G3/G4/G5, real-Postgres-verified, memory+pgx parity)
+- **G3 audit** (commit 9a703bf): `auditMiddleware` records successful mutating actions (reads/failures skipped, ids never leak into the action) + `GET /audit` (admin) + `audit_logs` table.
+- **G4 telemetry reads** (commit eadaa7f): `GET /devices/{id}/telemetry` (device reads only its own) + `GET /telemetry/overview` (fleet counts).
+- **G5 device-group CRUD** (commit e3e1307): full `/groups` CRUD + membership; writes operator/admin, delete admin-only.
+All three added `store.Repository` methods on memory + pgx, extended the shared contract, and pass the pgx integration test on real Postgres.
+
+### NEXT wave (still open)
+1. **Operator decision applied**: end-user rollback stays in **1.0.1** (with staged-rollout). Docs reconciliation (synthesis §10 K8 + 1.0.1/1.0.2 dir renumber) still pending — the agent wave for it was rate-limited; redo.
+2. **Implement** the staged-rollout engine + migration `002_*` (per `1.0.1-staged-rollout/`); now includes end-user rollback.
+3. **Dashboard repo** scaffold (G6); **G12** NFR/load harness; **G11** verify/create ota-* public repos; confirm CODEOWNERS GitHub handle. (These 5-6-agent wave items were rate-limited mid-session — redo when limits recover.)
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
