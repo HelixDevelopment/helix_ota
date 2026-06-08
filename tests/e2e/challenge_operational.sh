@@ -23,7 +23,8 @@
 #   8b. POST /api/v1/groups/{id}/members      -> 200, re-add => .already_member
 #   8c. POST /api/v1/groups/{id}/members      -> 200, unregistered id => .not_found
 #   8d. POST /api/v1/groups/{id}/members []   -> 400 (empty device_ids rejected)
-#   9.  GET  /api/v1/groups/{id}/members      -> 200, device_ids contains member
+#   9.  GET  /api/v1/groups/{id}/members      -> 200, .items[].device_id contains
+#                                                member (+ added_at non-empty)
 #   10. GET  /api/v1/telemetry/overview       -> 200, has total + event_counts
 #   11. GET  /api/v1/audit                    -> 200, GROUP_CREATE +
 #                                                GROUP_MEMBER_CREATE audited
@@ -275,13 +276,32 @@ req POST "${API}/groups/no-such-group-${RUN_TAG}/members" "$(jq -nc --arg d "$DE
 assert_status 404 "POST /groups/{absent}/members -> 404"
 
 # ---- 9. list members (must contain the added device) ---------------------------
+# Wire change (breaking): the members body is now {"group_id":"...","items":[
+# {"device_id":"...","added_at":"<RFC3339>"}]} (was {"group_id","device_ids":[...]}).
+# Read .items[].device_id (NOT the deprecated .device_ids), and assert the
+# membership's added_at is present + non-empty. Anti-bluff: a server still
+# emitting the old .device_ids array (or an empty added_at) must now FAIL.
 req GET "${API}/groups/${GROUP_ID}/members" "" auth
 assert_status 200 "GET /groups/{id}/members"
+[ "$(jqget '.group_id')" = "$GROUP_ID" ] && pass "member list echoes group_id" || fail "member list group_id mismatch"
+# The deprecated flat .device_ids array must be gone.
+if [ "$(jqget '.device_ids')" = "null" ]; then
+  pass "member list dropped the deprecated 'device_ids' array (now '.items[]')"
+else
+  fail "member list still emits the deprecated 'device_ids' array (breaking-change regression)"
+fi
 if [ -n "$DEVICE_ID" ]; then
-  if printf '%s' "$HTTP_BODY" | jq -e --arg d "$DEVICE_ID" '.device_ids | index($d) != null' >/dev/null 2>&1; then
-    pass "member list contains the added device_id"
+  if printf '%s' "$HTTP_BODY" | jq -e --arg d "$DEVICE_ID" '[.items[].device_id] | index($d) != null' >/dev/null 2>&1; then
+    pass "member list .items[].device_id contains the added device"
   else
-    fail "member list does NOT contain the added device (body: $(printf '%s' "$HTTP_BODY" | head -c 200))"
+    fail "member list .items[].device_id does NOT contain the added device (body: $(printf '%s' "$HTTP_BODY" | head -c 200))"
+  fi
+  # added_at must be present + non-empty for the member we added.
+  MEMBER_ADDED_AT="$(printf '%s' "$HTTP_BODY" | jq -r --arg d "$DEVICE_ID" '.items[] | select(.device_id==$d) | .added_at' 2>/dev/null)"
+  if [ -n "$MEMBER_ADDED_AT" ] && [ "$MEMBER_ADDED_AT" != "null" ]; then
+    pass "member item carries a non-empty added_at ($MEMBER_ADDED_AT)"
+  else
+    fail "member item is missing a non-empty added_at (body: $(printf '%s' "$HTTP_BODY" | head -c 200))"
   fi
 fi
 
