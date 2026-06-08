@@ -48,3 +48,43 @@ FleetScreen.tsx
 LoginScreen.tsx
 OverviewScreen.tsx
 ReleasesScreen.tsx
+
+================================================================================
+Captured: 2026-06-08T15:11:15Z
+Host: Darwin 24.5.0 arm64
+node: v22.22.3   npm: 10.9.8
+Directory: /Volumes/T7/Projects/helix_ota/dashboard
+
+Change: device-group API WIDEN (breaking wire change) — typed client + wire types.
+  - types/api.ts: DeviceGroup now carries member_count + created_at (was device_count);
+    added DeviceGroupMembersAdd { device_ids }, DeviceGroupMembersAddResult
+    { added, already_member, not_found }, DeviceGroupMembers { group_id, device_ids }.
+    (group_id was already the id field in this scaffold — no .id rename needed.)
+  - api/client.ts: addGroupMembers(groupId, deviceIds) — batch POST /groups/{id}/members
+    body { device_ids } -> 200 { added, already_member, not_found } (was { device_id } -> 204);
+    getGroupMembers(groupId) -> { group_id, device_ids }.
+  - No screen referenced a group .id or the old member-add; no groups screen exists, so no
+    screen edits were required. (DeploymentsScreen's `group` field is DeploymentCreate.group,
+    a free-text string — unrelated, left intact.)
+
+=== command: npm run typecheck  (tsc --noEmit, app tsconfig + node tsconfig) ===
+
+> ota-dashboard@1.0.0-mvp typecheck
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json
+
+typecheck exit code: 0
+
+=== command: npm run build  (tsc --noEmit x2 && vite build) ===
+
+> ota-dashboard@1.0.0-mvp build
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 44 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.59 kB │ gzip:  0.43 kB
+dist/assets/index-Bj2Qft4z.js  195.83 kB │ gzip: 62.31 kB │ map: 816.90 kB
+✓ built in 568ms
+build exit code: 0

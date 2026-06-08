@@ -16,9 +16,13 @@
 #   3.  Anti-bluff: a protected route with NO token -> 401 (must be enforced)
 #   4.  POST /api/v1/devices/register         -> 201, device_id present
 #   5.  GET  /api/v1/devices/{id}/status      -> 200, device_id echoes
-#   6.  POST /api/v1/groups                   -> 201, group id present
+#   6.  POST /api/v1/groups                   -> 201, group_id present
 #   7.  GET  /api/v1/groups/{id}              -> 200, name echoes
-#   8.  POST /api/v1/groups/{id}/members      -> 204 (add the registered device)
+#   8.  POST /api/v1/groups/{id}/members      -> 200 (BATCH add the registered
+#                                                device_ids; id appears in .added)
+#   8b. POST /api/v1/groups/{id}/members      -> 200, re-add => .already_member
+#   8c. POST /api/v1/groups/{id}/members      -> 200, unregistered id => .not_found
+#   8d. POST /api/v1/groups/{id}/members []   -> 400 (empty device_ids rejected)
 #   9.  GET  /api/v1/groups/{id}/members      -> 200, device_ids contains member
 #   10. GET  /api/v1/telemetry/overview       -> 200, has total + event_counts
 #   11. GET  /api/v1/audit                    -> 200, GROUP_CREATE +
@@ -212,8 +216,15 @@ fi
 GRP_NAME="grp-${RUN_TAG}"
 req POST "${API}/groups" "$(jq -nc --arg n "$GRP_NAME" '{name:$n, description:"e2e challenge group"}')" auth
 assert_status 201 "POST /groups"
-GROUP_ID="$(jqget '.id')"
-[ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "null" ] || fatal "group create 201 but no id"
+# Wire change (breaking): the group id key is now "group_id" (was "id").
+# Anti-bluff: reading ".id" must now FAIL — a server emitting the old key is wrong.
+GROUP_ID="$(jqget '.group_id')"
+[ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "null" ] || fatal "group create 201 but no group_id"
+if [ "$(jqget '.id')" = "null" ]; then
+  pass "group create uses new 'group_id' key (old 'id' key absent)"
+else
+  fail "group create still emits the deprecated 'id' key (breaking-change regression)"
+fi
 [ "$(jqget '.name')" = "$GRP_NAME" ] && pass "group create echoes name" || fail "group name mismatch"
 
 # ---- 7. get group --------------------------------------------------------------
@@ -221,11 +232,47 @@ req GET "${API}/groups/${GROUP_ID}" "" auth
 assert_status 200 "GET /groups/{id}"
 [ "$(jqget '.name')" = "$GRP_NAME" ] && pass "GET group echoes name" || fail "GET group name mismatch"
 
-# ---- 8. add member -------------------------------------------------------------
+# ---- 8. add member (BATCH wire change) -----------------------------------------
+# Wire change (breaking): the body is now a BATCH {"device_ids":[...]} (was a
+# single {"device_id":"..."}) and the success status is 200 (was 204) with a
+# body {"added":[...],"already_member":[...],"not_found":[...]}. A REGISTERED
+# device lands in .added. Anti-bluff: a 204 must now FAIL.
 if [ -n "$DEVICE_ID" ]; then
-  req POST "${API}/groups/${GROUP_ID}/members" "$(jq -nc --arg d "$DEVICE_ID" '{device_id:$d}')" auth
-  assert_status 204 "POST /groups/{id}/members (add device)"
+  req POST "${API}/groups/${GROUP_ID}/members" "$(jq -nc --arg d "$DEVICE_ID" '{device_ids:[$d]}')" auth
+  assert_status 200 "POST /groups/{id}/members (batch add registered device)"
+  if printf '%s' "$HTTP_BODY" | jq -e --arg d "$DEVICE_ID" '.added | index($d) != null' >/dev/null 2>&1; then
+    pass "batch add put the registered device in .added"
+  else
+    fail "batch add did NOT report the device in .added (body: $(printf '%s' "$HTTP_BODY" | head -c 200))"
+  fi
+
+  # ---- 8b. re-add the same device -> it is already a member ---------------------
+  req POST "${API}/groups/${GROUP_ID}/members" "$(jq -nc --arg d "$DEVICE_ID" '{device_ids:[$d]}')" auth
+  assert_status 200 "POST /groups/{id}/members (re-add) -> 200"
+  if printf '%s' "$HTTP_BODY" | jq -e --arg d "$DEVICE_ID" '.already_member | index($d) != null' >/dev/null 2>&1; then
+    pass "re-add reports the device in .already_member"
+  else
+    fail "re-add did NOT report the device in .already_member (body: $(printf '%s' "$HTTP_BODY" | head -c 200))"
+  fi
 fi
+
+# ---- 8c. an UNREGISTERED device id lands in .not_found -------------------------
+UNREG_ID="unregistered-device-${RUN_TAG}"
+req POST "${API}/groups/${GROUP_ID}/members" "$(jq -nc --arg d "$UNREG_ID" '{device_ids:[$d]}')" auth
+assert_status 200 "POST /groups/{id}/members (unregistered id) -> 200"
+if printf '%s' "$HTTP_BODY" | jq -e --arg d "$UNREG_ID" '.not_found | index($d) != null' >/dev/null 2>&1; then
+  pass "unregistered device id is reported in .not_found"
+else
+  fail "unregistered device id was NOT reported in .not_found (body: $(printf '%s' "$HTTP_BODY" | head -c 200))"
+fi
+
+# ---- 8d. an EMPTY device_ids batch is rejected with 400 -----------------------
+req POST "${API}/groups/${GROUP_ID}/members" '{"device_ids":[]}' auth
+assert_status 400 "POST /groups/{id}/members (empty device_ids) -> 400"
+
+# ---- 8e. adding to an UNKNOWN group is still 404 ------------------------------
+req POST "${API}/groups/no-such-group-${RUN_TAG}/members" "$(jq -nc --arg d "$DEVICE_ID" '{device_ids:[$d]}')" auth
+assert_status 404 "POST /groups/{absent}/members -> 404"
 
 # ---- 9. list members (must contain the added device) ---------------------------
 req GET "${API}/groups/${GROUP_ID}/members" "" auth
