@@ -1,12 +1,61 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
 
 	otaprotocol "github.com/HelixDevelopment/ota-protocol"
+
+	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
+
+// TestClientUpdateOffersDelta proves delta selection: a device on 1.0.0 with a
+// registered 1.0.0->1.1.0 delta gets the delta sidecar in its update offer;
+// without a registered delta the offer carries no delta (TestClientUpdate200WhenBehind).
+func TestClientUpdateOffersDelta(t *testing.T) {
+	env := newTestEnv(t)
+	dev := setupDeployment(t, env, "1.0.0", "1.1.0") // device@1.0.0, target release+artifact@1.1.0
+	ctx := context.Background()
+
+	// Resolve the target (1.1.0) artifact.
+	target, err := env.repo.ReleaseByVersion(ctx, otaprotocol.OSAndroid, "OrangePi5Max", "1.1.0")
+	if err != nil {
+		t.Fatalf("resolve target release: %v", err)
+	}
+	// Insert a base artifact + base release at 1.0.0 (direct — the API's S4 would
+	// reject an older version), then register the 1.0.0->1.1.0 delta.
+	if err := env.repo.CreateArtifact(ctx, store.Artifact{ArtifactID: "base-art", SHA256: "basehash",
+		Size: 100, OSType: otaprotocol.OSAndroid, TargetModel: "OrangePi5Max", Version: "1.0.0", Verified: true}); err != nil {
+		t.Fatalf("base artifact: %v", err)
+	}
+	if err := env.repo.CreateRelease(ctx, store.Release{ReleaseID: "base-rel", ArtifactID: "base-art",
+		Version: "1.0.0", OSType: otaprotocol.OSAndroid, TargetModel: "OrangePi5Max", Status: "published", CreatedAt: env.srv.now()}); err != nil {
+		t.Fatalf("base release: %v", err)
+	}
+	if err := env.repo.CreateDelta(ctx, store.DeltaArtifact{ID: "delta-1", BaseArtifactID: "base-art",
+		TargetArtifactID: target.ArtifactID, SHA256: "deltahash", Size: 42, StorageRef: "s3://d/1", CreatedAt: env.srv.now()}); err != nil {
+		t.Fatalf("create delta: %v", err)
+	}
+
+	w := env.do(http.MethodGet, "/api/v1/client/update", env.deviceToken(dev.DeviceID), nil, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("behind device want 200, got %d (%s)", w.Code, w.Body.String())
+	}
+	var upd otaprotocol.UpdateAvailable
+	env.decode(w, &upd)
+	if upd.Delta == nil {
+		t.Fatalf("expected a delta offer, got none: %+v", upd)
+	}
+	if upd.Delta.BaseVersion != "1.0.0" || upd.Delta.SHA256 != "deltahash" || upd.Delta.Size != 42 || upd.Delta.URL == "" {
+		t.Fatalf("delta offer mismatch: %+v", upd.Delta)
+	}
+	// The full payload is still present as the fallback.
+	if upd.URL == "" || upd.SHA256 == "" {
+		t.Fatalf("full payload must remain as fallback: %+v", upd)
+	}
+}
 
 // setupDeployment registers a device, uploads+releases an artifact at version,
 // and creates an all-targets deployment. It returns the device and the release

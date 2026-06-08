@@ -204,6 +204,9 @@ type Repository interface {
 	CreateRelease(ctx context.Context, r Release) error
 	GetRelease(ctx context.Context, releaseID string) (Release, error)
 	LatestRelease(ctx context.Context, os otaprotocol.OSType, targetModel string) (Release, error)
+	// ReleaseByVersion resolves an exact os+target+version to its release (delta
+	// base-artifact lookup), or ErrNotFound.
+	ReleaseByVersion(ctx context.Context, os otaprotocol.OSType, targetModel, version string) (Release, error)
 	ListReleases(ctx context.Context, f ReleaseFilter) ([]Release, string, error)
 
 	// Deployments.

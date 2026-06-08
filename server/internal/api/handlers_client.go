@@ -76,6 +76,23 @@ func (s *Server) handleClientUpdate(c *gin.Context) {
 		Signature:         art.Signature,
 		PayloadProperties: art.PayloadProperties.Headers(),
 	}
+
+	// Delta selection (delta_updates_design.md): if the device's current version
+	// resolves to a base artifact AND a base->target delta is registered, offer it
+	// alongside the full payload (the device falls back to the full payload if it
+	// cannot apply the delta). Best-effort: any miss leaves the full payload only.
+	if current != "" {
+		if base, berr := s.repo.ReleaseByVersion(ctx, dev.OSType, dev.Model, current); berr == nil {
+			if d, derr := s.repo.FindDelta(ctx, base.ArtifactID, art.ArtifactID); derr == nil {
+				update.Delta = &otaprotocol.DeltaUpdate{
+					BaseVersion: current,
+					URL:         s.artifactURL(d.ID),
+					Size:        d.Size,
+					SHA256:      d.SHA256,
+				}
+			}
+		}
+	}
 	c.JSON(http.StatusOK, update)
 }
 

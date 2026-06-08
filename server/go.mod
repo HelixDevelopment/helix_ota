@@ -66,3 +66,8 @@ require (
 replace digital.vasic.containers => ../containers
 
 replace digital.vasic.http3 => ../submodules/http3
+
+// ota-protocol is co-developed (§11.4.28); built against the local submodule
+// during development. Production pins a tagged version. The v0.1.0 require above
+// is the floor; the replace supersedes it for the local build.
+replace github.com/HelixDevelopment/ota-protocol => ../submodules/ota-protocol

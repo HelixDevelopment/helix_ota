@@ -165,6 +165,21 @@ func (m *MemoryRepository) LatestRelease(_ context.Context, os otaprotocol.OSTyp
 	return latest, nil
 }
 
+// ReleaseByVersion returns the release for an exact os+target+version, or
+// ErrNotFound. Used to resolve a device's current version to its base artifact
+// for delta selection.
+func (m *MemoryRepository) ReleaseByVersion(_ context.Context, os otaprotocol.OSType, targetModel, version string) (Release, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, id := range m.relOrder {
+		r := m.releases[id]
+		if r.OSType == os && r.TargetModel == targetModel && r.Version == version {
+			return r, nil
+		}
+	}
+	return Release{}, ErrNotFound
+}
+
 // ListReleases returns releases matching the filter, in insertion order, with a
 // simple offset cursor. The next cursor is empty when the page is the last.
 func (m *MemoryRepository) ListReleases(_ context.Context, f ReleaseFilter) ([]Release, string, error) {
