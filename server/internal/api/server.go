@@ -135,6 +135,11 @@ func (s *Server) Router() *gin.Engine {
 		auth.POST("/artifacts/upload", requireRole(RoleOperator, RoleAdmin), s.handleUploadArtifact)
 		auth.GET("/artifacts/:artifactId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetArtifact)
 
+		// Delta artifacts (delta_updates_design.md §4): register + lookup a
+		// base->target delta. Register is operator/admin; lookup is viewer+.
+		auth.POST("/deltas", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDelta)
+		auth.GET("/deltas", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleFindDelta)
+
 		auth.POST("/releases", requireRole(RoleOperator, RoleAdmin), s.handleCreateRelease)
 		auth.GET("/releases", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListReleases)
 		auth.GET("/releases/:releaseId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRelease)

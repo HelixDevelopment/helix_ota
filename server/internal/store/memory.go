@@ -24,6 +24,7 @@ type MemoryRepository struct {
 	telemetry   []TelemetryRecord     // append-only event log
 	audit       []AuditEntry          // append-only admin/operator action log
 	rollbacks   []RollbackRecord      // append-only rollback/abort log
+	deltas      []DeltaArtifact       // base->target delta artifacts
 	groups      map[string]Group      // by groupID
 	grpOrder    []string              // insertion order for stable listing
 	grpByName   map[string]string     // name -> groupID (uniqueness)
@@ -440,6 +441,32 @@ func (m *MemoryRepository) RemoveGroupMember(_ context.Context, groupID, deviceI
 		}
 	}
 	return nil // idempotent
+}
+
+// CreateDelta stores a base->target delta artifact, rejecting a duplicate
+// (base,target) pair with ErrConflict.
+func (m *MemoryRepository) CreateDelta(_ context.Context, d DeltaArtifact) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, existing := range m.deltas {
+		if existing.BaseArtifactID == d.BaseArtifactID && existing.TargetArtifactID == d.TargetArtifactID {
+			return ErrConflict
+		}
+	}
+	m.deltas = append(m.deltas, d)
+	return nil
+}
+
+// FindDelta returns the delta from baseArtifactID to targetArtifactID, or ErrNotFound.
+func (m *MemoryRepository) FindDelta(_ context.Context, baseArtifactID, targetArtifactID string) (DeltaArtifact, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, d := range m.deltas {
+		if d.BaseArtifactID == baseArtifactID && d.TargetArtifactID == targetArtifactID {
+			return d, nil
+		}
+	}
+	return DeltaArtifact{}, ErrNotFound
 }
 
 // AppendRollback appends a rollback/abort record (append-only).

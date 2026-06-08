@@ -117,6 +117,19 @@ CREATE TABLE IF NOT EXISTS helix_ota.audit_logs (
 CREATE INDEX IF NOT EXISTS idx_audit_action   ON helix_ota.audit_logs (action);
 CREATE INDEX IF NOT EXISTS idx_audit_resource ON helix_ota.audit_logs (resource_type, resource_id);
 
+CREATE TABLE IF NOT EXISTS helix_ota.delta_artifacts (
+    delta_id           TEXT PRIMARY KEY,
+    base_artifact_id   TEXT        NOT NULL,
+    target_artifact_id TEXT        NOT NULL,
+    sha256             TEXT        NOT NULL DEFAULT '',
+    size               BIGINT      NOT NULL DEFAULT 0,
+    storage_ref        TEXT        NOT NULL DEFAULT '',
+    created_at         TIMESTAMPTZ NOT NULL,
+    CONSTRAINT delta_artifacts_base_ne_target_chk CHECK (base_artifact_id <> target_artifact_id),
+    CONSTRAINT delta_artifacts_pair_uniq UNIQUE (base_artifact_id, target_artifact_id)
+);
+CREATE INDEX IF NOT EXISTS idx_delta_artifacts_pair ON helix_ota.delta_artifacts (base_artifact_id, target_artifact_id);
+
 CREATE TABLE IF NOT EXISTS helix_ota.rollback_history (
     seq                  BIGSERIAL PRIMARY KEY,
     rollback_id          TEXT        NOT NULL,

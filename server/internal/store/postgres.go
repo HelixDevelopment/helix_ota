@@ -641,6 +641,34 @@ ORDER BY seq OFFSET $3 LIMIT $4`
 	return out, next, nil
 }
 
+// --- delta artifacts ---
+
+func (r *PostgresRepository) CreateDelta(ctx context.Context, d DeltaArtifact) error {
+	const q = `
+INSERT INTO helix_ota.delta_artifacts
+ (delta_id, base_artifact_id, target_artifact_id, sha256, size, storage_ref, created_at)
+VALUES ($1,$2,$3,$4,$5,$6,$7)`
+	_, err := r.pool.Exec(ctx, q, d.ID, d.BaseArtifactID, d.TargetArtifactID, d.SHA256,
+		d.Size, d.StorageRef, d.CreatedAt)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	return err
+}
+
+func (r *PostgresRepository) FindDelta(ctx context.Context, baseArtifactID, targetArtifactID string) (DeltaArtifact, error) {
+	const q = `
+SELECT delta_id, base_artifact_id, target_artifact_id, sha256, size, storage_ref, created_at
+FROM helix_ota.delta_artifacts WHERE base_artifact_id=$1 AND target_artifact_id=$2`
+	var d DeltaArtifact
+	err := r.pool.QueryRow(ctx, q, baseArtifactID, targetArtifactID).Scan(&d.ID, &d.BaseArtifactID,
+		&d.TargetArtifactID, &d.SHA256, &d.Size, &d.StorageRef, &d.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return DeltaArtifact{}, ErrNotFound
+	}
+	return d, err
+}
+
 // --- rollback history ---
 
 func (r *PostgresRepository) AppendRollback(ctx context.Context, rec RollbackRecord) error {
