@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>device_tuf_client_decision</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="adr-0002-4.3-step-2-device-side-tuf-client-decision-spike">adr-0002
+§4.3 step-2 device-side tuf client decision spike</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>field</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Type</td>
+<td>decision memo (spike output for adr-0002 §4.3 step-2)</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Recommendation: Option A (gomobile-wrapped
+go-tuf/v2)</strong> — proposed, pending operator review + the
+build-measurement gate in §9</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Resolves the adr-0002 §8 item 1 / <code>device_tuf.md</code> §11
+item 1 OPEN question: pick (A) gomobile-wrapped <code>go-tuf/v2</code>
+vs (B) a hand-rolled Kotlin TUF client on the <code>Security-KMP</code>
+brick. Recommends <strong>A</strong> primarily on
+security-code-ownership grounds: A reuses the same audited go-tuf/v2
+verifier the server runs (adr-0002 §3.2 / §4.2 one-trust-implementation
+seam), so the device does not hand-write a second security-sensitive
+verifier of the root→timestamp→snapshot→targets flow. The dominant cost
+moves from “owning crypto-correctness” (B) to “owning a JNI build seam +
+APK binary-size” (A), which is a measurement/engineering risk rather
+than a correctness risk. The recommendation is <strong>not
+unconditional</strong>: it is gated on the build-measurement spike in §9
+(APK size delta + gomobile/JNI viability on Android-15/RK3588) and on
+<code>go-tuf/v2</code>’s <code>metadata/updater</code> client flow,
+whose API is now <strong>VERIFIED</strong> (§3) where adr-0002 §8 item 2
+carried it UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The APK binary-size magnitude added by the gomobile Go-runtime
+<code>.so</code> is <strong>UNVERIFIED</strong> — no authoritative size
+figure was found in research; it MUST be measured (§9). gomobile/JNI
+viability on the specific Android-15 / RK3588 target is
+<strong>UNVERIFIED</strong> (adr-0002 §8 item 8).
+<code>Security-KMP</code> fit for TUF role/threshold/expiry primitives
+(which Option B depends on) is <strong>UNVERIFIED</strong> (adr-0002 §8
+item 9) — and is the reason B is not recommended, not a reason it is. No
+maintained device-side Kotlin/JVM TUF <em>client</em> exists
+(<strong>VERIFIED</strong> by survey, §4); the nearest JVM artifact
+(<code>uptane/ota-tuf</code>) is server-side Scala.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Recommendation is A; the residual risk on A is build-size + JNI
+viability (measurable, §9), not verification correctness; B’s blocker
+(hand-owned crypto + unverified brick fit) is the higher, less-bounded
+risk.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 1: enumerated the A-vs-B comparison across the six adr-0002 axes
+(APK size, JNI/gomobile build complexity, maintenance burden,
+security-code-ownership risk, brick fit, audited-verifier reuse);
+recommended A with rationale; fixed the integration points into the §6
+verify-before-apply gate + <code>ota-android-agent</code>; verified the
+<code>go-tuf/v2</code> <code>updater</code>/<code>config</code> client
+API (closing adr-0002 §8 item 2); verified the absence of a maintained
+Kotlin/JVM TUF client; carried every still-open figure as
+UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Captured the device-client A-vs-B decision as a recommendation
+grounded in verified library facts, with the one genuinely unmeasured
+cost (APK size) carried UNVERIFIED behind a measurement gate rather than
+invented.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Execute §9 step-1 (gomobile <code>bind</code> of a minimal
+<code>go-tuf/v2</code> <code>updater</code> wrapper → measure the
+per-arm64 <code>.so</code> size delta in a release APK) and step-2 (run
+one full root→timestamp→snapshot→targets refresh through the wrapped
+updater on an Android-15 / RK3588 board) before treating A as decided;
+if the measured size delta is unacceptable AND <code>Security-KMP</code>
+is confirmed (adr-0002 §8 item 9) to expose threshold/expiry primitives,
+re-open B; define the offline key-custody ceremony (adr-0002 §4.3
+step-3) regardless of A/B; do not mandate device-side TUF enforcement
+until adr-0002 §4.3 step-4.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">table of contents</h2>
+<ul>
+<li><a href="#1-purpose-and-scope">§1. purpose and scope</a></li>
+<li><a href="#2-what-the-spike-must-decide-the-question-restated">§2.
+what the spike must decide (the question, restated)</a></li>
+<li><a
+href="#3-verified-facts--go-tufv2-client-flow-closes-adr-0002-8-item-2">§3.
+verified facts — go-tuf/v2 client flow (closes adr-0002 §8 item
+2)</a></li>
+<li><a href="#4-verified-facts--the-kotlinjvm-tuf-client-landscape">§4.
+verified facts — the kotlin/jvm tuf client landscape</a></li>
+<li><a href="#5-option-a-vs-option-b--comparison">§5. option a vs option
+b — comparison</a></li>
+<li><a href="#6-recommendation">§6. recommendation</a></li>
+<li><a href="#7-integration-points">§7. integration points</a></li>
+<li><a href="#8-residual-risks">§8. residual risks</a></li>
+<li><a
+href="#9-the-measurement-gate-close-before-treating-a-as-decided">§9.
+the measurement gate (close before treating a as decided)</a></li>
+<li><a href="#10-open--unverified-items-carried-forward">§10. open /
+unverified items carried forward</a></li>
+<li><a href="#11-sources">§11. sources</a></li>
+<li><a href="#sources-verified-2026-06-08">## sources verified
+2026-06-08</a></li>
+</ul>
+<hr />
+<h2 id="purpose-and-scope">§1. purpose and scope</h2>
+<p>This is the decision memo for <strong>adr-0002 §4.3 step-2</strong>:
+the on-device TUF client spike that <code>device_tuf.md</code> §5 / §11
+item 1 and adr-0002 §8 item 1 carry as the dominant, OPEN, UNVERIFIED
+adoption cost. It picks between the two options those documents
+enumerate but deliberately did <strong>not</strong> decide (per
+HelixConstitution §11.4.6 no-guessing / §11.4.8
+research-before-implementation):</p>
+<ul>
+<li><strong>Option A</strong> — gomobile-wrapped <code>go-tuf/v2</code>
+(compile the Go <code>metadata/updater</code> client flow to an Android
+library via gomobile/JNI; the Kotlin <code>ota-android-agent</code>
+calls the wrapped Go).</li>
+<li><strong>Option B</strong> — a hand-rolled Kotlin TUF client
+implementing the root→timestamp→snapshot→targets refresh/verify flow
+natively against the <code>Security-KMP</code> brick’s crypto
+primitives.</li>
+</ul>
+<p>In scope: the verified library + landscape facts the choice rests on
+(§3, §4); the A-vs-B comparison across the six adr-0002 axes (§5); a
+concrete recommendation + rationale (§6); where the chosen client plugs
+into the existing verify-before-apply gate and the
+<code>ota-android-agent</code> (§7); the residual risks (§8); and the
+measurement gate that must close before A is treated as decided
+(§9).</p>
+<p><strong>Out of scope / not re-decided here.</strong> TUF adoption
+itself (adr-0002, decided phased). The server-side publish path
+(<code>go-tuf/v2</code>, adr-0002 §3.2 / §4.3 step-1 — DECIDED). The
+device verification <em>flow and invariants</em>
+(<code>device_tuf.md</code> §6, fixed there; this memo decides only
+<em>what code</em> runs that flow). The offline key-custody ceremony
+(adr-0002 §4.3 step-3; <code>key_management.md</code>). The
+Director/Image stretch split (adr-0002 §4.3 step-5). The TUF metadata
+storage DDL (<code>device_tuf.md</code> §9). Making device-side
+enforcement <em>mandatory</em> (adr-0002 §4.3 step-4 — happens only
+after this spike + the ceremony close their UNVERIFIED items).</p>
+<p><strong>LOCKED context honored (not re-decided):</strong> native
+Android A/B (<code>update_engine</code> + AVB/dm-verity + auto-rollback)
++ a custom Go (Gin) control plane; Go + <code>go-tuf/v2</code>
+server-side; Android-15-first (Orange Pi 5 Max / RK3588); the Kotlin
+agent (<code>ota-android-agent</code>) is the device-side consumer
+(adr-0002 §1, §4; <code>device_tuf.md</code> §1).</p>
+<h2 id="what-the-spike-must-decide-the-question-restated">§2. what the
+spike must decide (the question, restated)</h2>
+<p><code>device_tuf.md</code> §6 already fixes the device-side
+<strong>flow and invariants</strong> the client must enforce — role
+order root→timestamp→snapshot→targets, threshold-signature verification
+per the current <code>root</code>, expiry rejection, per-role
+monotonic-version rejection (rollback/freeze guard), snapshot↔︎targets
+consistency (mix-and-match guard), and the
+TUF-<code>targets</code>-digest ↔︎ recomputed-SHA-256 cross-binding ahead
+of the unchanged MVP hash+signature check. The flow is
+<strong>not</strong> what this spike decides.</p>
+<p>What this spike decides is <strong>which implementation runs that
+flow on the device</strong> — i.e. who owns the most security-sensitive
+code in the whole OTA chain: the metadata verification logic. That is
+the framing adr-0002 §5.2 gives the two options: A’s cost is “Go
+toolchain on the Android build + APK binary-size + a JNI boundary”; B’s
+cost is “owning security-sensitive verification code … the highest-risk
+thing to hand-write.” The decision axis is therefore <strong>risk
+class</strong>, not feature parity (both options enforce the identical
+§6 flow).</p>
+<h2
+id="verified-facts-go-tufv2-client-flow-closes-adr-0002-8-item-2">§3.
+verified facts — go-tuf/v2 client flow (closes adr-0002 §8 item 2)</h2>
+<p>adr-0002 §8 item 2 and <code>device_tuf.md</code> §11 item 2 carried
+the <code>go-tuf/v2</code> <code>metadata/updater</code> /
+<code>metadata/trustedmetadata</code> client-flow API as
+<strong>UNVERIFIED</strong> (pkg.go.dev was truncated when the ADR was
+written). Verified against pkg.go.dev on
+<strong>2026-06-08</strong>:</p>
+<p><strong>Module / version.</strong>
+<code>github.com/theupdateframework/go-tuf/v2</code>; latest release
+<strong>v2.4.2 (published 2026-05-19)</strong> — consistent with the
+v2.4.2 / spec-1.0.31 fact adr-0002 §3.2 recorded for 2026-06-07.</p>
+<p><strong><code>metadata/updater</code> package — VERIFIED exported
+surface</strong> (signatures quoted from pkg.go.dev):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> New<span class="op">(</span>config <span class="op">*</span>config<span class="op">.</span>UpdaterConfig<span class="op">)</span> <span class="op">(*</span>Updater<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>update <span class="op">*</span>Updater<span class="op">)</span> Refresh<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>update <span class="op">*</span>Updater<span class="op">)</span> GetTargetInfo<span class="op">(</span>targetPath <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>metadata<span class="op">.</span>TargetFiles<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>update <span class="op">*</span>Updater<span class="op">)</span> FindCachedTarget<span class="op">(</span>targetFile <span class="op">*</span>metadata<span class="op">.</span>TargetFiles<span class="op">,</span> filePath <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="op">[]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>update <span class="op">*</span>Updater<span class="op">)</span> DownloadTarget<span class="op">(</span>targetFile <span class="op">*</span>metadata<span class="op">.</span>TargetFiles<span class="op">,</span> filePath<span class="op">,</span> targetBaseURL <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="op">[]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>update <span class="op">*</span>Updater<span class="op">)</span> GetTopLevelTargets<span class="op">()</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]*</span>metadata<span class="op">.</span>TargetFiles</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>update <span class="op">*</span>Updater<span class="op">)</span> GetTrustedMetadataSet<span class="op">()</span> trustedmetadata<span class="op">.</span>TrustedMetadata</span></code></pre></div>
+<p><code>Refresh()</code> runs the full root→timestamp→snapshot→targets
+refresh+verify workflow against locally cached + remotely fetched
+metadata; <code>GetTargetInfo(path)</code> resolves the requested
+artifact in <code>targets</code> and returns its authorized
+<code>*metadata.TargetFiles</code> (path + length + hashes) — exactly
+the <code>device_tuf.md</code> §6.1 “resolve the requested artifact in
+<code>targets</code>; capture its authorized length + SHA-256” step.
+<code>FindCachedTarget</code> / <code>DownloadTarget</code> enforce the
+declared-length + hash binding on the bytes.</p>
+<p><strong><code>metadata/config</code> package — VERIFIED
+<code>UpdaterConfig</code></strong> (signatures quoted from
+pkg.go.dev):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> New<span class="op">(</span>remoteURL <span class="dt">string</span><span class="op">,</span> rootBytes <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="op">(*</span>UpdaterConfig<span class="op">,</span> <span class="dt">error</span><span class="op">)</span>   <span class="co">// takes the pinned bootstrap root.json bytes</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UpdaterConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    MaxRootRotations   <span class="dt">int64</span>   <span class="co">// root-rotation bound — the §7.2 chained root→root walk cap</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    MaxDelegations     <span class="dt">int</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    RootMaxLength      <span class="dt">int64</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    TimestampMaxLength <span class="dt">int64</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    SnapshotMaxLength  <span class="dt">int64</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    TargetsMaxLength   <span class="dt">int64</span>   <span class="co">// endless-data cap (device_tuf.md §4)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    Fetcher               fetcher<span class="op">.</span>Fetcher   <span class="co">// pluggable HTTP fetcher → the existing HTTP/3→HTTP/2 path</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    LocalTrustedRoot      <span class="op">[]</span><span class="dt">byte</span>            <span class="co">// the pinned, image-embedded root.json (device_tuf.md §7.1)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    LocalMetadataDir      <span class="dt">string</span>            <span class="co">// on-device trusted-metadata cache (device_tuf.md §6.3)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    LocalTargetsDir       <span class="dt">string</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    RemoteMetadataURL     <span class="dt">string</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    RemoteTargetsURL      <span class="dt">string</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    DisableLocalCache     <span class="dt">bool</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    PrefixTargetsWithHash <span class="dt">bool</span>              <span class="co">// consistent-snapshot layout toggle</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    UnsafeLocalMode       <span class="dt">bool</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">// SetDefaultFetcherHTTPClient(*http.Client), SetDefaultFetcherTransport(http.RoundTripper),</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">// SetDefaultFetcherRetry(...), EnsurePathsExist() also exported.</span></span></code></pre></div>
+<p><strong>Why this matters for the decision.</strong> The verified
+surface shows the client flow is a small, well-shaped API: construct
+<code>UpdaterConfig</code> from the <strong>pinned bootstrap
+<code>root.json</code> bytes</strong> (<code>LocalTrustedRoot</code> —
+the <code>device_tuf.md</code> §7.1 trust-on-first-install anchor), call
+<code>Refresh()</code>, call <code>GetTargetInfo()</code>. A gomobile
+wrapper (Option A) needs to surface ~3 calls across JNI
+(<code>New</code> → <code>Refresh</code> → <code>GetTargetInfo</code>,
+returning length+SHA-256). Conversely, Option B would have to
+re-implement everything <code>Refresh()</code> does — root rotation
+bounds, four expiry checks, four monotonic-version checks, threshold
+counting, snapshot↔︎targets consistency — in hand-written Kotlin. The
+verified API makes A’s wrapping surface <strong>small and
+known</strong>, while leaving B’s re-implementation surface
+<strong>large and security-critical</strong>.</p>
+<h2 id="verified-facts-the-kotlinjvm-tuf-client-landscape">§4. verified
+facts — the kotlin/jvm tuf client landscape</h2>
+<p>adr-0002 §8 item 1 / <code>device_tuf.md</code> §5 stated <em>“no
+verified production-grade Kotlin/JVM TUF client is known to exist.”</em>
+Re-surveyed on <strong>2026-06-08</strong> (theupdateframework.io, the
+TUF GitHub org, and a targeted JVM/Maven search):</p>
+<ul>
+<li><strong>No official TUF Java/Kotlin implementation</strong> exists
+in the <code>theupdateframework</code> org. The maintained official
+implementations are Python (reference), Go (<code>go-tuf</code>),
+JavaScript (<code>tuf-js</code>), and Rust (<code>rust-tuf</code>).
+(theupdateframework GitHub org / TUF site, accessed 2026-06-08.)</li>
+<li><strong><code>uptane/ota-tuf</code></strong> (the nearest JVM
+artifact) is <strong>Scala</strong>, and — VERIFIED from its README — is
+a <strong>server-side</strong> TUF repository + key-management service
+(<code>reposerver</code> for metadata administration,
+<code>keyserver</code> for online role signing, a CLI,
+<code>libtuf</code>/<code>libtuf-server</code>). It is
+<strong>not</strong> a device-side verification client. Actively
+maintained (latest release v6.1.0, 2026-04-27) but the wrong tier: it
+publishes/signs metadata, it does not verify metadata on an embedded
+device. (github.com/uptane/ota-tuf, accessed 2026-06-08.)</li>
+<li>No actively-maintained, Maven-published <strong>JVM TUF
+client</strong> (the device-verification role) was found.</li>
+</ul>
+<p><strong>Conclusion (VERIFIED-as-absence):</strong> the third path
+adr-0002 §3.2 considered — <em>“an existing JVM client”</em> — still has
+<strong>no maintained candidate</strong>. This removes the cheapest
+hypothetical option and sharpens the choice to A vs B exactly as the ADR
+framed it. Critically, it also means Option B is <strong>not</strong>
+“wrap a maintained JVM library”; it is <strong>“write a new TUF client
+from scratch in Kotlin”</strong> — the highest-risk reading of B.</p>
+<h2 id="option-a-vs-option-b-comparison">§5. option a vs option b —
+comparison</h2>
+<p>Across the six axes the task and adr-0002 §3.2 / §5.2 name.
+“VERIFIED” / “UNVERIFIED” tags per HelixConstitution §11.4.6.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>axis</th>
+<th>option A — gomobile-wrapped go-tuf/v2</th>
+<th>option B — hand-rolled Kotlin on Security-KMP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>APK / binary size</strong></td>
+<td>Adds the <strong>Go runtime <code>.so</code> per ABI</strong> to the
+APK. Magnitude <strong>UNVERIFIED</strong> — no authoritative size
+figure was found; the Go-runtime native lib is a well-known non-trivial
+multi-MB-per-arch cost, but the exact bytes MUST be measured (§9).
+Mitigable: ship <strong>arm64-v8a only</strong> for the RK3588 target
+(<code>-target=android/arm64</code>), which avoids the fat-APK multi-ABI
+multiplier.</td>
+<td>Adds <strong>only Kotlin/JVM bytecode</strong> + whatever
+<code>Security-KMP</code> already pulls in. Smallest footprint; no
+native runtime. <strong>VERIFIED-directional</strong> (no Go runtime),
+exact delta still board-dependent.</td>
+</tr>
+<tr>
+<td><strong>JNI / gomobile build complexity</strong></td>
+<td>Adds the <strong>Go toolchain + gomobile + NDK</strong> to the
+Android build and a <strong>JNI boundary</strong>. gomobile is
+maintained (recent x/mobile + NDK 28 / 16KB-page-size support, 2025);
+the wrapped surface is small (§3, ~3 calls). Viability on
+<strong>Android-15 / RK3588</strong> is <strong>UNVERIFIED</strong>
+(adr-0002 §8 item 8) and is the §9 gate.</td>
+<td><strong>No Go toolchain, no JNI, no NDK coupling</strong> — pure
+Kotlin in the existing agent build. Lowest build-system complexity.
+<strong>VERIFIED-directional.</strong></td>
+</tr>
+<tr>
+<td><strong>maintenance burden</strong></td>
+<td>Track <strong>one</strong> verifier: bump <code>go-tuf/v2</code>
+(Apache-2.0, actively maintained, latest v2.4.2 2026-05-19, §3) and
+re-bind. Server and device share the same library + the same spec
+version, so a TUF-spec change lands once.</td>
+<td>Track a <strong>hand-written security codebase forever</strong>:
+every TUF-spec change, every CVE class, every attack-class refinement
+must be re-derived and re-tested in Kotlin independently of the server.
+Divergence between the Kotlin verifier and the Go server verifier is a
+standing risk.</td>
+</tr>
+<tr>
+<td><strong>security-code-ownership risk</strong></td>
+<td><strong>LOW</strong> — reuses the <strong>same audited go-tuf/v2
+verification logic the server runs</strong> (adr-0002 §3.2 / §4.2 “one
+trust implementation, no second hand-written verifier”). The most
+security-sensitive code (metadata verification) is <strong>not</strong>
+newly authored.</td>
+<td><strong>HIGH</strong> — means <strong>owning security-sensitive
+verification code</strong>, <em>“the highest-risk thing to
+hand-write”</em> (adr-0002 §5.2). §4 shows there is <strong>no
+maintained JVM client to start from</strong>, so B is a from-scratch TUF
+client. A subtle hand-rolled error (threshold off-by-one, missed expiry,
+non-monotonic accept) is exactly the attack surface TUF exists to
+close.</td>
+</tr>
+<tr>
+<td><strong><code>Security-KMP</code> brick fit</strong></td>
+<td><strong>Not on the critical path</strong> — A does its crypto inside
+go-tuf/v2; <code>Security-KMP</code> is not required for verification.
+(<code>Security-KMP</code> may still host the MVP detached-sig device
+re-check, unchanged.)</td>
+<td><strong>On the critical path and UNVERIFIED</strong> — B depends on
+<code>Security-KMP</code> exposing (or being extended to host, without
+bespoke crypto) TUF role/threshold/expiry primitives. adr-0002 §8 item 9
+/ <code>device_tuf.md</code> §11 item 3 carry this fit as
+<strong>UNVERIFIED</strong>. If the brick lacks threshold/multi-key
+primitives, B either grows bespoke crypto (forbidden direction per
+§11.4.74 catalogue-first) or stalls.</td>
+</tr>
+<tr>
+<td><strong>audited-verifier reuse</strong></td>
+<td><strong>YES</strong> — the defining advantage. One trust
+implementation, server + device, byte-for-byte the same
+role-verification semantics.</td>
+<td><strong>NO</strong> — a second, independent verifier the project
+must prove equivalent to the Go one.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Symmetry note (no bluff).</strong> A is <strong>not</strong>
+risk-free: it trades a <em>correctness-ownership</em> risk (B) for a
+<em>build/size + JNI-viability</em> risk (A). The decisive difference is
+that A’s residual risk is <strong>bounded and measurable</strong> (you
+can build the wrapper and read the APK size; you can run one refresh on
+the board), whereas B’s residual risk is <strong>unbounded and
+ongoing</strong> (you can never fully prove a hand-written security
+verifier is free of subtle attack-class gaps, and you must re-prove it
+on every spec change).</p>
+<h2 id="recommendation">§6. recommendation</h2>
+<p><strong>Recommend Option A — gomobile-wrapped <code>go-tuf/v2</code>
+— conditional on the §9 measurement gate.</strong></p>
+<p>Top three rationale points:</p>
+<ol type="1">
+<li><p><strong>Security-code-ownership: reuse the audited verifier,
+don’t hand-write a second one.</strong> The metadata verification flow
+is the single most security-sensitive component of the OTA trust chain
+(its whole purpose is to be un-foolable by a repository/key compromise —
+adr-0002 §2). A runs the <strong>same audited go-tuf/v2
+<code>Refresh()</code> verifier the server uses</strong> (§3; adr-0002
+§4.2 one-trust- implementation seam), so the device adds
+<strong>zero</strong> new hand-written security-critical code. B
+requires authoring a from-scratch Kotlin TUF client (§4 confirms there
+is no maintained JVM client to lean on), which adr-0002 §5.2 calls
+<em>“the highest-risk thing to hand-write.”</em> Risk-class beats
+footprint for a safety-critical path (HelixConstitution §11.4.123
+rock-solid-proof — a hand-rolled verifier is the hardest thing to prove
+correct).</p></li>
+<li><p><strong>A’s cost is bounded + measurable; B’s cost is unbounded +
+ongoing.</strong> A’s only genuine unknown is APK binary-size + JNI
+viability on RK3588 — both <em>measurable in a single spike</em> (§9)
+and mitigable (arm64-only build avoids the fat-APK multiplier; gomobile
+is maintained with current NDK-28 / 16KB-page-size support). B’s cost is
+permanent: re-deriving + re-testing TUF correctness in Kotlin on every
+spec change, plus the <strong>UNVERIFIED</strong>
+<code>Security-KMP</code> threshold/expiry fit (adr-0002 §8 item 9) that
+B is <em>on the critical path for</em> and A is not.</p></li>
+<li><p><strong>The verified API makes A small and B large.</strong> §3
+shows the client flow is ~3 wrapped calls
+(<code>config.New(remoteURL, rootBytes)</code> →
+<code>updater.New</code> → <code>Refresh()</code> →
+<code>GetTargetInfo()</code>), mapping 1:1 onto the
+<code>device_tuf.md</code> §6 flow (pinned <code>root.json</code> →
+<code>LocalTrustedRoot</code>; resolve target →
+<code>GetTargetInfo</code>). A wraps a tiny, known surface; B must
+re-implement everything behind <code>Refresh()</code> (root-rotation
+bounds, four expiry checks, four monotonic-version checks, threshold
+counting, snapshot↔︎targets consistency).</p></li>
+</ol>
+<p><strong>This recommendation flips to B only if</strong> the §9
+measurement shows the arm64-only Go-runtime <code>.so</code> size delta
+is unacceptable for the product <strong>and</strong> adr-0002 §8 item 9
+closes with <code>Security-KMP</code> confirmed to expose the TUF
+threshold/expiry primitives B needs. Absent both, A is the
+lower-total-risk choice. Per adr-0002 §4.3 step-4, device-side TUF
+enforcement is <strong>not made mandatory</strong> until this spike +
+the key-custody ceremony close their UNVERIFIED items either way.</p>
+<h2 id="integration-points">§7. integration points</h2>
+<p>The chosen client (A) plugs into two existing, unchanged seams. It
+does <strong>not</strong> alter the <code>device_tuf.md</code> §6
+flow/invariants or the MVP gate.</p>
+<h3
+id="the-verify-before-apply-gate-device_tuf.md-6-signing_verification.md-6-8-seam-3">§7.1
+the verify-before-apply gate (device_tuf.md §6 / signing_verification.md
+§6, §8 seam 3)</h3>
+<p>The TUF refresh/verify runs as the <strong>new first gate, in front
+of</strong> the unchanged MVP hash+signature check
+(<code>device_tuf.md</code> §6.1, §8.2 five-gate chain). With Option A
+the wrapped go-tuf/v2 updater fills exactly the
+<code>[NEW] TUF metadata refresh + verify</code> box:</p>
+<pre><code>download byte-identical artifact (HTTPS+Range; ADR-0004)
+        │
+        ▼
+[wrapped go-tuf/v2 updater]  cfg = config.New(remoteURL, pinnedRootBytes)   // §7.1 image-embedded root.json → LocalTrustedRoot
+                             u   = updater.New(cfg)                          // §3
+                             u.Refresh()                                     // root→timestamp→snapshot→targets; expiry + monotonic + threshold + consistency
+                             ti  = u.GetTargetInfo(targetPath)               // authorized length + SHA-256 for THIS artifact
+        │   ANY error from Refresh()/GetTargetInfo → ABORT before apply (device_tuf.md §6.1; do NOT fall back to MVP-only)
+        ▼
+MVP gate (UNCHANGED): recompute SHA-256/512 → MUST equal ti.Hashes (TUF-digest ↔ recomputed-bytes
+        cross-binding, device_tuf.md §6.2) AND the manifest hash → verify ED25519 detached sig vs trust-store key_id
+        ▼
+hand fully-verified local artifact to ota-update-engine-bridge → applyPayload
+        ▼
+update_engine FILE_HASH/METADATA_HASH + payload sig (native gate 3) → AVB / A/B auto-rollback (native gate 4)</code></pre>
+<p>The cross-binding in <code>device_tuf.md</code> §6.2 is satisfied
+directly by comparing the agent’s recomputed SHA-256 to
+<code>ti.Hashes</code> from <code>GetTargetInfo</code> — the verified
+API returns exactly that.</p>
+<h3 id="the-ota-android-agent-readme-7-device_tuf.md-5">§7.2 the
+ota-android-agent (README §7; device_tuf.md §5)</h3>
+<ul>
+<li><strong>Wrapped library packaging.</strong>
+<code>gomobile bind -target=android/arm64 ./tufclient</code> produces an
+<code>.aar</code> the Kotlin <code>ota-android-agent</code> depends on;
+the agent calls a thin Kotlin facade
+(<code>TufClient.refreshAndResolve(targetPath): {length, sha256}</code>)
+over the JNI boundary. Build the arm64-only variant for the RK3588
+target to avoid the fat-APK multiplier (§5).</li>
+<li><strong>Trusted-metadata cache + bootstrap root.</strong>
+<code>UpdaterConfig.LocalMetadataDir</code> points at an app-private
+on-device cache (the <code>device_tuf.md</code> §6.3 on-disk
+trusted-metadata layout); <code>UpdaterConfig.LocalTrustedRoot</code> is
+loaded from the <strong>image-embedded, AVB-protected pinned
+<code>root.json</code></strong> (<code>device_tuf.md</code> §7.1; the
+exact on-image location is the UNVERIFIED board item, adr-0002 §8 item
+8).</li>
+<li><strong>Fetcher.</strong> <code>UpdaterConfig.Fetcher</code> (or
+<code>SetDefaultFetcherHTTPClient</code>) routes metadata + target
+fetches over the existing HTTP/3→HTTP/2 transport (ADR-0004); no
+separate network stack.</li>
+<li><strong>Refresh trigger.</strong> The refresh fires at the
+update-check poll seam (<code>rollout_engine.md</code> §4 deterministic
+cohort check) ahead of the per-device install decision (the future
+Director seam, <code>device_tuf.md</code> §5). The exact trigger
+relative to the poll + the failure→agent-state mapping are the §6.3
+fields the spike finalizes.</li>
+<li><strong><code>Security-KMP</code></strong> remains the home of the
+<strong>unchanged MVP detached-signature device re-check</strong> (it is
+not on the TUF-verification path under A). No bespoke crypto is
+introduced (§11.4.74).</li>
+</ul>
+<h2 id="residual-risks">§8. residual risks</h2>
+<ol type="1">
+<li><strong>APK binary-size (A).</strong> Go-runtime <code>.so</code>
+per ABI. <strong>UNVERIFIED</strong> magnitude — measure (§9).
+Mitigation: arm64-only build for RK3588; if still unacceptable,
+reconsider B (§6 flip condition).</li>
+<li><strong>gomobile/JNI viability on Android-15 / RK3588 (A).</strong>
+<strong>UNVERIFIED</strong> (adr-0002 §8 item 8). Mitigation: §9 step-2
+runs one full refresh on the board before A is treated as decided.</li>
+<li><strong>JNI error-surface mapping.</strong> Errors from
+<code>Refresh()</code>/<code>GetTargetInfo()</code> must map cleanly
+across JNI into the agent’s abort-before-apply path (no silent swallow).
+Covered by the <code>device_tuf.md</code> §10 Layer-4 mutation “skip the
+TUF refresh / force verify always-true” mutants — they must flip
+PASS→FAIL through the wrapper.</li>
+<li><strong>gomobile project health (A).</strong> A long-lived
+dependency on <code>golang.org/x/mobile</code>. Maintained as of 2025
+(NDK-28 / 16KB-page-size support) but a single-point maintenance
+dependency. Mitigation: the wrapped surface is tiny (§3), so a future
+re-wrap or fallback is bounded.</li>
+<li><strong><code>Security-KMP</code> TUF-primitive fit (B-side,
+carried).</strong> Still <strong>UNVERIFIED</strong> (adr-0002 §8 item
+9). Only bites if A is rejected at §9 and B is reopened; it is the
+reason B is not the default.</li>
+<li><strong>Root-of-trust bootstrap provenance (both).</strong> The
+pinned <code>root.json</code> must be image-embedded + AVB-covered
+(<code>device_tuf.md</code> §7.1); its exact on-image location is
+<strong>UNVERIFIED</strong> board work (adr-0002 §8 item 8), independent
+of A/B.</li>
+<li><strong>No production precedent (both).</strong> No shipping
+production Android+TUF device client is known (§4; adr-0002 §8 item 6) —
+A is the first, which is itself an argument for reusing the audited
+verifier rather than hand-writing one.</li>
+</ol>
+<h2 id="the-measurement-gate-close-before-treating-a-as-decided">§9. the
+measurement gate (close before treating a as decided)</h2>
+<p>A is recommended <strong>conditionally</strong>; these two
+measurements close the only UNVERIFIED risks unique to A
+(HelixConstitution §11.4.123 — decide on measured evidence, not
+assertion):</p>
+<ul>
+<li><strong>Step 1 — APK size delta.</strong>
+<code>gomobile bind -target=android/arm64</code> a minimal wrapper
+exposing <code>config.New</code> → <code>updater.New</code> →
+<code>Refresh</code> → <code>GetTargetInfo</code>; integrate the
+<code>.aar</code> into a release build of
+<code>ota-android-agent</code>; <strong>measure the per-arm64
+<code>.so</code> size and the net signed-APK delta.</strong> Record the
+number (it is currently UNVERIFIED). Decision rule: accept A if the
+delta is within the product’s size budget; otherwise evaluate the §6
+flip condition.</li>
+<li><strong>Step 2 — JNI viability on the board.</strong> Run
+<strong>one full</strong> root→timestamp→snapshot→targets
+<code>Refresh()</code> + <code>GetTargetInfo()</code> through the
+wrapped updater on an <strong>Android-15 / RK3588 (Orange Pi 5
+Max)</strong> device against the §4.3 step-1 server publish path, with a
+pinned bootstrap <code>root.json</code>. Capture positive evidence (the
+resolved length+SHA-256 matching a known target) and run the
+<code>device_tuf.md</code> §10 Layer-3 attack-class rejections
+(rollback/freeze/mix-and-match) through the wrapper. A is decided only
+when both steps pass.</li>
+</ul>
+<h2 id="open-unverified-items-carried-forward">§10. open / unverified
+items carried forward</h2>
+<ol type="1">
+<li><strong>APK binary-size magnitude for the gomobile Go-runtime
+<code>.so</code></strong> — <strong>UNVERIFIED</strong>; no
+authoritative figure found; measure in §9 step-1. (Not invented per
+§11.4.6.)</li>
+<li><strong>gomobile/JNI viability on Android-15 / RK3588</strong> —
+<strong>UNVERIFIED</strong> (adr-0002 §8 item 8); §9 step-2.</li>
+<li><strong><code>Security-KMP</code> fit for TUF role/threshold/expiry
+primitives</strong> — <strong>UNVERIFIED</strong> (adr-0002 §8 item 9);
+only material if A is rejected and B reopened.</li>
+<li><strong>On-image AVB-protected location of the pinned
+<code>root.json</code></strong> — <strong>UNVERIFIED</strong> board work
+(<code>device_tuf.md</code> §7.1; adr-0002 §8 item 8).</li>
+<li><strong>§6.3 client fields</strong> — on-disk cache layout, refresh
+trigger vs poll, failure→agent-state mapping — finalized by this spike’s
+implementation; flow/invariants already fixed in
+<code>device_tuf.md</code> §6.</li>
+<li><strong>HelixConstitution clause numbers</strong> (§11.4.6, §11.4.8,
+§11.4.74, §11.4.123) cited per corpus convention; the Constitution
+source file is not present in this repo (adr-0002 §7 note).
+<strong>UNVERIFIED.</strong></li>
+<li><strong>No shipping production Android+TUF device client
+precedent</strong> — <strong>UNVERIFIED/absent</strong> (§4; adr-0002 §8
+item 6).</li>
+</ol>
+<h2 id="sources">§11. sources</h2>
+<p>In-repo (paths relative to
+<code>docs/research/main_specs/</code>):</p>
+<ul>
+<li><a
+href="../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— §3.2 (go-tuf/v2 verified facts + additive layering), §4.2
+(one-trust-implementation seam, verify- gate-distinct, Security-KMP
+routing), §4.3 (step-1 server+Go-client prototype, step-2 this spike,
+step-3 ceremony, step-4 mandatory-gating, step-5 Director split), §5.2
+(A vs B cost framing), §8 (UNVERIFIED items 1, 2, 6, 8, 9).</li>
+<li><a
+href="device_tuf.md"><code>1.0.1-staged-rollout/device_tuf.md</code></a>
+— §3 (roles + key posture), §4 (attack classes), §5 (server↔︎device
+split, the A/B option table), §6 (device verify-before-apply flow + §6.2
+cross-binding + §6.3 OPEN fields), §7.1 (pinned bootstrap root.json),
+§10 (four-layer + attack-class testing), §11 (OPEN items).</li>
+<li><a
+href="../1.0.0-mvp/security/signing_verification.md"><code>1.0.0-mvp/security/signing_verification.md</code></a>
+— §4 (build-pipeline key in device trust store, same provenance as the
+pinned root.json), §6 (device re-verify gate this client fronts), §8
+(TUF-forward seams).</li>
+<li><a
+href="rollout_engine.md"><code>1.0.1-staged-rollout/rollout_engine.md</code></a>
+— §4 (cohort check = refresh-trigger seam).</li>
+</ul>
+<p>External (URLs + access date in the footer):</p>
+<ul>
+<li><code>go-tuf/v2</code> <code>metadata/updater</code> package —
+pkg.go.dev (v2.4.2, 2026-05-19); the <code>Updater</code> API
+(<code>New</code>, <code>Refresh</code>, <code>GetTargetInfo</code>,
+<code>FindCachedTarget</code>, <code>DownloadTarget</code>,
+<code>GetTopLevelTargets</code>).</li>
+<li><code>go-tuf/v2</code> <code>metadata/config</code> package —
+pkg.go.dev; <code>UpdaterConfig</code>
+(<code>New(remoteURL, rootBytes)</code>, <code>LocalTrustedRoot</code>,
+<code>Fetcher</code>, <code>*MaxLength</code>,
+<code>MaxRootRotations</code>, <code>PrefixTargetsWithHash</code>).</li>
+<li>The Update Framework project + GitHub org — official implementations
+(Python/Go/JS/Rust); no official Java/Kotlin client.</li>
+<li><code>uptane/ota-tuf</code> GitHub README — Scala,
+<strong>server-side</strong> reposerver/keyserver (latest v6.1.0,
+2026-04-27); not a device client.</li>
+<li>gomobile / <code>golang.org/x/mobile</code> —
+<code>gomobile bind</code>, <code>-target=android/arm64</code> ABI
+selection; maintained 2025 (NDK-28, 16KB page-size alignment); per-ABI
+Go-runtime <code>.so</code> (exact size UNVERIFIED).</li>
+</ul>
+<h2 id="sources-verified-2026-06-08">sources verified 2026-06-08</h2>
+<ul>
+<li>go-tuf/v2 <code>metadata/updater</code> — <a
+href="https://pkg.go.dev/github.com/theupdateframework/go-tuf/v2/metadata/updater"
+class="uri">https://pkg.go.dev/github.com/theupdateframework/go-tuf/v2/metadata/updater</a>
+— accessed 2026-06-08 (latest release v2.4.2, 2026-05-19;
+<code>Updater</code>/<code>New</code>/<code>Refresh</code>/<code>GetTargetInfo</code>
+signatures verified).</li>
+<li>go-tuf/v2 <code>metadata/config</code> — <a
+href="https://pkg.go.dev/github.com/theupdateframework/go-tuf/v2/metadata/config"
+class="uri">https://pkg.go.dev/github.com/theupdateframework/go-tuf/v2/metadata/config</a>
+— accessed 2026-06-08
+(<code>UpdaterConfig.New(remoteURL, rootBytes)</code> + field set
+verified).</li>
+<li>go-tuf repository — <a
+href="https://github.com/theupdateframework/go-tuf"
+class="uri">https://github.com/theupdateframework/go-tuf</a> — accessed
+2026-06-08 (v2 replaces legacy v0.7.0;
+<code>Updater</code>/<code>TrustedMetadata</code>/<code>Refresh</code>
+workflow description).</li>
+<li>The Update Framework — <a href="https://theupdateframework.io/"
+class="uri">https://theupdateframework.io/</a> and <a
+href="https://github.com/theupdateframework"
+class="uri">https://github.com/theupdateframework</a> — accessed
+2026-06-08 (official implementations are Python/Go/JS/Rust; no official
+Java/Kotlin client).</li>
+<li>uptane/ota-tuf — <a href="https://github.com/uptane/ota-tuf"
+class="uri">https://github.com/uptane/ota-tuf</a> — accessed 2026-06-08
+(Scala, server-side reposerver+keyserver, latest v6.1.0 2026-04-27; NOT
+a device verification client).</li>
+<li>gomobile — <a
+href="https://pkg.go.dev/golang.org/x/mobile/cmd/gomobile"
+class="uri">https://pkg.go.dev/golang.org/x/mobile/cmd/gomobile</a> and
+<a
+href="https://danballard.com/2025/09/28/generating-android-16kb-page-size-libraries-from-go/"
+class="uri">https://danballard.com/2025/09/28/generating-android-16kb-page-size-libraries-from-go/</a>
+— accessed 2026-06-08 (<code>-target</code> ABI selection; NDK-28 /
+16KB-page-size support 2025; no authoritative Go-runtime
+<code>.so</code> size figure found → carried UNVERIFIED).</li>
+<li><strong>Negative finding (no maintained JVM/Kotlin TUF device
+client):</strong> targeted GitHub/Maven survey — accessed 2026-06-08 —
+nearest JVM artifact is Scala server-side <code>uptane/ota-tuf</code>;
+no maintained Kotlin/JVM device-verification client exists.</li>
+</ul>
+</body>
+</html>
