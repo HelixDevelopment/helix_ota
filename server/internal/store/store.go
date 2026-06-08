@@ -106,6 +106,31 @@ type TelemetryRecord struct {
 	ReceivedAt   time.Time
 }
 
+// AuditEntry is one persisted admin/operator action (audit_logs;
+// operational_endpoints.md §4.2). No transport types cross the seam. UserID is
+// empty when the actor does not resolve to a users row (nullable by design);
+// the token subject is then preserved in ActorSubject.
+type AuditEntry struct {
+	ID           string
+	UserID       string
+	ActorSubject string
+	Action       string // SCREAMING_SNAKE_CASE verb, e.g. DEVICE_REGISTER
+	ResourceType string // artifact|release|deployment|device|group|group_member
+	ResourceID   string
+	Details      map[string]string
+	IPAddress    string
+	UserAgent    string
+	CreatedAt    time.Time
+}
+
+// AuditFilter narrows an audit list query (operational_endpoints.md §4.3).
+type AuditFilter struct {
+	Action       string
+	ResourceType string
+	Limit        int
+	Cursor       string
+}
+
 // ReleaseFilter narrows a release list query (endpoints.md §10.2).
 type ReleaseFilter struct {
 	OSType      otaprotocol.OSType
@@ -143,6 +168,10 @@ type Repository interface {
 	// Telemetry.
 	AppendTelemetry(ctx context.Context, rec TelemetryRecord) error
 	TelemetryForDeployment(ctx context.Context, deploymentID string) ([]TelemetryRecord, error)
+
+	// Audit (operational_endpoints.md §4): append-only admin/operator action log.
+	AppendAudit(ctx context.Context, e AuditEntry) error
+	ListAudit(ctx context.Context, f AuditFilter) ([]AuditEntry, string, error)
 
 	// Idempotency support for register/deployment replay (endpoints.md §2).
 	GetIdempotent(ctx context.Context, key string) (string, bool)

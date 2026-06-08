@@ -114,9 +114,10 @@ func (s *Server) Router() *gin.Engine {
 	v1.POST("/auth/login", s.handleLogin)
 	v1.POST("/auth/refresh", s.handleRefresh)
 
-	// Protected endpoints: authenticate, then enforce per-route roles.
+	// Protected endpoints: authenticate, enforce per-route roles, then audit any
+	// successful mutating action (auditMiddleware runs after the handler).
 	auth := v1.Group("")
-	auth.Use(s.authMiddleware())
+	auth.Use(s.authMiddleware(), s.auditMiddleware())
 	{
 		auth.POST("/devices/register", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDevice)
 		auth.GET("/devices/:deviceId/status", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceStatus)
@@ -133,6 +134,9 @@ func (s *Server) Router() *gin.Engine {
 
 		auth.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
 		auth.POST("/client/telemetry", requireRole(RoleDevice), s.handleClientTelemetry)
+
+		// Audit log read (operational_endpoints.md §4.3) — admin only.
+		auth.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
 	}
 
 	return r

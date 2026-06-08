@@ -156,6 +156,27 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("TelemetryForDeployment empty: %+v err=%v", evs, err)
 	}
 
+	// --- audit ---
+	if err := repo.AppendAudit(ctx, AuditEntry{ID: "aud-1", ActorSubject: "admin@helix.test",
+		Action: "DEVICE_REGISTER", ResourceType: "device", ResourceID: "dev-1",
+		Details: map[string]string{"model": "OrangePi5Max"}, IPAddress: "10.0.0.1",
+		UserAgent: "curl", CreatedAt: ts}); err != nil {
+		t.Fatalf("AppendAudit 1: %v", err)
+	}
+	if err := repo.AppendAudit(ctx, AuditEntry{ID: "aud-2", Action: "RELEASE_CREATE",
+		ResourceType: "release", ResourceID: "rel-1", CreatedAt: ts}); err != nil {
+		t.Fatalf("AppendAudit 2: %v", err)
+	}
+	auds, _, err := repo.ListAudit(ctx, AuditFilter{})
+	if err != nil || len(auds) != 2 || auds[0].Action != "DEVICE_REGISTER" || auds[0].Details["model"] != "OrangePi5Max" {
+		t.Fatalf("ListAudit all: %+v err=%v", auds, err)
+	}
+	// Filter by action.
+	filtered, _, err := repo.ListAudit(ctx, AuditFilter{Action: "RELEASE_CREATE"})
+	if err != nil || len(filtered) != 1 || filtered[0].ID != "aud-2" {
+		t.Fatalf("ListAudit filtered: %+v err=%v", filtered, err)
+	}
+
 	// --- idempotency ---
 	if _, ok := repo.GetIdempotent(ctx, "k1"); ok {
 		t.Fatalf("GetIdempotent before put should be absent")

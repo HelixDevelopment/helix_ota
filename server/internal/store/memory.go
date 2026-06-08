@@ -22,6 +22,7 @@ type MemoryRepository struct {
 	relOrder    []string              // insertion order for stable listing
 	deployments map[string]Deployment // by deploymentID
 	telemetry   []TelemetryRecord     // append-only event log
+	audit       []AuditEntry          // append-only admin/operator action log
 	idem        map[string]string     // Idempotency-Key -> resultID
 }
 
@@ -285,6 +286,47 @@ func (m *MemoryRepository) AllDevices(_ context.Context) []Device {
 }
 
 // GetIdempotent returns a stored result id for an Idempotency-Key.
+// AppendAudit appends an admin/operator action to the audit log.
+func (m *MemoryRepository) AppendAudit(_ context.Context, e AuditEntry) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.audit = append(m.audit, e)
+	return nil
+}
+
+// ListAudit returns audit entries matching the filter in insertion order, with
+// the same offset-cursor paging as ListReleases.
+func (m *MemoryRepository) ListAudit(_ context.Context, f AuditFilter) ([]AuditEntry, string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	start := decodeCursor(f.Cursor)
+	var matched []AuditEntry
+	for _, e := range m.audit {
+		if f.Action != "" && e.Action != f.Action {
+			continue
+		}
+		if f.ResourceType != "" && e.ResourceType != f.ResourceType {
+			continue
+		}
+		matched = append(matched, e)
+	}
+	if start > len(matched) {
+		start = len(matched)
+	}
+	end := start + limit
+	next := ""
+	if end < len(matched) {
+		next = encodeCursor(end)
+	} else {
+		end = len(matched)
+	}
+	return matched[start:end], next, nil
+}
+
 func (m *MemoryRepository) GetIdempotent(_ context.Context, key string) (string, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

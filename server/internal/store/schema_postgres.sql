@@ -83,6 +83,22 @@ CREATE TABLE IF NOT EXISTS helix_ota.telemetry_events (
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_deployment ON helix_ota.telemetry_events (deployment_id);
 
+CREATE TABLE IF NOT EXISTS helix_ota.audit_logs (
+    seq           BIGSERIAL PRIMARY KEY,
+    audit_id      TEXT        NOT NULL,
+    user_id       TEXT        NOT NULL DEFAULT '',
+    actor_subject TEXT        NOT NULL DEFAULT '',
+    action        TEXT        NOT NULL,
+    resource_type TEXT        NOT NULL DEFAULT '',
+    resource_id   TEXT        NOT NULL DEFAULT '',
+    details       JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    ip_address    TEXT        NOT NULL DEFAULT '',
+    user_agent    TEXT        NOT NULL DEFAULT '',
+    created_at    TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_audit_action   ON helix_ota.audit_logs (action);
+CREATE INDEX IF NOT EXISTS idx_audit_resource ON helix_ota.audit_logs (resource_type, resource_id);
+
 CREATE TABLE IF NOT EXISTS helix_ota.idempotency_keys (
     key        TEXT PRIMARY KEY,
     result_id  TEXT        NOT NULL,

@@ -416,6 +416,62 @@ FROM helix_ota.telemetry_events WHERE deployment_id=$1 ORDER BY seq`
 	return out, rows.Err()
 }
 
+// --- audit ---
+
+func (r *PostgresRepository) AppendAudit(ctx context.Context, e AuditEntry) error {
+	details, err := jsonbOf(orEmptyMap(e.Details))
+	if err != nil {
+		return err
+	}
+	const q = `
+INSERT INTO helix_ota.audit_logs
+ (audit_id, user_id, actor_subject, action, resource_type, resource_id, details,
+  ip_address, user_agent, created_at)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
+	_, err = r.pool.Exec(ctx, q, e.ID, e.UserID, e.ActorSubject, e.Action, e.ResourceType,
+		e.ResourceID, details, e.IPAddress, e.UserAgent, e.CreatedAt)
+	return err
+}
+
+func (r *PostgresRepository) ListAudit(ctx context.Context, f AuditFilter) ([]AuditEntry, string, error) {
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	start := decodeCursor(f.Cursor)
+	const q = `
+SELECT audit_id, user_id, actor_subject, action, resource_type, resource_id, details,
+       ip_address, user_agent, created_at
+FROM helix_ota.audit_logs
+WHERE ($1='' OR action=$1) AND ($2='' OR resource_type=$2)
+ORDER BY seq OFFSET $3 LIMIT $4`
+	rows, err := r.pool.Query(ctx, q, f.Action, f.ResourceType, start, limit+1)
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+	var out []AuditEntry
+	for rows.Next() {
+		var e AuditEntry
+		var details []byte
+		if serr := rows.Scan(&e.ID, &e.UserID, &e.ActorSubject, &e.Action, &e.ResourceType,
+			&e.ResourceID, &details, &e.IPAddress, &e.UserAgent, &e.CreatedAt); serr != nil {
+			return nil, "", serr
+		}
+		_ = json.Unmarshal(details, &e.Details)
+		out = append(out, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
+	next := ""
+	if len(out) > limit {
+		out = out[:limit]
+		next = encodeCursor(start + limit)
+	}
+	return out, next, nil
+}
+
 // --- idempotency ---
 
 func (r *PostgresRepository) GetIdempotent(ctx context.Context, key string) (string, bool) {
