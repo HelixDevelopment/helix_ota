@@ -542,10 +542,10 @@ href="#11-spec_vs_implementation_divergences">§11</a>.</p>
 <td><code>POST</code></td>
 <td><code>/groups/:groupId/members</code></td>
 <td><code>operator</code>, <code>admin</code></td>
-<td><code>MemberAdd</code></td>
-<td>— (<code>204</code>)</td>
+<td><code>MemberAdd</code> (batch)</td>
+<td><code>MemberAddResult</code> (<code>200</code>)</td>
 <td>L175</td>
-<td><code>handlers_group.go:handleAddGroupMember</code></td>
+<td><code>handlers_group.go:handleAddGroupMembers</code></td>
 </tr>
 <tr>
 <td><code>DELETE</code></td>
@@ -789,7 +789,7 @@ is <strong>required</strong> — blank →
 <code>400 VALIDATION_FAILED</code>
 (<code>details:[{field:"name",issue:"required"}]</code>).</li>
 <li><strong>Response 201</strong> (<code>GroupView</code>):
-<code>{ "id", "name", "description"(omitempty), "member_count", "created_at" }</code>
+<code>{ "group_id", "name", "description"(omitempty), "member_count", "created_at" }</code>
 (<code>member_count</code> is the live membership count; 0 for a
 just-created group).</li>
 <li><strong>Status codes:</strong> <code>201</code> Created;
@@ -838,13 +838,17 @@ collision; <code>404 NOT_FOUND</code>; <code>500 INTERNAL</code>.</li>
 <code>null</code>). <code>404 NOT_FOUND</code> if the group is
 missing.</li>
 <li><strong>POST <code>/groups/{groupId}/members</code></strong>
-(<code>handleAddGroupMember</code>, <code>server.go:175</code>): roles
+(<code>handleAddGroupMembers</code>, <code>server.go:175</code>): roles
 <code>operator</code>, <code>admin</code>. Body <code>MemberAdd</code>
-<code>{ "device_id": "..." }</code> — <strong>a single device
-id</strong>, required (blank → <code>400 VALIDATION_FAILED</code>).
-Response <code>204 No Content</code>. <code>404 NOT_FOUND</code>
-(<code>store.ErrNotFound</code> → missing group);
-<code>500 INTERNAL</code>.</li>
+<code>{ "device_ids": ["..."] }</code> — <strong>a batch</strong>
+(non-empty, blank/empty → <code>400 VALIDATION_FAILED</code>). Response
+<code>200</code> (<code>MemberAddResult</code>)
+<code>{ "added": [...], "already_member": [...], "not_found": [...] }</code>
+— a device must be REGISTERED to be added (unregistered ids →
+<code>not_found</code>), ids already in the group →
+<code>already_member</code>, the rest → <code>added</code> (duplicates
+within the batch de-duped). <code>404 NOT_FOUND</code> if the GROUP is
+missing; <code>500 INTERNAL</code>.</li>
 <li><strong>DELETE
 <code>/groups/{groupId}/members/{deviceId}</code></strong>
 (<code>handleRemoveGroupMember</code>, <code>server.go:176</code>):
@@ -1240,25 +1244,23 @@ query scoping, which are still <strong>not</strong> implemented.</li>
 <ul>
 <li>The built <code>GroupView</code> is
 <code>{ id, name, description, member_count, created_at }</code>.
-<code>member_count</code> is now implemented (LANDED, additive — the
-WIDEN of spec row 6, commit pending); <code>filter_criteria</code> is
-still <strong>not</strong> present (dynamic membership deferred — MVP is
-static-only). The response key for the id is <code>id</code>, not the
-spec’s <code>group_id</code> (TRIM recommendation, not yet amended in
-the prose spec).</li>
+<code>member_count</code> is implemented (LANDED 4cb86d7). The id key is
+now <code>group_id</code> (RESOLVED — WIDENed to match the spec).
+<code>filter_criteria</code> is still <strong>not</strong> present
+(dynamic membership deferred — MVP is static-only).</li>
 <li><code>GET /groups</code> has <strong>no pagination</strong> (no
 <code>?name</code>/<code>?limit</code>/<code>?cursor</code>); the spec
-specifies a paginated <code>GroupList</code>.</li>
-<li><code>POST /groups/{id}/members</code> accepts a
-<strong>single</strong> <code>{ "device_id": "..." }</code> and returns
-<code>204</code>; the spec specifies a <strong>batch</strong>
-<code>{ "device_ids": [...] }</code> body returning <code>200</code>
-with a <code>{added, already_member, not_found}</code> result. There is
-no partial-success reporting in the build.</li>
+specifies a paginated <code>GroupList</code>. (Open — TRIM/WIDEN
+pending; low priority, groups are bounded.)</li>
+<li><code>POST /groups/{id}/members</code> is a <strong>batch</strong>
+<code>{ "device_ids": [...] }</code> returning <code>200</code> with a
+<code>{added, already_member, not_found}</code> result (RESOLVED —
+WIDENed to match the spec).</li>
 <li><code>GET /groups/{id}/members</code> returns
 <code>{ group_id, device_ids: [string] }</code>; the spec specifies an
 <code>items</code> array of <code>{ device_id, added_at }</code> objects
-with pagination.</li>
+with pagination. (Open — needs a store membership-timestamp change;
+deferred to group WIDEN B2.)</li>
 <li><code>DELETE /groups/{id}/members/{deviceId}</code> requires
 <code>operator</code>/<code>admin</code> in both spec and code
 (consistent). <code>DELETE /groups/{id}</code> requires

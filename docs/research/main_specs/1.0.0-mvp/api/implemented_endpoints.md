@@ -91,7 +91,7 @@ inline and collected in [§11](#11-spec_vs_implementation_divergences).
 | `PATCH` | `/groups/:groupId` | `operator`, `admin` | `GroupUpdate` | `GroupView` | L172 | `handlers_group.go:handleUpdateGroup` |
 | `DELETE` | `/groups/:groupId` | `admin` | — | — (`204`) | L173 | `handlers_group.go:handleDeleteGroup` |
 | `GET` | `/groups/:groupId/members` | `viewer`, `operator`, `admin` | — | `GroupMembers` | L174 | `handlers_group.go:handleListGroupMembers` |
-| `POST` | `/groups/:groupId/members` | `operator`, `admin` | `MemberAdd` | — (`204`) | L175 | `handlers_group.go:handleAddGroupMember` |
+| `POST` | `/groups/:groupId/members` | `operator`, `admin` | `MemberAdd` (batch) | `MemberAddResult` (`200`) | L175 | `handlers_group.go:handleAddGroupMembers` |
 | `DELETE` | `/groups/:groupId/members/:deviceId` | `operator`, `admin` | — | — (`204`) | L176 | `handlers_group.go:handleRemoveGroupMember` |
 | `POST` | `/deployments/:deploymentId/rollout` | `operator`, `admin` | `RolloutCreate` | `RolloutState` | L152 | `handlers_rollout.go:handleCreateRollout` |
 | `GET` | `/deployments/:deploymentId/rollout` | `viewer`, `operator`, `admin` | — | `RolloutState` | L153 | `handlers_rollout.go:handleGetRollout` |
@@ -236,7 +236,7 @@ Wire types: `handlers_group.go`. Store seam: `store.go` (`CreateGroup`, `GetGrou
 - **Roles:** `operator`, `admin` (`server.go:169`). **Maps to:** `handleCreateGroup`.
 - **Request body** (`GroupCreate`): `{ "name": "...", "description": "..." }`. `name` is
   **required** — blank → `400 VALIDATION_FAILED` (`details:[{field:"name",issue:"required"}]`).
-- **Response 201** (`GroupView`): `{ "id", "name", "description"(omitempty), "member_count", "created_at" }` (`member_count` is the live membership count; 0 for a just-created group).
+- **Response 201** (`GroupView`): `{ "group_id", "name", "description"(omitempty), "member_count", "created_at" }` (`member_count` is the live membership count; 0 for a just-created group).
 - **Status codes:** `201` Created; `400 VALIDATION_FAILED` (malformed body / blank name);
   `409 CONFLICT` (`store.ErrConflict` → `"a group with that name already exists"`);
   `500 INTERNAL`.
@@ -264,10 +264,12 @@ Wire types: `handlers_group.go`. Store seam: `store.go` (`CreateGroup`, `GetGrou
 - **GET `/groups/{groupId}/members`** (`handleListGroupMembers`, `server.go:174`): roles `viewer`,
   `operator`, `admin`. Response `GroupMembers` `{ "group_id", "device_ids": [...] }` (empty array,
   never `null`). `404 NOT_FOUND` if the group is missing.
-- **POST `/groups/{groupId}/members`** (`handleAddGroupMember`, `server.go:175`): roles `operator`,
-  `admin`. Body `MemberAdd` `{ "device_id": "..." }` — **a single device id**, required (blank →
-  `400 VALIDATION_FAILED`). Response `204 No Content`. `404 NOT_FOUND` (`store.ErrNotFound` →
-  missing group); `500 INTERNAL`.
+- **POST `/groups/{groupId}/members`** (`handleAddGroupMembers`, `server.go:175`): roles `operator`,
+  `admin`. Body `MemberAdd` `{ "device_ids": ["..."] }` — **a batch** (non-empty, blank/empty →
+  `400 VALIDATION_FAILED`). Response `200` (`MemberAddResult`) `{ "added": [...], "already_member":
+  [...], "not_found": [...] }` — a device must be REGISTERED to be added (unregistered ids → `not_found`),
+  ids already in the group → `already_member`, the rest → `added` (duplicates within the batch
+  de-duped). `404 NOT_FOUND` if the GROUP is missing; `500 INTERNAL`.
 - **DELETE `/groups/{groupId}/members/{deviceId}`** (`handleRemoveGroupMember`, `server.go:176`):
   roles `operator`, `admin`. Response `204 No Content`. `404 NOT_FOUND` (missing group);
   `500 INTERNAL`.
@@ -537,16 +539,15 @@ since been closed in code are marked **RESOLVED** with the landing commit.
 **Groups (`operational_endpoints.md` §6 vs `handlers_group.go`):**
 
 - The built `GroupView` is `{ id, name, description, member_count, created_at }`. `member_count`
-  is now implemented (LANDED, additive — the WIDEN of spec row 6, commit pending); `filter_criteria`
-  is still **not** present (dynamic membership deferred — MVP is static-only). The response key for
-  the id is `id`, not the spec's `group_id` (TRIM recommendation, not yet amended in the prose spec).
+  is implemented (LANDED 4cb86d7). The id key is now `group_id` (RESOLVED — WIDENed to match the
+  spec). `filter_criteria` is still **not** present (dynamic membership deferred — MVP is static-only).
 - `GET /groups` has **no pagination** (no `?name`/`?limit`/`?cursor`); the spec specifies a
-  paginated `GroupList`.
-- `POST /groups/{id}/members` accepts a **single** `{ "device_id": "..." }` and returns `204`; the
-  spec specifies a **batch** `{ "device_ids": [...] }` body returning `200` with a
-  `{added, already_member, not_found}` result. There is no partial-success reporting in the build.
+  paginated `GroupList`. (Open — TRIM/WIDEN pending; low priority, groups are bounded.)
+- `POST /groups/{id}/members` is a **batch** `{ "device_ids": [...] }` returning `200` with a
+  `{added, already_member, not_found}` result (RESOLVED — WIDENed to match the spec).
 - `GET /groups/{id}/members` returns `{ group_id, device_ids: [string] }`; the spec specifies an
-  `items` array of `{ device_id, added_at }` objects with pagination.
+  `items` array of `{ device_id, added_at }` objects with pagination. (Open — needs a store
+  membership-timestamp change; deferred to group WIDEN B2.)
 - `DELETE /groups/{id}/members/{deviceId}` requires `operator`/`admin` in both spec and code
   (consistent). `DELETE /groups/{id}` requires `admin` in both (consistent).
 

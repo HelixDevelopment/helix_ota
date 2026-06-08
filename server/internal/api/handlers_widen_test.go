@@ -77,12 +77,17 @@ func TestGroupMemberCount(t *testing.T) {
 		t.Fatalf("new group member_count want 0, got %d", g.MemberCount)
 	}
 	for _, dev := range []string{"dev-a", "dev-b"} {
-		if w := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.ID+"/members", tok, MemberAdd{DeviceID: dev}); w.Code != http.StatusNoContent {
-			t.Fatalf("add member %s want 204, got %d", dev, w.Code)
+		if err := env.repo.CreateDevice(context.Background(), store.Device{DeviceID: dev,
+			HardwareID: "HW-" + dev, Model: "OrangePi5Max", OSType: otaprotocol.OSAndroid, RegisteredAt: env.srv.now()}); err != nil {
+			t.Fatalf("register %s: %v", dev, err)
 		}
 	}
+	aw := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.GroupID+"/members", tok, MemberAdd{DeviceIDs: []string{"dev-a", "dev-b"}})
+	if aw.Code != http.StatusOK {
+		t.Fatalf("batch add want 200, got %d (%s)", aw.Code, aw.Body.String())
+	}
 	// GET reflects the live count.
-	gw := env.do(http.MethodGet, "/api/v1/groups/"+g.ID, tok, nil, "")
+	gw := env.do(http.MethodGet, "/api/v1/groups/"+g.GroupID, tok, nil, "")
 	var got GroupView
 	env.decode(gw, &got)
 	if got.MemberCount != 2 {
@@ -94,7 +99,7 @@ func TestGroupMemberCount(t *testing.T) {
 	env.decode(lw, &list)
 	found := false
 	for _, it := range list.Items {
-		if it.ID == g.ID {
+		if it.GroupID == g.GroupID {
 			found = true
 			if it.MemberCount != 2 {
 				t.Fatalf("listed group member_count want 2, got %d", it.MemberCount)

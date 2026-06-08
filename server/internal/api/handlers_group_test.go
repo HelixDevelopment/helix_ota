@@ -1,8 +1,13 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"testing"
+
+	otaprotocol "github.com/HelixDevelopment/ota-protocol"
+
+	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
 
 func TestGroupCRUDLifecycle(t *testing.T) {
@@ -16,7 +21,7 @@ func TestGroupCRUDLifecycle(t *testing.T) {
 	}
 	var g GroupView
 	env.decode(w, &g)
-	if g.ID == "" || g.Name != "fleet-a" {
+	if g.GroupID == "" || g.Name != "fleet-a" {
 		t.Fatalf("created group mismatch: %+v", g)
 	}
 
@@ -27,7 +32,7 @@ func TestGroupCRUDLifecycle(t *testing.T) {
 	}
 
 	// Get + list.
-	if gw := env.do(http.MethodGet, "/api/v1/groups/"+g.ID, tok, nil, ""); gw.Code != http.StatusOK {
+	if gw := env.do(http.MethodGet, "/api/v1/groups/"+g.GroupID, tok, nil, ""); gw.Code != http.StatusOK {
 		t.Fatalf("get group want 200, got %d", gw.Code)
 	}
 	if nf := env.do(http.MethodGet, "/api/v1/groups/nope", tok, nil, ""); nf.Code != http.StatusNotFound {
@@ -41,37 +46,52 @@ func TestGroupCRUDLifecycle(t *testing.T) {
 	}
 
 	// Update.
-	uw := env.doJSON(http.MethodPatch, "/api/v1/groups/"+g.ID, tok, GroupUpdate{Name: "fleet-a", Description: "field"})
+	uw := env.doJSON(http.MethodPatch, "/api/v1/groups/"+g.GroupID, tok, GroupUpdate{Name: "fleet-a", Description: "field"})
 	if uw.Code != http.StatusOK {
 		t.Fatalf("update group want 200, got %d (%s)", uw.Code, uw.Body.String())
 	}
 
-	// Members: add (idempotent), list, remove.
-	if mw := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.ID+"/members", tok, MemberAdd{DeviceID: "dev-1"}); mw.Code != http.StatusNoContent {
-		t.Fatalf("add member want 204, got %d (%s)", mw.Code, mw.Body.String())
+	// Members: batch add (with not_found + already_member buckets), list, remove.
+	// dev-1 is registered; ghost-dev is not (lands in not_found).
+	if err := env.repo.CreateDevice(context.Background(), store.Device{DeviceID: "dev-1",
+		HardwareID: "HW-D1", Model: "OrangePi5Max", OSType: otaprotocol.OSAndroid, RegisteredAt: env.srv.now()}); err != nil {
+		t.Fatalf("register dev-1: %v", err)
 	}
-	if mw2 := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.ID+"/members", tok, MemberAdd{DeviceID: "dev-1"}); mw2.Code != http.StatusNoContent {
-		t.Fatalf("idempotent add member want 204, got %d", mw2.Code)
+	mw := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.GroupID+"/members", tok, MemberAdd{DeviceIDs: []string{"dev-1", "ghost-dev"}})
+	if mw.Code != http.StatusOK {
+		t.Fatalf("batch add member want 200, got %d (%s)", mw.Code, mw.Body.String())
 	}
-	mlw := env.do(http.MethodGet, "/api/v1/groups/"+g.ID+"/members", tok, nil, "")
+	var res MemberAddResult
+	env.decode(mw, &res)
+	if len(res.Added) != 1 || res.Added[0] != "dev-1" || len(res.NotFound) != 1 || res.NotFound[0] != "ghost-dev" {
+		t.Fatalf("batch add result mismatch: %+v", res)
+	}
+	// Re-add dev-1 -> already_member.
+	mw2 := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.GroupID+"/members", tok, MemberAdd{DeviceIDs: []string{"dev-1"}})
+	var res2 MemberAddResult
+	env.decode(mw2, &res2)
+	if mw2.Code != http.StatusOK || len(res2.AlreadyMember) != 1 || res2.AlreadyMember[0] != "dev-1" {
+		t.Fatalf("re-add result want already_member dev-1, got %d %+v", mw2.Code, res2)
+	}
+	mlw := env.do(http.MethodGet, "/api/v1/groups/"+g.GroupID+"/members", tok, nil, "")
 	var members GroupMembers
 	env.decode(mlw, &members)
 	if len(members.DeviceIDs) != 1 || members.DeviceIDs[0] != "dev-1" {
 		t.Fatalf("members mismatch: %+v", members)
 	}
-	// Add member to unknown group -> 404.
-	if bad := env.doJSON(http.MethodPost, "/api/v1/groups/nope/members", tok, MemberAdd{DeviceID: "dev-1"}); bad.Code != http.StatusNotFound {
+	// Batch add to unknown group -> 404.
+	if bad := env.doJSON(http.MethodPost, "/api/v1/groups/nope/members", tok, MemberAdd{DeviceIDs: []string{"dev-1"}}); bad.Code != http.StatusNotFound {
 		t.Fatalf("add member to unknown group want 404, got %d", bad.Code)
 	}
-	if rw := env.do(http.MethodDelete, "/api/v1/groups/"+g.ID+"/members/dev-1", tok, nil, ""); rw.Code != http.StatusNoContent {
+	if rw := env.do(http.MethodDelete, "/api/v1/groups/"+g.GroupID+"/members/dev-1", tok, nil, ""); rw.Code != http.StatusNoContent {
 		t.Fatalf("remove member want 204, got %d", rw.Code)
 	}
 
 	// Delete group, then it's gone.
-	if dw := env.do(http.MethodDelete, "/api/v1/groups/"+g.ID, tok, nil, ""); dw.Code != http.StatusNoContent {
+	if dw := env.do(http.MethodDelete, "/api/v1/groups/"+g.GroupID, tok, nil, ""); dw.Code != http.StatusNoContent {
 		t.Fatalf("delete group want 204, got %d", dw.Code)
 	}
-	if gone := env.do(http.MethodGet, "/api/v1/groups/"+g.ID, tok, nil, ""); gone.Code != http.StatusNotFound {
+	if gone := env.do(http.MethodGet, "/api/v1/groups/"+g.GroupID, tok, nil, ""); gone.Code != http.StatusNotFound {
 		t.Fatalf("deleted group should be 404, got %d", gone.Code)
 	}
 }
@@ -92,7 +112,7 @@ func TestGroupRBAC(t *testing.T) {
 	}
 	var g GroupView
 	env.decode(cw, &g)
-	if dw := env.do(http.MethodDelete, "/api/v1/groups/"+g.ID, operator, nil, ""); dw.Code != http.StatusForbidden {
+	if dw := env.do(http.MethodDelete, "/api/v1/groups/"+g.GroupID, operator, nil, ""); dw.Code != http.StatusForbidden {
 		t.Fatalf("operator delete group want 403 (admin-only), got %d", dw.Code)
 	}
 }

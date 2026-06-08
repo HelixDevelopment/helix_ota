@@ -26,7 +26,7 @@ type GroupUpdate struct {
 
 // GroupView is a device-group response.
 type GroupView struct {
-	ID          string    `json:"id"`
+	GroupID     string    `json:"group_id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description,omitempty"`
 	MemberCount int       `json:"member_count"`
@@ -38,9 +38,18 @@ type GroupList struct {
 	Items []GroupView `json:"items"`
 }
 
-// MemberAdd is the POST /groups/{id}/members body.
+// MemberAdd is the POST /groups/{id}/members body — a BATCH of device ids
+// (operational_endpoints.md §6.4).
 type MemberAdd struct {
-	DeviceID string `json:"device_id"`
+	DeviceIDs []string `json:"device_ids"`
+}
+
+// MemberAddResult is the 200 response of a batch member-add: which ids were
+// newly added, were already members, or are not registered devices.
+type MemberAddResult struct {
+	Added         []string `json:"added"`
+	AlreadyMember []string `json:"already_member"`
+	NotFound      []string `json:"not_found"`
 }
 
 // GroupMembers is the GET /groups/{id}/members body.
@@ -50,7 +59,7 @@ type GroupMembers struct {
 }
 
 func toGroupView(g store.Group) GroupView {
-	return GroupView{ID: g.ID, Name: g.Name, Description: g.Description, CreatedAt: g.CreatedAt}
+	return GroupView{GroupID: g.ID, Name: g.Name, Description: g.Description, CreatedAt: g.CreatedAt}
 }
 
 func toGroupViewWithCount(g store.Group, members int) GroupView {
@@ -166,25 +175,57 @@ func (s *Server) handleListGroupMembers(c *gin.Context) {
 	c.JSON(http.StatusOK, GroupMembers{GroupID: groupID, DeviceIDs: members})
 }
 
-func (s *Server) handleAddGroupMember(c *gin.Context) {
+func (s *Server) handleAddGroupMembers(c *gin.Context) {
 	var req MemberAdd
 	if err := bindJSON(c, &req); err != nil {
 		respondValidation(c, "malformed member body")
 		return
 	}
-	if req.DeviceID == "" {
-		respondValidation(c, "device_id is required", ErrorDetail{Field: "device_id", Issue: "required"})
+	if len(req.DeviceIDs) == 0 {
+		respondValidation(c, "device_ids is required and must be non-empty",
+			ErrorDetail{Field: "device_ids", Issue: "required"})
 		return
 	}
-	if err := s.repo.AddGroupMember(c.Request.Context(), c.Param("groupId"), req.DeviceID); err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
-			return
+	ctx := c.Request.Context()
+	groupID := c.Param("groupId")
+	// Group must exist (a batch into a missing group is a 404, not a partial).
+	existingMembers, err := s.repo.ListGroupMembers(ctx, groupID)
+	if err != nil {
+		respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
+		return
+	}
+	already := make(map[string]bool, len(existingMembers))
+	for _, m := range existingMembers {
+		already[m] = true
+	}
+	result := MemberAddResult{Added: []string{}, AlreadyMember: []string{}, NotFound: []string{}}
+	seen := make(map[string]bool, len(req.DeviceIDs))
+	for _, id := range req.DeviceIDs {
+		if id == "" || seen[id] {
+			continue
 		}
-		respondError(c, http.StatusInternalServerError, CodeInternal, "could not add member")
-		return
+		seen[id] = true
+		switch {
+		case already[id]:
+			result.AlreadyMember = append(result.AlreadyMember, id)
+		default:
+			if _, derr := s.repo.GetDevice(ctx, id); derr != nil {
+				result.NotFound = append(result.NotFound, id)
+				continue
+			}
+			if aerr := s.repo.AddGroupMember(ctx, groupID, id); aerr != nil {
+				if errors.Is(aerr, store.ErrNotFound) {
+					respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
+					return
+				}
+				respondError(c, http.StatusInternalServerError, CodeInternal, "could not add member")
+				return
+			}
+			result.Added = append(result.Added, id)
+			already[id] = true
+		}
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, result)
 }
 
 func (s *Server) handleRemoveGroupMember(c *gin.Context) {
