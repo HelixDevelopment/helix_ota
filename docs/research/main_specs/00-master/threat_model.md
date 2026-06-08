@@ -775,6 +775,29 @@ conditional on the board actually shipping locked AVB** — an UNVERIFIED item t
    authenticated length, anti-freeze/anti-mirror, threshold + offline-key compromise resilience,
    and per-device Director targeting are **scheduled for 1.0.1+** (ADR-0002 §4.3) and are
    **not** MVP mitigations; this document treats them as future closures, not current controls.
+8. **Audit-log DB-grant enforcement** — append-only is enforced at the `store.Repository`
+   interface (no Update/Delete) + INSERT-only SQL; **UNVERIFIED** whether the deployment revokes
+   UPDATE/DELETE on `helix_ota.audit_logs` / `rollback_history` from the app DB role. Affects §4.13.1.
+9. **Security-event vs audit log** — reads and failed mutations are intentionally **not** audited
+   (handler doc); whether a separate security-event log (auth failures, RBAC denials, repeated
+   4xx) is warranted is an open decision. Affects §4.13.1.
+10. **Rollout `evaluate` verdict source** — `POST .../rollout/evaluate` accepts a client-supplied
+    `RolloutVerdict`; **UNVERIFIED** whether the verdict is (or will be) computed server-side from
+    stored telemetry instead of trusting the request body, and the exact HALT-precedence semantics
+    in the `ota-rollout-engine` brick (asserted from handler doc, not read from brick source).
+    Affects §4.13.4 (cross-ref §4.10).
+11. **Recall ↔ anti-downgrade reconciliation** — `handleRecall` records intent + an append-only
+    `rollback_history` row but defers the actual N-1 re-deploy to a separate deployment-engine path
+    not read here; **how a recall to a lower-rollback-index N-1 reconciles with the
+    bootloader-enforced AVB anti-downgrade (§4.3) is UNVERIFIED and needs an operator/architecture
+    decision** (honor-but-device-refuses vs deliberate operator-gated downgrade mechanism).
+    Affects §4.13.5.
+12. **"G1" label** — the prompt-supplied label "G1 anti-downgrade invariant" is **UNVERIFIED**
+    against the design corpus, which names the guarantee "version monotonicity" / "anti-downgrade";
+    the mechanism is verified, the literal label is not. Affects §4.13.5.
+13. **Group member device-existence + per-group scoping** — member-add validates non-empty
+    `device_id` + group existence but **UNVERIFIED** whether it requires a *registered* device;
+    authorization is role-coarse (any operator edits any group), no per-group ACL. Affects §4.13.3.
 
 ## 8. Sources
 
@@ -795,3 +818,31 @@ All paths relative to `docs/research/main_specs/`:
   Continuation (board specifics).
 - [`00-master/documentation_standards.md`](./documentation_standards.md) — §2 (metadata table),
   §3 (ToC requirement, §11.4.61), §8 (anti-bluff/UNVERIFIED), §9 (canonical submodule catalogue).
+
+**§4.13 — implemented handlers (read directly, not via design docs).** All paths relative to the
+repository root:
+
+- `server/internal/api/server.go` — protected route group + per-route `requireRole(...)` RBAC
+  (lines 122–168), middleware ordering `authMiddleware()` → `auditMiddleware()`, public auth
+  endpoints. Source of the §4.13 RBAC table.
+- `server/internal/api/handlers_audit.go` — `auditMiddleware` (runs after handler + RBAC; mutating
+  + 2xx only; reads/failed mutations not audited; best-effort write), `deriveAuditAction`
+  (route-template not raw path; `members` → `group_member`), `auditResourceID`, `handleListAudit`
+  (admin-only). §4.13.1.
+- `server/internal/api/handlers_telemetry.go` — `handleDeviceTelemetry` object-level subject check
+  (`!isPrivileged(claims) && claims.Subject != deviceID` → 403), `handleTelemetryOverview`
+  (aggregate-only). §4.13.2.
+- `server/internal/api/handlers_group.go` — group + member CRUD handlers. §4.13.3.
+- `server/internal/api/handlers_rollout.go` — `handleCreateRollout` (brick plan-validation → 400),
+  `handleGetRollout`, `handleEvaluateRollout` (client-supplied `RolloutVerdict`; decision set
+  advance/hold/halt/complete). §4.13.4.
+- `server/internal/api/handlers_recall.go` — `handleRecall` (records intent + append-only
+  `rollback_history`; defers N-1 re-deploy), `handleListRollbacks`. §4.13.5.
+- `server/internal/api/handlers_device.go` — `isPrivileged` (admin OR operator OR viewer; device
+  never privileged), device-status subject check. §4.13.2.
+- `server/internal/api/middleware.go` — `requireRole` (any-allowed-role), `claimsFrom`. §4.13 RBAC.
+- `server/internal/api/token.go` — role constants (`admin`/`operator`/`viewer`/`device`). §4.13 RBAC.
+- `server/internal/store/store.go` — `Repository` interface exposing only `AppendAudit`/`ListAudit`
+  + `AppendRollback`/`ListRollbacks` (no Update/Delete → append-only). §4.13.1, §4.13.5.
+- `server/internal/store/postgres.go` + `memory.go` — INSERT-only audit/rollback impls with
+  monotonic `seq` ordering. §4.13.1, §4.13.5.
