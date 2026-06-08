@@ -56,9 +56,17 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **Rollout pgx StoragePort** — real-DB tested via containers submodule (8190e92).
 - **§11.4.65 exports** for 13+2 new docs (242ee2f, a288a4b). **device_tuf.md** + **rollback_ux.md** specs (1.0.1).
 
+### Round 3 deliverables — DONE this session
+- **Rollback-history store layer** (AppendRollback/ListRollbacks) memory+pgx, real-DB parity (e4165a6).
+- **Recall endpoint** `POST /deployments/{id}/recall` + `GET /rollbacks` (c98dfac) — records rollback_history, validates deployment/target-release, operator/admin; 3 tests.
+- **Delta-updates 1.0.3** design (ADR-0005 Option B) + **as-built endpoint reference** (server.go route table) + submodule README §11.4.65 siblings (573779a).
+- **Autonomous e2e challenge** `tests/e2e/challenge_operational.sh` — real live-server run, 28 passed/0 failed/1 skip, independently re-verified (bb332a4).
+
 ### NEXT wave (still open)
-1. **Wire the recall endpoint** `POST /deployments/{id}/recall` per `rollback_ux.md` (writes `rollback_history`); wire the rollout `Service` to the pgx store in production (`NewServiceWithStore` exists).
+1. **Wire the rollout `Service` to the pgx store in production** (`NewServiceWithStore` exists; main wires memory). Optionally the recall→actual N-1 re-deployment (deployment-engine job).
 2. **Device-side TUF implementation** (per `device_tuf.md`) — ADR-0002 spike to pick gomobile-go-tuf vs Kotlin client.
+3. **Spec↔impl alignment** (per `implemented_endpoints.md` §10): decide whether to widen the leaner handlers (audit actor object, telemetry pagination/newest-first, batch group-add) to the fuller spec, or trim the spec.
+4. Confirm CODEOWNERS GitHub handle; GitLab-mirror visibility (G11); delta migration 004; HelixQA bank wiring into CI.
 3. Confirm CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
 4. Delta-updates 1.0.3 full spec; HelixQA challenge bank entries for the new endpoints.
 
