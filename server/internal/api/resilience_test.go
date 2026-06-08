@@ -47,7 +47,7 @@ func (f *faultRepo) ListGroups(ctx context.Context) ([]store.Group, error) {
 
 // newResilienceServer builds a server with a CONCURRENCY-SAFE id generator (the
 // shared test env uses a non-atomic counter unsuitable for parallel load).
-func newResilienceServer(t *testing.T, repo store.Repository) (*gin.Engine, *Server) {
+func newResilienceServer(t testing.TB, repo store.Repository) (*gin.Engine, *Server) {
 	t.Helper()
 	var ctr int64
 	srv := NewServer(Options{
@@ -67,7 +67,7 @@ func newResilienceServer(t *testing.T, repo store.Repository) (*gin.Engine, *Ser
 	return srv.Router(), srv
 }
 
-func resilienceAdminToken(t *testing.T, srv *Server) string {
+func resilienceAdminToken(t testing.TB, srv *Server) string {
 	t.Helper()
 	tok, err := srv.signer.Mint("admin@stress", []string{RoleAdmin, RoleOperator, RoleViewer}, time.Hour, time.Now())
 	if err != nil {
