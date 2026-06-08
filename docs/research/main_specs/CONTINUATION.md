@@ -69,10 +69,15 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 ### Round 5 deliverables — DONE this session
 - **Recall = forward-fix** (operator decision honor-AVB, 4e35c3e): `handleRecall` supersedes the current deployment + creates a NEW active deployment of the target release; the update-check anti-downgrade invariant means AVB is honored by construction. New store `UpdateDeployment` (memory+pgx, real-DB parity). Decision recorded in `rollback_ux.md` Rev 2 + `threat_model.md` §11.11 RESOLVED (f5ec504).
 
+### Round 6 deliverables — DONE this session
+- **Delta-artifact store + API** (66464d7): `delta_artifacts` (base≠target CHECK + UNIQUE pair) on memory+pgx; `POST/GET /deltas` register+lookup; real-DB parity.
+- **device-TUF client-decision memo** (recommend gomobile-go-tuf/v2, ADR-0002 §4.3) + sibling.
+- **Additive WIDENs** (028e656, operator-approved): audit `?since/?until` filters + telemetry `failure_rate`/`by_state` (memory+pgx, real-DB parity, 2 api tests). `spec_impl_alignment.md` Rev 2 marks rows 2+5 landed.
+
 ### NEXT wave (still open)
-1. **Device-side TUF implementation** (per `device_tuf.md`) — ADR-0002 spike to pick gomobile-go-tuf vs hand-rolled Kotlin client.
-2. **Spec↔impl alignment** (per `implemented_endpoints.md` §10): widen the leaner handlers (audit actor object, telemetry pagination/newest-first, batch group-add) to the fuller spec, OR trim the spec — operator/architecture call.
-3. **Delta-updates implementation** — migration 004 SQL is real-DB-validated; wire delta_artifacts into the pgx store + the update-check delta-selection path.
+1. **Breaking spec↔impl WIDENs** — gated behind an operator WIDEN/TRIM ruling: audit `actor` object, per-device telemetry pagination + `events`→`items`, batch group-member-add (`spec_impl_alignment.md` rows 1/4/8).
+2. **Device-side TUF implementation** (gomobile-go-tuf/v2 per the decision memo; needs the arm64 `.so`-size/JNI measurement gate first) — Kotlin `ota-android-agent`/`ota-update-engine-bridge`.
+3. **Delta-updates device-side** — update-check delta-selection (map device current-version → base artifact → `FindDelta`) + device payload apply.
 4. CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
 
 ### Carried-forward gaps register
