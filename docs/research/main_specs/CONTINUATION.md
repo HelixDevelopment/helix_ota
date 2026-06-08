@@ -29,8 +29,23 @@ Type **`continue`** in a new session. Read this file + the memory index first. A
 - **All 3 additions processed** (operator mandate — nothing skipped): per-input exhaustive inventories in `research/additions_analysis/0{1,2,3}_analysis.md`; `research/additions_synthesis.md` → **Rev 2** with consolidated 14-gap register (§8), new-work routing (§9), addition-#3 conflict reconciliation (§10, locks Gin/ed25519/JWT/releases+deployments/≥90%), future-phase catalogue (§11), UNVERIFIED register (§12). MVP-critical **G1 (anti-downgrade invariant)** implemented as regression tests; `handleClientUpdate` 79.3%→86.2%. Commit 629b4eb.
 - **Constitution path is now `constitution/`** — update any new references accordingly.
 
-### Carried-forward gaps from the additions (routed, not blockers)
-Dashboard spec/repo (G6), full staged-rollout engine spec 1.0.1 (G7), audit subsystem (G3), telemetry read/analytics API (G4), device-group CRUD (G5), CI/governance (G10), NFR/load harness (G12). See `additions_synthesis.md` §8/§9. Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
+### Server hardening — DONE this session (handoff NEXT #1, real evidence)
+- **Coverage**: upload handler 71.2%→**96.6%**, client-update 79.3%→**93.1%** (≥90% safety floor). Commit 64c3bfd.
+- **pgx PostgreSQL Repository** (`server/internal/store/postgres.go`): full `store.Repository` impl; shared `contract_test.go` proves parity with memory; **integration test boots real Postgres via the containers submodule on podman** (`go test -tags integration ./internal/store/`), evidence in `docs/qa/20260608-pgx-postgres-integration/`. Surfaced+fixed a real idempotency overwrite bug. Commit 96fdecb.
+- **Brotli→gzip→identity** compression middleware (`server/internal/api/compression.go`). Commit b26f30e.
+- **HTTP/3 (QUIC)+HTTP/2 fallback** via the new `submodules/http3` (`digital.vasic.http3`) — `server/internal/transport/`; wired into `cmd/ota-server` (TLS via HELIX_TLS_CERT/KEY → HTTPS port 8443; plain HTTP otherwise). Real h3+h2 client test; evidence in `docs/qa/20260608-http3-h2-brotli-transport/`. Commit 1469edf.
+
+### Parallel-wave deliverables — DONE this session (commit 8efb6b8)
+6 subagents closed additions gaps: **G2** validator hash-before-signature VERIFIED (FACT, file:line); **G7** staged-rollout engine spec + migration_002 design; **G6** dashboard design; **G3/G4/G5** operational endpoints spec (audit/telemetry-reads/group CRUD + proposed repo methods); **G10** CI (`.github/workflows/ci.yml` + CODEOWNERS + dependabot); **§11** future-phase folding (1.0.2-rollback, 1.0.3-delta-updates created; 1.X-linux/windows/other-os extended).
+
+### NEXT wave (specced, not yet implemented)
+1. **Implement** the specced operational endpoints (audit middleware + `GET /audit`; telemetry history + `/telemetry/overview`; device-group CRUD) with TDD against BOTH memory + pgx repos (new `store.Repository` methods per `1.0.0-mvp/api/operational_endpoints.md`).
+2. **Implement** the staged-rollout engine + migration `002_*` (per `1.0.1-staged-rollout/`).
+3. **Ratify** the 1.0.1↔1.0.2 boundary: 1.0.1 outline still lists "end-user rollback" which now collides with rollback LOCKED at 1.0.2 — operator decision needed.
+4. **Dashboard repo** scaffold (G6); **G12** NFR/load harness; **G11** verify/create ota-* public repos; confirm CODEOWNERS GitHub handle.
+
+### Carried-forward gaps register
+See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
 
 ## DONE (verified, on `main`, pushed)
 
