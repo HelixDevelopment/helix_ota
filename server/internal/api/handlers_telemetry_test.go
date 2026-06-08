@@ -38,11 +38,29 @@ func TestDeviceTelemetryHistory(t *testing.T) {
 	}
 	var hist TelemetryHistory
 	env.decode(w, &hist)
-	if hist.DeviceID != dev.DeviceID || len(hist.Events) != 2 {
+	if hist.DeviceID != dev.DeviceID || len(hist.Items) != 2 {
 		t.Fatalf("history mismatch: %+v", hist)
 	}
-	if hist.Events[0].Event != otaprotocol.EventDownloadStarted || hist.Events[1].Event != otaprotocol.EventSuccess {
-		t.Fatalf("history order/content mismatch: %+v", hist.Events)
+	// Newest-first: success was reported after download_started.
+	if hist.Items[0].Event != otaprotocol.EventSuccess || hist.Items[1].Event != otaprotocol.EventDownloadStarted {
+		t.Fatalf("history order (newest-first) mismatch: %+v", hist.Items)
+	}
+	if hist.NextCursor != nil {
+		t.Fatalf("single page should have nil next_cursor, got %v", *hist.NextCursor)
+	}
+
+	// Pagination: limit=1 returns the newest + a next_cursor to the second.
+	pw := env.do(http.MethodGet, "/api/v1/devices/"+dev.DeviceID+"/telemetry?limit=1", env.adminToken(), nil, "")
+	var page1 TelemetryHistory
+	env.decode(pw, &page1)
+	if len(page1.Items) != 1 || page1.Items[0].Event != otaprotocol.EventSuccess || page1.NextCursor == nil {
+		t.Fatalf("page1 mismatch: %+v", page1)
+	}
+	p2 := env.do(http.MethodGet, "/api/v1/devices/"+dev.DeviceID+"/telemetry?limit=1&cursor="+*page1.NextCursor, env.adminToken(), nil, "")
+	var page2 TelemetryHistory
+	env.decode(p2, &page2)
+	if len(page2.Items) != 1 || page2.Items[0].Event != otaprotocol.EventDownloadStarted || page2.NextCursor != nil {
+		t.Fatalf("page2 mismatch: %+v", page2)
 	}
 }
 

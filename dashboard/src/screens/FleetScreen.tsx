@@ -129,12 +129,12 @@ export function DeviceDetail() {
           </EmptyState>
         ) : null}
         {telemetry.error && !telemetryMissing ? <ErrorPanel error={telemetry.error} /> : null}
-        {telemetry.data && telemetry.data.events.length === 0 ? (
+        {telemetry.data && telemetry.data.items.length === 0 ? (
           <EmptyState>No telemetry events yet.</EmptyState>
         ) : null}
-        {telemetry.data && telemetry.data.events.length > 0 ? (
+        {telemetry.data && telemetry.data.items.length > 0 ? (
           <Table head={["event_type", "at", "detail"]}>
-            {telemetry.data.events.map((ev, i) => (
+            {telemetry.data.items.map((ev, i) => (
               <tr key={i}>
                 <td style={td}>
                   <Badge tone={toneForState(ev.event_type)}>{ev.event_type}</Badge>

@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	otaprotocol "github.com/HelixDevelopment/ota-protocol"
@@ -21,10 +22,14 @@ type TelemetryEventView struct {
 	ReceivedAt   time.Time                  `json:"received_at"`
 }
 
-// TelemetryHistory is the GET /devices/{id}/telemetry body.
+// TelemetryHistory is the GET /devices/{id}/telemetry body — newest-first,
+// cursor-paginated (operational_endpoints.md §5). NextCursor is nil on the last
+// page. (Per-item duration_ms/bytes_transferred from the spec are deferred —
+// not ingested yet; see spec_impl_alignment.md row 4.)
 type TelemetryHistory struct {
-	DeviceID string               `json:"device_id"`
-	Events   []TelemetryEventView `json:"events"`
+	DeviceID   string               `json:"device_id"`
+	Items      []TelemetryEventView `json:"items"`
+	NextCursor *string              `json:"next_cursor"`
 }
 
 // TelemetryOverview is the GET /telemetry/overview body: fleet-wide counts by
@@ -60,16 +65,44 @@ func (s *Server) handleDeviceTelemetry(c *gin.Context) {
 		respondError(c, http.StatusForbidden, CodeForbidden, "a device may read only its own telemetry")
 		return
 	}
+	limit := 50
+	if lim := c.Query("limit"); lim != "" {
+		n, perr := strconv.Atoi(lim)
+		if perr != nil || n < 1 || n > 200 {
+			respondValidation(c, "limit must be an integer in [1,200]",
+				ErrorDetail{Field: "limit", Issue: "out of range"})
+			return
+		}
+		limit = n
+	}
+	offset := 0
+	if cur := c.Query("cursor"); cur != "" {
+		n, perr := strconv.Atoi(cur)
+		if perr != nil || n < 0 {
+			respondValidation(c, "cursor is malformed", ErrorDetail{Field: "cursor", Issue: "invalid"})
+			return
+		}
+		offset = n
+	}
 	recs, err := s.repo.TelemetryForDevice(c.Request.Context(), deviceID)
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not read telemetry")
 		return
 	}
-	events := make([]TelemetryEventView, 0, len(recs))
-	for _, r := range recs {
-		events = append(events, toTelemetryView(r))
+	// Newest-first: the store returns insertion order, so walk it in reverse.
+	// (Device history is bounded per device; a store-level keyset paginate is a
+	// future optimisation — spec_impl_alignment.md row 4.)
+	total := len(recs)
+	items := make([]TelemetryEventView, 0, limit)
+	for i := total - 1 - offset; i >= 0 && len(items) < limit; i-- {
+		items = append(items, toTelemetryView(recs[i]))
 	}
-	c.JSON(http.StatusOK, TelemetryHistory{DeviceID: deviceID, Events: events})
+	body := TelemetryHistory{DeviceID: deviceID, Items: items}
+	if next := offset + len(items); next < total {
+		nc := strconv.Itoa(next)
+		body.NextCursor = &nc
+	}
+	c.JSON(http.StatusOK, body)
 }
 
 // handleTelemetryOverview returns fleet-wide telemetry counts by event type.

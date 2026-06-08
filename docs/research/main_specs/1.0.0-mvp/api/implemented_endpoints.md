@@ -163,30 +163,36 @@ Per-device telemetry event history.
   `403 FORBIDDEN` (`"a device may read only its own telemetry"`) for a non-privileged caller
   reading another device.
 - **Maps to:** `handlers_telemetry.go:handleDeviceTelemetry`.
-- **Request:** no body, no query parameters consumed by the handler.
-- **Response 200** (`TelemetryHistory`):
+- **Request:** no body. Optional query params `?limit` (1–200, default 50; out-of-range → `400`)
+  and `?cursor` (opaque non-negative offset from a prior `next_cursor`; malformed → `400`).
+- **Response 200** (`TelemetryHistory`), **newest-first**, cursor-paginated:
 
 ```json
 {
   "device_id": "8f3a...",
-  "events": [
+  "items": [
     {
-      "event": "download_started",
+      "event": "success",
       "version": "1.1.0",
       "deployment_id": "d12b...",
       "error_code": "",
       "detail": "",
-      "timestamp": "2026-06-08T10:15:00Z",
-      "received_at": "2026-06-08T10:15:01Z"
+      "timestamp": "2026-06-08T10:16:00Z",
+      "received_at": "2026-06-08T10:16:01Z"
     }
-  ]
+  ],
+  "next_cursor": null
 }
 ```
 
 - **Key fields** (`TelemetryEventView`): `event` (`otaprotocol.TelemetryEvent`), `version`,
-  `deployment_id`, `error_code`, `detail` (all omitempty), `timestamp`, `received_at`. Events are
-  returned in insertion order (the store contract `TelemetryForDevice`, `store.go:179–181`).
-- **Status codes:** `200` OK; `403 FORBIDDEN` (cross-device `device` token); `500 INTERNAL`
+  `deployment_id`, `error_code`, `detail` (all omitempty), `timestamp`, `received_at`. Items are
+  **newest-first**; `next_cursor` is `null` on the last page. (Spec's per-item
+  `duration_ms`/`bytes_transferred` are DEFERRED — not ingested yet; spec_impl_alignment.md row 4.
+  Pagination is handler-side over the bounded per-device history; a store-level keyset paginate is
+  a future optimisation.)
+- **Status codes:** `200` OK; `400 VALIDATION_FAILED` (bad `limit`/`cursor`);
+  `403 FORBIDDEN` (cross-device `device` token); `500 INTERNAL`
   (`"could not read telemetry"`).
 
 ### 5.2 GET /api/v1/telemetry/overview
@@ -521,13 +527,12 @@ since been closed in code are marked **RESOLVED** with the landing commit.
 
 **Telemetry (`operational_endpoints.md` §5 vs `handlers_telemetry.go`):**
 
-- `GET /devices/{id}/telemetry`: the spec specifies pagination (`?limit`/`?cursor`), filters
-  (`?event_type`, `?since`, `?until`, `?deployment_id`), newest-first ordering, and an `items`
-  array with `id`/`success`/`duration_ms`/`bytes_transferred`. The built handler takes **no query
-  params**, returns the full history in **insertion order** under an **`events`** key, and the
-  per-event view is `{event, version, deployment_id, error_code, detail, timestamp, received_at}`
-  — no `id`, `success`, `duration_ms`, or `bytes_transferred`. It does **not** emit `404` for an
-  unknown device (an empty history is returned).
+- `GET /devices/{id}/telemetry`: **RESOLVED (commit pending)** — now **newest-first**, cursor-paginated
+  (`?limit`/`?cursor`), with the container key `items` (was `events`) and a `next_cursor`. DEFERRED
+  (not yet WIDENed): the richer per-event fields `id`/`success`/`duration_ms`/`bytes_transferred`
+  (UNVERIFIED ingest — the event source does not carry them yet) and the `?event_type`/`?since`/
+  `?until`/`?deployment_id` filters. It still does **not** emit `404` for an unknown device (an
+  empty page is returned).
 - `GET /telemetry/overview`: the spec specifies a rich aggregate (`scope`, `devices_total`,
   `devices_reporting`, `by_state` latest-per-device, `event_counts`, `failure_rate`,
   `generated_at`) plus `?deployment_id`/`?os`/`?since`/`?until` scoping. **RESOLVED (commit

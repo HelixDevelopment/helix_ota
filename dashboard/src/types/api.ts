@@ -176,7 +176,8 @@ export interface TelemetryEvent {
 // screens render a graceful empty state when the endpoints are not yet built.
 export interface TelemetryHistory {
   device_id: DeviceId;
-  events: TelemetryEvent[];
+  items: TelemetryEvent[];
+  next_cursor?: string | null;
 }
 
 export interface TelemetryOverview {
