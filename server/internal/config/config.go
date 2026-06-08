@@ -81,6 +81,11 @@ type Config struct {
 	TLSKeyFile  string
 	// HTTPSPort is the port for the TLS HTTP/2 (TCP) + HTTP/3 (UDP) listeners.
 	HTTPSPort string
+
+	// DatabaseURL, when set (HELIX_DATABASE_URL), switches the control plane onto
+	// the pgx/PostgreSQL Repository + rollout StoragePort (the production target,
+	// architecture.md §4). Unset = the in-memory implementations (dev/MVP default).
+	DatabaseURL string
 }
 
 // Load builds a Config from the process environment, applying defaults for any
@@ -99,6 +104,7 @@ func Load() (Config, error) {
 		TLSCertFile:     os.Getenv("HELIX_TLS_CERT"),
 		TLSKeyFile:      os.Getenv("HELIX_TLS_KEY"),
 		HTTPSPort:       getEnv("HELIX_HTTPS_PORT", DefaultHTTPSPort),
+		DatabaseURL:     os.Getenv("HELIX_DATABASE_URL"),
 	}
 
 	var err error

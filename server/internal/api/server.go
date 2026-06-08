@@ -50,6 +50,9 @@ type Options struct {
 	ArtifactKey  ed25519.PublicKey
 	Now          func() time.Time
 	NewID        func() string
+	// Rollout, when non-nil, is the staged-rollout service the server uses (e.g.
+	// a pgx-backed one in production). Nil falls back to an in-memory service.
+	Rollout *rollout.Service
 }
 
 // NewServer builds a Server from the given options.
@@ -76,6 +79,10 @@ func NewServer(opts Options) *Server {
 	pubKey := opts.ArtifactKey
 	if pubKey == nil && len(opts.Config.ArtifactPublicKey) == ed25519.PublicKeySize {
 		pubKey = ed25519.PublicKey(opts.Config.ArtifactPublicKey)
+	}
+	rolloutSvc := opts.Rollout
+	if rolloutSvc == nil {
+		rolloutSvc = rollout.NewService(now)
 	}
 	return &Server{
 		cfg:     opts.Config,

@@ -18,12 +18,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/HelixDevelopment/helix_ota/server/internal/api"
 	"github.com/HelixDevelopment/helix_ota/server/internal/config"
 	"github.com/HelixDevelopment/helix_ota/server/internal/health"
+	"github.com/HelixDevelopment/helix_ota/server/internal/rollout"
 	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 	"github.com/HelixDevelopment/helix_ota/server/internal/transport"
 )
@@ -36,11 +38,36 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 
-	// MVP wiring: in-memory repository (the pgx/PostgreSQL implementation is the
-	// production target — store.Repository is the seam).
-	repo := store.NewMemoryRepository()
+	// Persistence: pgx/PostgreSQL when HELIX_DATABASE_URL is set (production
+	// target, architecture.md §4), else the in-memory implementations (dev/MVP).
+	// store.Repository + the rollout StoragePort are the seams.
+	var repo store.Repository
+	var rolloutSvc *rollout.Service
+	if cfg.DatabaseURL != "" {
+		bootCtx := context.Background()
+		pg, perr := store.NewPostgresRepository(bootCtx, cfg.DatabaseURL)
+		if perr != nil {
+			log.Fatalf("ota-server: connect postgres: %v", perr)
+		}
+		if perr := pg.Migrate(bootCtx); perr != nil {
+			log.Fatalf("ota-server: migrate store schema: %v", perr)
+		}
+		rs, rerr := rollout.NewPostgresStore(bootCtx, cfg.DatabaseURL)
+		if rerr != nil {
+			log.Fatalf("ota-server: connect rollout store: %v", rerr)
+		}
+		if rerr := rs.Migrate(bootCtx); rerr != nil {
+			log.Fatalf("ota-server: migrate rollout schema: %v", rerr)
+		}
+		repo = pg
+		rolloutSvc = rollout.NewServiceWithStore(rs, time.Now)
+		log.Printf("ota-server: persistence = PostgreSQL (pgx)")
+	} else {
+		repo = store.NewMemoryRepository()
+		log.Printf("ota-server: persistence = in-memory (set HELIX_DATABASE_URL for PostgreSQL)")
+	}
 
-	// Readiness consults the repository as a stand-in for the real
+	// Readiness consults the repository as a liveness stand-in for the real
 	// PostgreSQL/MinIO probes used in production.
 	checker := health.New(func(ctx context.Context) bool {
 		_, getErr := repo.GetIdempotent(ctx, "__readyz__")
@@ -60,10 +87,11 @@ func main() {
 	}
 
 	srv := api.NewServer(api.Options{
-		Config: cfg,
-		Repo:   repo,
-		Users:  api.NewStaticUserDirectory(users...),
-		Health: checker,
+		Config:  cfg,
+		Repo:    repo,
+		Rollout: rolloutSvc, // nil with the in-memory default => NewServer builds a memory rollout service
+		Users:   api.NewStaticUserDirectory(users...),
+		Health:  checker,
 	})
 
 	router := srv.Router()
