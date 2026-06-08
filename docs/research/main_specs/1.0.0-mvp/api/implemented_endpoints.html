@@ -255,7 +255,7 @@ OTA — As-Built Operational &amp; Rollout REST Endpoints
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Last modified</td>
@@ -273,26 +273,29 @@ OTA — As-Built Operational &amp; Rollout REST Endpoints
 <td>Status summary</td>
 <td>An <strong>as-built</strong> reference for the operational +
 staged-rollout REST endpoints actually wired in
-<code>server/internal/api/server.go</code> (the audit read, telemetry
-reads, device-group CRUD + membership, and the staged-rollout
-create/get/evaluate routes). It documents only routes that exist in the
-code and cites the <code>handler file:func</code> each path maps to. It
-is the implemented counterpart to the prose specs <a
+<code>server/internal/api/server.go</code> (delta artifacts
+register+find, the audit read, telemetry reads, device-group CRUD +
+membership, the staged-rollout create/get/evaluate routes, and the
+server-driven recall + rollback-history routes). It documents only
+routes that exist in the code and cites the
+<code>handler file:func</code> each path maps to. It is the implemented
+counterpart to the prose specs <a
 href="operational_endpoints.md"><code>operational_endpoints.md</code></a>
-(audit/telemetry/groups) and
-<code>1.0.1-staged-rollout/rollout_engine.md</code> (rollout); where the
-implementation and the spec disagree, the divergence is called out in <a
-href="#10-spec_vs_implementation_divergences">§10</a>. The operator
-<strong>recall</strong> endpoint from <a
+(audit/telemetry/groups), <code>delta_updates_design.md</code> (deltas),
+<code>1.0.1-staged-rollout/rollout_engine.md</code> (rollout), and <a
 href="../../1.0.1-staged-rollout/rollback_ux.md"><code>../../1.0.1-staged-rollout/rollback_ux.md</code></a>
-§7 is marked <strong>PLANNED / not-yet-wired</strong>.</td>
+§7 (recall); where the implementation and the spec disagree, the
+divergence is called out in <a
+href="#11-spec_vs_implementation_divergences">§11</a>. The operator
+<strong>recall</strong> endpoint is now <strong>WIRED</strong>
+(<code>handlers_recall.go</code>), no longer planned.</td>
 </tr>
 <tr>
 <td>Generated from</td>
 <td><code>server/internal/api/server.go</code> route table —
-<code>Router()</code>, <strong>lines 104–167</strong> (specifically the
-protected <code>auth</code> group, lines 122–164, plus the unversioned
-probes on lines 111–112). This document was hand-authored from a direct
+<code>Router()</code>, <strong>lines 111–183</strong> (specifically the
+protected <code>auth</code> group, lines 132–179, plus the unversioned
+probes on lines 118–119). This document was hand-authored from a direct
 read of that route table and the handler sources; it is not
 auto-generated, but every row traces to a cited line/function.</td>
 </tr>
@@ -302,7 +305,7 @@ auto-generated, but every row traces to a cited line/function.</td>
 <code>server.go</code> are documented. Status/Action/Reason enum values
 are taken from the <code>ota-rollout-engine</code> brick source
 (<code>types.go</code>, <code>verdict.go</code>), not invented.
-Spec/impl divergences are listed in §10, never silently reconciled.</td>
+Spec/impl divergences are listed in §11, never silently reconciled.</td>
 </tr>
 <tr>
 <td>Owner</td>
@@ -336,11 +339,13 @@ href="#6-device_group_crud_and_membership">device_group_crud_and_membership</a><
 <li><a
 href="#7-staged_rollout_endpoints">staged_rollout_endpoints</a></li>
 <li><a
-href="#8-planned_recall_endpoint_not_yet_wired">planned_recall_endpoint_not_yet_wired</a></li>
+href="#8-recall_and_rollback_history_endpoints">recall_and_rollback_history_endpoints</a></li>
 <li><a
-href="#9-audit_write_middleware_cross_cutting">audit_write_middleware_cross_cutting</a></li>
+href="#9-delta_artifact_endpoints">delta_artifact_endpoints</a></li>
 <li><a
-href="#10-spec_vs_implementation_divergences">spec_vs_implementation_divergences</a></li>
+href="#10-audit_write_middleware_cross_cutting">audit_write_middleware_cross_cutting</a></li>
+<li><a
+href="#11-spec_vs_implementation_divergences">spec_vs_implementation_divergences</a></li>
 </ol>
 <hr />
 <h2 id="purpose_and_scope">1. purpose_and_scope</h2>
@@ -367,27 +372,30 @@ from</strong> <a href="endpoints.md"><code>endpoints.md</code></a> and
 not re-specified here.</p>
 <p>In scope (all confirmed present in the route table):</p>
 <ul>
+<li><strong>Delta artifacts</strong> — <code>POST /deltas</code> and
+<code>GET /deltas</code> (<code>server.go:140–141</code>).</li>
 <li><strong>Audit read</strong> — <code>GET /audit</code>
-(<code>server.go:163</code>).</li>
+(<code>server.go:179</code>).</li>
 <li><strong>Telemetry reads</strong> —
 <code>GET /devices/:deviceId/telemetry</code>
-(<code>server.go:148</code>) and <code>GET /telemetry/overview</code>
-(<code>server.go:149</code>).</li>
+(<code>server.go:164</code>) and <code>GET /telemetry/overview</code>
+(<code>server.go:165</code>).</li>
 <li><strong>Device-group CRUD + membership</strong> —
 <code>POST/GET/GET/PATCH/DELETE /groups[...]</code> and the members
-sub-routes (<code>server.go:153–160</code>).</li>
+sub-routes (<code>server.go:169–176</code>).</li>
 <li><strong>Staged rollout</strong> —
 <code>POST/GET /deployments/:deploymentId/rollout</code> and
 <code>POST /deployments/:deploymentId/rollout/evaluate</code>
-(<code>server.go:140–142</code>).</li>
+(<code>server.go:152–154</code>).</li>
+<li><strong>Recall + rollback history</strong> —
+<code>POST /deployments/:deploymentId/recall</code> and
+<code>GET /deployments/:deploymentId/rollbacks</code>
+(<code>server.go:157–158</code>).</li>
 </ul>
 <p>Out of scope: the auth, device-register, artifact, release,
 deployment-CRUD, and client (device) endpoints — those are the 1.0.0-MVP
 base surface documented in <a
-href="endpoints.md"><code>endpoints.md</code></a>. The operator
-<strong>recall</strong> endpoint is <strong>not</strong> in the route
-table and is documented as PLANNED in <a
-href="#8-planned_recall_endpoint_not_yet_wired">§8</a>.</p>
+href="endpoints.md"><code>endpoints.md</code></a>.</p>
 <h2 id="how_to_read_this_document">2. how_to_read_this_document</h2>
 <p>Each endpoint section states the <strong>verified</strong> facts
 pulled from source:</p>
@@ -406,7 +414,7 @@ below are rendered from those struct tags.</li>
 </ul>
 <p>Where the implemented shape differs from the prose spec it
 implements, the difference is noted inline and collected in <a
-href="#10-spec_vs_implementation_divergences">§10</a>.</p>
+href="#11-spec_vs_implementation_divergences">§11</a>.</p>
 <h2 id="as_built_endpoint_table">3. as_built_endpoint_table</h2>
 <table style="width:100%;">
 <colgroup>
@@ -431,12 +439,30 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>POST</code></td>
+<td><code>/deltas</code></td>
+<td><code>operator</code>, <code>admin</code></td>
+<td><code>DeltaRegister</code></td>
+<td><code>DeltaView</code></td>
+<td>L140</td>
+<td><code>handlers_delta.go:handleRegisterDelta</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/deltas</code></td>
+<td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
+<td>— (query params)</td>
+<td><code>DeltaView</code></td>
+<td>L141</td>
+<td><code>handlers_delta.go:handleFindDelta</code></td>
+</tr>
+<tr>
 <td><code>GET</code></td>
 <td><code>/audit</code></td>
 <td><code>admin</code></td>
 <td>— (query params)</td>
 <td><code>AuditLogList</code></td>
-<td>L163</td>
+<td>L179</td>
 <td><code>handlers_audit.go:handleListAudit</code></td>
 </tr>
 <tr>
@@ -446,7 +472,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <code>device</code> (own id)</td>
 <td>—</td>
 <td><code>TelemetryHistory</code></td>
-<td>L148</td>
+<td>L164</td>
 <td><code>handlers_telemetry.go:handleDeviceTelemetry</code></td>
 </tr>
 <tr>
@@ -455,7 +481,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
 <td>—</td>
 <td><code>TelemetryOverview</code></td>
-<td>L149</td>
+<td>L165</td>
 <td><code>handlers_telemetry.go:handleTelemetryOverview</code></td>
 </tr>
 <tr>
@@ -464,7 +490,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>operator</code>, <code>admin</code></td>
 <td><code>GroupCreate</code></td>
 <td><code>GroupView</code></td>
-<td>L153</td>
+<td>L169</td>
 <td><code>handlers_group.go:handleCreateGroup</code></td>
 </tr>
 <tr>
@@ -473,7 +499,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
 <td>—</td>
 <td><code>GroupList</code></td>
-<td>L154</td>
+<td>L170</td>
 <td><code>handlers_group.go:handleListGroups</code></td>
 </tr>
 <tr>
@@ -482,7 +508,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
 <td>—</td>
 <td><code>GroupView</code></td>
-<td>L155</td>
+<td>L171</td>
 <td><code>handlers_group.go:handleGetGroup</code></td>
 </tr>
 <tr>
@@ -491,7 +517,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>operator</code>, <code>admin</code></td>
 <td><code>GroupUpdate</code></td>
 <td><code>GroupView</code></td>
-<td>L156</td>
+<td>L172</td>
 <td><code>handlers_group.go:handleUpdateGroup</code></td>
 </tr>
 <tr>
@@ -500,7 +526,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>admin</code></td>
 <td>—</td>
 <td>— (<code>204</code>)</td>
-<td>L157</td>
+<td>L173</td>
 <td><code>handlers_group.go:handleDeleteGroup</code></td>
 </tr>
 <tr>
@@ -509,7 +535,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
 <td>—</td>
 <td><code>GroupMembers</code></td>
-<td>L158</td>
+<td>L174</td>
 <td><code>handlers_group.go:handleListGroupMembers</code></td>
 </tr>
 <tr>
@@ -518,7 +544,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>operator</code>, <code>admin</code></td>
 <td><code>MemberAdd</code></td>
 <td>— (<code>204</code>)</td>
-<td>L159</td>
+<td>L175</td>
 <td><code>handlers_group.go:handleAddGroupMember</code></td>
 </tr>
 <tr>
@@ -527,7 +553,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>operator</code>, <code>admin</code></td>
 <td>—</td>
 <td>— (<code>204</code>)</td>
-<td>L160</td>
+<td>L176</td>
 <td><code>handlers_group.go:handleRemoveGroupMember</code></td>
 </tr>
 <tr>
@@ -536,7 +562,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>operator</code>, <code>admin</code></td>
 <td><code>RolloutCreate</code></td>
 <td><code>RolloutState</code></td>
-<td>L140</td>
+<td>L152</td>
 <td><code>handlers_rollout.go:handleCreateRollout</code></td>
 </tr>
 <tr>
@@ -545,7 +571,7 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
 <td>—</td>
 <td><code>RolloutState</code></td>
-<td>L141</td>
+<td>L153</td>
 <td><code>handlers_rollout.go:handleGetRollout</code></td>
 </tr>
 <tr>
@@ -554,26 +580,26 @@ href="#10-spec_vs_implementation_divergences">§10</a>.</p>
 <td><code>operator</code>, <code>admin</code></td>
 <td><code>RolloutVerdict</code></td>
 <td><code>RolloutDecision</code></td>
-<td>L142</td>
+<td>L154</td>
 <td><code>handlers_rollout.go:handleEvaluateRollout</code></td>
 </tr>
 <tr>
 <td><code>POST</code></td>
-<td><code>/deployments/{deploymentId}/recall</code></td>
-<td>—</td>
-<td>—</td>
-<td>—</td>
-<td><strong>PLANNED</strong></td>
-<td><strong>not wired</strong> (see §8)</td>
+<td><code>/deployments/:deploymentId/recall</code></td>
+<td><code>operator</code>, <code>admin</code></td>
+<td><code>RecallRequest</code></td>
+<td><code>RollbackView</code></td>
+<td>L157</td>
+<td><code>handlers_recall.go:handleRecall</code></td>
 </tr>
 <tr>
 <td><code>GET</code></td>
-<td><code>/deployments/{deploymentId}/rollbacks</code></td>
+<td><code>/deployments/:deploymentId/rollbacks</code></td>
+<td><code>viewer</code>, <code>operator</code>, <code>admin</code></td>
 <td>—</td>
-<td>—</td>
-<td>—</td>
-<td><strong>PLANNED</strong></td>
-<td><strong>not wired</strong> (see §8)</td>
+<td><code>RollbackList</code></td>
+<td>L158</td>
+<td><code>handlers_recall.go:handleListRollbacks</code></td>
 </tr>
 </tbody>
 </table>
@@ -587,7 +613,7 @@ same parameter.</p>
 <p>Reads the audit trail. Admin-only.</p>
 <ul>
 <li><strong>Roles:</strong> <code>admin</code>
-(<code>requireRole(RoleAdmin)</code>, <code>server.go:163</code>).</li>
+(<code>requireRole(RoleAdmin)</code>, <code>server.go:179</code>).</li>
 <li><strong>Maps to:</strong>
 <code>handlers_audit.go:handleListAudit</code>.</li>
 <li><strong>Request:</strong> no body. Query parameters (all optional,
@@ -599,6 +625,14 @@ combined as AND):
 <li><code>?limit=</code> — integer in <code>[1, 200]</code> (default
 <code>50</code>). Out of range → <code>400 VALIDATION_FAILED</code> with
 <code>details: [{field:"limit", issue:"out of range"}]</code>.</li>
+<li><code>?since=</code> — RFC3339 lower time bound
+(<code>store.AuditFilter.Since</code>). A non-RFC3339 value →
+<code>400 VALIDATION_FAILED</code> with
+<code>details:[{field:"since", issue:"not RFC3339"}]</code>.</li>
+<li><code>?until=</code> — RFC3339 upper time bound
+(<code>store.AuditFilter.Until</code>). A non-RFC3339 value →
+<code>400 VALIDATION_FAILED</code> with
+<code>details:[{field:"until", issue:"not RFC3339"}]</code>.</li>
 </ul></li>
 <li><strong>Response 200</strong> (<code>AuditLogList</code>,
 <code>audit_wire.go</code>):</li>
@@ -631,7 +665,8 @@ the actor subject, falling back to the user id;
 (omitempty), <code>created_at</code>. <code>next_cursor</code> is
 <code>*string</code> (JSON <code>null</code> when exhausted).</li>
 <li><strong>Status codes:</strong> <code>200</code> OK;
-<code>400 VALIDATION_FAILED</code> (bad <code>limit</code>);
+<code>400 VALIDATION_FAILED</code> (bad <code>limit</code>, or
+non-RFC3339 <code>since</code>/<code>until</code>);
 <code>500 INTERNAL</code> (store error →
 <code>"could not list audit log"</code>). Auth failures
 (<code>401</code>/<code>403</code>) are produced by the shared
@@ -640,7 +675,7 @@ handler.</li>
 <li><strong>Immutability:</strong> read-only over the API — there is no
 <code>POST/PATCH/DELETE /audit</code>. Rows are written only by the
 audit middleware (<a
-href="#9-audit_write_middleware_cross_cutting">§9</a>).</li>
+href="#10-audit_write_middleware_cross_cutting">§10</a>).</li>
 </ul>
 <h2 id="telemetry_read_endpoints">5. telemetry_read_endpoints</h2>
 <h3 id="get-apiv1devicesdeviceidtelemetry">5.1 GET
@@ -648,7 +683,7 @@ href="#9-audit_write_middleware_cross_cutting">§9</a>).</li>
 <p>Per-device telemetry event history.</p>
 <ul>
 <li><strong>Roles:</strong> <code>viewer</code>, <code>operator</code>,
-<code>admin</code>, <code>device</code> (<code>server.go:148</code>). A
+<code>admin</code>, <code>device</code> (<code>server.go:164</code>). A
 <code>device</code> token may read <strong>only its own</strong> id: the
 handler compares <code>claims.Subject</code> to the path
 <code>deviceId</code> and returns <code>403 FORBIDDEN</code>
@@ -693,7 +728,7 @@ insertion order (the store contract <code>TelemetryForDevice</code>,
 <p>Fleet-wide telemetry counts grouped by event type.</p>
 <ul>
 <li><strong>Roles:</strong> <code>viewer</code>, <code>operator</code>,
-<code>admin</code> (<code>server.go:149</code>). No <code>device</code>
+<code>admin</code> (<code>server.go:165</code>). No <code>device</code>
 access.</li>
 <li><strong>Maps to:</strong>
 <code>handlers_telemetry.go:handleTelemetryOverview</code>.</li>
@@ -708,18 +743,33 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success&quot;</span><span class="fu">:</span> <span class="dv">1100</span><span class="fu">,</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure&quot;</span><span class="fu">:</span> <span class="dv">36</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;total&quot;</span><span class="fu">:</span> <span class="dv">3476</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;total&quot;</span><span class="fu">:</span> <span class="dv">3476</span><span class="fu">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="fl">0.0317</span><span class="fu">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;by_state&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;idle&quot;</span><span class="fu">:</span> <span class="dv">980</span><span class="fu">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;updating&quot;</span><span class="fu">:</span> <span class="dv">42</span><span class="fu">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failed&quot;</span><span class="fu">:</span> <span class="dv">12</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li><strong>Key fields</strong> (<code>TelemetryOverview</code>):
 <code>event_counts</code> (string→int64 map, keyed by event type via the
-store <code>TelemetryEventCounts</code>, <code>store.go:182–184</code>)
-and <code>total</code> (sum of all counts, computed in the handler).
-There is <strong>no</strong> device-state breakdown, scope object, or
-<code>failure_rate</code> in the built response (see §10).</li>
+store <code>TelemetryEventCounts</code>), <code>total</code> (sum of all
+counts, computed in the handler), <code>failure_rate</code>
+(<code>float64</code>) and <code>by_state</code> (string→int64 map).
+<code>failure_rate</code> is computed in the handler as
+<code>failure / (success + failure)</code> — the fraction of failed
+terminal outcomes among the two terminal events
+(<code>EventSuccess</code>, <code>EventFailure</code>); it is
+<code>0</code> when there are no terminal events yet.
+<code>by_state</code> is the fleet device count keyed by last-known
+update state, from the store <code>DeviceStateCounts</code>. (Both
+fields landed this session — see §11.)</li>
 <li><strong>Status codes:</strong> <code>200</code> OK;
-<code>500 INTERNAL</code>
-(<code>"could not aggregate telemetry"</code>).</li>
+<code>500 INTERNAL</code> (<code>"could not aggregate telemetry"</code>
+on the event-count read, or
+<code>"could not aggregate device states"</code> on the device-state
+read).</li>
 </ul>
 <h2 id="device_group_crud_and_membership">6.
 device_group_crud_and_membership</h2>
@@ -731,7 +781,7 @@ device_group_crud_and_membership</h2>
 <h3 id="post-apiv1groups">6.1 POST /api/v1/groups</h3>
 <ul>
 <li><strong>Roles:</strong> <code>operator</code>, <code>admin</code>
-(<code>server.go:153</code>). <strong>Maps to:</strong>
+(<code>server.go:169</code>). <strong>Maps to:</strong>
 <code>handleCreateGroup</code>.</li>
 <li><strong>Request body</strong> (<code>GroupCreate</code>):
 <code>{ "name": "...", "description": "..." }</code>. <code>name</code>
@@ -750,7 +800,7 @@ is <strong>required</strong> — blank →
 GET /api/v1/groups/{groupId}</h3>
 <ul>
 <li><strong>Roles:</strong> <code>viewer</code>, <code>operator</code>,
-<code>admin</code> (<code>server.go:154–155</code>).</li>
+<code>admin</code> (<code>server.go:170–171</code>).</li>
 <li><strong>List</strong> (<code>handleListGroups</code>): response
 <code>GroupList</code> <code>{ "items": [GroupView] }</code> —
 <strong>no pagination</strong> (<code>ListGroups</code> takes no
@@ -763,30 +813,30 @@ filter/cursor; <code>500 INTERNAL</code> on store error).</li>
 /api/v1/groups/{groupId}, DELETE /api/v1/groups/{groupId}</h3>
 <ul>
 <li><strong>PATCH</strong> (<code>handleUpdateGroup</code>,
-<code>server.go:156</code>): roles <code>operator</code>,
+<code>server.go:172</code>): roles <code>operator</code>,
 <code>admin</code>. Body <code>GroupUpdate</code>
 <code>{ "name", "description" }</code>. The handler loads the existing
 group (<code>404</code> if absent), applies <code>name</code> only when
 non-empty, and <strong>always</strong> sets <code>description</code>
-from the body (a missing <code>description</code> clears it — see §10).
+from the body (a missing <code>description</code> clears it — see §11).
 Response <code>200 GroupView</code>. <code>409 CONFLICT</code> on name
 collision; <code>404 NOT_FOUND</code>; <code>500 INTERNAL</code>.</li>
 <li><strong>DELETE</strong> (<code>handleDeleteGroup</code>,
-<code>server.go:157</code>): role <code>admin</code> only. Response
+<code>server.go:173</code>): role <code>admin</code> only. Response
 <code>204 No Content</code>. Any store error maps to
 <code>404 NOT_FOUND</code> (<code>"group not found"</code>).</li>
 </ul>
 <h3 id="membership-endpoints">6.4 membership endpoints</h3>
 <ul>
 <li><strong>GET <code>/groups/{groupId}/members</code></strong>
-(<code>handleListGroupMembers</code>, <code>server.go:158</code>): roles
+(<code>handleListGroupMembers</code>, <code>server.go:174</code>): roles
 <code>viewer</code>, <code>operator</code>, <code>admin</code>. Response
 <code>GroupMembers</code>
 <code>{ "group_id", "device_ids": [...] }</code> (empty array, never
 <code>null</code>). <code>404 NOT_FOUND</code> if the group is
 missing.</li>
 <li><strong>POST <code>/groups/{groupId}/members</code></strong>
-(<code>handleAddGroupMember</code>, <code>server.go:159</code>): roles
+(<code>handleAddGroupMember</code>, <code>server.go:175</code>): roles
 <code>operator</code>, <code>admin</code>. Body <code>MemberAdd</code>
 <code>{ "device_id": "..." }</code> — <strong>a single device
 id</strong>, required (blank → <code>400 VALIDATION_FAILED</code>).
@@ -795,7 +845,7 @@ Response <code>204 No Content</code>. <code>404 NOT_FOUND</code>
 <code>500 INTERNAL</code>.</li>
 <li><strong>DELETE
 <code>/groups/{groupId}/members/{deviceId}</code></strong>
-(<code>handleRemoveGroupMember</code>, <code>server.go:160</code>):
+(<code>handleRemoveGroupMember</code>, <code>server.go:176</code>):
 roles <code>operator</code>, <code>admin</code>. Response
 <code>204 No Content</code>. <code>404 NOT_FOUND</code> (missing group);
 <code>500 INTERNAL</code>.</li>
@@ -805,7 +855,7 @@ roles <code>operator</code>, <code>admin</code>. Response
 <code>ota-rollout-engine</code> brick
 (<code>github.com/ HelixDevelopment/ota-rollout-engine</code>), driven
 via <code>server/internal/rollout.Service</code>
-(<code>s.rollout</code>, wired in <code>server.go:89</code>). Enum
+(<code>s.rollout</code>, wired in <code>server.go:96</code>). Enum
 values below are taken from the brick source (<code>types.go</code>,
 <code>verdict.go</code>).</p>
 <h3 id="post-apiv1deploymentsdeploymentidrollout">7.1 POST
@@ -813,7 +863,7 @@ values below are taken from the brick source (<code>types.go</code>,
 <p>Create + start a staged rollout for an existing deployment.</p>
 <ul>
 <li><strong>Roles:</strong> <code>operator</code>, <code>admin</code>
-(<code>server.go:140</code>). <strong>Maps to:</strong>
+(<code>server.go:152</code>). <strong>Maps to:</strong>
 <code>handleCreateRollout</code>.</li>
 <li><strong>Request body</strong> (<code>RolloutCreate</code>):
 <code>{ "phases": [RolloutPhaseSpec, ...] }</code>, <strong>at least
@@ -860,7 +910,7 @@ increasing and end at 100, thresholds in <code>[0,1]</code>).</li>
 /api/v1/deployments/{deploymentId}/rollout</h3>
 <ul>
 <li><strong>Roles:</strong> <code>viewer</code>, <code>operator</code>,
-<code>admin</code> (<code>server.go:141</code>). <strong>Maps
+<code>admin</code> (<code>server.go:153</code>). <strong>Maps
 to:</strong> <code>handleGetRollout</code>.</li>
 <li><strong>Response 200</strong> (<code>RolloutState</code>, same shape
 as §7.1).</li>
@@ -875,7 +925,7 @@ as §7.1).</li>
 return the engine decision.</p>
 <ul>
 <li><strong>Roles:</strong> <code>operator</code>, <code>admin</code>
-(<code>server.go:142</code>). <strong>Maps to:</strong>
+(<code>server.go:154</code>). <strong>Maps to:</strong>
 <code>handleEvaluateRollout</code>.</li>
 <li><strong>Request body</strong> (<code>RolloutVerdict</code>):</li>
 </ul>
@@ -910,34 +960,192 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="
 non-not-found evaluate error →
 <code>"could not evaluate rollout"</code>).</li>
 </ul>
-<h2 id="planned_recall_endpoint_not_yet_wired">8.
-planned_recall_endpoint_not_yet_wired</h2>
-<p>The operator <strong>recall</strong> (server-driven rollback to N-1)
+<h2 id="recall_and_rollback_history_endpoints">8.
+recall_and_rollback_history_endpoints</h2>
+<p>Wire types: <code>handlers_recall.go</code>. Store seam:
+<code>store.go</code> (<code>GetDeployment</code>,
+<code>UpdateDeployment</code>, <code>GetRelease</code>,
+<code>CreateDeployment</code>, <code>AppendRollback</code>,
+<code>ListRollbacks</code> over the <code>rollback_history</code>
+table). The operator <strong>recall</strong> (server-driven rollback)
 surface from <a
 href="../../1.0.1-staged-rollout/rollback_ux.md"><code>../../1.0.1-staged-rollout/rollback_ux.md</code></a>
-§7 is <strong>PLANNED / not-yet-wired</strong>. It is documented here
-only to record that it is <em>absent</em> from the built route
-table:</p>
+§7 is now <strong>WIRED</strong> (it was planned in Revision 1). Recall
+is implemented as a <strong>forward-fix</strong>: it supersedes the
+current deployment and creates a NEW active deployment of the target
+release, recording a <code>rollback_history</code> row.</p>
+<h3 id="post-apiv1deploymentsdeploymentidrecall">8.1 POST
+/api/v1/deployments/{deploymentId}/recall</h3>
+<p>Server-driven recall (rollback) of a deployment’s current release to
+a previous-good release.</p>
 <ul>
-<li><code>POST /api/v1/deployments/{deploymentId}/recall</code> —
-<strong>not present</strong> in <code>server.go</code>.</li>
-<li><code>GET /api/v1/deployments/{deploymentId}/rollbacks</code> —
-<strong>not present</strong> in <code>server.go</code>.</li>
+<li><strong>Roles:</strong> <code>operator</code>, <code>admin</code>
+(<code>server.go:157</code>). <strong>Maps to:</strong>
+<code>handlers_recall.go:handleRecall</code>.</li>
+<li><strong>Request body</strong> (<code>RecallRequest</code>):
+<code>{ "to_release_id": "...", "reason": "..." }</code>.
+<code>to_release_id</code> is <strong>required</strong> — blank →
+<code>400 VALIDATION_FAILED</code>
+(<code>details:[{field:"to_release_id",issue:"required"}]</code>).
+<code>reason</code> is optional.</li>
+<li><strong>Pre-checks (in order):</strong> the deployment must exist
+(<code>s.repo.GetDeployment</code>) → else <code>404 NOT_FOUND</code>
+(<code>"deployment not found"</code>); the deployment must have a
+current release (<code>dep.ReleaseID</code> non-empty) → else
+<code>400 VALIDATION_FAILED</code>
+(<code>"deployment has no current release to roll back from"</code>,
+<code>details:[{field:"deployment",issue:"no current release"}]</code>);
+the target release must exist (<code>s.repo.GetRelease</code>) → else
+<code>404 NOT_FOUND</code>
+(<code>"target release not found"</code>).</li>
+<li><strong>Effect (forward-fix, operator decision 2026-06-08):</strong>
+the current deployment is updated to <code>status="superseded"</code>
+(<code>UpdateDeployment</code>); a new <code>Deployment</code>
+(<code>status="active"</code>, target release, inheriting the prior
+deployment’s strategy/group/target_count) is created
+(<code>CreateDeployment</code>); a <code>RollbackRecord</code>
+(<code>kind="rollback"</code>) is appended
+(<code>AppendRollback</code>). The anti-downgrade invariant in
+<code>handleClientUpdate</code> guarantees a device is never offered a
+version <code>&lt;=</code> its current, so the bootloader-enforced AVB
+anti-rollback is honored by construction.</li>
+<li><strong>Response 201</strong> (<code>RollbackView</code>):</li>
 </ul>
-<p>Per <code>rollback_ux.md</code> §7 and §11, these depend on the
-migration-002 pgx <code>StoragePort</code> over the
-<code>rollback_history</code> table (phase README “REMAINING”), and
-<strong>no <code>rollout.Service</code> rollback/recall method exists
-today</strong>. The route group these would extend
-(<code>/deployments/:deploymentId/rollout*</code>) is real (§7); the
-recall routes are not. This section will be promoted to a live endpoint
-section when the handler + route land.</p>
-<h2 id="audit_write_middleware_cross_cutting">9.
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ab12...&quot;</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;deployment_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...&quot;</span><span class="fu">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="st">&quot;rollback&quot;</span><span class="fu">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;from_release_id&quot;</span><span class="fu">:</span> <span class="st">&quot;r-curr...&quot;</span><span class="fu">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;to_release_id&quot;</span><span class="fu">:</span> <span class="st">&quot;r-prev...&quot;</span><span class="fu">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;recall_deployment_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d34c...&quot;</span><span class="fu">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;high failure rate&quot;</span><span class="fu">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;triggered_by&quot;</span><span class="fu">:</span> <span class="st">&quot;operator@example.com&quot;</span><span class="fu">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;details&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;mode&quot;</span><span class="fu">:</span> <span class="st">&quot;forward-fix&quot;</span><span class="fu">,</span> <span class="dt">&quot;superseded_deployment&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...&quot;</span> <span class="fu">},</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;created_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:30:00Z&quot;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><strong>Key fields</strong> (<code>RollbackView</code>):
+<code>id</code>, <code>deployment_id</code> (the superseded/origin
+deployment), <code>kind</code> (<code>"rollback"</code>),
+<code>from_release_id</code> (the deployment’s current release),
+<code>to_release_id</code> (the requested target),
+<code>recall_deployment_id</code> (the newly-created active deployment),
+<code>reason</code>, <code>triggered_by</code> (the caller subject from
+the token claims), <code>details</code> (string→string map; the build
+sets <code>mode=forward-fix</code> +
+<code>superseded_deployment=&lt;origin id&gt;</code>),
+<code>created_at</code>. The
+<code>from/to/recall/reason/triggered_by/details</code> fields are all
+<code>omitempty</code>.</li>
+<li><strong>Status codes:</strong> <code>201</code> Created;
+<code>400 VALIDATION_FAILED</code> (malformed body, blank
+<code>to_release_id</code>, or no current release);
+<code>404 NOT_FOUND</code> (deployment or target release missing);
+<code>500 INTERNAL</code>
+(<code>"could not supersede current deployment"</code>,
+<code>"could not create recall deployment"</code>, or
+<code>"could not record rollback"</code> on the respective store
+failures).</li>
+<li><strong>Audited:</strong> a <code>POST</code> returning
+<code>2xx</code> is logged by the audit middleware (<a
+href="#10-audit_write_middleware_cross_cutting">§10</a>) as a
+<code>DEPLOYMENT_CREATE</code> action (the route template ends in
+<code>recall</code>, which is not in the verb-refinement set; the
+resource is <code>deployment</code>).</li>
+</ul>
+<h3 id="get-apiv1deploymentsdeploymentidrollbacks">8.2 GET
+/api/v1/deployments/{deploymentId}/rollbacks</h3>
+<p>Rollback/recall history for a deployment.</p>
+<ul>
+<li><strong>Roles:</strong> <code>viewer</code>, <code>operator</code>,
+<code>admin</code> (<code>server.go:158</code>). <strong>Maps
+to:</strong> <code>handlers_recall.go:handleListRollbacks</code>.</li>
+<li><strong>Request:</strong> no body, no query parameters consumed by
+the handler.</li>
+<li><strong>Response 200</strong> (<code>RollbackList</code>):
+<code>{ "items": [RollbackView, ...] }</code> — empty array, never
+<code>null</code> (the handler pre-allocates a non-nil slice). Items are
+returned in the store’s <code>ListRollbacks</code> order. There is
+<strong>no</strong> <code>404</code> for an unknown deployment — an
+empty history is returned.</li>
+<li><strong>Status codes:</strong> <code>200</code> OK;
+<code>500 INTERNAL</code> (<code>"could not list rollbacks"</code> on
+store error).</li>
+</ul>
+<h2 id="delta_artifact_endpoints">9. delta_artifact_endpoints</h2>
+<p>Wire types: <code>handlers_delta.go</code>. Store seam:
+<code>store.go</code> (<code>GetArtifact</code>,
+<code>CreateDelta</code>, <code>FindDelta</code> over the delta-artifact
+table). Implements <code>delta_updates_design.md</code> §3/§4 (register
++ look up a generated <code>base-&gt;target</code> delta payload).</p>
+<h3 id="post-apiv1deltas">9.1 POST /api/v1/deltas</h3>
+<p>Register a generated base→target delta artifact.</p>
+<ul>
+<li><strong>Roles:</strong> <code>operator</code>, <code>admin</code>
+(<code>server.go:140</code>). <strong>Maps to:</strong>
+<code>handlers_delta.go:handleRegisterDelta</code>.</li>
+<li><strong>Request body</strong> (<code>DeltaRegister</code>):</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;base_artifact_id&quot;</span><span class="fu">:</span> <span class="st">&quot;a-base...&quot;</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;target_artifact_id&quot;</span><span class="fu">:</span> <span class="st">&quot;a-target...&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sha256&quot;</span><span class="fu">:</span> <span class="st">&quot;9f86d0...&quot;</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;size&quot;</span><span class="fu">:</span> <span class="dv">10485760</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;storage_ref&quot;</span><span class="fu">:</span> <span class="st">&quot;s3://helix-deltas/ab12.patch&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>base_artifact_id</code> and <code>target_artifact_id</code> are
+<strong>required</strong> (blank → <code>400 VALIDATION_FAILED</code>,
+<code>details:[{field:"base_artifact_id",issue:"required"},{field:"target_artifact_id",issue:"required"}]</code>)
+and must <strong>differ</strong> (equal →
+<code>400 VALIDATION_FAILED</code>,
+<code>details:[{field:"target_artifact_id",issue:"must differ from base"}]</code>).
+<code>sha256</code>, <code>size</code>, and <code>storage_ref</code> are
+optional. - <strong>Pre-checks:</strong> both artifacts must exist
+(<code>s.repo.GetArtifact</code> for each) → else
+<code>404 NOT_FOUND</code> (<code>"artifact not found"</code>,
+<code>details:[{field:"&lt;base|target&gt;_artifact_id",issue:"unknown artifact"}]</code>).
+- <strong>Response 201</strong> (<code>DeltaView</code>):
+<code>{ "id", "base_artifact_id", "target_artifact_id",   "sha256"(omitempty), "size"(omitempty), "storage_ref"(omitempty), "created_at" }</code>.
+- <strong>Status codes:</strong> <code>201</code> Created;
+<code>400 VALIDATION_FAILED</code> (malformed body, missing ids, or
+base==target); <code>404 NOT_FOUND</code> (unknown base/target
+artifact); <code>409 CONFLICT</code> (<code>store.ErrConflict</code> →
+<code>"a delta for this base-&gt;target pair already exists"</code> —
+duplicate (base,target) pair); <code>500 INTERNAL</code>
+(<code>"could not register delta"</code>).</p>
+<h3 id="get-apiv1deltas">9.2 GET /api/v1/deltas</h3>
+<p>Look up the delta for a <code>base</code>/<code>target</code>
+pair.</p>
+<ul>
+<li><strong>Roles:</strong> <code>viewer</code>, <code>operator</code>,
+<code>admin</code> (<code>server.go:141</code>). <strong>Maps
+to:</strong> <code>handlers_delta.go:handleFindDelta</code>.</li>
+<li><strong>Request:</strong> no body. <strong>Required</strong> query
+parameters:
+<ul>
+<li><code>?base=</code> — base artifact id. Blank →
+<code>400 VALIDATION_FAILED</code>
+(<code>details:[{field:"base",issue:"required"}]</code>).</li>
+<li><code>?target=</code> — target artifact id. Blank →
+<code>400 VALIDATION_FAILED</code>
+(<code>details:[{field:"target",issue:"required"}]</code>).</li>
+</ul></li>
+<li><strong>Response 200</strong> (<code>DeltaView</code>, same shape as
+§9.1).</li>
+<li><strong>Status codes:</strong> <code>200</code> OK;
+<code>400 VALIDATION_FAILED</code> (missing
+<code>base</code>/<code>target</code>); <code>404 NOT_FOUND</code>
+(<code>"no delta for this base-&gt;target pair"</code> —
+<code>FindDelta</code> returns an error).</li>
+</ul>
+<h2 id="audit_write_middleware_cross_cutting">10.
 audit_write_middleware_cross_cutting</h2>
 <p>The audit <strong>write</strong> path is not an endpoint but is the
 source of every <code>GET /audit</code> row, so it is recorded here for
 completeness (<code>handlers_audit.go:auditMiddleware</code>, wired on
-the protected group at <code>server.go:123</code>).</p>
+the protected group at <code>server.go:130</code>).</p>
 <ul>
 <li><strong>Placement (load-bearing):</strong> mounted on the
 <code>auth</code> group <strong>with</strong>
@@ -963,11 +1171,13 @@ e.g. <code>GROUP_CREATE</code>, <code>GROUP_UPDATE</code>,
 swallowed (<code>_ =</code>) — a failing audit sink never fails the
 user’s already-successful request.</li>
 </ul>
-<h2 id="spec_vs_implementation_divergences">10.
+<h2 id="spec_vs_implementation_divergences">11.
 spec_vs_implementation_divergences</h2>
 <p>Per Constitution §11.4.6, where the prose specs and the built code
 disagree, the <strong>code is authoritative</strong> and the difference
-is stated here, never silently reconciled.</p>
+is stated here, never silently reconciled. Divergences that have since
+been closed in code are marked <strong>RESOLVED</strong> with the
+landing commit.</p>
 <p><strong>Audit (<code>operational_endpoints.md</code> §4 vs
 <code>handlers_audit.go</code>):</strong></p>
 <ul>
@@ -975,12 +1185,15 @@ is stated here, never silently reconciled.</p>
 <code>{ user_id, subject }</code>; the built
 <code>AuditLogEntry.actor</code> is a <strong>flat string</strong>
 (subject, falling back to user id).</li>
-<li>The spec lists query params <code>?actor</code>,
-<code>?resource_id</code>, <code>?since</code>, <code>?until</code>; the
-built handler consumes only <code>?action</code>,
-<code>?resource_type</code>, <code>?cursor</code>, <code>?limit</code>.
-There is <strong>no</strong> time-window or actor/resource-id filtering
-in the implementation.</li>
+<li><strong>RESOLVED (commit <code>028e656</code>):</strong> the audit
+handler now also consumes <code>?since</code> and <code>?until</code>
+(RFC3339; bad format → <code>400</code>), implementing the spec’s
+time-window filter (<code>store.AuditFilter.Since</code>/
+<code>.Until</code>). The remaining gap is
+<code>?actor</code>/<code>?resource_id</code> filtering, which is still
+<strong>not</strong> implemented; the built handler consumes
+<code>?action</code>, <code>?resource_type</code>, <code>?cursor</code>,
+<code>?limit</code>, <code>?since</code>, <code>?until</code>.</li>
 <li>The spec’s response model is <code>AuditList</code>; the built type
 is <code>AuditLogList</code>.</li>
 </ul>
@@ -1007,10 +1220,18 @@ aggregate (<code>scope</code>, <code>devices_total</code>,
 <code>event_counts</code>, <code>failure_rate</code>,
 <code>generated_at</code>) plus
 <code>?deployment_id</code>/<code>?os</code>/<code>?since</code>/<code>?until</code>
-scoping. The built response is the minimal
-<code>{ "event_counts": {type:int64}, "total": int64 }</code> with
-<strong>no</strong> scoping, <strong>no</strong> per-device state
-breakdown, and <strong>no</strong> <code>failure_rate</code>.</li>
+scoping. <strong>RESOLVED (commit <code>028e656</code>):</strong> the
+built response now adds <code>failure_rate</code> (<code>float64</code>,
+<code>failure/(success+failure)</code>) and <code>by_state</code>
+(string→int64 device-state map, from <code>DeviceStateCounts</code>)
+alongside <code>event_counts</code>
+<ul>
+<li><code>total</code> (see §5.2). The remaining gap is the
+<code>scope</code>/<code>devices_total</code>/<code>devices_reporting</code>/
+<code>generated_at</code> fields and the
+<code>?deployment_id</code>/<code>?os</code>/<code>?since</code>/<code>?until</code>
+query scoping, which are still <strong>not</strong> implemented.</li>
+</ul></li>
 </ul>
 <p><strong>Groups (<code>operational_endpoints.md</code> §6 vs
 <code>handlers_group.go</code>):</strong></p>
@@ -1052,5 +1273,18 @@ exact <code>ota-rollout-engine</code>
 values; no values are invented. The handler maps deployment-missing →
 <code>404</code>, plan-invalid → <code>400</code>, and
 evaluate-not-found → <code>404</code>.</p>
+<p><strong>Recall (<code>rollback_ux.md</code> §7 vs
+<code>handlers_recall.go</code>):</strong> <strong>LANDED (recall now
+wired; see §8).</strong> The endpoint is implemented as a
+<strong>forward-fix</strong> rather than an in-place N-1 re-flash: it
+supersedes the current deployment (<code>status="superseded"</code>) and
+creates a NEW active deployment of the requested target release,
+recording a <code>rollback_history</code> row
+(<code>kind="rollback"</code>, <code>details.mode="forward-fix"</code>).
+The caller supplies the explicit <code>to_release_id</code> (the build
+does not auto-resolve N-1). On success the response is <code>201</code>
+with the <code>RollbackView</code> record. <code>GET /rollbacks</code>
+returns the full history and does <strong>not</strong> <code>404</code>
+on an unknown deployment (empty list).</p>
 </body>
 </html>
