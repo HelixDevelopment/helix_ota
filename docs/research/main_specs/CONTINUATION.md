@@ -44,10 +44,16 @@ Type **`continue`** in a new session. Read this file + the memory index first. A
 - **G5 device-group CRUD** (commit e3e1307): full `/groups` CRUD + membership; writes operator/admin, delete admin-only.
 All three added `store.Repository` methods on memory + pgx, extended the shared contract, and pass the pgx integration test on real Postgres.
 
+### Staged rollout + more — DONE this session
+- Migration 002 real-DB validated (e14942a). **Go engine** wired via the `ota-rollout-engine` brick: `server/internal/rollout` + REST `POST/GET /deployments/{id}/rollout` + `/evaluate` (create→start→advance→complete, halt-on-error-breach); 7 tests green (046ea07).
+- End-user rollback reconciled INTO **1.0.1** per operator decision; 1.0.2-rollback superseded→folded (a4c2b3d).
+- **G11** repo audit: all 6 ota-* PUBLIC on GitHub+GitLab (dab2f0e). **G12** NFR/load harness real measured percentiles (6547c7f).
+
 ### NEXT wave (still open)
-1. **Operator decision applied**: end-user rollback stays in **1.0.1** (with staged-rollout). Docs reconciliation (synthesis §10 K8 + 1.0.1/1.0.2 dir renumber) still pending — the agent wave for it was rate-limited; redo.
-2. **Staged-rollout engine** (per `1.0.1-staged-rollout/`): migration `002_*` (deployment_phases/rollouts/rollback_history) is DONE + real-DB validated (commit e14942a, evidence `docs/qa/20260608-migration-002/`). REMAINING: the Go engine — a `StoragePort` adapter over the `ota-rollout-engine` brick + rollout REST endpoints (start/pause/resume/abort/rollback). End-user rollback included per operator decision.
-3. **Dashboard repo** scaffold (G6); **G12** NFR/load harness; **G11** verify/create ota-* public repos; confirm CODEOWNERS GitHub handle. (These 5-6-agent wave items were rate-limited mid-session — redo when limits recover.)
+1. **pgx StoragePort** for the rollout engine over migration-002 tables (memory store done+tested; pgx is production hardening).
+2. **Dashboard** scaffold (G6) + **per-submodule README** enrichment — agents in flight this session; integrate/commit when complete.
+3. Confirm CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
+4. Device-side TUF + rollback UX (1.0.1 depth); delta-updates 1.0.3.
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
