@@ -190,7 +190,8 @@ export interface TelemetryOverview {
 export interface DeviceGroup {
   group_id: string;
   name: string;
-  device_count: number;
+  member_count: number;
+  created_at: string; // RFC 3339 UTC
 }
 
 export interface DeviceGroupCreate {
@@ -200,6 +201,25 @@ export interface DeviceGroupCreate {
 export interface DeviceGroupList {
   items: DeviceGroup[];
   next_cursor?: string;
+}
+
+// Batch member-add request/response for POST /groups/{id}/members.
+// The wire moved from a single-device 204 to a batch 200 with a per-id
+// disposition breakdown so the operator UI can report partial results.
+export interface DeviceGroupMembersAdd {
+  device_ids: DeviceId[];
+}
+
+export interface DeviceGroupMembersAddResult {
+  added: DeviceId[];
+  already_member: DeviceId[];
+  not_found: DeviceId[];
+}
+
+// GET /groups/{id}/members — current membership snapshot.
+export interface DeviceGroupMembers {
+  group_id: string;
+  device_ids: DeviceId[];
 }
 
 // --- audit (design §6; audit viewer is G3/1.0.1, route deferred) ------------

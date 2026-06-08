@@ -1,59 +1,73 @@
 ================================================================
 Helix OTA E2E challenge — REAL run evidence
-Captured: 2026-06-08T13:56:11Z
+Captured: 2026-06-08T15:12:01Z
 Host: Darwin 24.5.0 arm64
 Tooling: curl 8.7.1 (x86_64-apple-darwin24.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.64.0 | jq-1.7.1-apple | go version go1.26.2 darwin/arm64
 Server: go run ./cmd/ota-server  (in-memory repo, plain HTTP :8080)
 Server env: HELIX_ADMIN_USERNAME=admin@helix.test HELIX_ADMIN_PASSWORD=*** HELIX_TOKEN_SECRET=***
-Token format: FACT — 2-segment <base64url(RawURLEncoding) claims>.<HMAC-SHA256 sig>
-              (server/internal/api/token.go); challenge re-pads then jq-validates sub+roles.
+WIRE CHANGE under test (breaking): device-group API widened —
+  * group id key is now "group_id" (was "id")
+  * POST /groups/{id}/members takes BATCH {"device_ids":[...]} (was {"device_id":...}),
+    returns 200 (was 204) with {"added":[],"already_member":[],"not_found":[]};
+    a device must be REGISTERED to be added (else => not_found); empty => 400; unknown group => 404.
 ================================================================
 
 == Helix OTA operational + rollout E2E challenge ==
-base_url=http://127.0.0.1:8080 user=admin@helix.test run=e2e-1780926971-30314
+base_url=http://127.0.0.1:8080 user=admin@helix.test run=e2e-1780931521-23491
 
-[32m[PASS][0m GET /healthz -> 200
-[32m[PASS][0m POST /auth/login (HTTP 200)
-[32m[PASS][0m login token_type is Bearer
-[32m[PASS][0m access_token is a signed claims blob carrying sub + admin role
-[32m[PASS][0m anti-bluff: unauthenticated GET /telemetry/overview -> 401 (auth enforced)
-[32m[PASS][0m POST /devices/register (HTTP 201)
-[32m[PASS][0m device registration returned a device_token
-[32m[PASS][0m GET /devices/{id}/status (HTTP 200)
-[32m[PASS][0m device status echoes device_id
-[32m[PASS][0m POST /groups (HTTP 201)
-[32m[PASS][0m group create echoes name
-[32m[PASS][0m GET /groups/{id} (HTTP 200)
-[32m[PASS][0m GET group echoes name
-[32m[PASS][0m POST /groups/{id}/members (add device) (HTTP 204)
-[32m[PASS][0m GET /groups/{id}/members (HTTP 200)
-[32m[PASS][0m member list contains the added device_id
-[32m[PASS][0m GET /telemetry/overview (HTTP 200)
-[32m[PASS][0m telemetry overview has total + event_counts
-[32m[PASS][0m GET /audit (HTTP 200)
-[32m[PASS][0m audit log is non-empty (13 entries)
-[32m[PASS][0m audit log contains GROUP_CREATE (the group we created was audited)
-[32m[PASS][0m audit log contains GROUP_MEMBER_CREATE (member-add was audited)
-[32m[PASS][0m anti-bluff: GET reads are not audited (only mutations)
-[32m[PASS][0m GET /deployments/{absent}/rollout -> 404 (HTTP 404)
-[32m[PASS][0m POST /deployments/{absent}/rollout -> 404 (deployment-existence gate) (HTTP 404)
-[33m[SKIP][0m full pipeline (upload->release->deploy->rollout create/get/evaluate): requires a server-config-coupled signed artifact; set HELIX_E2E_TRY_PIPELINE=1 + HELIX_E2E_VERIFIED_RELEASE_ID=<id> to drive it. Rollout ROUTES were still asserted deterministically above (step 12).
-[32m[PASS][0m DELETE /groups/{id}/members/{deviceId} -> 204 (HTTP 204)
-[32m[PASS][0m DELETE /groups/{id} -> 204 (HTTP 204)
-[32m[PASS][0m GET /groups/{deleted} -> 404 (deletion is real) (HTTP 404)
+[PASS] GET /healthz -> 200
+[PASS] POST /auth/login (HTTP 200)
+[PASS] login token_type is Bearer
+[PASS] access_token is a signed claims blob carrying sub + admin role
+[PASS] anti-bluff: unauthenticated GET /telemetry/overview -> 401 (auth enforced)
+[PASS] POST /devices/register (HTTP 201)
+[PASS] device registration returned a device_token
+[PASS] GET /devices/{id}/status (HTTP 200)
+[PASS] device status echoes device_id
+[PASS] POST /groups (HTTP 201)
+[PASS] group create uses new 'group_id' key (old 'id' key absent)
+[PASS] group create echoes name
+[PASS] GET /groups/{id} (HTTP 200)
+[PASS] GET group echoes name
+[PASS] POST /groups/{id}/members (batch add registered device) (HTTP 200)
+[PASS] batch add put the registered device in .added
+[PASS] POST /groups/{id}/members (re-add) -> 200 (HTTP 200)
+[PASS] re-add reports the device in .already_member
+[PASS] POST /groups/{id}/members (unregistered id) -> 200 (HTTP 200)
+[PASS] unregistered device id is reported in .not_found
+[PASS] POST /groups/{id}/members (empty device_ids) -> 400 (HTTP 400)
+[PASS] POST /groups/{absent}/members -> 404 (HTTP 404)
+[PASS] GET /groups/{id}/members (HTTP 200)
+[PASS] member list contains the added device_id
+[PASS] GET /telemetry/overview (HTTP 200)
+[PASS] telemetry overview has total + event_counts
+[PASS] GET /audit (HTTP 200)
+[PASS] audit log is non-empty (20 entries)
+[PASS] audit log contains GROUP_CREATE (the group we created was audited)
+[PASS] audit log contains GROUP_MEMBER_CREATE (member-add was audited)
+[PASS] anti-bluff: GET reads are not audited (only mutations)
+[PASS] GET /deployments/{absent}/rollout -> 404 (HTTP 404)
+[PASS] POST /deployments/{absent}/rollout -> 404 (deployment-existence gate) (HTTP 404)
+[SKIP] full pipeline (upload->release->deploy->rollout create/get/evaluate): requires a server-config-coupled signed artifact; set HELIX_E2E_TRY_PIPELINE=1 + HELIX_E2E_VERIFIED_RELEASE_ID=<id> to drive it. Rollout ROUTES were still asserted deterministically above (step 12).
+[PASS] DELETE /groups/{id}/members/{deviceId} -> 204 (HTTP 204)
+[PASS] DELETE /groups/{id} -> 204 (HTTP 204)
+[PASS] GET /groups/{deleted} -> 404 (deletion is real) (HTTP 404)
 
-== summary: 28 passed, 0 failed, 1 skipped ==
+== summary: 36 passed, 0 failed, 1 skipped ==
 RESULT: PASS
 
-challenge exit code: 
+challenge exit code: 0
 
 ================================================================
 ANTI-BLUFF NEGATIVE CONTROLS (prove the challenge can FAIL)
 ================================================================
-[control 1] live server, correct password   -> exit 0, RESULT: PASS (28/0/1)  [verified]
+[control 1] live server, correct password   -> exit 0, RESULT: PASS (36/0/1)  [verified, above]
 [control 2] live server, WRONG password      -> exit 1, '[FAIL] login failed' [verified]
-[control 3] server NOT running               -> exit 1, '[FAIL] server is not reachable ... HTTP 000' [verified]
+[control 3] server NOT running               -> exit 1, '[FAIL] server is not reachable ... HTTP 000' [verified previously]
 
-These prove the PASS is real: the script genuinely exercises the live
-server and returns non-zero when the server is broken/absent or auth fails.
+Direct curl probe of the NEW wire shape (decisive breaking-change proof):
+  POST /groups          body -> {"group_id":...}   has .group_id=true  has .id=false
+  POST .../members {"device_ids":["<registered>"]} -> status=200 {"added":["..."],"already_member":[],"not_found":[]}
+  POST .../members {"device_id":"<id>"} (OLD shape) -> status=400 (server rejects old body) => a 204/.id script FAILS
+
 Server stopped and TCP :8080 freed after the run (host left quiescent).

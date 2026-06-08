@@ -41,8 +41,8 @@
 bank:
   id: helix_ota_operational_rollout
   name: Helix OTA — operational + rollout E2E challenge bank
-  revision: 1
-  last_modified: "2026-06-08T00:00:00Z"
+  revision: 2
+  last_modified: "2026-06-08T12:00:00Z"
   description: >-
     Black-box, anti-bluff end-to-end challenges that drive the live ota-server
     REST API over real HTTP and assert real HTTP status codes plus key JSON
@@ -113,7 +113,7 @@ bank:
       evidence_artifact: tests/e2e/RUN_EVIDENCE.txt
 
     - id: HOTA-GROUP-LIFECYCLE
-      title: Device-group create/get/add-member/list/delete lifecycle is real
+      title: Device-group create/get/batch-add-member/list/delete lifecycle is real (widened member-add wire)
       capability_area: group-lifecycle
       dispatch_command: >-
         HELIX_BASE_URL=http://127.0.0.1:8080
@@ -121,19 +121,34 @@ bank:
         HELIX_ADMIN_PASSWORD=<pw>
         bash tests/e2e/challenge_operational.sh
       pass_criterion: >-
-        POST /api/v1/groups -> 201 with id + echoed name;
-        GET /api/v1/groups/{id} -> 200 echoing name;
-        POST /api/v1/groups/{id}/members (add the registered device) -> 204;
+        POST /api/v1/groups -> 201 returning the group id under the new
+        "group_id" key (the deprecated "id" key MUST be absent — breaking wire
+        change) plus an echoed name; GET /api/v1/groups/{id} -> 200 echoing
+        name; the member-add endpoint is now a BATCH:
+        POST /api/v1/groups/{id}/members {"device_ids":[...]} -> 200 returning
+        {added,already_member,not_found}, where adding the REGISTERED device puts
+        its id in .added (a 204 now FAILs); re-adding the same device -> 200 with
+        the id in .already_member; an UNREGISTERED device id -> 200 with the id
+        in .not_found (a device must be registered to be added); an empty
+        {"device_ids":[]} batch -> 400; adding to an unknown group -> 404;
         GET /api/v1/groups/{id}/members -> 200 and device_ids contains the added
         device_id; DELETE /api/v1/groups/{id}/members/{deviceId} -> 204;
         DELETE /api/v1/groups/{id} -> 204; and a follow-up GET on the deleted
         group -> 404 (deletion is real, not a no-op).
       asserted_lines:
         - "POST /groups (HTTP 201)"
+        - "group create uses new 'group_id' key (old 'id' key absent)"
         - "group create echoes name"
         - "GET /groups/{id} (HTTP 200)"
         - "GET group echoes name"
-        - "POST /groups/{id}/members (add device) (HTTP 204)"
+        - "POST /groups/{id}/members (batch add registered device) (HTTP 200)"
+        - "batch add put the registered device in .added"
+        - "POST /groups/{id}/members (re-add) -> 200 (HTTP 200)"
+        - "re-add reports the device in .already_member"
+        - "POST /groups/{id}/members (unregistered id) -> 200 (HTTP 200)"
+        - "unregistered device id is reported in .not_found"
+        - "POST /groups/{id}/members (empty device_ids) -> 400 (HTTP 400)"
+        - "POST /groups/{absent}/members -> 404 (HTTP 404)"
         - "GET /groups/{id}/members (HTTP 200)"
         - "member list contains the added device_id"
         - "DELETE /groups/{id}/members/{deviceId} -> 204 (HTTP 204)"

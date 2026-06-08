@@ -19,6 +19,9 @@ import type {
   DeviceGroup,
   DeviceGroupCreate,
   DeviceGroupList,
+  DeviceGroupMembers,
+  DeviceGroupMembersAdd,
+  DeviceGroupMembersAddResult,
   DeviceStatus,
   HealthStatus,
   LoginRequest,
@@ -269,6 +272,25 @@ export class ApiClient {
 
   createGroup(req: DeviceGroupCreate): Promise<DeviceGroup> {
     return this.json<DeviceGroup>("/groups", { method: "POST", body: req });
+  }
+
+  getGroupMembers(groupId: string): Promise<DeviceGroupMembers> {
+    return this.json<DeviceGroupMembers>(
+      `/groups/${encodeURIComponent(groupId)}/members`,
+    );
+  }
+
+  // Batch member-add (breaking wire change): POST /groups/{id}/members now takes
+  // { device_ids } and returns 200 with a per-id disposition breakdown
+  // ({ added, already_member, not_found }) instead of the old single-device 204.
+  addGroupMembers(
+    groupId: string,
+    deviceIds: DeviceGroupMembersAdd["device_ids"],
+  ): Promise<DeviceGroupMembersAddResult> {
+    return this.json<DeviceGroupMembersAddResult>(
+      `/groups/${encodeURIComponent(groupId)}/members`,
+      { method: "POST", body: { device_ids: deviceIds } satisfies DeviceGroupMembersAdd },
+    );
   }
 
   // --- audit (design §6; G3/1.0.1) -----------------------------------------
