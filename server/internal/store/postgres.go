@@ -545,14 +545,35 @@ func (r *PostgresRepository) DeleteGroup(ctx context.Context, groupID string) er
 	return nil
 }
 
-func (r *PostgresRepository) AddGroupMember(ctx context.Context, groupID, deviceID string) error {
+func (r *PostgresRepository) AddGroupMember(ctx context.Context, groupID, deviceID string, addedAt time.Time) error {
 	if _, err := r.GetGroup(ctx, groupID); err != nil {
 		return err
 	}
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO helix_ota.device_group_members (group_id, device_id) VALUES ($1,$2)
-		 ON CONFLICT (group_id, device_id) DO NOTHING`, groupID, deviceID)
+		`INSERT INTO helix_ota.device_group_members (group_id, device_id, added_at) VALUES ($1,$2,$3)
+		 ON CONFLICT (group_id, device_id) DO NOTHING`, groupID, deviceID, addedAt)
 	return err
+}
+
+func (r *PostgresRepository) ListGroupMembersDetailed(ctx context.Context, groupID string) ([]GroupMember, error) {
+	if _, err := r.GetGroup(ctx, groupID); err != nil {
+		return nil, err
+	}
+	rows, err := r.pool.Query(ctx,
+		`SELECT device_id, added_at FROM helix_ota.device_group_members WHERE group_id=$1 ORDER BY seq`, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []GroupMember
+	for rows.Next() {
+		var m GroupMember
+		if serr := rows.Scan(&m.DeviceID, &m.AddedAt); serr != nil {
+			return nil, serr
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
 }
 
 func (r *PostgresRepository) ListGroupMembers(ctx context.Context, groupID string) ([]string, error) {

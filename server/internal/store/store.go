@@ -160,6 +160,13 @@ type Group struct {
 	CreatedAt   time.Time
 }
 
+// GroupMember is one device-group membership with its join time
+// (device_group_members; operational_endpoints.md §6).
+type GroupMember struct {
+	DeviceID string
+	AddedAt  time.Time
+}
+
 // AuditFilter narrows an audit list query (operational_endpoints.md §4.3).
 // Since/Until are inclusive time bounds (zero value = unbounded).
 type AuditFilter struct {
@@ -239,8 +246,10 @@ type Repository interface {
 	ListGroups(ctx context.Context) ([]Group, error)
 	UpdateGroup(ctx context.Context, g Group) error
 	DeleteGroup(ctx context.Context, groupID string) error
-	AddGroupMember(ctx context.Context, groupID, deviceID string) error
+	AddGroupMember(ctx context.Context, groupID, deviceID string, addedAt time.Time) error
 	ListGroupMembers(ctx context.Context, groupID string) ([]string, error)
+	// ListGroupMembersDetailed returns members with their join time, oldest-first.
+	ListGroupMembersDetailed(ctx context.Context, groupID string) ([]GroupMember, error)
 	RemoveGroupMember(ctx context.Context, groupID, deviceID string) error
 
 	// Idempotency support for register/deployment replay (endpoints.md §2).

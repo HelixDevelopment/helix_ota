@@ -52,10 +52,16 @@ type MemberAddResult struct {
 	NotFound      []string `json:"not_found"`
 }
 
-// GroupMembers is the GET /groups/{id}/members body.
+// GroupMemberView is one membership with its join time.
+type GroupMemberView struct {
+	DeviceID string    `json:"device_id"`
+	AddedAt  time.Time `json:"added_at"`
+}
+
+// GroupMembers is the GET /groups/{id}/members body — items of {device_id, added_at}.
 type GroupMembers struct {
-	GroupID   string   `json:"group_id"`
-	DeviceIDs []string `json:"device_ids"`
+	GroupID string            `json:"group_id"`
+	Items   []GroupMemberView `json:"items"`
 }
 
 func toGroupView(g store.Group) GroupView {
@@ -164,15 +170,16 @@ func (s *Server) handleDeleteGroup(c *gin.Context) {
 
 func (s *Server) handleListGroupMembers(c *gin.Context) {
 	groupID := c.Param("groupId")
-	members, err := s.repo.ListGroupMembers(c.Request.Context(), groupID)
+	members, err := s.repo.ListGroupMembersDetailed(c.Request.Context(), groupID)
 	if err != nil {
 		respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
 		return
 	}
-	if members == nil {
-		members = []string{}
+	items := make([]GroupMemberView, 0, len(members))
+	for _, m := range members {
+		items = append(items, GroupMemberView{DeviceID: m.DeviceID, AddedAt: m.AddedAt})
 	}
-	c.JSON(http.StatusOK, GroupMembers{GroupID: groupID, DeviceIDs: members})
+	c.JSON(http.StatusOK, GroupMembers{GroupID: groupID, Items: items})
 }
 
 func (s *Server) handleAddGroupMembers(c *gin.Context) {
@@ -213,7 +220,7 @@ func (s *Server) handleAddGroupMembers(c *gin.Context) {
 				result.NotFound = append(result.NotFound, id)
 				continue
 			}
-			if aerr := s.repo.AddGroupMember(ctx, groupID, id); aerr != nil {
+			if aerr := s.repo.AddGroupMember(ctx, groupID, id, s.now()); aerr != nil {
 				if errors.Is(aerr, store.ErrNotFound) {
 					respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
 					return

@@ -199,17 +199,22 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("UpdateGroup unknown want ErrNotFound, got %v", err)
 	}
 	// Membership (idempotent add, requires existing group).
-	if err := repo.AddGroupMember(ctx, "grp-1", "dev-1"); err != nil {
+	if err := repo.AddGroupMember(ctx, "grp-1", "dev-1", ts); err != nil {
 		t.Fatalf("AddGroupMember: %v", err)
 	}
-	if err := repo.AddGroupMember(ctx, "grp-1", "dev-1"); err != nil { // idempotent
+	if err := repo.AddGroupMember(ctx, "grp-1", "dev-1", ts.Add(time.Hour)); err != nil { // idempotent: no-op
 		t.Fatalf("AddGroupMember idempotent: %v", err)
 	}
-	if err := repo.AddGroupMember(ctx, "no-group", "dev-1"); !errors.Is(err, ErrNotFound) {
+	if err := repo.AddGroupMember(ctx, "no-group", "dev-1", ts); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("AddGroupMember unknown group want ErrNotFound, got %v", err)
 	}
 	if mem, err := repo.ListGroupMembers(ctx, "grp-1"); err != nil || len(mem) != 1 || mem[0] != "dev-1" {
 		t.Fatalf("ListGroupMembers: %+v err=%v", mem, err)
+	}
+	// Detailed members carry the join time (added_at == ts; idempotent re-add did NOT change it).
+	if det, err := repo.ListGroupMembersDetailed(ctx, "grp-1"); err != nil || len(det) != 1 ||
+		det[0].DeviceID != "dev-1" || !det[0].AddedAt.Equal(ts) {
+		t.Fatalf("ListGroupMembersDetailed: %+v err=%v", det, err)
 	}
 	if err := repo.RemoveGroupMember(ctx, "grp-1", "dev-1"); err != nil {
 		t.Fatalf("RemoveGroupMember: %v", err)
