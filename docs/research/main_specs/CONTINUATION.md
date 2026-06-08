@@ -72,7 +72,7 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 ### Round 6 deliverables — DONE this session
 - **Delta-artifact store + API** (66464d7): `delta_artifacts` (base≠target CHECK + UNIQUE pair) on memory+pgx; `POST/GET /deltas` register+lookup; real-DB parity.
 - **device-TUF client-decision memo** (recommend gomobile-go-tuf/v2, ADR-0002 §4.3) + sibling.
-- **Additive WIDENs** (028e656, operator-approved): audit `?since/?until` filters + telemetry `failure_rate`/`by_state` (memory+pgx, real-DB parity, 2 api tests). `spec_impl_alignment.md` Rev 2 marks rows 2+5 landed.
+- **Additive WIDENs — full set landed** (operator-approved): audit `?since/?until` filters + telemetry `failure_rate`/`by_state` (028e656, memory+pgx real-DB parity) + group `member_count` (4cb86d7). `spec_impl_alignment.md` Rev 3: rows 2+5+6-partial landed; as-built doc re-synced (recall now WIRED, /deltas + recall + rollbacks documented).
 
 ### NEXT wave (still open)
 1. **Breaking spec↔impl WIDENs** — gated behind an operator WIDEN/TRIM ruling: audit `actor` object, per-device telemetry pagination + `events`→`items`, batch group-member-add (`spec_impl_alignment.md` rows 1/4/8).
