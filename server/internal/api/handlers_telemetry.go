@@ -32,6 +32,11 @@ type TelemetryHistory struct {
 type TelemetryOverview struct {
 	EventCounts map[string]int64 `json:"event_counts"`
 	Total       int64            `json:"total"`
+	// FailureRate is failed terminal outcomes among terminal outcomes:
+	// failure / (success + failure). 0 when no terminal events yet.
+	FailureRate float64 `json:"failure_rate"`
+	// ByState is the fleet device count keyed by last-known update state.
+	ByState map[string]int64 `json:"by_state"`
 }
 
 func toTelemetryView(r store.TelemetryRecord) TelemetryEventView {
@@ -78,5 +83,19 @@ func (s *Server) handleTelemetryOverview(c *gin.Context) {
 	for _, n := range counts {
 		total += n
 	}
-	c.JSON(http.StatusOK, TelemetryOverview{EventCounts: counts, Total: total})
+	// failure_rate = failure / (success + failure) — failed terminal outcomes
+	// among terminal outcomes (the six events are download_started/installing/
+	// installed/verifying/success/failure; success+failure are the terminals).
+	var failureRate float64
+	if terminal := counts[string(otaprotocol.EventSuccess)] + counts[string(otaprotocol.EventFailure)]; terminal > 0 {
+		failureRate = float64(counts[string(otaprotocol.EventFailure)]) / float64(terminal)
+	}
+	byState, err := s.repo.DeviceStateCounts(c.Request.Context())
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, CodeInternal, "could not aggregate device states")
+		return
+	}
+	c.JSON(http.StatusOK, TelemetryOverview{
+		EventCounts: counts, Total: total, FailureRate: failureRate, ByState: byState,
+	})
 }

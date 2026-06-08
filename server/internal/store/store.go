@@ -161,9 +161,12 @@ type Group struct {
 }
 
 // AuditFilter narrows an audit list query (operational_endpoints.md §4.3).
+// Since/Until are inclusive time bounds (zero value = unbounded).
 type AuditFilter struct {
 	Action       string
 	ResourceType string
+	Since        time.Time
+	Until        time.Time
 	Limit        int
 	Cursor       string
 }
@@ -212,6 +215,9 @@ type Repository interface {
 	// TelemetryEventCounts returns fleet-wide counts keyed by event type, for the
 	// /telemetry/overview aggregate (operational_endpoints.md §5).
 	TelemetryEventCounts(ctx context.Context) (map[string]int64, error)
+	// DeviceStateCounts returns fleet device counts keyed by last-known update
+	// state (operational_endpoints.md §5 by_state).
+	DeviceStateCounts(ctx context.Context) (map[string]int64, error)
 
 	// Audit (operational_endpoints.md §4): append-only admin/operator action log.
 	AppendAudit(ctx context.Context, e AuditEntry) error

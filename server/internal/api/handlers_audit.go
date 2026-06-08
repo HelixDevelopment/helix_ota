@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -144,6 +145,18 @@ func (s *Server) handleListAudit(c *gin.Context) {
 			return
 		}
 		f.Limit = n
+	}
+	// Optional RFC3339 time bounds (operational_endpoints.md §4.3).
+	for field, set := range map[string]func(time.Time){"since": func(t time.Time) { f.Since = t }, "until": func(t time.Time) { f.Until = t }} {
+		if v := c.Query(field); v != "" {
+			t, err := time.Parse(time.RFC3339, v)
+			if err != nil {
+				respondValidation(c, field+" must be an RFC3339 timestamp",
+					ErrorDetail{Field: field, Issue: "not RFC3339"})
+				return
+			}
+			set(t)
+		}
 	}
 	entries, next, err := s.repo.ListAudit(c.Request.Context(), f)
 	if err != nil {
