@@ -74,8 +74,14 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **device-TUF client-decision memo** (recommend gomobile-go-tuf/v2, ADR-0002 §4.3) + sibling.
 - **Additive WIDENs — full set landed** (operator-approved): audit `?since/?until` filters + telemetry `failure_rate`/`by_state` (028e656, memory+pgx real-DB parity) + group `member_count` (4cb86d7). `spec_impl_alignment.md` Rev 3: rows 2+5+6-partial landed; as-built doc re-synced (recall now WIRED, /deltas + recall + rollbacks documented).
 
+### Round 7 — breaking WIDENs landed (operator ruling: WIDEN-impl)
+- **Group** (a91271b + 02ad2d0): `id`→`group_id`; batch member-add → 200 `{added, already_member, not_found}`. Server+tests+e2e(36/0/1)+dashboard+bank+docs.
+- **Audit** (fbaefbe): `actor` → object `{user_id, subject}`. Server+test+dashboard+docs.
+- **Telemetry per-device** (2a48ab5): `events`→`items`, newest-first, `?limit`/`?cursor`+`next_cursor`. Server+tests+dashboard+docs.
+- Each: full default suite green, all wire consumers updated in lockstep, `spec_impl_alignment.md` rows 6/8/1/4-structural RESOLVED.
+
 ### NEXT wave (still open)
-1. **Breaking spec↔impl WIDENs** — gated behind an operator WIDEN/TRIM ruling: audit `actor` object, per-device telemetry pagination + `events`→`items`, batch group-member-add (`spec_impl_alignment.md` rows 1/4/8).
+1. **Remaining WIDEN bits**: `GET /groups/{id}/members` `items[]`+`added_at` (needs a store membership-timestamp change); group-list pagination (row 7); row-4 richer telemetry fields `duration_ms`/`bytes_transferred` — **blocked on UNVERIFIED ingest** (the event source must carry them first) + the per-device filters.
 2. **Device-side TUF implementation** (gomobile-go-tuf/v2 per the decision memo; needs the arm64 `.so`-size/JNI measurement gate first) — Kotlin `ota-android-agent`/`ota-update-engine-bridge`.
 3. **Delta-updates device-side** — update-check delta-selection (map device current-version → base artifact → `FindDelta`) + device payload apply.
 4. CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
