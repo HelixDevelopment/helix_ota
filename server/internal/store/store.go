@@ -123,6 +123,14 @@ type AuditEntry struct {
 	CreatedAt    time.Time
 }
 
+// Group is a named device cohort (device_groups; operational_endpoints.md §6).
+type Group struct {
+	ID          string
+	Name        string
+	Description string
+	CreatedAt   time.Time
+}
+
 // AuditFilter narrows an audit list query (operational_endpoints.md §4.3).
 type AuditFilter struct {
 	Action       string
@@ -178,6 +186,18 @@ type Repository interface {
 	// Audit (operational_endpoints.md §4): append-only admin/operator action log.
 	AppendAudit(ctx context.Context, e AuditEntry) error
 	ListAudit(ctx context.Context, f AuditFilter) ([]AuditEntry, string, error)
+
+	// Device groups (operational_endpoints.md §6). A duplicate group name is a
+	// conflict; membership add/remove is idempotent and requires the group to
+	// exist. Members are device ids.
+	CreateGroup(ctx context.Context, g Group) error
+	GetGroup(ctx context.Context, groupID string) (Group, error)
+	ListGroups(ctx context.Context) ([]Group, error)
+	UpdateGroup(ctx context.Context, g Group) error
+	DeleteGroup(ctx context.Context, groupID string) error
+	AddGroupMember(ctx context.Context, groupID, deviceID string) error
+	ListGroupMembers(ctx context.Context, groupID string) ([]string, error)
+	RemoveGroupMember(ctx context.Context, groupID, deviceID string) error
 
 	// Idempotency support for register/deployment replay (endpoints.md §2).
 	GetIdempotent(ctx context.Context, key string) (string, bool)

@@ -139,6 +139,17 @@ func (s *Server) Router() *gin.Engine {
 		auth.GET("/devices/:deviceId/telemetry", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceTelemetry)
 		auth.GET("/telemetry/overview", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleTelemetryOverview)
 
+		// Device groups (operational_endpoints.md §6). Writes operator/admin;
+		// group delete is admin-only; reads viewer+.
+		auth.POST("/groups", requireRole(RoleOperator, RoleAdmin), s.handleCreateGroup)
+		auth.GET("/groups", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroups)
+		auth.GET("/groups/:groupId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetGroup)
+		auth.PATCH("/groups/:groupId", requireRole(RoleOperator, RoleAdmin), s.handleUpdateGroup)
+		auth.DELETE("/groups/:groupId", requireRole(RoleAdmin), s.handleDeleteGroup)
+		auth.GET("/groups/:groupId/members", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroupMembers)
+		auth.POST("/groups/:groupId/members", requireRole(RoleOperator, RoleAdmin), s.handleAddGroupMember)
+		auth.DELETE("/groups/:groupId/members/:deviceId", requireRole(RoleOperator, RoleAdmin), s.handleRemoveGroupMember)
+
 		// Audit log read (operational_endpoints.md §4.3) — admin only.
 		auth.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
 	}

@@ -23,6 +23,10 @@ type MemoryRepository struct {
 	deployments map[string]Deployment // by deploymentID
 	telemetry   []TelemetryRecord     // append-only event log
 	audit       []AuditEntry          // append-only admin/operator action log
+	groups      map[string]Group      // by groupID
+	grpOrder    []string              // insertion order for stable listing
+	grpByName   map[string]string     // name -> groupID (uniqueness)
+	members     map[string][]string   // groupID -> ordered device ids
 	idem        map[string]string     // Idempotency-Key -> resultID
 }
 
@@ -34,6 +38,9 @@ func NewMemoryRepository() *MemoryRepository {
 		artifacts:   make(map[string]Artifact),
 		releases:    make(map[string]Release),
 		deployments: make(map[string]Deployment),
+		groups:      make(map[string]Group),
+		grpByName:   make(map[string]string),
+		members:     make(map[string][]string),
 		idem:        make(map[string]string),
 	}
 }
@@ -308,6 +315,118 @@ func (m *MemoryRepository) TelemetryEventCounts(_ context.Context) (map[string]i
 		counts[string(rec.Event)]++
 	}
 	return counts, nil
+}
+
+// --- device groups ---
+
+func (m *MemoryRepository) CreateGroup(_ context.Context, g Group) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if existing, ok := m.grpByName[g.Name]; ok && existing != g.ID {
+		return ErrConflict
+	}
+	if _, exists := m.groups[g.ID]; !exists {
+		m.grpOrder = append(m.grpOrder, g.ID)
+	}
+	m.groups[g.ID] = g
+	m.grpByName[g.Name] = g.ID
+	return nil
+}
+
+func (m *MemoryRepository) GetGroup(_ context.Context, groupID string) (Group, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	g, ok := m.groups[groupID]
+	if !ok {
+		return Group{}, ErrNotFound
+	}
+	return g, nil
+}
+
+func (m *MemoryRepository) ListGroups(_ context.Context) ([]Group, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]Group, 0, len(m.grpOrder))
+	for _, id := range m.grpOrder {
+		out = append(out, m.groups[id])
+	}
+	return out, nil
+}
+
+func (m *MemoryRepository) UpdateGroup(_ context.Context, g Group) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	old, ok := m.groups[g.ID]
+	if !ok {
+		return ErrNotFound
+	}
+	if other, taken := m.grpByName[g.Name]; taken && other != g.ID {
+		return ErrConflict
+	}
+	if old.Name != g.Name {
+		delete(m.grpByName, old.Name)
+		m.grpByName[g.Name] = g.ID
+	}
+	m.groups[g.ID] = g
+	return nil
+}
+
+func (m *MemoryRepository) DeleteGroup(_ context.Context, groupID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	g, ok := m.groups[groupID]
+	if !ok {
+		return ErrNotFound
+	}
+	delete(m.groups, groupID)
+	delete(m.grpByName, g.Name)
+	delete(m.members, groupID)
+	for i, id := range m.grpOrder {
+		if id == groupID {
+			m.grpOrder = append(m.grpOrder[:i], m.grpOrder[i+1:]...)
+			break
+		}
+	}
+	return nil
+}
+
+func (m *MemoryRepository) AddGroupMember(_ context.Context, groupID, deviceID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.groups[groupID]; !ok {
+		return ErrNotFound
+	}
+	for _, id := range m.members[groupID] {
+		if id == deviceID {
+			return nil // idempotent
+		}
+	}
+	m.members[groupID] = append(m.members[groupID], deviceID)
+	return nil
+}
+
+func (m *MemoryRepository) ListGroupMembers(_ context.Context, groupID string) ([]string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if _, ok := m.groups[groupID]; !ok {
+		return nil, ErrNotFound
+	}
+	return append([]string(nil), m.members[groupID]...), nil
+}
+
+func (m *MemoryRepository) RemoveGroupMember(_ context.Context, groupID, deviceID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.groups[groupID]; !ok {
+		return ErrNotFound
+	}
+	for i, id := range m.members[groupID] {
+		if id == deviceID {
+			m.members[groupID] = append(m.members[groupID][:i], m.members[groupID][i+1:]...)
+			break
+		}
+	}
+	return nil // idempotent
 }
 
 // AppendAudit appends an admin/operator action to the audit log.

@@ -83,6 +83,24 @@ CREATE TABLE IF NOT EXISTS helix_ota.telemetry_events (
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_deployment ON helix_ota.telemetry_events (deployment_id);
 
+CREATE TABLE IF NOT EXISTS helix_ota.device_groups (
+    seq         BIGSERIAL,
+    group_id    TEXT PRIMARY KEY,
+    name        TEXT        NOT NULL,
+    description TEXT        NOT NULL DEFAULT '',
+    created_at  TIMESTAMPTZ NOT NULL,
+    CONSTRAINT device_groups_name_uniq UNIQUE (name)
+);
+
+CREATE TABLE IF NOT EXISTS helix_ota.device_group_members (
+    group_id  TEXT        NOT NULL,
+    device_id TEXT        NOT NULL,
+    seq       BIGSERIAL,
+    CONSTRAINT device_group_members_pk PRIMARY KEY (group_id, device_id),
+    CONSTRAINT device_group_members_group_fk
+        FOREIGN KEY (group_id) REFERENCES helix_ota.device_groups (group_id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS helix_ota.audit_logs (
     seq           BIGSERIAL PRIMARY KEY,
     audit_id      TEXT        NOT NULL,

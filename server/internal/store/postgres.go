@@ -459,6 +459,116 @@ func (r *PostgresRepository) TelemetryEventCounts(ctx context.Context) (map[stri
 	return counts, rows.Err()
 }
 
+// --- device groups ---
+
+func (r *PostgresRepository) CreateGroup(ctx context.Context, g Group) error {
+	const q = `
+INSERT INTO helix_ota.device_groups (group_id, name, description, created_at)
+VALUES ($1,$2,$3,$4)
+ON CONFLICT (group_id) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description`
+	_, err := r.pool.Exec(ctx, q, g.ID, g.Name, g.Description, g.CreatedAt)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	return err
+}
+
+func (r *PostgresRepository) GetGroup(ctx context.Context, groupID string) (Group, error) {
+	var g Group
+	err := r.pool.QueryRow(ctx,
+		`SELECT group_id, name, description, created_at FROM helix_ota.device_groups WHERE group_id=$1`, groupID).
+		Scan(&g.ID, &g.Name, &g.Description, &g.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Group{}, ErrNotFound
+	}
+	return g, err
+}
+
+func (r *PostgresRepository) ListGroups(ctx context.Context) ([]Group, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT group_id, name, description, created_at FROM helix_ota.device_groups ORDER BY seq`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Group
+	for rows.Next() {
+		var g Group
+		if serr := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedAt); serr != nil {
+			return nil, serr
+		}
+		out = append(out, g)
+	}
+	return out, rows.Err()
+}
+
+func (r *PostgresRepository) UpdateGroup(ctx context.Context, g Group) error {
+	ct, err := r.pool.Exec(ctx,
+		`UPDATE helix_ota.device_groups SET name=$2, description=$3 WHERE group_id=$1`,
+		g.ID, g.Name, g.Description)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) DeleteGroup(ctx context.Context, groupID string) error {
+	ct, err := r.pool.Exec(ctx, `DELETE FROM helix_ota.device_groups WHERE group_id=$1`, groupID)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) AddGroupMember(ctx context.Context, groupID, deviceID string) error {
+	if _, err := r.GetGroup(ctx, groupID); err != nil {
+		return err
+	}
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO helix_ota.device_group_members (group_id, device_id) VALUES ($1,$2)
+		 ON CONFLICT (group_id, device_id) DO NOTHING`, groupID, deviceID)
+	return err
+}
+
+func (r *PostgresRepository) ListGroupMembers(ctx context.Context, groupID string) ([]string, error) {
+	if _, err := r.GetGroup(ctx, groupID); err != nil {
+		return nil, err
+	}
+	rows, err := r.pool.Query(ctx,
+		`SELECT device_id FROM helix_ota.device_group_members WHERE group_id=$1 ORDER BY seq`, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var id string
+		if serr := rows.Scan(&id); serr != nil {
+			return nil, serr
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
+
+func (r *PostgresRepository) RemoveGroupMember(ctx context.Context, groupID, deviceID string) error {
+	if _, err := r.GetGroup(ctx, groupID); err != nil {
+		return err
+	}
+	_, err := r.pool.Exec(ctx,
+		`DELETE FROM helix_ota.device_group_members WHERE group_id=$1 AND device_id=$2`, groupID, deviceID)
+	return err
+}
+
 // --- audit ---
 
 func (r *PostgresRepository) AppendAudit(ctx context.Context, e AuditEntry) error {
