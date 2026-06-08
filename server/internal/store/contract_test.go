@@ -138,6 +138,22 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 	if all, err := repo.ListActiveDeployments(ctx); err != nil || len(all) != 1 || all[0].DeploymentID != "dep-1" {
 		t.Fatalf("ListActiveDeployments: %+v err=%v", all, err)
 	}
+	// UpdateDeployment (e.g. supersede on recall).
+	superseded := dep
+	superseded.Status = "superseded"
+	if err := repo.UpdateDeployment(ctx, superseded); err != nil {
+		t.Fatalf("UpdateDeployment: %v", err)
+	}
+	if got, _ := repo.GetDeployment(ctx, "dep-1"); got.Status != "superseded" {
+		t.Fatalf("UpdateDeployment not applied: %+v", got)
+	}
+	if err := repo.UpdateDeployment(ctx, Deployment{DeploymentID: "ghost-dep"}); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("UpdateDeployment unknown want ErrNotFound, got %v", err)
+	}
+	// Restore active so later sections (telemetry uses dep-1) are unaffected.
+	if err := repo.UpdateDeployment(ctx, dep); err != nil {
+		t.Fatalf("restore deployment: %v", err)
+	}
 
 	// --- telemetry ---
 	if err := repo.AppendTelemetry(ctx, TelemetryRecord{DeviceID: "dev-1", DeploymentID: "dep-1",

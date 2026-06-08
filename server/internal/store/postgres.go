@@ -347,6 +347,22 @@ func (r *PostgresRepository) GetDeployment(ctx context.Context, deploymentID str
 	return scanDeployment(r.pool.QueryRow(ctx, deploymentSelect+` WHERE deployment_id=$1`, deploymentID))
 }
 
+func (r *PostgresRepository) UpdateDeployment(ctx context.Context, d Deployment) error {
+	const q = `
+UPDATE helix_ota.deployments SET
+  release_id=$2, strategy=$3, group_name=$4, status=$5, target_count=$6, created_at=$7
+WHERE deployment_id=$1`
+	ct, err := r.pool.Exec(ctx, q, d.DeploymentID, d.ReleaseID, d.Strategy, d.Group, d.Status,
+		d.TargetCount, d.CreatedAt)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // ActiveDeploymentForTarget mirrors memory: an active deployment whose release
 // targets os+target_model, with the same group-narrowing rule (skip only when
 // both the deployment group and the query group are non-empty and differ).
