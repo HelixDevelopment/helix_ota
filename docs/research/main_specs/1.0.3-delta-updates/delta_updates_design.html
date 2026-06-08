@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>delta_updates_design</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-delta-incremental-updates-design-1.0.3">Helix OTA —
+Delta / Incremental Updates Design (1.0.3)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>planned (design spec — depth follows 1.0.0-MVP /
+1.0.1-staged-rollout / 1.0.2-rollback; gated on ADR-0005 resolution +
+G12 measurements)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Promotes the routed 1.0.3 outline (<code>README.md</code>) into a
+fuller design grounded in ADR-0005 (AOSP block diffs vs
+custom/third-party) and addition-#3’s
+<code>DELTA_UPDATES_DESIGN.md</code> (<code>HELOTA-DELTA-001</code>,
+re-based from self-numbered 1.0.2 to canonical 1.0.3). Specifies the
+diff-strategy decision, server-side delta generation from a base→target
+pair, the <code>artifacts.artifact_type='delta'</code> schema impact
+(migration <code>004_*</code> needed), device-side apply via
+<code>update_engine</code>, the mandatory full-payload fallback,
+storage/bandwidth tradeoffs (all savings numbers UNVERIFIED), and
+composition with staged rollout + signing/verification.</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>ADR-0005 (Proposed);
+<code>additions/.../DELTA_UPDATES_DESIGN.md</code>;
+<code>1.0.0-mvp/database/migrations/001_initial_schema.up.sql</code>;
+this directory’s <code>README.md</code></td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Delta is a bandwidth optimization, not (for minor versions) a time
+optimization (source §8.3). It introduces N×M delta-artifact storage
+growth and a load-bearing source-state dependency: the source partition
+must hash-match exactly or the delta MUST fall back to full. Every
+benchmark in the source is a projection, not a measurement.</td>
+</tr>
+<tr>
+<td>Anti-bluff rule</td>
+<td>Per Constitution §11.4.6 (no-guessing) / §7.1 (no-bluff): no savings
+%, generation-time, RAM, apply-time, or storage-overhead figure from the
+source is propagated as a Helix fact. Each is carried as
+<strong>UNVERIFIED</strong> and tied to the G12 measurement gate
+(§9).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table_of_contents">table_of_contents</h2>
+<ul>
+<li><a href="#1-scope_and_relationship_to_the_outline">§1.
+scope_and_relationship_to_the_outline</a></li>
+<li><a href="#2-diff_strategy_decision_adr_0005">§2.
+diff_strategy_decision_adr_0005</a></li>
+<li><a href="#3-delta_artifact_generation_server_side">§3.
+delta_artifact_generation_server_side</a></li>
+<li><a href="#4-artifacts_schema_impact_and_migration_004">§4.
+artifacts_schema_impact_and_migration_004</a></li>
+<li><a href="#5-device_side_apply_via_update_engine">§5.
+device_side_apply_via_update_engine</a></li>
+<li><a href="#6-fallback_to_full_payload">§6.
+fallback_to_full_payload</a></li>
+<li><a href="#7-storage_and_bandwidth_tradeoffs">§7.
+storage_and_bandwidth_tradeoffs</a></li>
+<li><a
+href="#8-composition_with_staged_rollout_and_signing_verification">§8.
+composition_with_staged_rollout_and_signing_verification</a></li>
+<li><a href="#9-anti_bluff_unverified_register">§9.
+anti_bluff_unverified_register</a></li>
+<li><a href="#10-open_items_to_close_before_implementation">§10.
+open_items_to_close_before_implementation</a></li>
+</ul>
+<hr />
+<h2 id="scope_and_relationship_to_the_outline">§1.
+scope_and_relationship_to_the_outline</h2>
+<p>This document is the design-level expansion of the routed 1.0.3
+outline in <a href="README.md"><code>README.md</code></a>. It is
+<strong>not</strong> an implementation contract: ADR-0005 is
+<strong>Proposed</strong>, and no number, ratio, or NFR here is binding
+until the measurement items in §9–§10 close (ADR-0005 §8; Constitution
+§11.4.6 / §11.4.8).</p>
+<p><strong>In scope:</strong> server-generated, per-source <strong>delta
+artifacts</strong> that encode only the binary difference between a
+device’s current image (the <em>source</em>) and a <em>target</em>
+image, delivered over the existing Helix control plane and applied by
+Android <code>update_engine</code>. The control plane (releases +
+deployments), the signing/verify path, the storage brick, and telemetry
+are <strong>reused</strong>; the new work is the delta-generation
+service, the source×target compatibility index, and the client-side
+source-state verification + full-update fallback.</p>
+<p><strong>Out of scope (deferred):</strong> Linux/universal deltas
+(OSTree static deltas, RAUC adaptive/casync) — these belong to the later
+Linux-phase engine ADR, per ADR-0005 §3.5/§6 and the
+<code>1.X-linux</code> phase. The source design’s
+<code>DeltaGenerator</code> interface is built to <em>abstract</em>
+per-platform generation (source §3.6), so the seam exists, but 1.0.3
+targets the <strong>Android A/B path first</strong>.</p>
+<p><strong>Vocabulary reconciliation (LOCKED, per <code>README.md</code>
+§3):</strong> the source design speaks of <code>updates</code> /
+<code>rollouts</code> and RSA signing; this spec uses canonical Helix
+<strong>releases</strong> (publishing an artifact) +
+<strong>deployments</strong> (delivering a release), <strong>ed25519 +
+SHA-256</strong> signing/integrity, <strong>Gin</strong> + canonical
+paths, and the <code>ota-*</code> module-naming convention (the source’s
+<code>helix-delta-gen</code> is re-based to
+e.g. <code>ota-delta-gen</code>, repo creation gated on the G11
+catalogue verification — do not adopt the source’s repo/module name
+as-is).</p>
+<hr />
+<h2 id="diff_strategy_decision_adr_0005">§2.
+diff_strategy_decision_adr_0005</h2>
+<p>ADR-0005 is the decision axis this phase resolves: <strong>AOSP block
+diffs vs a custom (or third-party) delta format</strong>, and the phase
+in which deltas land.</p>
+<h3 id="the-options-adr-0005-3">§2.1 the options (ADR-0005 §3)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>Summary</th>
+<th>ADR verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A — Full payload only</td>
+<td>One complete <code>payload.bin</code> per release; no
+<code>-i</code>. Virtual A/B COW compression provides interim on-device
+savings.</td>
+<td><strong>MVP (1.0.0)</strong> — simplest correct artifact; no source
+matrix</td>
+</tr>
+<tr>
+<td>B — AOSP-native incrementals
+(<code>ota_from_target_files -i</code>)</td>
+<td>Differential <code>payload.bin</code> produced by the same
+generator, applied by the unchanged <code>applyPayload</code> path.</td>
+<td><strong>Adopted, post-MVP (1.0.1+ → lands at 1.0.3
+here)</strong></td>
+</tr>
+<tr>
+<td>C — Custom block/binary-diff format + custom on-device apply</td>
+<td>Bespoke Helix delta format.</td>
+<td><strong>Rejected</strong> — re-derives the hardened, version-tracked
+AOSP apply/verify/rollback surface for no Android upside; breaks the
+opaque-<code>payload.bin</code> integrity seam</td>
+</tr>
+<tr>
+<td>D — Wrap a third-party delta engine (e.g. Mender)</td>
+<td>Adopt an external platform’s delta generation.</td>
+<td><strong>Rejected for Android</strong> — Mender has no Android client
+/ no <code>update_engine</code> integration; delta gen is a paid
+feature; ~70–90% savings is a <strong>vendor claim,
+UNVERIFIED</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-decision-adr-0005-4">§2.2 the decision (ADR-0005 §4)</h3>
+<p><strong>Adopt Option B: AOSP-native incremental payloads, with full
+payloads retained as the universal fallback.</strong> Deltas are
+produced with
+<code>ota_from_target_files -i PREVIOUS-target_files</code> against the
+exact source build and consumed by the <strong>unchanged</strong>
+on-device <code>applyPayload</code> path — <strong>zero new on-device
+delta code</strong>. This honors the LOCKED “wrap, do not replace”
+boundary for the Android device path: the control plane owns base-build
+matching and serving; AOSP owns apply.</p>
+<p>The diff itself is <strong>block-level with binary-diff
+compression</strong> — unchanged blocks become <code>SOURCE_COPY</code>
+(zero download cost), changed blocks become <code>SOURCE_BSDIFF</code>,
+and deflated content (system/vendor) uses <code>PUFFDIFF</code> (source
+§1.3, §2.2). This is what <code>update_engine</code> natively
+understands; choosing it is the <em>consequence</em> of adopting Option
+B, not an independent choice.</p>
+<blockquote>
+<p><strong>File-level deltas</strong> (skip-unchanged-files) are noted
+as more applicable to Linux package updates; they are out of scope here
+(source §1.3; ADR-0005 §3.5).</p>
+</blockquote>
+<h3 id="the-load-bearing-consequence-version-coupling">§2.3 the
+load-bearing consequence: version coupling</h3>
+<p>An AOSP incremental applies <strong>only to its exact source
+build</strong>, enforced by <code>update_engine</code>’s
+<code>source_partition_hash</code> precheck and the package
+<code>pre-build</code> / <code>pre-build-incremental</code> /
+<code>pre-device</code> preconditions (source §2.4; ADR-0005 §1, §3.2).
+This is <em>why</em> deltas need a source×target matrix, per-pair
+generation, and a mandatory full fallback (§6) — the cost the ADR
+explicitly accepted as “deferred complexity, not eliminated.”</p>
+<hr />
+<h2 id="delta_artifact_generation_server_side">§3.
+delta_artifact_generation_server_side</h2>
+<p>A delta is generated <strong>server-side, asynchronously, from a
+base→target artifact pair</strong> — never in the device or update-check
+request path (source §3.1).</p>
+<h3 id="trigger-and-inputs">§3.1 trigger and inputs</h3>
+<ul>
+<li><strong>Auto-trigger:</strong> when a new full artifact is uploaded
+and validated, the control plane enqueues delta generation for the N
+most-recent eligible source versions (default N=3, configurable) sharing
+<code>os_type</code> and overlapping hardware compatibility (source
+§5.3). A manual trigger (<code>POST /api/v1/deltas/generate</code>,
+source §12.3) covers retries/gaps.</li>
+<li><strong>Inputs:</strong> two full OTA zips — the
+<strong>source</strong> artifact (a device’s current version) and the
+<strong>target</strong> artifact. Note the source caveat (source §2.5):
+the server has the published full OTA zips, <strong>not</strong> the
+build system’s <code>target_files.zip</code>, so the pipeline extracts
+partition images from each <code>payload.bin</code> and reconstructs a
+<code>target_files</code>-like structure before running
+<code>ota_from_target_files -i</code>.</li>
+</ul>
+<h3 id="pipeline-six-stages-source-3.3">§3.2 pipeline (six stages,
+source §3.3)</h3>
+<ol type="1">
+<li><strong>Validate</strong> — both artifacts exist, are validated,
+share an <code>os_type</code>, have overlapping hardware models, and
+<code>source_version &lt; target_version</code> (cross-OS and downgrade
+pairs rejected — anti-downgrade per §8.3).</li>
+<li><strong>Extract partitions</strong> — download both full OTA zips
+from the Storage brick; parse each <code>payload.bin</code>
+<code>DeltaArchiveManifest</code>; extract raw images (RK3588
+partitions: <code>system</code>, <code>vendor</code>, <code>boot</code>,
+<code>product</code>, <code>odm</code>).</li>
+<li><strong>Compute delta diff</strong> — run the AOSP incremental
+generator per partition; unchanged partitions collapse to
+<code>SOURCE_COPY</code>-only (zero-cost).</li>
+<li><strong>Package</strong> — assemble the delta
+<code>payload.bin</code> + <code>payload_properties.txt</code> +
+<code>care_map.pb</code> into the standard OTA zip; compute
+SHA-256.</li>
+<li><strong>Verify-apply</strong> — apply the delta to the extracted
+source images and compare the result against the target images
+(hash-equality). A failed verify marks the job <code>FAILED</code>; the
+delta is <strong>never published</strong>.</li>
+<li><strong>Publish</strong> — sign with the <strong>ed25519</strong>
+OTA key (reconciled; the source uses RSA), upload to the Storage brick
+under a <code>deltas/{source}/{target}/</code> key, write the
+<code>delta_artifacts</code> row (§4), emit a
+<code>delta.generated</code> event.</li>
+</ol>
+<h3 id="job-lifecycle-and-resourcing">§3.3 job lifecycle and
+resourcing</h3>
+<ul>
+<li><strong>Status machine:</strong>
+<code>PENDING → GENERATING → GENERATED | FAILED | CANCELLED</code>
+(source §7.3). Generation is <strong>idempotent</strong> (re-run = same
+output) and <strong>resource-bounded</strong> (worker pool with
+concurrency + memory caps).</li>
+<li><strong>Resource budget:</strong> the source estimates 8 cores, ~32
+GB RAM, ~40 GB temp, 2–8 h wall-clock per job for ~4 GB/slot partitions,
+with bsdiff needing ~8× partition size in RAM and puffdiff ~4× (source
+§3.4, §8.2). <strong>All of these are UNVERIFIED projections</strong>
+(§9) — they set a <em>planning</em> envelope, not an NFR. Generation
+runs on a dedicated high-memory worker, parallelized per partition; it
+must respect the host-safety memory ceiling (Constitution §12.6) on any
+shared host.</li>
+<li><strong>Chain limit:</strong> the source caps delta chains at length
+3 (source §4.4); a device more than 3 versions behind receives a full
+update rather than applying 4+ sequential deltas. In practice most
+deployments generate direct deltas from the last N sources to the latest
+target, so chains are a safety net.</li>
+</ul>
+<hr />
+<h2 id="artifacts_schema_impact_and_migration_004">§4.
+artifacts_schema_impact_and_migration_004</h2>
+<p>The MVP schema already <strong>anticipated</strong> deltas:
+<code>artifacts.artifact_type</code> carries <code>DEFAULT 'full'</code>
+and
+<code>CONSTRAINT artifacts_type_chk CHECK (artifact_type IN ('full', 'incremental', 'delta'))</code>,
+with the inline comment “‘delta’/‘incremental’ are reserved for ADR-0005
+(delta updates, deferred)” (<code>001_initial_schema.up.sql</code> lines
+137, 144, 159–160). So a delta payload can be stored as an
+<code>artifacts</code> row today; <strong>no
+<code>CHECK</code>-constraint migration is needed for the type value
+itself.</strong></p>
+<p>What is <strong>not</strong> yet expressible is the
+<em>relationship</em>: which full artifact a delta was diffed
+<strong>from</strong> (its base), plus the per-pair generation metadata,
+status, and savings. The MVP <code>artifacts</code> table has no
+base-artifact reference. This is the migration <code>004_*</code> gap
+(numbering: 1.0.1 = <code>002_*</code>, 1.0.2 = <code>003_*</code>, so
+delta tracking = <strong><code>004_*</code></strong>, per
+<code>README.md</code> §5).</p>
+<h3 id="two-design-choices-for-the-basetarget-reference">§4.1 two design
+choices for the base→target reference</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Shape</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>(a) Separate <code>delta_artifacts</code> table</strong>
+(source §11.1)</td>
+<td>New table with <code>source_artifact_id</code> +
+<code>target_artifact_id</code> FKs to <code>artifacts(id)</code>,
+<code>status</code>, <code>savings_percent</code>,
+<code>partition_deltas</code> JSONB, <code>(source,target)</code>
+unique-while-not-deleted.</td>
+<td>Matches the source design; keeps the delta lifecycle
+(PENDING/GENERATING/…) off the <code>artifacts</code> row; richer
+per-pair indices. <strong>Recommended starting point — UNVERIFIED until
+reviewed against the actual <code>artifacts</code>/<code>releases</code>
+model.</strong></td>
+</tr>
+<tr>
+<td><strong>(b) Self-reference column on
+<code>artifacts</code></strong></td>
+<td>Add a nullable
+<code>base_artifact_id UUID REFERENCES artifacts(id)</code> (the
+“base_artifact reference”), populated only for
+<code>artifact_type='delta'</code> rows.</td>
+<td>Fewer tables; reuses existing artifact integrity columns. But
+delta-generation lifecycle (job status, retries) still needs somewhere
+to live, so a companion job/status table is likely needed anyway.</td>
+</tr>
+</tbody>
+</table>
+<p>The two are not mutually exclusive: a thin
+<code>base_artifact_id</code> on <code>artifacts</code> plus a
+<code>delta_artifacts</code> (or <code>delta_jobs</code>) table for
+lifecycle/index is a common resolution. The final choice is an
+<strong>open item for the migration <code>004_*</code> spec
+(§10)</strong> — both must be validated up/down against live Postgres
+before binding.</p>
+<h3 id="reconciling-the-source-schema-to-the-canonical-model">§4.2
+reconciling the source schema to the canonical model</h3>
+<p>The source <code>delta_artifacts</code> DDL (source §11.1) was
+written against an <code>artifacts</code> table with a
+<code>payload_metadata</code> JSONB column and
+<code>dlt_</code>/<code>art_</code> string IDs. The canonical MVP
+<code>artifacts</code> table uses <code>UUID</code> PKs, a
+<code>metadata</code> JSONB column (not <code>payload_metadata</code>),
+and the dedicated <code>helix_ota</code> schema. Therefore, when
+<code>004_*</code> is authored:</p>
+<ul>
+<li>FKs reference <code>helix_ota.artifacts(id)</code> (UUID), not a
+string id.</li>
+<li>Per-artifact delta hints the source put in
+<code>payload_metadata</code> (<code>partition_hashes</code>,
+<code>delta_eligible</code>, <code>partitions</code>) map onto the
+existing <code>artifacts.metadata</code> JSONB — <strong>no new
+column</strong> is required for those hints, only documented keys.</li>
+<li>The source’s
+<code>CONSTRAINT chk_delta_source_lt_target CHECK (source_version &lt; target_version)</code>
+is a <strong>string</strong> comparison; Helix version monotonicity must
+use the same comparator the releases layer uses (anti-downgrade G1,
+§8.3) — do not inherit raw string <code>&lt;</code> without confirming
+it matches release ordering. <strong>UNVERIFIED.</strong></li>
+<li>The source’s <code>partition_hashes</code> are SHA-256 (integrity,
+kept); artifact <strong>signing</strong> is ed25519 (reconciled from the
+source’s RSA).</li>
+</ul>
+<hr />
+<h2 id="device_side_apply_via_update_engine">§5.
+device_side_apply_via_update_engine</h2>
+<p>From the device’s perspective a delta is <strong>just a smaller OTA
+package</strong> — there is no delta-specific client code (ADR-0005
+§5.1; source §6.2–§6.3).</p>
+<h3 id="download-verify-identical-to-full">§5.1 download + verify
+(identical to full)</h3>
+<ol type="1">
+<li>Download the delta zip with resume support (same
+<code>DownloadManager</code> path, served over the same
+<code>ZIP_STORED</code> + HTTP Range + Brotli + HTTP/3→HTTP/2 transport
+as full artifacts).</li>
+<li><strong>SHA-256</strong> the downloaded zip against the value from
+the update-check response.</li>
+<li><strong>ed25519 signature</strong> verification against the
+server-configured public key (reconciled from the source’s RSA; the
+verify key comes ONLY from server config, never the request — project
+trust-boundary rule).</li>
+<li>Structure check: the zip contains <code>payload.bin</code>,
+<code>payload_properties.txt</code>, <code>care_map.pb</code>.</li>
+</ol>
+<h3 id="apply-the-source-state-gate-is-the-safety-pivot">§5.2 apply (the
+source-state gate is the safety pivot)</h3>
+<p>The client calls <code>update_engine.applyPayload()</code> with the
+delta’s <code>payload.bin</code> URI + offsets — the same call as a full
+update. <code>update_engine</code> then:</p>
+<ol type="1">
+<li><strong>Source-partition precheck (LOAD-BEARING):</strong> reads
+each source partition (the inactive slot), computes its SHA-256, and
+compares against the manifest’s <code>source_partition_hash</code>.
+<strong>Any mismatch aborts the apply</strong> (AOSP
+<code>kErrorCodeDownloadPartitionHashMismatch</code>, error 28 /
+<code>DELTA_PRECHECK_FAILED</code>) — it MUST NOT force a delta onto a
+non-matching source (source §2.3–§2.4). Common mismatch causes:
+sideloaded/root modification, fsck repair, an interrupted prior update,
+or a stale <code>current_version</code> in the registry.</li>
+<li>Apply ops per partition (<code>SOURCE_COPY</code> /
+<code>SOURCE_BSDIFF</code> / <code>PUFFDIFF</code> /
+<code>REPLACE</code>), writing the inactive slot.</li>
+<li><strong>Post-apply verify:</strong> SHA-256 the target partition
+against <code>new_partition_info.hash</code>; mismatch fails the
+update.</li>
+<li>Run any <code>postinstall</code>; then
+<code>setActiveBootSlot(newSlot)</code>; report success via the Binder
+callback.</li>
+</ol>
+<blockquote>
+<p>The <code>file://</code> local-verified-file apply vs HTTPS-streaming
+apply ambiguity noted in the synthesis (<code>README.md</code> §6, item
+7) must be pinned in the client delta-handling spec; the ADR’s stated
+preference is the safer local-verified-file path. <strong>UNVERIFIED —
+to be resolved on the board.</strong></p>
+</blockquote>
+<hr />
+<h2 id="fallback_to_full_payload">§6. fallback_to_full_payload</h2>
+<p><strong>The full artifact for every target release MUST always remain
+available; delta is strictly additive.</strong> Fallback is the
+default-safe path (ADR-0005 §4; source §4.3, §6.4;
+<code>README.md</code> §4).</p>
+<h3 id="server-side-selection-no-delta-serve-full">§6.1 server-side
+selection (no delta ⇒ serve full)</h3>
+<p>At update-check time the control plane returns the full artifact
+whenever a valid delta is <em>not</em> available (source §4.1, §4.3): no
+delta generated for this source→target pair; generation still in
+progress (<code>GENERATING</code>); generation failed
+(<code>FAILED</code>); the device’s <code>current_version</code> matches
+no known source; the delta’s hardware model differs; or the chain
+exceeds the length cap. The device sees the same response shape with
+<code>update_type="FULL"</code>.</p>
+<h3 id="client-side-fallback-delta-apply-fails-full">§6.2 client-side
+fallback (delta apply fails ⇒ full)</h3>
+<p>When <code>update_type="DELTA"</code>, the update-check response
+carries a <code>full_update_fallback</code> object inline (source §6.1),
+so the client can fall back <strong>without a second update-check
+round-trip</strong>. On a delta-specific failure
+(<code>DELTA_PRECHECK_FAILED</code> / source-hash mismatch /
+delta-application failure) the client reports a
+<code>delta_failed</code> telemetry event and downloads + applies the
+full artifact via the normal flow (source §6.4). Generic failures
+(network/storage) exhaust the normal retry budget <em>first</em>, and
+only then fall back.</p>
+<h3 id="coverage-requirement">§6.3 coverage requirement</h3>
+<p>Per <code>README.md</code> §3, the <strong>source-hash gate</strong>
+and the <strong>fallback trigger</strong> are safety-critical and carry
+a <strong>≥90% coverage floor</strong>, with delta-corruption and
+source-mismatch attack-class tests (source §14 security/chaos rows). A
+fallback that silently no-ops on a real delta failure is the precise
+§11.4 PASS-bluff this gate exists to prevent.</p>
+<hr />
+<h2 id="storage_and_bandwidth_tradeoffs">§7.
+storage_and_bandwidth_tradeoffs</h2>
+<blockquote>
+<p><strong>Every quantitative figure in this section is
+UNVERIFIED</strong> — a projection from the source design (§8) or
+ADR-0005 (Virtual A/B COW/XOR figures), not a Helix measurement. They
+are reproduced <strong>only</strong> to frame the trade-off and
+<strong>MUST NOT</strong> be quoted as Helix facts, NFRs, or
+business-case numbers (Constitution §11.4.6 / §7.1; ADR-0005 §4, §7).
+Binding any of them requires the G12 measurement gate (§9).</p>
+</blockquote>
+<h3 id="the-trade-off-qualitative-safe-to-state">§7.1 the trade-off
+(qualitative, safe to state)</h3>
+<ul>
+<li><strong>Bandwidth:</strong> deltas transfer only changed blocks, so
+they are materially smaller than full payloads (“much smaller” per AOSP
+docs; ADR-0005 §1, §5). The <em>direction</em> is certain; the
+<em>magnitude</em> is not (it depends on the real source→target diff for
+Helix images).</li>
+<li><strong>Storage (server):</strong> deltas create <strong>N×M
+growth</strong> — N source versions × M targets. Bounded by the cleanup
+policy: max source deltas per target (source says 5 in §5.4, 3 in
+§1.1/<code>README.md</code> — <strong>inconsistent in the source;
+reconcile in the cleanup spec</strong>), max 90-day source age,
+<code>FAILED</code>-delta and orphan-delta GC, run daily (source
+§5.4).</li>
+<li><strong>Apply time:</strong> delta apply is <strong>not</strong>
+reliably faster than full apply for minor versions — it adds
+source-partition reads (I/O) plus bsdiff/puffdiff compute (CPU) (source
+§8.3). The value proposition is <strong>bandwidth, not time</strong>,
+for minor versions; patch-level deltas may save both. This is a
+<em>qualitative</em> conclusion the source supports and is safe to
+carry.</li>
+<li><strong>Generation cost:</strong> CPU/RAM-heavy, hours-long, per
+source→target pair (source §3.4, §8.2) — the cost paid once on the
+server to save bandwidth many times on the fleet.</li>
+</ul>
+<h3 id="figures-carried-as-unverified-do-not-cite-as-fact">§7.2 figures
+carried as UNVERIFIED (do not cite as fact)</h3>
+<ul>
+<li>Source §1.1/§8.1 / <code>README.md</code>: <strong>60–90% bandwidth
+savings</strong>, the per-update-type savings table, and the <strong>20
+TB→4 TB / ~$1,440 per 10k-device cycle</strong> cost claim.</li>
+<li>Source §8.2–§8.4: <strong>2–8 h generation</strong>, <strong>32 GB
+peak RAM</strong>, apply-time table, <strong>+43% / +71% storage
+overhead</strong>.</li>
+<li>Source illustrative figures: <strong>“2 GB full / 200 MB delta”, 50
+Mbps reference, RK3588 partition sizes</strong>.</li>
+<li>ADR-0005 §1/§7: <strong>Virtual A/B COW ~45% (full) / ~55%
+(incremental), XOR +25–40%</strong> — version- and board-dependent;
+confirm against the Android 15/16 docs revision and on RK3588.</li>
+<li>ADR-0005 §3.4/§7: <strong>Mender ~70–90%</strong> — a rejected
+vendor claim; do not cite if Option D is ever revisited.</li>
+</ul>
+<hr />
+<h2 id="composition_with_staged_rollout_and_signing_verification">§8.
+composition_with_staged_rollout_and_signing_verification</h2>
+<p>Deltas are a <strong>transparent artifact variant</strong> that slot
+into the existing control plane without changing its outer
+contracts.</p>
+<h3 id="with-staged-rollout-1.0.1">§8.1 with staged rollout (1.0.1)</h3>
+<ul>
+<li>A <strong>deployment</strong> delivering a <strong>release</strong>
+decides <em>which devices</em> update and <em>in what order</em> (1.0.1
+staged engine). The delta layer decides, <strong>per device at
+update-check time</strong>, <em>which artifact shape</em> that device
+receives (delta vs full) — these are orthogonal. A staged cohort can be
+served deltas for the devices whose source matches and full payloads for
+the rest, with no cohort logic change.</li>
+<li>Because the auto-trigger generates deltas within hours of artifact
+upload (source §5.3) — well before a staged rollout reaches even a small
+percentage — deltas are typically ready before the rollout needs them.
+If not ready, the cohort simply gets full payloads (§6); the rollout is
+never blocked on delta generation. <strong>The “ready before 5%” timing
+claim is UNVERIFIED</strong> (§9).</li>
+<li>Telemetry distinguishes delta vs full (<code>update_type</code>) and
+records <code>delta_failed</code> fallbacks, so the rollout health
+engine can observe a delta’s real-world success rate per cohort.</li>
+</ul>
+<h3 id="with-signing-verification">§8.2 with signing / verification</h3>
+<ul>
+<li>The delta <code>payload.bin</code> is an <strong>opaque, signed
+target</strong> exactly like a full payload (ADR-0005 §5.1, §5.3): the
+integrity contract (SHA-256 + ed25519 signature, verified server-side on
+publish AND device-side before apply) is <strong>identical</strong>
+regardless of full-vs-delta shape. This clean integrity seam is
+precisely why Options C/D were rejected.</li>
+<li><strong>One signing key for both</strong> delta and full OTAs
+(source §13 risk row): a key rotation invalidates and must regenerate
+deltas. The source’s RSA is reconciled to <strong>ed25519</strong>; the
+manifest’s <code>source_partition_hash</code> /
+<code>new_partition_info</code> SHA-256 checks are <em>integrity</em>
+(kept as-is, not signing).</li>
+<li>Defense-in-depth is preserved: SHA-256 (zip) + ed25519 (signature) +
+the A/B engine’s own <code>source_partition_hash</code> precheck +
+<code>new_partition_info</code> post-check
+<ul>
+<li>AVB/dm-verity on boot.</li>
+</ul></li>
+</ul>
+<h3 id="with-anti-downgrade-g1">§8.3 with anti-downgrade (G1)</h3>
+<p>Delta selection MUST honor the same anti-downgrade / monotonicity
+invariant as full updates (G1): a delta MUST NEVER be a vehicle to offer
+a lower target than the device runs. The generation-time
+<code>source_version &lt; target_version</code> guard (§3.2 stage 1) and
+the selection-time matrix (§6.1) both enforce this, using the release
+layer’s version comparator (<strong>not</strong> raw string
+<code>&lt;</code> until confirmed — §4.2, §9).</p>
+<hr />
+<h2 id="anti_bluff_unverified_register">§9.
+anti_bluff_unverified_register</h2>
+<p>Per Constitution §11.4.6 (no-guessing) / §7.1 (no-bluff) — these MUST
+NOT be propagated as fact; each is gated on the G12 measurement plan
+(real Orange Pi 5 Max / RK3588) before any NFR is bound:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Item</th>
+<th>Source</th>
+<th>Disposition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U1</td>
+<td>60–90% bandwidth savings; per-update-type savings table</td>
+<td>source §1.1, §8.1</td>
+<td>measure real source→target diff on Helix images</td>
+</tr>
+<tr>
+<td>U2</td>
+<td>$1,440/cycle, 20 TB→4 TB cost claim</td>
+<td>source §1.1</td>
+<td>derived from U1; do not cite</td>
+</tr>
+<tr>
+<td>U3</td>
+<td>Generation 2–8 h, ~32 GB peak RAM, ~40 GB temp</td>
+<td>source §3.4, §8.2</td>
+<td>measure on the actual generation worker</td>
+</tr>
+<tr>
+<td>U4</td>
+<td>Apply-time table; “delta ≤ 1.2× full apply”</td>
+<td>source §8.3, §14</td>
+<td>measure on board</td>
+</tr>
+<tr>
+<td>U5</td>
+<td>+43% / +71% storage overhead</td>
+<td>source §8.4</td>
+<td>compute from real delta sizes + cleanup policy</td>
+</tr>
+<tr>
+<td>U6</td>
+<td>“2 GB full / 200 MB delta”, 50 Mbps reference, RK3588 partition
+sizes</td>
+<td>source §1.1, §8</td>
+<td>illustrative only</td>
+</tr>
+<tr>
+<td>U7</td>
+<td>Virtual A/B COW <sub>45%/</sub>55%, XOR +25–40%</td>
+<td>ADR-0005 §1, §7</td>
+<td>confirm Android 15/16 docs + measure on RK3588</td>
+</tr>
+<tr>
+<td>U8</td>
+<td>Whether the RK3588 build ships classic A/B or Virtual A/B</td>
+<td>ADR-0005 §7 item 5</td>
+<td>hands-on board confirmation</td>
+</tr>
+<tr>
+<td>U9</td>
+<td>Exact <code>ota_from_target_files -i</code> + signing flag spelling
+(Android 15); precondition field set (<code>pre-build</code>,
+<code>pre-build-incremental</code>, <code>pre-device</code>, optional
+headers)</td>
+<td>ADR-0005 §7 items 3–4</td>
+<td>confirm against Android 15 docs revision</td>
+</tr>
+<tr>
+<td>U10</td>
+<td><code>payload.bin</code> delta-op set + <code>update_engine</code>
+delta-apply behavior on Android 15 / RK3588</td>
+<td><code>README.md</code> §7</td>
+<td>hardware gate (overlaps MVP <code>payload_properties</code>
+gate)</td>
+</tr>
+<tr>
+<td>U11</td>
+<td><code>Storage</code> brick Range-GET / pre-signed-URL support</td>
+<td><code>README.md</code> §3, §6</td>
+<td>inspect the brick before relying on it</td>
+</tr>
+<tr>
+<td>U12</td>
+<td>Cleanup “max deltas per target” = 3 (source §1.1) vs 5 (source
+§5.4)</td>
+<td>source (self-inconsistent)</td>
+<td>reconcile in cleanup spec</td>
+</tr>
+<tr>
+<td>U13</td>
+<td><code>source_version &lt; target_version</code> raw string
+comparison</td>
+<td>source §11.1</td>
+<td>replace with the release layer’s version comparator</td>
+</tr>
+<tr>
+<td>U14</td>
+<td>Deltas “ready before 5% rollout” timing</td>
+<td>source §5.3</td>
+<td>derived from U3; measure</td>
+</tr>
+<tr>
+<td>U15</td>
+<td>Cited Constitution §11.4.x clause numbers (beyond the six confirmed
+in <code>tests/test_strategy.md</code> §13)</td>
+<td>carried</td>
+<td>UNVERIFIED clause text</td>
+</tr>
+<tr>
+<td>U16</td>
+<td>The source <code>helix-delta-gen</code> Go/script reference (naming
++ RSA + <code>/api/v1</code> paths)</td>
+<td>source §7, §9, §10, §12</td>
+<td>reference only — re-base to <code>ota-*</code> + ed25519 + canonical
+paths before adoption</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="open_items_to_close_before_implementation">§10.
+open_items_to_close_before_implementation</h2>
+<p>Mirrors and extends <code>README.md</code> §6; each must be its own
+adversarially-reviewed spec under this directory before code is
+written:</p>
+<ol type="1">
+<li><strong>Resolve ADR-0005 to Accepted</strong> — operator review gate
++ mandatory code-review subagent pass (§11.4.125); deltas remain
+unauthorized until the §9 measurement gates close (ADR-0005 §8).</li>
+<li><strong>Delta-generation service spec</strong> — async job design,
+the ed25519 signing of delta artifacts, idempotency + retry, resource
+budget under §12.6; verify the <code>Storage</code> brick Range-GET /
+pre-signed-URL support first (U11).</li>
+<li><strong><code>ota-delta-gen</code> submodule spec</strong> —
+re-based naming under the canonical module path; reuse catalogue bricks;
+PUBLIC repo creation gated on the same G11 verification as other
+<code>ota-*</code> repos.</li>
+<li><strong>Source-state verification spec</strong> — the SHA-256
+source-hash gate + the mandatory full-update fallback pinned as the
+default-safe path; ≥90% coverage.</li>
+<li><strong>Delta selection / compatibility-matrix spec</strong> —
+update-check response extension (<code>update_type</code>,
+<code>source_version</code>, <code>full_update_fallback</code>),
+source-version matching, chain-length cap, anti-downgrade interplay
+(§8.3).</li>
+<li><strong>Migration <code>004_*</code> spec</strong> — resolve §4.1’s
+table-vs-column choice; define the base→target reference, status,
+savings, per-partition stats, and indices; validate up/down against live
+Postgres.</li>
+<li><strong>Client delta-handling spec</strong> —
+<code>update_engine</code> delta apply path, source read, fallback on
+any failure; resolve the <code>file://</code> vs HTTPS-streaming apply
+ambiguity (§5.2, U10).</li>
+<li><strong>Measured benchmark plan (G12)</strong> — replace every
+U1–U14 projection with measurements on real hardware before binding any
+NFR.</li>
+<li><strong>Test plan</strong> — four-layer coverage; ≥90% on the
+source-hash gate + fallback trigger; delta-corruption / source-mismatch
+/ chaos (kill-gen-mid-job, kill-<code>update_engine</code>-mid-apply)
+classes (source §14).</li>
+</ol>
+<hr />
+<p><em>Design spec for Helix OTA phase 1.0.3 (delta / incremental
+updates). Re-based from <code>HELOTA-DELTA-001</code> (source
+self-numbered 1.0.2) and bound to ADR-0005 (Proposed). No statistic,
+ratio, or NFR herein is binding until the §9 / §10 measurement gates
+close.</em></p>
+</body>
+</html>
