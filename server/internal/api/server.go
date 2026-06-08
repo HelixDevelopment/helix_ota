@@ -172,7 +172,7 @@ func (s *Server) Router() *gin.Engine {
 		auth.PATCH("/groups/:groupId", requireRole(RoleOperator, RoleAdmin), s.handleUpdateGroup)
 		auth.DELETE("/groups/:groupId", requireRole(RoleAdmin), s.handleDeleteGroup)
 		auth.GET("/groups/:groupId/members", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroupMembers)
-		auth.POST("/groups/:groupId/members", requireRole(RoleOperator, RoleAdmin), s.handleAddGroupMember)
+		auth.POST("/groups/:groupId/members", requireRole(RoleOperator, RoleAdmin), s.handleAddGroupMembers)
 		auth.DELETE("/groups/:groupId/members/:deviceId", requireRole(RoleOperator, RoleAdmin), s.handleRemoveGroupMember)
 
 		// Audit log read (operational_endpoints.md §4.3) — admin only.
