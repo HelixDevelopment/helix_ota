@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>rollback_ux</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-1.0.1-end-user-operator-rollback-ux">Helix OTA — 1.0.1
+End-User / Operator Rollback UX</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>planned (spec — depth follows 1.0.0-MVP sibling specs)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The product/UX spec for <strong>end-user / operator rollback in
+phase 1.0.1</strong>. The operator ratified end-user rollback INTO 1.0.1
+(2026-06-08), folding the former <code>1.0.2-rollback/</code> design
+reference into this phase. Specifies the three rollback trigger types
+(automatic A/B boot-failure — already an MVP guarantee;
+server/operator-driven recall to N-1; user-initiated device-local), the
+operator dashboard UX, the device-side/user-initiated path and its A/B
+single-previous-slot constraints, the REST surface (an operator
+<strong>recall</strong> endpoint extending the existing rollout API,
+writing a <code>rollback_history</code> row), the cardinal data-safety
+invariant (never leave a device unbootable / never touch
+<code>userdata</code>), and how rollback composes with staged-rollout
+halt/abort.</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>Reuses the <strong>existing</strong> migration-002
+<code>rollback_history</code> table
+(<code>1.0.0-mvp/database/migrations/002_staged_rollout.up.sql</code>) —
+does NOT invent a new table. Extends the <strong>existing</strong>
+rollout API (<code>server/internal/api/handlers_rollout.go</code>,
+routes in <code>server/internal/api/server.go</code>) — does NOT
+redesign it.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Merge-window / boot-success timing values are UNVERIFIED on the
+Orange Pi 5 Max (see §10). Multi-version / true-downgrade is OUT of A/B
+single-previous-slot reach (deferred, §6). The persistent-store (pgx)
+recall path is gated on the migration-002 <code>StoragePort</code>
+landing (per phase README “REMAINING”).</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Accept the rollback UX + recall endpoint shapes; do not bind
+UNVERIFIED timing constants; do not promise multi-version rollback.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial rollback-UX spec routed onto migration-002
+<code>rollback_history</code> + the existing rollout API.</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Captured the three trigger types, the dashboard recall control, the
+user-initiated path predicates, the recall REST surface, the data-safety
+invariant, and the halt/abort composition — all grounded in real schema
++ real handlers, no invented tables/routes.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Wire the recall handler + route once the migration-002 pgx
+<code>StoragePort</code> lands; confirm the merge-window / boot-success
+timing constants on a real Orange Pi 5 Max and drop the §10 UNVERIFIED
+tags; spec the device-side rollback-detection report path against
+<code>ota-android-agent</code>; four-layer test the recall authorization
++ data-safety paths; export HTML/PDF siblings per §11.4.65.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table_of_contents">table_of_contents</h2>
+<ul>
+<li><a href="#1-scope_and_provenance">§1. scope_and_provenance</a></li>
+<li><a href="#2-rollback_vs_downgrade_distinction">§2.
+rollback_vs_downgrade_distinction</a></li>
+<li><a href="#3-the_three_rollback_trigger_types">§3.
+the_three_rollback_trigger_types</a></li>
+<li><a href="#4-operator_dashboard_ux">§4.
+operator_dashboard_ux</a></li>
+<li><a href="#5-device_side_user_initiated_path">§5.
+device_side_user_initiated_path</a></li>
+<li><a href="#6-multi_version_out_of_scope">§6.
+multi_version_out_of_scope</a></li>
+<li><a href="#7-rest_surface">§7. rest_surface</a></li>
+<li><a href="#8-data_safety_invariant">§8.
+data_safety_invariant</a></li>
+<li><a href="#9-composition_with_staged_rollout_halt_abort">§9.
+composition_with_staged_rollout_halt_abort</a></li>
+<li><a href="#10-anti_bluff_unverified_register">§10.
+anti_bluff_unverified_register</a></li>
+<li><a href="#11-sources">§11. sources</a></li>
+</ul>
+<blockquote>
+<p>The ToC requirement is mandated by HelixConstitution §11.4.61
+(UNVERIFIED clause number, carried per the MVP sibling specs). This
+document carries its ToC immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="scope_and_provenance">§1. scope_and_provenance</h2>
+<p>This document specifies the <strong>end-user / operator rollback
+experience</strong> for phase <strong>1.0.1</strong>. Per the operator
+decision of 2026-06-08, end-user rollback is part of 1.0.1 (the
+<code>1.0.2-rollback/</code> directory is retained as a superseded
+design reference per §11.4.124, not deleted). This spec is the
+product/UX layer; it sits on top of, and routes onto, concrete existing
+assets:</p>
+<ul>
+<li><strong>Data backing — already landed.</strong> The
+<code>rollback_history</code> table is in <strong>migration 002</strong>
+(<code>1.0.0-mvp/database/migrations/002_staged_rollout.up.sql</code>),
+real-DB validated. Its <code>kind</code> column is the closed set
+<code>{'abort','rollback'}</code>; its <code>kind_ref</code> CHECK
+requires a <code>'rollback'</code> row to carry both
+<code>from_release_id</code> and <code>to_release_id</code>, and an
+<code>'abort'</code> row to carry neither. <strong>This spec reuses that
+table; it does NOT add a new one.</strong></li>
+<li><strong>API substrate — already landed.</strong> The staged-rollout
+REST handlers (<code>server/internal/api/handlers_rollout.go</code>) and
+routes (<code>server/internal/api/server.go</code>, the
+<code>/api/v1/deployments/:deploymentId/rollout[...]</code> group) are
+real and role-gated. The recall endpoint in §7 <strong>extends</strong>
+that group; it does not replace it.</li>
+<li><strong>Automatic boot-failure rollback — already an MVP
+guarantee.</strong> The AOSP A/B boot-control HAL + AVB auto-fallback is
+shipped in MVP. It is treated here as the substrate the human-driven
+paths sit on, <strong>not</strong> as new deliverable code (§3.1).</li>
+</ul>
+<p><code>triggered_by</code> on <code>rollback_history</code> is the FK
+to <code>helix_ota.users(id)</code> — the operator who authorized the
+rollback. For a purely automatic boot-failure event (no human
+authorizer) it is left NULL.</p>
+<h2 id="rollback_vs_downgrade_distinction">§2.
+rollback_vs_downgrade_distinction</h2>
+<p>Pinned so the UX never overpromises (source reference:
+<code>1.0.2-rollback/README.md</code> §1.3, re-based):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Term</th>
+<th>Mechanism</th>
+<th>Reach</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rollback</strong></td>
+<td>Instant A/B slot swap back to the immediate previous build
+(boot-control metadata change only)</td>
+<td>Exactly <strong>one</strong> previous version</td>
+<td><strong>1.0.1 (this spec)</strong></td>
+</tr>
+<tr>
+<td><strong>Downgrade</strong></td>
+<td>Full OTA cycle delivering an arbitrary older build as a new
+artifact</td>
+<td>Any older version</td>
+<td>Deferred — own sub-design (§6)</td>
+</tr>
+</tbody>
+</table>
+<p>Everything in §3–§9 is <strong>rollback</strong>. The word “recall”
+is used for the <em>operator-driven fleet/single-device</em> form of
+rollback (it produces a server-side directive); “rollback” is the
+umbrella term and the <code>kind</code> value persisted.</p>
+<h2 id="the_three_rollback_trigger_types">§3.
+the_three_rollback_trigger_types</h2>
+<p>All three converge on the same A/B slot-swap substrate; they differ
+only in <strong>who initiates</strong> and <strong>what audit
+row</strong> results.</p>
+<h3
+id="automatic_ab_boot_failure-already-mvp-substrate-not-new-code">§3.1
+automatic_ab_boot_failure (already MVP — substrate, not new code)</h3>
+<ul>
+<li><strong>Path:</strong> hardware/bootloader. The A/B boot-control HAL
+retry counter exhausts on the new slot → the bootloader falls back to
+the previous slot. AVB re-verifies the rolled-back slot.</li>
+<li><strong>New in 1.0.1 (report-after-the-fact only):</strong> the
+device-side rollback-detection report — on the next <em>successful</em>
+boot the agent notices it is back on the pre-update slot and emits a
+<code>ROLLBACK</code> telemetry event. The server then writes a
+<code>rollback_history</code> row. For a pure boot-failure auto-fallback
+the natural <code>kind</code> is <code>'rollback'</code> (a real from→to
+version change occurred), with <code>triggered_by = NULL</code> (no
+human authorizer) and <code>details</code> carrying
+<code>{"origin":"automatic_boot_failure"}</code>.
+<strong>UNVERIFIED:</strong> whether the auto-fallback is recorded as
+<code>kind='rollback'</code> vs surfaced separately is a §10 open item —
+the migration-002 CHECK only admits <code>'abort'</code> and
+<code>'rollback'</code>.</li>
+<li><strong>UX:</strong> none on the operator side beyond the
+audit/history surface (§4.3) and a device-health flag. The end user
+experiences a transparent recovery.</li>
+</ul>
+<h3
+id="server_operator_driven_recall_to_n_minus_1-the-primary-new-control-plane-work">§3.2
+server_operator_driven_recall_to_n_minus_1 (the primary new
+control-plane work)</h3>
+<ul>
+<li><strong>Path:</strong> an operator/admin invokes recall for a
+deployment (fleet) or a single device from the dashboard (§4) or
+directly via the recall endpoint (§7). The server classifies in-scope
+devices into:
+<ul>
+<li><strong>pre-merge</strong> (Virtual A/B COW merge still pending) →
+slot-swappable, gets a rollback directive in its next update-check
+response;</li>
+<li><strong>post-merge</strong> (merge complete, previous slot
+reclaimed) → NOT slot-swappable → needs a downgrade artifact (OUT of
+scope, §6) → reported back to the operator as “not
+rollback-eligible”;</li>
+<li><strong>offline</strong> → directive queued for next check-in.</li>
+</ul></li>
+<li><strong>Audit:</strong> one <code>rollback_history</code> row,
+<code>kind='rollback'</code>, <code>from_release_id</code> = the
+regressing release, <code>to_release_id</code> = N-1,
+<code>triggered_by</code> = the operator, <code>deployment_id</code> =
+the recalled deployment, and <code>recall_deployment_id</code> = the new
+server-side recall deployment if one is materialized (the column exists
+in migration 002 precisely for this correlation).</li>
+<li>This is the <strong>primary new deliverable</strong> of the rollback
+work.</li>
+</ul>
+<h3 id="user_initiated_device_local">§3.3
+user_initiated_device_local</h3>
+<ul>
+<li><strong>Path:</strong> an on-device Settings entry the end user can
+tap. Available <strong>only</strong> while the §5 predicates hold
+(bootable previous slot exists, Virtual A/B merge still pending,
+rollback window unexpired).</li>
+<li><strong>Audit:</strong> the device reports the action via telemetry;
+the server writes a <code>rollback_history</code> row,
+<code>kind='rollback'</code>, <code>triggered_by = NULL</code> (the
+actor is the device end user, not a <code>users</code> row) with
+<code>details</code> carrying
+<code>{"origin":"user_initiated"}</code>.</li>
+<li><strong>UX:</strong> §5.</li>
+</ul>
+<h2 id="operator_dashboard_ux">§4. operator_dashboard_ux</h2>
+<p>The dashboard is the operator’s surface; the device-side path (§5) is
+separate. The deployment screen gains a rollback/recall control.</p>
+<h3 id="recall_control_on_the_deployment_screen">§4.1
+recall_control_on_the_deployment_screen</h3>
+<ul>
+<li>On the deployment detail screen (the same screen that shows the
+staged-rollout phase cursor + health), add a <strong>“Recall to previous
+version (N-1)”</strong> action. It is visible only to
+<code>RoleOperator</code> / <code>RoleAdmin</code> (parity with the
+existing rollout-create role gate); <code>RoleViewer</code> sees the
+rollback <strong>history</strong> (§4.3) read-only but not the
+action.</li>
+<li>The control surfaces the eligibility split <em>before</em> the
+operator commits: a pre-flight (dry-run, §7) returns the count of
+rollback-eligible (pre-merge), not-eligible (post-merge), and queued
+(offline) devices, plus the resolved <code>from</code>→<code>to</code>
+releases. This is the “what will actually happen” preview — never a
+blind fire.</li>
+<li><strong>Scope toggle:</strong> single-device recall vs
+whole-deployment (fleet) recall. Single-device is the low-blast-radius
+default surfaced first.</li>
+</ul>
+<h3 id="confirmation">§4.2 confirmation</h3>
+<ul>
+<li>A blocking confirmation dialog states, in plain language: the
+<code>from</code> version, the <code>to</code> (N-1) version, the
+affected device count (and the not-eligible count it will NOT touch),
+and the data-safety guarantee (“device user data is not modified; only
+the active boot slot is changed back”, §8).</li>
+<li>The operator must explicitly confirm. Per §11.4.6 (no-guessing), the
+dialog shows resolved facts (counts, version ids) from the dry-run,
+never estimates.</li>
+<li><strong>Execution mode</strong> is chosen here:
+<strong>instant</strong> (directive to all eligible devices at once) or
+<strong>gradual / wave</strong> (rollback delivered in cohorts,
+mirroring the staged-rollout phase shape) — the gradual form reuses the
+rollout engine’s cohort logic rather than re-inventing it.</li>
+</ul>
+<h3 id="audit_surface">§4.3 audit_surface</h3>
+<ul>
+<li>A <strong>Rollback history</strong> panel on the deployment screen
+lists <code>rollback_history</code> rows for that deployment (and a
+fleet-wide view elsewhere): timestamp, <code>kind</code>
+(<code>abort</code> vs <code>rollback</code>), from→to release, who
+(<code>triggered_by</code>, resolved to the user; “automatic” / “device
+user” when NULL with the <code>details.origin</code>), and
+<code>reason</code>.</li>
+<li>This panel is the operator-visible projection of the append-only
+audit table — it is read-only (the table has no UPDATE/DELETE path in
+normal operation; FKs are <code>ON DELETE SET NULL</code> so history
+outlives the releases/deployments it references).</li>
+</ul>
+<h2 id="device_side_user_initiated_path">§5.
+device_side_user_initiated_path</h2>
+<h3 id="availability_predicates-all-must-hold">§5.1
+availability_predicates (all must hold)</h3>
+<p>The Settings entry is shown/enabled only when ALL of:</p>
+<ol type="1">
+<li>a <strong>bootable previous slot exists</strong> (A/B inactive slot
+is intact);</li>
+<li>the <strong>Virtual A/B COW merge is still pending</strong> (the
+previous slot has not been reclaimed — see the merge-window constraint,
+§8 + §9);</li>
+<li>the <strong>rollback window has not expired</strong> (a bounded
+post-update window; default value is UNVERIFIED, §10).</li>
+</ol>
+<p>When any predicate fails the entry is hidden or shown
+disabled-with-reason (“rollback no longer available: update finalized” /
+“rollback window expired”) — never a button that fails after tap.</p>
+<h3 id="confirmation_and_effect">§5.2 confirmation_and_effect</h3>
+<ul>
+<li>A device-local confirmation states the from→to version and the §8
+data-safety guarantee (“your data and settings are kept”).</li>
+<li>On confirm: the device sets the previous slot active via the
+boot-control HAL and reboots; it does <strong>not</strong> call
+<code>markBootSuccessful()</code> on the failed/new slot. On the next
+boot the device is on N-1; the rollback-detection report (§3.1 mechanism
+reused) emits the telemetry event that produces the
+<code>rollback_history</code> row.</li>
+</ul>
+<h3 id="constraints">§5.3 constraints</h3>
+<ul>
+<li>A/B gives the device <strong>exactly one</strong> reachable previous
+slot. The user-initiated path can therefore only reach N-1; there is no
+on-device “pick an older version” list (that is multi-version, §6).</li>
+<li>The path is strictly <strong>time-and-merge-bounded</strong>
+(§5.1.2/§5.1.3): once the merge completes or the window expires, the
+previous slot is gone and the only remaining reversion is an
+operator-driven downgrade artifact (§6), not a device-local slot
+swap.</li>
+</ul>
+<h2 id="multi_version_out_of_scope">§6. multi_version_out_of_scope</h2>
+<p>A/B inherently supports exactly <strong>one</strong> previous
+version. Reaching an arbitrary older version (N-2, N-3, …) is
+<strong>explicitly OUT of scope</strong> for 1.0.1 rollback. It would
+require one of: additional slots (unsupported on RK3588 per the source
+reference), <code>/data</code>-stored images, or a server-side
+<strong>downgrade</strong> (full OTA cycle delivering the older build as
+a new artifact, §2). Multi-version rollback and delta-rollback are
+deferred to a later phase (the freed <code>1.0.2</code> slot /
+<code>1.0.3</code> delta-updates per the phase README), each needing its
+own downgrade-artifact + forward-migration + security-patch-level
+sub-design before being promised. The UX MUST NOT present a
+multi-version chooser in 1.0.1.</p>
+<h2 id="rest_surface">§7. rest_surface</h2>
+<p>The recall surface <strong>extends</strong> the existing rollout
+route group (<code>server/internal/api/server.go</code>, the
+<code>auth</code> group under <code>/api/v1</code>, alongside
+<code>POST /deployments/:deploymentId/rollout</code> and
+<code>/rollout/evaluate</code>). It does NOT introduce a new versioned
+prefix and follows the same handler/error/role conventions
+(<code>respondError</code> / <code>respondValidation</code> /
+<code>requireRole</code>).</p>
+<h3 id="recall_endpoint">§7.1 recall_endpoint</h3>
+<pre><code>POST /api/v1/deployments/{deploymentId}/recall
+  Roles: RoleOperator, RoleAdmin   (parity with rollout-create; RoleViewer forbidden → 403)
+  Audited: yes (auditMiddleware records the successful mutating action)</code></pre>
+<p>Request body (proposed wire type, mirroring the
+<code>RolloutCreate</code>/<code>RolloutVerdict</code> style already in
+<code>handlers_rollout.go</code>):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scope&quot;</span><span class="fu">:</span>   <span class="st">&quot;deployment | device&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;device_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uuid, required when scope=device&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;mode&quot;</span><span class="fu">:</span>    <span class="st">&quot;instant | gradual&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dry_run&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;reason&quot;</span><span class="fu">:</span>  <span class="st">&quot;regression in phase 2 cohort&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Behavior:</p>
+<ul>
+<li><strong>404</strong> when the deployment does not exist (same
+<code>GetDeployment</code> precheck as
+<code>handleCreateRollout</code>).</li>
+<li><strong>400</strong> when the body is malformed,
+<code>scope</code>/<code>mode</code> is outside its closed set, or
+<code>scope=device</code> without <code>device_id</code>
+(<code>respondValidation</code> with an <code>ErrorDetail</code>).</li>
+<li><strong><code>dry_run=true</code></strong> returns the eligibility
+split (pre-merge eligible / post-merge not-eligible / offline queued) +
+resolved <code>from</code>/<code>to</code> release ids and writes
+<strong>no</strong> <code>rollback_history</code> row. This backs the
+§4.1 pre-flight.</li>
+<li><strong><code>dry_run=false</code></strong> resolves N-1 (the
+<code>to</code> release), classifies devices, injects the rollback
+directive (instant or gradual), and writes exactly <strong>one</strong>
+<code>rollback_history</code> row: <code>kind='rollback'</code>,
+<code>from_release_id</code> = current deployment release,
+<code>to_release_id</code> = N-1, <code>triggered_by</code> = the JWT
+subject’s user id, <code>deployment_id</code> =
+<code>{deploymentId}</code>, <code>recall_deployment_id</code> = the
+materialized recall deployment (if any), <code>reason</code> = the
+request <code>reason</code>, <code>details</code> =
+<code>{"origin":"operator_recall","scope":...,"mode":...,"counts":{...}}</code>.</li>
+<li>Returns the resulting rollback summary (eligible/queued/skipped
+counts + the <code>rollback_history</code> row id). The rollout
+<code>status</code> for the affected deployment moves to the
+<code>rolled_back</code> control-plane overlay (one of the migration-002
+<code>rollouts.status</code> overlay values, alongside
+<code>paused</code>/<code>aborted</code>).</li>
+</ul>
+<h3 id="history_read">§7.2 history_read</h3>
+<pre><code>GET /api/v1/deployments/{deploymentId}/rollbacks
+  Roles: RoleViewer, RoleOperator, RoleAdmin   (read parity with GET .../rollout)</code></pre>
+<p>Returns the <code>rollback_history</code> rows for the deployment
+(both <code>kind='abort'</code> and <code>kind='rollback'</code>),
+newest first — the data behind the §4.3 audit panel.</p>
+<blockquote>
+<p>Implementation note (honest status): the route + handler are
+<strong>not yet wired</strong>. The phase README lists the pgx
+<code>StoragePort</code> over migration-002 tables as REMAINING; the
+recall handler depends on persistent reads/writes of
+<code>rollback_history</code>, so it lands with that store. The
+in-memory rollout <code>Service</code>
+(<code>server/internal/rollout/service.go</code>) has no rollback method
+today. This is a spec of the surface, not a claim that it ships.</p>
+</blockquote>
+<h2 id="data_safety_invariant">§8. data_safety_invariant</h2>
+<p>The cardinal invariant, non-negotiable (Constitution §9 absolute data
+safety; source reference <code>1.0.2-rollback/README.md</code> §5):</p>
+<ol type="1">
+<li><strong>Never leave a device unbootable.</strong> A rollback only
+ever makes an <strong>already-bootable, already-verified</strong>
+previous slot active. It never erases, reflashes, or partially writes
+the slot the device is currently running from. If the previous slot is
+not intact + bootable, the device is <strong>not</strong>
+rollback-eligible (it falls into the post-merge / not-eligible class,
+§3.2) — the operation is refused, never attempted half-way.</li>
+<li><strong>Never touch <code>userdata</code>.</strong> A slot swap
+changes <strong>only</strong> boot-control metadata. <code>/data</code>
+(user data, settings, app data) is untouched. The operator and
+device-local confirmation copy both state this explicitly (§4.2, §5.2).
+This MUST be pinned by a pre/post integrity test (userdata hash
+unchanged across a rollback) on real hardware.</li>
+<li><strong>Authorized rollback ≠ malicious downgrade.</strong> The
+rollback authorization (operator JWT / device-local user action against
+an intact previous slot) must be distinguishable from a malicious
+downgrade offer; the AVB rollback-index / anti-downgrade invariant must
+be preserved, not defeated (1.0.1 §5 / synthesis G1). An authorized N-1
+rollback to an already-installed, already-index-valid slot does not
+violate anti-downgrade because that slot was the running build moments
+earlier.</li>
+</ol>
+<h2 id="composition_with_staged_rollout_halt_abort">§9.
+composition_with_staged_rollout_halt_abort</h2>
+<p>Rollback is <strong>distinct from</strong> the staged-rollout
+engine’s <code>halt</code>/<code>abort</code>, and the two are
+reconciled at the <code>rollback_history.kind</code> and
+<code>rollouts.status</code> layers:</p>
+<ul>
+<li><strong>abort</strong> (<code>kind='abort'</code>) — the
+staged-rollout engine’s existing safety action: a regressing cohort’s
+rollout is <strong>stopped</strong> (no further devices receive the new
+build). Per the migration-002 CHECK, an <code>'abort'</code> row carries
+<strong>no</strong> from/to release — nothing was reverted, advancement
+was merely halted. The engine’s automatic halt-on-error-breach
+(<code>handleEvaluateRollout</code> → <code>halt</code> decision) and
+the operator one-click abort both produce <code>kind='abort'</code>.
+Abort moves <code>rollouts.status</code> to the <code>aborted</code>
+overlay.</li>
+<li><strong>rollback</strong> (<code>kind='rollback'</code>) — actually
+<strong>reverts already-updated devices</strong> to N-1 (§3.2/§3.3).
+Carries both from/to releases. Moves <code>rollouts.status</code> to the
+<code>rolled_back</code> overlay.</li>
+<li><strong>Ordering / safety-invariant alignment:</strong> halt/abort
+wins over advance in a single evaluation window (1.0.1 rollout-engine
+safety invariant). A recall (<code>rollback</code>) is naturally
+preceded by an abort: the operator first stops the bleeding (abort → no
+new devices get the bad build) and then recalls the already-updated
+cohort (rollback → revert them). The dashboard MAY offer “abort +
+recall” as one operator gesture that produces <strong>two</strong> audit
+rows (one <code>abort</code>, one <code>rollback</code>), preserving the
+closed-set semantics rather than overloading a single row.</li>
+<li><strong>Merge-window dependency on 1.0.1’s health window.</strong>
+Slot-swap rollback is possible <strong>only before</strong> the Virtual
+A/B COW merge completes. The device therefore delays
+<code>markBootSuccessful()</code> until the 1.0.1 post-boot
+health-confirmation window passes — rollback <strong>depends on</strong>
+that 1.0.1 health-gating mechanism rather than re-inventing it. This is
+the load-bearing timing edge between staged rollout and rollback.</li>
+</ul>
+<h2 id="anti_bluff_unverified_register">§10.
+anti_bluff_unverified_register</h2>
+<p>Per Constitution §11.4.6 (no-guessing) / §11.4 (no-bluff) — MUST NOT
+propagate as fact:</p>
+<ul>
+<li><strong>Rollback window default (e.g. 7 days), boot-success /
+merge-delay timing, retry-counter values</strong> — UNVERIFIED on RK3588
+/ Orange Pi 5 Max / the shipped Android version. Source-doc defaults
+only; confirm on real hardware before binding any constant.</li>
+<li><strong>Virtual A/B merge behavior under mid-merge rollback</strong>
+(<code>snapuserd</code>/bootloader) — UNVERIFIED on the Orange Pi 5 Max;
+hardware-gated spike required before §5.1.2 / §8.1 are asserted as
+facts.</li>
+<li><strong>Whether automatic boot-failure auto-fallback is persisted as
+<code>kind='rollback'</code> vs surfaced via a separate signal</strong>
+— UNVERIFIED; migration-002’s <code>rollback_history_kind_chk</code>
+admits only <code>{'abort','rollback'}</code>, so §3.1’s choice
+(<code>kind='rollback'</code>, <code>triggered_by=NULL</code>) is a
+proposal pending the device-side report spec, not a landed
+decision.</li>
+<li><strong>dm-verity / verified-boot-state transitions on
+rollback</strong> — UNVERIFIED on RK3588.</li>
+<li><strong>The recall endpoint + history read (§7) are NOT yet
+wired</strong> — they depend on the migration-002 pgx
+<code>StoragePort</code> (phase README “REMAINING”). This document
+specifies the surface; it does not claim shipped behavior. No
+<code>rollout.Service</code> rollback/recall method exists today
+(verified against <code>server/internal/rollout/service.go</code>).</li>
+<li><strong>The dashboard is a server-side product surface not present
+in this repo at spec time</strong> — §4 is a UX specification, not a
+description of existing UI (UNVERIFIED that any dashboard front-end
+exists yet).</li>
+<li><strong>HelixConstitution §11.4.x clause numbers</strong> cited here
+remain UNVERIFIED except those confirmed in
+<code>tests/test_strategy.md</code> §13 (carried from the MVP sibling
+specs).</li>
+</ul>
+<h2 id="sources">§11. sources</h2>
+<ul>
+<li><code>1.0.1-staged-rollout/README.md</code> (this phase; §5 End-user
+rollback, the operator’s INTO-1.0.1 ratification).</li>
+<li><code>1.0.2-rollback/README.md</code> (SUPERSEDED design reference —
+rollback trigger types, merge-window constraint, data-safety invariant,
+rollback-vs-downgrade table; folded here).</li>
+<li><code>1.0.0-mvp/database/migrations/002_staged_rollout.up.sql</code>
+(the real <code>rollback_history</code> table reused by this spec —
+<code>kind</code> closed set, <code>kind_ref</code> CHECK, FK
+survivability; <code>rollouts.status</code> overlays).</li>
+<li><code>server/internal/api/handlers_rollout.go</code> +
+<code>server/internal/api/server.go</code> (the existing rollout REST
+handlers/routes/roles the recall surface extends).</li>
+<li><code>server/internal/rollout/service.go</code> (the control-plane
+facade — confirms no rollback method exists yet; honest-status anchor
+for §7).</li>
+</ul>
+</body>
+</html>

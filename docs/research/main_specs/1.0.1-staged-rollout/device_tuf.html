@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>device_tuf</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="device-side-tuf-trust-enforcement-1.0.1-staged-rollout">device-side
+tuf trust enforcement (1.0.1-staged-rollout)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>field</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>planned (outline — depth follows 1.0.0-MVP; gated on the ADR-0002
+§4.3 on-device-client spike)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Normative outline for phase-1.0.1 device-side TUF (The Update
+Framework) trust enforcement. Layers a TUF metadata refresh/verify flow
+IN FRONT OF the existing MVP verify-before-apply gate
+(<code>security/signing_verification.md</code> §6) without re-signing or
+re-packaging artifacts. Server-side metadata is published by
+<code>go-tuf/v2</code> (ADR-0002 §3.2); device-side enforcement becomes
+mandatory only after the ADR-0002 §4.3 step-2 client spike resolves the
+still-OPEN on-device client path (gomobile-wrapped go-tuf/v2 vs
+hand-rolled Kotlin). Adds the attack-class mitigations (rollback /
+freeze / mix-and-match / mirror-denial / key-compromise recovery) that
+MVP plain ED25519+SHA-256+AVB leaves open (ADR-0002 §1, §3.1). Composes
+with — does not replace — the <code>ota-artifact-validator</code> S2→S3
+pipeline and the four native gates.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The on-device TUF client (gomobile/JNI vs hand-rolled Kotlin vs an
+existing JVM client) is the dominant adoption cost and is
+<strong>UNVERIFIED/OPEN</strong> — no verified production-grade
+Kotlin/JVM TUF client is known to exist (ADR-0002 §8 item 1). go-tuf/v2
+<code>metadata/updater</code> + <code>metadata/trustedmetadata</code>
+client-flow API signatures are <strong>UNVERIFIED</strong> (ADR-0002 §8
+item 2). The <code>security</code> / <code>Security-KMP</code> catalogue
+bricks’ fit for TUF-role / threshold / offline-key primitives is
+<strong>UNVERIFIED</strong> (ADR-0002 §8 item 9). Android-15 / RK3588
+board specifics the client integrates against are
+<strong>UNVERIFIED</strong> (ADR-0002 §8 item 8). TUF metadata storage
+tables (deferred out of <code>rollout_engine.md</code> §11) are first
+specified here (§7) but their DDL lands in migration
+<code>002_*</code>/<code>003_*</code> per the data-model owner, not
+here.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Device client path is the long pole and OPEN; library,
+catalogue-brick, and board surfaces carried as UNVERIFIED; not made
+mandatory until the spike closes them.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 1: first device-side TUF spec for 1.0.1; pins the role model,
+the device verify-flow extension of the MVP gate, the bootstrap/rotation
+outline, the attack-class delta over plain signing, the
+go-tuf/v2(server) ↔︎ device-client split with the two ADR-0002 spike
+options, and the composition with the
+<code>ota-artifact-validator</code> S-stage pipeline.</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Captured the 1.0.1 device-trust design as an outline traceable to
+ADR-0002 and the MVP signing spec, with every UNVERIFIED item carried,
+not invented.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Run the ADR-0002 §4.3 step-1 (server publish path + Go reference
+refresh client end-to-end) and step-2 (on-device client ADR + spike)
+before any field of §6.3 is treated as decided; confirm the go-tuf/v2
+<code>updater</code>/<code>trustedmetadata</code> client API against
+pkg.go.dev; confirm <code>Security-KMP</code> exposes (or can host
+without bespoke crypto) the TUF role/threshold/expiry primitives; define
+the offline key-custody ceremony (ADR-0002 §4.3 step-3) before mandating
+device enforcement; land the TUF metadata storage DDL (§7) in the
+migration owned by <code>migration_002_design.md</code>’s
+successor.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">table of contents</h2>
+<ul>
+<li><a href="#1-purpose-and-scope">§1. purpose and scope</a></li>
+<li><a href="#2-why-tuf-over-plain-signing-the-101-delta">§2. why tuf
+over plain signing (the 1.0.1 delta)</a></li>
+<li><a href="#3-tuf-metadata-roles">§3. tuf metadata roles</a></li>
+<li><a href="#4-attack-classes-tuf-adds-over-plain-signing">§4. attack
+classes tuf adds over plain signing</a></li>
+<li><a href="#5-server-side--device-side-split">§5. server-side ↔︎
+device-side split</a></li>
+<li><a
+href="#6-device-side-verification-flow-extends-the-verify-before-apply-gate">§6.
+device-side verification flow (extends the verify-before-apply
+gate)</a></li>
+<li><a href="#7-key-rotation--root-of-trust-bootstrap-on-the-device">§7.
+key rotation + root-of-trust bootstrap on the device</a></li>
+<li><a
+href="#8-composition-with-the-ota-artifact-validator-pipeline--native-gates">§8.
+composition with the ota-artifact-validator pipeline + native
+gates</a></li>
+<li><a href="#9-data-model-deltas-tuf-metadata-storage">§9. data-model
+deltas (tuf metadata storage)</a></li>
+<li><a href="#10-testing-four-layer--attack-class">§10. testing
+(four-layer + attack-class)</a></li>
+<li><a href="#11-open--unverified-items">§11. open / unverified
+items</a></li>
+<li><a href="#12-compliance-notes-helixconstitution">§12. compliance
+notes (helixconstitution)</a></li>
+<li><a href="#13-sources">§13. sources</a></li>
+</ul>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number, per corpus convention). This
+document carries its ToC immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">§1. purpose and scope</h2>
+<p>This document specifies, for phase 1.0.1, how Helix OTA establishes
+<strong>device-side TUF trust enforcement</strong>: a metadata-driven
+refresh/verify flow that runs on the Android agent
+<strong>before</strong> the existing MVP verify-before-apply gate, so
+the device accepts an artifact only if a chain of TUF metadata (root →
+timestamp → snapshot → targets) proves the artifact is the
+<strong>authorized, fresh, correct</strong> target for that device — not
+merely a validly-signed blob.</p>
+<p>It is the device half of ADR-0002’s phased trust decision: <em>“MVP
+(1.0.0) ships plain per-artifact trust (signed artifact + SHA-256 +
+AVB). TUF (go-tuf/v2) is adopted server-side as the metadata/trust layer
+in 1.0.1+, with mandatory device-side enforcement gated behind an
+Android-client spike.”</em> (ADR-0002 §4). The server-side publish path
+is owned by ADR-0002 §3.2 and §4.3 step-1; this spec owns the
+<strong>device</strong> path and the seam where it joins the existing
+gate (<code>security/signing_verification.md</code> §6, §8).</p>
+<p>In scope: the TUF role model as the device verifies it (§3); the
+attack-class delta over MVP plain signing (§2, §4); the server↔︎device
+split and the two ADR-0002 client options (§5); the device verification
+flow extending the verify-before-apply gate (§6); device root-of-trust
+bootstrap and key rotation (§7); composition with the
+<code>ota-artifact-validator</code> S2→S3 pipeline and the four native
+gates (§8); the TUF metadata storage delta deferred out of
+<code>rollout_engine.md</code> §11 (§9); four-layer + attack-class
+testing (§10).</p>
+<p><strong>Out of scope / not re-decided here.</strong> TUF/Uptane
+<em>adoption</em> (ADR-0002, already decided phased). The
+<em>delivery</em> engine (native A/B <code>update_engine</code>;
+ADR-0001) — TUF is a trust layer, not a delivery engine (ADR-0002 §1).
+The MVP plain-signing scheme
+(<code>security/signing_verification.md</code>) — this spec
+<strong>layers over</strong> it byte-identically, never replaces it.
+Transport (ADR-0004). The staged-rollout engine and cohort assignment
+(<code>rollout_engine.md</code>) — referenced here only as the
+per-device decision seam a future Director consumes (§5, §7). Key
+custody <em>ceremony</em> mechanics (<code>key_management.md</code>;
+ADR-0002 §4.3 step-3) — referenced, not specified.</p>
+<p><strong>LOCKED context honored (not re-decided):</strong> native
+Android A/B (<code>update_engine</code> + AVB/dm-verity + auto-rollback)
+on device + a custom Go (Gin) control plane; Go + go-tuf/v2 server-side;
+Android-15-first (Orange Pi 5 Max / RK3588); the device-side client is
+the dominant, OPEN, UNVERIFIED cost (ADR-0002 §1, §4, §8).</p>
+<h2 id="why-tuf-over-plain-signing-the-1.0.1-delta">§2. why tuf over
+plain signing (the 1.0.1 delta)</h2>
+<p>The MVP gate proves an artifact is <strong>authentic</strong> (signed
+by a trusted <code>key_id</code>) and <strong>intact</strong> (matches
+its declared SHA-256). It does <strong>not</strong> prove the artifact
+is the one this device is <strong>authorized</strong> to install
+<em>right now</em>. Plain per-artifact signature <em>“does not cover
+freshness, version monotonicity, or per-device targeting”</em>
+(<code>security/signing_verification.md</code> §3) and the whole MVP
+trust model <em>“collapses to a single signing key”</em> (ADR-0002
+§3.1). The accepted MVP residual is explicit: <em>“no
+rollback/freeze/mix-and-match/mirror-denial mitigation until TUF in
+1.0.1+”</em> (<code>security/signing_verification.md</code> §11 item 4;
+ADR-0002 §5.2).</p>
+<p>TUF closes that delta with <strong>separately-keyed,
+separately-expiring metadata roles</strong> layered over the same
+byte-identical artifacts (ADR-0002 §3.2 additive/non-invasive layering).
+The device no longer trusts “a signed blob arrived”; it trusts “a
+current, threshold-signed, monotonic metadata chain says THIS digest is
+the authorized target.” A single popped signing key no longer lets an
+attacker ship arbitrary, stale, or device-targeted firmware — the
+attacker must also defeat threshold-held, offline-keyed roles (ADR-0002
+§2 compromise-resilience driver). The per-attack-class breakdown is
+§4.</p>
+<h2 id="tuf-metadata-roles">§3. tuf metadata roles</h2>
+<p>TUF defines four metadata roles (ADR-0002 §3.2;
+<code>research/stacks/tuf-go-tuf.md</code> §3). The device verifies them
+in a fixed order each refresh — <strong>root → timestamp → snapshot →
+targets</strong> (ADR-0002 §4.2 role order;
+<code>security/signing_verification.md</code> §8 seam 3). Each role is a
+signed JSON document with an <code>expires</code> field and a monotonic
+<code>version</code>; the device enforces both.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>role</th>
+<th>signs / asserts</th>
+<th>key posture</th>
+<th>device check (per refresh)</th>
+<th>UNVERIFIED</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>root</strong></td>
+<td>The root of trust: which public keys + signature thresholds are
+authoritative for <strong>every</strong> role (including root itself).
+The key-distribution document.</td>
+<td><strong>Offline</strong>, threshold-held; rotated via a chained
+root→root signature (§7).</td>
+<td>Verify the new <code>root</code> is signed by a threshold of the
+<strong>currently-trusted</strong> root keys (chain-of-trust walk from
+the device’s pinned root, §7); enforce <code>version</code> strictly
+increasing; enforce not-expired.</td>
+<td>Offline-key custody ceremony is ADR-0002 §4.3 step-3,
+<strong>UNVERIFIED</strong> until defined.</td>
+</tr>
+<tr>
+<td><strong>timestamp</strong></td>
+<td>Freshness beacon: a short-lived signature over the current
+<code>snapshot</code> metadata’s hash+version. The “is the repo state
+current?” anchor.</td>
+<td><strong>Online</strong> (re-signed frequently by automation;
+ADR-0002 §4.3 step-3 timestamp re-signing automation).</td>
+<td>Verify signed by a threshold of <code>timestamp</code> keys (per
+current <code>root</code>); enforce not-expired (tight expiry); it names
+the expected <code>snapshot</code> version+hash.</td>
+<td>Re-signing cadence/automation <strong>UNVERIFIED</strong> until
+ADR-0002 §4.3 step-3.</td>
+</tr>
+<tr>
+<td><strong>snapshot</strong></td>
+<td>Consistency: the version number (and, with consistent snapshots,
+hash) of the current <code>targets</code> metadata (and any delegated
+targets). Prevents mix-and-match across roles.</td>
+<td><strong>Online or offline</strong> per posture decision (stretch
+Director split keeps it online; ADR-0002 §4.3 step-5).</td>
+<td>Verify signed by a threshold of <code>snapshot</code> keys; enforce
+<code>version</code> matches the one <code>timestamp</code> named;
+enforce not-expired; enforce <code>targets</code> version it lists is ≥
+the device’s last-seen.</td>
+<td>Posture (online vs offline) <strong>UNVERIFIED</strong> pending the
+Director/Image split decision (ADR-0002 §4.3 step-5).</td>
+</tr>
+<tr>
+<td><strong>targets</strong></td>
+<td>Authorization + integrity binding: the map of target path → {length,
+hashes (SHA-256/512), custom metadata}. Names exactly
+<strong>which</strong> artifacts are authorized and their expected
+digests.</td>
+<td><strong>Offline</strong> (Image repo) and/or <strong>online
+per-device</strong> (Director repo, stretch §5).</td>
+<td>Verify signed by a threshold of <code>targets</code> keys; enforce
+<code>version</code> matches <code>snapshot</code>; enforce not-expired;
+the requested artifact’s path MUST be present and its length+SHA-256
+MUST equal what the MVP gate independently recomputes (§6, §8).</td>
+<td>Delegations (hash-bin / succinct TAP-15) deferred; per-device
+Director <code>targets</code> is the §5 stretch,
+<strong>UNVERIFIED</strong>.</td>
+</tr>
+</tbody>
+</table>
+<p>The device-side guarantees the role chain produces:
+<strong>freshness</strong> (timestamp+expiry), <strong>role
+consistency</strong> (snapshot pins targets version/hash),
+<strong>monotonicity</strong> (every role’s <code>version</code>
+strictly increases), <strong>authorization</strong> (the artifact
+appears in <code>targets</code>), and <strong>digest binding</strong>
+(<code>targets</code> length+SHA-256 == the bytes the device hashes).
+The artifact’s existing ED25519 detached signature (MVP) is retained and
+re-checked unchanged — TUF is additive (ADR-0002 §3.2; §8 below).</p>
+<h2 id="attack-classes-tuf-adds-over-plain-signing">§4. attack classes
+tuf adds over plain signing</h2>
+<p>Per ADR-0002 §3.1 / §4 and <code>research/stacks/tuf-go-tuf.md</code>
+§4, the device-side role enforcement closes attack classes that MVP
+plain ED25519+SHA-256+AVB leaves open
+(<code>security/signing_verification.md</code> §2, §11 item 4). The
+native A/B auto-rollback (§8 gate 4) remains the independent
+anti-bricking backstop regardless.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>attack class</th>
+<th>MVP plain-signing exposure</th>
+<th>TUF role(s) that close it (device-side)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arbitrary install / wrong-software</td>
+<td>Closed only if the device already knows the correct hash and the key
+is intact.</td>
+<td><code>targets</code> (artifact must be a named, digest-matched
+authorized target).</td>
+</tr>
+<tr>
+<td><strong>Rollback</strong> (install an older,
+validly-signed-but-superseded build)</td>
+<td>OPEN — old signed artifacts stay valid
+(<code>security/signing_verification.md</code> §11 item 4).</td>
+<td><code>snapshot</code>+<code>targets</code> monotonic
+<code>version</code>; device rejects a metadata <code>version</code> ≤
+last-seen. Composes with AVB rollback-index anti-downgrade
+(<code>rollout_engine.md</code> /
+<code>research/stacks/android-avb-rollback.md</code>).</td>
+</tr>
+<tr>
+<td><strong>Indefinite freeze</strong> (pin a device to a
+stale-but-valid state)</td>
+<td>OPEN — no freshness anchor.</td>
+<td><code>timestamp</code> short expiry; an expired/withheld
+<code>timestamp</code> is rejected, so a stuck repo is detectable, not
+silently accepted.</td>
+</tr>
+<tr>
+<td>Fast-forward (jump version counter to lock out future updates)</td>
+<td>OPEN.</td>
+<td>TUF version-recovery semantics + root rotation re-baseline; device
+enforces ordered role recovery.</td>
+</tr>
+<tr>
+<td><strong>Mix-and-match</strong> (combine artifacts/metadata from
+different releases)</td>
+<td>OPEN.</td>
+<td><code>snapshot</code> binds the consistent set of
+<code>targets</code> versions/hashes; device rejects an inconsistent
+combination.</td>
+</tr>
+<tr>
+<td>Endless-data / extraneous-dependencies</td>
+<td>OPEN.</td>
+<td>Metadata declares expected lengths; device caps reads at the
+<code>targets</code>-declared length.</td>
+</tr>
+<tr>
+<td><strong>Malicious-mirror denial</strong></td>
+<td>OPEN — a hostile mirror can serve stale/blocked content.</td>
+<td>Threshold-signed, expiring metadata makes a mirror unable to forge
+currency; device detects stale/forged metadata.</td>
+</tr>
+<tr>
+<td><strong>Key-compromise recovery</strong></td>
+<td>OPEN — one key = full break.</td>
+<td>Thresholds + <strong>offline</strong> root/targets keys; root
+rotation (§7) re-establishes trust after an online-key compromise
+without re-flashing devices.</td>
+</tr>
+</tbody>
+</table>
+<p>These are the ADR-0002 §3.1 / §5.1 <em>“real attack classes in
+1.0.1+”</em>. <strong>UNVERIFIED:</strong> the exact
+recovery/version-rollback-protection semantics depend on the go-tuf/v2
+client flow (<code>updater</code>/<code>trustedmetadata</code>), whose
+API is carried UNVERIFIED (ADR-0002 §8 item 2; §11 item 2).</p>
+<h2 id="server-side-device-side-split">§5. server-side ↔︎ device-side
+split</h2>
+<p>ADR-0002 splits the work along a hard seam: <strong>the server
+library is decided and idiomatic; the device client is the dominant,
+OPEN cost</strong> (ADR-0002 §3.2, §8 item 1).</p>
+<p><strong>Server-side — DECIDED (ADR-0002 §3.2, §4):</strong> publish +
+sign metadata with <code>github.com/theupdateframework/go-tuf/v2</code>
+(Apache-2.0; verified latest v2.4.2 / spec 1.0.31 as of 2026-06-07 per
+ADR-0002 §3.2). The publish path treats each artifact as an opaque
+target (<code>TargetFiles.FromFile(...)</code> → path + length +
+SHA-256/512), bumps <code>snapshot</code> + <code>timestamp</code>,
+signs, and writes metadata next to the byte-identical blobs, served over
+the existing HTTP/3→HTTP/2 + Brotli path (ADR-0002 §3.2). Server effort
+estimate LOW–MEDIUM, <strong>UNVERIFIED until spiked</strong> (ADR-0002
+§8 item 7). ADR-0002 §4.3 step-1 prototypes this publish path
+<strong>plus a Go reference refresh client</strong> end-to-end to
+validate the model before the device client is even sized.</p>
+<p><strong>Device-side — OPEN, gated behind a spike (ADR-0002 §4.3
+step-2, §8 item 1).</strong> No verified production-grade
+Android/Kotlin/JVM TUF client is known to exist (ADR-0002 §8 item 1;
+landscape pins <code>tuf-go-tuf</code> Android-15 fit at 2/5 on this
+gap). The on-device client path is one of two options the ADR-0002 spike
+MUST decide:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>option</th>
+<th>what it is</th>
+<th>pros (per ADR-0002)</th>
+<th>cons / risks (per ADR-0002)</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — gomobile-wrapped go-tuf/v2</strong></td>
+<td>Compile go-tuf/v2’s <code>metadata/updater</code> +
+<code>metadata/trustedmetadata</code> client flow to an Android library
+via gomobile/JNI; the Kotlin agent calls the wrapped Go.</td>
+<td>Reuses the <strong>same, audited</strong> go-tuf/v2 verification
+logic as the server; one trust implementation, no second hand-written
+verifier to keep correct.</td>
+<td>Adds the Go toolchain to the Android build + an APK
+<strong>binary-size</strong> cost; gomobile/JNI boundary +
+Android-15/RK3588 integration are <strong>UNVERIFIED</strong> (ADR-0002
+§5.2, §8 item 8).</td>
+<td><strong>UNVERIFIED</strong> — spike must measure size + JNI
+viability.</td>
+</tr>
+<tr>
+<td><strong>B — hand-rolled Kotlin TUF client</strong></td>
+<td>Implement the root→timestamp→snapshot→targets refresh/verify flow
+natively in Kotlin against <code>Security-KMP</code> crypto
+primitives.</td>
+<td>No Go toolchain / no JNI / smaller footprint; fits the Kotlin agent
+natively.</td>
+<td>Means <strong>owning security-sensitive verification code</strong>
+(the highest-risk thing to hand-write); must re-derive TUF correctness
+independently; <code>Security-KMP</code> fit for TUF
+role/threshold/expiry primitives is <strong>UNVERIFIED</strong>
+(ADR-0002 §5.2, §8 item 9).</td>
+<td><strong>UNVERIFIED</strong> — spike must prove correctness + brick
+fit.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>A third path — <em>“an existing JVM client”</em> — was considered in
+ADR-0002 §3.2 and found <strong>none verified to exist or be
+maintained</strong>, so it is not a recommendation here (ADR-0002 §8
+item 1). Per HelixConstitution §11.4.6 (no-guessing) and §11.4.8
+(research-before-implementation), this spec does <strong>not</strong>
+pick A or B: the choice is the ADR-0002 §4.3 step-2 spike’s output, and
+device-side TUF enforcement is <strong>not made mandatory</strong> until
+that spike closes the UNVERIFIED items (ADR-0002 §4.3 step-4, §6).</p>
+</blockquote>
+<p><strong>Stretch — Director + Image split (ADR-0002 §4.3 step-5, §3.3
+Option C verdict).</strong> A 1.0.1+ stretch hardening goal: a Go
+<strong>Director</strong> repo (online keys, mints
+<strong>per-device</strong> <code>targets.json</code> from the inventory
+DB) + an <strong>Image</strong> repo (offline-keyed). The per-device
+decision seam already exists — <code>rollout_engine.md</code> §4
+deterministic cohort assignment is exactly the “what should this device
+install” decision a Director consumes
+(<code>security/signing_verification.md</code> §8 seam 4; ADR-0002
+§4.2). The Primary/Secondary ECU tier is <strong>vacuous</strong> for
+full-power Android devices and is <strong>rejected</strong>; each Helix
+device is a Primary doing full verification (ADR-0002 §3.3). aktualizr
+and full Uptane are <strong>rejected</strong> (ADR-0002 §3.3, §3.4).
+<strong>UNVERIFIED:</strong> no shipping production Android+Uptane
+integration is known (ADR-0002 §8 item 6).</p>
+<h2
+id="device-side-verification-flow-extends-the-verify-before-apply-gate">§6.
+device-side verification flow (extends the verify-before-apply
+gate)</h2>
+<p>The MVP device gate (<code>security/signing_verification.md</code>
+§6) is, today: download byte-identical → recompute SHA-256/512 → verify
+ED25519 detached signature against the on-device trust-store
+<code>key_id</code> → hand the <strong>fully verified local
+artifact</strong> to <code>ota-update-engine-bridge</code>. The
+verify-gate is deliberately <em>“a distinct gate in front of the apply
+path so a TUF refresh/verify flow can be inserted ahead of the existing
+hash+signature check without changing the apply path”</em>
+(<code>security/signing_verification.md</code> §6, §8 seam 3; ADR-0002
+§4.2).</p>
+<p>1.0.1 inserts the TUF refresh/verify <strong>in front of</strong>
+that gate. Apply still requires a fully verified local file
+(verify-before-apply driver, ADR-0002 §2, §4.1) — TUF adds
+<strong>authorization + freshness</strong> ahead of the existing
+<strong>authenticity + integrity</strong> check; it does not remove
+either.</p>
+<h3 id="flow-new-tuf-step-prepended">§6.1 flow (new TUF step
+prepended)</h3>
+<pre><code>download byte-identical artifact (HTTPS+Range, no content-compression on the artifact path;
+  ADR-0004 §3.2/§3.3 — bytes the device hashes == bytes the server signed)
+        │
+        ▼
+[NEW] TUF metadata refresh + verify  ── role order: root → timestamp → snapshot → targets
+        │   • refresh each role from the repo; verify threshold signatures per current `root`
+        │   • enforce expiry (reject expired timestamp/snapshot/targets/root)
+        │   • enforce monotonic `version` per role (reject ≤ last-seen → rollback/freeze guard, §4)
+        │   • enforce snapshot↔targets consistency (mix-and-match guard, §4)
+        │   • resolve the requested artifact in `targets`; capture its authorized length + SHA-256
+        │   • ANY failure → ABORT before apply (record verdict; do NOT fall back to MVP-only)
+        ▼
+MVP gate (unchanged, retained as defense-in-depth):
+        │   • recompute SHA-256 (and SHA-512 where available); MUST equal the manifest hash
+        │     AND the TUF `targets` digest captured above (cross-binding, §8)
+        │   • verify ED25519 detached signature against on-device trust-store `key_id`
+        ▼
+hand fully-verified local artifact to ota-update-engine-bridge → applyPayload
+        ▼
+update_engine FILE_HASH/METADATA_HASH + payload sig (native gate 3) → AVB / A/B (native gate 4)</code></pre>
+<h3
+id="ordering-rationale-consistent-with-the-validation-chain-order-audit">§6.2
+ordering rationale (consistent with the validation-chain-order
+audit)</h3>
+<p>The TUF step runs <strong>before</strong> the MVP hash/sig check, but
+the MVP <strong>hash</strong> still runs <strong>before</strong> the MVP
+<strong>signature</strong> (the verified S2-before-S3 invariant in
+<code>security/validation_chain_order.md</code> is preserved unchanged
+on the device side). The TUF <code>targets</code> digest and the
+device-recomputed SHA-256 MUST agree: TUF says “digest D is authorized”;
+S2 says “these bytes hash to D”; S3 says “D is signed by the trusted
+key”. Accept ⟺ <em>(TUF authorizes D, fresh + monotonic + consistent) ∧
+(bytes hash to D) ∧ (D signed by the trusted MVP key)</em>. A
+TUF-authorized digest that does not match the recomputed bytes is a
+payload-substitution attempt → ABORT (mirrors the S2-binds-D reasoning
+in <code>validation_chain_order.md</code> §why_order_matters).</p>
+<h3 id="fields-the-spike-must-finalize-carried-open">§6.3 fields the
+spike must finalize (carried OPEN)</h3>
+<p>The concrete client API (<code>metadata/updater</code>,
+<code>metadata/trustedmetadata</code>) signatures, the on-disk
+trusted-metadata cache layout on Android, the refresh trigger relative
+to the update-check poll (<code>rollout_engine.md</code> §4 cohort
+check), and the exact failure→HTTP/agent-state mapping are
+<strong>UNVERIFIED</strong> and are the output of the ADR-0002 §4.3
+step-2 spike (ADR-0002 §8 items 1–2; §11 below). This spec fixes the
+<strong>flow and invariants</strong>, not those signatures.</p>
+<h2 id="key-rotation-root-of-trust-bootstrap-on-the-device">§7. key
+rotation + root-of-trust bootstrap on the device</h2>
+<h3 id="device-root-of-trust-bootstrap-trust-on-first-install">§7.1
+device root-of-trust bootstrap (trust-on-first-install)</h3>
+<p>TUF’s root is bootstrapped, not discovered: the device MUST start
+from a <strong>pinned, trusted initial <code>root.json</code></strong>
+that did not come from the (untrusted) network. The bootstrap root is
+shipped <strong>in the device build/image</strong> — the same provenance
+as the MVP build-pipeline public key, which already <em>“lives in the
+device trust store”</em> and is <em>“embedded… non-empty… in the device
+build”</em> (<code>security/signing_verification.md</code> §4, §10 Layer
+2). This keeps a single trust-anchor provenance: the
+verified-boot-protected image (AVB, native gate 4, §8) is the root of
+the root of trust. Subsequent root updates are accepted
+<strong>only</strong> if they chain-validate from this pinned root
+(§7.2). <strong>UNVERIFIED:</strong> the exact image location +
+AVB-coverage of the embedded <code>root.json</code> on Android-15/RK3588
+is board-specific and carried UNVERIFIED (ADR-0002 §8 item 8).</p>
+<h3 id="root-rotation-chained-rootroot">§7.2 root rotation (chained
+root→root)</h3>
+<p>Root keys are <strong>offline, threshold-held</strong> (§3; ADR-0002
+§2, §4.3 step-3). Rotation is a TUF chained walk: the device, holding
+trusted <code>root</code> version <em>N</em>, accepts <code>root</code>
+version <em>N+1</em> iff <em>N+1</em> is signed by a <strong>threshold
+of version-<em>N</em> root keys</strong> (and is itself well-formed,
+not-expired, version strictly increasing). The device walks the chain
+<em>N → N+1 → … → latest</em> before trusting any other role under the
+new root. This is what gives <strong>key-compromise recovery</strong>
+(§4): a compromised online key (timestamp/snapshot, or even a targets
+key) is revoked by publishing a new root, signed offline by the
+threshold, that drops the bad key — <strong>without re-flashing
+devices</strong>. A compromise of enough <strong>offline root</strong>
+keys to meet threshold is the catastrophic case requiring re-bootstrap
+(re-flash); thresholds make that the highest bar.</p>
+<h3 id="rotation-overlap-with-the-mvp-key_id-trust-store">§7.3 rotation
+overlap with the MVP <code>key_id</code> trust store</h3>
+<p>The MVP already supports rotation overlap via <code>key_id</code>
+(each trust-store entry binds <code>key_id</code> → public key +
+algorithm; <code>security/signing_verification.md</code> §3, §4). TUF
+role-key rotation (§7.2) and MVP artifact-signing-<code>key_id</code>
+rotation are <strong>independent</strong> rotation tracks that coexist:
+TUF rotates <em>role</em> keys via root; the MVP rotates the
+<em>artifact</em> signing key via <code>key_id</code> in
+<code>targets</code>/trust-store. The device must tolerate both
+overlapping (accept old+new for a window) so a rotation does not strand
+in-flight devices (<code>key_management.md</code>, referenced; ceremony
+mechanics out of scope here per §1). <strong>UNVERIFIED:</strong>
+whether <code>Security-KMP</code> exposes the threshold/multi-key
+primitives a hand-rolled client (§5 option B) would need (ADR-0002 §8
+item 9).</p>
+<h2
+id="composition-with-the-ota-artifact-validator-pipeline-native-gates">§8.
+composition with the ota-artifact-validator pipeline + native gates</h2>
+<h3
+id="server-side-tuf-wraps-does-not-reorder-the-s-stage-pipeline">§8.1
+server side — TUF wraps, does not reorder, the S-stage pipeline</h3>
+<p>The server <code>ota-artifact-validator</code> pipeline is the
+verified, fail-fast <strong>S2(hash)→S3(sig)→
+S4(version)→S5(target)→S6(metadata)</strong> order
+(<code>validation_chain_order.md</code>, FACT). TUF server-side publish
+(§5) is <strong>additive after validation</strong>: an artifact is
+validated by the existing pipeline (unchanged), and only a passing
+artifact becomes a TUF <strong>target</strong> (path+length+SHA-256 →
+<code>TargetFiles.FromFile</code>) and gets metadata published. TUF does
+<strong>not</strong> reorder or replace S2→S3; the artifact stays
+byte-identical (ADR-0002 §3.2;
+<code>security/signing_verification.md</code> §8 seam 1). The server S3
+verification key is, and remains, taken <strong>only</strong> from
+server config (<code>resolvePublicKey</code>), never from the request
+(<code>validation_chain_order.md</code> §http_mapping trust-boundary
+note) — TUF metadata does not change that boundary.</p>
+<h3
+id="device-side-tuf-is-a-new-gate-in-front-of-the-four-existing-gates">§8.2
+device side — TUF is a NEW gate in front of the four existing gates</h3>
+<p>Adding the device TUF refresh/verify (§6) makes the device-side trust
+chain a <strong>five-gate</strong> chain. The four MVP/native gates
+(<code>security/signing_verification.md</code> §2 mermaid, §7) are
+unchanged:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>gate</th>
+<th>owner</th>
+<th>what it adds</th>
+<th>new in 1.0.1?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TUF metadata refresh/verify</strong></td>
+<td>Helix device agent (this spec)</td>
+<td>authorization + freshness + monotonicity + role consistency (§3,
+§4)</td>
+<td><strong>YES (new)</strong> — runs first</td>
+</tr>
+<tr>
+<td>Helix detached-sig + SHA-256 (device re-verify)</td>
+<td>Helix agent (<code>security/signing_verification.md</code> §6)</td>
+<td>authenticity + integrity, before apply</td>
+<td>no (MVP, retained)</td>
+</tr>
+<tr>
+<td><code>update_engine</code>
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> + payload sig</td>
+<td>AOSP</td>
+<td>payload integrity during apply to inactive slot</td>
+<td>no (native)</td>
+</tr>
+<tr>
+<td>AVB / dm-verity</td>
+<td>AOSP</td>
+<td>verified boot of the running system</td>
+<td>no (native)</td>
+</tr>
+<tr>
+<td>A/B <code>boot_control</code> + auto-rollback</td>
+<td>AOSP</td>
+<td>atomic apply + automatic boot-failure rollback (zero-bricking,
+independent of any metadata layer)</td>
+<td>no (native)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Byte-identity is the contract</strong> that lets the TUF gate
+coexist with all four: re-compressing/re-wrapping would break both the
+<code>update_engine</code> hash check and the TUF target entry
+(<code>security/signing_verification.md</code> §7; ADR-0004 §3.2). A
+failure at the new TUF gate aborts <strong>before</strong>
+<code>update_engine</code> is invoked (same discipline as the MVP
+gates); a boot-stage failure still triggers native A/B rollback
+regardless of TUF (ADR-0002 §5.1) — TUF never weakens the anti-bricking
+backstop, which is <strong>why a safe MVP could ship without the device
+TUF client</strong> (ADR-0002 §5.1, §8 item 1).</p>
+<h2 id="data-model-deltas-tuf-metadata-storage">§9. data-model deltas
+(tuf metadata storage)</h2>
+<p><code>rollout_engine.md</code> §11 explicitly
+<strong>deferred</strong> TUF metadata tables out of the rollout-engine
+spec to this document: <em>“This engine spec does not add TUF metadata
+tables or fields.”</em> The phase-1.0.1 README §6 lists <em>“plus TUF
+metadata storage”</em> among the migration-002 data-model deltas. The
+conceptual storage this spec requires (DDL owned by the migration spec,
+<strong>not</strong> fixed here):</p>
+<ul>
+<li><strong>TUF metadata blobs</strong> — the signed <code>root</code> /
+<code>timestamp</code> / <code>snapshot</code> / <code>targets</code>
+JSON the server publishes and the device refreshes (server stores
+authoritative copies; served byte-identically over the existing path).
+Stored alongside artifact blobs in the <code>Storage</code> brick and/or
+a metadata table; consistent-snapshot versioning means
+<code>root</code>/<code>targets</code> are version-addressed.</li>
+<li><strong>Per-device trusted-metadata cursor</strong> (forward /
+Director seam) — the last-seen role versions per device, so the
+device-side monotonicity check (§4 rollback/freeze) and a future
+Director’s per-device <code>targets</code> (§5 stretch) compose with the
+<code>rollout_engine.md</code> inventory/cohort model.</li>
+<li><strong>Root-rotation history</strong> — the chained root versions
+for audit (§7.2).</li>
+</ul>
+<p><strong>UNVERIFIED / OPEN:</strong> exact tables, columns, and
+whether metadata lives in Postgres vs the <code>Storage</code> object
+store are the data-model owner’s decision (successor to
+<code>migration_002_design.md</code>); this spec states the
+<em>requirement</em>, not the schema. Consistent-snapshot vs
+non-consistent storage layout depends on the go-tuf/v2 publish config
+(ADR-0002 §3.2), carried UNVERIFIED until the ADR-0002 §4.3 step-1
+server prototype.</p>
+<h2 id="testing-four-layer-attack-class">§10. testing (four-layer +
+attack-class)</h2>
+<p>Per HelixConstitution §1 (UNVERIFIED clause) and
+<code>1.0.1-staged-rollout/README.md</code> §8, device TUF is a
+<strong>safety-critical path targeting ≥90% coverage</strong> and ships
+all four layers with no-bluff positive evidence (§7.1), plus the
+attack-class suite the README §8 mandates.</p>
+<ul>
+<li><strong>Layer 1 — source-presence gate.</strong> Static check that
+the device path actually contains: a TUF refresh/verify step that runs
+<strong>before</strong> the MVP hash/sig gate (§6); role-order
+enforcement root→timestamp→snapshot→targets; expiry checks; per-role
+monotonic-version checks; snapshot↔︎targets consistency; the TUF-digest ↔︎
+recomputed-SHA-256 cross-binding (§6.2); the pinned-bootstrap-root
+presence (§7.1). Absence of any is a build-time failure.</li>
+<li><strong>Layer 2 — artifact gate (bytes/metadata shipped).</strong>
+Confirm artifacts stay <strong>byte-identical</strong> (no re-wrap), the
+device image embeds a non-empty <strong>pinned
+<code>root.json</code></strong> plus the MVP trust-store, and published
+metadata (<code>root/timestamp/snapshot/targets</code>) is well-formed +
+threshold-signed for the released set.</li>
+<li><strong>Layer 3 — runtime / attack-class (must reject, not
+apply).</strong> End-to-end: publish metadata → device refresh+verify →
+MVP gate → apply. <strong>Negative attack-class cases (README
+§8):</strong> <strong>rollback</strong> (offer an older monotonic
+metadata version → reject); <strong>freeze</strong> (expired/withheld
+<code>timestamp</code> → reject); <strong>mix-and-match</strong>
+(inconsistent snapshot↔︎targets set → reject); malicious-mirror stale
+metadata → reject; TUF-authorized digest ≠ recomputed bytes → reject;
+threshold not met / signed by a rotated-out role key → reject; expired
+<code>root</code>/<code>targets</code> → reject. Confirm AVB/A/B still
+auto-rolls-back on a corrupt-slot boot <strong>independent</strong> of
+the TUF gate (ADR-0002 §5.1).</li>
+<li><strong>Layer 4 — mutation meta-test (PASS→FAIL on
+negation).</strong> Mutate and require the suite to flip PASS→FAIL: skip
+the TUF refresh entirely (fall straight to the MVP gate); force
+role-signature verify to always-true; accept a non-monotonic role
+version; skip the expiry check; accept an inconsistent snapshot; drop
+the TUF-digest↔︎SHA-256 cross-binding; trust an unchained
+<code>root</code>. A surviving mutant is a coverage defect on a
+safety-critical path.</li>
+</ul>
+<p>Real-device validation on Orange Pi 5 Max (README §8): staged cohort,
+induced regression → automatic halt, <strong>authorized</strong>
+rollback, with the device TUF gate active — once the §5 client is chosen
+and the spike closes the OPEN items (not before; ADR-0002 §4.3
+step-4).</p>
+<h2 id="open-unverified-items">§11. open / unverified items</h2>
+<p>Carried forward (must close before <strong>device-side TUF
+enforcement is made mandatory</strong> — ADR-0002 §4.3 step-4, §6
+Status):</p>
+<ol type="1">
+<li><strong>On-device TUF client path (gomobile/JNI vs hand-rolled
+Kotlin)</strong> — dominant adoption cost; no verified production
+Kotlin/JVM TUF client is known. The §5 A-vs-B choice is the ADR-0002
+§4.3 step-2 spike’s output, not decided here.
+<strong>UNVERIFIED/OPEN.</strong> (ADR-0002 §8 item 1.)</li>
+<li><strong>go-tuf/v2 client-flow API</strong>
+(<code>metadata/updater</code>, <code>metadata/trustedmetadata</code>)
+signatures not fully enumerated — client sizing + §6.3 fields
+provisional until confirmed against pkg.go.dev.
+<strong>UNVERIFIED.</strong> (ADR-0002 §8 item 2.)</li>
+<li><strong><code>Security-KMP</code> (device) / <code>security</code>
+(server) fit for TUF role/threshold/offline-key/expiry
+primitives</strong> — whether the catalogue bricks expose or can host
+these without bespoke crypto is not confirmed; bears directly on §5
+option B feasibility and §7.3. <strong>UNVERIFIED.</strong> (ADR-0002 §8
+item 9; <code>security/signing_verification.md</code> §11 item 2.)</li>
+<li><strong>Android-15 / RK3588 board specifics</strong> the device
+client integrates against (<code>update_engine</code> constants/AIDL;
+the AVB-protected on-image location of the embedded
+<code>root.json</code>, §7.1). <strong>UNVERIFIED.</strong> (ADR-0002 §8
+item 8; <code>security/signing_verification.md</code> §11 item 3.)</li>
+<li><strong>Snapshot key posture</strong> (online vs offline) and
+<strong>Director/Image split</strong> adoption — the §5 stretch; no
+shipping production Android+Uptane integration is known.
+<strong>UNVERIFIED.</strong> (ADR-0002 §8 item 6; §3.3.)</li>
+<li><strong>TUF metadata storage DDL</strong> (§9) — tables/columns and
+Postgres-vs-object-store placement are the data-model owner’s decision
+(migration successor), not fixed here. <strong>OPEN.</strong></li>
+<li><strong>Adoption-effort figures</strong> (server LOW–MEDIUM;
+key-mgmt MEDIUM–HIGH; device HIGH) are estimates, not measured.
+<strong>UNVERIFIED</strong> until spiked. (ADR-0002 §8 item 7.)</li>
+<li><strong>HelixConstitution clause numbers</strong> (§11.4.61, §7.1,
+§11.4.6, §11.4.8, §11.4.28, §11.4.74, §11.4.123, §11.4.125, §1) are
+<strong>UNVERIFIED</strong> against the authoritative constitution text
+(corpus convention; the source file is not present in this repository —
+ADR-0002 §7 note).</li>
+</ol>
+<h2 id="compliance-notes-helixconstitution">§12. compliance notes
+(helixconstitution)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>clause (UNVERIFIED numbers)</th>
+<th>how this spec complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.61 (ToC)</td>
+<td>ToC present immediately after the metadata table.</td>
+</tr>
+<tr>
+<td>§7.1 / §11.4.6 (no-bluff / no-guessing)</td>
+<td>Every claim cites ADR-0002, the MVP signing spec, the
+validation-chain-order audit, or the rollout-engine spec; the device
+client (A vs B), library client API, catalogue-brick fit, board
+specifics, snapshot posture, and storage DDL are carried as
+<strong>UNVERIFIED/OPEN</strong> rather than asserted (§11). No A/B
+client recommendation is invented.</td>
+</tr>
+<tr>
+<td>§11.4.8 (research-before-implementation)</td>
+<td>Device-side TUF enforcement is gated behind the ADR-0002 §4.3 step-2
+spike; §5/§6.3 explicitly leave the client and its API as spike outputs;
+nothing on-device is mandated without that research evidence.</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>The TUF gate is a distinct device step in front of the unchanged MVP
+verify-gate and the unchanged native gates (§6, §8); server TUF publish
+is additive after the unchanged <code>ota-artifact-validator</code>
+pipeline — each independently testable and Uptane-swappable.</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first reuse)</td>
+<td>Server publish via <code>go-tuf/v2</code>; device crypto routed
+through <code>Security-KMP</code>; no bespoke crypto recommended where a
+brick may exist (the brick fit is the UNVERIFIED §11 item 3, not an
+invented dependency).</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§10 specifies all four layers + the attack-class suite
+(rollback/freeze/mix-and-match) on the ≥90% safety-critical device-trust
+path.</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>UNVERIFIED items are closed by the ADR-0002 §4.3 spikes and Layer-3
+attack-class runtime evidence, not by assertion; enforcement is not
+mandated until they close.</td>
+</tr>
+<tr>
+<td>§11.4.125 (code-review gate)</td>
+<td>Subject to the mandatory adversarial code-review subagent before
+acceptance (per the corpus convention).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources">§13. sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>:</p>
+<ul>
+<li><a
+href="../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— §1 (TUF is trust not delivery), §2 (drivers), §3.1–§3.4 (options:
+plain / TUF / Uptane / aktualizr; verified go-tuf/v2 facts; rejected
+items), §4.1–§4.3 (phased decision; MVP-forward seams; 1.0.1+ sequencing
+incl. step-2 client spike, step-3 ceremony, step-5 Director split), §5
+(consequences), §6 (status/gating), §8 (carried UNVERIFIED items
+1–9).</li>
+<li><a
+href="../1.0.0-mvp/security/signing_verification.md"><code>1.0.0-mvp/security/signing_verification.md</code></a>
+— §2 (MVP trust model + accepted residual), §3 (ED25519 default +
+integrity primitives), §4 (build-pipeline key in device trust store), §6
+(device re-verify-before-apply gate this spec extends), §7 (composition
+with AVB/A/B), §8 (TUF-forward seams: opaque target, signer abstraction,
+verify-gate-distinct, per-device decision), §10 (four-layer testing),
+§11 (UNVERIFIED items).</li>
+<li><a
+href="../1.0.0-mvp/security/validation_chain_order.md"><code>1.0.0-mvp/security/validation_chain_order.md</code></a>
+— verified S2(hash)-before-S3(signature) order,
+signature-binds-to-the-hashed-bytes, the <code>resolvePublicKey</code>
+server trust-boundary, why-order-matters.</li>
+<li><a href="README.md"><code>1.0.1-staged-rollout/README.md</code></a>
+— §4 (device-side TUF goal), §6 (TUF metadata storage data-model delta),
+§7 (device-side TUF in <code>ota-android-agent</code>), §8 (attack-class
+testing + real-device validation).</li>
+<li><a
+href="rollout_engine.md"><code>1.0.1-staged-rollout/rollout_engine.md</code></a>
+— §4 (deterministic cohort = per-device decision seam a Director
+consumes), §11 (TUF metadata storage deferred to this document).</li>
+<li><a
+href="../1.0.0-mvp/security/key_management.md"><code>1.0.0-mvp/security/key_management.md</code></a>
+— key custody/rotation mechanics (referenced; ceremony out of scope
+here).</li>
+<li>ADR-0002 evidence base: <code>research/stacks/tuf-go-tuf.md</code>
+(§3 roles, §4 attack classes, §5 verified library facts, §7 effort, §9
+recommendation); <code>research/stacks/uptane.md</code> (§3 dual-repo,
+§6 ECU model rejected, §9–§10 relevance/recommendation) — cited
+transitively via ADR-0002.</li>
+</ul>
+</body>
+</html>
