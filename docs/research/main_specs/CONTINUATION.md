@@ -49,11 +49,18 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - End-user rollback reconciled INTO **1.0.1** per operator decision; 1.0.2-rollback superseded→folded (a4c2b3d).
 - **G11** repo audit: all 6 ota-* PUBLIC on GitHub+GitLab (dab2f0e). **G12** NFR/load harness real measured percentiles (6547c7f).
 
+### Round 2 deliverables — DONE this session
+- **Dashboard** scaffold (G6) — Vite+React+TS, real `tsc`/`vite build` exit 0 (813a00e).
+- **6 submodule READMEs** enriched + pushed to each github+gitlab (813a00e).
+- **Dependabot ×4 merged + verified**: gin 1.12.0, quic-go 0.60.0 (http3 transport re-verified), actions v6 (33039b8).
+- **Rollout pgx StoragePort** — real-DB tested via containers submodule (8190e92).
+- **§11.4.65 exports** for 13+2 new docs (242ee2f, a288a4b). **device_tuf.md** + **rollback_ux.md** specs (1.0.1).
+
 ### NEXT wave (still open)
-1. **pgx StoragePort** for the rollout engine over migration-002 tables (memory store done+tested; pgx is production hardening).
-2. **Dashboard** scaffold (G6) + **per-submodule README** enrichment — agents in flight this session; integrate/commit when complete.
+1. **Wire the recall endpoint** `POST /deployments/{id}/recall` per `rollback_ux.md` (writes `rollback_history`); wire the rollout `Service` to the pgx store in production (`NewServiceWithStore` exists).
+2. **Device-side TUF implementation** (per `device_tuf.md`) — ADR-0002 spike to pick gomobile-go-tuf vs Kotlin client.
 3. Confirm CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
-4. Device-side TUF + rollback UX (1.0.1 depth); delta-updates 1.0.3.
+4. Delta-updates 1.0.3 full spec; HelixQA challenge bank entries for the new endpoints.
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
