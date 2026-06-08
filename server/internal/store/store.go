@@ -168,6 +168,12 @@ type Repository interface {
 	// Telemetry.
 	AppendTelemetry(ctx context.Context, rec TelemetryRecord) error
 	TelemetryForDeployment(ctx context.Context, deploymentID string) ([]TelemetryRecord, error)
+	// TelemetryForDevice returns a device's event history in insertion order
+	// (operational_endpoints.md §5).
+	TelemetryForDevice(ctx context.Context, deviceID string) ([]TelemetryRecord, error)
+	// TelemetryEventCounts returns fleet-wide counts keyed by event type, for the
+	// /telemetry/overview aggregate (operational_endpoints.md §5).
+	TelemetryEventCounts(ctx context.Context) (map[string]int64, error)
 
 	// Audit (operational_endpoints.md §4): append-only admin/operator action log.
 	AppendAudit(ctx context.Context, e AuditEntry) error

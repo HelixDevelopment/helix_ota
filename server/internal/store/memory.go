@@ -286,6 +286,30 @@ func (m *MemoryRepository) AllDevices(_ context.Context) []Device {
 }
 
 // GetIdempotent returns a stored result id for an Idempotency-Key.
+// TelemetryForDevice returns a device's event history in insertion order.
+func (m *MemoryRepository) TelemetryForDevice(_ context.Context, deviceID string) ([]TelemetryRecord, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []TelemetryRecord
+	for _, rec := range m.telemetry {
+		if rec.DeviceID == deviceID {
+			out = append(out, rec)
+		}
+	}
+	return out, nil
+}
+
+// TelemetryEventCounts returns fleet-wide counts keyed by event type.
+func (m *MemoryRepository) TelemetryEventCounts(_ context.Context) (map[string]int64, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	counts := make(map[string]int64)
+	for _, rec := range m.telemetry {
+		counts[string(rec.Event)]++
+	}
+	return counts, nil
+}
+
 // AppendAudit appends an admin/operator action to the audit log.
 func (m *MemoryRepository) AppendAudit(_ context.Context, e AuditEntry) error {
 	m.mu.Lock()
