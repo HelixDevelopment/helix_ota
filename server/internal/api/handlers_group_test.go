@@ -76,7 +76,7 @@ func TestGroupCRUDLifecycle(t *testing.T) {
 	mlw := env.do(http.MethodGet, "/api/v1/groups/"+g.GroupID+"/members", tok, nil, "")
 	var members GroupMembers
 	env.decode(mlw, &members)
-	if len(members.DeviceIDs) != 1 || members.DeviceIDs[0] != "dev-1" {
+	if len(members.Items) != 1 || members.Items[0].DeviceID != "dev-1" || members.Items[0].AddedAt.IsZero() {
 		t.Fatalf("members mismatch: %+v", members)
 	}
 	// Batch add to unknown group -> 404.

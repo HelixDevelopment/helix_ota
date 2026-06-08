@@ -217,14 +217,17 @@ object <code>{user_id, subject}</code></strong>; <strong>row 4
 structural</strong> — per-device telemetry
 <code>events</code>→<code>items</code> + <code>next_cursor</code>,
 <strong>newest-first</strong>, <code>?limit</code>/<code>?cursor</code>
-pagination (handler-side over bounded history). Remaining: row 4
-DEFERRED bits (richer per-item fields
+pagination (handler-side over bounded history).
+<strong><code>GET /groups/{id}/members</code> → <code>items[]</code> of
+<code>{device_id, added_at}</code></strong> (store gained an
+<code>added_at</code> membership column +
+<code>ListGroupMembersDetailed</code> on memory + pgx, real-DB parity).
+Remaining: row 4 DEFERRED bits (richer per-item fields
 <code>duration_ms</code>/<code>bytes_transferred</code> — UNVERIFIED
 ingest;
 <code>?event_type</code>/<code>?since</code>/<code>?until</code>/<code>?deployment_id</code>
-filters), <code>GET /groups/{id}/members</code>
-<code>items[]</code>+<code>added_at</code> (needs a store
-membership-timestamp change), row 7 (group list pagination).</td>
+filters), row 7 (group + members list pagination — deferred, groups
+bounded).</td>
 </tr>
 <tr>
 <td>Landed (2026-06-08, operator-approved additive WIDENs)</td>

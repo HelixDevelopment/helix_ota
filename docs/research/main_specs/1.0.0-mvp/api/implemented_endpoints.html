@@ -846,9 +846,9 @@ collision; <code>404 NOT_FOUND</code>; <code>500 INTERNAL</code>.</li>
 (<code>handleListGroupMembers</code>, <code>server.go:174</code>): roles
 <code>viewer</code>, <code>operator</code>, <code>admin</code>. Response
 <code>GroupMembers</code>
-<code>{ "group_id", "device_ids": [...] }</code> (empty array, never
-<code>null</code>). <code>404 NOT_FOUND</code> if the group is
-missing.</li>
+<code>{ "group_id", "items": [ { "device_id", "added_at" } ] }</code>
+(empty array, never <code>null</code>), oldest-first by join time.
+<code>404 NOT_FOUND</code> if the group is missing.</li>
 <li><strong>POST <code>/groups/{groupId}/members</code></strong>
 (<code>handleAddGroupMembers</code>, <code>server.go:175</code>): roles
 <code>operator</code>, <code>admin</code>. Body <code>MemberAdd</code>
@@ -1267,10 +1267,12 @@ pending; low priority, groups are bounded.)</li>
 <code>{added, already_member, not_found}</code> result (RESOLVED —
 WIDENed to match the spec).</li>
 <li><code>GET /groups/{id}/members</code> returns
-<code>{ group_id, device_ids: [string] }</code>; the spec specifies an
-<code>items</code> array of <code>{ device_id, added_at }</code> objects
-with pagination. (Open — needs a store membership-timestamp change;
-deferred to group WIDEN B2.)</li>
+<code>{ group_id, items: [ { device_id, added_at } ] }</code> (RESOLVED
+— WIDENed to match the spec; a store membership-timestamp column
+<code>added_at</code> was added, with
+<code>ListGroupMembersDetailed</code> on memory + pgx). Pagination of
+the members list itself is not added (groups are bounded; matches the
+row-7 defer).</li>
 <li><code>DELETE /groups/{id}/members/{deviceId}</code> requires
 <code>operator</code>/<code>admin</code> in both spec and code
 (consistent). <code>DELETE /groups/{id}</code> requires

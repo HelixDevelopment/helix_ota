@@ -269,8 +269,8 @@ Wire types: `handlers_group.go`. Store seam: `store.go` (`CreateGroup`, `GetGrou
 ### 6.4 membership endpoints
 
 - **GET `/groups/{groupId}/members`** (`handleListGroupMembers`, `server.go:174`): roles `viewer`,
-  `operator`, `admin`. Response `GroupMembers` `{ "group_id", "device_ids": [...] }` (empty array,
-  never `null`). `404 NOT_FOUND` if the group is missing.
+  `operator`, `admin`. Response `GroupMembers` `{ "group_id", "items": [ { "device_id", "added_at" } ] }`
+  (empty array, never `null`), oldest-first by join time. `404 NOT_FOUND` if the group is missing.
 - **POST `/groups/{groupId}/members`** (`handleAddGroupMembers`, `server.go:175`): roles `operator`,
   `admin`. Body `MemberAdd` `{ "device_ids": ["..."] }` — **a batch** (non-empty, blank/empty →
   `400 VALIDATION_FAILED`). Response `200` (`MemberAddResult`) `{ "added": [...], "already_member":
@@ -551,9 +551,10 @@ since been closed in code are marked **RESOLVED** with the landing commit.
   paginated `GroupList`. (Open — TRIM/WIDEN pending; low priority, groups are bounded.)
 - `POST /groups/{id}/members` is a **batch** `{ "device_ids": [...] }` returning `200` with a
   `{added, already_member, not_found}` result (RESOLVED — WIDENed to match the spec).
-- `GET /groups/{id}/members` returns `{ group_id, device_ids: [string] }`; the spec specifies an
-  `items` array of `{ device_id, added_at }` objects with pagination. (Open — needs a store
-  membership-timestamp change; deferred to group WIDEN B2.)
+- `GET /groups/{id}/members` returns `{ group_id, items: [ { device_id, added_at } ] }`
+  (RESOLVED — WIDENed to match the spec; a store membership-timestamp column `added_at` was added,
+  with `ListGroupMembersDetailed` on memory + pgx). Pagination of the members list itself is not
+  added (groups are bounded; matches the row-7 defer).
 - `DELETE /groups/{id}/members/{deviceId}` requires `operator`/`admin` in both spec and code
   (consistent). `DELETE /groups/{id}` requires `admin` in both (consistent).
 

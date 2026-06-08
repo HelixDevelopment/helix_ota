@@ -218,9 +218,16 @@ export interface DeviceGroupMembersAddResult {
 }
 
 // GET /groups/{id}/members — current membership snapshot.
+// Wire change: the flat `device_ids: DeviceId[]` was replaced by an `items`
+// array of per-member records carrying the membership timestamp.
+export interface DeviceGroupMember {
+  device_id: DeviceId;
+  added_at: string;
+}
+
 export interface DeviceGroupMembers {
   group_id: string;
-  device_ids: DeviceId[];
+  items: DeviceGroupMember[];
 }
 
 // --- audit (design §6; audit viewer is G3/1.0.1, route deferred) ------------

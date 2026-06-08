@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"sync"
+	"time"
 
 	otavalidator "github.com/HelixDevelopment/ota-artifact-validator"
 	otaprotocol "github.com/HelixDevelopment/ota-protocol"
@@ -15,21 +16,21 @@ import (
 type MemoryRepository struct {
 	mu sync.RWMutex
 
-	devices     map[string]Device     // by deviceID
-	devByHW     map[string]string     // hardwareID -> deviceID
-	artifacts   map[string]Artifact   // by artifactID
-	releases    map[string]Release    // by releaseID
-	relOrder    []string              // insertion order for stable listing
-	deployments map[string]Deployment // by deploymentID
-	telemetry   []TelemetryRecord     // append-only event log
-	audit       []AuditEntry          // append-only admin/operator action log
-	rollbacks   []RollbackRecord      // append-only rollback/abort log
-	deltas      []DeltaArtifact       // base->target delta artifacts
-	groups      map[string]Group      // by groupID
-	grpOrder    []string              // insertion order for stable listing
-	grpByName   map[string]string     // name -> groupID (uniqueness)
-	members     map[string][]string   // groupID -> ordered device ids
-	idem        map[string]string     // Idempotency-Key -> resultID
+	devices     map[string]Device        // by deviceID
+	devByHW     map[string]string        // hardwareID -> deviceID
+	artifacts   map[string]Artifact      // by artifactID
+	releases    map[string]Release       // by releaseID
+	relOrder    []string                 // insertion order for stable listing
+	deployments map[string]Deployment    // by deploymentID
+	telemetry   []TelemetryRecord        // append-only event log
+	audit       []AuditEntry             // append-only admin/operator action log
+	rollbacks   []RollbackRecord         // append-only rollback/abort log
+	deltas      []DeltaArtifact          // base->target delta artifacts
+	groups      map[string]Group         // by groupID
+	grpOrder    []string                 // insertion order for stable listing
+	grpByName   map[string]string        // name -> groupID (uniqueness)
+	members     map[string][]GroupMember // groupID -> ordered members (with join time)
+	idem        map[string]string        // Idempotency-Key -> resultID
 }
 
 // NewMemoryRepository constructs an empty in-memory repository.
@@ -42,7 +43,7 @@ func NewMemoryRepository() *MemoryRepository {
 		deployments: make(map[string]Deployment),
 		groups:      make(map[string]Group),
 		grpByName:   make(map[string]string),
-		members:     make(map[string][]string),
+		members:     make(map[string][]GroupMember),
 		idem:        make(map[string]string),
 	}
 }
@@ -404,18 +405,18 @@ func (m *MemoryRepository) DeleteGroup(_ context.Context, groupID string) error 
 	return nil
 }
 
-func (m *MemoryRepository) AddGroupMember(_ context.Context, groupID, deviceID string) error {
+func (m *MemoryRepository) AddGroupMember(_ context.Context, groupID, deviceID string, addedAt time.Time) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if _, ok := m.groups[groupID]; !ok {
 		return ErrNotFound
 	}
-	for _, id := range m.members[groupID] {
-		if id == deviceID {
+	for _, mem := range m.members[groupID] {
+		if mem.DeviceID == deviceID {
 			return nil // idempotent
 		}
 	}
-	m.members[groupID] = append(m.members[groupID], deviceID)
+	m.members[groupID] = append(m.members[groupID], GroupMember{DeviceID: deviceID, AddedAt: addedAt})
 	return nil
 }
 
@@ -425,7 +426,20 @@ func (m *MemoryRepository) ListGroupMembers(_ context.Context, groupID string) (
 	if _, ok := m.groups[groupID]; !ok {
 		return nil, ErrNotFound
 	}
-	return append([]string(nil), m.members[groupID]...), nil
+	out := make([]string, 0, len(m.members[groupID]))
+	for _, mem := range m.members[groupID] {
+		out = append(out, mem.DeviceID)
+	}
+	return out, nil
+}
+
+func (m *MemoryRepository) ListGroupMembersDetailed(_ context.Context, groupID string) ([]GroupMember, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if _, ok := m.groups[groupID]; !ok {
+		return nil, ErrNotFound
+	}
+	return append([]GroupMember(nil), m.members[groupID]...), nil
 }
 
 func (m *MemoryRepository) RemoveGroupMember(_ context.Context, groupID, deviceID string) error {
@@ -434,8 +448,8 @@ func (m *MemoryRepository) RemoveGroupMember(_ context.Context, groupID, deviceI
 	if _, ok := m.groups[groupID]; !ok {
 		return ErrNotFound
 	}
-	for i, id := range m.members[groupID] {
-		if id == deviceID {
+	for i, mem := range m.members[groupID] {
+		if mem.DeviceID == deviceID {
 			m.members[groupID] = append(m.members[groupID][:i], m.members[groupID][i+1:]...)
 			break
 		}

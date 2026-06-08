@@ -93,9 +93,10 @@ CREATE TABLE IF NOT EXISTS helix_ota.device_groups (
 );
 
 CREATE TABLE IF NOT EXISTS helix_ota.device_group_members (
-    group_id  TEXT        NOT NULL,
-    device_id TEXT        NOT NULL,
-    seq       BIGSERIAL,
+    group_id   TEXT        NOT NULL,
+    device_id  TEXT        NOT NULL,
+    added_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    seq        BIGSERIAL,
     CONSTRAINT device_group_members_pk PRIMARY KEY (group_id, device_id),
     CONSTRAINT device_group_members_group_fk
         FOREIGN KEY (group_id) REFERENCES helix_ota.device_groups (group_id) ON DELETE CASCADE
