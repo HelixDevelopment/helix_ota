@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>build_integration</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-android-agent-build-integration-1.0.0-mvp">Helix OTA —
+Android Agent Build Integration (1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>How the Helix OTA Android agent (<code>ota-android-agent</code>) is
+built and shipped as a <strong>system app</strong> in the AOSP tree for
+the Orange Pi 5 Max / RK3588 target, so it can use the
+<code>@SystemApi</code> <code>UpdateEngine</code> and run as
+<code>android.uid.system</code> (or as a privileged system app). Covers
+the <code>Android.bp</code> system-module build, platform signing,
+<code>sharedUserId</code> / priv-app placement, SELinux +
+<code>/data/ota_package/</code> access, and how the OTA package itself
+is generated/signed by the Helix Go build pipeline
+(<code>ota_from_target_files</code>, <code>ZIP_STORED</code>,
+<code>--package_key</code> / <code>--payload_signer</code>).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Whether the chosen RK3588 Android-15 BSP ships AOSP A/B + dynamic
+partitions + Virtual A/B + <code>dm-user</code> (vs an A-only Rockchip
+proprietary OTA) is UNVERIFIED and is the top-priority hardware gate.
+The exact SELinux policy to let a Helix-signed system app reach
+<code>update_engine</code>, and the precise <code>Android.bp</code>
+<code>certificate:</code>/<code>privileged:</code> fields for the
+target, are UNVERIFIED. HelixConstitution clause numbers are
+UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Validate the target image is AOSP A/B + VAB on real hardware (apply
+a test OTA, observe <code>MergeStatus</code>, force failed boot +
+power-loss-mid-merge); pin the <code>Android.bp</code>
+certificate/priv-app config and SELinux <code>.te</code> policy;
+integrate <code>ota_from_target_files</code> with
+<code>ZIP_STORED</code> + <code>--package_key</code> (otacert-pinned) +
+<code>--payload_signer</code> into the Go pipeline; decide HSM-backed
+payload signing + key rotation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-why-a-system-app-recap">Why a system app
+(recap)</a></li>
+<li><a href="#3-building-the-agent-in-the-aosp-tree-androidbp">Building
+the agent in the AOSP tree (Android.bp)</a></li>
+<li><a href="#4-system-uid-vs-privileged-app-placement">System UID vs
+privileged-app placement</a></li>
+<li><a href="#5-platform-signing">Platform signing</a></li>
+<li><a href="#6-selinux-and-dataota_package-access">SELinux and
+/data/ota_package access</a></li>
+<li><a href="#7-target-board-orange-pi-5-max--rk3588">Target board:
+Orange Pi 5 Max / RK3588</a></li>
+<li><a href="#8-ota-package-generation-and-signing-go-pipeline">OTA
+package generation and signing (Go pipeline)</a></li>
+<li><a href="#9-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#10-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#11-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>ToC mandated by HelixConstitution §11.4.61 (UNVERIFIED clause
+number).</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This spec covers <strong>building and shipping</strong> the Helix OTA
+Android agent as a <strong>system component</strong> for the 1.0.0-MVP
+target (Orange Pi 5 Max / RK3588, Android 15). It also covers the
+build/signing of the <strong>OTA package</strong> the agent consumes,
+since the Helix Go build pipeline owns that contract.</p>
+<p>It honors the LOCKED strategy — native Android A/B
+(<code>update_engine</code> + AVB/dm-verity + auto-rollback) [ADR-0001
+§1] — and the LOCKED MVP trust model — signing + SHA-256 + AVB, TUF
+device-side deferred to 1.0.1 [ADR-0002 §4.1, §4.3]. The runtime
+behaviour of the agent is in <a
+href="integration_guide.md"><code>integration_guide.md</code></a>; the
+apply contract is in <a
+href="update_engine_integration.md"><code>update_engine_integration.md</code></a>.</p>
+<h2 id="why-a-system-app-recap">2. Why a system app (recap)</h2>
+<p><code>android.os.UpdateEngine</code> is <code>@SystemApi</code> with
+<strong>no third-party manifest permission</strong>; only system apps
+can call it [android-update-engine-api §10]. The agent therefore must be
+built into the system image as either a <strong>system-UID</strong> app
+or a <strong>privileged system app</strong>, with access to
+<code>/data/ota_package/</code> and SELinux permission to bind
+<code>update_engine</code> [android-update-engine-api §10]. It cannot be
+a Play-Store app.</p>
+<h2 id="building-the-agent-in-the-aosp-tree-android.bp">3. Building the
+agent in the AOSP tree (Android.bp)</h2>
+<p>The agent module is built <strong>inside the AOSP tree</strong>
+(Soong/<code>Android.bp</code>) so it can link the
+hidden/<code>@SystemApi</code> <code>UpdateEngine</code> surface and be
+platform-signed. A representative <code>Android.bp</code> is in <a
+href="code_snippets/Android.bp"><code>code_snippets/Android.bp</code></a>.
+Key points:</p>
+<ul>
+<li><code>platform_apis: true</code> (or an appropriate
+<code>sdk_version</code>/<code>system_current</code>) so the build
+resolves <code>android.os.UpdateEngine</code> /
+<code>UpdateEngineCallback</code>.</li>
+<li><code>certificate: "platform"</code> for the platform-signing path
+(§5), or a Helix-controlled certificate registered in the device’s
+<code>mac_permissions</code>/keys.</li>
+<li><code>privileged: true</code> <strong>and</strong> placement under
+<code>priv-app</code> if using the privileged-app path (§4); omit if
+using system-UID.</li>
+<li>The KMP <code>ota-android-agent</code> Kotlin output
+(<code>androidMain</code> + <code>commonMain</code>) is compiled to the
+module; the <code>ota-update-engine-bridge</code> is linked as the
+Android-only apply path.</li>
+</ul>
+<p>The KMP layers (<code>Auth-KMP</code>, <code>Security-KMP</code>,
+<code>Storage-KMP</code>, <code>Config-KMP</code>) are consumed as the
+agent’s dependencies; only canonical catalogue names are referenced
+(§7.1 anti-bluff; <a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code>
+§9</a>).</p>
+<h2 id="system-uid-vs-privileged-app-placement">4. System UID vs
+privileged-app placement</h2>
+<p>Two valid deployment shapes [android-update-engine-api §10]:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Path</th>
+<th>How</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>System UID</strong></td>
+<td><code>android:sharedUserId="android.uid.system"</code> in the
+manifest <strong>and</strong> platform-signed</td>
+<td>Strongest access (runs as the system user); broadest privilege — use
+only if the agent genuinely needs it. See <a
+href="code_snippets/AndroidManifest.xml"><code>code_snippets/AndroidManifest.xml</code></a>.</td>
+</tr>
+<tr>
+<td><strong>Privileged system app</strong></td>
+<td>Install under <code>/system/priv-app/</code> (or
+<code>/vendor/priv-app/</code>), platform/OEM-signed, with a priv-app
+allowlist entry</td>
+<td>Narrower than full system UID; still grants <code>@SystemApi</code>
+access via signature + priv-app status.</td>
+</tr>
+</tbody>
+</table>
+<p>MVP picks the path the target image supports; both require
+platform/OEM signing and system-image placement. The choice is recorded
+per board and is UNVERIFIED until confirmed on the RK3588 image
+(§7).</p>
+<h2 id="platform-signing">5. Platform signing</h2>
+<p>OTA packages and the agent both depend on signing. For the
+<strong>agent</strong>: platform-signing (or a Helix-registered system
+certificate) is what unlocks <code>@SystemApi</code>
+[android-update-engine-api §10]. For the <strong>OTA package</strong>,
+two distinct signatures apply [android-update-engine-api §11]:</p>
+<ol type="1">
+<li><strong>Whole-package signature</strong> — <code>-k</code> /
+<code>--package_key</code> (default
+<code>default_system_dev_certificate</code> from
+<code>META/misc_info.txt</code>, else
+<code>build/target/product/security/testkey</code>); performed by
+<code>signapk</code>; verified on device against
+<code>otacert</code>.</li>
+<li><strong>A/B payload + metadata signature</strong> —
+<code>--payload_signer</code> (default: <code>openssl pkeyutl</code>
+with the package private key); checked by <code>update_engine</code> via
+<code>METADATA_HASH</code> / payload pubkey verification.</li>
+</ol>
+<p>Each key is a <code>.x509.pem</code> cert + a <code>.pk8</code>
+private key; the <code>.pk8</code> is kept secret
+[android-update-engine-api §11]. Helix must sign the package with a
+<strong>Helix-controlled <code>--package_key</code></strong> whose cert
+is embedded as <code>otacert</code> and <strong>pinned on
+device</strong>, and sign the payload via <code>--payload_signer</code>.
+HSM-backed <code>--payload_signer</code> and key rotation are 1.0.1
+follow-ups (Continuation).</p>
+<h2 id="selinux-and-dataota_package-access">6. SELinux and
+/data/ota_package access</h2>
+<p>The agent’s SELinux domain must be allowed to:</p>
+<ul>
+<li>bind/talk to the <code>update_engine</code> service over Binder/AIDL
+[android-update-engine-api §10];</li>
+<li>read/write <strong><code>/data/ota_package/</code></strong> for the
+local <code>file://</code> apply path [android-update-engine-api §7,
+§10].</li>
+</ul>
+<p>The exact <code>.te</code> policy for a Helix-signed system app
+reaching <code>update_engine</code> is <strong>UNVERIFIED</strong> and
+must be authored against the target tree (Continuation). The agent
+<strong>must not</strong> use SELinux escalation to bypass any
+AVB/dm-verity protection [android-avb-rollback §10].</p>
+<h2 id="target-board-orange-pi-5-max-rk3588">7. Target board: Orange Pi
+5 Max / RK3588</h2>
+<p><strong>Top-priority gate — UNVERIFIED.</strong> AOSP documents the
+A/B + Virtual A/B <em>mechanism</em>; it does not certify the RK3588 /
+Orange Pi 5 Max. Whether the chosen Android-15 image ships the native
+path depends entirely on the <strong>Rockchip BSP and the integrator’s
+board config</strong> [android15-virtual-ab §11]. Before the
+no-corruption guarantee can be claimed, validate on real hardware:</p>
+<ol type="1">
+<li><strong>Is the build AOSP A/B (not A-only)?</strong> Many Rockchip
+images historically ship <strong>A-only with a proprietary OTA</strong>
+(<code>rkupdate</code> / <code>update.img</code>) rather than
+<code>update_engine</code> A/B. If A-only, the native path does not
+apply and a separate ADR is needed [android15-virtual-ab §11].</li>
+<li><strong>Dynamic partitions enabled?</strong> Confirm
+<code>super</code> / logical partitions
+(<code>BOARD_SUPER_PARTITION_SIZE</code>, update groups)
+[android15-virtual-ab §3, §11].</li>
+<li><strong>VAB + VABc enabled?</strong> Confirm
+<code>PRODUCT_VIRTUAL_AB_OTA</code> / <code>vabc_features.mk</code> /
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD</code> (default
+<code>lz4</code>) [android15-virtual-ab §7, §11].</li>
+<li><strong>Kernel support.</strong> RK3588 vendor kernels are typically
+5.10-class; VAB needs <code>CONFIG_DM_SNAPSHOT</code>, compressed VAB
+needs <code>CONFIG_DM_USER</code> (the non-upstream <code>dm-user</code>
+module must be carried in the Rockchip kernel; load in first-stage
+ramdisk if modular) [android15-virtual-ab §6, §11].</li>
+<li><strong><code>super</code> sizing + storage.</strong> Size
+<code>super</code> per [android15-virtual-ab §8]; prefer
+<code>lz4</code> to limit COW spill into <code>/data</code>; eMMC/NVMe
+endurance affects merge time — benchmark.</li>
+<li><strong>Bootloader / AVB.</strong> RK3588 uses U-Boot + Rockchip
+miniloader; confirm <code>boot_control</code> is the AOSP HAL (not a
+Rockchip stub), AVB/vbmeta signed, and rollback-index storage present
+[android-avb-rollback §12; android15-virtual-ab §11].</li>
+</ol>
+<p>The validation procedure: apply a test OTA, observe
+<code>MergeStatus</code> transitions, force a failed boot to confirm
+automatic rollback, and force power loss mid-merge to confirm resume
+[android15-virtual-ab §11].</p>
+<p>The compression knob (default <code>lz4</code>, <code>zstd</code> per
+fleet segment) is set at build time to match the device build; the
+agent’s payload must target the device’s enabled compression
+[android15-virtual-ab §12]. See <a
+href="code_snippets/device_vab.mk"><code>code_snippets/device_vab.mk</code></a>.</p>
+<h2 id="ota-package-generation-and-signing-go-pipeline">8. OTA package
+generation and signing (Go pipeline)</h2>
+<p>The Helix <strong>Go build pipeline</strong> owns OTA-package
+production via <code>ota_from_target_files</code>
+[android-update-engine-api §11]:</p>
+<ul>
+<li><strong>Full</strong> OTA from one <code>target-files.zip</code>;
+<strong>incremental/delta</strong> by diffing against a previous
+<code>target-files.zip</code> (delta deferred per <a
+href="../../research/adr/adr-0005-delta-updates.md">ADR-0005</a>).</li>
+<li>Produce the package with <strong><code>ZIP_STORED</code></strong>
+entries and per-entry offset/size streaming metadata (so the streaming
+opt-in works and the agent can compute the <code>payload.bin</code>
+offset/size) [android-update-engine-api §9].</li>
+<li>Emit <code>payload.bin</code> + <code>payload_properties.txt</code>
+(the four hash/size values), and surface those four values into the
+<strong>control-plane release manifest</strong> so the agent can
+pre-verify and pass them to <code>applyPayload</code>
+[android-update-engine-api §4, §11].</li>
+<li>Sign with the Helix <code>--package_key</code> (otacert-pinned) and
+<code>--payload_signer</code> (§5).</li>
+<li>Compute the <strong>artifact-level SHA-256 + detached
+signature</strong> that the agent verifies before apply (the MVP
+“signing + SHA-256” layer) [ADR-0002 §4.1]; this is in addition to the
+two AOSP package signatures.</li>
+</ul>
+<p>This pipeline runs on the <code>containers</code> substrate
+(§11.4.76, UNVERIFIED) and conforms to the LOCKED stack — Go + Gin +
+REST <code>/api/v1</code>; HTTP/3 (QUIC) via
+<code>vasic-digital/http3</code> with HTTP/2 + gzip fallback; Brotli for
+control-plane responses, while the <strong>artifact path stays
+<code>identity</code> + Range</strong> [ADR-0004 §97, §106].
+Representative invocation: <a
+href="code_snippets/build_ota_package.sh"><code>code_snippets/build_ota_package.sh</code></a>.</p>
+<h2 id="testing-four-layer">9. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 / §1.1 and master design §13 (no-bluff
+positive evidence, §7.1):</p>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> Assert the
+<code>Android.bp</code> declares <code>platform_apis</code>/system
+signing and (system-UID path) the manifest carries
+<code>sharedUserId="android.uid.system"</code>; assert the pipeline
+invokes <code>ota_from_target_files</code> with <code>ZIP_STORED</code>,
+<code>--package_key</code>, and <code>--payload_signer</code>. Grep
+gates in CI.</li>
+<li><strong>Artifact gate (bytes shipped).</strong> Inspect the built
+OTA <code>.zip</code>: entries are <code>ZIP_STORED</code>;
+<code>payload.bin</code>, <code>payload_properties.txt</code>, and
+<code>META-INF/.../otacert</code> are present; verify the package
+signature and the four <code>payload_properties</code> values against
+the manifest. Inspect the built agent module: platform-signed, placed in
+system/priv-app.</li>
+<li><strong>Runtime / integration.</strong> On an emulator/host, install
+the system-signed agent and apply a generated <code>ZIP_STORED</code>
+package end-to-end. On the <strong>real Orange Pi 5 Max</strong>: the §7
+validation procedure (apply → reboot → verify; corrupt-slot → confirm
+A/B fallback; power-loss-mid-merge → confirm resume) [master design §13;
+android15-virtual-ab §11].</li>
+<li><strong>Mutation meta-test.</strong> Negate a build invariant
+(e.g. drop <code>--payload_signer</code>, or build the package
+<code>ZIP_DEFLATED</code>, or strip the <code>otacert</code>, or remove
+<code>platform_apis</code>) and assert the gates flip PASS → FAIL. A
+build that ships an unsigned/mis-built package while gates stay green is
+a conformance defect.</li>
+</ol>
+<h2 id="open-unverified-items">10. Open / UNVERIFIED items</h2>
+<ul>
+<li>RK3588 / Orange Pi 5 Max AOSP A/B + dynamic partitions + VAB + VABc
++ <code>dm-user</code> enablement — UNVERIFIED, top-priority
+[android15-virtual-ab §11, §13].</li>
+<li>Exact <code>Android.bp</code> <code>certificate:</code> /
+<code>privileged:</code> config and priv-app allowlist for the target —
+UNVERIFIED.</li>
+<li>SELinux <code>.te</code> policy for the Helix-signed agent to reach
+<code>update_engine</code> — UNVERIFIED [android-update-engine-api
+§13].</li>
+<li>HSM-backed <code>--payload_signer</code> and vbmeta/package key
+rotation — UNVERIFIED (1.0.1 follow-up) [android-update-engine-api
+§13].</li>
+<li><code>containers</code> substrate (§11.4.76) — UNVERIFIED
+clause/binding.</li>
+</ul>
+<h2 id="sources">11. Sources</h2>
+<ul>
+<li><a
+href="../../research/stacks/android-update-engine-api.md"><code>android-update-engine-api.md</code></a>
+— <code>ota_from_target_files</code>, <code>ZIP_STORED</code>,
+<code>--package_key</code>/<code>--payload_signer</code>, system-app
+requirement.</li>
+<li><a
+href="../../research/stacks/android-avb-rollback.md"><code>android-avb-rollback.md</code></a>,
+<a
+href="../../research/stacks/android15-virtual-ab.md"><code>android15-virtual-ab.md</code></a>
+— board/VAB considerations.</li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>adr-0001-wrapped-engine.md</code></a>,
+<a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>adr-0002-supply-chain-trust.md</code></a>,
+<a
+href="../../research/adr/adr-0004-transport.md"><code>adr-0004-transport.md</code></a>,
+<a
+href="../../research/adr/adr-0005-delta-updates.md"><code>adr-0005-delta-updates.md</code></a>.</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>submodule_reuse_map.md</code></a>,
+<a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code></a>,
+<a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>2026-06-07-helix-ota-design.md</code></a>.</li>
+</ul>
+</body>
+</html>

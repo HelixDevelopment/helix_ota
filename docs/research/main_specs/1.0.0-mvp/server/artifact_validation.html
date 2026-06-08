@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>artifact_validation</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="mvp-artifact-upload-validation-pipeline">1.0.0-MVP — Artifact
+Upload Validation Pipeline</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Specifies the mandatory server-side upload validation pipeline for
+OTA artifacts as an ordered decision table: structure → SHA-256 vs hash
+file → signature → version monotonicity → target compatibility →
+metadata extraction, with explicit reject/accept paths. Server-side
+validation is defense-in-depth alongside device-side
+verify-before-apply; it is the “safe upload” hard guarantee. Implements
+ADR-0002 (plain signing for MVP, Uptane-ready interfaces) and preserves
+the ADR-0004 byte-identity rule.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Whether the <code>security</code> brick exposes the SHA-256/512 +
+signature-verify primitives the validator needs is UNVERIFIED. Exact
+Android OTA metadata field names / custom-metadata location are
+partially from the operator drafts and UNVERIFIED against AOSP.
+<code>ZIP_STORED</code> enforcement interacts with ADR-0004’s artifact
+serving and must not be bypassed. HelixConstitution clause numbers are
+UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: resolved S4↔︎S6 ordering circularity (version/target
+identifiers parsed by an S1/manifest-read precursor so they precede
+S4/S5 gating; full metadata extraction stays at S6); corrected the S2
+“constant-time compare” claim (public-digest compare gains nothing from
+timing-safety — integrity = digest match + S3 signature); added explicit
+NON-GOAL that the server does not re-validate the artifact’s retained
+AOSP/payload signature at intake (device re-verifies before apply).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Confirm the <code>security</code>/<code>Security-KMP</code> crypto
+primitive surface; pin the exact OTA metadata schema
+(<code>ota-protocol</code> manifest) against AOSP
+<code>META-INF/com/android/metadata</code>; wire the signer abstraction
+to <code>go-securesystemslib</code> <code>signature.Signer</code> so TUF
+drops in later (ADR-0002 §4.2); finalize
+<code>ota-artifact-validator</code> repo before creation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-position-in-the-system-where-this-runs">Position in the
+system (where this runs)</a></li>
+<li><a href="#3-pipeline-overview">Pipeline overview</a></li>
+<li><a href="#4-inputs">Inputs</a></li>
+<li><a href="#5-decision-table-ordered-stages">Decision table (ordered
+stages)</a>
+<ul>
+<li><a href="#51-stage-s1--structure">5.1 Stage S1 — Structure</a></li>
+<li><a href="#52-stage-s2--sha-256-vs-hash-file">5.2 Stage S2 — SHA-256
+vs hash file</a></li>
+<li><a href="#53-stage-s3--signature">5.3 Stage S3 — Signature</a></li>
+<li><a href="#54-stage-s4--version-monotonicity">5.4 Stage S4 — Version
+monotonicity</a></li>
+<li><a href="#55-stage-s5--target-compatibility">5.5 Stage S5 — Target
+compatibility</a></li>
+<li><a href="#56-stage-s6--metadata-extraction">5.6 Stage S6 — Metadata
+extraction</a></li>
+</ul></li>
+<li><a href="#6-accept-path">Accept path</a></li>
+<li><a href="#7-reject-path-common-contract">Reject path (common
+contract)</a></li>
+<li><a href="#8-uptane-forward-design">Uptane-forward design</a></li>
+<li><a href="#9-catalogue-first-composition">Catalogue-first
+composition</a></li>
+<li><a href="#10-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#11-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#12-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#13-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies the <strong>mandatory upload validation
+pipeline</strong> the Helix OTA control plane runs <strong>before any
+artifact can be published or deployed</strong>. It satisfies the
+operator “safe upload” hard guarantee: <em>every OTA artifact passes
+mandatory validation before it can be deployed.</em> [master §1]</p>
+<p>The pipeline is <strong>server-side defense-in-depth</strong>, not a
+replacement for device-side checks. The device still re-verifies
+(<code>FILE_HASH</code>/<code>METADATA_HASH</code> + AOSP/payload
+signature + AVB/dm-verity) before apply, and <code>update_engine</code>
+performs the atomic apply with automatic boot-failure rollback.
+[adr-0002 §1; adr-0004 §4.2] Both drafts independently converged on
+“artifact integrity = SHA-256 + signature verification, verified
+server-side on upload and device-side before apply.” [adr-0002 §1]</p>
+<p>For <strong>1.0.0-MVP the trust model is plain per-artifact
+signing</strong> (SHA-256 + detached signature + AVB) —
+<strong>not</strong> TUF/Uptane, which is deferred to 1.0.1+; the
+signing/verify interfaces are designed MVP-forward so TUF drops in
+without rework (§8). [adr-0002 §4.1, §4.2]</p>
+<p>This logic lives in the <code>artifact-validator</code> seam (NEW
+submodule <code>ota-artifact-validator</code>), which is
+<strong>OS-aware via plugins and carries no transport</strong>.
+[architecture §4; submodule-reuse-map §4]</p>
+<p><strong>NON-GOAL (intake):</strong> the server does
+<strong>not</strong> validate the artifact’s retained AOSP/payload
+signature at intake. S3 verifies only the <strong>Helix-layer</strong>
+detached signature (additive to the AOSP signature); the artifact’s own
+AOSP/payload signature is carried through byte-identically and is
+<strong>re-verified by the device</strong> (AOSP/payload signature +
+AVB/dm-verity) before apply. Re-validating the AOSP signature
+server-side is out of scope for MVP. [adr-0002 §4.2; adr-0004 §4.2]</p>
+<h2 id="position-in-the-system-where-this-runs">2. Position in the
+system (where this runs)</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Admin as Admin (Dashboard)
+    participant API as api (/api/v1)
+    participant V as artifact-validator
+    participant SEC as security (crypto)
+    participant DB as database (PostgreSQL)
+    participant OBJ as Storage (MinIO/S3)
+
+    Admin-&gt;&gt;API: POST /api/v1/artifacts (signed OTA .zip + .sha256 + metadata)
+    API-&gt;&gt;V: validate(upload)
+    V-&gt;&gt;V: S1 structure
+    V-&gt;&gt;SEC: S2 compute SHA-256 / S3 verify signature
+    V-&gt;&gt;DB: S4 version monotonicity (lookup prior versions)
+    V-&gt;&gt;V: S5 target compatibility · S6 metadata extraction
+    alt all stages PASS
+        V-&gt;&gt;OBJ: stage artifact (ZIP_STORED, byte-identical)
+        V-&gt;&gt;DB: record release (status=validated)
+        V--&gt;&gt;API: ACCEPT {artifact_id, metadata}
+        API--&gt;&gt;Admin: 201 Created
+    else any stage FAIL
+        V--&gt;&gt;API: REJECT {stage, code, message}
+        API--&gt;&gt;Admin: 4xx + reject reason (artifact NOT staged/published)
+    end</code></pre>
+<p>A rejected artifact is <strong>never staged in object storage as
+deployable, never recorded as a publishable release, and never assigned
+to any device.</strong> [master §5; §7]</p>
+<h2 id="pipeline-overview">3. Pipeline overview</h2>
+<p>The pipeline is an <strong>ordered, fail-fast sequence</strong>.
+Stages run in the order S1→S6. The <strong>first failing stage</strong>
+terminates the pipeline and returns the reject contract (§7); later
+stages do not run. A staged artifact that later fails a re-validation is
+quarantined, not deployed.</p>
+<p>The S1 structure stage includes a <strong>manifest-read
+precursor</strong>: as part of parsing the package structure, S1 reads
+the <code>ota-protocol</code> manifest and parses the lightweight
+identifiers needed for gating — the <strong>version identifier</strong>
+(used by S4 monotonicity) and the <strong>declared target
+identifiers</strong> (used by S5 target compatibility). These
+identifiers are therefore available to the gating stages
+<strong>before</strong> S4 runs; this resolves the apparent S4↔︎S6
+ordering circularity. <strong>Full</strong> release metadata extraction
+(sizes, hashes, build fingerprint, the complete release record) still
+happens at S6 — S1 only parses the minimal identifiers required to
+gate.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Stage</th>
+<th>Question answered</th>
+<th>Brick / source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td>Structure</td>
+<td>Is this a well-formed OTA package with the required entries
+(incl. <code>ZIP_STORED</code> payload)?</td>
+<td><code>ota-artifact-validator</code> + <code>ota-protocol</code>
+manifest schema</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>SHA-256 vs hash file</td>
+<td>Do the computed digests match the mandatory hash file
+byte-for-byte?</td>
+<td><code>security</code> (hash primitives)</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>Signature</td>
+<td>Is the detached signature valid under the trusted public key?</td>
+<td><code>security</code> (signature verify), signer abstraction
+(§8)</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>Version monotonicity</td>
+<td>Is this version strictly newer than what’s already published for the
+target?</td>
+<td><code>database</code> (prior-version lookup)</td>
+</tr>
+<tr>
+<td>S5</td>
+<td>Target compatibility</td>
+<td>Does the artifact declare a device/product/build target the fleet
+can accept?</td>
+<td><code>ota-protocol</code> + <code>database</code> (known
+targets)</td>
+</tr>
+<tr>
+<td>S6</td>
+<td>Metadata extraction</td>
+<td>Capture release metadata (target, version, sizes, hashes, build
+fingerprint) for the release record.</td>
+<td><code>ota-protocol</code> manifest + AOSP metadata</td>
+</tr>
+</tbody>
+</table>
+<p>This ordering matches the master MVP flow: <em>server validates
+(structure, hash, signature, version monotonicity, target compatibility)
+→ publishes release.</em> [master §5]</p>
+<h2 id="inputs">4. Inputs</h2>
+<p>The upload (multipart) carries: [adr-0004 §4.3; drafts
+initial_research §5.4]</p>
+<ul>
+<li><code>artifact</code> — the signed OTA <code>.zip</code> (the
+<code>payload.bin</code> inside is <code>ZIP_STORED</code>,
+byte-identical, already-compressed; <strong>must not</strong> be
+re-compressed — preserves the ADR-0004 byte-identity rule). [adr-0004
+§4.2]</li>
+<li><code>hash_file</code> — the mandatory external hash file
+(e.g. <code>.sha256</code>) the build pipeline emits. [master §1,
+§6]</li>
+<li><code>signature</code> / signed manifest — the detached signature
+over the artifact (and/or the manifest carrying
+<code>{path, length, SHA-256}</code> per target file). [adr-0002
+§4.2]</li>
+<li><code>declared_metadata</code> — target product/build, version, and
+the device-compatibility fields (extracted/confirmed in S6).</li>
+</ul>
+<p>The trusted <strong>public key</strong> comes from server config
+(<code>config</code> brick); the <strong>signer/verifier</strong> is
+behind the signer abstraction (§8). [adr-0002 §4.2; master §6]</p>
+<h2 id="decision-table-ordered-stages">5. Decision table (ordered
+stages)</h2>
+<p>Common columns: <strong>Condition</strong> (the predicate),
+<strong>PASS →</strong> (next action), <strong>FAIL →</strong> (reject;
+pipeline terminates, see §7). All FAILs follow the §7 reject
+contract.</p>
+<h3 id="stage-s1-structure">5.1 Stage S1 — Structure</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>PASS →</th>
+<th>FAIL →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Upload is a readable ZIP and parses without error</td>
+<td>continue</td>
+<td>REJECT <code>S1_MALFORMED_ARCHIVE</code></td>
+</tr>
+<tr>
+<td>Required entries present (OTA payload + metadata entry/manifest) per
+the <code>ota-protocol</code> schema</td>
+<td>continue</td>
+<td>REJECT <code>S1_MISSING_ENTRY</code></td>
+</tr>
+<tr>
+<td><code>payload.bin</code> (and OTA ZIP entries the device
+range-fetches) are stored <strong><code>ZIP_STORED</code></strong>
+(uncompressed)</td>
+<td>continue</td>
+<td>REJECT <code>S1_NOT_ZIP_STORED</code></td>
+</tr>
+<tr>
+<td>Declared sizes are internally consistent (no
+truncation/overrun)</td>
+<td>continue to S2</td>
+<td>REJECT <code>S1_SIZE_INCONSISTENT</code></td>
+</tr>
+</tbody>
+</table>
+<p>Rationale: <code>update_engine</code> byte-range-fetches
+<code>payload.bin</code> by <code>offset</code>/<code>size</code> from
+an <strong>uncompressed (<code>ZIP_STORED</code>)</strong> ZIP; a
+compressed payload breaks streaming range-fetch and hash verification.
+S1 enforces this at intake so the ADR-0004 byte-identity contract holds
+end-to-end. [adr-0004 §4.2; aosp-update-engine via adr-0004 §1]</p>
+<h3 id="stage-s2-sha-256-vs-hash-file">5.2 Stage S2 — SHA-256 vs hash
+file</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>PASS →</th>
+<th>FAIL →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mandatory hash file is present and parseable</td>
+<td>continue</td>
+<td>REJECT <code>S2_HASH_FILE_MISSING</code></td>
+</tr>
+<tr>
+<td>Server-computed SHA-256 over the artifact <strong>equals</strong>
+the hash-file value (plain byte-for-byte digest comparison)</td>
+<td>continue</td>
+<td>REJECT <code>S2_HASH_MISMATCH</code></td>
+</tr>
+<tr>
+<td>SHA-512 computed and recorded where available (defense-in-depth;
+absence is not a fail at MVP)</td>
+<td>continue to S3</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Integrity is SHA-256 (and SHA-512 where available) over the artifact
++ the mandatory hash file. [master §6] A mismatch means corruption or
+tampering: hard reject. The hash-file value is a <strong>public,
+attacker-known digest</strong>, so a constant-time comparison buys
+nothing here (there is no secret to leak via timing); a plain comparison
+is sufficient. The integrity guarantee comes from the <strong>digest
+match (S2) plus the S3 signature</strong> over the same bytes, not from
+the comparison being timing-safe. Hashes computed here are also
+persisted for the release record (S6) and the device download contract
+(<code>FILE_HASH</code>). [adr-0004 §4.3]</p>
+<h3 id="stage-s3-signature">5.3 Stage S3 — Signature</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>PASS →</th>
+<th>FAIL →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A detached signature (or signed manifest) is present</td>
+<td>continue</td>
+<td>REJECT <code>S3_SIGNATURE_MISSING</code></td>
+</tr>
+<tr>
+<td>Signature verifies under the <strong>trusted public key</strong> via
+the signer abstraction</td>
+<td>continue</td>
+<td>REJECT <code>S3_SIGNATURE_INVALID</code></td>
+</tr>
+<tr>
+<td>The signed bytes correspond to the <strong>same</strong> artifact
+that passed S2 (no swap between hash and signature scope)</td>
+<td>continue to S4</td>
+<td>REJECT <code>S3_SIGNATURE_SCOPE_MISMATCH</code></td>
+</tr>
+</tbody>
+</table>
+<p>The build-pipeline private key signs; the public key is in server
+config and the device trust store; the server verifies on upload and the
+device re-verifies before apply. [master §6] MVP uses a
+<strong>detached-signature signer</strong>; the abstraction is
+compatible with <code>go-securesystemslib</code>
+<code>signature.Signer</code> so a future TUF role signer shares the
+same seam (§8). [adr-0002 §4.2] The artifact keeps its existing
+AOSP/payload signature regardless — S3 is the Helix-layer signature,
+additive to it. [adr-0002 §4.2]</p>
+<h3 id="stage-s4-version-monotonicity">5.4 Stage S4 — Version
+monotonicity</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>PASS →</th>
+<th>FAIL →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A comparable version identifier is parseable (parsed by the
+S1/manifest-read precursor, before S4)</td>
+<td>continue</td>
+<td>REJECT <code>S4_VERSION_UNPARSEABLE</code></td>
+</tr>
+<tr>
+<td>Version is <strong>strictly greater</strong> than the latest
+published version for the same target</td>
+<td>continue</td>
+<td>REJECT <code>S4_NOT_MONOTONIC</code> (downgrade/equal)</td>
+</tr>
+<tr>
+<td>No published release already exists with the same
+<code>{target, version}</code> (idempotency / no clobber)</td>
+<td>continue to S5</td>
+<td>REJECT <code>S4_DUPLICATE_VERSION</code></td>
+</tr>
+</tbody>
+</table>
+<p>Anti-downgrade is an MVP guarantee (bootloader/AVB enforce it
+on-device; the server enforces it at intake so a stale or replayed
+artifact is never publishable). Plain signing alone does
+<strong>not</strong> mitigate rollback/freeze — S4 is the server-side
+guard that plain signing leaves open at MVP, pending TUF’s stronger
+freshness guarantees in 1.0.1+. [master §6; adr-0002 §3.1, “why plain
+signing is not enough”]</p>
+<blockquote>
+<p>Override (e.g. an intentional rollback release) is <strong>out of
+scope for MVP</strong> (end-user/multi-version rollback is deferred); if
+ever added it MUST be an explicit, audited admin action, not a silent
+pass. [master §1 non-goals]</p>
+</blockquote>
+<h3 id="stage-s5-target-compatibility">5.5 Stage S5 — Target
+compatibility</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>PASS →</th>
+<th>FAIL →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Artifact declares a target (product/device/build fingerprint)</td>
+<td>continue</td>
+<td>REJECT <code>S5_TARGET_UNDECLARED</code></td>
+</tr>
+<tr>
+<td>Declared target matches a known/accepted target class for the
+fleet</td>
+<td>continue</td>
+<td>REJECT <code>S5_TARGET_UNKNOWN</code></td>
+</tr>
+<tr>
+<td>Declared target is <strong>Android Phase-1 compatible</strong>
+(Android 15 / RK3588 class for MVP)</td>
+<td>continue to S6</td>
+<td>REJECT <code>S5_TARGET_UNSUPPORTED</code></td>
+</tr>
+</tbody>
+</table>
+<p>Prevents mix-and-match / wrong-software deployment to incompatible
+devices — the validator confirms the artifact is for a device class the
+fleet can accept before it can be assigned. Phase-1 scope is
+Android-15-first; non-Android targets are rejected at MVP. [master §1;
+adr-0001 §1]</p>
+<blockquote>
+<p>The exact device-compatibility fields (<code>ro.product.name</code>,
+<code>ro.build.fingerprint</code>, etc.) and whether they come from
+<code>META-INF/com/android/metadata</code> or a custom metadata entry
+are partly from the operator drafts and <strong>UNVERIFIED</strong>
+against AOSP — pinned in the <code>ota-protocol</code> manifest schema
+before coding. [drafts initial_research_02 §5.4]</p>
+</blockquote>
+<h3 id="stage-s6-metadata-extraction">5.6 Stage S6 — Metadata
+extraction</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>PASS →</th>
+<th>FAIL →</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All required release fields extractable (target, version, FILE_SIZE,
+METADATA_SIZE, FILE_HASH, METADATA_HASH, build fingerprint)</td>
+<td>continue</td>
+<td>REJECT <code>S6_METADATA_INCOMPLETE</code></td>
+</tr>
+<tr>
+<td>Extracted metadata is internally consistent with S2 hashes and S1
+sizes</td>
+<td>ACCEPT (→ §6)</td>
+<td>REJECT <code>S6_METADATA_INCONSISTENT</code></td>
+</tr>
+</tbody>
+</table>
+<p>S6 produces the <strong>release record fields</strong> and the
+<strong>device download contract</strong>
+(<code>{url, offset, size, FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE}</code>)
+the control plane later returns to devices. [adr-0004 §4.3] Metadata is
+treated as opaque <code>{path + length + SHA-256}</code> target data so
+a TUF <code>targets</code> entry can layer over it byte-identically
+later (§8). [adr-0002 §4.2]</p>
+<h2 id="accept-path">6. Accept path</h2>
+<p>When <strong>all</strong> of S1–S6 pass: [master §5]</p>
+<ol type="1">
+<li>Stage the artifact in object storage via <code>Storage</code>
+(MinIO/S3) <strong>byte-identical, <code>ZIP_STORED</code>,
+content-encoding <code>identity</code></strong> — never
+re-compressed/re-zipped (preserves ADR-0004 byte-identity + Range).
+[adr-0004 §4.2]</li>
+<li>Record a <strong>release</strong> in <code>database</code>
+(PostgreSQL) with status <code>validated</code>, the S6 metadata, and
+the computed hashes; this is the publishable unit. [master §7]</li>
+<li>Write an <strong>audit log</strong> entry for the upload (admin
+identity, artifact id, validation result). [master §6]</li>
+<li>Surface the artifact to the dashboard as <strong>deployable</strong>
+(one-click deploy-to-all for MVP; staged rollout lands 1.0.1). [master
+§5]</li>
+</ol>
+<p>The artifact only becomes assignable to devices
+<strong>after</strong> the accept path completes.</p>
+<h2 id="reject-path-common-contract">7. Reject path (common
+contract)</h2>
+<p>Any stage failure: [§5]</p>
+<ul>
+<li><strong>Terminate immediately</strong> (fail-fast); later stages do
+not run.</li>
+<li>Return a typed reject <code>{stage, code, message}</code> (codes per
+§5) → mapped to a <code>4xx</code> by the <code>api</code> layer; the
+message is operator-actionable but leaks no key material.</li>
+<li><strong>Do not stage</strong> the artifact as deployable, <strong>do
+not record a publishable release</strong>, <strong>do not assign to any
+device</strong>. A partially-uploaded blob is discarded/quarantined,
+never promoted. [master §5]</li>
+<li><strong>Audit-log</strong> the rejection (admin identity, stage,
+code) for the security trail. [master §6; threat model intake
+controls]</li>
+</ul>
+<p>This is the enforcement point of the “safe upload” guarantee: a
+non-conforming artifact is structurally unable to reach a device.
+[master §1]</p>
+<h2 id="uptane-forward-design">8. Uptane-forward design</h2>
+<p>MVP ships plain signing, but the interfaces are designed so TUF (then
+a Director+Image split) drops in without rework: [adr-0002 §4.2]</p>
+<ul>
+<li>Treat every artifact as an <strong>opaque target identified by
+<code>path + length + SHA-256</code></strong> (S6) so a TUF
+<code>targets</code> entry layers over it byte-identically later;
+artifacts keep their existing signature.</li>
+<li>Put signing/verify behind a <strong>signer abstraction</strong>
+compatible with <code>go-securesystemslib</code>
+<code>signature.Signer</code> (the go-tuf/v2 integration point) so the
+MVP detached-signature signer (S3) and a future TUF role signer share
+one seam.</li>
+<li>Keep verification a <strong>distinct device-side step that gates
+apply</strong>, so a TUF refresh/verify flow
+(root→timestamp→snapshot→targets, expiry, version monotonicity,
+threshold sigs) can be inserted in front of the existing hash+signature
+check without changing the apply path. (S4’s monotonicity is the MVP
+analogue of TUF’s freshness guarantee.)</li>
+<li>Reserve a <strong>per-device “what should this device install”
+decision</strong> in the control plane so a Director repository can
+later mint per-device <code>targets.json</code> from the inventory
+DB.</li>
+</ul>
+<p>Route signing/verify work through the verified catalogue
+(<code>security</code>, <code>Security-KMP</code>) —
+<strong>UNVERIFIED</strong> whether these expose the needed primitives
+without bespoke crypto. [adr-0002 §4.2, §8]</p>
+<h2 id="catalogue-first-composition">9. Catalogue-first composition</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Brick / module</th>
+<th>Class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hash + signature primitives</td>
+<td><code>security</code> (server), <code>Security-KMP</code>
+(device)</td>
+<td>reuse (UNVERIFIED surface)</td>
+</tr>
+<tr>
+<td>Blob staging</td>
+<td><code>Storage</code> (MinIO/S3)</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td>Upload handling / request middleware</td>
+<td><code>middleware</code></td>
+<td>reuse</td>
+</tr>
+<tr>
+<td>Prior-version + target lookup, release record</td>
+<td><code>database</code> (PostgreSQL)</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td>Manifest / target schema, device + status types</td>
+<td><code>ota-protocol</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td>The validation pipeline itself</td>
+<td><code>ota-artifact-validator</code></td>
+<td>new</td>
+</tr>
+</tbody>
+</table>
+<p>No transport in the validator; only canonical catalogue names used
+(none invented). [submodule-reuse-map §3/§4]</p>
+<h2 id="testing-four-layer">10. Testing (four-layer)</h2>
+<p>Signing-verify is a <strong>safety-critical path → ≥90%
+coverage</strong> with mutation immunity. [master §13; adr-0002 §7]</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What it asserts for this pipeline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Source-presence gate</strong></td>
+<td>All six stage functions (S1–S6) exist in
+<code>ota-artifact-validator</code>; the signer abstraction and the
+<code>ota-protocol</code> manifest schema are present; reject codes (§5)
+are defined;
+<code>security</code>/<code>Storage</code>/<code>database</code> are
+wired (not re-implemented).</td>
+</tr>
+<tr>
+<td><strong>2. Artifact gate</strong></td>
+<td>The validator ships in the control-plane binary; an accepted
+artifact is staged <strong><code>ZIP_STORED</code>, byte-identical,
+<code>identity</code></strong> (assert the bytes are unchanged and
+uncompressed); a rejected artifact produces <strong>no</strong>
+deployable blob and <strong>no</strong> publishable release row.</td>
+</tr>
+<tr>
+<td><strong>3. Runtime / integration</strong></td>
+<td>Drive each stage with crafted fixtures: malformed ZIP (S1),
+compressed payload (S1 <code>NOT_ZIP_STORED</code>), hash mismatch (S2),
+bad/missing signature (S3), downgrade + duplicate version (S4),
+unknown/unsupported target (S5), incomplete metadata (S6); plus a
+fully-valid artifact reaching ACCEPT and becoming deployable. Confirm
+fail-fast (later stages do not run) and audit-log on both paths.</td>
+</tr>
+<tr>
+<td><strong>4. Mutation meta-test</strong></td>
+<td>Negate each accept condition (e.g. make S2 compare succeed on a
+mismatch, or let S4 admit an equal version, or let S1 admit a compressed
+payload) and assert the corresponding test flips
+<strong>PASS→FAIL</strong>. The pipeline’s safety is proven by the
+negation breaking the gate.</td>
+</tr>
+</tbody>
+</table>
+<p>No-bluff positive evidence only (§7.1, UNVERIFIED). [adr-0002 §7]</p>
+<h2 id="compliance-notes-helixconstitution">11. Compliance notes
+(HelixConstitution)</h2>
+<blockquote>
+<p>Clause numbers carried from the corpus convention;
+<strong>UNVERIFIED</strong> against the authoritative text.
+[submodule-reuse-map §7]</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>How this pipeline complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1 zero-corruption / safe-upload</td>
+<td>The ordered decision table makes a non-conforming artifact
+structurally unable to reach a device (§7); byte-identity preserved
+(§6). [master §1]</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>Signer abstraction + a distinct verify-gate keep the validator /
+signing / update_engine-bridge independently testable and
+Uptane-swappable (§8). [adr-0002 §7]</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first)</td>
+<td>Crypto/storage/DB routed through
+<code>security</code>/<code>Storage</code>/<code>database</code>; no
+bespoke crypto where a catalogue brick exists (§9). [adr-0002 §7]</td>
+</tr>
+<tr>
+<td>§11.4.6 / §11.4.8 (no-guessing / research-first)</td>
+<td>Plain-signing-for-MVP vs TUF-for-1.0.1 decided on ADR evidence;
+metadata field specifics carried <strong>UNVERIFIED</strong> rather than
+asserted (§5.5, §5.6). [adr-0002 §7]</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§10 testing; signing-verify floored ≥90% with mutation immunity.
+[master §13]</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>The 1.0.1+ TUF adoption spikes (server publish + Go refresh client,
+on-device client, key custody) replace the carried UNVERIFIEDs before
+device-side TUF is mandated. <strong>UNVERIFIED</strong> against clause
+text. [adr-0002 §4.3]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-unverified-items">12. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong><code>security</code> / <code>Security-KMP</code> primitive
+surface</strong> — SHA-256/512 + signature-verify availability.
+<strong>UNVERIFIED.</strong> [adr-0002 §8]</li>
+<li><strong>OTA metadata schema</strong> — exact device-compatibility
+fields and whether from <code>META-INF/com/android/metadata</code> or
+custom entry. <strong>UNVERIFIED</strong> against AOSP. [drafts
+initial_research_02 §5.4]</li>
+<li><strong>Android-15 / RK3588 <code>update_engine</code>
+constants/AIDL</strong> the download contract integrates against.
+<strong>UNVERIFIED</strong> (carried from ADR-0001/0002). [adr-0002
+§8]</li>
+<li><strong>Signer abstraction ↔︎
+<code>go-securesystemslib</code></strong> binding not yet implemented;
+provisional until spiked. [adr-0002 §8]</li>
+<li><strong>Constitution clause numbers</strong> — carried from corpus
+convention. <strong>UNVERIFIED.</strong></li>
+</ol>
+<h2 id="sources">13. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>.</p>
+<ul>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— MVP plain signing, Uptane-ready signer abstraction + verify-gate,
+attack classes plain signing leaves open.</li>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>research/adr/adr-0004-transport.md</code></a>
+— byte-identity rule, <code>ZIP_STORED</code>, Range, download contract
+<code>{url, offset, size, FILE_HASH, ...}</code>.</li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>research/adr/adr-0001-wrapped-engine.md</code></a>
+— Android-15-first scope; Helix owns payload + trust regardless of
+wrap.</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— §1 hard guarantees, §5 MVP flow, §6 security model, §7 data model, §13
+testing.</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>00-master/submodule_reuse_map.md</code></a>
+— <code>ota-artifact-validator</code> boundary,
+<code>security</code>/<code>Storage</code>/<code>database</code>
+bindings.</li>
+<li><a
+href="../../00-master/threat_model.md"><code>00-master/threat_model.md</code></a>
+— artifact-intake threat controls (server-side defense-in-depth).</li>
+<li><a
+href="../../additions/initial_research_02.md"><code>additions/initial_research_02.md</code></a>,
+<a
+href="../../additions/initial_research.md"><code>additions/initial_research.md</code></a>
+— operator drafts (upload/verification flow, metadata extraction).</li>
+<li><a href="architecture.md"><code>architecture.md</code></a> — the
+<code>artifact-validator</code> seam this pipeline implements.</li>
+</ul>
+</body>
+</html>

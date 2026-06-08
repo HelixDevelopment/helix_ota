@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>update_engine_integration</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-update_engine-integration-1.0.0-mvp">Helix OTA —
+<code>update_engine</code> Integration (1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The device-side apply contract for the Helix OTA Android agent:
+<code>UpdateEngine.applyPayload(url, offset, size, props)</code> with
+the four header properties (<code>FILE_HASH</code> /
+<code>FILE_SIZE</code> / <code>METADATA_HASH</code> /
+<code>METADATA_SIZE</code>), the <code>UpdateEngineCallback</code>
+status constants + error codes, the rationale for the
+local-verified-file apply path, and the AVB / <code>boot_control</code>
+/ <code>update_verifier</code> interplay that delivers the no-corruption
+guarantee. Constants are carried verbatim from the verified AOSP
+research notes; UNVERIFIED items are flagged. Implemented behind the
+<code>ota-update-engine-bridge</code> (NEW, Android-only)
+submodule.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td><code>CLEANUP_PREVIOUS_UPDATE</code> status value, the complete
+Android-15 <code>ErrorCodeConstants</code> table (codes 13..50), and
+whether to bind via <code>IUpdateEngine</code> vs the stable AIDL
+surface are UNVERIFIED. Target-board AVB lock state,
+<code>boot_control</code> HAL conformance, and rollback-index storage on
+RK3588 / Orange Pi 5 Max are UNVERIFIED and require hardware validation.
+HelixConstitution clause numbers are UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Pin the Android-15 <code>ErrorCodeConstants</code> table and
+<code>CLEANUP_PREVIOUS_UPDATE</code> value against
+<code>android-15.0.0_rNN</code>; decide <code>IUpdateEngine</code> vs
+<code>IUpdateEngineStable</code>; confirm SELinux policy for the
+Helix-signed system app to reach <code>update_engine</code>; validate
+AVB lock + <code>boot_control</code> + rollback-index backend on the
+target board.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-the-applypayload-contract">The applyPayload
+contract</a></li>
+<li><a href="#3-the-four-header-properties">The four header
+properties</a></li>
+<li><a
+href="#4-updateenginecallback-status-constants">UpdateEngineCallback:
+status constants</a></li>
+<li><a href="#5-updateenginecallback-error-codes">UpdateEngineCallback:
+error codes</a></li>
+<li><a href="#6-local-verified-file-apply-rationale">Local-verified-file
+apply rationale</a></li>
+<li><a href="#7-avb--boot_control--update_verifier-interplay">AVB /
+boot_control / update_verifier interplay</a></li>
+<li><a href="#8-what-the-agent-must-not-do">What the agent MUST NOT
+do</a></li>
+<li><a href="#9-the-bridge-surface-ota-update-engine-bridge">The bridge
+surface (ota-update-engine-bridge)</a></li>
+<li><a href="#10-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#11-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#12-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>ToC mandated by HelixConstitution §11.4.61 (UNVERIFIED clause
+number).</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This spec is the <strong>device apply contract</strong> the Helix
+Android agent implements via the
+<strong><code>ota-update-engine-bridge</code></strong> (NEW,
+Android-only, thin, testable; <a
+href="../../00-master/submodule_reuse_map.md">submodule reuse map
+§4</a>). It pins exactly how the agent hands a verified artifact to AOSP
+<code>update_engine</code>, what callbacks/codes it must handle, and how
+that sits on top of the AVB / <code>boot_control</code> /
+<code>update_verifier</code> safety stack.</p>
+<p>It honors the LOCKED strategy: <strong>native Android A/B</strong>
+(<code>update_engine</code> + AVB/dm-verity + auto-rollback) on device
+[ADR-0001 §1]; <strong>signing + SHA-256 + AVB</strong> for MVP, TUF
+device-side deferred to 1.0.1 [ADR-0002 §4.1, §4.3]. The agent
+<strong>wraps, never replaces</strong> the engine [ADR-0001;
+android-avb-rollback §10].</p>
+<p>All constants below are carried from the verified research notes <a
+href="../../research/stacks/android-update-engine-api.md">android-update-engine-api</a>;
+where a value could not be pinned to a single Android-15 source it is
+marked UNVERIFIED.</p>
+<h2 id="the-applypayload-contract">2. The applyPayload contract</h2>
+<p><code>android.os.UpdateEngine</code> is <code>@SystemApi</code>.
+Verified overloads [android-update-engine-api §5]:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Streaming or local-by-URL form</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">applyPayload</span><span class="op">(</span><span class="bu">String</span> url<span class="op">,</span> <span class="dt">long</span> offset<span class="op">,</span> <span class="dt">long</span> size<span class="op">,</span> <span class="bu">String</span><span class="op">[]</span> headerKeyValuePairs<span class="op">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// File-descriptor form (AssetFileDescriptor variant)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">applyPayload</span><span class="op">(</span><span class="at">@NonNull</span> AssetFileDescriptor assetFd<span class="op">,</span> <span class="at">@NonNull</span> <span class="bu">String</span><span class="op">[]</span> headerKeyValuePairs<span class="op">)</span></span></code></pre></div>
+<p>Callback registration:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">bind</span><span class="op">(</span><span class="dt">final</span> UpdateEngineCallback callback<span class="op">)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">bind</span><span class="op">(</span><span class="dt">final</span> UpdateEngineCallback callback<span class="op">,</span> <span class="dt">final</span> <span class="bu">Handler</span> handler<span class="op">)</span></span></code></pre></div>
+<p>Call flow the bridge implements [android-update-engine-api §5]:</p>
+<ol type="1">
+<li><code>UpdateEngine engine = new UpdateEngine();</code></li>
+<li><code>engine.bind(callback);</code></li>
+<li>Read the four lines from <code>payload_properties.txt</code> into
+<code>String[] props</code>.</li>
+<li>Compute <code>offset</code>/<code>size</code> of the
+<strong><code>payload.bin</code> entry within the outer zip</strong>
+(not the whole zip).</li>
+<li><code>engine.applyPayload(url, offset, size, props);</code>
+<ul>
+<li><code>url = "file:///data/ota_package/ota_update.zip"</code> for
+local apply (MVP default), OR</li>
+<li><code>url = "https://…/ota_update.zip"</code> for streaming
+(opt-in).</li>
+</ul></li>
+<li>Drive telemetry from <code>onStatusUpdate</code>; finalize on
+<code>onPayloadApplicationComplete(SUCCESS)</code>, then reboot.</li>
+</ol>
+<p><strong><code>offset</code>/<code>size</code> semantics:</strong> for
+both <code>file://</code> and <code>https://</code>,
+<code>offset</code>/<code>size</code> describe the
+<strong><code>payload.bin</code> entry’s byte position inside the outer
+zip</strong>; <code>update_engine</code> reads only that range as the
+payload [android-update-engine-api §5]. For the streaming form, every
+zip entry must be stored <strong>uncompressed
+(<code>ZIP_STORED</code>)</strong> and the host must support HTTP
+<strong>Range</strong> [android-update-engine-api §9].</p>
+<p>Kotlin: see <a
+href="code_snippets/UpdateApplier.kt"><code>code_snippets/UpdateApplier.kt</code></a>
+and <a
+href="code_snippets/UpdateEngineCallbackImpl.kt"><code>code_snippets/UpdateEngineCallbackImpl.kt</code></a>.</p>
+<h2 id="the-four-header-properties">3. The four header properties</h2>
+<p><code>payload_properties.txt</code> (generated by
+<code>brillo_update_payload</code>) contains exactly four
+<code>KEY=VALUE</code> lines, passed <strong>verbatim</strong> as
+<code>headerKeyValuePairs</code> [android-update-engine-api §4, §6]:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Meaning</th>
+<th>Mismatch → error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FILE_HASH</code></td>
+<td>base64(SHA-256)</td>
+<td>Hash of the entire <code>payload.bin</code></td>
+<td><code>PAYLOAD_HASH_MISMATCH_ERROR</code> (10)</td>
+</tr>
+<tr>
+<td><code>FILE_SIZE</code></td>
+<td>bytes (decimal)</td>
+<td>Total length of <code>payload.bin</code></td>
+<td><code>PAYLOAD_SIZE_MISMATCH_ERROR</code> (11)</td>
+</tr>
+<tr>
+<td><code>METADATA_HASH</code></td>
+<td>base64(SHA-256)</td>
+<td>Hash of the metadata prefix (first <code>METADATA_SIZE</code>
+bytes); verified early</td>
+<td>metadata-signature errors (24/25/26)</td>
+</tr>
+<tr>
+<td><code>METADATA_SIZE</code></td>
+<td>bytes (decimal)</td>
+<td>Length of the metadata prefix region</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Example values [android-update-engine-api §4]:</p>
+<pre><code>FILE_HASH=lURPCIkIAjtMOyB/EjQcl8zDzqtD6Ta3tJef6G/+z2k=
+FILE_SIZE=871903868
+METADATA_HASH=tBvj43QOB0Jn++JojcpVdbRLz0qdAuL+uTkSy7hokaw=
+METADATA_SIZE=70604</code></pre>
+<p><code>METADATA_HASH</code>/<code>METADATA_SIZE</code> let the engine
+validate the small leading metadata region <strong>before</strong>
+committing to the full download — fail-fast, important for the streaming
+path [android-update-engine-api §6]. These four values must flow from
+the Helix build pipeline into the control-plane release manifest so the
+agent can both pass them to <code>applyPayload</code> and pre-verify
+<code>FILE_HASH</code>/<code>FILE_SIZE</code> (see <a
+href="integration_guide.md"><code>integration_guide.md</code>
+§8</a>).</p>
+<h2 id="updateenginecallback-status-constants">4. UpdateEngineCallback:
+status constants</h2>
+<p><code>UpdateEngine.UpdateStatusConstants</code> (verified integer
+values) [android-update-engine-api §8]:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IDLE</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>CHECKING_FOR_UPDATE</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>UPDATE_AVAILABLE</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>DOWNLOADING</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td><code>VERIFYING</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>FINALIZING</code></td>
+<td>5</td>
+</tr>
+<tr>
+<td><code>UPDATED_NEED_REBOOT</code></td>
+<td>6</td>
+</tr>
+<tr>
+<td><code>REPORTING_ERROR_EVENT</code></td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>ATTEMPTING_ROLLBACK</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>DISABLED</code></td>
+<td>9</td>
+</tr>
+<tr>
+<td><code>CLEANUP_PREVIOUS_UPDATE</code></td>
+<td>UNVERIFIED — present on Virtual A/B trees; commonly 12 in
+<code>update_status.h</code>; confirm for Android 15</td>
+</tr>
+</tbody>
+</table>
+<p><code>onStatusUpdate(int status, float percent)</code> is the
+progress signal; the bridge maps each status into a Helix telemetry
+state (<a href="integration_guide.md"><code>integration_guide.md</code>
+§9</a>). <code>UPDATED_NEED_REBOOT</code> (6) is the cue that the
+payload is applied and a reboot will switch slots.</p>
+<h2 id="updateenginecallback-error-codes">5. UpdateEngineCallback: error
+codes</h2>
+<p><code>UpdateEngine.ErrorCodeConstants</code> (verified where
+literal-sourced) [android-update-engine-api §8]:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SUCCESS</code></td>
+<td>0</td>
+<td>apply succeeded</td>
+</tr>
+<tr>
+<td><code>ERROR</code></td>
+<td>1</td>
+<td>generic error</td>
+</tr>
+<tr>
+<td><code>FILESYSTEM_COPIER_ERROR</code></td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST_INSTALL_RUNNER_ERROR</code></td>
+<td>5</td>
+<td>post-install script failed</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_MISMATCHED_TYPE_ERROR</code></td>
+<td>6</td>
+<td>full vs incremental mismatch</td>
+</tr>
+<tr>
+<td><code>INSTALL_DEVICE_OPEN_ERROR</code></td>
+<td>7</td>
+<td></td>
+</tr>
+<tr>
+<td><code>KERNEL_DEVICE_OPEN_ERROR</code></td>
+<td>8</td>
+<td></td>
+</tr>
+<tr>
+<td><code>DOWNLOAD_TRANSFER_ERROR</code></td>
+<td>9</td>
+<td>network/transfer failure (streaming)</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_HASH_MISMATCH_ERROR</code></td>
+<td>10</td>
+<td><code>FILE_HASH</code> mismatch</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_SIZE_MISMATCH_ERROR</code></td>
+<td>11</td>
+<td><code>FILE_SIZE</code> mismatch</td>
+</tr>
+<tr>
+<td><code>DOWNLOAD_PAYLOAD_VERIFICATION_ERROR</code></td>
+<td>12</td>
+<td>payload signature/verification failed</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_TIMESTAMP_ERROR</code></td>
+<td>51</td>
+<td>target build older than current (anti-rollback)</td>
+</tr>
+<tr>
+<td><code>UPDATED_BUT_NOT_ACTIVE</code></td>
+<td>52</td>
+<td>applied but slot not made active</td>
+</tr>
+<tr>
+<td><code>NOT_ENOUGH_SPACE</code></td>
+<td>60</td>
+<td>insufficient space (Virtual A/B COW)</td>
+</tr>
+<tr>
+<td><code>DEVICE_CORRUPTED</code></td>
+<td>61</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Underlying <code>error_code.h</code> values relevant to verification
+failures [android-update-engine-api §8]:
+<code>kDownloadPayloadPubKeyVerificationError=18</code>,
+<code>kDownloadMetadataSignatureError=24</code>,
+<code>kDownloadMetadataSignatureVerificationError=25</code>,
+<code>kDownloadMetadataSignatureMismatch=26</code>,
+<code>kDownloadOperationHashVerificationError=27</code>. Codes 13..50
+surface inconsistently between the C++ enum and Java constants —
+UNVERIFIED for the exact Android-15 tag.</p>
+<p>Agent handling: map every non-<code>SUCCESS</code> code into a
+telemetry error event and abort cleanly.
+<code>PAYLOAD_TIMESTAMP_ERROR</code> (51) means the control plane
+attempted an anti-rollback-violating downgrade; the engine refuses it
+[android-update-engine-api §12] — the rollout policy must never push an
+older build to a newer device. <code>NOT_ENOUGH_SPACE</code> (60)
+correlates with low free <code>/data</code> for the Virtual A/B COW
+[android15-virtual-ab §8] and should be reported with the device’s
+free-<code>/data</code> reading.</p>
+<h2 id="local-verified-file-apply-rationale">6. Local-verified-file
+apply rationale</h2>
+<p>Both apply modes use the same <code>applyPayload</code>; only the
+<code>url</code> scheme differs. The MVP default is <strong>local
+<code>file://</code></strong> [android-update-engine-api §7; ADR-0002
+§4.1]:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Local (<code>file://</code>) — MVP default</th>
+<th>Streaming (<code>https://</code>) — opt-in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Who downloads</td>
+<td>The <strong>Helix agent</strong> downloads the full zip to
+<code>/data/ota_package/</code>, then points the engine at it</td>
+<td><code>update_engine</code> downloads via HTTP <strong>Range</strong>
+as it applies</td>
+</tr>
+<tr>
+<td>Disk usage</td>
+<td>Needs room for the whole package on <code>/data</code></td>
+<td>Minimal extra storage</td>
+</tr>
+<tr>
+<td>Verify-before-apply</td>
+<td><strong>Strong</strong> — agent verifies whole-zip signature
+<strong>and</strong> <code>FILE_HASH</code>/<code>METADATA_HASH</code>
+<strong>before</strong> calling <code>applyPayload</code></td>
+<td><strong>Weaker</strong> — engine verifies during/after; a poisoned
+stream is only caught mid-apply</td>
+</tr>
+<tr>
+<td>Network during apply</td>
+<td>None (already on disk)</td>
+<td>Live connection for the whole apply; CDN must support Range +
+<code>ZIP_STORED</code></td>
+</tr>
+<tr>
+<td>Resumability</td>
+<td>Agent controls retry/resume</td>
+<td>Engine resumes the transfer</td>
+</tr>
+</tbody>
+</table>
+<p>The local path gives <strong>two independent verification
+layers</strong>: (1) the agent verifies SHA-256 + signature + the four
+hashes before apply, then (2) <code>update_engine</code> re-verifies
+metadata + payload signature — defense-in-depth consistent with the
+Uptane-ready trust direction [android-update-engine-api §7; ADR-0002
+§4.1]. This is why <a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002
+§4.1</a> attributes the local-verified-file decision to the
+<strong>verify-before-apply</strong> driver. Streaming remains available
+for storage-constrained fleets but forfeits the pre-apply full-artifact
+verification window.</p>
+<h2 id="avb-boot_control-update_verifier-interplay">7. AVB /
+boot_control / update_verifier interplay</h2>
+<p>The apply is only the entry point; the <strong>no-corruption
+guarantee</strong> comes from the on-device, signed, bootloader-enforced
+stack underneath [android-avb-rollback §9; android15-virtual-ab §9]:</p>
+<ol type="1">
+<li><strong>A/B slots (<code>update_engine</code>).</strong>
+<code>applyPayload</code> writes only the <strong>inactive</strong> slot
+(Virtual A/B: into the COW snapshot via <code>snapuserd</code>); the
+running slot is never touched [android15-virtual-ab §9].</li>
+<li><strong>AVB / vbmeta.</strong> The image is cryptographically
+authenticated to the OEM (or user) root key; the bootloader reports
+<code>androidboot.verifiedbootstate</code> (GREEN/YELLOW/ORANGE/RED).
+Production fleets should be <strong>GREEN</strong> (or YELLOW for a
+custom-key fleet) [android-avb-rollback §3].</li>
+<li><strong><code>boot_control</code> HAL.</strong> After writing,
+<code>update_engine</code> calls <code>setActiveBootSlot(slot)</code>
+(clears unbootable/successful, resets retry count). On the next boot the
+device enters the new slot in a <strong>trial state</strong> (bootable,
+not-yet-successful, retry-count &gt; 0) [android-avb-rollback §5,
+§7].</li>
+<li><strong><code>update_verifier</code>.</strong> On first boot into
+the new slot it reads the <strong>care map</strong> and forces reads so
+<strong>dm-verity</strong> verifies the freshly written blocks before
+commit. Only on success does the path to
+<strong><code>markBootSuccessful</code></strong> proceed
+[android-avb-rollback §6].</li>
+<li><strong>Automatic rollback.</strong> If the slot is never marked
+successful and <code>slot-retry-count</code> hits zero, the bootloader
+falls back to the other (known-good) slot — bootloader-enforced, no
+network/agent needed [android-avb-rollback §7].</li>
+<li><strong>Anti-downgrade (rollback index).</strong> Boot is permitted
+only if <code>image.rollback_index &gt;= stored_rollback_index</code>;
+the load-bearing ordering rule is <strong>mark SUCCESSFUL before bumping
+the stored index</strong>, else a power loss can leave no bootable slot
+[android-avb-rollback §8].</li>
+<li><strong>Virtual A/B merge.</strong> After a confirmed-good boot,
+<code>snapuserd</code> merges the COW into the base; merge is
+power-fail-resumable. The <strong>dangerous window</strong> is
+reboot-to-old-slot <strong>after merge has started</strong> — forbidden
+[android15-virtual-ab §9, §10].</li>
+</ol>
+<p>The agent <strong>observes</strong> this stack for telemetry
+(<code>ro.boot.verifiedbootstate</code>,
+<code>ro.boot.veritymode</code>, current/active slot,
+<code>slot-successful</code>, <code>MergeStatus</code>) but
+<strong>drives</strong> it only through documented APIs
+[android-avb-rollback §10]. See <a
+href="code_snippets/BootControlObserver.kt"><code>code_snippets/BootControlObserver.kt</code></a>.</p>
+<h2 id="what-the-agent-must-not-do">8. What the agent MUST NOT do</h2>
+<p>From <a
+href="../../research/stacks/android-avb-rollback.md">android-avb-rollback
+§10</a>, the agent <strong>MUST NOT</strong>:</p>
+<ul>
+<li>write slot flags
+(<code>active</code>/<code>bootable</code>/<code>successful</code>) or
+alter <code>slot-retry-count</code> outside <code>update_engine</code> /
+documented HAL usage;</li>
+<li>call <code>markBootSuccessful</code> itself to force a commit
+(defeats <code>update_verifier</code> and the trial window);</li>
+<li>write or bump the <strong>rollback index</strong>, or reorder the
+“mark SUCCESSFUL before bump index” sequence;</li>
+<li>regenerate, strip, or re-sign <strong>vbmeta</strong> on-device,
+disable AVB, or boot with verification off;</li>
+<li>disable dm-verity or mount protected partitions read-write to patch
+in place;</li>
+<li>assume the agent must be alive for rollback (rollback is
+bootloader-enforced);</li>
+<li>trigger a slot revert once <code>MergeStatus == MERGING</code>
+[android15-virtual-ab §10].</li>
+</ul>
+<h2 id="the-bridge-surface-ota-update-engine-bridge">9. The bridge
+surface (ota-update-engine-bridge)</h2>
+<p>The bridge is the <strong>only</strong> OS-apply path [submodule
+reuse map §4]. Its surface is intentionally minimal:</p>
+<ul>
+<li><code>applyVerifiedPackage(file: LocalArtifact, props: PayloadProperties): ApplyHandle</code>
+— binds the callback, computes <code>offset</code>/<code>size</code> for
+the <code>payload.bin</code> entry, and calls
+<code>applyPayload(file://…, offset, size, props)</code>.</li>
+<li><code>observeStatus(): Flow&lt;EngineStatus&gt;</code> — maps
+<code>onStatusUpdate</code>/<code>onPayloadApplicationComplete</code> to
+typed events.</li>
+<li><code>currentSlot()</code>, <code>verifiedBootState()</code>,
+<code>mergeStatus()</code> — read-only observers for telemetry.</li>
+<li>No polling, no networking, no business policy in the bridge.</li>
+</ul>
+<p>The bridge accepts only an <strong>already-verified</strong> local
+artifact; verification lives in the agent (<code>Security-KMP</code>),
+not the bridge, keeping the bridge thin and the safety gate
+centralized.</p>
+<h2 id="testing-four-layer">10. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 / §1.1 and master design §13; apply is
+safety-critical, floored at <strong>≥90%</strong> [master design §13;
+additions_synthesis §5 C8]:</p>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> Assert
+<code>applyPayload</code> is called with the four <code>props</code> in
+order; the bridge exposes no slot-flag / <code>markBootSuccessful</code>
+/ rollback-index writer (grep gate proving the MUST-NOTs of §8 are
+absent from source).</li>
+<li><strong>Artifact gate.</strong> The shipped bridge bytes contain the
+callback handler and the <code>applyPayload</code> call; no forbidden
+HAL mutators are present in the compiled module.</li>
+<li><strong>Runtime / integration.</strong> Host/emulated
+<code>update_engine</code> fake exercises
+<code>applyVerifiedPackage → onStatusUpdate(3..6) → onPayloadApplicationComplete(SUCCESS)</code>
+over a real <code>ZIP_STORED</code> payload; inject
+<code>PAYLOAD_HASH_MISMATCH_ERROR (10)</code> and
+<code>PAYLOAD_TIMESTAMP_ERROR (51)</code> and assert correct telemetry +
+abort. Real-board plan: download → verify → apply → reboot → verify;
+corrupt-slot → confirm automatic A/B fallback [master design §13].</li>
+<li><strong>Mutation meta-test.</strong> Negate a safety invariant
+(e.g. make the bridge call <code>markBootSuccessful</code>, or pass
+<code>props</code> out of order, or revert after <code>MERGING</code>)
+and assert tests flip PASS → FAIL.</li>
+</ol>
+<h2 id="open-unverified-items">11. Open / UNVERIFIED items</h2>
+<ul>
+<li><code>CLEANUP_PREVIOUS_UPDATE</code> value; complete Android-15
+<code>ErrorCodeConstants</code> (13..50) — UNVERIFIED
+[android-update-engine-api §13].</li>
+<li><code>IUpdateEngine</code> vs stable
+<code>IUpdateEngineStable</code> binding choice — UNVERIFIED
+[android-update-engine-api §13].</li>
+<li>SELinux policy for the Helix-signed system app to reach
+<code>update_engine</code> — UNVERIFIED.</li>
+<li>RK3588 / Orange Pi 5 Max AVB lock state, <code>boot_control</code>
+conformance, rollback-index backend — UNVERIFIED [android-avb-rollback
+§12; android15-virtual-ab §11].</li>
+<li>Default <code>slot-retry-count</code> (commonly 3, sometimes 7;
+board-dependent) — UNVERIFIED [android-avb-rollback §12].</li>
+</ul>
+<h2 id="sources">12. Sources</h2>
+<ul>
+<li><a
+href="../../research/stacks/android-update-engine-api.md"><code>android-update-engine-api.md</code></a></li>
+<li><a
+href="../../research/stacks/android-avb-rollback.md"><code>android-avb-rollback.md</code></a></li>
+<li><a
+href="../../research/stacks/android15-virtual-ab.md"><code>android15-virtual-ab.md</code></a></li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>adr-0001-wrapped-engine.md</code></a>,
+<a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>adr-0002-supply-chain-trust.md</code></a></li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>submodule_reuse_map.md</code></a>,
+<a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>2026-06-07-helix-ota-design.md</code></a></li>
+</ul>
+</body>
+</html>

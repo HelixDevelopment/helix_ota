@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>adr-0004-transport</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="adr-0004-transport-http3-quic-brotli-with-http2-fallback">ADR-0004 —
+Transport: HTTP/3 (QUIC) + Brotli with HTTP/2 Fallback</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR</td>
+<td>ADR-0004</td>
+</tr>
+<tr>
+<td>Title</td>
+<td>Transport &amp; compression strategy (HTTP/3 (QUIC) primary, HTTP/2
++ gzip fallback, Brotli content compression)</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Proposed</strong></td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Fixed-summary</td>
+<td>Rev 2: corrected master pointers (transport mandate §3; TLS 1.3 §6),
+re-attributed <code>FILE_HASH</code>/<code>METADATA_HASH</code> to
+aosp-update-engine §7 / android-update-engine-api.md §6, softened
+download-resume claims to UNVERIFIED, and added a §11.4.123
+(spikes-as-rock-solid-proof) compliance nod.</td>
+</tr>
+<tr>
+<td>Author</td>
+<td>Lead architect (research synthesis)</td>
+</tr>
+<tr>
+<td>Decides</td>
+<td>Transport protocol, negotiation/fallback, content compression, and
+OTA-artifact download/resume strategy for the Helix control plane and
+Android client.</td>
+</tr>
+<tr>
+<td>Anchors contradiction</td>
+<td><code>additions_synthesis.md</code> §5 <strong>C4</strong>
+(REST+gRPC drafts vs mandated Gin + REST-primary + HTTP/3→HTTP/2 +
+Brotli).</td>
+</tr>
+<tr>
+<td>Honors LOCKED</td>
+<td>D2 native Android A/B + custom Go control plane; D6 mandated stack
+(Go + Gin + Brotli + HTTP/3(QUIC)→HTTP/2, REST primary); research
+decides wrap target (not re-opened here).</td>
+</tr>
+<tr>
+<td>Sources</td>
+<td><code>ota_landscape_report.md</code>;
+<code>stacks/aosp-update-engine.md</code>; <code>stacks/rauc.md</code>;
+<code>stacks/eclipse-hawkbit.md</code>; <code>stacks/ostree.md</code>;
+<code>additions_synthesis.md</code>;
+<code>00-master/2026-06-07-helix-ota-design.md</code>.</td>
+</tr>
+<tr>
+<td>Anti-bluff</td>
+<td>Every claim traces to a cited source note or the master design;
+items the notes flagged are carried forward as
+<strong>UNVERIFIED</strong>. This ADR introduces no transport facts
+absent from the underlying corpus, except where explicitly labelled
+<strong>UNVERIFIED (new, needs spike)</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-context">Context</a></li>
+<li><a href="#2-decision-drivers">Decision drivers</a></li>
+<li><a href="#3-options-considered">Options considered</a>
+<ul>
+<li><a href="#31-transport-protocol">3.1 Transport protocol</a></li>
+<li><a href="#32-content-compression">3.2 Content compression</a></li>
+<li><a href="#33-artifact-download--resumability">3.3 Artifact download
+&amp; resumability</a></li>
+</ul></li>
+<li><a href="#4-decision">Decision</a></li>
+<li><a href="#5-consequences">Consequences</a>
+<ul>
+<li><a href="#51-positive">5.1 Positive</a></li>
+<li><a href="#52-negative--costs">5.2 Negative / costs</a></li>
+</ul></li>
+<li><a href="#6-open--unverified-items-to-close">Open / UNVERIFIED items
+to close</a></li>
+<li><a href="#7-status">Status</a></li>
+<li><a href="#8-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+</ol>
+<hr />
+<h2 id="context">1. Context</h2>
+<p>Helix OTA’s transport stack is <strong>mandated, not open</strong>:
+the operator-locked stack (D6) is <em>Go + Gin + Brotli + HTTP/3 (QUIC)
+→ HTTP/2 fallback, REST primary</em>, delivered via the
+<code>vasic-digital/http3</code> submodule as a drop-in
+<code>net/http.Handler</code> with automatic fallback to HTTP/2 +
+standard compression, and Brotli content compression negotiating down to
+gzip for older clients [00-master §3, §4]. This ADR does
+<strong>not</strong> re-decide whether to use HTTP/3 or Brotli — that is
+locked. It decides <strong>how</strong> the transport is composed and,
+critically, <strong>distinguishes two traffic classes with opposite
+requirements</strong>:</p>
+<ul>
+<li><strong>Control-plane traffic</strong> (REST <code>/api/v1</code>:
+poll/check-in, rollout assignment, telemetry ingest, dashboard) — many
+small JSON request/response pairs from up to millions of devices
+[00-master §1 scalability guarantee]. This class benefits from HTTP/3’s
+connection-migration + head-of-line-blocking elimination and from
+Brotli/gzip text compression.</li>
+<li><strong>Artifact traffic</strong> (the OTA <code>payload.bin</code>
+download) — large, opaque, <strong>already-compressed</strong> binary
+blobs that the device’s <code>update_engine</code> byte-range-fetches by
+<code>offset</code>/<code>size</code> from an uncompressed
+(<code>ZIP_STORED</code>) ZIP [aosp-update-engine §6, §7]. This class
+has near-zero gain from generic content compression and a <strong>hard
+requirement</strong> for HTTP Range support.</li>
+</ul>
+<p>Conflating these two classes is the central transport risk. The
+reconciliation already ruled (C4) that the mandated stack wins over the
+drafts’ REST+gRPC proposals: <strong>REST is the compatibility surface;
+gRPC is optional/internal only</strong> [additions_synthesis.md §5
+C4].</p>
+<p>Device-network realities the corpus flags: device-pull streaming over
+plain HTTP(S) Range Requests “fits a custom Go control plane far better
+than engines that demand their own server protocol” [rauc §5], but
+“Brotli/HTTP3 specifics would need spike validation … Range-request
+semantics over HTTP/2/3 should hold but is unverified for Helix’s exact
+stack” [rauc §5]. There is <strong>no Google-mandated OTA server
+protocol</strong>; the device side only needs a payload + metadata over
+HTTPS [aosp-update-engine §7].</p>
+<h2 id="decision-drivers">2. Decision drivers</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Driver</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mandated stack is non-negotiable (HTTP/3 primary, HTTP/2 fallback,
+Brotli, REST primary, Gin, <code>http3</code> submodule).</td>
+<td>00-master §3 D6; additions_synthesis.md §5 C4</td>
+</tr>
+<tr>
+<td>Zero system corruption / verify-before-apply — transport must
+preserve byte-identity of signed artifacts.</td>
+<td>00-master §1 hard guarantees; additions_synthesis.md §3</td>
+</tr>
+<tr>
+<td>Scalability single board → millions of devices — favors
+connection-efficient transport and small control-plane payloads.</td>
+<td>00-master §1</td>
+</tr>
+<tr>
+<td><code>update_engine</code> streaming <strong>requires</strong>
+<code>ZIP_STORED</code> + HTTP Range so it can range-fetch
+<code>payload.bin</code> by offset/length.</td>
+<td>aosp-update-engine §6, §7, item 2</td>
+</tr>
+<tr>
+<td>Download resume is a first-class <code>update_engine</code> concern
+(the <code>DISABLE_DOWNLOAD_RESUME</code> header <em>suggests</em>
+resume may be the default, but this is
+<strong>UNVERIFIED</strong>).</td>
+<td>aosp-update-engine §7 / Open-item 1</td>
+</tr>
+<tr>
+<td>Catalogue-first reuse: use <code>http3</code>,
+<code>middleware</code>, <code>Storage</code> bricks rather than
+hand-rolling.</td>
+<td>00-master §10 (§11.4.74)</td>
+</tr>
+<tr>
+<td>Poll cadence 15 min + jitter (configurable) → many short-lived
+connections, amplifying HTTP/3 handshake/migration benefits.</td>
+<td>00-master §2 D7; additions_synthesis.md §5 C3</td>
+</tr>
+</tbody>
+</table>
+<h2 id="options-considered">3. Options considered</h2>
+<h3 id="transport-protocol">3.1 Transport protocol</h3>
+<p><strong>Option A — HTTP/3 (QUIC) primary with automatic HTTP/2
+fallback (CHOSEN; mandated).</strong> HTTP/3 over QUIC eliminates TCP
+head-of-line blocking and supports connection migration across network
+changes — directly relevant to mobile/field devices polling every 15 min
++ jitter [00-master §2 D7]. Delivered via the
+<code>vasic-digital/http3</code> submodule as a drop-in
+<code>net/http.Handler</code> with automatic fallback to HTTP/2 +
+standard compression [00-master §3]. The fallback is essential because
+many corporate/middlebox networks block UDP/443; QUIC must degrade
+gracefully. <strong>Evidence caveat:</strong> Range-request semantics
+over HTTP/2/3 “should hold but is unverified for Helix’s exact stack” —
+flagged for a spike [rauc §5].</p>
+<p><strong>Option B — HTTP/2 only (no QUIC).</strong> Simpler,
+universally reachable, no UDP/443 concern. <strong>Rejected:</strong>
+contradicts the mandated stack (D6) [00-master §3]; forfeits QUIC
+connection-migration and HoL-blocking benefits that the scalability +
+mobile-poll profile rewards [00-master §1, §2 D7].</p>
+<p><strong>Option C — gRPC as primary transport.</strong> Proposed by
+both operator drafts [additions_synthesis.md §2].
+<strong>Rejected:</strong> mandated stack makes REST the
+primary/compatibility surface; gRPC is optional/internal only
+[additions_synthesis.md §5 C4]. gRPC also complicates the dumb-server
+artifact-serving path that just needs HTTPS + Range [aosp-update-engine
+§7].</p>
+<p><strong>Option D — custom server protocol (engine-defined).</strong>
+Several embedded engines demand their own protocol; the corpus
+explicitly contrasts this against Helix’s plain-HTTP device-pull model
+and finds plain HTTP Range “fits a custom Go control plane far better”
+[rauc §5]. hawkBit’s DDI is “plain HTTPS poll + token + feedback” and
+trivially implementable [ota_landscape_report §2.3 eclipse-hawkbit];
+OSTree serves an “archive repo over plain HTTP” [ota_landscape_report
+§2.3 ostree]. <strong>Rejected:</strong> no benefit over plain HTTP(S);
+the wrapped engine (decided in ADR-0001, not here) sits behind the Go
+control plane and never dictates the public transport.</p>
+<h3 id="content-compression">3.2 Content compression</h3>
+<p><strong>Option A — Brotli for control-plane responses, negotiating to
+gzip; NO content-compression on the artifact path (CHOSEN).</strong>
+Brotli is mandated for content compression with negotiated fallback to
+gzip for older clients [00-master §3]. Applied where it pays: REST/JSON
+control-plane traffic (poll responses, rollout assignment payloads,
+telemetry, dashboard). <strong>Critically, content compression MUST NOT
+be applied to the OTA artifact:</strong> <code>payload.bin</code> is the
+output of <code>update_engine</code>’s <code>delta_generator</code> and
+is already compressed internally (the Android COW format uses gzip/XOR
+block compression) [aosp-update-engine §4, §5]; re-compressing it with
+Brotli/gzip yields negligible size reduction while <strong>breaking the
+<code>ZIP_STORED</code> + byte-range contract</strong> that streaming
+<code>applyPayload</code> depends on [aosp-update-engine §6, §7]. The
+artifact must be served byte-identical so its
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> verify and its
+AOSP/payload signature stays intact [aosp-update-engine §7;
+android-update-engine-api.md §6] (the generic SHA-256 + signature
+integrity requirement is corroborated by additions_synthesis.md §3, but
+the named header properties trace to the AOSP notes). This is the
+load-bearing rule of this ADR.</p>
+<p><strong>Option B — Brotli everywhere including artifacts.</strong>
+<strong>Rejected:</strong> transfer-encoding compression over a
+range-fetched, already-compressed, hash-verified blob is both useless
+(no size win) and harmful (defeats <code>ZIP_STORED</code> offset/length
+range fetch and risks altering bytes the device hashes)
+[aosp-update-engine §6, §7].</p>
+<p><strong>Option C — gzip-only (no Brotli).</strong>
+<strong>Rejected:</strong> contradicts the mandated stack (D6); Brotli
+is the primary, gzip the fallback [00-master §3].</p>
+<p><strong>Note on delta/adaptive savings:</strong> real download-size
+reduction for Helix comes from <strong>incremental/delta
+payloads</strong> (diffs vs <code>PREVIOUS-target-files.zip</code>), not
+transport compression [aosp-update-engine §5]. RAUC similarly
+distinguishes adaptive (skip-unchanged-blocks) and delta updates from
+transport [rauc §5]. Delta strategy is <strong>out of scope
+here</strong> and routed to <strong>ADR-0005</strong>
+[additions_synthesis.md §7].</p>
+<h3 id="artifact-download-resumability">3.3 Artifact download &amp;
+resumability</h3>
+<p><strong>Option A — device-pull streaming over HTTPS with mandatory
+HTTP Range; rely on <code>update_engine</code>’s native resume
+(CHOSEN).</strong> The Go control plane returns
+<code>{url, offset, size, FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE}</code>
+and the device’s <code>update_engine</code> byte-range-fetches
+<code>payload.bin</code> directly [aosp-update-engine §6, §7]. The
+object store / control plane <strong>must</strong> support HTTP Range
+Requests and serve OTA ZIP entries uncompressed
+(<code>ZIP_STORED</code>) [aosp-update-engine §7 item 2]. Resumability
+is <strong>likely provided on-device</strong>: the existence of a
+<code>DISABLE_DOWNLOAD_RESUME</code> header <em>suggests</em> download
+resume may be the default <code>update_engine</code> behaviour, but this
+is <strong>UNVERIFIED</strong> [aosp-update-engine Open-item 1] — Helix
+should avoid sending that header and ensure the server honours
+Range/conditional requests so interrupted downloads can resume rather
+than restart. The client must also survive process death and reconcile
+daemon state on rebind (re-issue <code>applyPayload</code>)
+[aosp-update-engine §6 state management]. This matches RAUC’s
+independent finding that streaming installs over HTTP Range fit a custom
+Go control plane well [rauc §5].</p>
+<p><strong>Option B — full-file download to local storage, then
+<code>file://</code> apply.</strong> The reconciliation flags that
+<code>file://</code> (local-verified-file) apply vs HTTPS streaming are
+two distinct paths and “local-verified-file apply is safer for our
+verify-before-apply requirement” [additions_synthesis.md §6].
+<strong>Decision:</strong> keep both apply paths available but make
+<strong>streaming-over-Range the primary transport design</strong>
+(mandated stack + scalability) while preserving the option to
+stage-then-verify-then-<code>file://</code>-apply on constrained/flaky
+networks; the verify-before-apply guarantee is satisfied either way
+because <code>update_engine</code> verifies
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> + AVB/dm-verity before
+commit [aosp-update-engine §7, §lessons]. The streaming-vs-staged choice
+is a client-policy knob, not a transport-protocol change.</p>
+<p><strong>Option C — server-side resumable chunk protocol (e.g., casync
+chunk store).</strong> RAUC supports casync chunked delivery but it
+“needs a separate server-side chunk store” and enabling streaming means
+RAUC “can no longer download plain casync bundles” [rauc §5].
+<strong>Rejected for Android phase:</strong> unnecessary given native
+<code>update_engine</code> range-fetch + resume; revisit only in the
+Linux phase if an engine requires it.</p>
+<h2 id="decision">4. Decision</h2>
+<p>Adopt the mandated transport, composed as follows:</p>
+<ol type="1">
+<li><strong>Transport protocol:</strong> <strong>HTTP/3 (QUIC)
+primary</strong> via the <code>vasic-digital/http3</code> submodule
+(drop-in <code>net/http.Handler</code>), with <strong>automatic
+negotiation/fallback to HTTP/2</strong> (and TLS 1.3 throughout
+[00-master §6 Security]) for clients/networks that cannot use
+QUIC/UDP-443 [00-master §3; D6]. <strong>REST <code>/api/v1</code> is
+the primary surface</strong>; gRPC remains optional/internal only
+[additions_synthesis.md §5 C4].</li>
+<li><strong>Content compression — two-class rule:</strong>
+<ul>
+<li>Control-plane REST/JSON: <strong>Brotli</strong>, negotiating to
+<strong>gzip</strong> for older clients via <code>Accept-Encoding</code>
+[00-master §3].</li>
+<li>OTA artifacts (<code>payload.bin</code> / OTA ZIP): <strong>no
+content compression</strong>; served <strong>byte-identical</strong> and
+<strong><code>ZIP_STORED</code></strong> so streaming range-fetch and
+hash/signature verification hold [aosp-update-engine §6, §7].</li>
+</ul></li>
+<li><strong>Artifact delivery:</strong> device-pull <strong>streaming
+over HTTPS with mandatory HTTP Range Request support</strong> on the
+control plane / object store (<code>Storage</code> brick + MinIO/S3);
+the control plane returns
+<code>{url, offset, size, FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE}</code>
+to the device [aosp-update-engine §7].</li>
+<li><strong>Resumability:</strong> do not send
+<code>DISABLE_DOWNLOAD_RESUME</code>, so that
+<code>update_engine</code>’s native download-resume behaviour (if it is
+indeed enabled by default — <strong>UNVERIFIED</strong>, see §6) is not
+suppressed; regardless, the server MUST honour Range / conditional
+requests so interrupted transfers can resume from offset rather than
+restart [aosp-update-engine Open-item 1]. Client survives process death
+and reconciles daemon state on rebind [aosp-update-engine §6].</li>
+<li><strong>Apply-path policy:</strong> streaming-over-Range is the
+primary path; a
+<strong>stage-then-verify-then-<code>file://</code>-apply</strong>
+fallback is retained for flaky/constrained networks. Both satisfy
+verify-before-apply because <code>update_engine</code> verifies hashes +
+AVB before commit [aosp-update-engine §7; additions_synthesis.md
+§6].</li>
+<li><strong>Reuse:</strong> compose from the verified catalogue —
+<code>http3</code>, <code>middleware</code>, <code>Storage</code>,
+<code>ratelimiter</code>, <code>observability</code> bricks — rather
+than hand-rolling transport/compression [00-master §10, §11.4.74].</li>
+</ol>
+<p>Negotiation order at the edge: try HTTP/3 (QUIC/UDP-443) → fall back
+to HTTP/2 (TCP/TLS-1.3) → content-encoding <code>br</code> →
+<code>gzip</code> → identity. The artifact path is pinned to
+<code>identity</code> content-encoding with Range enabled regardless of
+the control-plane negotiation.</p>
+<h2 id="consequences">5. Consequences</h2>
+<h3 id="positive">5.1 Positive</h3>
+<ul>
+<li><strong>Honors the locked mandated stack exactly</strong> (D6) and
+resolves contradiction C4 in favour of REST-primary + HTTP/3→HTTP/2 +
+Brotli [additions_synthesis.md §5 C4].</li>
+<li><strong>QUIC connection migration + HoL-blocking
+elimination</strong> suit mobile/field devices and the 15-min-jitter
+poll profile, aiding the single-board→millions scalability guarantee
+[00-master §1, §2 D7].</li>
+<li><strong>Two-class compression preserves byte-identity</strong> of
+signed artifacts, protecting the zero-corruption / verify-before-apply
+guarantees [00-master §1; aosp-update-engine §7].</li>
+<li><strong>Mandatory HTTP Range + native resume</strong> gives robust
+downloads on flaky networks for free, since the safety-critical
+apply/resume path lives in battle-tested AOSP code, not Helix
+[aosp-update-engine §6, §7; rauc §5].</li>
+<li><strong>Plain-HTTP device-pull</strong> keeps the server “dumb,”
+matching AOSP’s no-mandated-protocol model and avoiding lock-in to any
+engine’s bespoke protocol [aosp-update-engine §7; rauc §5].</li>
+<li><strong>Catalogue reuse</strong> (<code>http3</code>,
+<code>middleware</code>, <code>Storage</code>) minimizes new transport
+code [00-master §10].</li>
+</ul>
+<h3 id="negative-costs">5.2 Negative / costs</h3>
+<ul>
+<li><strong>QUIC/UDP-443 reachability:</strong> middlebox/corporate
+networks may block UDP, forcing HTTP/2 fallback; the fallback path must
+be continuously tested, not assumed. <strong>UNVERIFIED (new, needs
+spike):</strong> real-world QUIC reachability for the target device
+fleet.</li>
+<li><strong>Range semantics over HTTP/2/3 unverified for Helix’s exact
+stack</strong> — must be spike-validated end-to-end
+(<code>update_engine</code> range-fetch through the <code>http3</code>
+submodule + MinIO/S3) [rauc §5].</li>
+<li><strong>Operational discipline required</strong> to ensure the
+artifact path is never accidentally Brotli/gzip-compressed or re-zipped
+with compression (would silently break streaming + hashing)
+[aosp-update-engine §6, §7]. Needs a CI/serving guard.</li>
+<li><strong>Two transport-handling code paths</strong> (compressed
+control-plane vs identity artifact) add edge-config complexity.</li>
+<li><strong><code>ZIP_STORED</code> packaging</strong> is larger on disk
+in object storage than a compressed ZIP would be (acceptable; real
+savings come from delta payloads — ADR-0005) [aosp-update-engine
+§5].</li>
+<li><strong><code>update_engine</code> resume + exact optional-header
+set</strong> (incl. <code>DISABLE_DOWNLOAD_RESUME</code>,
+<code>SWITCH_SLOT_ON_REBOOT</code>, <code>RUN_POST_INSTALL</code>) is
+<strong>UNVERIFIED</strong> against the Android 15
+<code>IUpdateEngine</code> / <code>payload_properties.cc</code> and must
+be confirmed [aosp-update-engine Open-item 1].</li>
+</ul>
+<h2 id="open-unverified-items-to-close">6. Open / UNVERIFIED items to
+close</h2>
+<ol type="1">
+<li><strong>Range-request semantics over HTTP/3/HTTP/2 via the
+<code>http3</code> submodule + MinIO/S3</strong> — spike: stream a real
+<code>ZIP_STORED</code> <code>payload.bin</code> end-to-end and confirm
+byte-range correctness and resume. [rauc §5; aosp-update-engine §7]</li>
+<li><strong>Exact <code>update_engine</code> resume + optional-header
+contract on Android 15</strong> (<code>DISABLE_DOWNLOAD_RESUME</code>,
+<code>SWITCH_SLOT_ON_REBOOT</code>, <code>RUN_POST_INSTALL</code>) —
+confirm against
+<code>IUpdateEngine</code>/<code>payload_properties.cc</code>.
+[aosp-update-engine Open-item 1, §7 item 3]
+<strong>UNVERIFIED</strong></li>
+<li><strong>QUIC/UDP-443 reachability</strong> across the target
+deployment networks and the HTTP/2 fallback trigger behaviour.
+<strong>UNVERIFIED (new, needs spike)</strong></li>
+<li><strong>Brotli quality/parameter tuning</strong> for control-plane
+JSON (CPU vs ratio) at fleet scale — benchmark; no figure asserted here.
+<strong>UNVERIFIED (new)</strong></li>
+<li><strong>Interaction of any future RAUC/Linux-phase NBD/Range
+streaming with Helix Brotli/HTTP3</strong> [ota_landscape_report §5 item
+6; rauc §5] — deferred to the Linux phase.</li>
+<li><strong>Delta/adaptive download-size strategy</strong> (the real
+bandwidth lever) — routed to <strong>ADR-0005</strong>, not decided
+here. [additions_synthesis.md §7]</li>
+</ol>
+<h2 id="status">7. Status</h2>
+<p><strong>Proposed.</strong> Pending operator review gate alongside
+ADR-0001..0005. The mandated stack elements (HTTP/3→HTTP/2, Brotli,
+REST-primary) are locked (D6) and not re-litigated; this ADR’s
+<em>composition</em> choices (two-class compression, mandatory Range,
+native-resume policy, streaming-vs-staged apply) become binding on
+approval and are gated on closing the §6 spike items before the
+corresponding code paths are marked stable.</p>
+<h2 id="compliance-notes-helixconstitution">8. Compliance notes
+(HelixConstitution)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>How this ADR complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>§11.4.6 (no guessing)</strong></td>
+<td>Every transport claim cites a source note or the master design;
+unverifiable items (QUIC reachability, Range-over-HTTP3, Android-15
+resume headers, Brotli tuning) are carried as
+<strong>UNVERIFIED</strong> rather than asserted. [aosp-update-engine;
+rauc; 00-master]</td>
+</tr>
+<tr>
+<td><strong>§11.4.8 (research before implementation)</strong></td>
+<td>This is an evidence-based ADR derived from the landscape report +
+stack notes + additions synthesis; binding code paths gated behind the
+§6 spikes before being marked stable. [00-master §16]</td>
+</tr>
+<tr>
+<td><strong>§11.4.74 (catalogue-first reuse)</strong></td>
+<td>Transport/compression composed from verified bricks
+(<code>http3</code>, <code>middleware</code>, <code>Storage</code>,
+<code>ratelimiter</code>, <code>observability</code>); no hand-rolled
+QUIC/Brotli stack. [00-master §10]</td>
+</tr>
+<tr>
+<td><strong>§1 (four-layer testing) / §7.1 (no-bluff)</strong></td>
+<td>§6 spike items are written as runtime/integration validations
+(stream a real <code>ZIP_STORED</code> payload, exercise fallback,
+confirm resume) producing positive evidence; safety-critical serving
+correctness (byte-identity, Range, hash-verify) is treated as a ≥90%
+path. [00-master §13]</td>
+</tr>
+<tr>
+<td><strong>§11.4.123 (rock-solid proof)</strong></td>
+<td>The §6 spikes are the rock-solid-proof mechanism for this ADR: each
+<strong>UNVERIFIED</strong> claim (QUIC reachability, Range-over-HTTP3,
+Android-15 resume/optional-header contract, Brotli tuning) is closed by
+an executable spike that produces positive runtime evidence before the
+dependent code path is marked stable, rather than by assertion.
+[00-master §13, §16]</td>
+</tr>
+<tr>
+<td><strong>D2 / D6 (locked decisions honored)</strong></td>
+<td>Native A/B + custom Go control plane retained; mandated stack
+(HTTP/3→HTTP/2, Brotli, REST-primary, Gin, <code>http3</code> submodule)
+adopted verbatim; wrap-engine choice left to ADR-0001 (not re-opened).
+[00-master §2]</td>
+</tr>
+<tr>
+<td><strong>§1 zero-corruption guarantee</strong></td>
+<td>Two-class compression rule keeps signed artifacts byte-identical;
+verify-before-apply preserved via <code>update_engine</code> hash/AVB
+checks on both streaming and <code>file://</code> paths. [00-master §1;
+aosp-update-engine §7]</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

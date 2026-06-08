@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>integration_guide</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-android-agent-integration-guide-1.0.0-mvp">Helix OTA —
+Android Agent Integration Guide (1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Integration guide for the 1.0.0-MVP Helix OTA Android device agent
+(<code>ota-android-agent</code>, KMP): registration, WorkManager-driven
+polling (15 min + configurable jitter), download-to-local,
+verify-before-apply (SHA-256 + signature) prior to
+<code>UpdateEngine.applyPayload</code>, telemetry reporting, and the
+system-UID / privileged-app deployment requirement. Reuses the catalogue
+KMP submodules <code>Auth-KMP</code>, <code>Security-KMP</code>,
+<code>Storage-KMP</code>, <code>Config-KMP</code> and the NEW submodules
+<code>ota-protocol</code>, <code>ota-update-engine-bridge</code>,
+<code>ota-telemetry-schema</code>.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Several AOSP constants/behaviours are carried as UNVERIFIED from the
+research notes (e.g. <code>CLEANUP_PREVIOUS_UPDATE</code> value, full
+Android-15 <code>ErrorCodeConstants</code> table, RK3588/Orange Pi 5 Max
+A/B + VAB enablement). The exact public API surface of the KMP catalogue
+submodules has not been inspected; capability claims about them are
+tagged UNVERIFIED. HelixConstitution clause numbers are UNVERIFIED
+against the authoritative text.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: corrected §6 jitter mechanism — <code>setInitialDelay</code>
+offsets only the first run, so per-cycle jitter needs a flex-interval
+window or a self-rescheduling <code>OneTimeWorkRequest</code> (no new
+unverified claims introduced).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Confirm KMP submodule public APIs (<code>Auth-KMP</code>
+device-token issue/verify, <code>Security-KMP</code> SHA-256 + signature
+primitives, <code>Storage-KMP</code> blob/range, <code>Config-KMP</code>
+runtime config); pin the Android-15 <code>update_engine</code> AIDL
+surface (stable vs <code>IUpdateEngine</code>); validate the agent runs
+platform-signed as <code>android.uid.system</code> on the target image;
+close all UNVERIFIED hardware items in <a
+href="build_integration.md"><code>build_integration.md</code></a> and <a
+href="update_engine_integration.md"><code>update_engine_integration.md</code></a>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-locked-context-honored">Locked context honored</a></li>
+<li><a href="#3-agent-architecture-kmp">Agent architecture
+(KMP)</a></li>
+<li><a href="#4-submodule-reuse">Submodule reuse</a></li>
+<li><a href="#5-device-registration">Device registration</a></li>
+<li><a
+href="#6-polling-with-workmanager-15-min--jitter-configurable">Polling
+with WorkManager (15 min + jitter, configurable)</a></li>
+<li><a href="#7-download-to-local">Download to local</a></li>
+<li><a
+href="#8-verify-before-apply-sha-256--signature-then-applypayload">Verify-before-apply
+(SHA-256 + signature) then applyPayload</a></li>
+<li><a href="#9-telemetry">Telemetry</a></li>
+<li><a href="#10-system-uid--privileged-app-requirement">System-UID /
+privileged-app requirement</a></li>
+<li><a href="#11-end-to-end-update-lifecycle">End-to-end update
+lifecycle</a></li>
+<li><a href="#12-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#13-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#14-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>ToC mandated by HelixConstitution §11.4.61 (UNVERIFIED clause
+number); it follows the metadata table per <a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code>
+§3</a>.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This guide specifies how the <strong>Helix OTA Android device
+agent</strong> is integrated on an Android 15 device (Orange Pi 5 Max /
+RK3588 target) for the <strong>1.0.0-MVP</strong> release. It is the
+device-side counterpart to the Go control plane and covers the agent’s
+full duty cycle: <strong>register → poll → download → verify → apply →
+report</strong>.</p>
+<p>It is scoped to the MVP trust model — <strong>signing + SHA-256 +
+AVB</strong> — per <a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002
+§4.1</a>. Device-side TUF is explicitly <strong>deferred to
+1.0.1</strong> per <a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002
+§4.3</a>; this guide does not implement TUF metadata on device, but the
+verify step is designed MVP-forward so the Uptane-ready signing
+interface drops in without rework.</p>
+<p>Two companion specs carry the lower layers:</p>
+<ul>
+<li><a
+href="update_engine_integration.md"><code>update_engine_integration.md</code></a>
+— the <code>applyPayload(...)</code> contract, header properties,
+callback states/error codes, and
+AVB/<code>boot_control</code>/<code>update_verifier</code>
+interplay.</li>
+<li><a href="build_integration.md"><code>build_integration.md</code></a>
+— building the agent as a system app in the AOSP tree for the target
+board.</li>
+</ul>
+<h2 id="locked-context-honored">2. Locked context honored</h2>
+<p>This document does not re-open any locked decision; it consumes
+them:</p>
+<ul>
+<li><strong>Device-side strategy (LOCKED).</strong> Native Android A/B
+(<code>update_engine</code> + AVB/dm-verity + automatic boot-failure
+rollback) on device + a custom Go control plane (modular monolith for
+MVP per <a
+href="../../research/adr/adr-0003-server-topology.md">ADR-0003</a>);
+wrap OSS only where it adds value (hawkBit gated per <a
+href="../../research/adr/adr-0001-wrapped-engine.md">ADR-0001</a>).
+[ADR-0001 §1; master design §2 D2]</li>
+<li><strong>Trust (LOCKED).</strong> Signing + SHA-256 + AVB for MVP;
+TUF device-side deferred to 1.0.1 per <a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002</a>.</li>
+<li><strong>Stack (LOCKED).</strong> Go + Gin (gin-gonic) + Brotli +
+HTTP/3 (QUIC) via the <code>vasic-digital/http3</code> submodule with
+HTTP/2 + gzip fallback; <strong>REST primary</strong>
+(<code>/api/v1</code>); gRPC optional/internal only. [ADR-0004 §97;
+master design §3]</li>
+<li><strong>Catalogue-first reuse (§11.4.74, UNVERIFIED).</strong> The
+agent reuses the KMP catalogue submodules and the six NEW submodules
+from the <a href="../../00-master/submodule_reuse_map.md">submodule
+reuse map §3–§4</a>; no submodule name is invented (§7.1 /
+§11.4.6).</li>
+</ul>
+<h2 id="agent-architecture-kmp">3. Agent architecture (KMP)</h2>
+<p>The agent is <code>ota-android-agent</code> — a <strong>Kotlin
+Multiplatform</strong> module whose orchestration logic
+(<code>commonMain</code>) is platform-agnostic and whose Android-only
+apply path lives in <code>androidMain</code> behind the
+<code>ota-update-engine-bridge</code>. [submodule reuse map §3 Android
+client, §4]</p>
+<pre class="mermaid"><code>flowchart TD
+  subgraph commonMain[ota-android-agent : commonMain]
+    REG[Registration] --&gt; POLL[Poll scheduler]
+    POLL --&gt; DL[Downloader]
+    DL --&gt; VER[Verifier]
+    VER --&gt; APPLY[Apply coordinator]
+    APPLY --&gt; TEL[Telemetry reporter]
+  end
+  subgraph androidMain[ota-android-agent : androidMain]
+    WM[WorkManager worker] --&gt; POLL
+    BRIDGE[ota-update-engine-bridge] --&gt; UE[(AOSP update_engine)]
+  end
+  APPLY --&gt; BRIDGE
+  REG -. uses .-&gt; AUTH[Auth-KMP]
+  VER -. uses .-&gt; SEC[Security-KMP]
+  DL -. uses .-&gt; STO[Storage-KMP]
+  POLL -. uses .-&gt; CFG[Config-KMP]
+  REG -. wire types .-&gt; PROTO[ota-protocol]
+  TEL -. schema .-&gt; TSCHEMA[ota-telemetry-schema]</code></pre>
+<p>Decoupling boundary (per <a
+href="../../00-master/submodule_reuse_map.md">submodule reuse map
+§4</a>): the agent holds <strong>no server-side logic</strong>; the
+<strong>only</strong> OS-apply path is the bridge; the bridge is
+<strong>Android-only, thin, and testable</strong> with no polling,
+networking, or business policy.</p>
+<h2 id="submodule-reuse">4. Submodule reuse</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Submodule</th>
+<th>Class</th>
+<th>Boundary / note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Device identity, token issue/verify, RBAC at the agent edge</td>
+<td><code>Auth-KMP</code></td>
+<td>reuse</td>
+<td>Agent obtains/refreshes a device token; no auth logic
+re-implemented. (UNVERIFIED: <code>Auth-KMP</code> exposes device-token
+issue/verify as needed.)</td>
+</tr>
+<tr>
+<td>SHA-256 hashing + signature verification of the downloaded
+artifact</td>
+<td><code>Security-KMP</code></td>
+<td>reuse</td>
+<td>All crypto primitives come from <code>Security-KMP</code>; the agent
+contains no bespoke crypto. (UNVERIFIED: <code>Security-KMP</code>
+exposes SHA-256 + detached-signature verify.)</td>
+</tr>
+<tr>
+<td>Local persistence of the downloaded artifact + state</td>
+<td><code>Storage-KMP</code></td>
+<td>reuse</td>
+<td>Blob/range storage behind a port; no direct filesystem/S3 SDK calls
+outside <code>Storage-KMP</code>. (UNVERIFIED: range/stream get for
+large <code>.zip</code>.)</td>
+</tr>
+<tr>
+<td>Runtime config (poll interval, jitter, endpoints)</td>
+<td><code>Config-KMP</code></td>
+<td>reuse</td>
+<td>The 15 min + jitter poll cadence (master §5 / D7) flows through
+<code>Config-KMP</code>; no bespoke config parsing.</td>
+</tr>
+<tr>
+<td>Wire types, manifest schema, status/event enums</td>
+<td><code>ota-protocol</code></td>
+<td>new + reuse</td>
+<td>Pure contracts only — no business logic/transport/storage.</td>
+</tr>
+<tr>
+<td>Apply via AOSP <code>update_engine</code> /
+<code>boot_control</code></td>
+<td><code>ota-update-engine-bridge</code></td>
+<td>new</td>
+<td>Android-only, thin; see <a
+href="update_engine_integration.md"><code>update_engine_integration.md</code></a>.</td>
+</tr>
+<tr>
+<td>Telemetry event/metric schema + codecs</td>
+<td><code>ota-telemetry-schema</code></td>
+<td>new + reuse</td>
+<td>Shared server + agent; no transport/storage.</td>
+</tr>
+</tbody>
+</table>
+<p>Only canonical names from <a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code>
+§9</a> are used (§7.1 anti-bluff). The React/dashboard submodules are
+intentionally not referenced here (not on the verified catalogue).</p>
+<h2 id="device-registration">5. Device registration</h2>
+<p>On first boot (or first agent launch after a factory reset), the
+agent registers with the control plane over the <strong>REST
+<code>/api/v1</code></strong> surface (HTTP/3 primary, HTTP/2 fallback)
+[ADR-0004 §97]. Registration establishes a device record (master §6) and
+obtains a device token via <code>Auth-KMP</code>.</p>
+<p>Registration payload (wire types from <code>ota-protocol</code>):</p>
+<ul>
+<li><code>hardware_id</code> — stable hardware identifier (master §6
+device-identity).</li>
+<li><code>current_build_fingerprint</code> —
+<code>ro.build.fingerprint</code> of the running slot.</li>
+<li><code>current_slot</code> / <code>verified_boot_state</code> —
+observed via <code>boot_control</code> /
+<code>ro.boot.verifiedbootstate</code> (telemetry only; see <a
+href="update_engine_integration.md"><code>update_engine_integration.md</code>
+§AVB interplay</a>).</li>
+<li><code>agent_version</code>, <code>model</code>, <code>soc</code>
+(e.g. RK3588).</li>
+</ul>
+<p>The control plane returns the device’s registration id and (if
+<code>Auth-KMP</code> supports hardware-bound device tokens) a token
+bound to <code>hardware_id</code>. If
+<code>security</code>/<code>Security-KMP</code> does not yet expose a
+hardware-bound device token, that is an upstream <strong>extend</strong>
+item (per <a href="../../00-master/submodule_reuse_map.md">submodule
+reuse map §5</a>) — UNVERIFIED.</p>
+<p>A real Kotlin registration snippet is in <a
+href="code_snippets/Registration.kt"><code>code_snippets/Registration.kt</code></a>.</p>
+<h2 id="polling-with-workmanager-15-min-jitter-configurable">6. Polling
+with WorkManager (15 min + jitter, configurable)</h2>
+<p>The agent polls the control plane for an assigned update on a
+periodic schedule. The cadence is <strong>15 minutes plus configurable
+jitter</strong> (master §5 / D7), driven by <code>Config-KMP</code> so
+the values are runtime-tunable per fleet/cohort.</p>
+<p>Design constraints:</p>
+<ul>
+<li><strong>WorkManager <code>PeriodicWorkRequest</code></strong> is the
+Android scheduler. Note: WorkManager enforces a <strong>minimum periodic
+interval of 15 minutes</strong>
+(<code>PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS</code>), which
+matches the locked 15-min cadence. (UNVERIFIED exact constant value
+against the target AndroidX version.)</li>
+<li><strong>Jitter</strong> spreads fleet poll times so millions of
+devices do not stampede the control plane at the same instant — directly
+serving the single-board→millions scalability guarantee (master §1). The
+<code>jitterMaxMillis</code> value comes from <code>Config-KMP</code>
+(uniform draw over <code>[0, jitterMaxMillis]</code>). Note on
+mechanism: <code>PeriodicWorkRequest.setInitialDelay(...)</code> only
+offsets the <strong>first</strong> run after a (re)schedule — it does
+<strong>not</strong> re-randomize each periodic cycle, so a single
+jitter value applied at schedule time does not produce ongoing per-cycle
+spread. To achieve per-cycle jitter use one of: (a) a
+<strong>flex-interval</strong> <code>PeriodicWorkRequest</code> (the
+worker may run anywhere within the flex window each period), or (b) a
+<strong><code>OneTimeWorkRequest</code> that self-reschedules</strong>
+at the end of each run with a freshly drawn delay. The MVP applies
+jitter at schedule time via <code>setInitialDelay(...)</code>; the
+per-cycle flex/self-reschedule option is a follow-up if uniform
+per-cycle spread is required (UNVERIFIED requirement).</li>
+<li><strong>Constraints</strong>: require network connectivity;
+optionally require charging / unmetered network for large downloads
+(configurable via <code>Config-KMP</code>). HTTP/3’s QUIC
+connection-migration tolerates network changes across the poll window
+[ADR-0004 §65].</li>
+<li><strong>Backoff</strong>: transient poll failures use WorkManager’s
+exponential backoff; the agent never busy-loops.</li>
+</ul>
+<p>The poll request hits <code>GET /api/v1/devices/{id}/update</code>
+(REST primary; exact path owned by <code>ota-protocol</code>). A
+<code>204 No Content</code> means “no update”; a <code>200</code>
+returns the release manifest (artifact URL, SHA-256, signature, the four
+<code>payload_properties</code> values, rollout phase token).</p>
+<p>Snippets: scheduling in <a
+href="code_snippets/PollScheduler.kt"><code>code_snippets/PollScheduler.kt</code></a>;
+the worker in <a
+href="code_snippets/OtaPollWorker.kt"><code>code_snippets/OtaPollWorker.kt</code></a>.</p>
+<h2 id="download-to-local">7. Download to local</h2>
+<p>Per the verify-before-apply decision (<a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002
+§4.1</a>; <a
+href="../../research/stacks/android-update-engine-api.md">android-update-engine-api
+§7</a>), the agent prefers the <strong>local <code>file://</code> apply
+path</strong>: it downloads the entire <code>ota_update.zip</code> to
+local storage <strong>before</strong> invoking
+<code>update_engine</code>.</p>
+<ul>
+<li><strong>Destination</strong>: <code>/data/ota_package/</code> — the
+directory <code>update_engine</code> expects for local apply, and which
+the agent must have read/write access to as a system component (§10).
+[android-update-engine-api §10]</li>
+<li><strong>Download mechanism</strong>: streamed via
+<code>Storage-KMP</code> over the transport layer. The artifact path is
+pinned to <code>identity</code> content-encoding with <strong>HTTP
+Range</strong> enabled (resumable), regardless of control-plane content
+negotiation [ADR-0004 §106].</li>
+<li><strong>Resumability</strong>: the agent controls retry/resume
+policy on the local path (it owns the download), unlike streaming apply
+where <code>update_engine</code> owns the transfer
+[android-update-engine-api §7].</li>
+<li><strong>Storage gating</strong>: the agent checks free space on
+<code>/data</code> before downloading; low free <code>/data</code>
+lowers Virtual A/B update success because the COW snapshot may spill to
+<code>/data</code> [android15-virtual-ab §8]. Report
+free-<code>/data</code> as telemetry so the control plane can treat
+low-space devices as elevated-risk.</li>
+</ul>
+<p>A streaming (<code>https://</code>) apply remains an opt-in for
+storage-constrained fleets but trades away the pre-apply full-artifact
+verification window [android-update-engine-api §7]; MVP defaults to
+local download.</p>
+<p>Snippet: <a
+href="code_snippets/Downloader.kt"><code>code_snippets/Downloader.kt</code></a>.</p>
+<h2 id="verify-before-apply-sha-256-signature-then-applypayload">8.
+Verify-before-apply (SHA-256 + signature) then applyPayload</h2>
+<p>This is the <strong>safety-critical</strong> step. The agent
+<strong>must</strong> verify the downloaded artifact
+<strong>before</strong> handing it to <code>update_engine</code> (<a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002
+§4.1</a>). Verification is layered:</p>
+<ol type="1">
+<li><strong>Whole-zip / artifact integrity (Helix MVP trust).</strong>
+Compute <strong>SHA-256</strong> over the downloaded
+<code>ota_update.zip</code> (via <code>Security-KMP</code>) and compare
+to the control-plane manifest hash. Verify the <strong>detached
+signature</strong> over that hash against the Helix-pinned public key
+(via <code>Security-KMP</code>). This is the MVP “signing + SHA-256”
+layer [ADR-0002 §4.1].</li>
+<li><strong>Payload header verification.</strong> Read the four
+<code>payload_properties.txt</code> lines (<code>FILE_HASH</code>,
+<code>FILE_SIZE</code>, <code>METADATA_HASH</code>,
+<code>METADATA_SIZE</code>) and independently confirm
+<code>FILE_HASH</code>/<code>FILE_SIZE</code> of the
+<code>payload.bin</code> entry match (the <code>*_HASH</code> are
+base64(SHA-256); <code>*_SIZE</code> are decimal bytes)
+[android-update-engine-api §4, §6]. These four values are then passed
+verbatim to <code>applyPayload</code> (see <a
+href="update_engine_integration.md"><code>update_engine_integration.md</code></a>).</li>
+<li><strong>AVB / engine layer (defense in depth).</strong> Only after
+(1) and (2) pass does the agent call
+<code>applyPayload(file://…, offset, size, props)</code>.
+<code>update_engine</code> then <strong>independently</strong>
+re-verifies <code>METADATA_HASH</code>/<code>FILE_HASH</code> and the
+payload signature, and the on-device AVB/dm-verity chain verifies the
+booted slot [android-update-engine-api §7; android-avb-rollback §9]. The
+agent <strong>never</strong> disables AVB or dm-verity, never calls
+<code>markBootSuccessful</code> itself, and never writes slot flags or
+rollback indexes [android-avb-rollback §10].</li>
+</ol>
+<p>If any verification fails, the agent <strong>aborts the
+apply</strong>, deletes the artifact, and reports a verification-failure
+telemetry event (§9). A failed verify never reaches
+<code>update_engine</code>.</p>
+<p>Snippet: <a
+href="code_snippets/Verifier.kt"><code>code_snippets/Verifier.kt</code></a>.
+The apply hand-off is in <a
+href="code_snippets/UpdateApplier.kt"><code>code_snippets/UpdateApplier.kt</code></a>
+and detailed in <a
+href="update_engine_integration.md"><code>update_engine_integration.md</code></a>.</p>
+<h2 id="telemetry">9. Telemetry</h2>
+<p>The agent reports state transitions and outcomes using the
+<strong><code>ota-telemetry-schema</code></strong> event/metric schema
+(shared server + agent; no transport/storage in the schema module)
+[submodule reuse map §3 Telemetry]. Events are posted over REST
+<code>/api/v1</code> (HTTP/3 → HTTP/2). The control plane consumes them
+to drive staged-rollout halt/advance decisions (the rollout engine
+consumes telemetry signals; <a
+href="../../research/adr/adr-0001-wrapped-engine.md">ADR-0001
+§1</a>).</p>
+<p>Modeled states mirror the <code>boot_control</code> / Virtual A/B
+state machine [android-avb-rollback §10; android15-virtual-ab §9]:</p>
+<ul>
+<li><code>REGISTERED</code></li>
+<li><code>POLLED</code> / <code>UPDATE_ASSIGNED</code></li>
+<li><code>DOWNLOADING</code> → <code>DOWNLOADED</code></li>
+<li><code>VERIFY_OK</code> / <code>VERIFY_FAILED</code></li>
+<li><code>APPLYING</code> (driven by <code>onStatusUpdate</code>) →
+<code>APPLIED_PENDING_REBOOT</code></li>
+<li><code>BOOTED_NOT_YET_SUCCESSFUL</code> → <code>SUCCESSFUL</code> /
+<code>ROLLED_BACK</code></li>
+<li><code>MERGE_SNAPSHOTTED</code> → <code>MERGING</code> →
+<code>MERGE_COMPLETE</code> (Virtual A/B <code>MergeStatus</code>
+[android15-virtual-ab §9])</li>
+</ul>
+<p>Map <code>update_engine</code> status/error codes directly into
+telemetry codes [android-update-engine-api §8, §12]. Critically, surface
+<strong>unexpected slot fallback</strong> (current slot != commanded
+slot), <code>verifiedbootstate</code> != GREEN/YELLOW, and verity EIO as
+high-value failure signals that should drive automatic rollout halt
+[android-avb-rollback §10, §11]. Treat an update as “done” only after
+<strong>merge completion</strong>, not at reboot [android15-virtual-ab
+§12].</p>
+<p>Snippet: <a
+href="code_snippets/TelemetryReporter.kt"><code>code_snippets/TelemetryReporter.kt</code></a>.</p>
+<h2 id="system-uid-privileged-app-requirement">10. System-UID /
+privileged-app requirement</h2>
+<p><code>android.os.UpdateEngine</code> and
+<code>UpdateEngineCallback</code> are
+<strong><code>@SystemApi</code></strong> — only system apps can use
+them; there is <strong>no manifest permission</strong> a normal
+third-party app can request [android-update-engine-api §10]. Therefore
+the Helix agent <strong>must</strong> be a system component:</p>
+<ul>
+<li>Run as the <strong>system UID</strong> via
+<code>android:sharedUserId="android.uid.system"</code>
+<strong>and</strong> be <strong>platform-signed</strong>, OR be
+installed as a <strong>privileged system app</strong> under
+<code>/system/priv-app/</code> (platform/OEM-signed).
+[android-update-engine-api §10]</li>
+<li>Have <strong>read/write access to
+<code>/data/ota_package/</code></strong> for the local
+<code>file://</code> apply path. [android-update-engine-api §10]</li>
+<li>Be allowed by <strong>SELinux</strong> to bind the
+<code>update_engine</code> service over Binder/AIDL.
+[android-update-engine-api §10]</li>
+</ul>
+<p>Consequence: the agent is <strong>shipped as part of the system
+image</strong> (or via an OEM partnership), <strong>not</strong> as a
+Play-Store app [android-update-engine-api §10, §12]. The build/packaging
+mechanics are in <a
+href="build_integration.md"><code>build_integration.md</code></a>.</p>
+<h2 id="end-to-end-update-lifecycle">11. End-to-end update
+lifecycle</h2>
+<pre class="mermaid"><code>sequenceDiagram
+  participant W as WorkManager
+  participant A as ota-android-agent
+  participant CP as Go control plane (/api/v1)
+  participant FS as /data/ota_package
+  participant UE as update_engine
+  W-&gt;&gt;A: periodic trigger (15m + jitter)
+  A-&gt;&gt;CP: GET /devices/{id}/update
+  CP--&gt;&gt;A: 200 manifest (url, sha256, sig, props) | 204
+  A-&gt;&gt;FS: download ota_update.zip (Range, identity)
+  A-&gt;&gt;A: SHA-256 + signature verify (Security-KMP)
+  A-&gt;&gt;A: verify FILE_HASH/SIZE, METADATA_HASH/SIZE
+  alt verify fails
+    A-&gt;&gt;CP: telemetry VERIFY_FAILED; abort
+  else verify ok
+    A-&gt;&gt;UE: applyPayload(file://…, offset, size, props)
+    UE--&gt;&gt;A: onStatusUpdate(...) ; onPayloadApplicationComplete(SUCCESS)
+    A-&gt;&gt;CP: telemetry APPLIED_PENDING_REBOOT
+    A-&gt;&gt;UE: reboot to new slot
+    Note over UE: update_verifier + AVB/dm-verity; markBootSuccessful by framework
+    A-&gt;&gt;CP: telemetry SUCCESSFUL after merge complete
+  end</code></pre>
+<p>The dangerous-window invariant from Virtual A/B applies:
+<strong>never trigger a slot revert once
+<code>MergeStatus == MERGING</code></strong> [android15-virtual-ab §10,
+§12].</p>
+<h2 id="testing-four-layer">12. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 / §1.1 (four-layer + mutation immunity) and
+master design §13, every change ships four layers, with positive
+evidence (no-bluff, §7.1). The agent’s
+<strong>verify-before-apply</strong> and <strong>apply</strong> paths
+are safety-critical and floored at <strong>≥90% coverage</strong>
+[master design §13; additions_synthesis §5 C8].</p>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> Static assertion that the
+code exists and is wired: the verifier rejects on hash/signature
+mismatch; <code>applyPayload</code> is never reachable without a passed
+verify; only catalogue submodule names are referenced;
+<code>android:sharedUserId="android.uid.system"</code> and the
+<code>@SystemApi</code> usage are present in source. Enforced by
+linters/grep gates in CI.</li>
+<li><strong>Artifact gate (bytes shipped).</strong> Build the agent
+APK/system module and assert the shipped artifact contains the verifier,
+the WorkManager worker, the bridge classes, and the platform-signing
+config — i.e. the behaviour is in the bytes that ship, not only in
+source.</li>
+<li><strong>Runtime / integration.</strong> Emulated A/B apply: a
+fake/host <code>update_engine</code> bridge plus a real
+<code>ZIP_STORED</code> payload exercises
+<code>download → verify → applyPayload → onStatusUpdate → onPayloadApplicationComplete</code>.
+WorkManager scheduling tested with a test driver (fake clock) to confirm
+the 15-min + jitter cadence and backoff. Plus the real-board plan from
+master §13: <strong>download → verify → apply → reboot → verify;
+corrupt-slot → confirm A/B fallback</strong> on the Orange Pi 5
+Max.</li>
+<li><strong>Mutation meta-test.</strong> Negate each safety check
+(e.g. invert the SHA-256 comparison, skip the signature check, bypass
+the verify gate) and assert the test suite turns <strong>PASS →
+FAIL</strong>. A mutation that disables verify-before-apply yet leaves
+tests green is a conformance defect.</li>
+</ol>
+<p>UNVERIFIED: per-repo test suites for the NEW submodules do not yet
+exist (see <a
+href="../../00-master/requirements_traceability.md">requirements_traceability
+R-SUB-07</a>).</p>
+<h2 id="open-unverified-items">13. Open / UNVERIFIED items</h2>
+<ul>
+<li>KMP catalogue submodule public APIs (<code>Auth-KMP</code> device
+token, <code>Security-KMP</code> SHA-256 + signature verify,
+<code>Storage-KMP</code> range get, <code>Config-KMP</code> runtime
+config) — UNVERIFIED; confirm before coding.</li>
+<li><code>PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS</code> exact
+value on the target AndroidX version — UNVERIFIED.</li>
+<li>Hardware-bound device token in
+<code>security</code>/<code>Security-KMP</code> — UNVERIFIED (possible
+<strong>extend</strong>).</li>
+<li>RK3588 / Orange Pi 5 Max A/B + Virtual A/B + <code>dm-user</code>
+enablement — UNVERIFIED top-priority hardware validation
+[android15-virtual-ab §11].</li>
+<li>HelixConstitution clause numbers — UNVERIFIED against authoritative
+text.</li>
+</ul>
+<h2 id="sources">14. Sources</h2>
+<ul>
+<li><a
+href="../../research/stacks/android-update-engine-api.md"><code>android-update-engine-api.md</code></a>
+— applyPayload, header properties, status/error codes,
+local-vs-streaming, system-UID.</li>
+<li><a
+href="../../research/stacks/android-avb-rollback.md"><code>android-avb-rollback.md</code></a>
+— AVB / dm-verity / <code>boot_control</code> / rollback; agent
+MUST/MUST-NOT.</li>
+<li><a
+href="../../research/stacks/android15-virtual-ab.md"><code>android15-virtual-ab.md</code></a>
+— Virtual A/B compression, merge lifecycle, <code>/data</code> sizing,
+RK3588 considerations.</li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>adr-0001-wrapped-engine.md</code></a>,
+<a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>adr-0002-supply-chain-trust.md</code></a>,
+<a
+href="../../research/adr/adr-0003-server-topology.md"><code>adr-0003-server-topology.md</code></a>,
+<a
+href="../../research/adr/adr-0004-transport.md"><code>adr-0004-transport.md</code></a>.</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>submodule_reuse_map.md</code></a>,
+<a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code></a>,
+<a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>2026-06-07-helix-ota-design.md</code></a>.</li>
+</ul>
+</body>
+</html>

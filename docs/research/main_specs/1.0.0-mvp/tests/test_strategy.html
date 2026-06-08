@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>test_strategy</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-1.0.0-mvp-test-strategy">Helix OTA 1.0.0-MVP — Test
+Strategy</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The four-layer test strategy for the Helix OTA 1.0.0-MVP, derived
+from HelixConstitution §1 (source-presence gate, artifact gate,
+runtime/integration) and §1.1 (mutation meta-test). Maps each test layer
+to every MVP component (server, artifact-validator, signing, rollout
+[deferred], Android agent, database, API) and specifies unit,
+integration, contract, e2e (on the Orange Pi 5 Max), security, and load
+testing, plus a mutation-testing meta-test. Anchored to the
+already-performed physical validation recorded in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The six NEW <code>ota-*</code> submodules do not yet exist as repos,
+so no test code has been written or executed against them; all
+per-module unit/integration/mutation claims are forward-looking test
+<em>plans</em>, not executed results (UNVERIFIED until the repos and CI
+exist). On-board e2e on the Orange Pi 5 Max / RK3588 has not been run;
+the board’s AOSP A/B + Virtual A/B + AVB enablement is itself UNVERIFIED
+and is the top-priority hardware gate carried from <a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code></a>.
+(The HelixConstitution clause numbers §1, §1.1, §7.1, §11.4.6, §11.4.61,
+§11.4.123 are now VERIFIED against the authoritative constitution text
+at <a
+href="../../../../../constitution/Constitution.md"><code>constitution/Constitution.md</code></a>
+— see §2 and §13; this resolves the prior-revision UNVERIFIED tag on the
+clause numbers.)</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>The only <em>executed</em> validation to date is the artifact gate
+captured in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>
+(OpenAPI redocly-valid, SQL migrations applied up+down on live Postgres,
+k8s kubeconform-valid). Everything else here is a plan to be implemented
+in CI and on hardware.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: verified the six cited HelixConstitution clause numbers (§1,
+§1.1, §7.1, §11.4.6, §11.4.61, §11.4.123) against the live <a
+href="../../../../../constitution/Constitution.md"><code>Constitution.md</code></a>
+and removed the blanket “clause numbers UNVERIFIED” tag — the numbers
+are now confirmed FACT (§13). Rev 1: initial revision.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Stand up the six NEW <code>ota-*</code> repos and wire a CI matrix
+that runs: the §1 artifact gate (redocly, Postgres up/down migration
+service, kubeconform, <code>docker compose config</code>) exactly as in
+<a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>;
+Go unit (<code>go test</code>) + testcontainers-go integration;
+Kotlin/KMP unit; OpenAPI contract conformance; mutation testing
+(<code>go-mutesting</code> / <code>gremlins</code> for Go,
+<code>pitest</code> for Kotlin/JVM). Execute the on-board e2e +
+corrupt-slot A/B rollback runbook on the Orange Pi 5 Max once the
+board’s A/B/VAB/AVB enablement is confirmed. Compile the Kotlin snippets
+once the AOSP/Android-SDK toolchain is wired (carried from <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>
+Issues).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-the-four-test-layers-helixconstitution-1--11">The four
+test layers (HelixConstitution §1 / §1.1)</a></li>
+<li><a href="#3-components-under-test">Components under test</a></li>
+<li><a href="#4-layer--component-matrix">Layer × component
+matrix</a></li>
+<li><a href="#5-unit-testing">Unit testing</a></li>
+<li><a href="#6-integration-testing">Integration testing</a></li>
+<li><a href="#7-contract-testing-openapi-conformance">Contract testing
+(OpenAPI conformance)</a></li>
+<li><a href="#8-end-to-end-on-the-orange-pi-5-max">End-to-end on the
+Orange Pi 5 Max</a></li>
+<li><a href="#9-security-testing">Security testing</a></li>
+<li><a href="#10-load-testing">Load testing</a></li>
+<li><a href="#11-mutation-testing-meta-test-11">Mutation testing
+(meta-test, §1.1)</a></li>
+<li><a
+href="#12-already-performed-validation-evidence">Already-performed
+validation (evidence)</a></li>
+<li><a href="#13-anti-bluff-notes">Anti-bluff notes</a></li>
+</ol>
+<blockquote>
+<p>The metadata-table + table-of-contents requirement is mandated by
+HelixConstitution <strong>§11.4.61</strong> (“Mandatory Markdown
+metadata table + structured-doc ToC”, User mandate 2026-05-19 — VERIFIED
+at <a
+href="../../../../../constitution/Constitution.md"><code>Constitution.md</code></a>
+line ~5687). This document carries its metadata table first, then its
+ToC immediately after, per that clause and <a
+href="../../00-master/documentation_standards.md#3-table-of-contents-requirement"><code>documentation_standards.md</code>
+§3</a>.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document defines the <strong>test strategy</strong> for the
+Helix OTA <strong>1.0.0-MVP</strong> release. It is normative for how
+the MVP is verified before it is considered done. It binds the
+four-layer testing model mandated by HelixConstitution §1
+(source-presence gate, artifact gate, runtime/integration) and §1.1
+(mutation meta-test) — clause numbers VERIFIED against the live <a
+href="../../../../../constitution/Constitution.md"><code>Constitution.md</code></a>
+(see §2) — to each MVP component, and it specifies the concrete test
+types (unit, integration, contract, e2e, security, load) plus the
+mutation meta-test.</p>
+<p>The strategy is <strong>catalogue-first</strong> (see <a
+href="../../00-master/submodule_reuse_map.md"><code>submodule_reuse_map.md</code></a>):
+new test code is written only for the <strong>six NEW</strong>
+<code>ota-*</code> submodules (<code>ota-protocol</code>,
+<code>ota-artifact-validator</code>, <code>ota-rollout-engine</code>,
+<code>ota-update-engine-bridge</code>, <code>ota-android-agent</code>,
+<code>ota-telemetry-schema</code>). Behavior that lives in catalogue
+submodules (<code>auth</code>, <code>security</code>,
+<code>database</code>, <code>Storage</code>, <code>observability</code>,
+<code>Herald</code>, <code>eventbus</code>, <code>ratelimiter</code>,
+<code>middleware</code>, <code>http3</code>, <code>mdns</code>,
+<code>recovery</code>, <code>config</code>, <code>discovery</code>,
+<code>cache</code>; KMP: <code>Auth-KMP</code>,
+<code>Security-KMP</code>, <code>Storage-KMP</code>,
+<code>Config-KMP</code>) is the responsibility of those submodules’ own
+suites; Helix OTA tests verify only the <strong>wiring and
+contracts</strong> at the boundary, not the reused internals.</p>
+<p>The <strong>rollout engine</strong> (<code>ota-rollout-engine</code>)
+is <strong>deferred</strong> to 1.0.1-staged-rollout (see <a
+href="../../1.0.1-staged-rollout/README.md"><code>1.0.1-staged-rollout/README.md</code></a>);
+its tests are specified here for completeness but are <strong>out of
+scope for MVP execution</strong> and marked <strong>(deferred)</strong>
+throughout.</p>
+<p>Only the executed artifact-gate validation in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>
+is a confirmed result; everything else in this document is a
+<strong>test plan</strong>, not an executed outcome (see §13).</p>
+<h2 id="the-four-test-layers-helixconstitution-1-1.1">2. The four test
+layers (HelixConstitution §1 / §1.1)</h2>
+<p>The four layers below are a <strong>direct map</strong> of
+HelixConstitution <strong>§1</strong> (“Test coverage is mandatory for
+every change”) — VERIFIED at <a
+href="../../../../../constitution/Constitution.md"><code>Constitution.md</code></a>
+line ~133. §1’s own four-row invariant table reads, verbatim: (i)
+<em>“The change is present in source”</em> → source-presence gate; (ii)
+<em>“The change survives compilation / packaging … inspects the produced
+artifact … verifies the change actually shipped”</em> → artifact gate;
+(iii) <em>“The change behaves correctly at runtime … runtime /
+integration / on-device test”</em> → runtime/ integration; (iv) <em>“The
+gate itself is not bluffing → meta-test (mutation) entry that mutates
+the asserted condition and proves the gate catches the break”</em> → the
+mutation meta-test, further specified by <strong>§1.1</strong>
+(“False-positive immunity is an invariant”, VERIFIED line ~147). The
+clause numbers are therefore confirmed FACT, not assumptions.</p>
+<p>The strategy implements those four layers:</p>
+<ol type="1">
+<li><strong>Source-presence gate (§1).</strong> Before anything is
+claimed to exist, the <em>source</em> that implements it must be present
+and identifiable. For MVP this means: the component’s source module
+exists, compiles/parses, and the artifact it produces is checked into
+the corpus (e.g. the OpenAPI spec, the SQL migrations, the k8s
+manifests, the docker-compose file, the Kotlin snippets). A claim with
+no backing source is a §1 violation.</li>
+<li><strong>Artifact gate (§1).</strong> Every produced artifact that is
+parseable or executable MUST be validated by a <em>real</em> tool, never
+by inspection alone. This is the gate already exercised in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>
+(redocly for OpenAPI, live-Postgres apply for SQL, kubeconform for k8s).
+The MVP CI re-runs these exact validators as the standing artifact
+gate.</li>
+<li><strong>Runtime / integration (§1).</strong> The code must actually
+run against real dependencies: Go services against real Postgres + MinIO
+via testcontainers-go and <code>net/http/httptest</code>; the Android
+agent against a host/fake <code>update_engine</code> bridge with a real
+<code>ZIP_STORED</code> payload; and the on-board e2e on the Orange Pi 5
+Max.</li>
+<li><strong>Mutation meta-test (§1.1).</strong> A meta-test that
+<em>tests the tests</em>: seed faults (mutants) into the code under test
+and confirm the suite kills them. This guards against vacuous or
+assertion-free tests that pass without exercising behavior. §1.1 is
+explicit: <em>“Every new gate MUST be paired with a mutation entry … (1)
+Temporarily breaks the assertion … (3) Asserts the gate now reports FAIL
+… If the mutation round does not turn PASS → FAIL, the gate is a sham
+and must be rewritten.”</em> The constitution also carries
+<strong>Appendix A — Mutation testing — academic and industrial
+foundations</strong> (VERIFIED, line ~8994). See §11.</li>
+</ol>
+<p>These layers are cumulative: a component is not “done” until its
+source is present (§1), its artifacts pass the gate (§1), it runs in
+integration (§1), and its suite survives the mutation meta-test
+(§1.1).</p>
+<h2 id="components-under-test">3. Components under test</h2>
+<p>The MVP components and their owning module(s) (from <a
+href="../../00-master/submodule_reuse_map.md"><code>submodule_reuse_map.md</code>
+§3–§4</a>):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Primary module(s)</th>
+<th>Language</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Server</strong> (control plane / API host)</td>
+<td>NEW <code>ota-protocol</code> + catalogue <code>http3</code>,
+<code>middleware</code>, <code>ratelimiter</code>,
+<code>recovery</code>, <code>auth</code>, <code>security</code>,
+<code>database</code>, <code>Storage</code>, <code>observability</code>,
+<code>Herald</code>, <code>eventbus</code>, <code>config</code></td>
+<td>Go</td>
+<td>Wires reused submodules; owns route/policy wiring + handlers.</td>
+</tr>
+<tr>
+<td><strong>Artifact-validator</strong></td>
+<td>NEW <code>ota-artifact-validator</code> (+ <code>security</code>,
+<code>ota-protocol</code>)</td>
+<td>Go</td>
+<td>Structure → hash → signature → version monotonicity → target
+compatibility (<a
+href="../server/artifact_validation.md"><code>artifact_validation.md</code></a>).</td>
+</tr>
+<tr>
+<td><strong>Signing</strong></td>
+<td>catalogue <code>security</code> / <code>Security-KMP</code> (crypto
+primitives) + the OTA package signing in the Go build pipeline</td>
+<td>Go + build tooling</td>
+<td>SHA-256 + signature + AVB for MVP; TUF device-side deferred (<a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002</a>,
+<a
+href="../security/signing_verification.md"><code>signing_verification.md</code></a>).</td>
+</tr>
+<tr>
+<td><strong>Rollout</strong> <em>(deferred)</em></td>
+<td>NEW <code>ota-rollout-engine</code> (+ <code>database</code>)</td>
+<td>Go</td>
+<td>Staged %, halt/advance. <strong>Deferred to 1.0.1</strong> — tests
+planned, not run in MVP.</td>
+</tr>
+<tr>
+<td><strong>Android agent</strong></td>
+<td>NEW <code>ota-android-agent</code> (KMP) +
+<code>ota-update-engine-bridge</code> + <code>ota-protocol</code> +
+<code>ota-telemetry-schema</code>; KMP catalogue <code>Auth-KMP</code>,
+<code>Security-KMP</code>, <code>Storage-KMP</code>,
+<code>Config-KMP</code></td>
+<td>Kotlin / KMP</td>
+<td>register → poll → download → verify → apply → report (<a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code></a>).</td>
+</tr>
+<tr>
+<td><strong>DB</strong></td>
+<td>catalogue <code>database</code> + the MVP migrations</td>
+<td>SQL (PostgreSQL)</td>
+<td><code>001_initial_schema.{up,down}.sql</code>; schema in <a
+href="../database/schema.md"><code>schema.md</code></a>.</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>NEW <code>ota-protocol</code> (wire contracts) + the OpenAPI
+spec</td>
+<td>OpenAPI 3.1 + Go</td>
+<td><a href="../api/openapi.yaml"><code>openapi.yaml</code></a>, 12
+paths / 24 schemas (per <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code>
+§1</a>).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="layer-component-matrix">4. Layer × component matrix</h2>
+<p><code>✓</code> = in MVP scope; <code>(def)</code> = deferred to
+1.0.1; <code>—</code> = not applicable; <code>(evi)</code> = already
+executed, see <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>§1 source-presence</th>
+<th>§1 artifact gate</th>
+<th>Unit</th>
+<th>Integration</th>
+<th>Contract</th>
+<th>e2e (board)</th>
+<th>Security</th>
+<th>Load</th>
+<th>§1.1 mutation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Artifact-validator</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Signing</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Rollout</td>
+<td>(def)</td>
+<td>(def)</td>
+<td>(def)</td>
+<td>(def)</td>
+<td>—</td>
+<td>(def)</td>
+<td>(def)</td>
+<td>(def)</td>
+<td>(def)</td>
+</tr>
+<tr>
+<td>Android agent</td>
+<td>✓</td>
+<td>✓ (Kotlin compile UNVERIFIED)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓ (consumer)</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>DB</td>
+<td>✓</td>
+<td>✓ (evi)</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr>
+<td>API</td>
+<td>✓</td>
+<td>✓ (evi)</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>DB and API have no meaningful “unit”/“mutation” target of their own
+(the DB is DDL; the API is a declarative contract); their correctness is
+covered by the artifact gate (<code>(evi)</code>), contract conformance,
+and the integration/security/load layers that exercise them.</p>
+<h2 id="unit-testing">5. Unit testing</h2>
+<h3 id="go-server-artifact-validator-signing-rollout-deferred">5.1 Go
+(server, artifact-validator, signing, rollout [deferred])</h3>
+<ul>
+<li><strong>Framework:</strong> standard <code>go test</code> with
+<strong><code>testify</code></strong>
+(<code>require</code>/<code>assert</code>) and <strong>table-driven
+tests</strong> as the default style. Each table row names a case,
+inputs, and expected outcome.</li>
+<li><strong><code>ota-protocol</code></strong> — round-trip
+encode/decode of wire types, manifest schema, status/event enums; table
+tests over valid + malformed payloads. Pure contracts, no I/O, fully
+deterministic.</li>
+<li><strong><code>ota-artifact-validator</code></strong> — table tests
+driving the pipeline stages on <strong>raw artifact bytes</strong> (the
+module is independently testable on bytes per <a
+href="../../00-master/submodule_reuse_map.md#4-new-submodules-decoupled-boundaries"><code>submodule_reuse_map.md</code>
+§4</a>):
+<ul>
+<li>structure: well-formed vs truncated/garbage zip;</li>
+<li>hash: matching vs mismatched SHA-256;</li>
+<li>signature: valid vs forged/absent signature (crypto primitive
+supplied by <code>security</code>);</li>
+<li>version monotonicity: newer accepted, equal/older rejected;</li>
+<li>target compatibility: matching vs mismatching device/build
+target.</li>
+</ul></li>
+<li><strong>Signing</strong> — table tests over verify-good /
+verify-forged / verify-tampered using the <code>security</code>
+primitives; the Go-side OTA package signing helpers (the
+<code>ota_from_target_files</code> / <code>--package_key</code> /
+<code>--payload_signer</code> wrapping described in <a
+href="../client_android/build_integration.md"><code>build_integration.md</code></a>)
+get unit coverage on argument assembly and error paths.</li>
+<li><strong>Server handlers</strong> — <code>net/http/httptest</code>
+exercises each handler in isolation with a fake store/port; table tests
+over auth-required vs anonymous, valid vs invalid bodies, and the
+error-mapping paths. (Reused submodule internals are <em>not</em>
+re-tested here.)</li>
+<li><strong><code>ota-rollout-engine</code></strong> <em>(deferred)</em>
+— table tests with a <strong>fake clock + fake telemetry</strong> (per
+its decoupled boundary): phase advance, halt-on-failure-signal, and
+no-HTTP invariants.</li>
+</ul>
+<h3 id="kotlin-kmp-android-agent">5.2 Kotlin / KMP (Android agent)</h3>
+<ul>
+<li><strong>Framework:</strong> Kotlin unit tests
+(JUnit/<code>kotlin.test</code> on the JVM target where the logic is
+platform-independent). Logic that does not touch Android APIs is tested
+in <code>commonTest</code>.</li>
+<li><strong><code>ota-android-agent</code></strong> — duty-cycle state
+machine (register → poll → download → verify → apply → report),
+poll-cadence (15 min + jitter) and backoff computed against a
+<strong>test driver / fake clock</strong> (<a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code>
+§runtime/integration</a>), error-code mapping from the engine callbacks
+into telemetry events.</li>
+<li><strong><code>ota-telemetry-schema</code></strong> — encode/decode
+round-trips of telemetry events/metrics shared by server + agent.</li>
+<li><strong><code>ota-update-engine-bridge</code></strong> — thin
+Android-only surface; the host-testable portion (argument assembly for
+<code>applyPayload(url, offset, size, props)</code> and the four header
+props
+<code>FILE_HASH</code>/<code>FILE_SIZE</code>/<code>METADATA_HASH</code>/<code>METADATA_SIZE</code>
+per <a
+href="../client_android/update_engine_integration.md"><code>update_engine_integration.md</code></a>)
+is unit tested; the actual HAL call is covered in integration/e2e.</li>
+<li><strong>UNVERIFIED:</strong> the Kotlin snippets are <strong>not yet
+compiled</strong> (no Android SDK on the build host — carried from <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>
+Issues); compiling
+<ul>
+<li>running these tests is in Continuation.</li>
+</ul></li>
+</ul>
+<h2 id="integration-testing">6. Integration testing</h2>
+<ul>
+<li><strong>Go ↔︎ Postgres + MinIO via <a
+href="https://golang.testcontainers.org/">testcontainers-go</a>:</strong>
+integration tests spin up <strong>real PostgreSQL</strong> and
+<strong>real MinIO</strong> containers (not mocks), apply the MVP
+migrations, and exercise the server end-to-end through its HTTP surface
+with <code>net/http/httptest</code>.
+<ul>
+<li><strong>Server + DB:</strong> register a device, upload artifact
+metadata, create a release/deployment, and read back state — asserting
+the rows written match the schema in <a
+href="../database/schema.md"><code>schema.md</code></a> (12 tables, per
+<a href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code>
+§2</a>).</li>
+<li><strong>Server + Storage (MinIO):</strong> upload an artifact blob
+and re-fetch it (range-get for large <code>.zip</code> if the
+<code>Storage</code> binding supports it — UNVERIFIED per <a
+href="../../00-master/submodule_reuse_map.md#5-upstream-additions-summary"><code>submodule_reuse_map.md</code>
+§5</a>).</li>
+<li><strong>Artifact-validator + security + Storage:</strong> push a
+real artifact through upload → validate → persist, asserting good
+artifacts pass and bad ones (forged/tampered/downgrade) are rejected at
+the right stage.</li>
+</ul></li>
+<li><strong>Android agent integration (host/emulated A/B):</strong> a
+<strong>fake/host <code>update_engine</code> bridge</strong> plus a
+<strong>real <code>ZIP_STORED</code> payload</strong> exercises
+<code>download → verify → applyPayload → onStatusUpdate → onPayloadApplicationComplete</code>,
+and WorkManager scheduling is driven by a test driver / fake clock to
+confirm the 15-min + jitter cadence and backoff — exactly the plan
+recorded in <a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code></a>
+(runtime/ integration).</li>
+<li><strong>Rollout</strong> <em>(deferred)</em> — engine integrated
+against a real <code>database</code>-backed store with injected
+telemetry signals.</li>
+</ul>
+<h2 id="contract-testing-openapi-conformance">7. Contract testing
+(OpenAPI conformance)</h2>
+<ul>
+<li><strong>Source of truth:</strong> <a
+href="../api/openapi.yaml"><code>openapi.yaml</code></a> — OpenAPI
+<strong>3.1.0</strong>, <strong>12 paths</strong>, <strong>24 component
+schemas</strong> (confirmed valid by redocly in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code>
+§1</a>).</li>
+<li><strong>Spec validity (artifact gate):</strong>
+<code>npx --yes @redocly/cli@latest lint api/openapi.yaml</code> runs in
+CI as a standing gate (already passing, single cosmetic
+<code>info-license</code> warning).</li>
+<li><strong>Server-side conformance:</strong> the running Go server’s
+responses are validated against the OpenAPI schema (request/response
+shape, status codes, required fields) for each of the 12 paths —
+i.e. the implementation must not drift from the contract. Drift is a
+test failure.</li>
+<li><strong>Client-side (consumer) conformance:</strong> the Android
+agent’s expectations of <code>/client/update</code> and
+<code>/client/telemetry</code> are checked against the same spec via the
+shared <code>ota-protocol</code> types, so server and agent share one
+contract.</li>
+<li><strong>Anti-drift invariant:</strong> <code>ota-protocol</code>
+wire types and <code>openapi.yaml</code> describe the same wire
+contract; a contract test asserts they agree (any mismatch fails
+CI).</li>
+</ul>
+<h2 id="end-to-end-on-the-orange-pi-5-max">8. End-to-end on the Orange
+Pi 5 Max</h2>
+<p>The on-board e2e is the §1 runtime layer’s hardware tier on the
+<strong>Orange Pi 5 Max / RK3588, Android 15</strong> target (<a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code></a>,
+<a
+href="../client_android/build_integration.md"><code>build_integration.md</code></a>).
+It is <strong>not yet executed</strong>; the board’s AOSP A/B + dynamic
+partitions + Virtual A/B + <code>dm-user</code> enablement is
+<strong>UNVERIFIED</strong> and is the top-priority hardware gate
+(carried from <a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code></a>
+and <a
+href="../client_android/update_engine_integration.md"><code>update_engine_integration.md</code></a>).</p>
+<h3 id="happy-path-runbook">8.1 Happy-path runbook</h3>
+<ol type="1">
+<li><strong>Flash</strong> the Helix-enabled AOSP build (with the
+<code>ota-android-agent</code> as a platform-signed system app per <a
+href="../client_android/build_integration.md"><code>build_integration.md</code></a>)
+to the board.</li>
+<li><strong>Upload</strong> a new OTA artifact via the dashboard (server
+intake → artifact-validator → <code>Storage</code>).</li>
+<li><strong>Deploy-to-all</strong> from the dashboard (create a
+deployment targeting the board).</li>
+<li>Device <strong>downloads + verifies</strong>: the agent downloads
+the full zip to <code>/data/ota_package/</code>, verifies SHA-256 +
+signature + the four hashes (<a
+href="../client_android/update_engine_integration.md"><code>update_engine_integration.md</code></a>).</li>
+<li><strong>A/B apply</strong>: <code>applyPayload</code> writes only
+the <strong>inactive</strong> slot (Virtual A/B: into the COW snapshot
+via <code>snapuserd</code>); <code>update_engine</code> re-verifies
+metadata + payload signature.</li>
+<li><strong>Reboot</strong> into the new slot (trial state via
+<code>boot_control</code>).</li>
+<li><strong>Post-boot success</strong>: <code>update_verifier</code> /
+agent marks the slot successful; the agent reports a success telemetry
+event to the server.</li>
+</ol>
+<h3 id="failure-path-runbook-automatic-ab-rollback">8.2 Failure-path
+runbook (automatic A/B rollback)</h3>
+<ol type="1">
+<li><strong>Corrupt the new (inactive) slot</strong> after apply (or
+inject a payload that fails post-boot verification).</li>
+<li>Reboot: the new slot fails its trial; the
+bootloader/<code>update_verifier</code> does <strong>not</strong> mark
+it successful.</li>
+<li><strong>Confirm automatic A/B rollback</strong>: the device falls
+back to the previous good slot (the running slot was never touched
+during apply), and the agent reports a failure/rollback telemetry
+event.</li>
+</ol>
+<p>This validates the no-corruption guarantee (A/B + AVB/dm-verity +
+<code>boot_control</code> auto-rollback) described in <a
+href="../client_android/update_engine_integration.md#7-avb--boot_control--update_verifier-interplay"><code>update_engine_integration.md</code>
+§7</a> and the LOCKED native-Android-A/B strategy (<a
+href="../../research/adr/adr-0001-wrapped-engine.md">ADR-0001</a>). The
+agent <strong>wraps, never replaces</strong> the engine, so rollback is
+enforced by the bootloader, not by Helix code.</p>
+<p><strong>UNVERIFIED:</strong> every step in §8 depends on the board
+actually shipping AOSP A/B + VAB + AVB; until that is confirmed on
+hardware, the e2e result is unknown.</p>
+<h2 id="security-testing">9. Security testing</h2>
+<p>Security tests target the trust boundary defined in <a
+href="../security/signing_verification.md"><code>signing_verification.md</code></a>,
+<a
+href="../security/transport_security.md"><code>transport_security.md</code></a>,
+<a
+href="../../00-master/threat_model.md"><code>threat_model.md</code></a>,
+and <a
+href="../../research/adr/adr-0002-supply-chain-trust.md">ADR-0002</a>.
+Each is a negative test that MUST fail closed:</p>
+<ul>
+<li><strong>Forged artifact</strong> — an artifact whose contents do not
+match its manifest/hashes is rejected by
+<code>ota-artifact-validator</code> (structure/hash stage) and,
+defense-in-depth, by <code>update_engine</code> on apply.</li>
+<li><strong>Bad signature</strong> — an artifact with an invalid/absent
+signature is rejected by the validator (signature stage) on the server
+and re-checked by <code>update_engine</code> (payload signature) on the
+device.</li>
+<li><strong>Downgrade / anti-rollback</strong> — pushing an older build
+to a newer device is rejected: the server-side <strong>version
+monotonicity</strong> check rejects it at intake, and on-device
+<code>update_engine</code> refuses it with
+<code>PAYLOAD_TIMESTAMP_ERROR</code> (51) per <a
+href="../client_android/update_engine_integration.md"><code>update_engine_integration.md</code></a>.
+The rollout policy must never attempt a downgrade.</li>
+<li><strong>MITM</strong> — transport is exercised against a
+tampered/intercepted channel to confirm TLS and the on-device
+verify-before-apply window defeat in-flight modification (<a
+href="../security/transport_security.md"><code>transport_security.md</code></a>);
+a body altered in transit must fail hash/signature verification before
+apply.</li>
+</ul>
+<p>These map directly to the artifact-validator and signing components
+and are run both in integration (server-side) and in the e2e
+(device-side re-verification).</p>
+<h2 id="load-testing">10. Load testing</h2>
+<ul>
+<li><strong>Tool:</strong> <a href="https://k6.io/">k6</a>.</li>
+<li><strong>Scenarios:</strong> concurrent <strong>device poll</strong>
+(<code>/client/update</code>) and <strong>artifact download</strong>
+modeling a fleet polling on the 15-min + jitter cadence (<a
+href="../client_android/integration_guide.md"><code>integration_guide.md</code></a>),
+plus concurrent telemetry ingest (<code>/client/telemetry</code>).</li>
+<li><strong>Targets under load:</strong> the <strong>server</strong>
+(HTTP/3→HTTP/2 transport, <code>ratelimiter</code>), the
+<strong>API</strong> paths, the <strong>DB</strong> (read/write under
+concurrent poll + telemetry), and artifact <strong>download</strong>
+throughput from <code>Storage</code>/MinIO (range-get behavior for large
+<code>.zip</code> — UNVERIFIED whether <code>Storage</code> supports
+streaming/range-get, per <a
+href="../../00-master/submodule_reuse_map.md#5-upstream-additions-summary"><code>submodule_reuse_map.md</code>
+§5</a>).</li>
+<li><strong>Assertions:</strong> error rate, p95/p99 latency, and that
+<code>ratelimiter</code> throttles abusive clients without starving
+healthy ones. Concrete SLO thresholds are <strong>UNVERIFIED</strong>
+for this revision and are set in Continuation once a baseline run
+exists.</li>
+</ul>
+<h2 id="mutation-testing-meta-test-1.1">11. Mutation testing (meta-test,
+§1.1)</h2>
+<p>The mutation meta-test (HelixConstitution <strong>§1.1</strong>,
+VERIFIED — “False-positive immunity is an invariant”, plus
+<strong>Appendix A</strong> “Mutation testing — academic and industrial
+foundations”) tests the tests: it seeds faults into the code under test
+and asserts the suite <strong>kills</strong> them (a surviving mutant
+means the suite has a blind spot).</p>
+<ul>
+<li><strong>Go modules</strong> (<code>ota-protocol</code>,
+<code>ota-artifact-validator</code>, <code>ota-rollout-engine</code>
+[deferred], server handlers, signing helpers): run a Go mutation engine
+— <strong><code>gremlins</code></strong> and/or
+<strong><code>go-mutesting</code></strong> — over the unit suites in
+§5.1. The validator and protocol are the highest value targets because
+their unit tests are pure-function table tests where mutation score is
+most meaningful (e.g. flipping a comparison in version monotonicity must
+be caught).</li>
+<li><strong>Kotlin / JVM modules</strong> (the host-testable portions of
+<code>ota-android-agent</code>, <code>ota-telemetry-schema</code>,
+<code>ota-update-engine-bridge</code>): run
+<strong><code>pitest</code></strong> over the JVM-target unit suites in
+§5.2.</li>
+<li><strong>Scope:</strong> mutation testing runs on the NEW
+<code>ota-*</code> modules’ own suites only; catalogue submodules are
+out of scope here (their suites are their own responsibility).</li>
+<li><strong>Gate:</strong> a per-module <strong>mutation-score
+threshold</strong> is enforced in CI. The exact threshold is
+<strong>UNVERIFIED</strong> for this revision (no suite has been run
+yet) and is fixed in Continuation after a first measured run.</li>
+<li><strong>Tool availability:</strong> none of <code>gremlins</code>,
+<code>go-mutesting</code>, or <code>pitest</code> is confirmed installed
+on the current build host (only the tools listed in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code>
+§5</a> are confirmed present); wiring them into CI is in Continuation.
+Marked <strong>UNVERIFIED</strong>.</li>
+</ul>
+<h2 id="already-performed-validation-evidence">12. Already-performed
+validation (evidence)</h2>
+<p>The following are <strong>executed, reproducible</strong> results —
+the §1 artifact gate (§2) — recorded in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>.
+They are the only confirmed test outcomes in this corpus to date; the CI
+artifact gate re-runs these exact validators:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Validator (real tool)</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>api/openapi.yaml</code></td>
+<td><code>npx @redocly/cli@latest lint</code></td>
+<td><strong>Valid</strong> — OpenAPI 3.1.0, 12 paths, 24 schemas; 1
+cosmetic <code>info-license</code> warning (<a
+href="../VALIDATION_EVIDENCE.md">§1</a>).</td>
+</tr>
+<tr>
+<td><code>database/migrations/001_initial_schema.{up,down}.sql</code></td>
+<td><code>psql -v ON_ERROR_STOP=1</code> against a <strong>live
+PostgreSQL</strong> server</td>
+<td><strong>UP OK</strong> (12 tables created), <strong>DOWN OK</strong>
+(clean teardown) (<a href="../VALIDATION_EVIDENCE.md">§2</a>).</td>
+</tr>
+<tr>
+<td><code>deployment/kubernetes/*.yaml</code></td>
+<td><code>kubeconform -summary -strict</code></td>
+<td><strong>5 resources, Valid: 5, Invalid: 0</strong> (<a
+href="../VALIDATION_EVIDENCE.md">§3</a>).</td>
+</tr>
+<tr>
+<td><code>deployment/docker-compose.mvp.yml</code></td>
+<td>YAML parse only (docker engine absent on host)</td>
+<td>Parses; full <code>docker compose config</code> deferred to CI (<a
+href="../VALIDATION_EVIDENCE.md">§4</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>Carried-forward limitations from that evidence: docker-compose is not
+yet <code>docker compose config</code>-validated (engine absent), and
+the Kotlin snippets are <strong>not compiled</strong> (no Android SDK on
+host) — both are UNVERIFIED and tracked in Continuation here and in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>.</p>
+<h2 id="anti-bluff-notes">13. Anti-bluff notes</h2>
+<p>Per HelixConstitution <strong>§7.1</strong> (“NO BLUFF —
+positive-evidence-only validation”), <strong>§11.4.6</strong>
+(“No-guessing mandate”) and <strong>§11.4.123</strong>
+(“Rock-solid-proof-or-deep-research mandate”) — all three clause numbers
+VERIFIED against the live <a
+href="../../../../../constitution/Constitution.md"><code>Constitution.md</code></a>
+(§7.1 line ~282, §11.4.6 “No-guessing mandate” line ~630, §11.4.123 the
+2026-06-03 user mandate line ~8694) — and <a
+href="../../00-master/documentation_standards.md#8-anti-bluff-and-unverified-convention"><code>documentation_standards.md</code>
+§8</a>:</p>
+<ul>
+<li><strong>No fabricated results.</strong> The only <em>executed</em>
+test results referenced here are those in <a
+href="../VALIDATION_EVIDENCE.md"><code>VALIDATION_EVIDENCE.md</code></a>
+(§12). Every unit/integration/contract/ e2e/security/load/mutation item
+is a <strong>plan to be implemented</strong>, not a claimed pass; the
+six NEW <code>ota-*</code> repos do not yet exist, so no test code has
+been run against them.</li>
+<li><strong>Only real modules referenced.</strong> Submodules are named
+only from the verified catalogue (<a
+href="../../00-master/documentation_standards.md#9-submodule-catalogue-canonical-names"><code>documentation_standards.md</code>
+§9</a>) plus the <strong>six NEW</strong> <code>ota-*</code> submodules
+from <a
+href="../../00-master/submodule_reuse_map.md#4-new-submodules-decoupled-boundaries"><code>submodule_reuse_map.md</code>
+§4</a>. No submodule name is invented.</li>
+<li><strong>UNVERIFIED tagged.</strong> The Orange Pi 5 Max board’s
+A/B/VAB/AVB enablement, the Kotlin snippet compilation, the
+mutation-tool availability
+(<code>gremlins</code>/<code>go-mutesting</code>/<code>pitest</code> not
+confirmed on the build host), the load SLO thresholds, and the
+<code>Storage</code> range-get capability remain tagged UNVERIFIED
+inline where used. <strong>Resolved this revision:</strong> the
+HelixConstitution clause numbers (§1, §1.1, §7.1, §11.4.6, §11.4.61,
+§11.4.123) are now VERIFIED against the live <a
+href="../../../../../constitution/Constitution.md"><code>Constitution.md</code></a>
+and are no longer UNVERIFIED — leaving a verifiable fact tagged
+UNVERIFIED would itself be a §11.4.6 (no- guessing) / §7.1 deviation, so
+the tags were corrected after reading the source.</li>
+<li><strong>Open work in Continuation.</strong> Standing up the NEW
+repos, the CI matrix, the on-board e2e, and the mutation gate all live
+in the <code>Continuation</code> row, not as completed claims.</li>
+</ul>
+</body>
+</html>

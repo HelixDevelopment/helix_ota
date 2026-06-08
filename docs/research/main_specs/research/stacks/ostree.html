@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ostree</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-stack-research-ostree-libostree-rpm-ostree">Helix OTA
+— Stack Research: OSTree / libostree / rpm-ostree</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Evidence-based research note on libostree (OSTree) and rpm-ostree as
+a candidate engine for <strong>file-based atomic deployments</strong> in
+the Helix OTA <strong>Linux phase</strong> (all flavors). Covers the
+deployment model, pinning/rollback, static deltas, the HTTP server side,
+licensing/maturity, and Android (AOSP) fit. OSTree is explicitly
+<strong>not</strong> an A/B partition scheme; it is a parallel
+deployment model on a single rootfs partition — relevant to Linux,
+largely orthogonal to the Android-15-first native A/B path.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>A few quantitative/operational claims could not be pinned to a
+single canonical figure (exact storage-overhead formula, precise GC
+retention defaults, delta size ratios). These are tagged “UNVERIFIED —
+needs confirmation” inline and must be benchmarked before any ADR
+commits to OSTree.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>No number is invented; unverifiable claims are flagged, not guessed
+(HelixConstitution §11.4.6).</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial research note</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Authored from the official ostreedev/coreos docs and man pages
+consulted live on 2026-06-07; all URLs cited are pages actually fetched
+or returned by search this session.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Feed into the Linux-phase OS-adapter spec and the engine-selection
+ADR(s). If OSTree advances past screening, prototype an
+<code>archive</code> repo + static-delta server and measure delta sizes
++ GC behavior on real images; cross-link with the Mender/hawkBit
+landscape report. Re-run web verification before any production decision
+(releases move on a date-based cadence).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope--relevance-to-helix">§1. Scope &amp; relevance to
+Helix</a></li>
+<li><a href="#2-what-ostree-is-mechanism">§2. What OSTree is
+(mechanism)</a></li>
+<li><a href="#3-file-based-atomic-deployments">§3. File-based atomic
+deployments</a></li>
+<li><a href="#4-pinning--rollback">§4. Pinning &amp; rollback</a></li>
+<li><a href="#5-static-deltas">§5. Static deltas</a></li>
+<li><a href="#6-server-side">§6. Server side</a></li>
+<li><a href="#7-rpm-ostree--bootc">§7. rpm-ostree &amp; bootc</a></li>
+<li><a href="#8-ostree-vs-ab-and-why-it-matters-for-helix">§8. OSTree vs
+A/B (and why it matters for Helix)</a></li>
+<li><a href="#9-android-fit">§9. Android fit</a></li>
+<li><a href="#10-go-control-plane-fit--wrapability">§10. Go
+control-plane fit &amp; wrapability</a></li>
+<li><a href="#11-license--maturity">§11. License &amp; maturity</a></li>
+<li><a href="#12-pros--cons-for-helix">§12. Pros / cons for
+Helix</a></li>
+<li><a href="#13-recommendation">§13. Recommendation</a></li>
+<li><a href="#14-sources-consulted">§14. Sources consulted</a></li>
+<li><a href="#15-confidence">§15. Confidence</a></li>
+</ul>
+<h2 id="scope-relevance-to-helix">§1. Scope &amp; relevance to
+Helix</h2>
+<p>Helix OTA is <strong>Android 15 first</strong> (Orange Pi 5 Max),
+using AOSP-native A/B (Virtual A/B + compression) with a custom Go
+control plane, and later extends to <strong>Linux (all
+flavors)</strong>, Windows, and other OSes via pluggable OS adapters
+(per the master design spec, §1). OSTree is examined here as a candidate
+<strong>Linux-phase</strong> file-based atomic-deployment engine — i.e.,
+the OS-adapter backend for Linux targets, not for the Android device
+path. Per the request, the focus is: file-based atomic deployments,
+pinning/rollback, static deltas, the server side, relevance to the Linux
+phase, and the fact that it is <strong>not A/B</strong>.</p>
+<p>Key framing up front: <strong>OSTree is not an A/B partitioning
+system.</strong> It achieves atomicity and rollback through a
+content-addressed object store and multiple parallel “deployments”
+hardlinked onto a <strong>single</strong> root partition, swapped via
+the bootloader. This is a fundamentally different mechanism from
+Android’s dual-slot A/B, which is why OSTree is interesting for Linux
+but does not displace the locked Android A/B strategy.</p>
+<h2 id="what-ostree-is-mechanism">§2. What OSTree is (mechanism)</h2>
+<p>libostree (formerly “OSTree”) is a library + CLI for
+<strong>versioned, atomic, bootable filesystem trees</strong>, described
+upstream as “git for operating system binaries.” It is a userspace tool
+that “will work on top of any Linux filesystem” — i.e., it is
+Linux-oriented by design (ostreedev introduction; GitHub README).</p>
+<p>The repository is a <strong>content-addressed object store</strong>
+using <strong>SHA-256</strong> checksums, with these object types (repo
+format docs):</p>
+<ul>
+<li><strong>Commit object</strong> — metadata (timestamp, log message)
+plus a reference to a dirtree/dirmeta checksum pair describing the root
+directory.</li>
+<li><strong>Dirtree object</strong> — sorted arrays of
+<code>(filename, content checksum)</code> and
+<code>(filename, dirtree checksum, dirmeta checksum)</code> for
+subdirectories.</li>
+<li><strong>Dirmeta object</strong> — directory metadata
+(uid/gid/mode/xattrs), split out to avoid duplicating extended-attribute
+listings.</li>
+<li><strong>Content object</strong> — file metadata (uid, gid, mode,
+symlink target, xattrs) followed by file content for regular files.</li>
+</ul>
+<p>Notably, “the OSTree data format intentionally does not contain
+timestamps,” which makes builds reproducible/syncable across distributed
+builders (repo format docs).</p>
+<h2 id="file-based-atomic-deployments">§3. File-based atomic
+deployments</h2>
+<p>A <strong>deployment</strong> is a specific checksummed commit,
+checked out as a set of <strong>hardlinks into the object
+store</strong>. Because files are content-addressed and deduplicated,
+multiple deployments coexist on one partition and share identical
+objects; an upgrade “only uses disk space proportional to the new files,
+plus some constant overhead” (atomic-upgrades docs / search summary).
+The exact “constant overhead” figure is <strong>UNVERIFIED — needs
+confirmation</strong> (benchmark required).</p>
+<p>Atomicity guarantee, quoted from upstream: with
+<code>ostree admin upgrade</code>, “if the system crashes or you pull
+the power, you will have either the old system, or the new one.”
+Mechanism details (atomic-upgrades docs):</p>
+<ul>
+<li>The OS tree is read-only (<code>/usr</code>); <code>/etc</code> is
+handled via a <strong>3-way merge</strong> between the current
+<code>/etc</code>, the old default config, and the new deployment’s
+<code>/usr/etc</code>, preserving local edits (inspect with
+<code>ostree admin config-diff</code>). <code>/var</code> is
+shared/persistent.</li>
+<li>Boot config swap uses a <strong>“swapped directory”
+pattern</strong>: <code>/boot</code> (or <code>/ostree/boot.N</code>) is
+populated in the inactive copy, then the symlink is atomically flipped.
+Bootloader entries are written under <code>/boot/loader/entries/</code>
+with a kernel argument of the form
+<code>ostree=/ostree/deploy/$stateroot/deploy/$checksum</code> so
+initramfs mounts the chosen deployment as root.</li>
+<li>Objects are downloaded individually (HTTP model), each validated
+against its checksum before being stored in
+<code>/ostree/repo/objects/</code>.</li>
+</ul>
+<p>Net: atomicity is achieved at the <strong>filesystem-tree</strong>
+level via hardlink checkouts + an atomic bootloader pointer swap — no
+second partition required.</p>
+<h2 id="pinning-rollback">§4. Pinning &amp; rollback</h2>
+<p><strong>Rollback model.</strong> OSTree keeps the previous deployment
+available automatically. After one upgrade you have a booted deployment
+plus a rollback deployment; on the next upgrade the old rollback is
+discarded and the previously booted one becomes the new rollback (search
+summary of apertis/ostree docs). Rollback is performed by
+<strong>reordering the deployment list</strong> — historically via
+<code>ostree admin deploy</code> / status manipulation; note there is an
+open upstream request (<code>ostreedev/ostree#1808</code>) about a
+dedicated <code>ostree admin rollback</code>, and in practice rpm-ostree
+provides <code>rpm-ostree rollback</code>. The exact current
+<code>ostree admin</code> rollback invocation is <strong>UNVERIFIED —
+needs confirmation</strong> (verify against the installed version’s man
+pages before relying on it).</p>
+<p><strong>Pinning</strong> (<code>ostree admin pin</code>, man page
+consulted):</p>
+<ul>
+<li>Synopsis: <code>ostree admin pin {INDEX}</code>.</li>
+<li><code>INDEX</code> is a non-negative integer <strong>or</strong> one
+of the aliases <code>booted</code>, <code>pending</code>,
+<code>rollback</code>.</li>
+<li>A pinned deployment “will not be garbage collected by default.”</li>
+<li><code>--unpin</code> / <code>-u</code> undoes a pin.</li>
+<li>Pinned deployments are exempt from <code>ostree admin cleanup</code>
+GC; unpinned ones become eligible for collection. Status output
+(<code>ostree admin status</code> / <code>rpm-ostree status</code>)
+shows <code>Pinned: yes</code>.</li>
+</ul>
+<p><strong>Retention / GC.</strong> By default OSTree retains a small
+number of deployments (booted + rollback) and garbage-collects the rest
+on cleanup; pinning is the mechanism to retain a known-good baseline
+across rebases. The exact default number of retained deployments / GC
+depth is <strong>UNVERIFIED — needs confirmation</strong> (it is
+configurable and distro-dependent; confirm via
+<code>ostree admin cleanup</code> docs + config for the target
+image).</p>
+<p>For Helix this is attractive: pinning gives an explicit “known-good”
+anchor the control plane can guarantee survives, complementing (not
+replacing) the automatic last-good rollback.</p>
+<h2 id="static-deltas">§5. Static deltas</h2>
+<p>Default OSTree HTTP updates fetch <strong>one object per changed
+file</strong>, which is inefficient for large infrequent updates.
+<strong>Static deltas</strong> are pre-computed, server-generated diffs
+between two specific commits, trading “server-side storage (and one-time
+compute cost)” for client network-bandwidth efficiency (formats
+docs).</p>
+<p>Details (formats docs):</p>
+<ul>
+<li>Deltas are generated between arbitrary commits; a special
+<strong>“from NULL”</strong> mode produces a full initial download
+(useful for first install / container scenarios).</li>
+<li>On-disk layout: <code>deltas/$fromprefix/$fromsuffix-$to</code>,
+each delta being a directory with a <strong>superblock</strong>
+(metadata, target commit, fallback info) plus integer-named <strong>pack
+files</strong>.</li>
+<li>Delta payloads are described as “restricted programs” — an “updates
+as code” model (inspired by ChromiumOS) executed by the client during a
+compilation phase.</li>
+<li>Compression strategies: <strong>bsdiff</strong> for similarly
+named/sized files (effective on executables); bytecode instructions to
+reuse common data sections; and <strong>fallback objects</strong> for
+large incompressible files (e.g., compressed initramfs) fetched as
+normal objects.</li>
+<li>The repository <strong>summary file</strong> lists all static deltas
+with their metadata checksums, alongside ref info, so clients can
+discover them.</li>
+</ul>
+<p>Generation is via <code>ostree static-delta generate</code> (CLI),
+and deltas are served as static files. Concrete delta-size ratios vs
+full pulls are workload-dependent and <strong>UNVERIFIED — needs
+confirmation</strong> (must be measured on representative Helix Linux
+images).</p>
+<h2 id="server-side">§6. Server side</h2>
+<p>The server side is deliberately simple: an
+<strong><code>archive</code>-mode repository served over plain
+HTTP</strong> (repo format / formats docs). Properties:</p>
+<ul>
+<li><code>archive</code> mode stores content objects gzip-compressed
+with uncompressed metadata, “designed for serving via plain HTTP” —
+i.e., any static web server / CDN / object store works; no special
+server daemon is required for the base pull model.</li>
+<li>Incremental: clients fetch only changed objects (or a static delta)
+referenced from the commit/summary.</li>
+<li>Static deltas (see §5) are pre-generated server-side and dropped
+into the repo for bandwidth efficiency.</li>
+<li>Local on-device repos use <strong>bare</strong> /
+<strong>bare-user</strong> modes (uncompressed, hardlink farm;
+<code>bare-user</code> drops uid/gid for non-root/cross-env use); plus
+<code>bare-split-xattrs</code> and <code>bare-user-only</code> variants
+for xattr-constrained filesystems.</li>
+</ul>
+<p>Implication for Helix’s Go control plane: OSTree’s “server” is
+essentially <strong>static artifact hosting + a commit/summary/delta
+generation pipeline</strong>. The Go control plane would not need to
+reimplement the transport; it would orchestrate
+<code>ostree commit</code> / <code>ostree static-delta generate</code> /
+<code>ostree summary -u</code> on build, publish the
+<code>archive</code> repo to S3/MinIO (already in the Helix stack), and
+layer Helix’s own rollout/telemetry/auth on top. This is a clean wrap
+boundary (CLI + static files), not a tightly coupled server
+protocol.</p>
+<h2 id="rpm-ostree-bootc">§7. rpm-ostree &amp; bootc</h2>
+<p><strong>rpm-ostree</strong> is a hybrid image/package system:
+libostree as the base image format plus RPM (sharing libdnf with dnf) on
+client and server (coreos.github.io/rpm-ostree; GitHub README). It
+composes RPMs server-side into an OSTree commit that clients replicate
+bit-for-bit with fast incremental updates, and supports <strong>package
+layering</strong> (client-side overlay of extra RPMs as “OS
+extensions”). Rollback affects <code>/usr</code> but not
+<code>/etc</code> or <code>/var</code>.</p>
+<p>It also supports <strong>container-native OSTree</strong> (via
+ostree-rs-ext): OCI/Docker images as a transport for bootable OSes. Per
+upstream, <strong>active feature development has shifted to
+<code>bootc</code>, dnf, and the bootable-container ecosystem</strong>,
+while rpm-ostree “continues to be supported” and is widely used (Fedora
+CoreOS/Silverblue, RHEL for Edge). Red Hat documents a <strong>migration
+path from rpm-ostree to bootc</strong> (RHEL 10 docs). For Helix this is
+a strategic signal: <strong>OSTree (the core library) remains the
+durable, supported substrate</strong>, but the higher-level RPM-centric
+tooling is in a managed transition toward bootc — a forward-looking
+Linux adapter should evaluate bootc alongside raw libostree, not bet on
+rpm-ostree as a growth area.</p>
+<h2 id="ostree-vs-ab-and-why-it-matters-for-helix">§8. OSTree vs A/B
+(and why it matters for Helix)</h2>
+<p>This is the crux for Helix. OSTree is <strong>not</strong> an A/B
+partition scheme:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Android native A/B (Helix locked)</th>
+<th>OSTree</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit</td>
+<td>Two whole partitions (slot A / slot B)</td>
+<td>Multiple deployments (hardlink checkouts) on one rootfs
+partition</td>
+</tr>
+<tr>
+<td>Atomicity</td>
+<td>Slot switch in bootloader</td>
+<td>Atomic bootloader symlink/pointer swap to a checksummed
+deployment</td>
+</tr>
+<tr>
+<td>Storage cost</td>
+<td>~2× partition for the OS</td>
+<td>Deduplicated; only delta of changed objects + constant overhead
+(UNVERIFIED exact figure)</td>
+</tr>
+<tr>
+<td>Granularity</td>
+<td>Block/partition image (<code>payload.bin</code>)</td>
+<td>File/object level, content-addressed</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Slot revert + boot-failure auto-rollback</td>
+<td>Reorder deployment list; auto-keeps previous deployment</td>
+</tr>
+<tr>
+<td>Layering</td>
+<td>None (image swap)</td>
+<td>Package/config layering (rpm-ostree)</td>
+</tr>
+<tr>
+<td>Native platform</td>
+<td>AOSP / <code>update_engine</code></td>
+<td>Linux userspace (any FS)</td>
+</tr>
+</tbody>
+</table>
+<p>OSTree’s file-level dedup can be far more storage-efficient than 2×
+A/B and supports many retained versions cheaply (good for pinning
+multiple known-good baselines). But it does <strong>not</strong> provide
+A/B’s independent-partition fault isolation in the same way; its safety
+comes from atomic pointer swap + read-only <code>/usr</code> + automatic
+rollback deployment. For Helix, OSTree is a <strong>Linux-phase
+option</strong>, not a competitor to the Android A/B decision.</p>
+<h2 id="android-fit">§9. Android fit</h2>
+<p>Two distinct things must not be conflated:</p>
+<ol type="1">
+<li><p><strong>OSTree’s Android <em>bootloader</em> backend
+(<code>aboot-deploy</code>).</strong> OSTree has an Android-bootloader
+backend that reads <code>androidboot.slot_suffix=</code>, writes to the
+alternate <code>boot_a</code>/<code>boot_b</code> slot, and sets
+<code>/ostree/root.a</code> or <code>/ostree/root.b</code> (bootloaders
+docs; search summary). This targets devices that <em>use the Android
+boot image format / aboot</em> (notably automotive Linux images, e.g.,
+CentOS Automotive SIG), running <strong>Linux userspace</strong> under
+that bootloader. It is <strong>not</strong> OSTree managing the AOSP
+Android OS itself.</p></li>
+<li><p><strong>OSTree on actual AOSP/Android 15.</strong> OSTree expects
+a Linux rootfs it can lay out as <code>/ostree/...</code> with read-only
+<code>/usr</code>, a 3-way-merged <code>/etc</code>, and bootloader
+entries. AOSP’s runtime (system/vendor/product partitions,
+<code>update_engine</code>, Virtual A/B with dm-snapshot compression,
+dm-verity, SELinux policy, dynamic partitions) does <strong>not</strong>
+match this model. Using OSTree to deploy the Android OS would be a
+non-idiomatic, high-risk port. <strong>No evidence was found of OSTree
+being used to manage a standard AOSP system image;</strong> AOSP’s own
+A/B (<code>update_engine</code>) is the native, supported path — and is
+exactly what Helix has locked for the Android phase.</p></li>
+</ol>
+<p><strong>Conclusion: OSTree is a poor fit for the Android-15-first
+device path and a good candidate only for the later Linux
+phase.</strong> Treat the “Android bootloader backend” as a
+Linux-on-aboot feature, not Android OS support.</p>
+<h2 id="go-control-plane-fit-wrapability">§10. Go control-plane fit
+&amp; wrapability</h2>
+<ul>
+<li><strong>Wrap boundary is clean.</strong> The server side is
+<code>ostree</code> CLI commands (<code>commit</code>,
+<code>static-delta generate</code>, <code>summary -u</code>) producing
+an <code>archive</code> repo of static files. A Go control plane shells
+out (or uses libostree via cgo/GObject Introspection — heavier) to
+build/publish, then serves the repo from S3/MinIO behind Helix’s
+existing transport (Brotli/HTTP3→HTTP2). No bespoke server daemon to
+integrate.</li>
+<li><strong>Client side</strong> is the <code>ostree</code> binary +
+libostree on the Linux device; Helix’s Linux OS-adapter would invoke
+<code>ostree admin upgrade</code> / <code>deploy</code> /
+<code>pin</code> / <code>cleanup</code> and parse
+<code>ostree admin status</code> (machine-readable output /
+<code>--json</code> availability is <strong>UNVERIFIED — needs
+confirmation</strong> for the target version).</li>
+<li><strong>No native Go binding of record.</strong> A Rust crate exists
+(<code>ostree</code> on docs.rs, e.g. 0.20.x — GObject-Introspection
+bindings); for Go the pragmatic path is CLI orchestration. A native Go
+binding maturity claim would be <strong>UNVERIFIED</strong>; do not
+assume one.</li>
+<li>Pinning maps neatly onto Helix’s “guaranteed known-good baseline”
+requirement; rollback maps onto the zero-corruption guarantee for Linux
+targets.</li>
+</ul>
+<h2 id="license-maturity">§11. License &amp; maturity</h2>
+<ul>
+<li><strong>License:</strong> <strong>LGPL-2.1-or-later</strong>
+(upstream states “Currently, that’s LGPLv2+”, canonical in the
+<code>COPYING</code> file). LGPL is compatible with wrapping via CLI and
+with linking; redistribution of modified libostree must respect LGPL
+terms. Confirm the exact SPDX string in <code>COPYING</code> at the
+pinned version before shipping. (rpm-ostree is separately licensed —
+verify its <code>COPYING</code>; <strong>UNVERIFIED</strong> here.)</li>
+<li><strong>Maturity:</strong> Mature and production-proven. Date-based
+releases; <strong>latest observed release v2025.7</strong> (GitHub
+releases; release date reported as “November 11” by search — year/exact
+date <strong>UNVERIFIED</strong>, confirm on the releases page).
+Releases are GPG-signed git tags. Deployed at scale in Fedora
+Silverblue/CoreOS, RHEL for Edge, endless OS, Toradex Torizon, Apertis,
+and the CentOS Automotive SIG.</li>
+<li><strong>Governance:</strong> Active upstream
+(<code>ostreedev/ostree</code>); the broader ecosystem momentum is
+moving toward <strong>bootc</strong> for bootable-container workflows,
+with libostree as the stable substrate.</li>
+<li>Star count / contributor count: <strong>not collected this session —
+do not cite a number</strong> (would be fabrication).</li>
+</ul>
+<h2 id="pros-cons-for-helix">§12. Pros / cons for Helix</h2>
+<p><strong>Pros</strong> - True file-based atomic deployments with
+automatic rollback; matches the zero-corruption guarantee for Linux
+targets. - Storage-efficient via content-addressed dedup — many
+retained/pinned versions at low cost (vs ~2× for A/B). - Explicit
+<strong>pinning</strong> of known-good deployments, exempt from GC —
+direct fit for a control-plane-guaranteed baseline. - <strong>Static
+deltas</strong> give bandwidth-efficient updates without a custom diff
+format. - <strong>Trivial server side</strong>: <code>archive</code>
+repo over plain HTTP/static hosting/CDN/S3 — slots straight into Helix’s
+MinIO/S3 + Go control plane with a clean CLI wrap boundary. - Mature,
+widely deployed, LGPL, GPG-signed releases.</p>
+<p><strong>Cons</strong> - <strong>Not A/B</strong> and <strong>not an
+Android-OS solution</strong> — irrelevant to the Android-15-first device
+path; value is Linux-phase only. - Linux-only by design (userspace on a
+Linux FS); the “Android bootloader” backend is Linux-on-aboot, not AOSP.
+- No first-class Go binding; integration is CLI orchestration (or
+cgo/GI). - rpm-ostree feature development is winding down in favor of
+bootc — a Linux adapter must track the bootc transition rather than
+build on rpm-ostree’s growth. - Several operational specifics (GC
+retention defaults, delta size ratios, storage overhead constant,
+<code>--json</code> status, exact rollback command for current version)
+are <strong>UNVERIFIED</strong> and need hands-on
+confirmation/benchmarking.</p>
+<h2 id="recommendation">§13. Recommendation</h2>
+<p><strong>Shortlist for the Linux phase only; exclude from the
+Android-15-first device path.</strong> OSTree (libostree) is a strong,
+mature candidate as the <strong>Linux OS-adapter backend</strong> for
+file-based atomic deployments, with pinning and static deltas that map
+well onto Helix’s known-good-baseline and bandwidth requirements, and a
+server model that drops cleanly into the existing Go + S3/MinIO stack.
+It is <strong>not</strong> a substitute for the locked Android native
+A/B strategy and must not be positioned as such.</p>
+<p>Before any ADR commits to OSTree for Linux: (1) prototype an
+<code>archive</code> repo + static-delta pipeline driven by the Go
+control plane and <strong>measure</strong> delta sizes, storage
+overhead, and GC/pinning behavior on representative images; (2) evaluate
+<strong>bootc</strong> head-to-head, given the ecosystem shift; (3)
+confirm the flagged UNVERIFIED items against the pinned release. Overall
+confidence in the mechanism description is high; confidence in specific
+numeric/operational defaults is low pending benchmarking.</p>
+<h2 id="sources-consulted">§14. Sources consulted</h2>
+<p>All consulted live on 2026-06-07.</p>
+<ul>
+<li>OSTree Atomic Upgrades —
+https://ostreedev.github.io/ostree/atomic-upgrades/</li>
+<li>OSTree Repository Format —
+https://ostreedev.github.io/ostree/repo/</li>
+<li>OSTree Formats (static deltas, archive/bare modes) —
+https://ostreedev.github.io/ostree/formats/</li>
+<li><code>ostree admin pin</code> man page —
+https://ostreedev.github.io/ostree/man/ostree-admin-pin.html</li>
+<li>OSTree Bootloaders (Android aboot backend) —
+https://ostreedev.github.io/ostree/bootloaders/</li>
+<li>OSTree Introduction —
+https://ostreedev.github.io/ostree/introduction/</li>
+<li>libostree home / license — https://ostreedev.github.io/ostree/</li>
+<li>ostreedev/ostree GitHub (README, releases) —
+https://github.com/ostreedev/ostree ,
+https://github.com/ostreedev/ostree/releases ,
+https://github.com/ostreedev/ostree/releases/tag/v2025.7</li>
+<li>rpm-ostree home — https://coreos.github.io/rpm-ostree/</li>
+<li>coreos/rpm-ostree GitHub (README, container.md) —
+https://github.com/coreos/rpm-ostree</li>
+<li>RHEL 10: Migrating from rpm-ostree to bootc —
+https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_installing_and_managing_rhel_for_edge_images/migrating-from-rpm-ostree-based-deployed-systems-to-bootc-based-systems</li>
+<li>Pinning Deployments in OSTree-Based Systems (Dusty Mabe / Project
+Atomic) —
+https://dustymabe.com/2018/05/22/pinning-deployments-in-ostree-based-systems/</li>
+<li>Apertis: OSTree updates and rollback —
+https://www.apertis.org/guides/ostree/</li>
+<li>Add <code>ostree admin rollback</code> (issue #1808) —
+https://github.com/ostreedev/ostree/issues/1808</li>
+<li>Rust <code>ostree</code> crate (binding reference) —
+https://docs.rs/crate/ostree/latest</li>
+</ul>
+<h2 id="confidence">§15. Confidence</h2>
+<p><strong>Medium-high overall.</strong> Mechanism, deployment model,
+pinning, static deltas, server model, licensing, and Android-fit
+reasoning are well-supported by official docs consulted this session
+(high confidence). Specific operational numbers (GC retention defaults,
+storage-overhead constant, delta size ratios, exact current-version
+rollback command, <code>--json</code> status, exact v2025.7 release
+date) are flagged UNVERIFIED and lower confidence pending hands-on
+verification — none were invented.</p>
+</body>
+</html>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>adr-0003-server-topology</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="adr-0003-server-topology-modular-monolith-vs-microservices">ADR-0003
+— Server Topology: Modular Monolith vs Microservices</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR</td>
+<td>0003</td>
+</tr>
+<tr>
+<td>Title</td>
+<td>Server topology: modular monolith vs microservices</td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Proposed</strong></td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Decides the MVP deployment topology for the Helix OTA Go control
+plane and the concrete trigger to split into independent services.
+Resolves contradiction <strong>C2</strong> from <a
+href="../additions_synthesis.md"><code>../additions_synthesis.md</code></a>
+§5.</td>
+</tr>
+<tr>
+<td>Decision</td>
+<td><strong>Modular monolith</strong> for 1.0.0-MVP — one deployable Go
+binary with enforced internal package boundaries that mirror future
+service seams; <strong>rollout-engine</strong> and
+<strong>OS-adapter</strong> designed as extractable modules. Split to
+services only when a defined scale trigger fires.</td>
+</tr>
+<tr>
+<td>Deciders</td>
+<td>Lead architect (synthesis); operator review gate pending.</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>The Helix-authored Go control plane only. Wrapped third-party back
+ends (e.g. hawkBit, pending ADR-0001) are separate deployables
+regardless of this decision.</td>
+</tr>
+<tr>
+<td>Locked decisions honored</td>
+<td>Native Android A/B (AOSP <code>update_engine</code>) + custom Go
+control plane; research decides the wrap target (ADR-0001); mandated
+stack (Go + Gin + Brotli + HTTP/3→HTTP/2, REST-primary; PostgreSQL +
+MinIO/S3).</td>
+</tr>
+<tr>
+<td>Anti-bluff rule</td>
+<td>Every claim traces to the landscape report, a stack note, or the
+additions synthesis (cited by slug/section). Items the sources flagged
+as unverified are carried forward as <strong>UNVERIFIED</strong>. This
+ADR introduces no facts not present in the cited sources.</td>
+</tr>
+<tr>
+<td>Supersedes / Superseded by</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Fixed (rev 2)</td>
+<td>Anti-bluff pass: softened the telemetry-vs-rollout volume asymmetry
+to UNVERIFIED and dropped its source attribution; corrected the
+DMF/RabbitMQ-deferral citations from eclipse-hawkbit §4 to
+eclipse-hawkbit §7 + ota_landscape_report §4; flagged the broken
+OS-adapter destination (<code>00-master/architecture.md</code>)
+inherited from additions_synthesis §4 — the master design file is
+<code>2026-06-07-helix-ota-design.md</code> (architecture is its §4),
+pending upstream correction.</td>
+</tr>
+<tr>
+<td>Related</td>
+<td>ADR-0001 (wrapped engine), ADR-0002 (supply-chain trust), ADR-0004
+(transport), ADR-0005 (delta updates).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-context">1. Context</a></li>
+<li><a href="#2-options-considered">2. Options considered</a>
+<ul>
+<li><a href="#21-option-a--microservices-from-mvp">2.1 Option A —
+Microservices from MVP</a></li>
+<li><a href="#22-option-b--modular-monolith-extractable-seams">2.2
+Option B — Modular monolith (extractable seams)</a></li>
+<li><a href="#23-option-c--unstructured-single-binary-monolith">2.3
+Option C — Unstructured single-binary monolith</a></li>
+</ul></li>
+<li><a href="#3-decision">3. Decision</a>
+<ul>
+<li><a href="#31-module-boundaries-the-seams">3.1 Module boundaries (the
+seams)</a></li>
+<li><a href="#32-scale-trigger-to-split-into-services">3.2 Scale trigger
+to split into services</a></li>
+</ul></li>
+<li><a href="#4-consequences">4. Consequences</a>
+<ul>
+<li><a href="#41-positive">4.1 Positive</a></li>
+<li><a href="#42-negative">4.2 Negative</a></li>
+</ul></li>
+<li><a href="#5-status">5. Status</a></li>
+<li><a href="#6-compliance-notes-helixconstitution">6. Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#7-open--unverified-items">7. Open / UNVERIFIED
+items</a></li>
+<li><a href="#8-sources">8. Sources</a></li>
+</ul>
+<h2 id="context">1. Context</h2>
+<p>The two operator-supplied input drafts disagree on server topology.
+<code>initial_research_02.md</code> proposes a
+<strong>microservices</strong> topology with a pluggable OS-adapter
+architecture; <code>initial_research.md</code> proposes a leaner Go
+server that orchestrates the wrapped engine. The synthesis recorded this
+as contradiction <strong>C2</strong> and routed the final verdict to
+this ADR. [additions_synthesis §2, §5 C2, §7]</p>
+<p>The governing constraints are fixed before this decision:</p>
+<ul>
+<li><strong>Locked strategy:</strong> native Android A/B (AOSP
+<code>update_engine</code>) + a <strong>custom Go control
+plane</strong>, wrapping OSS only where it adds value.
+[ota_landscape_report §metadata; additions_synthesis §1]</li>
+<li><strong>Mandated stack:</strong> Go + Gin + Brotli + HTTP/3→HTTP/2
+(REST-primary); PostgreSQL + MinIO/S3. [ota_landscape_report §metadata;
+additions_synthesis §1, §5 C4]</li>
+<li><strong>Phase-1 target:</strong> Android 15 first (Orange Pi 5 Max /
+RK3588 class); Linux/universal is a later phase. [ota_landscape_report
+§metadata]</li>
+</ul>
+<p>Two architectural facts from the foundation corpus pre-shape the
+topology:</p>
+<ol type="1">
+<li>The wrapped-engine choice (ADR-0001) may introduce <strong>hawkBit
+as a separate JVM/Spring-Boot deployable</strong> sitting
+<em>behind</em> the Go control plane (never public). If adopted, hawkBit
+already constitutes a second process, so the JVM runtime is the major
+operational cost called out — independent of whether the Helix-authored
+code is mono or micro. [ota_landscape_report §3.2; eclipse-hawkbit]</li>
+<li>The landscape report explicitly recommends the <strong>leanest MVP
+topology</strong> for the wrapped back end:
+<code>hawkbit-monolith</code> + PostgreSQL + DDI-only (no RabbitMQ
+unless DMF push is needed) + MinIO/S3. The report’s own bias is toward
+<em>fewer moving parts</em> at MVP. [ota_landscape_report §3.2, §4
+(DMF/RabbitMQ deferral); eclipse-hawkbit §7]</li>
+</ol>
+<p>The decoupling requirement is also fixed by the master design:
+artifact-validator, rollout-engine, ota-protocol types, the
+<code>update_engine</code> bridge, and the OS-adapter are to be
+<strong>separate, independently testable modules</strong> so future OSes
+and future projects can reuse them. This requires <em>internal
+modularity</em> but does not, by itself, mandate <em>separate
+deployables</em>. [master-design §4 decoupling principle (§11.4.28)]</p>
+<p>The synthesis pre-resolved C2 toward a modular monolith (“one
+deployable, internal package boundaries mirroring the future services …
+the OS-adapter + rollout-engine seams stay extractable; microservices
+revisited at scale”). This ADR ratifies that direction with evidence and
+pins the concrete scale trigger. [additions_synthesis §5 C2]</p>
+<h2 id="options-considered">2. Options considered</h2>
+<h3 id="option-a-microservices-from-mvp">2.1 Option A — Microservices
+from MVP</h3>
+<p>Decompose the Helix-authored control plane into independently
+deployed services (e.g. release/artifact service, rollout/campaign
+service, telemetry service, device-API gateway) from day one, as drafted
+in <code>initial_research_02.md</code>. [additions_synthesis §2, §5
+C2]</p>
+<p><strong>Evidence for.</strong> - The staged-rollout engine is
+inherently OS-agnostic and is already specified as an extractable
+submodule, so a service boundary there is natural. [additions_synthesis
+§4 (rollout engine →
+<code>1.0.1-staged-rollout/rollout_engine.md</code>, “engine is
+OS-agnostic submodule”)] - Mender — the only studied stack that ships a
+comparable open back end — is itself a Go <strong>microservices</strong>
+server (Mongo/NATS/Traefik), demonstrating the pattern is viable for OTA
+at scale. [mender; ota_landscape_report §2.3 <code>mender</code>
+Mechanism]</p>
+<p><strong>Evidence against.</strong> - Mender’s microservices stack
+(Mongo/NATS/Traefik) is cited as a <em>conflict</em> with the mandated
+Gin + PostgreSQL + MinIO + REST stack — its topology is a cost, not a
+model to copy wholesale. [ota_landscape_report §2.3 <code>mender</code>
+Go-fit (2), Wrap-ability (1); §4 Mender row] - The report’s leanest-MVP
+recommendation deliberately <em>minimizes</em> runtimes and brokers
+(DDI-only, no RabbitMQ). Adding N Helix services on top of a possible
+JVM hawkBit multiplies operational surface against that grain.
+[ota_landscape_report §3.2, §4 (DMF/RabbitMQ deferral); eclipse-hawkbit
+§7] - No studied stack ships a <em>reusable Go control plane</em>; only
+orchestration <strong>patterns</strong> transfer. The microservice
+decomposition would be greenfield Helix work with no reuse dividend at
+MVP. [ota_landscape_report §2.3 <code>commercial-oss-fleet</code> Go-fit
+(2); §3.2] - The synthesis explicitly defers microservices to “at
+scale,” treating MVP microservices as premature operational cost.
+[additions_synthesis §5 C2]</p>
+<h3 id="option-b-modular-monolith-extractable-seams">2.2 Option B —
+Modular monolith (extractable seams)</h3>
+<p>One deployable Go binary. Internal Go package boundaries mirror the
+future services; the <strong>rollout-engine</strong> and
+<strong>OS-adapter</strong> are built as cleanly extractable modules
+with well-defined interfaces. [additions_synthesis §5 C2; master-design
+§4]</p>
+<p><strong>Evidence for.</strong> - Directly implements the synthesis
+resolution of C2: “MVP favors a modular monolith (one deployable,
+internal package boundaries mirroring the future services) to cut
+operational cost; the OS-adapter + rollout-engine seams stay
+extractable.” [additions_synthesis §5 C2] - Honors the decoupling
+principle (one purpose, well-defined interface, independently testable
+units) <em>without</em> paying per-service deployment, networking, and
+observability cost at MVP. [master-design §4 (§11.4.28)] - Matches the
+report’s lean-MVP bias: fewest deployables consistent with correctness,
+especially if a JVM hawkBit is already in the picture.
+[ota_landscape_report §3.2] - The OS-adapter seam is the studied
+universality boundary (Android now, Linux later via RAUC/OSTree
+candidates), so designing it as a module — not a service — keeps Phase-1
+lean while preserving the later-phase path. [additions_synthesis §4
+(OS-adapter destination — <strong>BROKEN REF, flag for upstream
+correction</strong>: inherited as
+<code>00-master/architecture.md</code>, but no such file exists; the
+master design file is <code>2026-06-07-helix-ota-design.md</code> and
+architecture is its §4); ota_landscape_report §4 RAUC/OSTree “later
+Linux/universal phase”] - The rollout engine remains independently
+testable to the floor-≥90% bar required for rollout-gate logic, whether
+or not it is a separate process. [additions_synthesis §5 C8]</p>
+<p><strong>Evidence against.</strong> - Requires discipline to keep
+internal boundaries from eroding; a monolith can decay into Option C
+without enforcement. (Mitigation in §3.1.) - A single deployable couples
+the scaling of telemetry ingestion to rollout-control traffic until the
+split trigger fires; telemetry is plausibly the higher-volume of the two
+(<strong>UNVERIFIED</strong> — confirm via MVP load tests). (Mitigation:
+the trigger in §3.2 is defined precisely to catch this.)</p>
+<h3 id="option-c-unstructured-single-binary-monolith">2.3 Option C —
+Unstructured single-binary monolith</h3>
+<p>One binary with no enforced internal seams (everything in shared
+packages).</p>
+<p><strong>Evidence against.</strong> - Violates the decoupling
+principle requiring separate, independently testable modules
+(artifact-validator, rollout-engine, ota-protocol, update_engine bridge,
+OS-adapter). [master-design §4 (§11.4.28)] - Forfeits the extractability
+the synthesis requires for the rollout-engine and OS-adapter seams,
+making the later service split a rewrite rather than a lift-out.
+[additions_synthesis §5 C2; §4] - Rejected without further analysis; it
+satisfies neither the MVP-lean goal beyond Option B nor any
+future-proofing.</p>
+<h2 id="decision">3. Decision</h2>
+<p><strong>Adopt Option B — a modular monolith with extractable seams —
+for 1.0.0-MVP.</strong> The Helix-authored Go control plane ships as
+<strong>one deployable binary</strong> (Gin, REST-primary, Brotli,
+HTTP/3→HTTP/2; PostgreSQL + MinIO/S3) with enforced internal module
+boundaries. The <strong>rollout-engine</strong> and
+<strong>OS-adapter</strong> are built as cleanly extractable modules.
+Microservice extraction is deferred until the scale trigger in §3.2
+fires. [additions_synthesis §5 C2; master-design §4;
+ota_landscape_report §3.2]</p>
+<p>This decision concerns only Helix-authored code. If ADR-0001 adopts
+hawkBit, hawkBit remains a <strong>separate deployable behind the Go
+control plane</strong> (<code>hawkbit-monolith</code> + PostgreSQL +
+DDI-only at MVP), which is orthogonal to and consistent with this
+topology. [ota_landscape_report §3.2; eclipse-hawkbit]</p>
+<h3 id="module-boundaries-the-seams">3.1 Module boundaries (the
+seams)</h3>
+<p>Internal packages mirror the future services and the decoupling
+principle’s named units: [master-design §4 (§11.4.28);
+additions_synthesis §4]</p>
+<ul>
+<li><strong>artifact-validator</strong> — server-side SHA-256 +
+signature verification on upload (defense-in-depth alongside device-side
+verify-before-apply). [additions_synthesis §3, §6 (<code>file://</code>
+verify-before-apply)]</li>
+<li><strong>rollout-engine</strong> — OS-agnostic staged-rollout state
+machine (percentage phases gated by success/error thresholds, pause/halt
+on breach); <strong>designed as an extractable submodule</strong> and
+the first split candidate. [additions_synthesis §3, §4, §5 C2]</li>
+<li><strong>ota-protocol types</strong> — shared
+release/deployment/telemetry contracts. [master-design §4]</li>
+<li><strong>update_engine bridge</strong> — server side of the thin
+Android <code>applyPayload</code> client contract. [ota_landscape_report
+§3.1; master-design §4]</li>
+<li><strong>OS-adapter</strong> — the universality seam (Android Phase
+1; Linux candidates RAUC/OSTree later), built as a module so a future-OS
+phase is an add, not a rewrite. [additions_synthesis §4;
+ota_landscape_report §4]</li>
+</ul>
+<p>Boundary enforcement (internal-import discipline / module interfaces)
+is mandatory so the monolith cannot decay into Option C and so each seam
+is independently testable to its coverage floor. [master-design §4;
+additions_synthesis §5 C8]</p>
+<h3 id="scale-trigger-to-split-into-services">3.2 Scale trigger to split
+into services</h3>
+<p>Extract a module into its own service <strong>when any one of the
+following fires</strong> (first-mover is the rollout-engine, then
+telemetry ingestion):</p>
+<ol type="1">
+<li><strong>Divergent scaling pressure</strong> — telemetry-ingestion
+load and rollout-control load require materially different horizontal
+scaling, such that scaling the monolith to satisfy one wastes resources
+on the other. (Telemetry is an independent event stream from devices
+feeding dashboards, and is plausibly higher-volume than rollout control
+— <strong>UNVERIFIED</strong>; confirm via MVP load tests.)
+[additions_synthesis §3 (telemetry event stream); §4 (rollout engine as
+submodule)]</li>
+<li><strong>Second OS target enters active development</strong> — when
+the Linux/universal phase begins, the OS-adapter seam is extracted so
+Android and Linux delivery paths deploy and scale independently.
+[ota_landscape_report §metadata (Linux later phase), §4 RAUC/OSTree;
+additions_synthesis §4 (OS-adapter seam)]</li>
+<li><strong>Independent release cadence</strong> — a seam (most likely
+the rollout-engine) needs to ship on a cadence that the monolith’s
+release train blocks, justifying its own deployable.
+[additions_synthesis §5 C2 (microservices “revisited at scale”)]</li>
+</ol>
+<p>Concrete quantitative thresholds (device count, req/s, telemetry
+events/s) are <strong>UNVERIFIED</strong> — the cited sources provide no
+load figures, and the additions drafts’ constants are explicitly
+non-binding. The trigger above is qualitative by necessity; numeric
+thresholds are to be set from MVP load-test data before the first split
+and recorded in a follow-up ADR revision. [additions_synthesis §5 C3
+(drafts’ constants non-binding); §6 (no-guessing); ota_landscape_report
+§5 (open items)]</p>
+<p>Because the seams are extractable by construction (§3.1), satisfying
+a trigger is a <strong>lift-out</strong>, not a rewrite.
+[additions_synthesis §5 C2]</p>
+<h2 id="consequences">4. Consequences</h2>
+<h3 id="positive">4.1 Positive</h3>
+<ul>
+<li><strong>Lowest MVP operational cost</strong> consistent with
+correctness — one Helix deployable, aligned with the report’s lean-MVP
+bias and especially valuable if a JVM hawkBit is already running
+alongside. [ota_landscape_report §3.2, §4 (DMF/RabbitMQ deferral);
+eclipse-hawkbit §7]</li>
+<li><strong>Preserves the decoupling principle</strong> — every named
+unit is a separate, independently testable module, satisfying the
+architecture mandate and the ≥90% floor on safety-critical
+rollout-gate/signing/apply paths. [master-design §4 (§11.4.28);
+additions_synthesis §5 C8]</li>
+<li><strong>Future-proof without speculation</strong> — the
+rollout-engine and OS-adapter are extractable, so the later
+Linux/universal phase and any scale-driven split are lift-outs, not
+rewrites. [additions_synthesis §5 C2, §4; ota_landscape_report §4]</li>
+<li><strong>No reuse forfeited</strong> — no studied stack ships a
+reusable Go control plane, so a microservice decomposition would buy no
+reuse dividend at MVP; the monolith loses nothing here.
+[ota_landscape_report §2.3 <code>commercial-oss-fleet</code> Go-fit;
+§3.2]</li>
+<li><strong>Catalogue-first compatible</strong> — cross-cutting concerns
+(auth, observability, eventbus, ratelimiter, cache, http3) come from the
+verified submodule catalogue and embed cleanly in one binary.
+[master-design §10 (§11.4.74); additions_synthesis §6, §5 C7]</li>
+</ul>
+<h3 id="negative">4.2 Negative</h3>
+<ul>
+<li><strong>Coupled scaling until a trigger fires</strong> — telemetry
+ingestion and rollout control scale together in the monolith (telemetry
+is plausibly the higher-volume of the two — <strong>UNVERIFIED</strong>,
+confirm via MVP load tests); mitigated by trigger #1, which is defined
+to catch exactly this. [additions_synthesis §3]</li>
+<li><strong>Boundary-erosion risk</strong> — internal seams require
+active enforcement or the monolith degrades toward Option C; mitigated
+by mandated import/interface discipline (§3.1). [master-design §4]</li>
+<li><strong>Eventual migration cost</strong> — splitting later incurs
+networking/observability/deployment work that an upfront microservices
+design would have amortized; accepted as the cost of avoiding premature
+complexity, and bounded by the extractable-by-construction seams.
+[additions_synthesis §5 C2]</li>
+<li><strong>Trigger thresholds unproven at authoring time</strong> — the
+split trigger is qualitative because no load figures exist in the
+sources (<strong>UNVERIFIED</strong>); numeric thresholds must be set
+from MVP load tests. [additions_synthesis §6; ota_landscape_report
+§5]</li>
+</ul>
+<h2 id="status">5. Status</h2>
+<p><strong>Proposed.</strong> Pending the operator review gate. Ratifies
+the synthesis’s pre-resolution of contradiction <strong>C2</strong>.
+[additions_synthesis §5 C2; master-design §15 ADR list]</p>
+<h2 id="compliance-notes-helixconstitution">6. Compliance notes
+(HelixConstitution)</h2>
+<p>Clause references use the mapping established in the master design’s
+compliance section. [master-design §compliance table]</p>
+<ul>
+<li><strong>§11.4.28 (decoupling).</strong> The modular-monolith seams
+(artifact-validator, rollout-engine, ota-protocol, update_engine bridge,
+OS-adapter) implement the requirement that each unit have one purpose, a
+well-defined interface, and independent testability. The split trigger
+(§3.2) preserves this at service granularity. [master-design §4]</li>
+<li><strong>§11.4.6 (no-guessing) / §11.4.8
+(research-before-implementation).</strong> This ADR makes the topology
+decision on cited evidence rather than draft assertion, and explicitly
+marks the absence of load figures and the numeric split thresholds as
+<strong>UNVERIFIED</strong> rather than inventing them. [master-design
+§2 D3; additions_synthesis §6; §7.1 no-bluff]</li>
+<li><strong>§11.4.74 (catalogue-first reuse).</strong> Cross-cutting
+capabilities are taken from the verified submodule catalogue rather than
+re-implemented, and the single-binary topology hosts them without new
+infrastructure (Redis only if the <code>cache</code> brick is
+insufficient — C7). [master-design §10; additions_synthesis §6, §5
+C7]</li>
+<li><strong>§11.4.76 (containers substrate).</strong> The single
+deployable runs on the <code>containers</code> submodule substrate; a
+future per-service split reuses the same substrate. [master-design §10;
+additions_synthesis §4 (deployment)]</li>
+<li><strong>§1 / §1.1 (four-layer testing + mutation immunity).</strong>
+Module boundaries keep each seam independently testable; safety-critical
+paths (signing, apply, rollout-gate) carry the ≥90% floor regardless of
+mono/micro packaging. [master-design §13; additions_synthesis §5
+C8]</li>
+</ul>
+<h2 id="open-unverified-items">7. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>Numeric split thresholds</strong> (device count, req/s,
+telemetry events/s) — no load figures exist in the sources; set from MVP
+load tests and record in a revision. <strong>UNVERIFIED.</strong>
+[additions_synthesis §6; ota_landscape_report §5]</li>
+<li><strong>hawkBit adoption (ADR-0001)</strong> affects how many
+<em>non-Helix</em> deployables exist alongside the monolith; this ADR
+holds either way but the operational-cost framing depends on that
+outcome. [ota_landscape_report §3.2; additions_synthesis §7
+ADR-0001]</li>
+<li><strong>First-split ordering</strong> — rollout-engine is the
+presumed first extraction, but this should be confirmed against observed
+MVP load before the split executes. [additions_synthesis §4, §5 C2]</li>
+<li><strong>Broken OS-adapter destination (upstream)</strong> —
+additions_synthesis §4 routes the OS-adapter to
+<code>00-master/architecture.md</code>, but no such file exists; the
+master design file is <code>2026-06-07-helix-ota-design.md</code>
+(architecture is its §4). Flag for upstream correction in
+additions_synthesis §4. [additions_synthesis §4]</li>
+</ol>
+<h2 id="sources">8. Sources</h2>
+<ul>
+<li><a
+href="../ota_landscape_report.md"><code>../ota_landscape_report.md</code></a>
+— Helix OTA Landscape Report (locked strategy, mandated stack, §3.2
+lean-MVP topology, §4 not-use rationale).</li>
+<li><a
+href="../additions_synthesis.md"><code>../additions_synthesis.md</code></a>
+— Reconciliation of operator drafts (§5 C2 topology resolution;
+C3/C4/C7/C8; §4 destinations; §6 corrections; §7 ADR routing).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>../../00-master/2026-06-07-helix-ota-design.md</code></a>
+— Master design (§4 decoupling principle; §10 catalogue/containers; §13
+testing; compliance mapping).</li>
+<li><a
+href="../stacks/eclipse-hawkbit.md"><code>../stacks/eclipse-hawkbit.md</code></a>
+— hawkBit note (monolith deployment option, DMF/RabbitMQ deferral).</li>
+<li><a href="../stacks/mender.md"><code>../stacks/mender.md</code></a> —
+Mender note (microservices back end as a contrasting topology and stack
+conflict).</li>
+<li><a href="../stacks/rauc.md"><code>../stacks/rauc.md</code></a>, <a
+href="../stacks/ostree.md"><code>../stacks/ostree.md</code></a> —
+Linux-phase OS-adapter candidates informing the OS-adapter split
+trigger.</li>
+</ul>
+</body>
+</html>

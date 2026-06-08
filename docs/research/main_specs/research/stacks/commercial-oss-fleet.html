@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>commercial-oss-fleet</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="helix-ota-commercial-oss-fleet-platform-survey-balena-toradex-torizon-memfault-foundries.io">Helix
+OTA — Commercial / OSS Fleet Platform Survey (balena, Toradex Torizon,
+Memfault, Foundries.io)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Evidence-based survey of four production fleet/OTA platforms —
+balena (balenaCloud + openBalena), Toradex Torizon (Torizon Cloud + OTA
+Community Edition), Memfault (observability + OTA), and Foundries.io
+(FoundriesFactory). For each: OTA mechanism, fleet management,
+telemetry, openness, and lock-in. Distills concrete lessons for the
+Helix Go control plane and the telemetry / halt-on-failure subsystem.
+All non-trivial claims are cited to a source actually consulted;
+anything not verifiable from those sources is tagged UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Several pricing and ARR figures and some device-side protocol
+internals (exact polling cadence, exact metric schemas) are not
+authoritatively documented in public pages and are tagged UNVERIFIED —
+needs confirmation. Memfault was acquired by Nordic Semiconductor
+(mid-2025 per search results); long-term openness of the
+source-available SDKs is a watch item.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial survey</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Four platforms covered against the requested axes (OTA + fleet mgmt
++ telemetry; openness; lock-in; lessons).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Feed the “Lessons for Helix” section into the control-plane spec
+(rollout/wave state machine, device-tag/cohort model, success/failure
+reporting API) and the telemetry / halt-on-failure ADR (canary +
+auto-abort + device-side update lock). Re-run if Helix targets MCU/Linux
+beyond Android, or if Memfault/Nordic changes SDK licensing.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-purpose-scope-method">§1. Purpose, scope,
+method</a></li>
+<li><a href="#2-at-a-glance-comparison">§2. At-a-glance
+comparison</a></li>
+<li><a href="#3-balena-balenacloud--openbalena">§3. balena (balenaCloud
+/ openBalena)</a></li>
+<li><a
+href="#4-toradex-torizon-torizon-cloud--ota-community-edition">§4.
+Toradex Torizon (Torizon Cloud / OTA Community Edition)</a></li>
+<li><a href="#5-memfault-observability--ota">§5. Memfault (observability
++ OTA)</a></li>
+<li><a href="#6-foundriesio-foundriesfactory">§6. Foundries.io
+(FoundriesFactory)</a></li>
+<li><a href="#7-cross-cutting-themes">§7. Cross-cutting themes</a></li>
+<li><a href="#8-lessons-to-copy-for-the-helix-control-plane">§8. Lessons
+to copy for the Helix control plane</a></li>
+<li><a href="#9-lessons-for-telemetry--halt-on-failure">§9. Lessons for
+telemetry &amp; halt-on-failure</a></li>
+<li><a href="#10-anti-bluff-register-unverified--to-confirm">§10.
+Anti-bluff register (unverified / to-confirm)</a></li>
+<li><a href="#11-sources-consulted">§11. Sources consulted</a></li>
+</ul>
+<h2 id="purpose-scope-method">§1. Purpose, scope, method</h2>
+<p>Helix OTA is a universal OTA system, Android 15 first, built on
+<strong>native A/B (<code>UpdateEngine</code>)</strong> with a
+<strong>custom Go control plane</strong>. This note surveys four
+established fleet platforms to (a) understand what each offers across
+OTA, fleet management, and telemetry; (b) assess openness and lock-in;
+and (c) extract concrete, copyable patterns for our control plane and
+for the telemetry / halt-on-failure path.</p>
+<p>Method: web search + page fetch against vendor docs and primary repos
+in June 2026. Per HelixConstitution §11.4.6 (no-guessing), every
+non-obvious claim carries a citation to a page actually consulted; where
+a number or internal detail could not be verified from those pages it is
+marked <strong>UNVERIFIED — needs confirmation</strong> rather than
+invented. No star counts, commit dates, or ARR figures are fabricated;
+the one ARR figure quoted is attributed to its search-surfaced source
+and flagged as second-hand.</p>
+<p>Confidence on the <strong>qualitative architecture and openness
+findings: HIGH</strong> (primary docs/repos). Confidence on
+<strong>pricing/ARR/commercial-tier specifics: LOW</strong> (marketing
+pages, acquisition press, third-party blogs).</p>
+<h2 id="at-a-glance-comparison">§2. At-a-glance comparison</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Axis</th>
+<th>balena</th>
+<th>Torizon</th>
+<th>Memfault</th>
+<th>Foundries.io</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary unit</td>
+<td>Linux container fleets (balenaOS)</td>
+<td>Embedded Linux (Torizon OS, Yocto)</td>
+<td>Device observability + OTA (MCU / Linux / <strong>Android
+AOSP</strong>)</td>
+<td>Embedded Linux (LmP, Yocto)</td>
+</tr>
+<tr>
+<td>OTA core</td>
+<td>balenaEngine container pull + <strong>binary deltas</strong></td>
+<td><strong>Uptane/TUF</strong> via aktualizr-Torizon +
+<strong>OSTree</strong></td>
+<td>App-managed: AOSP <strong>UpdateEngine (A/B)</strong> or
+RecoverySystem; MCU/Linux agents</td>
+<td><strong>OSTree</strong> + <strong>aktualizr-lite</strong>,
+TUF-secured</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Release pinning / re-target; supervisor-driven</td>
+<td>OSTree + bootloader rollback (Uptane)</td>
+<td>App/RecoverySystem + AOSP A/B slots</td>
+<td><strong>Bootloader auto-rollback after 3 failed boots</strong> + app
+rollback</td>
+</tr>
+<tr>
+<td>Staged rollout</td>
+<td>Fleet-to-fleet transfer / pinning (manual cohorts)</td>
+<td>Uptane role delegation; UNVERIFIED native wave UI</td>
+<td><strong>Cohorts</strong> + staged release, <strong>one-click
+abort</strong></td>
+<td><strong>Waves</strong> + canary group + % / group / UUID targeting;
+cancel mid-wave</td>
+</tr>
+<tr>
+<td>Telemetry</td>
+<td>Device state/online via VPN + dashboard</td>
+<td>Device + fleet monitoring, remote access</td>
+<td><strong>Best-in-class</strong>: coredumps, symbolication, metrics,
+fleet health, alerts</td>
+<td>Device status via fioctl; lighter than Memfault</td>
+</tr>
+<tr>
+<td>Open source</td>
+<td><strong>openBalena (AGPLv3)</strong>, single-user beta</td>
+<td><strong>OTA Community Edition (MPL-2.0, non-prod)</strong>; OS
+MIT/Yocto; aktualizr OSS</td>
+<td><strong>Source-available SDKs</strong> (bort, linux-sdk); backend
+proprietary</td>
+<td>LmP/aktualizr-lite OSS; <strong>backend (Factory) proprietary
+SaaS</strong></td>
+</tr>
+<tr>
+<td>Self-host backend</td>
+<td>Yes (openBalena, reduced features)</td>
+<td>Partial (OTA CE non-prod; on-prem “in progress” per docs)</td>
+<td><strong>No</strong> (cloud only; on-prem OTA only via example
+agent)</td>
+<td><strong>No</strong> (SaaS only)</td>
+</tr>
+<tr>
+<td>Lock-in vector</td>
+<td>Dashboard/deltas/multi-user are cloud-only</td>
+<td>Production-grade server is hosted/proprietary</td>
+<td>Backend + analytics proprietary; Nordic-owned</td>
+<td>Whole build+deploy CI/backend is the product</td>
+</tr>
+<tr>
+<td>Android A/B fit</td>
+<td>Indirect (container model)</td>
+<td>Indirect</td>
+<td><strong>Direct — uses <code>UpdateEngine</code></strong></td>
+<td>Indirect (OSTree, not AOSP A/B)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The single most directly transferable model for <strong>Helix
+(Android + A/B + custom server)</strong> is <strong>Memfault’s AOSP
+path</strong> (it actually drives <code>UpdateEngine</code> and polls a
+releases HTTP API), combined with <strong>Foundries.io’s wave/canary
+rollout state machine</strong> and <strong>balena’s device-side update
+lock</strong> for safety.</p>
+</blockquote>
+<h2 id="balena-balenacloud-openbalena">§3. balena (balenaCloud /
+openBalena)</h2>
+<p><strong>What it is.</strong> A container-centric IoT fleet platform:
+devices run <strong>balenaOS</strong> (a host OS for running
+Docker/balenaEngine containers); the <strong>balena Supervisor</strong>
+on-device applies target state; balenaCloud (hosted) provides dashboard,
+VPN remote access, registry, and OTA delivery. (<a
+href="https://www.balena.io/">balena.io</a>, <a
+href="https://www.balena.io/cloud">balena cloud</a>)</p>
+<p><strong>OTA mechanism.</strong> Updates are container image
+deliveries. The updater attempts to locate releases for current and
+target OS versions to use <strong>binary container deltas</strong> to
+cut over-the-wire size; if no delta is available it pulls the full image
+from the registry. (<a
+href="https://docs.balena.io/reference/OS/updates/update-process/">balena
+update process</a>) Rollout control is via <strong>release
+pinning</strong> and <strong>fleet-to-fleet transfer</strong> (move a
+device/subset to a different fleet or branch to stage functionality).
+(<a href="https://docs.balena.io/learn/manage/actions">balena
+actions</a>, <a
+href="https://docs.balena.io/learn/deploy/release-strategy/update-locking">update
+locking</a>)</p>
+<p><strong>Device-side safety — update locks.</strong> The Supervisor
+honors a <strong>lockfile</strong>
+(<code>/tmp/balena/updates.lock</code> on Supervisor ≥ v7.22.0) so the
+device can <em>veto</em> an update at an unsafe moment: “the Supervisor
+will not be able to kill the services running on the device for an
+update” while locked. (<a
+href="https://docs.balena.io/learn/deploy/release-strategy/update-locking">balena
+update locking</a>, <a
+href="https://github.com/balena-os/balena-supervisor/blob/master/docs/update-locking.md">supervisor
+docs</a>) <strong>This is a direct, copyable pattern for Helix</strong>
+(let the app/device assert “not now”).</p>
+<p><strong>Telemetry.</strong> Device online/heartbeat state, logs, and
+remote terminal via the built-in VPN, surfaced in the cloud dashboard.
+Not a metrics/crash-analytics platform like Memfault.</p>
+<p><strong>Openness &amp; lock-in.</strong> <strong>openBalena</strong>
+is the self-hostable backend, <strong>AGPLv3</strong>, explicitly
+positioned to “mitigate fears of lock-in and remove barriers to exit.”
+(<a href="https://github.com/balena-io/open-balena">openBalena
+GitHub</a>, <a href="https://www.balena.io/open">balena.io/open</a>) But
+openBalena is <strong>single-user, in beta, and omits the web dashboard
+and binary delta updates</strong> — those stay in balenaCloud. (<a
+href="https://github.com/balena-io/open-balena">openBalena GitHub</a>)
+Automatic Supervisor upgrades also do not apply to openBalena/on-prem
+installs. (<a
+href="https://docs.balena.io/reference/supervisor/supervisor-upgrades">balena
+supervisor upgrades</a>) So the open core is real but deliberately
+feature-gated toward the SaaS.</p>
+<p><strong>Helix relevance.</strong> Container-model, not AOSP A/B —
+architecture not directly reusable. The <strong>update-lock
+veto</strong> and the <strong>delta-or-full fallback</strong> delivery
+pattern are the takeaways.</p>
+<h2 id="toradex-torizon-torizon-cloud-ota-community-edition">§4. Toradex
+Torizon (Torizon Cloud / OTA Community Edition)</h2>
+<p><strong>What it is.</strong> <strong>Torizon OS</strong> is an
+open-source minimal embedded Linux image (Yocto-built) with a container
+runtime and secure offline + OTA update, monitoring, and remote access;
+the server side is <strong>Torizon Cloud</strong>
+(<code>app.torizon.io</code>). (<a
+href="https://www.torizon.io/torizon-os">torizon.io/torizon-os</a>, <a
+href="https://developer.toradex.com/torizon/torizon-platform/torizon-updates/torizon-updates-technical-overview/">Torizon
+updates overview</a>)</p>
+<p><strong>OTA mechanism — Uptane/TUF + OSTree.</strong> Torizon’s
+update system implements the <strong>Uptane</strong> automotive SOTA
+standard (an enhancement of <strong>TUF</strong>), using a fork
+<strong>aktualizr-Torizon</strong> (from aktualizr, a C++ Uptane client)
+and <strong>OSTree</strong> for the filesystem. Uptane’s multi-repo
+(image + director) design means compromise of a single server is
+insufficient to push a malicious update. (<a
+href="https://developer.toradex.com/torizon/torizon-platform/torizon-updates/torizon-updates-technical-overview/">Torizon
+updates overview</a>, <a
+href="https://www.ics.com/blog/iot-fleet-management-system-torizon-balena-mender">ICS
+comparison</a>) Rollback is OSTree + bootloader based (Uptane
+pattern).</p>
+<p><strong>Fleet management.</strong> Uptane <strong>role
+delegation</strong> lets you grant scoped permissions to different
+accounts — fleet monitoring, updating, remote troubleshooting — with
+granular control. (<a
+href="https://developer.toradex.com/torizon/torizon-platform/devices-fleet-management/">Toradex
+fleet mgmt</a>) Native percentage/wave-style staged rollout UI:
+<strong>UNVERIFIED — needs confirmation</strong> (delegation is
+documented; a balena/Foundries-style canary UI is not confirmed from
+pages consulted).</p>
+<p><strong>Openness &amp; lock-in.</strong> OS is open (metadata
+<strong>MIT</strong> unless noted; recipes per-<code>.bb</code>; Yocto).
+(<a
+href="https://github.com/torizon/meta-toradex-torizon">meta-toradex-torizon</a>)
+The device client (aktualizr-Torizon) is OSS. (<a
+href="https://github.com/torizon/aktualizr-deb">aktualizr-deb</a>)
+<strong>OTA Community Edition</strong> is open-source server software
+(<strong>MPL-2.0</strong>) but the docs explicitly warn it has
+<strong>no authentication or production security</strong> and is meant
+to run locally / inside a firewall. (<a
+href="https://github.com/advancedtelematic/ota-community-edition">ota-community-edition</a>,
+<a
+href="https://developer.toradex.com/software/cloud-services/over-the-air-update-solutions/">Toradex
+OTA solutions</a>) Toradex notes a hosted cloud option and an on-prem
+option “in progress.” (<a
+href="https://developer.toradex.com/knowledge-base/torizon-ota-technical-overview">Toradex
+OTA overview</a>) Net: production-grade server is effectively
+hosted/commercial; the OSS server is a dev/lab tool.</p>
+<p><strong>Helix relevance.</strong> Strongest <strong>security
+architecture</strong> reference: Uptane/TUF multi-repo signing is the
+gold standard for “an attacker who owns one server still can’t ship a
+bad update.” If Helix wants defensible OTA signing beyond plain
+code-signing, study Uptane’s director/image split. OSTree (filesystem
+deltas) is a Linux pattern, not Android A/B.</p>
+<h2 id="memfault-observability-ota">§5. Memfault (observability +
+OTA)</h2>
+<p><strong>What it is.</strong> An embedded <strong>device
+observability</strong> platform across MCU, embedded Linux, and
+<strong>Android AOSP</strong>: coredump/crash capture, symbolication,
+metrics, fleet health, alerts, and OTA. (<a
+href="https://memfault.com/">memfault.com</a>, <a
+href="https://memfault.com/product/">product</a>) Per search results,
+<strong>Memfault was acquired by Nordic Semiconductor
+(mid-2025)</strong> and integrated into nRF Cloud. (<a
+href="https://www.nordicsemi.com/Nordic-news/2025/09/Nordic-launches-full-device-observability-and-OTA-capabilities-via-nRF-Cloud-by-Memfault">Nordic
+press</a>)</p>
+<p><strong>Telemetry — the standout.</strong> Automatically captures
+<strong>coredumps, bug reports, logs, and metrics</strong>; on arrival
+it <strong>symbolicates</strong> crashes (maps addresses to functions
+using uploaded ELF/symbol files), <strong>groups related
+issues</strong>, and prioritizes by fleet impact. Fleet health uses
+out-of-box + custom metrics with dashboards, version/HW comparison, and
+<strong>automatic alerts</strong>. (<a
+href="https://memfault.com/product/">product</a>, search synthesis) This
+is the most mature telemetry of the four and the closest to what Helix’s
+halt-on-failure needs as an input signal.</p>
+<p><strong>OTA mechanism — directly relevant to Helix.</strong> The
+<strong>Bort SDK</strong> for AOSP bundles observability + logging +
+crash reporting + updating in one service; the <strong>OTA Update
+Client</strong> is a separate, optional app supporting <strong>both
+<code>UpdateEngine</code>-based (A/B / “Seamless”) and
+RecoverySystem-based updates</strong>, plus
+<strong>incremental/delta</strong> releases. (<a
+href="https://github.com/memfault/bort">bort</a>, <a
+href="https://docs.memfault.com/docs/android/android-ota-update-client">Android
+OTA client</a>) Releases are <strong>activated into a Cohort</strong>;
+staged rollout + <strong>one-click abort</strong> (“measure release
+quality in realtime… if things go wrong, abort with one click”). (<a
+href="https://docs.memfault.com/docs/android/android-ota-update-client">Android
+OTA client</a>, <a href="https://memfault.com/product/">product</a>)
+Notably there is an <strong>example on-prem OTA agent that polls a
+Memfault releases HTTP API, downloads the payload, and installs via
+RecoverySystem</strong> — an exact blueprint for a poll-based client
+talking to a custom server. (<a
+href="https://docs.memfault.com/docs/android/android-getting-started-guide">Android
+getting started</a>, search synthesis)</p>
+<p><strong>SDK footprint.</strong> ~4.5 KB ROM / 1.5 KB RAM on MCU;
+“&lt;40 MB” on Android; ~5 MB on Linux. (<a
+href="https://memfault.com/product/">product</a>)</p>
+<p><strong>Openness &amp; lock-in.</strong> SDKs are
+<strong>source-available on GitHub</strong> (<code>memfault/bort</code>,
+<code>memfault/memfault-linux-sdk</code>). (<a
+href="https://github.com/memfault/bort">bort</a>, <a
+href="https://github.com/memfault/memfault-linux-sdk">linux-sdk</a>) The
+<strong>backend, symbolication, and analytics are proprietary
+SaaS</strong> — no self-hosting of the cloud (the only on-prem story is
+the <em>example</em> polling agent for OTA, not the observability
+backend). Nordic ownership is a strategic lock-in/longevity watch
+item.</p>
+<p><strong>Pricing.</strong> Marketing/3rd-party: 10 devices free
+(non-prod), then pay-as-you-go “from $0.10/device/month” + usage. A
+third-party report cited ~$7.2M ARR / ~100 customers / ~$72k ACV.
+<strong>All pricing/ARR: LOW confidence / second-hand — needs
+confirmation.</strong> (<a
+href="https://www.softwareadvice.com/iot/memfault-profile/">Software
+Advice</a>, <a
+href="https://scadable.com/blog/what-you-actually-pay-to-ship-connected-hardware">Scadable
+blog</a>)</p>
+<p><strong>Helix relevance — highest.</strong> Memfault is the closest
+analog to “Android A/B OTA + telemetry + halt.” Copy: (1) the
+<strong>poll-a-releases-HTTP-API + <code>UpdateEngine</code>
+install</strong> client shape; (2) <strong>cohort/staged release +
+one-click abort</strong>; (3) the
+<strong>telemetry-feeds-the-abort-decision</strong> loop (crash/metric
+anomalies are the halt signal). Helix’s differentiator is owning that
+backend in Go instead of renting it.</p>
+<h2 id="foundries.io-foundriesfactory">§6. Foundries.io
+(FoundriesFactory)</h2>
+<p><strong>What it is.</strong> A Linux platform + cloud CI/deploy
+product. <strong>LmP</strong> (Linux microPlatform, Yocto) is the OS;
+<strong>FoundriesFactory</strong> is the SaaS that builds (CI on every
+source change), signs, and deploys it. (<a
+href="https://www.foundries.io/">foundries.io</a>, <a
+href="https://foundries.io/company/faq/">FAQ</a>)</p>
+<p><strong>OTA mechanism — OSTree + aktualizr-lite + TUF.</strong>
+<strong>OSTree</strong> + <strong>aktualizr-lite</strong> give
+incremental filesystem + Compose-app updates, secured by
+<strong>TUF</strong>, with <strong>OSTree static deltas</strong> to
+shrink payloads. (<a
+href="https://docs.foundries.io/latest/reference-manual/ota/ota.html">OTA
+overview</a>) <strong>Rollback is robust and automatic:</strong> if a
+new rootfs <strong>fails to boot three times the bootloader boots the
+previous deployment</strong>, and aktualizr-lite reinstalls the prior
+Compose-apps version; failed app container creation also triggers
+redeploy of the previous rootfs. There is an <strong>experimental
+user-initiated/confirmed rollback</strong> for cases needing custom “did
+it actually start OK” logic. (<a
+href="https://docs.foundries.io/latest/reference-manual/ota/update-rollback.html">update
+rollback</a>)</p>
+<p><strong>Fleet management — waves &amp; canary (the best rollout model
+surveyed).</strong> Production devices follow a <strong>tag</strong>
+(e.g. <code>release</code>); a new release creates a
+<strong>wave</strong>. The wave is rolled out to a <strong>canary device
+group first, results observed, and the wave cancelled if anything goes
+wrong</strong>, before expanding. Rollouts can target <strong>device
+groups, specific UUIDs, or a percentage of the fleet</strong>; multiple
+rollout commands per wave; parallel waves across tags (but <strong>only
+one active wave per tag</strong> at a time). Driven by the
+<strong><code>fioctl</code></strong> CLI
+(<code>fioctl waves rollout</code> / <code>status</code> /
+<code>list</code>). (<a
+href="https://docs.foundries.io/95/user-guide/waves/waves.html">waves</a>,
+<a
+href="https://docs.foundries.io/latest/reference-manual/ota/production-targets.html">production
+targets</a>, <a
+href="https://www.foundries.io/insights/blog/how-to-wave/">how-to-wave
+blog</a>, <a
+href="https://docs.foundries.io/latest/reference-manual/ota/device-tags.html">device
+tags</a>)</p>
+<p><strong>Telemetry.</strong> Device status/inventory via fioctl and
+the Factory dashboard; lighter than Memfault — it is a deploy/manage
+product, not a crash-analytics product.</p>
+<p><strong>Openness &amp; lock-in.</strong> LmP, aktualizr-lite, OSTree
+are open (upstream/Yocto). The <strong>backend (the Factory: CI, TUF key
+management, deploy orchestration, waves) is proprietary SaaS</strong> —
+there is no self-hosted Factory. Commercial model: <strong>per-project
+subscription, no per-unit royalties / no transaction fees</strong>. (<a
+href="https://foundries.io/company/faq/">FAQ</a>, <a
+href="https://www.foundries.io/">foundries.io</a>) Lock-in is the whole
+build+sign+deploy pipeline being the product; the device client is
+portable, the control plane is not.</p>
+<p><strong>Helix relevance — high (rollout model).</strong> The
+<strong>wave → canary → observe → expand-or-cancel</strong> state
+machine, plus <strong>device tags as the cohort primitive</strong> and
+<strong>target-by-group/UUID/percentage</strong>, is exactly the rollout
+orchestration Helix’s Go control plane should implement. OSTree itself
+is Linux, not Android A/B, so copy the <em>orchestration</em>, not the
+<em>delivery layer</em>.</p>
+<h2 id="cross-cutting-themes">§7. Cross-cutting themes</h2>
+<ol type="1">
+<li><strong>Open client, closed control plane is the dominant business
+model.</strong> Memfault and Foundries.io keep device SDKs
+open/source-available but monetize the proprietary backend; balena and
+Torizon ship a real OSS backend but <strong>feature-gate</strong> it
+(single-user/beta for openBalena; no-auth/non-prod for OTA Community
+Edition). Helix owning a <strong>fully open Go control plane</strong> is
+a genuine differentiator, not table stakes.</li>
+<li><strong>TUF/Uptane is the security baseline for serious
+OTA.</strong> Torizon (Uptane) and Foundries.io (TUF) both root trust in
+multi-role signing, not plain code-signing. Helix should at minimum
+adopt TUF-style signed metadata; Uptane’s director/image split is the
+stretch goal.</li>
+<li><strong>Automatic, bootloader-level rollback is expected.</strong>
+Foundries.io’s “3 failed boots → previous deployment” and Torizon’s
+OSTree+bootloader rollback are the bar. Android A/B already gives Helix
+slot-based rollback; the gap to close is <strong>post-boot health
+confirmation</strong> (did it actually <em>work</em>, not just
+<em>boot</em>).</li>
+<li><strong>Canary + observe + abort is the rollout consensus.</strong>
+Foundries.io waves and Memfault cohorts independently converge on the
+same loop. Percentage/group/UUID targeting and a
+single-active-rollout-per-cohort invariant are reusable design
+constraints.</li>
+<li><strong>Device-side veto matters.</strong> balena’s update lock
+shows the device must be able to say “not now” — important for
+kiosk/in-use Android devices.</li>
+</ol>
+<h2 id="lessons-to-copy-for-the-helix-control-plane">§8. Lessons to copy
+for the Helix control plane</h2>
+<ul>
+<li><strong>Cohort primitive = device tag.</strong> Adopt Foundries.io’s
+model: each device subscribes to exactly one tag; releases target a tag;
+this is simpler and more auditable than free-form device groups. (<a
+href="https://docs.foundries.io/latest/reference-manual/ota/device-tags.html">device
+tags</a>)</li>
+<li><strong>Rollout = wave state machine.</strong> Model a release
+rollout as a wave with explicit states (init → canary → expanding →
+complete / cancelled), supporting <strong>target-by-group, by-UUID, and
+by-percentage</strong>, with <strong>at most one active wave per
+cohort</strong>. (<a
+href="https://docs.foundries.io/95/user-guide/waves/waves.html">waves</a>)</li>
+<li><strong>Poll-based device protocol over a releases HTTP
+API.</strong> Memfault’s example agent (poll releases API → download
+payload → install) maps cleanly onto Helix’s Go REST/HTTP3 server +
+Android client; the server stays authoritative and stateless-per-poll.
+(<a
+href="https://docs.memfault.com/docs/android/android-getting-started-guide">Android
+getting started</a>)</li>
+<li><strong>First-class success/failure reporting endpoint.</strong> The
+client must report install + post-boot result back so the server can
+advance/halt the wave (the abort decision is server-side). Memfault’s
+cohort abort and Foundries.io’s wave cancel both presume this
+signal.</li>
+<li><strong>Signed metadata (TUF-style).</strong> Don’t rely on
+transport security alone; sign the target metadata. (<a
+href="https://developer.toradex.com/torizon/torizon-platform/torizon-updates/torizon-updates-technical-overview/">Torizon
+Uptane</a>)</li>
+<li><strong>Device update-lock / veto.</strong> Provide a balena-style
+lock so an Android device in active use can defer the swap. (<a
+href="https://docs.balena.io/learn/deploy/release-strategy/update-locking">balena
+update locking</a>)</li>
+<li><strong>Delta-or-full fallback.</strong> Prefer deltas (AOSP
+supports incremental A/B), fall back to full payload — balena and
+Foundries.io both do this. (<a
+href="https://docs.balena.io/reference/OS/updates/update-process/">balena
+update process</a>)</li>
+</ul>
+<h2 id="lessons-for-telemetry-halt-on-failure">§9. Lessons for telemetry
+&amp; halt-on-failure</h2>
+<ul>
+<li><strong>Telemetry is the halt signal — design them
+together.</strong> Memfault’s value is that crash/metric anomalies
+<em>drive</em> the one-click abort. Helix’s halt-on-failure should
+consume a telemetry stream (boot success, crash rate, key health metrics
+per release/cohort), not just an install exit code. (<a
+href="https://memfault.com/product/">memfault product</a>)</li>
+<li><strong>Confirm “healthy,” not just “booted.”</strong> Android A/B
+marks a slot good after boot; that’s weaker than Foundries.io’s
+experimental <em>user-confirmed</em> rollback for “is the Target
+actually running correctly.” Helix should add a <strong>post-boot
+health-confirmation window</strong> before marking the update
+successful, with auto-rollback if confirmation is not received. (<a
+href="https://docs.foundries.io/latest/reference-manual/ota/update-rollback.html">update
+rollback</a>)</li>
+<li><strong>Canary-then-watch, with automatic abort thresholds.</strong>
+Roll to a canary cohort, watch crash/health metrics against the previous
+release as baseline (Memfault does version-to-version comparison), and
+<strong>auto-halt the wave</strong> if thresholds are breached — don’t
+require a human to notice. (<a
+href="https://memfault.com/product/">memfault product</a>, <a
+href="https://www.foundries.io/insights/blog/how-to-wave/">how-to-wave</a>)</li>
+<li><strong>Symbolication is worth building (or deferring
+deliberately).</strong> Memfault’s symbolication of native crashes is a
+heavy lift; Helix can start with structured failure/metric reporting and
+treat full symbolication as a later phase — but the <strong>client
+should already upload enough context (logs + build/symbol
+identifiers)</strong> to enable it later. (<a
+href="https://memfault.com/product/">memfault product</a>)</li>
+<li><strong>Per-release / per-cohort baselining.</strong> All four treat
+“compare new release vs known-good” as the core analytic. Helix
+telemetry schema should tag every event with release + cohort + slot to
+make automatic regression detection possible.</li>
+</ul>
+<h2 id="anti-bluff-register-unverified-to-confirm">§10. Anti-bluff
+register (unverified / to-confirm)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memfault pricing “$0.10/device/month + usage”, 10 free non-prod</td>
+<td>LOW confidence — marketing/3rd-party; confirm on current pricing
+page</td>
+</tr>
+<tr>
+<td>Memfault “$7.2M ARR / ~100 customers / ~$72k ACV”</td>
+<td>Second-hand (search-surfaced acquisition disclosure); UNVERIFIED —
+needs primary source</td>
+</tr>
+<tr>
+<td>Memfault acquired by Nordic Semiconductor (mid-2025)</td>
+<td>Reported by Nordic press + multiple results; treat as likely-true,
+confirm exact date/terms</td>
+</tr>
+<tr>
+<td>Torizon native percentage/canary rollout UI (à la Foundries
+waves)</td>
+<td>UNVERIFIED — role delegation is documented; a wave-style UI is not
+confirmed</td>
+</tr>
+<tr>
+<td>Torizon on-prem production OTA server availability</td>
+<td>Docs say “in progress”; confirm current GA status</td>
+</tr>
+<tr>
+<td>openBalena exact omitted-feature list (dashboard, deltas,
+multi-user)</td>
+<td>HIGH — stated in openBalena repo README; re-verify against current
+beta</td>
+</tr>
+<tr>
+<td>Foundries.io “no per-unit royalties / no transaction fees”</td>
+<td>From vendor FAQ; commercial terms can change — confirm at contract
+time</td>
+</tr>
+<tr>
+<td>Exact device poll cadences, metric schemas, API payload shapes (all
+platforms)</td>
+<td>UNVERIFIED — not extracted; require deeper doc/repo dive if needed
+for implementation</td>
+</tr>
+<tr>
+<td>GitHub star counts / repo activity</td>
+<td>Intentionally NOT cited — not verified, would be fabrication</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Overall confidence: MEDIUM-HIGH</strong> on
+architecture/openness/lessons (primary docs + repos);
+<strong>LOW</strong> on commercial/pricing specifics.</p>
+<h2 id="sources-consulted">§11. Sources consulted</h2>
+<p>balena: - https://www.balena.io/ , https://www.balena.io/cloud ,
+https://www.balena.io/open - https://github.com/balena-io/open-balena -
+https://docs.balena.io/reference/OS/updates/update-process/ -
+https://docs.balena.io/learn/deploy/release-strategy/update-locking -
+https://github.com/balena-os/balena-supervisor/blob/master/docs/update-locking.md
+- https://docs.balena.io/learn/manage/actions -
+https://docs.balena.io/reference/supervisor/supervisor-upgrades</p>
+<p>Toradex Torizon: - https://www.torizon.io/torizon-os -
+https://developer.toradex.com/torizon/torizon-platform/torizon-updates/torizon-updates-technical-overview/
+-
+https://developer.toradex.com/torizon/torizon-platform/devices-fleet-management/
+-
+https://developer.toradex.com/knowledge-base/torizon-ota-technical-overview
+-
+https://developer.toradex.com/software/cloud-services/over-the-air-update-solutions/
+- https://github.com/torizon/meta-toradex-torizon ,
+https://github.com/torizon/aktualizr-deb -
+https://github.com/advancedtelematic/ota-community-edition -
+https://www.ics.com/blog/iot-fleet-management-system-torizon-balena-mender
+(3rd-party comparison)</p>
+<p>Memfault: - https://memfault.com/ , https://memfault.com/product/ ,
+https://memfault.com/android/ , https://memfault.com/security/ -
+https://github.com/memfault/bort ,
+https://github.com/memfault/memfault-linux-sdk -
+https://docs.memfault.com/docs/android/android-getting-started-guide -
+https://docs.memfault.com/docs/android/android-ota-update-client -
+https://docs.memfault.com/docs/android/introduction -
+https://www.nordicsemi.com/Nordic-news/2025/09/Nordic-launches-full-device-observability-and-OTA-capabilities-via-nRF-Cloud-by-Memfault
+- https://www.softwareadvice.com/iot/memfault-profile/ (pricing,
+3rd-party) ,
+https://scadable.com/blog/what-you-actually-pay-to-ship-connected-hardware
+(3rd-party)</p>
+<p>Foundries.io: - https://www.foundries.io/ ,
+https://foundries.io/company/faq/ -
+https://docs.foundries.io/latest/reference-manual/ota/ota.html -
+https://docs.foundries.io/latest/reference-manual/ota/update-rollback.html
+-
+https://docs.foundries.io/latest/reference-manual/ota/production-targets.html
+- https://docs.foundries.io/latest/reference-manual/ota/device-tags.html
+- https://docs.foundries.io/95/user-guide/waves/waves.html -
+https://www.foundries.io/insights/blog/how-to-wave/</p>
+</body>
+</html>

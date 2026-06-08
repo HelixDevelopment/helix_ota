@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>adr-0001-wrapped-engine</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="adr-0001-wrapped-update-engine-hawkbit-vs-mender-vs-aosp-native-only">ADR-0001
+— Wrapped Update Engine: hawkBit vs Mender vs AOSP-native-only</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR</td>
+<td>ADR-0001</td>
+</tr>
+<tr>
+<td>Title</td>
+<td>Wrapped update engine: wrap Eclipse hawkBit, wrap Mender, or
+AOSP-native-only (custom Go rollout engine)</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Proposed</strong></td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Fixed (rev 2)</td>
+<td>Editorial review fixes: §6 §11.4.74 cite corrected (§13→§15, reuse
+not testing); §3.1 hawkBit Go-fit reworded “top”→“top-or-tied” (ties
+<code>tuf-go-tuf</code>); §3.4 Option C Go-fit footnoted as flat matrix
+3 with “/ Go server” as editorial annotation. No new claims
+introduced.</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Author</td>
+<td>Lead architect (synthesis)</td>
+</tr>
+<tr>
+<td>Decision driver</td>
+<td>§11.4.8 research-before-implementation; locked decision D2/D3
+(native A/B + custom Go control plane; engine wrap target decided by
+research)</td>
+</tr>
+<tr>
+<td>Supersedes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Superseded by</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Related</td>
+<td>ADR-0002 (supply-chain trust: TUF/Uptane), ADR-0003 (server
+topology), ADR-0004 (transport), ADR-0005 (delta updates)</td>
+</tr>
+<tr>
+<td>Primary evidence</td>
+<td><a
+href="../ota_landscape_report.md"><code>ota_landscape_report.md</code></a>,
+<a
+href="../stacks/eclipse-hawkbit.md"><code>eclipse-hawkbit.md</code></a>,
+<a href="../stacks/mender.md"><code>mender.md</code></a>, <a
+href="../stacks/aosp-update-engine.md"><code>aosp-update-engine.md</code></a>,
+<a
+href="../stacks/commercial-oss-fleet.md"><code>commercial-oss-fleet.md</code></a>,
+<a
+href="../additions_synthesis.md"><code>additions_synthesis.md</code></a></td>
+</tr>
+<tr>
+<td>Anti-bluff rule</td>
+<td>Every load-bearing claim cites a source note by slug or a
+Constitution clause. Items the notes flagged as unverified are carried
+forward verbatim as <strong>UNVERIFIED</strong>. This ADR introduces no
+facts not present in the underlying notes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-context">Context</a></li>
+<li><a href="#2-decision-drivers--constraints">Decision Drivers &amp;
+Constraints</a></li>
+<li><a href="#3-options-considered">Options Considered</a>
+<ul>
+<li><a href="#31-option-a--wrap-eclipse-hawkbit">3.1 Option A — Wrap
+Eclipse hawkBit</a></li>
+<li><a href="#32-option-b--wrap-mender">3.2 Option B — Wrap
+Mender</a></li>
+<li><a
+href="#33-option-c--aosp-native-only-custom-go-rollout-engine-no-orchestration-wrap">3.3
+Option C — AOSP-native-only (custom Go rollout engine, no orchestration
+wrap)</a></li>
+<li><a href="#34-comparison-summary">3.4 Comparison summary</a></li>
+</ul></li>
+<li><a href="#4-decision">Decision</a></li>
+<li><a href="#5-consequences">Consequences</a>
+<ul>
+<li><a href="#51-positive">5.1 Positive</a></li>
+<li><a href="#52-negative">5.2 Negative</a></li>
+<li><a href="#53-gating-conditions-unverified-items-to-close">5.3 Gating
+conditions (UNVERIFIED items to close)</a></li>
+</ul></li>
+<li><a href="#6-compliance-notes-helixconstitution">Compliance Notes
+(HelixConstitution)</a></li>
+<li><a href="#7-status">Status</a></li>
+</ol>
+<hr />
+<h2 id="context">1. Context</h2>
+<p>Helix OTA is a universal, deeply decoupled OTA system: a Go server
+control plane + per-OS client SDKs + dashboard. <strong>Phase 1 targets
+Android 15</strong> on Orange Pi 5 Max (RK3588 class).
+[ota_landscape_report]</p>
+<p>Two decisions are already <strong>LOCKED</strong> by operator mandate
+and are <em>not</em> re-opened here:</p>
+<ul>
+<li><strong>D2 (LOCKED):</strong> Device-side update is <strong>native
+Android A/B</strong> (<code>update_engine</code> + AVB/dm-verity +
+automatic boot-failure rollback), and the server is a <strong>custom,
+decoupled Go control plane</strong>; an OSS engine is wrapped only where
+it adds value. [00-master design §2 D2]</li>
+<li><strong>D3 (LOCKED scope of <em>this</em> ADR):</strong> The
+<em>wrapped-engine choice</em> — wrap hawkBit, wrap Mender, or
+AOSP-native-only — is decided by this evidence-based research ADR, not
+pre-committed. [00-master design §2 D3; additions_synthesis §7]</li>
+<li><strong>Mandated stack (LOCKED):</strong> Go + Gin + Brotli +
+HTTP/3(QUIC)→HTTP/2 fallback, <strong>REST-primary</strong>;
+<strong>PostgreSQL</strong> relational state + <strong>MinIO/S3</strong>
+artifact blobs. [ota_landscape_report]</li>
+</ul>
+<p>Because D2 fixes the <strong>on-device</strong> mechanism (AOSP
+native A/B), the question this ADR resolves is narrower than “which
+whole OTA product.” On the device, AOSP <code>update_engine</code> is
+the path regardless of option chosen — it is “the native Android update
+path; thin wrapper over <code>applyPayload</code>” and is adopted, not
+replaced. [aosp-update-engine; ota_landscape_report §3.1] The live
+decision is therefore about the <strong>server-side rollout/campaign
+engine</strong>: do we <em>wrap</em> a third-party orchestration back
+end (hawkBit or Mender) behind the Go control plane, or <em>build</em>
+the rollout/campaign engine natively in Go and rely solely on AOSP
+on-device (the “AOSP-native-only” option)?</p>
+<p>The two operator-supplied drafts disagreed precisely here:
+<code>initial_research.md</code> proposed wrapping
+<strong>Mender</strong>; <code>initial_research_02.md</code> proposed
+wrapping <strong>hawkBit</strong>. The reconciliation routed this
+conflict (C1) to ADR-0001 with <strong>AOSP-native-only as a third
+option</strong>, noting “the locked strategy biases toward <em>minimal
+wrapping</em> … so a full-platform adopt must clear a high bar.”
+[additions_synthesis §5 C1, §7]</p>
+<p>The orchestration capability at stake is Helix’s locked
+staged-rollout design: <strong>percentage phases (5/10/30/…/100) gated
+by success/error thresholds with pause/halt on breach.</strong>
+[additions_synthesis §3]</p>
+<hr />
+<h2 id="decision-drivers-constraints">2. Decision Drivers &amp;
+Constraints</h2>
+<ol type="1">
+<li><strong>Decoupling (§11.4.28).</strong> Each unit has one purpose, a
+well-defined interface, and is independently testable; the
+rollout-engine and OS-adapter must remain separate, reusable modules so
+future OSes/projects can reuse them. [00-master design §4, §11.4.28] Any
+wrapped engine must sit <strong>behind</strong> the Go control plane via
+a clean seam and never be publicly exposed.</li>
+<li><strong>Minimal-wrap bias (D2).</strong> Wrap OSS only where it adds
+value; a full-platform adoption must clear a high bar. [00-master design
+§2 D2; additions_synthesis §5 C1]</li>
+<li><strong>Stack conformance.</strong> The control plane and its
+dependencies must conform to Go + Gin + REST-primary + PostgreSQL +
+MinIO/S3. [ota_landscape_report]</li>
+<li><strong>Android-15 fit.</strong> The chosen engine must not fight
+native A/B; Android <code>payload.bin</code>/slot semantics stay in the
+Helix client either way. [aosp-update-engine; eclipse-hawkbit §9]</li>
+<li><strong>License cleanliness.</strong> No copyleft or
+proprietary-gated dependency on the orchestration path. [mender §9;
+eclipse-hawkbit §2]</li>
+<li><strong>No-guessing (§11.4.6) / research-first (§11.4.8).</strong>
+Unverified specifics must be carried as UNVERIFIED and closed before
+implementation, not assumed. [additions_synthesis §1]</li>
+</ol>
+<hr />
+<h2 id="options-considered">3. Options Considered</h2>
+<h3 id="option-a-wrap-eclipse-hawkbit">3.1 Option A — Wrap Eclipse
+hawkBit</h3>
+<p><strong>What it is.</strong> A mature, domain-independent OTA back
+end exposing a REST <strong>Management API</strong> (control-plane
+facing), a polling REST <strong>DDI API</strong> (device facing), and an
+AMQP <strong>DMF API</strong> (optional federation). EPL-2.0; Spring
+Boot / Java 21; PostgreSQL-supported; ships as Docker images. Latest
+release <strong>1.0.3 (2025-04-09)</strong>, 1.0 line declared
+API-stable / “Eclipse Mature.” [eclipse-hawkbit §1, §2]</p>
+<p><strong>Evidence for.</strong> - <strong>Headline capability is a
+near 1:1 match to the locked design.</strong> hawkBit provides
+percentage-based phased rollouts via cascading deployment groups gated
+by <strong>success (trigger) thresholds</strong> and <strong>error
+thresholds</strong>, with an <strong>emergency-shutdown</strong> error
+action and start/pause/resume + approval gate. The locked Helix design
+(5/10/30/…/100 % phases gated by success/error thresholds with
+pause/halt) “maps <strong>directly</strong> onto hawkBit rollout groups
++ trigger/error thresholds + emergency shutdown… a near 1:1 fit and the
+core argument for wrapping.” [eclipse-hawkbit §5; ota_landscape_report
+§2.3 (staged-rollout 5)] - <strong>Designed to be wrapped.</strong>
+hawkBit is explicitly “a back end meant to be driven by 3rd-party apps
+over the Management API,” so the Go control plane “becomes that app.”
+Wrap-ability scored 5/5. [eclipse-hawkbit §1, §8; ota_landscape_report
+§2.3] - <strong>Clean seam, no Android fight.</strong> OS-agnostic; DDI
+is plain HTTPS poll + token + feedback, trivially implementable on
+Android; the client bridges DDI→<code>applyPayload</code>;
+Android-specific install logic stays in the Helix client.
+[eclipse-hawkbit §9] - <strong>Stack-compatible dependencies.</strong>
+PostgreSQL supported (separate schema/instance recommended); Docker
+monolith topology fits; <strong>DDI-only avoids RabbitMQ</strong> (AMQP
+only needed for DMF push). [eclipse-hawkbit §6, §7] -
+<strong>License.</strong> EPL-2.0, business-friendly. [eclipse-hawkbit
+§2] - Highest non-device total in the matrix (<strong>36/45</strong>),
+and top score on staged-rollout and wrap-ability, and top-or-tied on
+Go-fit (Go-fit 5 ties <code>tuf-go-tuf</code>), among control-plane
+candidates. [ota_landscape_report §2.2]</p>
+<p><strong>Evidence against.</strong> - <strong>Second
+runtime/language.</strong> JVM/Spring-Boot/Java-21 is “heavier than the
+Go control plane; adds a second language/runtime to operate” — the main
+downside. [eclipse-hawkbit §10; ota_landscape_report §3.2] - <strong>No
+Android/TUF awareness.</strong> hawkBit treats artifacts as opaque;
+<code>payload.bin</code>/A/B semantics and TUF signing must live in
+Helix regardless. [eclipse-hawkbit §8, §9] - <strong>UNVERIFIED
+integration specifics</strong> that must close before coding the Go
+wrapper: exact Management API rollout
+<strong>create/start/pause/resume</strong> verbs and create-rollout JSON
+fields; whether a <strong>management-side event/webhook stream</strong>
+exists or status must be <strong>polled</strong>; default DDI
+<code>pollingTime</code>; exact DDI <code>_links</code>/feedback schema;
+S3/MinIO artifact-store support matrix in 1.0.x; dynamic-rollout
+availability. [eclipse-hawkbit §11; ota_landscape_report §5(1)]</p>
+<h3 id="option-b-wrap-mender">3.2 Option B — Wrap Mender</h3>
+<p><strong>What it is.</strong> A mature, production-grade end-to-end
+OTA solution for <strong>embedded Linux</strong> (and, recently,
+Zephyr/MCU): Go client (3.x baseline) + microservices server (MongoDB /
+NATS / Traefik). Open-core licensing. [mender §1, §2, §4, §8, §9]</p>
+<p><strong>Evidence for.</strong> - Strong robustness/execution model:
+dual-A/B rootfs commit/rollback, Update Modules abstraction,
+no-open-ports HTTPS-polling security model — worth studying. [mender §3,
+§5, §10] - Client is Go (aligns <em>in principle</em> with the Go
+mandate). [mender §8] - High maturity (5/5), widely deployed in embedded
+Linux/IoT. [mender §1; ota_landscape_report §2.2]</p>
+<p><strong>Evidence against (disqualifying).</strong> - <strong>No
+Android support whatsoever.</strong> Official device-support lists
+Debian-family Linux, Yocto, Buildroot/OpenWRT, Zephyr/MCU —
+<strong>Android appears nowhere.</strong> A/B is bootloader-driven
+(U-Boot/GRUB), <strong>not</strong> Android <code>update_engine</code>.
+“Mender cannot be ‘pointed at’ an Android 15 device… eliminates Mender’s
+wrap value.” Android-15 fit and wrap-ability both score lowest (1/5);
+wrap-ability “Cannot wrap an engine that doesn’t run on Android.”
+[mender §7, §10; ota_landscape_report §2.3, §4] - <strong>Needed
+orchestration is paid/proprietary.</strong> Phased rollouts, dynamic
+groups, RBAC are <strong>Enterprise-tier</strong>; scheduled deployments
+/ auto-retry / delta generation are Professional+. The features
+overlapping Helix’s control plane are the <strong>commercially
+licensed</strong> part; the OSS pieces are client + basic server.
+Open-core; License scored 2/5. [mender §6, §9; ota_landscape_report
+§2.3, §4] - <strong>Server stack conflicts with the mandate.</strong>
+MongoDB / NATS / Traefik microservices vs the locked Gin + PostgreSQL +
+MinIO/S3 + REST stack. [mender §4, §10; ota_landscape_report §2.3 (Go
+fit 2)] - Lowest matrix total (<strong>24/45</strong>).
+[ota_landscape_report §2.2] - <strong>UNVERIFIED:</strong> newest client
+may be a C++ rewrite (vs verified Go 3.x); exact tier
+boundaries/pricing; ~70–90% delta savings is a vendor claim. None of
+these would rehabilitate the option, since the Android gap is decisive.
+[mender §11]</p>
+<h3
+id="option-c-aosp-native-only-custom-go-rollout-engine-no-orchestration-wrap">3.3
+Option C — AOSP-native-only (custom Go rollout engine, no orchestration
+wrap)</h3>
+<p><strong>What it is.</strong> Adopt AOSP <code>update_engine</code> on
+device (as D2 mandates) and <strong>build the rollout/campaign engine
+natively in Go</strong> rather than wrapping any third-party back end.
+The Go control plane owns rollout state, cohorts, thresholds, telemetry,
+and serving.</p>
+<p><strong>Evidence for.</strong> - <strong>Device side is already
+covered and is the strongest-scoring path.</strong>
+<code>update_engine</code> provides on-device A/B write to the inactive
+slot, Virtual A/B COW snapshots, and <strong>automatic bootloader revert
+on failed boot/dm-verity</strong> — adopted, not replaced. AOSP scores
+<strong>39/45</strong> (top), with
+mechanism/rollback/A/B/Android-fit/wrap-ability/license/maturity all 5.
+[aosp-update-engine; ota_landscape_report §2.3, §3.1] -
+<strong>Maximally honors the minimal-wrap bias and decoupling.</strong>
+No JVM, no second runtime; the rollout-engine stays a clean,
+independently testable Go module (§11.4.28) with no external
+orchestration dependency. [00-master design §4; ota_landscape_report
+§3.2] - <strong>Proven patterns exist to copy in Go.</strong> If a wrap
+is rejected, “build the rollout engine natively in Go and copy
+Foundries.io’s wave state machine
+(<code>init→canary→expanding→complete/cancelled</code>) + device-tag
+cohorts (group/UUID/percentage targeting) and Memfault’s server-side
+one-click abort.” Memfault’s AOSP device-client shape
+(poll-a-releases-HTTP-API → drive UpdateEngine A/B → report result) is
+the closest existing blueprint. [ota_landscape_report §3.1, §3.2;
+commercial-oss-fleet] - Full stack conformance by construction (Go + Gin
++ PostgreSQL + MinIO/S3 + REST).</p>
+<p><strong>Evidence against.</strong> - <strong>AOSP has no rollout
+orchestration at all.</strong> Staged-rollout scores 1/5: “None — AOSP
+applies whatever payload it’s handed; all rollout logic is the
+integrator’s.” [aosp-update-engine; ota_landscape_report §2.3] Choosing
+this option means Helix <strong>builds</strong> the threshold-gated
+cascading rollout engine that hawkBit already provides battle-tested —
+re-implementing “the hard, well-tested part.” [eclipse-hawkbit §8] -
+Higher build/test burden and schedule risk on the safety-critical
+rollout-gate path (Constitution §1 floors coverage ≥90% there).
+[additions_synthesis §5 C8] - <strong>UNVERIFIED:</strong> exact
+Android-15/RK3588 <code>update_engine</code> constants/AIDL headers and
+Virtual A/B savings (~45% full / ~55% incremental) need board-level
+confirmation — but these apply to the device side under <em>every</em>
+option. [aosp-update-engine; ota_landscape_report §5(4)]</p>
+<h3 id="comparison-summary">3.4 Comparison summary</h3>
+<p>Role-relevant scores from the landscape matrix (read
+role-specifically, per the report’s caveat — low A/B/Android is
+<em>expected and not disqualifying</em> for a control-plane candidate).
+[ota_landscape_report §2.2, note under §2.2]</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>Engine slug(s)</th>
+<th style="text-align: center;">Staged-rollout</th>
+<th style="text-align: center;">Go fit</th>
+<th style="text-align: center;">Wrap-ability</th>
+<th style="text-align: center;">License</th>
+<th style="text-align: center;">Android-15 fit</th>
+<th style="text-align: center;">Matrix total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A — Wrap hawkBit</td>
+<td><code>eclipse-hawkbit</code> (+ <code>aosp-update-engine</code> on
+device)</td>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">4 (via DDI bridge)</td>
+<td style="text-align: center;">36/45</td>
+</tr>
+<tr>
+<td>B — Wrap Mender</td>
+<td><code>mender</code></td>
+<td style="text-align: center;">2 (Enterprise-gated)</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;"><strong>1</strong> (none)</td>
+<td style="text-align: center;">24/45</td>
+</tr>
+<tr>
+<td>C — AOSP-native-only</td>
+<td><code>aosp-update-engine</code> (+ custom Go engine)</td>
+<td style="text-align: center;"><strong>1</strong> (build it)</td>
+<td style="text-align: center;">3 (device) / Go server <a href="#fn1"
+class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a></td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: center;">39/45 (device path)</td>
+</tr>
+</tbody>
+</table>
+<p>[ota_landscape_report §2.2, §2.3]</p>
+<p><strong>Reading:</strong> Option B is disqualified on hard facts (no
+Android; needed orchestration is proprietary; stack conflict). The real
+trade-off is <strong>A vs C</strong>: wrap hawkBit to <em>reuse</em> a
+near-1:1 rollout engine at the cost of a JVM runtime, versus
+AOSP-native-only to <em>build</em> the rollout engine in Go for a
+single-runtime, maximally-decoupled stack. The landscape report’s own
+recommendation is to wrap hawkBit <strong>gated</strong> on closing its
+integration UNVERIFIEDs, with the native-Go engine as the explicit
+fallback if the team declines the JVM cost. [ota_landscape_report
+§3.2]</p>
+<hr />
+<h2 id="decision">4. Decision</h2>
+<p><strong>Reject Option B (Mender) outright.</strong> <strong>Adopt
+Option A (wrap Eclipse hawkBit) as the front-runner for the
+staged-rollout/campaign engine, GATED on closing the integration
+UNVERIFIEDs in §5.3; with Option C (AOSP-native-only + custom Go rollout
+engine) as the pre-approved fallback if any gate fails or the team
+declines the JVM operational cost.</strong> On device, <strong>AOSP
+<code>update_engine</code> (native A/B + Virtual A/B) is adopted and
+wrapped, not replaced, under every option</strong> — this is fixed by
+LOCKED decision D2 and is not at issue. [00-master design §2 D2;
+aosp-update-engine; ota_landscape_report §3.1]</p>
+<p>Concretely:</p>
+<ol type="1">
+<li><strong>Device side (LOCKED, all options):</strong> Thin Helix
+Android client around <code>UpdateEngine.applyPayload</code>; do not
+re-implement apply/verify/rollback. [aosp-update-engine;
+ota_landscape_report §3.1]</li>
+<li><strong>Control plane (this decision):</strong> Build the Helix
+control plane in Go (Gin, REST-primary, Brotli, HTTP/3→HTTP/2,
+PostgreSQL, MinIO/S3) and <strong>wrap hawkBit</strong> for
+threshold-gated cascading rollouts + emergency shutdown. hawkBit runs as
+<code>hawkbit-monolith</code> + PostgreSQL + <strong>DDI-only (no
+RabbitMQ)</strong> + MinIO/S3, <strong>behind</strong> the Go control
+plane, never publicly exposed; the Go control plane drives it via the
+Management API. [eclipse-hawkbit §7, §8; ota_landscape_report §3.2]</li>
+<li><strong>Fallback (pre-authorized):</strong> If a §5.3 gate fails,
+build the rollout engine natively in Go, copying Foundries.io’s wave
+state machine + device-tag cohorts and Memfault’s one-click abort. This
+keeps the locked design intact regardless of outcome.
+[ota_landscape_report §3.2; commercial-oss-fleet]</li>
+</ol>
+<p>This honors the LOCKED decisions: native A/B + custom Go control
+plane (D2), and the wrap target chosen by research (D3), within the
+mandated stack.</p>
+<hr />
+<h2 id="consequences">5. Consequences</h2>
+<h3 id="positive">5.1 Positive</h3>
+<ul>
+<li><strong>Reuses battle-tested orchestration.</strong> hawkBit’s
+cascading groups + trigger/error thresholds + emergency shutdown match
+the locked staged-rollout design near 1:1, avoiding a from-scratch build
+of the safety-critical rollout-gate. [eclipse-hawkbit §5, §8]</li>
+<li><strong>Clean decoupling preserved (§11.4.28).</strong> hawkBit sits
+behind the Management API seam; the rollout concern is isolated and
+swappable for the Go fallback without touching device or trust layers.
+[eclipse-hawkbit §8; 00-master design §4]</li>
+<li><strong>No platform fight / no lock-in.</strong> OS-agnostic engine;
+EPL-2.0; Android specifics + TUF stay in Helix; Helix’s open Go control
+plane remains the differentiator vs open-client/closed-backend
+competitors. [eclipse-hawkbit §9, §10; commercial-oss-fleet;
+ota_landscape_report §4]</li>
+<li><strong>Stack-aligned dependencies.</strong> PostgreSQL reuse and
+DDI-only deployment avoid both a stack conflict and the AMQP broker.
+[eclipse-hawkbit §6, §7]</li>
+<li><strong>Reversible by design.</strong> The pre-authorized Go
+fallback means the decision carries no dead-end risk.
+[ota_landscape_report §3.2]</li>
+</ul>
+<h3 id="negative">5.2 Negative</h3>
+<ul>
+<li><strong>Operational cost of a second runtime.</strong> Operating a
+JVM/Spring-Boot service alongside Go is the principal downside (extra
+runtime, patching, memory footprint). [eclipse-hawkbit §10;
+ota_landscape_report §3.2]</li>
+<li><strong>Helix still owns Android payload + TUF regardless.</strong>
+hawkBit gives nothing toward <code>payload.bin</code> packaging, slot
+semantics, or supply-chain trust. [eclipse-hawkbit §8, §9]</li>
+<li><strong>Telemetry mismatch.</strong> DDI feedback states are coarser
+than <code>update_engine</code> progress; Helix needs a separate
+telemetry channel. [eclipse-hawkbit §9]</li>
+<li><strong>Decision is conditional.</strong> The wrap cannot be
+committed to code until §5.3 UNVERIFIEDs close (§11.4.6/§11.4.8); until
+then the fallback must remain implementable. [eclipse-hawkbit §11;
+additions_synthesis §1]</li>
+</ul>
+<h3
+id="gating-conditions-unverified-items-to-close-before-committing-the-wrap">5.3
+Gating conditions (UNVERIFIED items to close before committing the
+wrap)</h3>
+<p>These MUST be confirmed against the live hawkBit 1.0.x reference docs
+/ OpenAPI before the Go wrapper is coded; failure of any pushes the
+decision to Option C. [eclipse-hawkbit §11; ota_landscape_report §5]</p>
+<ol type="1">
+<li><strong>Management API rollout surface</strong> — exact verbs for
+create/start/pause/resume/approve and create-rollout JSON field names
+(group count, trigger %, error %). <strong>UNVERIFIED.</strong></li>
+<li><strong>Management-side event push vs. polling</strong> — whether
+the Go consumer can subscribe to a management event/webhook stream, or
+must poll for rollout/group status. <strong>UNVERIFIED.</strong></li>
+<li><strong>DDI specifics</strong> — default <code>pollingTime</code>
+and exact <code>_links</code>/feedback payload schema (verbatim).
+<strong>UNVERIFIED</strong> (partially corroborated:
+<code>deploymentBase</code>, <code>installedBase</code>,
+<code>configData</code>, <code>cancelAction</code>).</li>
+<li><strong>Artifact storage backends</strong> — S3/MinIO support matrix
+in 1.0.x. <strong>UNVERIFIED.</strong></li>
+<li><strong>Dynamic rollouts</strong> and
+<strong><code>DOWNLOADED</code>-state threshold</strong> configurability
+in 1.0.x. <strong>UNVERIFIED.</strong></li>
+<li><strong>1.0.3 release date</strong> — releases page shows
+2025-04-09; one fetch transcribed 2026; treated as 2025-04-09.
+<strong>LOW-RISK / confirm.</strong></li>
+</ol>
+<p>Device-side board confirmations (apply under every option, tracked
+here for completeness): exact Android-15/RK3588
+<code>update_engine</code> constants/AIDL headers and Virtual A/B
+savings figures (~45% full / ~55% incremental).
+<strong>UNVERIFIED.</strong> [aosp-update-engine; ota_landscape_report
+§5(4)]</p>
+<p>Note: <strong>swupdate</strong> was not part of the synthesized
+findings and is not evaluated here; it is out of scope for the Android
+Phase-1 engine decision and is carried to the later Linux phase.
+[ota_landscape_report §4 note, §5(8)]</p>
+<hr />
+<h2 id="compliance-notes-helixconstitution">6. Compliance Notes
+(HelixConstitution)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>How this ADR complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>§11.4.6 (no guessing)</strong></td>
+<td>No unverified specific is asserted as fact; every hawkBit
+integration unknown is carried as <strong>UNVERIFIED</strong> in §5.3
+and made a gate before implementation. [additions_synthesis §1;
+eclipse-hawkbit §11]</td>
+</tr>
+<tr>
+<td><strong>§11.4.8 (research before implementation)</strong></td>
+<td>This ADR is the evidence-based research decision mandated by D3; it
+cites the landscape report and stack notes throughout and defers the
+binding commit until the §5.3 gates close. [00-master design §2 D3, §13;
+additions_synthesis §7]</td>
+</tr>
+<tr>
+<td><strong>§11.4.28 (decoupling)</strong></td>
+<td>The rollout engine is an isolated, independently testable module
+behind the Management API seam; hawkBit is swappable for the Go fallback
+without touching the device or trust layers; OS-adapter and ota-protocol
+stay separate. [00-master design §4, §13 mapping; eclipse-hawkbit
+§8]</td>
+</tr>
+<tr>
+<td><strong>§11.4.74 (catalogue-first reuse)</strong></td>
+<td>Decision favors reusing battle-tested orchestration (hawkBit) and
+verified Helix submodules over re-implementation, consistent with
+catalogue-first reuse. The fallback likewise reuses documented
+Foundries.io/Memfault patterns. [00-master design §10, §15;
+additions_synthesis §1]</td>
+</tr>
+<tr>
+<td><strong>§1 (four-layer testing / coverage)</strong></td>
+<td>Whichever path ships, the rollout-gate is safety-critical and
+floored at ≥90% coverage with mutation immunity per §1, superseding any
+single percentage target. [additions_synthesis §5 C8]</td>
+</tr>
+<tr>
+<td><strong>D2 / D3 (locked decisions honored)</strong></td>
+<td>Native A/B + custom Go control plane (D2) is preserved under all
+options; the wrap target is chosen by research (D3), with hawkBit
+selected and the AOSP-native-only fallback pre-authorized. [00-master
+design §2 D2/D3]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="status">7. Status</h2>
+<p><strong>Proposed.</strong> This ADR records the front-runner (wrap
+hawkBit) and the pre-authorized fallback (AOSP-native-only + custom Go
+rollout engine), and rejects Mender. It becomes
+<strong>Accepted</strong> only once the §5.3 gating UNVERIFIEDs are
+closed against live hawkBit 1.0.x sources (or, on any gate failure, by
+formally selecting the AOSP-native-only fallback). Trust-layer decisions
+are deferred to ADR-0002 (TUF/Uptane); server topology to ADR-0003.
+[eclipse-hawkbit §11; additions_synthesis §7]</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The landscape matrix score for
+<code>aosp-update-engine</code> Go-fit is a flat <strong>3</strong>
+(“N/A on device; Go fits server side”). The “/ Go server” annotation is
+editorial, not a second matrix score — it flags that Option C’s custom
+Go control plane is itself fully Go-conformant. [ota_landscape_report
+§2.2]<a href="#fnref1" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>

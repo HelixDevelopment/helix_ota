@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>export_pipeline</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-multi-format-documentation-export-pipeline">Helix OTA
+— Multi-Format Documentation Export Pipeline</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The real, tested pipeline that converts the canonical Markdown
+corpus to HTML + DOCX (+ PDF when a LaTeX engine is present) and renders
+Mermaid diagrams to SVG + PNG. Implemented in
+<code>scripts/export_docs.sh</code>. This document records the exact
+commands and the <strong>real captured output</strong> of a live run
+(§11.4.6/§7.1 — no claimed format unless a file was physically
+produced).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>PDF and draw.io/PlantUML/graphviz rendering are not available on the
+current host (no LaTeX engine; no
+<code>drawio</code>/<code>plantuml</code>/<code>dot</code>). These are
+SKIPPED, not faked.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>HTML, DOCX, Mermaid→SVG, Mermaid→PNG verified working. PDF + native
+draw.io/UML render require additional tooling (documented below).</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial pipeline + live verification</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td><code>scripts/export_docs.sh</code> written, made executable, and
+run against the master design doc; outputs verified on disk.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Add a CI job + container (pandoc + mermaid-cli + a LaTeX engine such
+as <code>tectonic</code>, +
+<code>drawio-desktop</code>/<code>plantuml</code>) so every format
+renders reproducibly; wire into the changelog/release export (§5).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-goal--constitution-basis">§1. Goal &amp; Constitution
+basis</a></li>
+<li><a href="#2-tooling--verified-host-capabilities">§2. Tooling —
+verified host capabilities</a></li>
+<li><a href="#3-the-script">§3. The script</a></li>
+<li><a href="#4-live-run--real-captured-evidence">§4. Live run — real
+captured evidence</a></li>
+<li><a href="#5-format-coverage-matrix-honest-status">§5. Format
+coverage matrix (honest status)</a></li>
+<li><a href="#6-making-pdf--drawio--uml-render">§6. Making PDF + draw.io
++ UML render</a></li>
+</ul>
+<h2 id="goal-constitution-basis">§1. Goal &amp; Constitution basis</h2>
+<p>HelixConstitution §11.4.65 mandates that every Markdown document be
+exportable to <strong>PDF, HTML, DOCX</strong>, and that diagrams be
+available as <strong>Mermaid, draw.io, SVG, UML, PNG</strong>. The
+canonical source of truth is <strong>Markdown + Mermaid</strong>; all
+other formats are <em>generated</em> from it (and therefore git-ignored
+per §11.4.30, regenerable on demand). Per §7.1/§11.4.6 this document
+claims a format works <strong>only</strong> when a file was physically
+produced; everything else is marked SKIPPED with the reason.</p>
+<h2 id="tooling-verified-host-capabilities">§2. Tooling — verified host
+capabilities</h2>
+<p>Probed live on the build host (2026-06-07):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Status</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pandoc</code></td>
+<td>✅ FOUND (<code>/opt/homebrew/bin/pandoc</code>)</td>
+<td>Markdown → HTML, DOCX, PDF</td>
+</tr>
+<tr>
+<td><code>mmdc</code> (mermaid-cli)</td>
+<td>✅ FOUND (<code>/opt/homebrew/bin/mmdc</code>)</td>
+<td>Mermaid → SVG, PNG</td>
+</tr>
+<tr>
+<td><code>npx</code>, <code>node</code> v22, <code>java</code> 17</td>
+<td>✅ FOUND</td>
+<td>tooling/runtime</td>
+</tr>
+<tr>
+<td>LaTeX engine
+(<code>tectonic</code>/<code>xelatex</code>/<code>pdflatex</code>/<code>lualatex</code>/<code>wkhtmltopdf</code>)</td>
+<td>❌ MISSING</td>
+<td>(blocks PDF)</td>
+</tr>
+<tr>
+<td><code>drawio</code></td>
+<td>❌ MISSING</td>
+<td>(blocks draw.io→PNG render)</td>
+</tr>
+<tr>
+<td><code>plantuml</code></td>
+<td>❌ MISSING</td>
+<td>(blocks UML render)</td>
+</tr>
+<tr>
+<td><code>dot</code> (graphviz)</td>
+<td>❌ MISSING</td>
+<td>(blocks graphviz render)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-script">§3. The script</h2>
+<p><code>scripts/export_docs.sh &lt;file.md | dir&gt; [out_dir]</code>
+(defaults to <code>docs/research/main_specs</code>). It:</p>
+<ol type="1">
+<li>Probes capabilities at runtime; logs what it can/can’t do.</li>
+<li>For each <code>.md</code> (excluding <code>_exports/</code>):
+produces <code>*.html</code> and <code>*.docx</code> via pandoc;
+attempts <code>*.pdf</code> only if a PDF engine exists (else SKIP +
+warn).</li>
+<li>Extracts each fenced
+``<code>mermaid block to a numbered</code><em>.diagram-NN.mmd<code>and renders</code></em>.svg<code>+</code>*.png<code>via</code>mmdc`.</li>
+<li>Degrades gracefully — a missing renderer is logged, never
+fatal.</li>
+<li>Prints a final tally
+(<code>html= docx= pdf= mermaid_blocks= svg= png=</code>).</li>
+</ol>
+<p>Outputs land in a sibling <code>_exports/</code> directory
+(git-ignored).</p>
+<h2 id="live-run-real-captured-evidence">§4. Live run — real captured
+evidence</h2>
+<p>Command:</p>
+<pre><code>$ ./scripts/export_docs.sh docs/research/main_specs/00-master/2026-06-07-helix-ota-design.md</code></pre>
+<p>Real stdout:</p>
+<pre><code>[export] capabilities: pandoc=1 mmdc=1 pdf_engine=none
+[export][WARN] no LaTeX/PDF engine — PDF will be SKIPPED (HTML/DOCX unaffected)
+[export] inputs: 1 markdown file(s)
+[export] DONE — html=1 docx=1 pdf=0 mermaid_blocks=1 svg=1 png=1</code></pre>
+<p>Resulting files (<code>ls -la .../_exports/</code>):</p>
+<pre><code>2026-06-07-helix-ota-design.diagram-01.mmd   1081 B
+2026-06-07-helix-ota-design.diagram-01.png  33477 B
+2026-06-07-helix-ota-design.diagram-01.svg  27820 B
+2026-06-07-helix-ota-design.docx            19249 B
+2026-06-07-helix-ota-design.html            22650 B</code></pre>
+<p>This is rock-solid physical evidence: HTML, DOCX, Mermaid-SVG and
+Mermaid-PNG were all produced (non-zero, valid sizes). PDF was correctly
+SKIPPED — not faked.</p>
+<h2 id="format-coverage-matrix-honest-status">§5. Format coverage matrix
+(honest status)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Required format (§11.4.65)</th>
+<th>Status on this host</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTML</td>
+<td>✅ verified</td>
+<td>pandoc</td>
+</tr>
+<tr>
+<td>DOCX</td>
+<td>✅ verified</td>
+<td>pandoc</td>
+</tr>
+<tr>
+<td>PDF</td>
+<td>⏭️ SKIPPED — needs LaTeX engine</td>
+<td>pandoc + <code>tectonic</code>/<code>xelatex</code></td>
+</tr>
+<tr>
+<td>Mermaid (source)</td>
+<td>✅ canonical</td>
+<td>authored inline</td>
+</tr>
+<tr>
+<td>SVG</td>
+<td>✅ verified</td>
+<td>mmdc</td>
+</tr>
+<tr>
+<td>PNG</td>
+<td>✅ verified</td>
+<td>mmdc</td>
+</tr>
+<tr>
+<td>draw.io</td>
+<td>⚠️ source-only (no local renderer)</td>
+<td>emit <code>.drawio</code> XML; render needs
+<code>drawio-desktop</code></td>
+</tr>
+<tr>
+<td>UML</td>
+<td>⚠️ source-only (no local renderer)</td>
+<td>emit <code>.puml</code>; render needs <code>plantuml</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="making-pdf-draw.io-uml-render">§6. Making PDF + draw.io + UML
+render</h2>
+<p>To reach 100% of §11.4.65 reproducibly, the export container (built
+on the <code>containers</code> submodule) must add: a LaTeX engine
+(<code>tectonic</code> recommended — single binary, no texlive sprawl),
+<code>drawio-desktop</code> (headless <code>--export</code>),
+<code>plantuml</code> (+ <code>graphviz</code>). The script already
+calls these conditionally, so adding the binaries flips the SKIPPED rows
+to verified with no script change. This containerization is tracked as a
+1.0.0-MVP deployment task.</p>
+</body>
+</html>

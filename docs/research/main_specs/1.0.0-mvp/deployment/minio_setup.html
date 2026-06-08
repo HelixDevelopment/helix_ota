@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>minio_setup</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="minio-setup-helix-ota-1.0.0-mvp">MinIO Setup — Helix OTA
+1.0.0-MVP</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Bootstrap procedure for the MinIO (S3-compatible) artifact blob
+store used by Helix OTA 1.0.0-MVP: bucket layout, a least-privilege
+service-account policy for ota-server, key issuance, and the
+byte-identity / range-GET requirements the artifact path imposes. Honors
+the LOCKED state-store split (PostgreSQL relational + MinIO/S3 blobs)
+and the artifact-path no-compression rule (ADR-0004). All access flows
+through the <code>Storage</code> catalogue brick.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HelixConstitution clause numbers UNVERIFIED. <code>mc</code> command
+flags target current MinIO client semantics and are UNVERIFIED against
+the exact pinned image. Whether the <code>Storage</code> brick supports
+range-GET for large artifacts is UNVERIFIED (potential upstream extend,
+submodule_reuse_map §5). In orchestrated (k8s) environments a
+managed/operator S3 may replace standalone MinIO (overview §6).</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: clarified that <code>helix</code> in the <code>mc</code>
+commands is the local mc <strong>alias name</strong> (not a MinIO user)
+and that the actual root identity comes from the
+<code>$MINIO_ROOT_USER</code>/<code>$MINIO_ROOT_PASSWORD</code> secret —
+no specific username is assumed.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Pin the MinIO image + <code>mc</code> version and re-verify the
+commands; confirm <code>Storage</code> range-GET support and drop the
+UNVERIFIED tag; decide standalone-MinIO vs managed S3 for k8s; integrate
+the bucket/key bootstrap into the <code>containers</code>-substrate
+provisioning so it is reproducible, not manual.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-prerequisites">Prerequisites</a></li>
+<li><a href="#3-bucket-layout">Bucket layout</a></li>
+<li><a href="#4-service-account-policy-least-privilege">Service-account
+policy (least privilege)</a></li>
+<li><a href="#5-key-issuance-and-wiring">Key issuance and
+wiring</a></li>
+<li><a
+href="#6-artifact-path-requirements-byte-identity--range-get">Artifact-path
+requirements (byte-identity + range GET)</a></li>
+<li><a href="#7-verification-four-layer">Verification
+(four-layer)</a></li>
+<li><a href="#8-open--unverified-items">Open / UNVERIFIED items</a></li>
+<li><a href="#9-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>MinIO is the <strong>S3-compatible artifact blob store</strong> for
+Helix OTA 1.0.0-MVP. It holds OTA artifacts — the AOSP
+<code>payload.bin</code>, its manifest, and the detached signature —
+while <strong>PostgreSQL holds all relational state</strong>. This split
+is LOCKED. [master §3; ADR-0003 §3]</p>
+<p>This document covers the <strong>one-time bootstrap</strong>:
+creating the bucket, attaching a least-privilege policy, and issuing the
+access keys that ota-server consumes via the <code>Storage</code> brick.
+It does <strong>not</strong> cover MinIO HA/distributed-mode tuning (out
+of scope for MVP) and it does <strong>not</strong> put any direct S3 SDK
+call in Helix code — all access goes through the <code>Storage</code>
+catalogue brick. [submodule_reuse_map §3 Storage row] (UNVERIFIED:
+<code>Storage</code> provides an S3/MinIO backend.)</p>
+<p>The MinIO service itself is defined in <a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>.
+In Kubernetes the MVP manifests intentionally omit MinIO; use a managed
+S3 or a MinIO operator (overview §6, UNVERIFIED choice).</p>
+<h2 id="prerequisites">2. Prerequisites</h2>
+<ul>
+<li>MinIO running and healthy (compose: <code>minio</code> service
+healthcheck green).</li>
+<li>The MinIO client <code>mc</code> available (locally or
+<code>docker compose exec minio mc …</code>).</li>
+<li>Root credentials supplied via container secrets
+(<code>MINIO_ROOT_USER_FILE</code> /
+<code>MINIO_ROOT_PASSWORD_FILE</code> in <a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>) —
+<strong>never committed</strong>; these root creds are used only for
+bootstrap, not by ota-server.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Register the MinIO endpoint as an mc alias (root creds used only for bootstrap).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span> alias set helix http://minio:9000 <span class="st">&quot;</span><span class="va">$MINIO_ROOT_USER</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$MINIO_ROOT_PASSWORD</span><span class="st">&quot;</span></span></code></pre></div>
+<blockquote>
+<p>NOTE: <code>helix</code> here (and in every <code>mc … helix …</code>
+command below) is the local <strong>mc alias name</strong>, NOT a MinIO
+username. The actual root identity is supplied via
+<code>$MINIO_ROOT_USER</code>/<code>$MINIO_ROOT_PASSWORD</code> (from
+container secrets, <a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>);
+no specific root username is assumed. Likewise the issued
+service-account access key (§5) is generated by MinIO, not named
+<code>helix</code>.</p>
+</blockquote>
+<p>(UNVERIFIED: exact <code>mc</code> flags against the pinned image;
+re-verify after pinning — §8.)</p>
+<h2 id="bucket-layout">3. Bucket layout</h2>
+<p>A single bucket holds all artifacts; objects are keyed by release so
+listing is bounded.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Bucket</th>
+<th>Purpose</th>
+<th>Object key convention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-ota-artifacts</code></td>
+<td>OTA artifacts</td>
+<td><code>&lt;release-id&gt;/payload.bin</code>,
+<code>&lt;release-id&gt;/manifest.json</code>,
+<code>&lt;release-id&gt;/payload.sig</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span> mb helix/helix-ota-artifacts</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Private by default — devices fetch via ota-server, never directly from MinIO.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span> anonymous set none helix/helix-ota-artifacts</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Versioning ON so a release id never silently mutates (integrity defense-in-depth, ADR-0002).</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span> version enable helix/helix-ota-artifacts</span></code></pre></div>
+<p>Devices <strong>never</strong> read MinIO directly; ota-server
+mediates every fetch (so auth, rate limit, and the artifact-path rules
+in §6 apply). The bucket stays private.</p>
+<h2 id="service-account-policy-least-privilege">4. Service-account
+policy (least privilege)</h2>
+<p>ota-server gets a dedicated service account whose policy is scoped to
+the one bucket. Upload (release publishing) needs
+<code>PutObject</code>; serving needs <code>GetObject</code> (+ range);
+integrity checks need <code>GetObjectVersion</code>. No bucket-delete,
+no policy-admin.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;Version&quot;</span><span class="fu">:</span> <span class="st">&quot;2012-10-17&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;Statement&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Effect&quot;</span><span class="fu">:</span> <span class="st">&quot;Allow&quot;</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Action&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;s3:ListBucket&quot;</span><span class="ot">,</span> <span class="st">&quot;s3:GetBucketLocation&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Resource&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;arn:aws:s3:::helix-ota-artifacts&quot;</span><span class="ot">]</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Effect&quot;</span><span class="fu">:</span> <span class="st">&quot;Allow&quot;</span><span class="fu">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Action&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;s3:PutObject&quot;</span><span class="ot">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;s3:GetObject&quot;</span><span class="ot">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;s3:GetObjectVersion&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;Resource&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;arn:aws:s3:::helix-ota-artifacts/*&quot;</span><span class="ot">]</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span> admin policy create helix helix-ota-rw ./helix-ota-rw.json</span></code></pre></div>
+<p>Note there is <strong>no <code>s3:DeleteObject</code></strong>: MVP
+releases are immutable; retirement is a relational-state flag in
+PostgreSQL, not a blob delete.</p>
+<h2 id="key-issuance-and-wiring">5. Key issuance and wiring</h2>
+<p>Issue a service account scoped to the policy above; its access/secret
+keys are the values ota-server consumes via the <code>Storage</code>
+brick.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span> admin user svcacct add helix <span class="st">&quot;</span><span class="va">$MINIO_ROOT_USER</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--policy</span> ./helix-ota-rw.json</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; prints Access Key + Secret Key (store as container/orchestrator secrets, NOT in VCS)</span></span></code></pre></div>
+<p>Wire the issued keys into the deployment as <strong>secrets</strong>
+(overview §5):</p>
+<ul>
+<li><strong>Compose:</strong> the <code>minio_access_key</code> /
+<code>minio_secret_key</code> Docker secrets in <a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>
+(file-mounted under <code>/run/secrets/…</code>).</li>
+<li><strong>Kubernetes:</strong> the <code>helix-ota-minio</code> Secret
+(<code>access-key</code> / <code>secret-key</code>) referenced by <a
+href="kubernetes/ota-server-deployment.yaml"><code>kubernetes/ota-server-deployment.yaml</code></a>.</li>
+</ul>
+<p>The keys are referenced <strong>by name/path only</strong> in
+committed files; the literal values live outside version control.
+ota-server reads them through the <code>Storage</code> brick — no direct
+S3 SDK call elsewhere. [submodule_reuse_map §3 Storage row]</p>
+<h2 id="artifact-path-requirements-byte-identity-range-get">6.
+Artifact-path requirements (byte-identity + range GET)</h2>
+<p>These are hard requirements the store and its consumers must
+satisfy:</p>
+<ol type="1">
+<li><strong>Byte-identical serving.</strong> <code>payload.bin</code> is
+the output of <code>update_engine</code>’s <code>delta_generator</code>
+and is already internally compressed; it MUST be stored and served
+<strong>byte-for-byte unchanged</strong>. No transfer-encoding/content
+compression may be applied on the artifact path — re-compression yields
+~no size win and <strong>breaks the <code>ZIP_STORED</code> + byte-range
+contract</strong> and the device-side
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> + AOSP payload
+signature checks. [ADR-0004 §Decision artifact rule; aosp-update-engine
+§6, §7]</li>
+<li><strong>Range GET.</strong> Device-pull streaming uses HTTP Range
+requests; the store and the <code>Storage</code> brick must support
+range GET for large artifacts. (UNVERIFIED: <code>Storage</code>
+range-get support — potential upstream extend, submodule_reuse_map §5;
+ADR-0004 §1 range caveat.)</li>
+<li><strong>Integrity at rest.</strong> Bucket versioning is on (§3);
+ota-server verifies SHA-256 + the detached signature on
+<strong>upload</strong> (server-side defense-in-depth) before the object
+is considered published (MVP trust model). [ADR-0002 §4.1]</li>
+</ol>
+<h2 id="verification-four-layer">7. Verification (four-layer)</h2>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> This doc exists with metadata
+table + ToC; the policy JSON and bucket name match the references in <a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>
+and <a
+href="kubernetes/ota-server-deployment.yaml"><code>kubernetes/ota-server-deployment.yaml</code></a>;
+no literal key value appears in any committed file.</li>
+<li><strong>Artifact gate.</strong> The policy JSON parses; the
+<code>mc</code> command set is syntactically valid; the bucket name is a
+single source of truth across compose/k8s/this doc.</li>
+<li><strong>Runtime / integration gate.</strong> After bootstrap:
+<code>mc ls helix/helix-ota-artifacts</code> succeeds with the
+service-account key; ota-server PUTs a signed test artifact, a range-GET
+returns <strong>byte-identical</strong> bytes, and server-side SHA-256 +
+signature verify passes; an anonymous direct GET against MinIO is
+<strong>denied</strong> (bucket private).</li>
+<li><strong>Mutation meta-test.</strong> Mutating the setup must be
+caught: granting <code>s3:DeleteObject</code> → immutability test fails;
+setting the bucket public → anonymous-GET-denied test fails; enabling
+compression on the artifact path → byte-identity test fails (§6.1). A
+mutation no test catches is a missing test (mutation immunity). [master
+§13; §1.1]</li>
+</ol>
+<h2 id="open-unverified-items">8. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>HelixConstitution clause numbers</strong> — UNVERIFIED
+(corpus convention).</li>
+<li><strong><code>mc</code> command/flag accuracy</strong> against the
+pinned MinIO image — UNVERIFIED until pinned.</li>
+<li><strong><code>Storage</code> brick range-GET + S3/MinIO
+backend</strong> — UNVERIFIED (submodule_reuse_map §3, §5).</li>
+<li><strong>k8s object store</strong> — standalone MinIO vs managed S3 /
+MinIO operator — UNVERIFIED (overview §6); MVP k8s manifests omit
+MinIO.</li>
+<li><strong>Image digest</strong> for MinIO — must be pinned before
+deploy — UNVERIFIED (overview §8).</li>
+</ol>
+<h2 id="sources">9. Sources</h2>
+<ul>
+<li><a href="overview.md"><code>overview.md</code></a> — deployment
+overview (service set §3.3, secrets §5, environments §6).</li>
+<li><a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a> —
+<code>minio</code> service + secrets wiring.</li>
+<li><a
+href="kubernetes/ota-server-deployment.yaml"><code>kubernetes/ota-server-deployment.yaml</code></a>
+— S3 env + <code>helix-ota-minio</code> Secret reference.</li>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>../../research/adr/adr-0002-supply-chain-trust.md</code></a>
+— MVP trust model (signing + SHA-256 + AVB; server-side verify on
+upload).</li>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>../../research/adr/adr-0004-transport.md</code></a>
+— artifact-path no-compression / byte-identity / range-request
+rule.</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>
+— <code>Storage</code> brick binding; range-get upstream-extend note
+(§3, §5).</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>overview</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="deployment-overview-helix-ota-1.0.0-mvp">Deployment Overview —
+Helix OTA 1.0.0-MVP</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Deployment topology for the Helix OTA 1.0.0-MVP control plane.
+Defines the containerized service set (ota-server, postgres, minio,
+reverse proxy, dashboard), the container substrate
+(<code>vasic-digital/containers</code> submodule), secrets handling
+(security brick + container secrets), and the four-layer testing gates
+for deployment artifacts. Honors the LOCKED stack (Go + Gin + Brotli +
+HTTP/3→HTTP/2, REST-primary; PostgreSQL + MinIO) and the LOCKED strategy
+(native Android A/B + custom Go modular-monolith control plane per
+ADR-0003).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HelixConstitution clause numbers are UNVERIFIED (carried from corpus
+convention). Exact public surface of the <code>containers</code>,
+<code>security</code>, <code>config</code>, and
+<code>observability</code> catalogue submodules has not been inspected;
+“satisfies” claims are UNVERIFIED where so marked. Concrete resource
+sizing (CPU/RAM/replica counts) and load-derived scale thresholds are
+UNVERIFIED — to be set from MVP load tests (ADR-0003 §3.2, §7).
+Reverse-proxy and dashboard images are placeholders pending
+build-pipeline confirmation.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2 (anti-bluff review): minio dropped <code>:latest</code> for a
+placeholder pinned version tag (digest TBD) per the digest-pinning rule;
+k8s postgres probes now derive the user/db from
+<code>$POSTGRES_USER</code>/<code>$POSTGRES_DB</code> (Secret-sourced,
+not hardcoded <code>helix</code>) and the minio <code>mc</code>
+<code>helix</code> token is documented as an alias name, not a user;
+compose healthcheck <code>wget</code> flagged as Dockerfile-dependent
+(distroless/read-only bases); caddy <code>/healthz</code> flagged as
+dependent on the out-of-band Caddyfile (pending ADR-0004 QUIC spike);
+k8s <code>HELIX_S3_ENDPOINT=http://minio:9000</code> flagged as a
+placeholder that MUST be overridden (k8s omits in-cluster minio).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Inspect the
+<code>containers</code>/<code>security</code>/<code>config</code>
+submodule surfaces and remove UNVERIFIED tags; confirm reverse-proxy
+choice (Caddy vs nginx vs <code>http3</code>-fronted Go) once the
+QUIC/UDP-443 spike (ADR-0004) closes; pin all image digests before any
+deploy; derive resource requests/limits and HPA thresholds from load
+tests; wire the dashboard build target.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-container-substrate">Container substrate</a></li>
+<li><a href="#3-service-set">Service set</a>
+<ul>
+<li><a href="#31-ota-server-go-control-plane">3.1 ota-server (Go control
+plane)</a></li>
+<li><a href="#32-postgres">3.2 postgres</a></li>
+<li><a href="#33-minio-artifact-blobs">3.3 minio (artifact
+blobs)</a></li>
+<li><a href="#34-reverse-proxy">3.4 reverse proxy</a></li>
+<li><a href="#35-dashboard">3.5 dashboard</a></li>
+</ul></li>
+<li><a href="#4-topology-and-data-flow">Topology and data flow</a></li>
+<li><a href="#5-secrets-handling">Secrets handling</a></li>
+<li><a
+href="#6-environments-local-compose-vs-orchestrated-kubernetes">Environments:
+local (compose) vs orchestrated (kubernetes)</a></li>
+<li><a href="#7-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#8-open--unverified-items">Open / UNVERIFIED items</a></li>
+<li><a href="#9-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies <strong>how the Helix OTA 1.0.0-MVP control
+plane is deployed</strong>: the container set, the substrate it runs on,
+how the services connect, and how secrets are handled. It is normative
+for the MVP deployment topology and is the parent document for the
+concrete artifacts in this directory:</p>
+<ul>
+<li><a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a> —
+local / single-host topology.</li>
+<li><a href="kubernetes/"><code>kubernetes/</code></a> — orchestrated
+topology (namespace, ota-server Deployment+Service, postgres
+StatefulSet).</li>
+<li><a href="minio_setup.md"><code>minio_setup.md</code></a> —
+object-store bucket/policy/key bootstrap.</li>
+</ul>
+<p><strong>Scope honors the locked decisions and does not re-decide
+them:</strong></p>
+<ul>
+<li><strong>LOCKED stack (D6):</strong> Go + Gin (gin-gonic) + Brotli +
+HTTP/3 (QUIC) via the <code>vasic-digital/http3</code> submodule with
+HTTP/2 + gzip fallback; <strong>REST primary</strong>
+(<code>/api/v1</code>); gRPC optional/internal only. [ADR-0004
+§Decision; master §3]</li>
+<li><strong>LOCKED strategy:</strong> native Android
+<strong>A/B</strong> on device (<code>update_engine</code> +
+AVB/dm-verity + automatic boot-failure rollback) + a <strong>custom Go
+control plane</strong> as a <strong>modular monolith</strong> for MVP
+(one deployable binary, extractable seams) per ADR-0003. [ADR-0003
+§3]</li>
+<li><strong>LOCKED trust model (MVP):</strong> per-artifact
+<strong>signing + SHA-256 + AVB</strong>; TUF device-side enforcement is
+<strong>deferred to 1.0.1</strong> per ADR-0002. The deployment must
+therefore carry signing/verification key material (see §5), not a TUF
+metadata server. [ADR-0002 §4.1, §4.3]</li>
+<li><strong>LOCKED state stores:</strong> <strong>PostgreSQL</strong>
+relational state + <strong>MinIO/S3</strong> artifact blobs. [master §3;
+ADR-0001 §1; ADR-0003 §3]</li>
+</ul>
+<p>Out of scope: the device-side agent deployment (it ships in firmware,
+not as a container), TUF/Uptane infrastructure (deferred to 1.0.1,
+ADR-0002), and any wrapped hawkBit deployable (gated on ADR-0001; if
+adopted it is a <strong>separate</strong> deployable behind ota-server,
+ADR-0003 §3).</p>
+<h2 id="container-substrate">2. Container substrate</h2>
+<p>All MVP services are <strong>containerized and run on the
+<code>vasic-digital/containers</code> submodule substrate</strong>
+(catalogue-first, §11.4.74 / §11.4.76, UNVERIFIED clause numbers).
+[master §10; submodule_reuse_map §3 Docs-export/substrate row] The
+<code>containers</code> submodule is the canonical catalogue name;
+<strong>no new container-tooling submodule is invented</strong> for this
+purpose.</p>
+<ul>
+<li>The <strong>single ota-server deployable</strong> (ADR-0003 modular
+monolith) is the only Helix-authored image; postgres, minio, the reverse
+proxy and the dashboard are off-the-shelf or
+build-from-<code>vasic-digital</code> images orchestrated by the same
+substrate.</li>
+<li>A future per-service split (ADR-0003 §3.2 scale trigger)
+<strong>reuses the same substrate</strong> — the topology files here
+change, not the substrate choice. [ADR-0003 §6 §11.4.76]</li>
+<li>Local/single-host orchestration uses Docker Compose (<a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>);
+orchestrated/multi-node uses the Kubernetes manifests (<a
+href="kubernetes/"><code>kubernetes/</code></a>).</li>
+</ul>
+<p>UNVERIFIED: the exact build/run interface the <code>containers</code>
+submodule exposes has not been inspected in this revision; the
+compose/k8s files here use standard OCI/Compose/Kubernetes schemas so
+they remain valid independently of that surface, and bind to
+<code>containers</code> for image build + substrate per the reuse
+map.</p>
+<h2 id="service-set">3. Service set</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image (MVP)</th>
+<th>Purpose</th>
+<th>Exposed</th>
+<th>Persists</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ota-server</strong></td>
+<td>built from repo (<code>vasic-digital</code> Go build)</td>
+<td>Go modular-monolith control plane (REST <code>/api/v1</code>,
+rollout engine, artifact intake, telemetry ingest)</td>
+<td>internal <code>:8080</code> (HTTP/2 fallback) +
+<code>:8443/udp</code> (HTTP/3) behind proxy</td>
+<td>no (stateless; state in postgres/minio)</td>
+</tr>
+<tr>
+<td><strong>postgres</strong></td>
+<td><code>postgres:16</code></td>
+<td>Relational state (releases, deployments, devices, rollout
+phase/cohort state)</td>
+<td>internal <code>:5432</code></td>
+<td>volume <code>pgdata</code></td>
+</tr>
+<tr>
+<td><strong>minio</strong></td>
+<td><code>minio/minio</code> (placeholder pinned version tag, never
+<code>:latest</code>; digest before deploy)</td>
+<td>S3-compatible artifact blob store (<code>payload.bin</code> +
+manifests)</td>
+<td>internal <code>:9000</code> (S3) + <code>:9001</code> (console)</td>
+<td>volume <code>minio-data</code></td>
+</tr>
+<tr>
+<td><strong>reverse proxy</strong></td>
+<td><code>caddy:2</code> (placeholder, UNVERIFIED)</td>
+<td>TLS termination, HTTP/3↔︎HTTP/2 fronting, routing to ota-server +
+dashboard</td>
+<td>public <code>:80</code>, <code>:443</code> (TCP+UDP)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><strong>dashboard</strong></td>
+<td>built from repo (placeholder, UNVERIFIED)</td>
+<td>Operator web UI consuming ota-server REST</td>
+<td>internal, via proxy <code>/</code></td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ota-server-go-control-plane">3.1 ota-server (Go control
+plane)</h3>
+<ul>
+<li><strong>Single deployable binary</strong> per ADR-0003 (modular
+monolith with extractable artifact-validator / rollout-engine /
+OS-adapter seams). [ADR-0003 §3, §3.1]</li>
+<li>Serves <strong>REST <code>/api/v1</code> as the primary
+surface</strong> via Gin; HTTP/3 (QUIC) primary through the
+<code>vasic-digital/http3</code> drop-in <code>net/http.Handler</code>
+with <strong>automatic HTTP/2 fallback</strong>; Brotli response
+compression negotiating to gzip. [ADR-0004 §Decision; master §3]</li>
+<li><strong>gRPC, if present, is internal-only</strong> and never
+exposed through the public proxy. [ADR-0004 §Decision;
+additions_synthesis §5 C4]</li>
+<li><strong>Artifact path is NOT content-compressed</strong> (the proxy
+and server must serve <code>payload.bin</code> byte-identical via
+<code>ZIP_STORED</code> + byte-range so device-side
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> and the AOSP payload
+signature verify). This is a hard deployment rule. [ADR-0004 §Decision
+Option A on artifacts]</li>
+<li>Composes cross-cutting concerns from the catalogue:
+<code>http3</code>, <code>middleware</code> (Brotli/gzip),
+<code>ratelimiter</code>, <code>recovery</code>,
+<code>observability</code>, <code>config</code>, optional
+<code>cache</code>. [submodule_reuse_map §3 Transport/Caching/Config
+rows] (UNVERIFIED: each brick’s exact surface.)</li>
+<li>Stateless: all state in postgres + minio, so it scales horizontally
+without sticky sessions.</li>
+</ul>
+<h3 id="postgres">3.2 postgres</h3>
+<ul>
+<li><code>postgres:16</code> (LTS-class major; pinned to a digest before
+deploy). Holds all relational state for the modular monolith. [ADR-0003
+§3; master §3]</li>
+<li>A <strong>separate schema/instance is recommended</strong> if a
+wrapped hawkBit is ever adopted (ADR-0001), so they do not share a
+schema. [ADR-0001 §3.1; eclipse-hawkbit §6] Not needed at MVP since
+AOSP-native-only / Helix-only state is the baseline.</li>
+<li>Durable via a named volume (compose) / PVC (k8s StatefulSet).</li>
+</ul>
+<h3 id="minio-artifact-blobs">3.3 minio (artifact blobs)</h3>
+<ul>
+<li>S3-compatible object store for OTA artifacts
+(<code>payload.bin</code>, manifests, detached signatures). The
+<code>Storage</code> catalogue brick abstracts all access; <strong>no
+direct S3 SDK calls live outside <code>Storage</code></strong>.
+[submodule_reuse_map §3 Storage row] (UNVERIFIED: <code>Storage</code>
+provides an S3/MinIO backend.)</li>
+<li>Bucket layout, access policy, and service-account keys are
+bootstrapped per <a
+href="minio_setup.md"><code>minio_setup.md</code></a>.</li>
+<li>Must support <strong>range GET</strong> for large artifacts
+(device-pull streaming); if <code>Storage</code> lacks range-get it is
+an upstream extend item (UNVERIFIED). [submodule_reuse_map §5; ADR-0004
+§1 range-request caveat]</li>
+</ul>
+<h3 id="reverse-proxy">3.4 reverse proxy</h3>
+<ul>
+<li>Terminates TLS (TLS 1.3 throughout, master §6), fronts
+<strong>HTTP/3 (QUIC) on UDP/443 with HTTP/2 fallback on
+TCP/443</strong>, and routes <code>/api/*</code> → ota-server,
+<code>/</code> → dashboard. [ADR-0004 §Decision; master §3, §6]</li>
+<li>Image is a <strong>placeholder</strong> (<code>caddy:2</code>,
+chosen for first-class HTTP/3) — <strong>UNVERIFIED</strong>; final
+choice depends on the QUIC/UDP-443 + Brotli + range-request spike
+flagged in ADR-0004 (the <code>http3</code> submodule may instead front
+the server directly, removing a separate proxy). [ADR-0004 §1, §Decision
+caveat]</li>
+<li><strong>Does not compress the artifact path</strong> (§3.1
+rule).</li>
+</ul>
+<h3 id="dashboard">3.5 dashboard</h3>
+<ul>
+<li>Operator web UI; a static/SPA build consuming ota-server REST
+<code>/api/v1</code>. Image built from the repo
+(<strong>placeholder/UNVERIFIED</strong> build target). Served behind
+the proxy.</li>
+<li>No business logic; it is a thin REST consumer. Auth flows reuse the
+<code>auth</code>/<code>security</code> bricks via the server.
+[submodule_reuse_map §3 Auth row]</li>
+</ul>
+<h2 id="topology-and-data-flow">4. Topology and data flow</h2>
+<pre><code>                         (public)
+   devices  ──HTTP/3 QUIC :443/udp──┐
+   operators ─HTTP/2 TLS :443/tcp──┐│
+                                   ▼▼
+                          ┌─────────────────┐
+                          │  reverse proxy   │  TLS1.3, HTTP/3↔2, routing
+                          └───────┬─────────┘
+                       /api/*     │     /  (dashboard)
+                          ┌───────▼───────┐   ┌───────────┐
+                          │   ota-server   │   │ dashboard │
+                          │ (Go monolith)  │   └───────────┘
+                          └──┬─────────┬──┘
+                  relational │         │ blobs (range GET, byte-identical)
+                          ┌──▼──┐   ┌──▼────┐
+                          │ pg  │   │ minio │
+                          └─────┘   └───────┘</code></pre>
+<ul>
+<li><strong>Control-plane traffic</strong> (REST/JSON poll, rollout
+assignment, telemetry) is Brotli/gzip compressed. <strong>Artifact
+traffic</strong> (<code>payload.bin</code>) is served byte-identical, no
+compression, range-GET capable. [ADR-0004 §Decision]</li>
+<li>ota-server is stateless; postgres and minio are the only stateful
+services.</li>
+</ul>
+<h2 id="secrets-handling">5. Secrets handling</h2>
+<p>Secrets are handled via the <strong><code>security</code> catalogue
+brick + container/orchestrator secret mechanisms</strong> —
+<strong>NOT</strong> via any invented Vault submodule (no such submodule
+exists in the catalogue; inventing one violates §7.1 / §11.4.6).
+[submodule_reuse_map §2 canonical names; documentation_standards §9]</p>
+<ul>
+<li><strong>Crypto primitives &amp; signing/verification keys</strong>
+(per-artifact signing + SHA-256 verification, ADR-0002 MVP trust model)
+are owned by the <strong><code>security</code></strong> brick (server) /
+<strong><code>Security-KMP</code></strong> (device). The deployment’s
+job is only to <em>supply</em> the key material to
+<code>security</code>, not to re-implement key handling. [ADR-0002 §4.1;
+submodule_reuse_map §3 Auth row] (UNVERIFIED: <code>security</code>
+exposes the signing/verify + offline-key primitives — flagged in
+ADR-0002 §8.)</li>
+<li><strong>Runtime secret delivery</strong> uses the container
+substrate’s native secret mechanism:
+<ul>
+<li><strong>Compose:</strong> Docker <code>secrets:</code> (file-mounted
+under <code>/run/secrets/…</code>) and/or an env file excluded from VCS.
+The committed <a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>
+uses <strong>env placeholders only</strong> — no real credentials are
+committed.</li>
+<li><strong>Kubernetes:</strong> <code>Secret</code> objects mounted as
+files/env; the manifests reference Secret <strong>names</strong>, never
+literal values. (A sealed-secrets/external-secrets operator MAY back
+these in a real cluster — UNVERIFIED, deployment-environment
+choice.)</li>
+</ul></li>
+<li><strong>Secret classes at MVP:</strong> (1) artifact <strong>signing
+private key</strong> (offline/HSM-preferred; only the <em>public</em>
+verification key needs to be online for server-side upload verification,
+ADR-0002 §4.1); (2) <strong>postgres credentials</strong>; (3)
+<strong>minio access/secret keys</strong>; (4) TLS certificate/key for
+the proxy; (5) OAuth2/JWT signing secrets owned by
+<code>auth</code>/<code>security</code>.</li>
+<li><strong>No secret value appears in any committed file.</strong> The
+compose and k8s artifacts in this directory carry
+placeholders/Secret-name references only.</li>
+</ul>
+<h2 id="environments-local-compose-vs-orchestrated-kubernetes">6.
+Environments: local (compose) vs orchestrated (kubernetes)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Compose (<a
+href="docker-compose.mvp.yml"><code>docker-compose.mvp.yml</code></a>)</th>
+<th>Kubernetes (<a href="kubernetes/"><code>kubernetes/</code></a>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Use</td>
+<td>local dev, single host, demo</td>
+<td>staging / production multi-node</td>
+</tr>
+<tr>
+<td>ota-server</td>
+<td><code>build:</code> from repo</td>
+<td><code>Deployment</code> (replicas, rolling update) +
+<code>Service</code></td>
+</tr>
+<tr>
+<td>postgres</td>
+<td>container + named volume</td>
+<td><code>StatefulSet</code> + PVC + headless <code>Service</code></td>
+</tr>
+<tr>
+<td>minio</td>
+<td>container + named volume</td>
+<td>(out of scope of MVP manifests; use operator/managed S3)</td>
+</tr>
+<tr>
+<td>secrets</td>
+<td>Docker <code>secrets</code> / env file</td>
+<td><code>Secret</code> objects (referenced by name)</td>
+</tr>
+<tr>
+<td>scaling</td>
+<td>manual</td>
+<td>horizontal (Deployment replicas; HPA later, thresholds
+UNVERIFIED)</td>
+</tr>
+</tbody>
+</table>
+<p>The MVP k8s set is intentionally minimal (namespace + ota-server
+Deployment/Service + postgres StatefulSet) to match the
+modular-monolith, lean-MVP bias (ADR-0003 §4.1). minio and the proxy are
+deferred to a managed/operator path in the orchestrated environment
+(UNVERIFIED choice).</p>
+<h2 id="testing-four-layer">7. Testing (four-layer)</h2>
+<p>Deployment artifacts are gated by the four-layer testing model
+(master §13; §1/§1.1 four-layer testing + mutation immunity, UNVERIFIED
+clause numbers). For <em>deployment</em> artifacts the four layers
+are:</p>
+<ol type="1">
+<li><strong>Source-presence gate (Layer 1).</strong> Static
+existence/shape checks on the artifacts themselves:
+<code>overview.md</code>, <code>docker-compose.mvp.yml</code>,
+<code>kubernetes/namespace.yaml</code>,
+<code>kubernetes/ota-server-deployment.yaml</code>,
+<code>kubernetes/ota-server-service.yaml</code>,
+<code>kubernetes/postgres-statefulset.yaml</code>, and
+<code>minio_setup.md</code> all exist; each declares the required
+services/objects; <strong>no committed file contains a literal secret
+value</strong> (grep gate); every Markdown doc opens with the metadata
+table + ToC.</li>
+<li><strong>Artifact gate (Layer 2).</strong> The YAML is <em>valid and
+parseable</em>:
+<code>docker compose -f docker-compose.mvp.yml config -q</code> exits 0;
+<code>kubectl apply --dry-run=client -f kubernetes/</code> (or
+<code>kubeconform</code>) passes; healthchecks are present on every
+long-running compose service; image references are pinnable to digests.
+(This validates structure without running anything.)</li>
+<li><strong>Runtime / integration gate (Layer 3).</strong> Bring the
+stack up (<code>docker compose -f docker-compose.mvp.yml up</code>);
+assert each healthcheck reaches healthy; ota-server
+<code>/healthz</code> returns 200 over HTTP/2 fallback and HTTP/3;
+postgres accepts the server’s connection; minio bucket from <a
+href="minio_setup.md"><code>minio_setup.md</code></a> is reachable and a
+round-trip artifact PUT/range-GET is <strong>byte-identical</strong>
+(artifact-path no-compression rule, ADR-0004); a signed test artifact
+passes server-side SHA-256 + signature verify (ADR-0002).</li>
+<li><strong>Mutation meta-test (Layer 4).</strong> The deployment tests
+must <em>fail when the deployment is wrong</em> — a meta-test that
+mutates the artifacts and asserts the gates catch it: e.g. remove a
+healthcheck → Layer 2 fails; point ota-server at a wrong DB host → Layer
+3 fails; inject a plaintext secret into a committed file → Layer 1 grep
+gate fails; enable artifact-path compression → Layer 3 byte-identity
+check fails. A mutation that no gate catches is a missing test (mutation
+immunity). [master §13; §1.1]</li>
+</ol>
+<p>Safety-critical paths exercised by deployment (signing/verify on
+upload, byte-identical artifact serving) inherit the <strong>≥90%
+coverage floor</strong>. [ADR-0003 §6 §1/§1.1; additions_synthesis §5
+C8]</p>
+<h2 id="open-unverified-items">8. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>HelixConstitution clause numbers</strong>
+(§11.4.6/7.1/§11.4.61/§11.4.74/§11.4.76/§1/§1.1) — carried from corpus
+convention; <strong>UNVERIFIED</strong>.</li>
+<li><strong>Catalogue submodule surfaces</strong>
+(<code>containers</code>, <code>security</code>, <code>config</code>,
+<code>observability</code>, <code>Storage</code>, <code>http3</code>,
+<code>middleware</code>) — exact public API not inspected this revision;
+“satisfies” claims <strong>UNVERIFIED</strong> (mirrors
+submodule_reuse_map §2/§3 and ADR-0002 §8).</li>
+<li><strong>Reverse-proxy choice</strong> (<code>caddy:2</code>
+placeholder) and whether the <code>http3</code> submodule fronts the
+server directly — <strong>UNVERIFIED</strong>; depends on the
+QUIC/UDP-443 + Brotli + range-request spike in ADR-0004 §1.</li>
+<li><strong>Dashboard build target/image</strong> —
+<strong>placeholder/UNVERIFIED</strong>.</li>
+<li><strong>Resource sizing &amp; HPA thresholds</strong>
+(CPU/RAM/replicas; telemetry-vs-rollout split thresholds) — no load
+figures exist; set from MVP load tests. <strong>UNVERIFIED.</strong>
+[ADR-0003 §3.2, §7]</li>
+<li><strong>Image digests</strong> — <code>postgres:16</code>,
+<code>minio/minio</code>, <code>caddy:2</code> must be pinned to digests
+before any real deploy. <strong>UNVERIFIED</strong> until pinned.</li>
+<li><strong>hawkBit adoption (ADR-0001)</strong> would add a separate
+deployable (Spring Boot + its own postgres schema) behind ota-server;
+this topology holds either way. <strong>UNVERIFIED.</strong></li>
+</ol>
+<h2 id="sources">9. Sources</h2>
+<ul>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>../../research/adr/adr-0001-wrapped-engine.md</code></a>
+— wrapped-engine decision; hawkBit-as-separate-deployable +
+separate-schema note.</li>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>../../research/adr/adr-0002-supply-chain-trust.md</code></a>
+— MVP trust model (signing + SHA-256 + AVB; TUF deferred to 1.0.1);
+<code>security</code> brick fit (UNVERIFIED).</li>
+<li><a
+href="../../research/adr/adr-0003-server-topology.md"><code>../../research/adr/adr-0003-server-topology.md</code></a>
+— modular monolith (one deployable); <code>containers</code> substrate;
+scale trigger.</li>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>../../research/adr/adr-0004-transport.md</code></a>
+— HTTP/3→HTTP/2, Brotli/gzip, REST-primary, artifact-path no-compression
+rule.</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>../../00-master/2026-06-07-helix-ota-design.md</code></a>
+— master design (§3 transport, §6 security, §10 catalogue/containers,
+§13 testing).</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>
+— catalogue-first bindings; canonical submodule names;
+<code>Storage</code>/<code>security</code>/<code>http3</code> rows.</li>
+<li><a
+href="../../00-master/documentation_standards.md"><code>../../00-master/documentation_standards.md</code></a>
+— §9 canonical submodule catalogue (no invented names).</li>
+</ul>
+</body>
+</html>

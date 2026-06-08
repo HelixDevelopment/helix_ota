@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>transport_security</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="transport-security-1.0.0-mvp">Transport Security
+(1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Normative MVP specification for transport-layer security of the
+Helix OTA control plane and Android client: TLS 1.3 throughout, over the
+LOCKED HTTP/3 (QUIC) primary + HTTP/2 fallback transport with Brotli
+(→gzip) content compression on control-plane traffic only, served via
+the <code>vasic-digital/http3</code> submodule; certificate management;
+and an explicit mTLS / certificate-pinning evaluation (recorded as
+evaluated for MVP, gated to 1.0.1+).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HelixConstitution clause numbers are UNVERIFIED against the
+authoritative text. QUIC/UDP-443 reachability across the target fleet,
+Range-request semantics over HTTP/3 via the <code>http3</code>
+submodule, and Brotli tuning are UNVERIFIED and routed to ADR-0004 §6
+spikes. mTLS and certificate pinning are recorded only as “evaluated” in
+the MVP (master §6; threat_model §4.6/§4.7) — neither is committed for
+1.0.0. The TLS-1.3 cipher suites / curve set actually offered by the
+<code>http3</code> and <code>middleware</code> catalogue submodules have
+not been inspected and are UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Close the ADR-0004 §6 transport spikes (QUIC reachability,
+Range-over-HTTP/3, Brotli tuning) before the dependent code paths are
+marked stable; inspect <code>http3</code> / <code>middleware</code> to
+confirm the TLS-1.3 suite set and Brotli-negotiation surface and remove
+UNVERIFIED tags; produce a decision record on mTLS + certificate pinning
+for 1.0.1+ alongside the TUF signed-metadata work (closes the “fake
+availability” residual).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-threat-context-for-transport">Threat context for
+transport</a></li>
+<li><a href="#3-tls-13-baseline">TLS 1.3 baseline</a></li>
+<li><a
+href="#4-transport-composition-http3-quic--http2-brotli-two-class-rule">Transport
+composition: HTTP/3 (QUIC) → HTTP/2, Brotli two-class rule</a></li>
+<li><a href="#5-certificate-management">Certificate management</a></li>
+<li><a href="#6-mtls-and-certificate-pinning-evaluation">mTLS and
+certificate-pinning evaluation</a></li>
+<li><a href="#7-catalogue-reuse-and-module-boundaries">Catalogue reuse
+and module boundaries</a></li>
+<li><a href="#8-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#9-open--unverified-items">Open / UNVERIFIED items</a></li>
+<li><a href="#10-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#11-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies transport-layer security for the Helix OTA
+MVP: how the control plane and Android client are protected <strong>in
+transit</strong> (TLS 1.3), how that composes with the LOCKED transport
+stack (HTTP/3 (QUIC) primary, HTTP/2 fallback, Brotli→gzip content
+compression, REST <code>/api/v1</code> primary; gRPC optional/internal
+only), how certificates are managed, and the explicit decision on mTLS
+and certificate pinning for the MVP.</p>
+<p>It honors, and does <strong>not</strong> re-decide, the LOCKED
+transport stack from ADR-0004: the protocol, fallback order,
+compression, and the <code>vasic-digital/http3</code> submodule are
+mandated. Artifact <strong>authenticity/integrity</strong> (signing,
+hashing, device re-verify) is specified in <a
+href="signing_verification.md">signing_verification.md</a>; transport
+security here is the <em>confidentiality + endpoint-authentication +
+tamper-in-transit</em> layer that sits underneath it. The two are
+complementary: even if transport were broken, the artifact is
+re-verified on-device before apply (threat_model §4.6).</p>
+<h2 id="threat-context-for-transport">2. Threat context for
+transport</h2>
+<p>From the threat model (§4.6 MITM on poll/download; §4.7 device
+impersonation):</p>
+<ul>
+<li><strong>Artifact integrity is transport-independent.</strong> A MITM
+cannot forge a valid artifact because the device re-verifies hash +
+signature + AVB + A/B payload check before apply (threat_model §4.6; <a
+href="signing_verification.md">signing_verification.md §6–§7</a>).
+Residual artifact-integrity risk is <strong>low</strong>.</li>
+<li><strong>Confidentiality + “fake availability” denial are the real
+transport risks.</strong> The MVP commits to TLS 1.3 but does
+<strong>not</strong> mandate certificate pinning or mTLS, so a device
+trusting a rogue CA could be fed forged availability/metadata responses
+(a denial-of-update vector) even though it cannot forge the artifact
+itself (threat_model §4.6). The MVP also has no signed,
+freshness-checked metadata to authenticate the <em>availability</em>
+response — a TUF property deferred to 1.0.1+ (ADR-0002 §3.2
+malicious-mirror denial). Residual: <strong>moderate</strong> for
+confidentiality and fake-availability.</li>
+<li><strong>Device impersonation</strong> is mitigated in the MVP by a
+<strong>hardware-id-bound token (Android KeyStore)</strong>, with mTLS
+recorded only as evaluated (threat_model §4.7); the strength of KeyStore
+binding on the specific RK3588 / Orange Pi 5 Max board is
+<strong>UNVERIFIED</strong>.</li>
+</ul>
+<h2 id="tls-1.3-baseline">3. TLS 1.3 baseline</h2>
+<ul>
+<li><strong>TLS 1.3 is mandated throughout</strong> — both on the HTTP/3
+(QUIC) path (QUIC carries TLS 1.3 by design) and on the HTTP/2 fallback
+path (ADR-0004 §4; master §6). Earlier TLS versions are not
+offered.</li>
+<li><strong>Applies to every transport class:</strong> control-plane
+REST <code>/api/v1</code> (poll/check-in, rollout assignment, telemetry
+ingest, dashboard) and the artifact download path are both TLS-1.3
+only.</li>
+<li><strong>Cipher suites / key-exchange:</strong> the concrete TLS-1.3
+cipher suite list and key-exchange groups are those exposed by the
+<code>http3</code> / <code>middleware</code> catalogue submodules; the
+exact set has not been inspected and is <strong>UNVERIFIED</strong>
+(Continuation). TLS 1.3’s mandatory AEAD ciphers and forward-secret key
+exchange are the baseline expectation; no specific suite is asserted
+here beyond that.</li>
+<li><strong>Server authentication</strong> in the MVP relies on standard
+TLS server-certificate validation against the device/client trust roots
+(§5); endpoint mutual authentication (mTLS) is evaluated, not committed
+(§6).</li>
+</ul>
+<h2 id="transport-composition-http3-quic-http2-brotli-two-class-rule">4.
+Transport composition: HTTP/3 (QUIC) → HTTP/2, Brotli two-class
+rule</h2>
+<p>This section restates the LOCKED composition from ADR-0004 as it
+bears on security; it is not re-decided here.</p>
+<ul>
+<li><strong>Protocol negotiation:</strong> HTTP/3 (QUIC/UDP-443) primary
+→ automatic fallback to HTTP/2 (TCP/TLS 1.3) when QUIC/UDP-443 is
+unreachable (corporate/middlebox networks frequently block UDP). Served
+via the <code>vasic-digital/http3</code> submodule as a drop-in
+<code>net/http.Handler</code> (ADR-0004 §4; master §3). <strong>REST
+<code>/api/v1</code> is the primary surface; gRPC is optional/internal
+only</strong> (ADR-0004 §3.1; C4).</li>
+<li><strong>Two-class content compression (security-relevant):</strong>
+<ul>
+<li><strong>Control-plane REST/JSON</strong> uses
+<strong>Brotli</strong>, negotiating to <strong>gzip</strong> for older
+clients via <code>Accept-Encoding</code> (ADR-0004 §3.2).</li>
+<li><strong>OTA artifacts are served with NO content
+compression</strong> (content-encoding <code>identity</code>),
+<strong>byte-identical</strong> and <code>ZIP_STORED</code>, with HTTP
+Range enabled (ADR-0004 §3.2, §4). This is the load-bearing rule:
+re-compressing the artifact would break both the
+<code>update_engine</code> hash check and the on-device signature
+re-verify (<a href="signing_verification.md">signing_verification.md §3,
+§7</a>). A <strong>CI/serving guard</strong> MUST ensure the artifact
+path is never accidentally Brotli/gzip-compressed (ADR-0004 §5.2).</li>
+</ul></li>
+<li><strong>Compression-side-channel note (UNVERIFIED, new):</strong>
+compression oracle attacks (CRIME/BREACH-class) apply only to
+TLS-protected <em>compressed</em> responses that mix secrets with
+attacker-controlled input. The control-plane REST/JSON responses are
+Brotli-compressed under TLS 1.3; whether any endpoint reflects
+attacker-controlled input alongside a secret (e.g. a token) in a single
+compressed response must be reviewed. No such endpoint is asserted to
+exist; this is recorded as a review item (Continuation), not a confirmed
+finding. The artifact path is uncompressed and not exposed.</li>
+<li><strong>Negotiation order at the edge:</strong> HTTP/3 → HTTP/2 →
+content-encoding <code>br</code> → <code>gzip</code> →
+<code>identity</code>; the artifact path is pinned to
+<code>identity</code> + Range regardless of control-plane negotiation
+(ADR-0004 §4).</li>
+</ul>
+<h2 id="certificate-management">5. Certificate management</h2>
+<p>The MVP server-certificate posture (no certificate clause is
+re-decided from ADR-0004; this is the operational specification):</p>
+<ul>
+<li><strong>Server certificates</strong> terminate TLS 1.3 on the
+control plane edge. Issuance, renewal, and rotation are an
+<strong>operational process</strong> (e.g. an ACME-style automated
+issuer or an organization-internal CA); the specific issuer is a
+deployment choice and is <strong>not pinned here</strong> (recorded as a
+deployment decision, not asserted).</li>
+<li><strong>Trust roots on the device:</strong> the Android client
+validates the server certificate chain against its configured trust
+roots. In the MVP this is <strong>standard chain validation</strong> (no
+pinning; §6). The set of trusted roots is a build/config input via
+<code>Config-KMP</code> (master §6 device config).</li>
+<li><strong>Separation from the signing trust store.</strong> The TLS
+<strong>certificate</strong> trust (who the server <em>is</em>) is
+distinct from the <strong>artifact-signing</strong> trust store (which
+build-pipeline public key signs releases; <a
+href="key_management.md">key_management.md</a>). Compromise of a TLS
+certificate does <strong>not</strong> let an attacker forge an artifact,
+because the artifact signature is verified against the <em>signing</em>
+trust store on-device (<a
+href="signing_verification.md">signing_verification.md §6</a>;
+threat_model §4.6). These two trust anchors are managed and rotated
+independently.</li>
+<li><strong>QUIC certificate use:</strong> QUIC uses the same X.509
+server certificate / TLS-1.3 handshake; no separate QUIC-specific
+certificate scheme is introduced.</li>
+<li><strong>Renewal/rotation cadence and revocation handling</strong>
+(OCSP/CRL behavior on-device) are deployment parameters; the device must
+fail safe (abort the update attempt, retry on next poll) on a failed TLS
+handshake rather than downgrade. The exact revocation-checking behavior
+on the RK3588 / Orange Pi 5 Max Android build is
+<strong>UNVERIFIED</strong>.</li>
+</ul>
+<h2 id="mtls-and-certificate-pinning-evaluation">6. mTLS and
+certificate-pinning evaluation</h2>
+<p>The MVP <strong>records mTLS and certificate pinning as evaluated,
+and commits to neither</strong> (master §6; threat_model §4.6, §4.7).
+This section is that evaluation.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>What it adds</th>
+<th>MVP decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TLS 1.3, standard chain validation (CHOSEN,
+MVP)</strong></td>
+<td>Confidentiality + tamper-in-transit + server authentication against
+trust roots</td>
+<td><strong>Adopt</strong></td>
+<td>Mandated baseline (master §6; ADR-0004 §4). Sufficient because
+artifact authenticity is enforced independently on-device (threat_model
+§4.6).</td>
+</tr>
+<tr>
+<td><strong>Certificate pinning (device pins server
+cert/SPKI)</strong></td>
+<td>Closes the rogue-CA “fake availability” / forged-metadata vector
+(threat_model §4.6)</td>
+<td><strong>Evaluated; deferred to 1.0.1+</strong></td>
+<td>Raises operational risk (a mis-rotated pin bricks fleet
+connectivity); the residual it closes is a
+<em>denial/confidentiality</em> vector, not an artifact-forgery vector,
+which is already covered. Best paired with the TUF signed-metadata work
+(ADR-0002 §3.2) that authenticates the availability response
+itself.</td>
+</tr>
+<tr>
+<td><strong>mTLS (device presents a client certificate)</strong></td>
+<td>Strong device authentication at the transport layer; complements the
+KeyStore-bound token (threat_model §4.7)</td>
+<td><strong>Evaluated; deferred to 1.0.1+</strong></td>
+<td>The MVP already binds device identity to hardware via an
+Android-KeyStore token (master §6; threat_model §4.7); mTLS adds
+per-device certificate provisioning/rotation overhead at fleet scale.
+Best landed with the per-device Director-style targeting reserved in
+ADR-0002 §4.2.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>MVP residual accepted:</strong> without pinning or mTLS, a
+device trusting a rogue CA can be fed forged availability/metadata
+responses (denial-of-update), and device authentication rests on the
+KeyStore-bound token whose binding strength on RK3588 is
+<strong>UNVERIFIED</strong> (threat_model §4.6, §4.7). These are
+tracked, not fixed, in the MVP; the forward path is pinning + mTLS + TUF
+signed metadata in 1.0.1+ (threat_model §4.6 “1.0.1+”; ADR-0002).</p>
+<h2 id="catalogue-reuse-and-module-boundaries">7. Catalogue reuse and
+module boundaries</h2>
+<p>Per catalogue-first reuse (§11.4.74, UNVERIFIED clause); transport is
+composed, not hand-rolled (ADR-0004 §4 item 6):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Submodule(s)</th>
+<th>Class</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTTP/3 (QUIC) handler + HTTP/2 fallback + TLS 1.3</td>
+<td><code>http3</code> (<code>vasic-digital/http3</code>)</td>
+<td>reuse</td>
+<td>Drop-in <code>net/http.Handler</code>; carries no business logic.
+UNVERIFIED: exact TLS-1.3 suite set offered.</td>
+</tr>
+<tr>
+<td>Brotli↔︎gzip content negotiation (control-plane only)</td>
+<td><code>middleware</code></td>
+<td>reuse / extend</td>
+<td>Content-negotiation in <code>middleware</code>; artifact path forced
+to <code>identity</code>. UNVERIFIED that Brotli negotiation is already
+present (reuse map §5 — possible upstream <code>extend</code>).</td>
+</tr>
+<tr>
+<td>Request throttling (anti-DoS at the edge)</td>
+<td><code>ratelimiter</code></td>
+<td>reuse</td>
+<td>Throttles control-plane endpoints; no transport logic.</td>
+</tr>
+<tr>
+<td>Panic recovery on the request path</td>
+<td><code>recovery</code></td>
+<td>reuse</td>
+<td>Edge resilience; no business logic.</td>
+</tr>
+<tr>
+<td>Byte-identical, Range-enabled artifact serve</td>
+<td><code>Storage</code></td>
+<td>reuse</td>
+<td>Serves OTA blobs over HTTPS with Range; never compresses the
+artifact.</td>
+</tr>
+<tr>
+<td>Device-side trust roots / TLS config</td>
+<td><code>Config-KMP</code></td>
+<td>reuse</td>
+<td>Carries device trust-root + transport config.</td>
+</tr>
+<tr>
+<td>Server request-auth / device-token validation</td>
+<td><code>auth</code>, <code>middleware</code>; device:
+<code>Auth-KMP</code>, <code>Security-KMP</code></td>
+<td>reuse</td>
+<td>Token (KeyStore-bound) validation; mTLS would extend here in
+1.0.1+.</td>
+</tr>
+</tbody>
+</table>
+<p>REST/wire contracts come from <code>ota-protocol</code> (NEW);
+transport carries no business logic (reuse map §3 Transport).</p>
+<h2 id="testing-four-layer">8. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 (UNVERIFIED clause), with no-bluff positive
+evidence (§7.1). Transport correctness (TLS 1.3 enforced, fallback
+works, artifact path uncompressed) is treated as a safety-relevant
+serving path:</p>
+<ul>
+<li><strong>Layer 1 — Source-presence gate.</strong> Static check that
+the source: configures TLS 1.3 as the minimum (no downgrade to TLS
+≤1.2); wires the <code>http3</code> handler with HTTP/2 fallback;
+applies Brotli negotiation to control-plane routes only; pins the
+artifact route to <code>identity</code> content-encoding + Range; and
+does not send <code>DISABLE_DOWNLOAD_RESUME</code> (ADR-0004 §4).
+Absence is a build-time failure.</li>
+<li><strong>Layer 2 — Artifact gate (bytes shipped).</strong> Confirm
+the served OTA artifact is <strong>byte-identical</strong> (no
+Brotli/gzip transfer-encoding on the artifact response) and
+<code>ZIP_STORED</code>; confirm the device build embeds the configured
+TLS trust roots; confirm no TLS ≤1.2 cipher config is shipped.</li>
+<li><strong>Layer 3 — Runtime / integration.</strong> End-to-end: (a) a
+TLS-1.3 HTTP/3 handshake succeeds and a poll/assignment round-trips; (b)
+with UDP/443 blocked, the client <strong>falls back to HTTP/2</strong>
+and the same round-trip succeeds (ADR-0004 §6 reachability spike); (c) a
+control-plane response is Brotli- then gzip-negotiated; (d) the
+<strong>artifact download is uncompressed and Range-correct</strong>
+(stream a real <code>ZIP_STORED</code> <code>payload.bin</code>, confirm
+byte-range + resume; ADR-0004 §6 spike). <strong>Negative
+cases:</strong> a TLS ≤1.2 client is refused; a Brotli/gzip-compressed
+artifact response is rejected by the CI/serving guard; a
+tampered-in-transit artifact is caught by the device re-verify gate (<a
+href="signing_verification.md">signing_verification.md §6</a>).</li>
+<li><strong>Layer 4 — Mutation meta-test (PASS→FAIL on
+negation).</strong> Mutate transport config/guards and require
+PASS→FAIL: lower the TLS minimum to 1.2, enable Brotli on the artifact
+route, or disable Range — each MUST be caught by Layer 1/2/3. A
+surviving mutant is a defect.</li>
+</ul>
+<p>The QUIC reachability, Range-over-HTTP/3, and Brotli-tuning spikes
+(ADR-0004 §6) are the rock-solid- proof closures for the carried
+UNVERIFIED transport items and gate marking the corresponding paths
+stable.</p>
+<h2 id="open-unverified-items">9. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>QUIC/UDP-443 reachability</strong> across the target fleet
+and the HTTP/2 fallback trigger — <strong>UNVERIFIED (needs
+spike)</strong> (ADR-0004 §6 item 3).</li>
+<li><strong>Range-request semantics over HTTP/3 via the
+<code>http3</code> submodule + MinIO/S3</strong> —
+<strong>UNVERIFIED</strong> (ADR-0004 §6 item 1).</li>
+<li><strong>Brotli quality/parameter tuning</strong> for control-plane
+JSON at fleet scale — <strong>UNVERIFIED</strong> (ADR-0004 §6 item
+4).</li>
+<li><strong><code>http3</code> / <code>middleware</code> TLS-1.3
+cipher-suite set and Brotli-negotiation surface</strong> — not
+inspected, <strong>UNVERIFIED</strong> (reuse map §5).</li>
+<li><strong>mTLS / certificate pinning</strong> are <strong>evaluated,
+not committed</strong> in the MVP; the rogue-CA fake- availability
+residual and KeyStore-binding strength on RK3588 are accepted MVP
+residuals (threat_model §4.6, §4.7).</li>
+<li><strong>On-device revocation-checking behavior</strong> (OCSP/CRL)
+on the RK3588 / Orange Pi 5 Max Android build —
+<strong>UNVERIFIED</strong>.</li>
+<li><strong>HelixConstitution clause numbers</strong> —
+<strong>UNVERIFIED</strong> (corpus convention).</li>
+</ol>
+<h2 id="compliance-notes-helixconstitution">10. Compliance notes
+(HelixConstitution)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause (UNVERIFIED numbers)</th>
+<th>How this spec complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.61 (ToC)</td>
+<td>ToC present immediately after the metadata table.</td>
+</tr>
+<tr>
+<td>§7.1 / §11.4.6 (no-bluff / no-guessing)</td>
+<td>Every claim cites ADR-0004, master §6, or the threat model;
+reachability, Range-over-HTTP/3, Brotli tuning, suite sets, and
+mTLS/pinning status are carried as <strong>UNVERIFIED</strong> or
+“evaluated”, not asserted.</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first reuse)</td>
+<td>Transport composed from <code>http3</code>, <code>middleware</code>,
+<code>ratelimiter</code>, <code>recovery</code>, <code>Storage</code>,
+<code>Config-KMP</code>, <code>auth</code>; no hand-rolled
+QUIC/Brotli/TLS stack (§7).</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>Transport carries no business logic; contracts in
+<code>ota-protocol</code>; artifact-serve path isolated from
+control-plane compression (§4, §7).</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§8 specifies all four layers, including TLS-downgrade and
+artifact-compression mutations.</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>The ADR-0004 §6 spikes + Layer-3 runtime evidence close each
+UNVERIFIED transport claim before the path is marked stable (§8).</td>
+</tr>
+<tr>
+<td>§11.4.125 (code-review gate)</td>
+<td>Subject to the mandatory adversarial code-review subagent before
+acceptance (master §14).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources">11. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>:</p>
+<ul>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>research/adr/adr-0004-transport.md</code></a>
+— §3.1–§3.2, §4, §5, §6 (TLS 1.3, HTTP/3→HTTP/2, two-class compression,
+Range, spikes).</li>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— §3.2 (malicious-mirror denial), §4.2 (per-device Director
+reservation).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— §3 (mandated stack), §6 (security &amp; trust model: TLS 1.3, device
+identity, mTLS evaluated), §13 (four-layer testing).</li>
+<li><a
+href="../../00-master/threat_model.md"><code>00-master/threat_model.md</code></a>
+— §4.6 (MITM on poll/download), §4.7 (device impersonation).</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>00-master/submodule_reuse_map.md</code></a>
+— §3 (Transport), §5 (upstream additions: Brotli negotiation in
+<code>middleware</code>).</li>
+<li><a
+href="../../00-master/documentation_standards.md"><code>00-master/documentation_standards.md</code></a>
+— §2 (metadata), §8 (anti-bluff), §9 (canonical submodules).</li>
+<li><a href="signing_verification.md">signing_verification.md</a>, <a
+href="key_management.md">key_management.md</a> — companion MVP security
+specs.</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>aosp-update-engine</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="aosp-update_engine-android-ota-stack-research-note">AOSP
+<code>update_engine</code> / Android OTA — Stack Research Note</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Initial research complete. Native Android A/B + Virtual A/B
+mechanics, <code>payload.bin</code> generation via
+<code>ota_from_target_files</code>, and the
+<code>UpdateEngine.applyPayload</code> client API are documented from
+primary AOSP sources. Server-side responsibilities for streaming OTA are
+characterized. Conclusion: native-on-device update_engine is sufficient
+for the Helix Android 15 client; Helix only needs to build the payload
+and serve it.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>A few exact constants (Virtual A/B GMS version threshold,
+compression % figures) are sourced from AOSP docs but should be
+re-confirmed against the Android 15/16 docs revision before they are
+quoted in contracts. Marked UNVERIFIED where applicable.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (first revision)</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Follow-up note should cover: (1) exact
+<code>payload_properties.txt</code> header contract and ZIP_STORED
+offset/length extraction for streaming; (2) <code>update_engine</code>
+AIDL/Binder surface on Android 15 (<code>IUpdateEngine</code>); (3)
+Virtual A/B merge-resume failure handling; (4) signing key management
+(<code>--package_key</code>, AVB/vbmeta) for the Helix build
+pipeline.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--question">Scope &amp; Question</a></li>
+<li><a href="#2-executive-summary">Executive Summary</a></li>
+<li><a href="#3-native-android-ab-seamless-updates">Native Android A/B
+(Seamless) Updates</a></li>
+<li><a href="#4-virtual-ab">Virtual A/B</a></li>
+<li><a href="#5-payload-generation-ota_from_target_files">Payload
+Generation: <code>ota_from_target_files</code></a></li>
+<li><a href="#6-the-client-api-updateengineapplypayload">The Client API:
+<code>UpdateEngine.applyPayload</code></a></li>
+<li><a href="#7-what-the-server-side-must-provide">What the Server Side
+MUST Provide</a></li>
+<li><a href="#8-why-native-only-on-device-may-suffice">Why
+Native-Only-On-Device May Suffice</a></li>
+<li><a href="#9-implications-for-helix-ota">Implications for Helix
+OTA</a></li>
+<li><a href="#10-open-questions--unverified-items">Open Questions /
+UNVERIFIED Items</a></li>
+<li><a href="#11-sources-consulted">Sources Consulted</a></li>
+<li><a href="#12-confidence">Confidence</a></li>
+</ol>
+<hr />
+<h2 id="scope-question">1. Scope &amp; Question</h2>
+<p>Helix OTA targets <strong>Android 15 first</strong>, using
+<strong>native A/B + Virtual A/B</strong> on device with a
+<strong>custom Go control plane</strong> as the server. This note
+answers:</p>
+<ul>
+<li>How do Android native A/B and Virtual A/B updates actually work on
+device?</li>
+<li>How is the update artifact (<code>payload.bin</code>) generated
+(<code>ota_from_target_files</code>)?</li>
+<li>What is the on-device client API (<code>applyPayload</code>) and its
+contract?</li>
+<li>What exactly must the <strong>server</strong> provide?</li>
+<li>Why is relying on the <strong>native, on-device</strong>
+<code>update_engine</code> (rather than re-implementing the apply path)
+likely sufficient for the Android client?</li>
+</ul>
+<p>This is a build-vs-wrap decision input. The relevant claim to
+validate: for Android, Helix should <strong>wrap</strong> the native
+update path, not replace it.</p>
+<hr />
+<h2 id="executive-summary">2. Executive Summary</h2>
+<ul>
+<li><strong><code>update_engine</code></strong> is the AOSP daemon that
+performs A/B updates on device. It reads the active slot, writes the
+inactive slot, drives the <code>boot_control</code> HAL, runs
+post-install, and handles rollback. It has been the standard A/B
+mechanism since Android 7/8. (AOSP A/B docs.)</li>
+<li><strong>Virtual A/B</strong> (default for devices launching Android
+11+ per GMS requirement — see UNVERIFIED note) replaces physically
+duplicated dynamic partitions with <strong>snapshots</strong> written to
+a Copy-on-Write (COW) area, merged into the base after a confirmed-good
+boot. It is driven by the same <code>update_engine</code> plus userspace
+components <code>dm-user</code> and <code>snapuserd</code>. This is the
+mechanism a modern Android 15 device uses.</li>
+<li>The update artifact is <strong><code>payload.bin</code></strong>
+(plus <strong><code>payload_properties.txt</code></strong>), generated
+by <strong><code>ota_from_target_files</code></strong> (in
+<code>build/make/tools/releasetools</code>) from the build’s
+<strong><code>target-files.zip</code></strong>. Full payloads contain
+everything; <strong>incremental/delta</strong> payloads are diffs
+against a <code>PREVIOUS-target-files.zip</code>.</li>
+<li>The on-device client API is
+<strong><code>UpdateEngine.applyPayload(...)</code></strong> (Java/AIDL,
+exercised by the AOSP
+<strong><code>SystemUpdaterSample</code></strong>).
+<code>applyPayload</code> is <strong>overloaded</strong>: one form takes
+a <strong>URL</strong> (HTTP/HTTPS for streaming, or
+<code>file://</code>), the other takes a <strong>file
+descriptor</strong>. The client also calls <code>bind()</code> to
+register callbacks (<code>onStatusUpdate</code>,
+<code>onPayloadApplicationComplete</code>).</li>
+<li><strong>The server is “dumb”</strong>: it must build the OTA
+package, host <code>payload.bin</code> (and metadata), and serve it over
+HTTPS. For <strong>streaming</strong>, ZIP entries must be stored
+<strong>uncompressed (<code>ZIP_STORED</code>)</strong> so
+<code>update_engine</code> can range-fetch <code>payload.bin</code> by
+offset/length, and the client must be told the payload’s offset/size
+plus the hashes/sizes from <code>payload_properties.txt</code>. There is
+<strong>no Google-mandated OTA server protocol</strong> — the
+orchestration (which device gets which build, rollout %, rollback
+policy) is entirely the integrator’s responsibility. This is precisely
+the gap Helix’s Go control plane fills.</li>
+<li><strong>Conclusion:</strong> native-on-device
+<code>update_engine</code> does the dangerous part (atomic write,
+verify, slot switch, rollback) and is battle-tested. Helix’s Android
+client should be a <strong>thin wrapper</strong> around
+<code>applyPayload</code>; Helix’s value-add is the <strong>build
+pipeline + serving + rollout/telemetry control plane</strong>, not the
+apply path.</li>
+</ul>
+<hr />
+<h2 id="native-android-ab-seamless-updates">3. Native Android A/B
+(Seamless) Updates</h2>
+<p>Source: <a href="https://source.android.com/docs/core/ota/ab">Android
+A/B System Updates</a>.</p>
+<p><strong>Slots.</strong> A/B-capable systems keep two copies (“slots”)
+A and B of each updatable partition (e.g., <code>boot</code>,
+<code>system</code>, <code>vendor</code>). The device runs from the
+<strong>active</strong> slot; the <strong>inactive</strong> slot is the
+update target and the fallback. Each slot carries bootloader-managed
+attributes (e.g., bootable / successful).</p>
+<p><strong><code>update_engine</code> role.</strong> The
+<code>update_engine</code> daemon: - Reads from current-slot partitions,
+writes to the unused-slot partitions per the OTA instructions in the
+payload. - Calls the <strong><code>boot_control</code> HAL</strong> in a
+predefined workflow to manage which slot the bootloader boots and to
+mark slots bootable/successful/unbootable. - After writing all
+partitions, mounts the new partition and runs
+<strong>post-install</strong> programs from the new slot. (Constraint
+per docs: the old kernel must be able to mount the new filesystem and
+understand the new post-install program format.)</p>
+<p><strong>Slot marking &amp; rollback.</strong> - Before applying, the
+current slot is marked successful (so the bootloader won’t fall back),
+and the target slot is marked unbootable while it is being written. - On
+success, the previously-unused slot becomes active for next boot. - If
+the new slot fails to boot, the bootloader <strong>automatically
+reverts</strong> to the previous slot. This is the core safety
+property.</p>
+<p><strong>Post-reboot verification.</strong> After reboot into the new
+slot, <strong><code>update_verifier</code></strong> triggers
+<strong>dm-verity</strong> integrity checks before <code>zygote</code>
+starts, enabling safe rollback if corruption is detected.</p>
+<p><strong>Net:</strong> the entire “make it atomic, verify, and revert
+on failure” responsibility lives in well-tested on-device AOSP
+components, not in any server.</p>
+<hr />
+<h2 id="virtual-ab">4. Virtual A/B</h2>
+<p>Source: <a
+href="https://source.android.com/docs/core/ota/virtual_ab">Virtual
+A/B</a>.</p>
+<p><strong>Motivation.</strong> Classic A/B doubles storage for all
+duplicated partitions. Virtual A/B keeps a single base for dynamic
+partitions and writes the <strong>delta to a snapshot</strong>, then
+<strong>merges into the base partition after confirming a successful
+boot.</strong> This recovers most of the storage that classic A/B
+duplicated while keeping the seamless-update UX and rollback safety.</p>
+<p><strong>Userspace components.</strong> -
+<strong><code>dm-user</code></strong>: a kernel module that lets
+userspace implement a block device by routing I/O to a daemon. -
+<strong><code>snapuserd</code></strong>: the daemon implementing the
+Android-specific <strong>COW (Copy-on-Write)</strong> format —
+compression, metadata parsing, and block unpacking.</p>
+<p><strong>COW format &amp; compression (Android 12+).</strong> The
+Android COW format supports <code>Copy</code>, <code>Replace</code>
+(gzip), <code>Zero</code>, and <code>XOR</code> operations. - Reported
+snapshot-size reduction with compression: ~45% (full OTA) and ~55%
+(incremental OTA). <strong>UNVERIFIED — needs confirmation against
+current docs revision; figures originate from the AOSP Virtual A/B page
+but the exact numbers may differ by Android version.</strong> -
+<strong>XOR compression</strong> (since Android 13) stores compressed
+byte-differences instead of full blocks; reported additional 25–40%
+reduction on devices like Pixel. <strong>UNVERIFIED — same
+caveat.</strong></p>
+<p><strong>Merge phase.</strong> The merge happens
+<strong>after</strong> a confirmed-good reboot, runs in userspace, and
+<strong>can be interrupted and resumed</strong>. This matters for Helix
+telemetry/rollback: a device may be in a post-reboot “merging” state
+distinct from “fully applied.”</p>
+<p><strong>Version requirement.</strong> Per the AOSP page, “Virtual A/B
+is a GMS requirement on devices launching with Android 11 and higher.”
+<strong>UNVERIFIED for the exact Android-15 wording — confirm against
+the Android 15/16 docs revision.</strong> Practical takeaway: an Android
+15 device shipped through normal channels almost certainly uses Virtual
+A/B, and is driven by the same <code>update_engine</code> +
+<code>applyPayload</code> surface as classic A/B.</p>
+<hr />
+<h2 id="payload-generation-ota_from_target_files">5. Payload Generation:
+<code>ota_from_target_files</code></h2>
+<p>Sources: <a
+href="https://source.android.com/docs/core/ota/tools">Build OTA
+packages</a>; <a
+href="https://github.com/aosp-mirror/platform_build/blob/master/tools/releasetools/ota_from_target_files.py"><code>ota_from_target_files.py</code>
+(aosp-mirror)</a>.</p>
+<p><strong>Tool &amp; input.</strong> <code>ota_from_target_files</code>
+lives in <code>build/make/tools/releasetools</code>. Its primary input
+is the <strong><code>target-files.zip</code></strong> produced by the
+Android build system (contains partition images + metadata). For deltas
+it also takes a
+<strong><code>PREVIOUS-target-files.zip</code></strong>.</p>
+<p><strong>Full vs incremental.</strong> - <strong>Full
+payload</strong>: generated solely from the target image; contains
+everything needed to write the inactive slot. Large. - Example:
+<code>ota_from_target_files dist_output/tardis-target_files.zip ota_update.zip</code>
+- <strong>Incremental / delta payload</strong>: differential update
+comparing source vs target images; much smaller. - Example:
+<code>ota_from_target_files -i PREVIOUS-tardis-target_files.zip dist_output/tardis-target_files.zip incremental_ota_update.zip</code></p>
+<p><strong>Key flags observed in docs.</strong> - <code>-i</code> —
+incremental mode (previous target-files). - <code>--block</code> —
+block-based OTA (Android 8.0+ non-A/B path; A/B is block-based
+inherently). - <code>--boot_variable_file &lt;path&gt;</code> — runtime
+variable values for dynamic fingerprints (Android 11+). - Multi-SKU
+(Android 11+): a single package can target multiple SKUs via dynamic
+fingerprints, e.g. <code>pre-device=tardis|tardispro</code>. - Signing:
+package signing is done with a release key (<code>--package_key</code> /
+associated flags). <strong>UNVERIFIED exact flag spelling on the Android
+15 docs revision — confirm; the underlying script
+<code>scripts/brillo_update_payload</code> and AVB/vbmeta signing are
+involved.</strong></p>
+<p><strong>Package contents relevant to A/B.</strong> -
+<strong><code>payload.bin</code></strong> — the opaque binary blob that
+<code>update_engine</code> consumes; it takes up the majority of the OTA
+package. - <strong><code>payload_properties.txt</code></strong> —
+companion metadata file holding <code>FILE_HASH</code>,
+<code>FILE_SIZE</code>, <code>METADATA_HASH</code>,
+<code>METADATA_SIZE</code> (used to verify the payload and required as
+headers when streaming). Example values (from a real package,
+illustrative): <code>FILE_SIZE=379074366</code>,
+<code>METADATA_SIZE=46866</code>, with base64 hashes. (Sourced from AOSP
+<code>payload_generator/payload_properties.cc</code> and community
+examples — see Sources.) -
+<strong><code>META-INF/com/android/metadata</code></strong> —
+preconditions/postconditions: <code>pre-device</code>,
+<code>pre-build</code>, <code>pre-build-incremental</code>,
+<code>post-build</code>, <code>post-build-incremental</code> (derived
+from <code>ro.product.device</code>, <code>ro.build.fingerprint</code>,
+<code>ro.build.version.incremental</code>). These let the device/server
+gate which devices an incremental applies to.</p>
+<p><strong>Underlying generator.</strong>
+<code>ota_from_target_files</code> ultimately invokes the
+<code>update_engine</code> payload generator (the
+<code>brillo_update_payload</code> script wraps
+<code>delta_generator</code>) to produce and sign
+<code>payload.bin</code>. <strong>The Helix build pipeline must run this
+tool with the right keys and inputs; it is the producer side of the
+contract.</strong></p>
+<hr />
+<h2 id="the-client-api-updateengine.applypayload">6. The Client API:
+<code>UpdateEngine.applyPayload</code></h2>
+<p>Sources: <a
+href="https://android.googlesource.com/platform/bootable/recovery/+/main/updater_sample/README.md"><code>SystemUpdaterSample</code>
+README</a>; AOSP <code>update_engine</code>.</p>
+<p><strong><code>UpdateEngine</code> (Java/AIDL).</strong> The Android
+framework exposes <code>android.os.UpdateEngine</code>, a thin client
+that talks to the <code>update_engine</code> daemon over Binder/AIDL.
+The AOSP <strong><code>SystemUpdaterSample</code></strong> is the
+reference client for non-GMS / custom OTA flows.</p>
+<p><strong><code>applyPayload</code> is overloaded</strong> (per AOSP
+AIDL): 1. <strong>URL form</strong> —
+<code>applyPayload(String url, long offset, long size, String[] keyValuePairHeaders)</code>:
+starts an update by downloading/streaming the payload from
+<code>payload_url</code> (HTTP/HTTPS for streaming, or
+<code>file://</code> for local). <code>offset</code>/<code>size</code>
+point at <code>payload.bin</code> inside the (uncompressed) ZIP; headers
+carry payload metadata. 2. <strong>File-descriptor form</strong> —
+<code>applyPayload(ParcelFileDescriptor fd, long offset, long size, String[] headerKeyValuePairs)</code>:
+applies from an already-open FD.</p>
+<p>When a client calls <code>applyPayload</code>,
+<code>update_engine</code> builds an
+<strong><code>InstallPlan</code></strong> (internal data structure with
+the update configuration shared across the internal “actions”) and
+executes the apply.</p>
+<p><strong>Callbacks via <code>bind()</code>.</strong> -
+<code>UpdateEngine#bind(callback)</code> registers callbacks. On
+successful init, <code>update_engine</code> is guaranteed to invoke
+<code>onStatusUpdate</code>. -
+<code>onStatusUpdate(int status, float percent)</code> — called whenever
+status or progress changes; always fired on bind (unless the daemon
+fails to init). -
+<code>onPayloadApplicationComplete(int errorCode)</code> — called when
+an attempt completes or fails.</p>
+<p><strong>State management.</strong> The sample maintains its own
+<code>UpdaterState</code> because the app can unbind/rebind while an
+update runs; on rebind it reconciles and may re-issue
+<code>applyPayload</code>. <strong>A Helix Android client must do the
+same</strong> (survive process death, reconcile daemon state).</p>
+<p><strong>Streaming requirement.</strong> For streaming, “only
+necessary ZIP entries are downloaded rather than the entire package,”
+and <code>payload.bin</code> is streamed directly by
+<code>update_engine</code>. This requires the package’s ZIP entries to
+be <strong><code>ZIP_STORED</code></strong> (uncompressed) so byte-range
+fetches by <code>offset</code>/<code>length</code> are valid.</p>
+<hr />
+<h2 id="what-the-server-side-must-provide">7. What the Server Side MUST
+Provide</h2>
+<p>There is <strong>no Google-defined OTA server protocol</strong>. The
+device side (<code>update_engine</code>) only needs a payload +
+metadata; everything else is the integrator’s design. Minimum server
+obligations:</p>
+<ol type="1">
+<li><strong>Build &amp; sign the OTA package</strong>
+(<code>payload.bin</code> + <code>payload_properties.txt</code> +
+<code>metadata</code>) via <code>ota_from_target_files</code> with the
+device’s release/signing keys. (Producer side; can be a CI step rather
+than the live server.)</li>
+<li><strong>Host the artifact over HTTPS.</strong> For streaming A/B,
+store ZIP entries <strong>uncompressed
+(<code>ZIP_STORED</code>)</strong> and support <strong>HTTP range
+requests</strong> so <code>update_engine</code> can fetch
+<code>payload.bin</code> by offset/length.</li>
+<li><strong>Provide the apply parameters to the client:</strong>
+<ul>
+<li><code>payload_url</code></li>
+<li><code>offset</code> and <code>size</code> of
+<code>payload.bin</code> within the package</li>
+<li>Header key/values from <code>payload_properties.txt</code>:
+<code>FILE_HASH</code>, <code>FILE_SIZE</code>,
+<code>METADATA_HASH</code>, <code>METADATA_SIZE</code> (plus optionally
+<code>SWITCH_SLOT_ON_REBOOT</code>, <code>RUN_POST_INSTALL</code> —
+<strong>UNVERIFIED exact optional-header set; confirm in
+<code>payload_properties.cc</code> / AIDL docs</strong>).</li>
+</ul></li>
+<li><strong>Targeting / preconditions.</strong> Decide which device (by
+<code>pre-device</code>, <code>pre-build</code>, fingerprint) is
+eligible for a given full/incremental payload — incrementals only apply
+to the exact source build. The server matches device-reported build info
+to the right payload.</li>
+<li><strong>Orchestration (Helix value-add, not provided by
+AOSP):</strong> staged/percentage rollout, pause/resume, A/B
+(experiment) cohorts, rollback policy/recall, telemetry ingestion,
+signing-key custody, device inventory. <strong>None of this exists in
+AOSP</strong> — <code>update_engine</code> just applies whatever it is
+handed.</li>
+</ol>
+<p>The division is clean: <strong>AOSP owns “apply safely on device”;
+the server owns “decide, deliver, observe.”</strong></p>
+<hr />
+<h2 id="why-native-only-on-device-may-suffice">8. Why
+Native-Only-On-Device May Suffice</h2>
+<p>For the <strong>Android client</strong>, re-implementing the apply
+path would be high-risk and low-value. Native <code>update_engine</code>
+already provides, on device:</p>
+<ul>
+<li><strong>Atomicity</strong> — inactive-slot writes; the running
+system is never mutated in place.</li>
+<li><strong>Verification</strong> — payload hashes
+(<code>FILE_HASH</code>/<code>METADATA_HASH</code>), AVB/dm-verity,
+<code>update_verifier</code> before <code>zygote</code>.</li>
+<li><strong>Automatic rollback</strong> — bootloader reverts to the
+prior slot if the new slot fails to boot/verify.</li>
+<li><strong>Storage efficiency</strong> — Virtual A/B snapshots + COW
+compression.</li>
+<li><strong>Streaming</strong> — range-fetch of
+<code>payload.bin</code>, partial downloads.</li>
+<li><strong>Resumability</strong> — interrupted/resumable apply and
+Virtual A/B merge.</li>
+<li><strong>A stable, supported client API</strong> —
+<code>UpdateEngine.applyPayload</code> + callbacks, used by the AOSP
+reference sample.</li>
+</ul>
+<p>These are exactly the “zero corruption, atomic, verified, revertible”
+guarantees in the Helix mission. Reproducing them outside AOSP would
+mean re-deriving years of hardened boot/verify/rollback logic and
+tracking it across Android releases — a maintenance liability with no
+upside on Android.</p>
+<p><strong>Therefore for Android, Helix should wrap, not
+replace:</strong> a thin Android client that (a) talks to the Helix Go
+control plane to learn which payload to apply, (b) calls
+<code>applyPayload</code> with the URL/offset/size/headers, (c) relays
+<code>onStatusUpdate</code> / <code>onPayloadApplicationComplete</code>
+as telemetry, and (d) reconciles state across rebinds. The
+“native-only-on-device” path is sufficient because the on-device daemon
+already covers the safety-critical surface; Helix’s job is upstream
+(build/serve) and orchestration (rollout/telemetry/rollback policy).</p>
+<p><strong>Caveat / boundary:</strong> this conclusion is
+Android-specific. Helix’s universal ambition (Linux/Windows later)
+cannot rely on <code>update_engine</code>; those need different backends
+(RAUC/SWUpdate/OSTree/Mender-style). So “native-only” is the right
+Android backend choice, behind the same Helix client abstraction — not a
+universal mechanism.</p>
+<hr />
+<h2 id="implications-for-helix-ota">9. Implications for Helix OTA</h2>
+<ul>
+<li><strong>Android backend = wrap <code>update_engine</code>.</strong>
+Confirms the design intent of an Android client SDK that is a thin
+wrapper over <code>applyPayload</code>. Do not build a custom Android
+apply engine.</li>
+<li><strong>Build pipeline must run
+<code>ota_from_target_files</code>.</strong> Helix needs reproducible CI
+that consumes <code>target-files.zip</code>, produces full + incremental
+<code>payload.bin</code>, and signs with managed keys. Signing-key
+custody is a first-class concern.</li>
+<li><strong>Serving must be streaming-correct.</strong> OTA ZIPs served
+as <code>ZIP_STORED</code>; HTTPS with range support; the control plane
+returns
+<code>{url, offset, size, FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE}</code>
+to the device.</li>
+<li><strong>Control plane owns rollout/telemetry/rollback</strong> — the
+part AOSP deliberately leaves open. This is where the Go server’s
+differentiation lives (staged %, cohorts, recall, inventory, telemetry
+from <code>onStatusUpdate</code>/merge state).</li>
+<li><strong>Track Virtual A/B states</strong> — “applied, pending
+reboot, merging, merged” must be modeled in telemetry; merge can be
+interrupted/resumed.</li>
+</ul>
+<hr />
+<h2 id="open-questions-unverified-items">10. Open Questions / UNVERIFIED
+Items</h2>
+<ol type="1">
+<li><strong>Exact <code>applyPayload</code> AIDL signature &amp;
+optional headers on Android 15</strong> (e.g.,
+<code>SWITCH_SLOT_ON_REBOOT</code>, <code>RUN_POST_INSTALL</code>,
+<code>DISABLE_DOWNLOAD_RESUME</code>) — confirm against the Android 15
+<code>IUpdateEngine</code>/<code>payload_properties.cc</code>.</li>
+<li><strong>Virtual A/B GMS version threshold wording for Android
+15/16</strong> — the “Android 11+” statement is from the AOSP page;
+re-verify current phrasing. UNVERIFIED.</li>
+<li><strong>Compression % figures (45%/55%/25–40%)</strong> — from the
+AOSP Virtual A/B page; treat as approximate and version-dependent.
+UNVERIFIED.</li>
+<li><strong>Signing flags</strong> — exact
+<code>ota_from_target_files</code> signing flags
+(<code>--package_key</code>, AVB/<code>avbtool</code>,
+<code>vbmeta</code>) for the Helix pipeline. UNVERIFIED spelling.</li>
+<li><strong><code>ZIP_STORED</code> + range serving</strong> details and
+how the control plane computes <code>payload.bin</code> offset/size — to
+be specified in the serving note.</li>
+<li><strong>OEM/board specifics (Orange Pi 5 Max / RK3588)</strong> —
+boot_control HAL availability and whether the target build ships A/B or
+Virtual A/B; needs hands-on confirmation on the actual board.</li>
+</ol>
+<hr />
+<h2 id="sources-consulted">11. Sources Consulted</h2>
+<p>Primary (AOSP, official): - Android A/B System Updates —
+https://source.android.com/docs/core/ota/ab - Virtual A/B —
+https://source.android.com/docs/core/ota/virtual_ab - Build OTA packages
+(<code>ota_from_target_files</code>) —
+https://source.android.com/docs/core/ota/tools -
+<code>SystemUpdaterSample</code> README
+(<code>UpdateEngine.applyPayload</code>, <code>bind</code>, callbacks) —
+https://android.googlesource.com/platform/bootable/recovery/+/main/updater_sample/README.md
+- <code>update_engine</code> (Git) —
+https://chromium.googlesource.com/aosp/platform/system/update_engine/ -
+<code>payload_generator/payload_properties.cc</code> —
+https://android.googlesource.com/platform/system/update_engine/+/refs/tags/android-s-preview-1/payload_generator/payload_properties.cc
+- <code>payload_consumer/payload_metadata.cc</code> —
+https://android.googlesource.com/platform/system/update_engine/+/master/payload_consumer/payload_metadata.cc
+- <code>ota_from_target_files.py</code> (aosp-mirror) —
+https://github.com/aosp-mirror/platform_build/blob/master/tools/releasetools/ota_from_target_files.py
+- <code>scripts/brillo_update_payload</code> —
+https://android.googlesource.com/platform/system/update_engine/+/refs/heads/oreo-m4-s2-release/scripts/brillo_update_payload</p>
+<p>Secondary / community (used only for concrete example values; flagged
+accordingly): - Example <code>payload_properties.txt</code> values &amp;
+<code>update_engine_client --headers</code> usage — NXP Community thread
+(https://community.nxp.com/t5/i-MX-Processors/AOSP-Update/td-p/1006438)
+and a real crosshatch OTA log gist
+(https://gist.github.com/nooriro/313201c9687a409b2db0f32dead05d2a).</p>
+<p>No statistics, dates, or citations were fabricated. Items not
+directly verified against the current docs revision are tagged
+“UNVERIFIED — needs confirmation.”</p>
+<hr />
+<h2 id="confidence">12. Confidence</h2>
+<p><strong>Overall confidence: HIGH</strong> on the architecture and the
+build-vs-wrap conclusion (these are well-documented, stable AOSP
+mechanisms confirmed across multiple primary sources).
+<strong>MEDIUM</strong> on the exact numeric/version constants and the
+precise Android 15 AIDL header set — flagged UNVERIFIED above and slated
+for the continuation note.</p>
+</body>
+</html>
