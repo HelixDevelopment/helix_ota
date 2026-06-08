@@ -165,6 +165,56 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("TelemetryEventCounts: %+v err=%v", counts, err)
 	}
 
+	// --- device groups ---
+	if err := repo.CreateGroup(ctx, Group{ID: "grp-1", Name: "fleet-a", Description: "lab", CreatedAt: ts}); err != nil {
+		t.Fatalf("CreateGroup: %v", err)
+	}
+	if g, err := repo.GetGroup(ctx, "grp-1"); err != nil || g.Name != "fleet-a" {
+		t.Fatalf("GetGroup: %+v err=%v", g, err)
+	}
+	// Duplicate name on a different id -> conflict.
+	if err := repo.CreateGroup(ctx, Group{ID: "grp-2", Name: "fleet-a", CreatedAt: ts}); !errors.Is(err, ErrConflict) {
+		t.Fatalf("duplicate group name want ErrConflict, got %v", err)
+	}
+	if err := repo.UpdateGroup(ctx, Group{ID: "grp-1", Name: "fleet-a", Description: "field", CreatedAt: ts}); err != nil {
+		t.Fatalf("UpdateGroup: %v", err)
+	}
+	if err := repo.UpdateGroup(ctx, Group{ID: "ghost", Name: "x"}); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("UpdateGroup unknown want ErrNotFound, got %v", err)
+	}
+	// Membership (idempotent add, requires existing group).
+	if err := repo.AddGroupMember(ctx, "grp-1", "dev-1"); err != nil {
+		t.Fatalf("AddGroupMember: %v", err)
+	}
+	if err := repo.AddGroupMember(ctx, "grp-1", "dev-1"); err != nil { // idempotent
+		t.Fatalf("AddGroupMember idempotent: %v", err)
+	}
+	if err := repo.AddGroupMember(ctx, "no-group", "dev-1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("AddGroupMember unknown group want ErrNotFound, got %v", err)
+	}
+	if mem, err := repo.ListGroupMembers(ctx, "grp-1"); err != nil || len(mem) != 1 || mem[0] != "dev-1" {
+		t.Fatalf("ListGroupMembers: %+v err=%v", mem, err)
+	}
+	if err := repo.RemoveGroupMember(ctx, "grp-1", "dev-1"); err != nil {
+		t.Fatalf("RemoveGroupMember: %v", err)
+	}
+	if mem, _ := repo.ListGroupMembers(ctx, "grp-1"); len(mem) != 0 {
+		t.Fatalf("members should be empty after remove, got %+v", mem)
+	}
+	if groups, err := repo.ListGroups(ctx); err != nil || len(groups) != 1 || groups[0].ID != "grp-1" {
+		t.Fatalf("ListGroups: %+v err=%v", groups, err)
+	}
+	// Delete cascades members.
+	if err := repo.DeleteGroup(ctx, "grp-1"); err != nil {
+		t.Fatalf("DeleteGroup: %v", err)
+	}
+	if _, err := repo.GetGroup(ctx, "grp-1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("group should be gone, got %v", err)
+	}
+	if err := repo.DeleteGroup(ctx, "grp-1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("DeleteGroup unknown want ErrNotFound, got %v", err)
+	}
+
 	// --- audit ---
 	if err := repo.AppendAudit(ctx, AuditEntry{ID: "aud-1", ActorSubject: "admin@helix.test",
 		Action: "DEVICE_REGISTER", ResourceType: "device", ResourceID: "dev-1",
