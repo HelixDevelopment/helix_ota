@@ -1,0 +1,33 @@
+# Helix OTA — Dependabot configuration
+#
+# Closes part of gap G10 (governance scaffolding). Dependabot opens weekly PRs
+# for dependency updates in the two ecosystems this repo actually uses:
+#   - gomod         → the Go server module under /server
+#   - github-actions→ the workflow actions pinned in /.github/workflows
+#
+# Schema: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  # Go module for the server (go.mod / go.sum live in /server).
+  - package-ecosystem: "gomod"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(go)"
+    labels:
+      - "dependencies"
+      - "go"
+
+  # GitHub Actions used by the CI workflow(s) in /.github/workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(actions)"
+    labels:
+      - "dependencies"
+      - "github-actions"
