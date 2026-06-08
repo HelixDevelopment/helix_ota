@@ -211,6 +211,18 @@ func (m *MemoryRepository) CreateDeployment(_ context.Context, d Deployment) err
 	return nil
 }
 
+// UpdateDeployment overwrites an existing deployment (e.g. to supersede it on a
+// recall). Returns ErrNotFound if the deployment is unknown.
+func (m *MemoryRepository) UpdateDeployment(_ context.Context, d Deployment) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.deployments[d.DeploymentID]; !ok {
+		return ErrNotFound
+	}
+	m.deployments[d.DeploymentID] = d
+	return nil
+}
+
 // GetDeployment returns a deployment by id.
 func (m *MemoryRepository) GetDeployment(_ context.Context, deploymentID string) (Deployment, error) {
 	m.mu.RLock()

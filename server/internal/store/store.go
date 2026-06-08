@@ -186,6 +186,7 @@ type Repository interface {
 	// Deployments.
 	CreateDeployment(ctx context.Context, d Deployment) error
 	GetDeployment(ctx context.Context, deploymentID string) (Deployment, error)
+	UpdateDeployment(ctx context.Context, d Deployment) error
 	ActiveDeploymentForTarget(ctx context.Context, os otaprotocol.OSType, targetModel, group string) (Deployment, error)
 	ListActiveDeployments(ctx context.Context) ([]Deployment, error)
 

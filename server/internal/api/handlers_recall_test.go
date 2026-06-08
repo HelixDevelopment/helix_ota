@@ -43,6 +43,19 @@ func TestRecallRecordsRollback(t *testing.T) {
 	if rb.Kind != "rollback" || rb.ToReleaseID != "rel-prior" || rb.FromReleaseID == "" || rb.TriggeredBy != "admin@helix.test" {
 		t.Fatalf("recall record mismatch: %+v", rb)
 	}
+	// Forward-fix: a NEW active deployment of the target release was created, and
+	// the original deployment was superseded.
+	if rb.RecallDeploymentID == "" {
+		t.Fatalf("recall must create a recall deployment, got empty recall_deployment_id")
+	}
+	recallDep, derr := env.repo.GetDeployment(context.Background(), rb.RecallDeploymentID)
+	if derr != nil || recallDep.ReleaseID != "rel-prior" || recallDep.Status != string(otaprotocol.DeploymentActive) {
+		t.Fatalf("recall deployment mismatch: %+v err=%v", recallDep, derr)
+	}
+	origDep, _ := env.repo.GetDeployment(context.Background(), depID)
+	if origDep.Status != "superseded" {
+		t.Fatalf("original deployment should be superseded, got %q", origDep.Status)
+	}
 
 	// History lists it.
 	lw := env.do(http.MethodGet, "/api/v1/deployments/"+depID+"/rollbacks", tok, nil, "")
