@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>coverage_ledger</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-11.4.25-coverage-ledger-1.0.0-mvp">Helix OTA —
+§11.4.25 Coverage Ledger (1.0.0-MVP)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-08T00:00:00Z <strong>Authority:</strong> Constitution §11.4.25
+(Full-Automation-Coverage) + §11.4.6 (No-guessing) + §11.4.27 (100%
+test-type coverage) <strong>Scope:</strong> Go control plane
+(<code>server/</code>) + owned device-side / protocol bricks
+(<code>submodules/ota-*</code>, <code>submodules/http3</code>)
+<strong>Maintainer:</strong> QA lead</p>
+<blockquote>
+<p><strong>Post-authoring update (2026-06-08, commit 5363511).</strong>
+This ledger was authored from the tree just before the §11.4.85
+stress+chaos suite landed. The “Stress” and “Chaos” cells marked MISSING
+for the operational surface (groups / reads / membership / repo-fault)
+are now <strong>COVERED</strong> by
+<code>server/internal/api/resilience_test.go</code> (race-clean;
+evidence in <code>docs/qa/20260608-stress-chaos/</code>).
+Performance/NFR + adversarial-security suites were in flight the same
+session — see their qa dirs once committed.</p>
+</blockquote>
+<blockquote>
+<p><strong>Anti-bluff note (§11.4.6 / §11.4.25).</strong> Every COVERED
+cell below cites the test file (and, where useful, the function) that
+actually exists in the tree as of this revision. A cell is marked
+COVERED <strong>only</strong> when a test exercising that feature is
+present. Advanced test types not yet landed are marked MISSING or “in
+progress (this session)” — they are <strong>not</strong> claimed as
+coverage. On-device (RK3588 / Orange Pi 5 Max) validation is the one
+class blocked on hardware; it is marked <code>BLOCKED-HW</code>
+everywhere it applies and is <strong>never</strong> counted as automated
+coverage.</p>
+</blockquote>
+<h2 id="legend">Legend</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mark</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>COVERED</strong></td>
+<td>A real test exercising the feature exists; file cited.</td>
+</tr>
+<tr>
+<td><strong>PARTIAL</strong></td>
+<td>Some paths covered, notable gaps remain; file cited.</td>
+</tr>
+<tr>
+<td><strong>MISSING</strong></td>
+<td>No test of this type for this feature exists yet.</td>
+</tr>
+<tr>
+<td><strong>N-A</strong></td>
+<td>Test type does not apply to this feature.</td>
+</tr>
+<tr>
+<td><strong>BLOCKED-HW</strong></td>
+<td>Requires RK3588 hardware; cannot be automated tonight.</td>
+</tr>
+<tr>
+<td><strong>in progress</strong></td>
+<td>Being authored this session; not yet landed — do NOT count.</td>
+</tr>
+</tbody>
+</table>
+<p>Test-type columns: <strong>U</strong>=unit,
+<strong>I</strong>=integration (httptest / real-Postgres),
+<strong>E2E</strong>=live-server end-to-end,
+<strong>Sec</strong>=security, <strong>Str</strong>=stress,
+<strong>Ch</strong>=chaos, <strong>Perf</strong>=performance,
+<strong>Chal</strong>=HelixQA Challenge.</p>
+<hr />
+<h2 id="control-plane-server-feature-test-type-matrix">1. Control plane
+(<code>server/</code>) — feature × test-type matrix</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>U</th>
+<th>I (httptest/PG)</th>
+<th>E2E</th>
+<th>Sec</th>
+<th>Str</th>
+<th>Ch</th>
+<th>Perf</th>
+<th>Chal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Auth (login / JWT / refresh rotation / RBAC)</strong></td>
+<td>COVERED
+<code>api/handlers_auth_test.go:TestLogin,TestRefreshRotation,TestRBACForbidsWrongRole</code></td>
+<td>COVERED (httptest) same file</td>
+<td>COVERED <code>tests/e2e/challenge_operational.sh</code> (login +
+401-on-no-token)</td>
+<td>PARTIAL — RBAC-forbid + no-token-401 asserted
+(<code>handlers_auth_test.go:TestProtectedRouteRequiresAuth</code>); no
+token-tamper / expiry-fuzz / brute-force suite</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED <code>banks/helix_ota.yaml:HOTA-AUTH-LOGIN</code></td>
+</tr>
+<tr>
+<td><strong>Artifact upload + signature verify</strong></td>
+<td>COVERED <code>api/handlers_artifact_test.go</code>,
+<code>handlers_artifact_parts_test.go</code></td>
+<td>COVERED (httptest) same files</td>
+<td>PARTIAL — full signed pipeline is best-effort SKIP-with-reason in
+<code>challenge_operational.sh</code> step 13</td>
+<td>COVERED (trust-boundary)
+<code>handlers_artifact_parts_test.go:TestArtifactUploadIgnoresRequestSuppliedPubkey,TestArtifactUploadNoTrustedKey</code>
++
+<code>handlers_branches_test.go:TestUploadSignatureNotBase64,TestUploadEmptyZip,TestUploadOversizedReturns413</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Releases (create / get / monotonicity / list)</strong></td>
+<td>COVERED <code>api/handlers_release_test.go</code></td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>PARTIAL — unknown-artifact reject
+<code>handlers_release_test.go:TestReleaseUnknownArtifact</code>; no
+auth-class sec suite</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Deployments (all-targets / conflict /
+unknown-release)</strong></td>
+<td>COVERED <code>api/handlers_deployment_test.go</code></td>
+<td>COVERED (httptest) same file</td>
+<td>PARTIAL — rollout route gates only
+(<code>challenge_operational.sh</code> step 12)</td>
+<td>PARTIAL — non-all-targets reject
+<code>TestDeploymentRejectsNonAllTargets</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Staged rollout engine (phases /
+halt-on-breach)</strong></td>
+<td>COVERED
+<code>rollout/store_test.go:TestEngineDrivesPhasesToCompletion,TestEngineHaltsOnErrorBreach</code>;
+<code>api/handlers_rollout_test.go</code></td>
+<td>COVERED httptest <code>handlers_rollout_test.go</code> + real-PG
+<code>rollout/postgres_integration_test.go:TestPostgresStoreScenario_Integration</code>
+(build tag <code>integration</code>)</td>
+<td>COVERED
+<code>challenge_operational.sh:HOTA-ROLLOUT-ROUTE-GATES</code> (404
+gates)</td>
+<td>PARTIAL — viewer-forbidden
+<code>TestRolloutCreateForbiddenForViewer</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED
+<code>banks/helix_ota.yaml:HOTA-ROLLOUT-ROUTE-GATES</code></td>
+</tr>
+<tr>
+<td><strong>Recall / rollback</strong></td>
+<td>COVERED
+<code>api/handlers_recall_test.go:TestRecallRecordsRollback,TestRecallValidation</code></td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>PARTIAL — viewer-forbidden
+<code>TestRecallForbiddenForViewer</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Audit trail</strong></td>
+<td>COVERED
+<code>api/handlers_audit_test.go:TestAuditRecordsSuccessfulMutation,TestAuditSkipsReadsAndFailures,TestDeriveAuditAction</code>
++ <code>handlers_widen_test.go:TestAuditSinceUntilFilter</code></td>
+<td>COVERED (httptest) same files</td>
+<td>COVERED <code>challenge_operational.sh:HOTA-AUDIT-TRAIL</code>
+(non-empty after mutations)</td>
+<td>PARTIAL — read-is-admin-only
+<code>TestAuditReadIsAdminOnly</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED <code>banks/helix_ota.yaml:HOTA-AUDIT-TRAIL</code></td>
+</tr>
+<tr>
+<td><strong>Telemetry reads + overview</strong></td>
+<td>COVERED <code>api/handlers_telemetry_test.go</code>,
+<code>handlers_widen_test.go:TestTelemetryOverviewFailureRateAndByState</code></td>
+<td>COVERED (httptest) same files</td>
+<td>COVERED
+<code>challenge_operational.sh:HOTA-TELEMETRY-OVERVIEW</code></td>
+<td>PARTIAL — ownership
+<code>TestDeviceTelemetryOwnDeviceAllowedOtherForbidden</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED
+<code>banks/helix_ota.yaml:HOTA-TELEMETRY-OVERVIEW</code></td>
+</tr>
+<tr>
+<td><strong>Telemetry ingest (client)</strong></td>
+<td>COVERED
+<code>api/handlers_client_test.go:TestClientTelemetryIngest,TestClientTelemetryWrongDeviceForbidden,TestClientTelemetryEmptyEvents</code></td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>PARTIAL — wrong-device-forbidden asserted</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Device register + status</strong></td>
+<td>COVERED <code>api/handlers_device_test.go</code> (register /
+validation / conflict / idempotent / ownership)</td>
+<td>COVERED (httptest) same file</td>
+<td>COVERED
+<code>challenge_operational.sh:HOTA-DEVICE-REGISTER</code></td>
+<td>PARTIAL — status-ownership
+<code>TestDeviceStatusOwnership</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED <code>banks/helix_ota.yaml:HOTA-DEVICE-REGISTER</code></td>
+</tr>
+<tr>
+<td><strong>Device groups + members</strong></td>
+<td>COVERED
+<code>api/handlers_group_test.go:TestGroupCRUDLifecycle,TestGroupRBAC</code>
++ <code>handlers_widen_test.go:TestGroupMemberCount</code></td>
+<td>COVERED (httptest) same files</td>
+<td>COVERED <code>challenge_operational.sh:HOTA-GROUP-LIFECYCLE</code>
+(batch add / already-member / not-found / empty-400 / member list /
+delete)</td>
+<td>PARTIAL — <code>TestGroupRBAC</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED <code>banks/helix_ota.yaml:HOTA-GROUP-LIFECYCLE</code></td>
+</tr>
+<tr>
+<td><strong>Client update decision (offer / 200 / 204 /
+short-circuit)</strong></td>
+<td>COVERED <code>api/handlers_client_test.go</code> (offers-delta /
+200-behind / 204-on-target / 204-no-deployment / current-version
+short-circuit)</td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>N-A (read-path; ownership covered via telemetry)</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Anti-downgrade guard</strong></td>
+<td>COVERED
+<code>api/handlers_client_antidowngrade_test.go:TestClientUpdateNeverOffersDowngrade,TestClientUpdateQueryReportedAheadShortCircuits,TestClientUpdateUnknownVersionOffered</code></td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>COVERED (this IS the security-relevant downgrade-protection
+invariant) same file</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Branches / widen (advanced upload + filter edge
+cases)</strong></td>
+<td>COVERED <code>api/handlers_branches_test.go</code>,
+<code>handlers_widen_test.go</code></td>
+<td>COVERED (httptest) same files</td>
+<td>MISSING</td>
+<td>PARTIAL — malformed-multipart / oversized-413 / not-base64 /
+empty-zip rejects</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Delta register / select</strong></td>
+<td>COVERED
+<code>api/handlers_delta_test.go:TestDeltaRegisterAndFind,TestDeltaRegisterValidation,TestDeltaRegisterForbiddenForViewer</code></td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>PARTIAL — viewer-forbidden asserted</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Persistence seam — in-memory Repository</strong></td>
+<td>COVERED <code>store/memory_test.go</code>,
+<code>store/contract_test.go:TestMemoryRepositoryContract</code></td>
+<td>COVERED — contract suite IS the integration-level shape test</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>N-A</td>
+</tr>
+<tr>
+<td><strong>Persistence seam — pgx/PostgreSQL Repository</strong></td>
+<td>COVERED (same contract)</td>
+<td>COVERED
+<code>store/postgres_integration_test.go:TestPostgresRepositoryContract_Integration</code>
+(build tag <code>integration</code>, real Postgres via containers
+submodule)</td>
+<td>N-A</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>N-A</td>
+</tr>
+<tr>
+<td><strong>Health / readiness probes</strong></td>
+<td>COVERED <code>health/health_test.go</code>,
+<code>api/handlers_health_test.go</code></td>
+<td>COVERED (httptest) <code>handlers_health_test.go</code></td>
+<td>COVERED <code>challenge_operational.sh</code> step 1
+(<code>/healthz</code> 200)</td>
+<td>N-A</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>(implicit in bank dispatch)</td>
+</tr>
+<tr>
+<td><strong>Config loading</strong></td>
+<td>COVERED
+<code>config/config_test.go:TestLoadDefaults,TestLoadOverrides,TestLoadInvalidValues</code></td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+</tr>
+<tr>
+<td><strong>Transport — HTTP/3 (QUIC) + H2 fallback</strong></td>
+<td>COVERED
+<code>transport/transport_test.go:TestDualTransportServesH3AndH2</code></td>
+<td>COVERED — dual-transport test serves both real protocols</td>
+<td>MISSING (no live curl-over-h3 e2e)</td>
+<td>PARTIAL — TLS1.3/ALPN forced in brick (see §2)</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Response compression — Brotli / gzip /
+identity</strong></td>
+<td>COVERED <code>api/middleware_compression_test.go</code>
+(brotli-negotiate / gzip-fallback / identity-fallback /
+204-no-encode)</td>
+<td>COVERED (httptest) same file</td>
+<td>MISSING</td>
+<td>N-A</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>NFR / load (latency / RPS / p99)</strong></td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>PARTIAL — <code>server/tools/loadtest/main.go</code> MEASURES
+p50/p90/p99/RPS but asserts NO target; not wired into an automated
+gate</td>
+<td>MISSING</td>
+<td>PARTIAL — same harness (measure-only, manual)</td>
+<td>MISSING</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="device-side-protocol-bricks-submodules-feature-test-type-matrix">2.
+Device-side / protocol bricks (<code>submodules/</code>) — feature ×
+test-type matrix</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>U</th>
+<th>I</th>
+<th>E2E</th>
+<th>Sec</th>
+<th>Str</th>
+<th>Ch</th>
+<th>Perf</th>
+<th>Chal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Protocol types / enums / payload / validation</strong></td>
+<td>COVERED
+<code>ota-protocol/{enums,payload,types,validate}_test.go</code>
+(round-trips, invalid-enum-rejected, descriptive errors)</td>
+<td>COVERED — round-trip + cross-type marshalling</td>
+<td>N-A</td>
+<td>PARTIAL — invalid/non-string enum rejection
+(<code>enums_test.go</code>)</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Artifact validator (hash / sig / version / target /
+metadata)</strong></td>
+<td>COVERED <code>ota-artifact-validator/validator_test.go</code>
+(TestValidateHash/Signature/Version/Target/Metadata/FailFast)</td>
+<td>COVERED — full verdict pipeline</td>
+<td>N-A</td>
+<td>COVERED (signature + fail-fast verdict are the security invariants)
+same file</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Rollout engine (cohort hashing / decide / phases / halt /
+window)</strong></td>
+<td>COVERED
+<code>ota-rollout-engine/{cohort,decide,engine}_test.go</code>
+(determinism, boundaries, monotonic growth, full progression,
+halt-idempotent, window-hold, post-boot-abort)</td>
+<td>COVERED via server real-PG scenario (§1)</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>PARTIAL —
+<code>cohort_test.go:TestInCohortApproximatesPercentage</code> exercises
+distribution at scale (statistical, not load)</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>Telemetry schema (codec / events / health
+derivation)</strong></td>
+<td>COVERED
+<code>ota-telemetry-schema/{codec,event,health}_test.go</code> (batch
+round-trip, invalid-event-reject, health
+counts/rates/verdict/thresholds)</td>
+<td>COVERED — derive→verdict integration
+<code>health_test.go:TestDeriveThenVerdictIntegration</code></td>
+<td>N-A</td>
+<td>PARTIAL — invalid-event / decode-failure rejection</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td><strong>HTTP/3 server brick (config / TLS / lifecycle /
+cross-backend)</strong></td>
+<td>COVERED <code>http3/pkg/server/server_test.go</code>
+(config-validate, forces-TLS1.3+H3-ALPN, start-twice,
+idempotent-shutdown)</td>
+<td>COVERED <code>http3/pkg/server/integration_test.go</code> (real
+round-trip, large-body, shutdown-closes-listener)</td>
+<td>COVERED — integration_test IS a live h3 round-trip</td>
+<td>COVERED
+<code>server_test.go:TestNewForcesTLS13MinVersionAndH3ALPN</code> (TLS
+floor) + <code>fuzz_test.go:FuzzConfigValidate</code></td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>COVERED
+<code>http3/pkg/server/challenge_test.go:TestCrossBackendParity</code></td>
+</tr>
+<tr>
+<td><strong>Device delta-apply decision (agent)</strong></td>
+<td>COVERED
+<code>ota-android-agent/.../delta/DeltaApplyDecisionTest.kt</code> (12
+<span class="citation" data-cites="Test">@Test</span>: base-version/hash
+match, malformed gates, ordering, mutation-immunity)</td>
+<td>N-A (pure logic)</td>
+<td>BLOCKED-HW (real <code>update_engine</code> apply)</td>
+<td>COVERED — base-match gate + mutation-immunity test is
+load-bearing</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>N-A</td>
+<td>BLOCKED-HW</td>
+</tr>
+<tr>
+<td><strong>Verify-before-apply (agent: hash + signature)</strong></td>
+<td>COVERED
+<code>ota-android-agent/.../verify/VerifyBeforeApplyTest.kt</code> (9
+<span class="citation" data-cites="Test">@Test</span>: hash/sig
+accept+reject, ordering, mutation-immunity)</td>
+<td>N-A</td>
+<td>BLOCKED-HW</td>
+<td>COVERED — signature-invalid-even-when-hash-matches +
+inverted-compare mutation test</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>N-A</td>
+<td>BLOCKED-HW</td>
+</tr>
+<tr>
+<td><strong>Agent poll state machine + jitter</strong></td>
+<td>COVERED
+<code>ota-android-agent/.../poll/PollStateMachineTest.kt</code> (10),
+<code>JitterTest.kt</code> (6)</td>
+<td>N-A</td>
+<td>BLOCKED-HW</td>
+<td>N-A</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>N-A</td>
+<td>BLOCKED-HW</td>
+</tr>
+<tr>
+<td><strong>Agent protocol codecs (round-trip)</strong></td>
+<td>COVERED
+<code>ota-android-agent/.../protocol/CodecRoundTripTest.kt</code> (11
+<span class="citation" data-cites="Test">@Test</span>)</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+<td>N-A</td>
+</tr>
+<tr>
+<td><strong>update_engine bridge (apply request / status / error /
+payload props)</strong></td>
+<td>COVERED
+<code>ota-update-engine-bridge/core/src/test/.../{ApplyRequest,EngineStatus,EngineError,PayloadProperties}Test.kt</code></td>
+<td>N-A</td>
+<td>BLOCKED-HW (real binder to <code>update_engine</code>)</td>
+<td>N-A</td>
+<td>MISSING</td>
+<td>MISSING</td>
+<td>N-A</td>
+<td>BLOCKED-HW</td>
+</tr>
+<tr>
+<td><strong>A/B update + AVB/dm-verity + auto-rollback
+(on-device)</strong></td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+<td>BLOCKED-HW</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="biggest-gaps-most-least-critical">3. Biggest gaps (most → least
+critical)</h2>
+<ol type="1">
+<li><p><strong>Stress + Chaos test types are essentially absent
+project-wide (§11.4.85).</strong> Across both the control plane and the
+bricks, the Str and Ch columns are MISSING almost everywhere. There is
+no sustained-load suite, no concurrent- contention suite, and no
+fault-injection (process-death / network-fault / resource-exhaustion /
+state-corruption) suite wired into any gate. The only load-adjacent
+asset is <code>server/tools/loadtest/main.go</code>, which
+<strong>measures</strong> but <strong>asserts nothing</strong> and is
+not part of an automated gate.</p></li>
+<li><p><strong>Performance / NFR has no automated assertion
+gate.</strong> <code>loadtest</code> reports p50/p90/p99/RPS from real
+round-trips (honest, anti-bluff by design) but deliberately asserts no
+target. No CI/pre-build step compares measured numbers against stated
+NFR targets, so a regression in latency or throughput would not fail any
+gate.</p></li>
+<li><p><strong>Security coverage is real but narrow — it is
+RBAC/validation-shaped, not adversarial.</strong> Genuine security
+invariants ARE covered (the artifact trust-boundary
+<code>TestArtifactUploadIgnoresRequestSuppliedPubkey</code>, the
+anti-downgrade guard, the HTTP/3 TLS1.3 floor, RBAC-forbidden paths on
+every mutating route). What is MISSING: a dedicated security test type —
+JWT tamper/expiry/replay, fuzzing of request bodies beyond
+<code>http3/.../fuzz_test.go:FuzzConfigValidate</code>, injection/DoS,
+and authz-matrix sweeps. Today these live as side-assertions inside
+unit/integration tests, not as a first-class Sec suite.</p></li>
+</ol>
+<p>Secondary: <strong>E2E breadth.</strong> The live-server E2E
+(<code>challenge_operational.sh</code>) is strong for
+auth/device/group/audit/telemetry/rollout-gates but does NOT drive the
+full signed-artifact → release → deployment → rollout-evaluate pipeline
+end-to-end (it SKIPs-with-reason at step 13 per §11.4.3). Releases,
+recall, delta-select, and client-update decision have no live-server
+E2E.</p>
+<hr />
+<h2 id="on-device-validation-the-one-hardware-blocked-class">4.
+On-device validation (the one hardware-blocked class)</h2>
+<p>All RK3588 / Orange Pi 5 Max on-device classes — real
+<code>update_engine</code> A/B apply, AVB/dm-verity verification,
+auto-rollback, and live agent poll→download→ verify→apply→report against
+a running server — are <code>BLOCKED-HW</code> and are
+<strong>not</strong> counted as automated coverage anywhere above. The
+agent-side <strong>logic</strong> for those flows (delta decision,
+verify-before-apply, poll state machine, bridge DTOs) IS unit-covered in
+<code>submodules/ota-android-agent</code> and
+<code>submodules/ota-update-engine-bridge</code>; only the on-hardware
+execution is blocked. Per §11.4.3 this is the correct SKIP/BLOCKED
+posture — never a PASS-by-default.</p>
+</body>
+</html>
