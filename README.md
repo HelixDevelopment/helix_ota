@@ -22,7 +22,8 @@
 7. [Governance — HelixConstitution](#7-governance--helixconstitution)
 8. [Documentation export pipeline](#8-documentation-export-pipeline)
 9. [Repository layout](#9-repository-layout)
-10. [License](#10-license)
+10. [Tracked-Items + Status Documents](#10-tracked-items--status-documents)
+11. [License](#11-license)
 
 > Per HelixConstitution §11.4.61 (UNVERIFIED clause number), every document carries the
 > metadata table above followed by this table of contents.
@@ -188,6 +189,32 @@ scripts/export_docs.sh docs/research/main_specs/00-master/2026-06-07-helix-ota-d
 └── upstreams/                multi-upstream remote host definitions (GitHub, GitLab, …)
 ```
 
-## 10. License
+## 10. Tracked-Items + Status Documents
+
+<!-- doc-link-section:begin -->
+Doc-map for the key spec + status documents in the active spec corpus
+(`docs/research/main_specs/`). Each row links the canonical Markdown source plus its
+HTML/PDF exports where those siblings exist on disk; `Revision` and `Last modified` are read
+from each document's own metadata header (`—` = absent). Every linked path was verified to exist
+on disk (HelixConstitution §11.4.57 / §7.1 anti-bluff, UNVERIFIED clause numbers).
+
+| Document | Last modified | Revision | Markdown | HTML | PDF |
+|---|---|---|---|---|---|
+| Spec-corpus continuation / handoff | 2026-06-08 | 2 | [md](docs/research/main_specs/CONTINUATION.md) | — | — |
+| Additions synthesis (gap closure) | 2026-06-08 | 3 | [md](docs/research/main_specs/research/additions_synthesis.md) | [html](docs/research/main_specs/research/additions_synthesis.html) | [pdf](docs/research/main_specs/research/additions_synthesis.pdf) |
+| 1.0.0-MVP API — operational endpoints | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.pdf) |
+| 1.0.0-MVP API — implemented endpoints | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.pdf) |
+| 1.0.0-MVP dashboard design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.md) | [html](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.html) | [pdf](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.pdf) |
+| 1.0.1 staged rollout — overview (README) | 2026-06-08 | 2 | [md](docs/research/main_specs/1.0.1-staged-rollout/README.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/README.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/README.pdf) |
+| 1.0.1 staged rollout — rollout engine | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.pdf) |
+| 1.0.1 staged rollout — migration 002 design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.pdf) |
+| 1.0.1 staged rollout — device TUF | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.pdf) |
+| 1.0.1 staged rollout — rollback UX | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.pdf) |
+| 1.0.3 delta updates — overview (README) | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/README.md) | [html](docs/research/main_specs/1.0.3-delta-updates/README.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/README.pdf) |
+| 1.0.3 delta updates — design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.md) | [html](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.pdf) |
+| Repo public-visibility audit (gap G11) | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/research/repo_audit.md) | [html](docs/research/main_specs/research/repo_audit.html) | [pdf](docs/research/main_specs/research/repo_audit.pdf) |
+<!-- doc-link-section:end -->
+
+## 11. License
 
 Apache-2.0. See [`LICENSE`](LICENSE).

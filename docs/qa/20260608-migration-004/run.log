@@ -1,0 +1,222 @@
+================================================================
+Helix OTA migration 004 (delta_artifacts) — real psql validation
+Date (UTC): 2026-06-08T14:03:16Z
+Engine: PostgreSQL 16.14 (postgres:16-alpine via podman)
+================================================================
+
+### STEP 1: apply 001 up
+BEGIN
+CREATE EXTENSION
+CREATE SCHEMA
+SET
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+
+### STEP 2: apply 002 up
+BEGIN
+SET
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+
+### STEP 3: apply 004 up
+BEGIN
+SET
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+
+### STEP 3b: confirm delta_artifacts table + constraints exist
+psql: warning: extra command-line argument "helix_ota.delta_artifacts" ignored
+ERROR:  syntax error at or near "d"
+LINE 1: d
+        ^
+
+### STEP 3b: delta_artifacts structure
+                                  Table "helix_ota.delta_artifacts"
+       Column       |           Type           | Collation | Nullable |           Default            
+--------------------+--------------------------+-----------+----------+------------------------------
+ id                 | uuid                     |           | not null | gen_random_uuid()
+ base_artifact_id   | uuid                     |           | not null | 
+ target_artifact_id | uuid                     |           | not null | 
+ delta_artifact_id  | uuid                     |           |          | 
+ status             | character varying(50)    |           | not null | 'pending'::character varying
+ file_path          | character varying(500)   |           |          | 
+ file_size          | bigint                   |           |          | 
+ checksum_sha256    | character(64)            |           |          | 
+ savings_percent    | numeric(5,2)             |           |          | 
+ partition_deltas   | jsonb                    |           | not null | '{}'::jsonb
+ generation_errors  | jsonb                    |           |          | 
+ created_at         | timestamp with time zone |           | not null | now()
+ updated_at         | timestamp with time zone |           | not null | now()
+Indexes:
+    "delta_artifacts_pkey" PRIMARY KEY, btree (id)
+    "delta_artifacts_base_target_uniq" UNIQUE CONSTRAINT, btree (base_artifact_id, target_artifact_id)
+    "idx_delta_artifacts_base" btree (base_artifact_id)
+    "idx_delta_artifacts_delta" btree (delta_artifact_id)
+    "idx_delta_artifacts_status" btree (status)
+    "idx_delta_artifacts_target" btree (target_artifact_id)
+Check constraints:
+    "delta_artifacts_base_ne_target_chk" CHECK (base_artifact_id <> target_artifact_id)
+    "delta_artifacts_file_size_chk" CHECK (file_size IS NULL OR file_size > 0)
+    "delta_artifacts_savings_chk" CHECK (savings_percent IS NULL OR savings_percent >= 0::numeric AND savings_percent <= 100::numeric)
+    "delta_artifacts_sha256_chk" CHECK (checksum_sha256 IS NULL OR checksum_sha256 ~ '^[0-9a-f]{64}$'::text)
+    "delta_artifacts_status_chk" CHECK (status::text = ANY (ARRAY['pending'::character varying, 'generating'::character varying, 'generated'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[]))
+Foreign-key constraints:
+    "delta_artifacts_base_fk" FOREIGN KEY (base_artifact_id) REFERENCES helix_ota.artifacts(id) ON DELETE CASCADE
+    "delta_artifacts_delta_fk" FOREIGN KEY (delta_artifact_id) REFERENCES helix_ota.artifacts(id) ON DELETE CASCADE
+    "delta_artifacts_target_fk" FOREIGN KEY (target_artifact_id) REFERENCES helix_ota.artifacts(id) ON DELETE CASCADE
+
+
+### STEP 4: seed two full artifacts (base + target)
+SET
+INSERT 0 2
+                  id                  | version | artifact_type 
+--------------------------------------+---------+---------------
+ 11111111-1111-1111-1111-111111111111 | 1.0.0   | full
+ 22222222-2222-2222-2222-222222222222 | 1.0.1   | full
+(2 rows)
+
+
+### STEP 5: insert a VALID delta row (base 1.0.0 -> target 1.0.1)
+SET
+INSERT 0 1
+           base_artifact_id           |          target_artifact_id          |  status   | savings_percent 
+--------------------------------------+--------------------------------------+-----------+-----------------
+ 11111111-1111-1111-1111-111111111111 | 22222222-2222-2222-2222-222222222222 | generated |           90.23
+(1 row)
+
+
+### STEP 6: 'find delta from base X to target Y' (the indexed lookup)
+SET
+                  id                  |  status   |           file_path            
+--------------------------------------+-----------+--------------------------------
+ 8d86d432-df6b-4b60-a350-c20a797f0d95 | generated | deltas/1.0.0/1.0.1/payload.zip
+(1 row)
+
+
+### STEP 7 (NEGATIVE): base == target MUST be REJECTED by CHECK
+SET
+ERROR:  new row for relation "delta_artifacts" violates check constraint "delta_artifacts_base_ne_target_chk"
+DETAIL:  Failing row contains (23dd92ec-eb99-45fb-a7cd-de25cb2bb9d9, 11111111-1111-1111-1111-111111111111, 11111111-1111-1111-1111-111111111111, null, pending, null, null, null, null, {}, null, 2026-06-08 14:03:49.781525+00, 2026-06-08 14:03:49.781525+00).
+>>> EXPECTED: base==target REJECTED (delta_artifacts_base_ne_target_chk fired)
+
+### STEP 7b (NEGATIVE): duplicate (base,target) MUST be REJECTED by UNIQUE
+SET
+ERROR:  duplicate key value violates unique constraint "delta_artifacts_base_target_uniq"
+DETAIL:  Key (base_artifact_id, target_artifact_id)=(11111111-1111-1111-1111-111111111111, 22222222-2222-2222-2222-222222222222) already exists.
+>>> EXPECTED: duplicate (base,target) REJECTED (delta_artifacts_base_target_uniq fired)
+
+### STEP 7c (NEGATIVE): unknown base FK MUST be REJECTED
+SET
+ERROR:  insert or update on table "delta_artifacts" violates foreign key constraint "delta_artifacts_base_fk"
+DETAIL:  Key (base_artifact_id)=(99999999-9999-9999-9999-999999999999) is not present in table "artifacts".
+>>> EXPECTED: dangling base FK REJECTED (delta_artifacts_base_fk fired)
+
+### STEP 7d: ON DELETE CASCADE — deleting base artifact removes the delta row
+SET
+ delta_rows_before_delete 
+--------------------------
+                        1
+(1 row)
+
+DELETE 1
+ delta_rows_after_base_delete 
+------------------------------
+                            0
+(1 row)
+
+
+### STEP 8: 004 down
+BEGIN
+SET
+DROP TABLE
+COMMIT
+-- confirm delta_artifacts gone, 001/002 tables intact:
+ delta_artifacts |      artifacts      |      rollouts      
+-----------------+---------------------+--------------------
+                 | helix_ota.artifacts | helix_ota.rollouts
+(1 row)
+
+
+### STEP 9: 002 down
+BEGIN
+SET
+DROP TABLE
+DROP TABLE
+DROP TABLE
+COMMIT
+
+### STEP 10: 001 down
+BEGIN
+SET
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP SCHEMA
+COMMIT
+-- confirm schema fully gone:
+ helix_ota_schema 
+------------------
+ 
+(1 row)
+
+
+================================================================
+RESULT: up(001,002,004) OK; valid insert OK; base==target REJECTED;
+        dup REJECTED; dangling FK REJECTED; CASCADE OK; down(004,002,001) OK.
+================================================================

@@ -80,6 +80,12 @@ jobs:
       - name: go build
         run: go build ./...
 
+      # Prove the standalone load-test harness compiles. It is a `package main`
+      # under server/tools/loadtest that depends ONLY on the stdlib, so a plain
+      # `go build` of that package is the cheapest regression guard for it.
+      - name: go build loadtest harness
+        run: go build ./tools/loadtest/
+
       - name: go test (no integration tag)
         run: go test ./...
 
@@ -102,6 +108,125 @@ jobs:
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
           "$(go env GOPATH)/bin/gosec" ./...
+
+  # (c) Operational + rollout E2E challenge.
+  #     Starts a real ota-server with the IN-MEMORY repository (NO database
+  #     required — see tests/e2e/README.md), waits for /healthz, then runs the
+  #     anti-bluff black-box challenge (tests/e2e/challenge_operational.sh) which
+  #     drives the live REST API over HTTP with curl + jq and asserts real status
+  #     codes + JSON fields. Admin login is enabled by HELIX_ADMIN_PASSWORD.
+  e2e:
+    name: E2E operational challenge (in-memory repo)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+
+      # jq is required by the challenge; curl is preinstalled on ubuntu runners.
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      # Start the server in the background from the server/ module. The admin
+      # password enables the login route the challenge depends on; the token
+      # secret makes the minted JWTs deterministic for the run. In-memory repo,
+      # so no DB service is needed.
+      - name: Start ota-server (in-memory)
+        working-directory: server
+        run: |
+          HELIX_ADMIN_USERNAME=admin@helix.test \
+          HELIX_ADMIN_PASSWORD=s3cret \
+          HELIX_TOKEN_SECRET=ci \
+          go run ./cmd/ota-server > "${RUNNER_TEMP}/ota-server.log" 2>&1 &
+          echo "$!" > "${RUNNER_TEMP}/ota-server.pid"
+
+      - name: Wait for /healthz
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/healthz >/dev/null 2>&1; then
+              echo "server is healthy"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server did not become healthy in time; server log:"
+          cat "${RUNNER_TEMP}/ota-server.log" || true
+          exit 1
+
+      - name: Run operational challenge
+        run: HELIX_ADMIN_PASSWORD=s3cret bash tests/e2e/challenge_operational.sh
+
+      # Always surface the server log + stop the background process for hygiene.
+      - name: Stop ota-server + dump log
+        if: always()
+        run: |
+          echo "===== ota-server log ====="
+          cat "${RUNNER_TEMP}/ota-server.log" || true
+          if [ -f "${RUNNER_TEMP}/ota-server.pid" ]; then
+            kill "$(cat "${RUNNER_TEMP}/ota-server.pid")" 2>/dev/null || true
+          fi
+
+  # (d) Postgres-backed integration tests (`go test -tags integration ./...`).
+  #     GATED OFF on hosted runners — DO NOT enable as-is. This is an honest,
+  #     documented-manual job, NOT a faked pass:
+  #
+  #     The integration test (server/internal/store/postgres_integration_test.go,
+  #     //go:build integration) does NOT connect to an arbitrary DATABASE_URL.
+  #     It boots its OWN PostgreSQL via the `containers` submodule on PODMAN,
+  #     which is not available on a stock GitHub-hosted runner. A `services:
+  #     postgres:` container would therefore NOT be the DB the test actually uses,
+  #     so wiring one here would be misleading scaffolding that proves nothing.
+  #
+  #     We therefore keep this job `if: false` (never scheduled) rather than
+  #     pretend it passes. Run it locally on a host with podman:
+  #
+  #         cd server && go test -tags integration ./...
+  #
+  #     A `services:` block is shown below, commented out, as a record of the
+  #     shape a future self-hosted/container-runtime-equipped runner would use if
+  #     the integration tests are ever refactored to honour a DATABASE_URL.
+  integration:
+    name: Postgres integration tests (manual / self-hosted only)
+    runs-on: ubuntu-latest
+    if: false  # never runs on hosted runners — boots its own podman Postgres; see comment above
+    # services:
+    #   postgres:
+    #     image: postgres:16
+    #     env:
+    #       POSTGRES_USER: helix
+    #       POSTGRES_PASSWORD: helix
+    #       POSTGRES_DB: helix
+    #     ports:
+    #       - 5432:5432
+    #     options: >-
+    #       --health-cmd "pg_isready -U helix"
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 5
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+
+      - name: Integration tests (integration build tag)
+        working-directory: server
+        run: go test -tags integration ./...
 
   # (optional) Documentation export — scripts/export_docs.sh needs pandoc and
   # mermaid-cli (mmdc), which may be absent. The whole job is marked
