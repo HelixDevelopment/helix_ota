@@ -46,8 +46,38 @@ else
 fi
 
 echo
+echo "=================================================================="
+echo "C. Recursive owned-submodule inheritance pointers (runbook Step 9)"
+echo "=================================================================="
+OWNED_SUBMODULES=(
+    submodules/ota-protocol
+    submodules/ota-telemetry-schema
+    submodules/ota-artifact-validator
+    submodules/ota-rollout-engine
+    submodules/ota-update-engine-bridge
+    submodules/ota-android-agent
+)
+for sm in "${OWNED_SUBMODULES[@]}"; do
+    d="${ROOT}/${sm}"
+    if [[ ! -d "${d}" ]]; then
+        echo "  ⊘ ${sm}: not checked out (skipped)"
+        continue
+    fi
+    ok=1
+    for f in CLAUDE.md AGENTS.md; do
+        if [[ -f "${d}/${f}" ]] && grep -qiF "Helix Constitution" "${d}/${f}"; then :; else ok=0; fi
+    done
+    if [[ "${ok}" -eq 1 ]]; then
+        echo "  ✓ ${sm}: CLAUDE.md + AGENTS.md reference the Helix Constitution"
+    else
+        echo "  ✗ ${sm}: missing/incomplete inheritance pointer"
+        rc=1
+    fi
+done
+
+echo
 if [[ "${rc}" -eq 0 ]]; then
-    echo "CONSTITUTION INHERITANCE: PASS (gate real + mutation-proven)"
+    echo "CONSTITUTION INHERITANCE: PASS (gate real + mutation-proven + submodules wired)"
 else
     echo "CONSTITUTION INHERITANCE: FAIL"
 fi
