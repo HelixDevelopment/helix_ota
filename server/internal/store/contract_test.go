@@ -251,6 +251,13 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 	if err != nil || len(filtered) != 1 || filtered[0].ID != "aud-2" {
 		t.Fatalf("ListAudit filtered: %+v err=%v", filtered, err)
 	}
+	// Time bounds (both entries created at ts).
+	if after, _, err := repo.ListAudit(ctx, AuditFilter{Since: ts.Add(time.Hour)}); err != nil || len(after) != 0 {
+		t.Fatalf("ListAudit since=ts+1h want 0, got %d err=%v", len(after), err)
+	}
+	if upto, _, err := repo.ListAudit(ctx, AuditFilter{Until: ts}); err != nil || len(upto) != 2 {
+		t.Fatalf("ListAudit until=ts want 2, got %d err=%v", len(upto), err)
+	}
 
 	// --- rollback history ---
 	if err := repo.AppendRollback(ctx, RollbackRecord{ID: "rb-1", DeploymentID: "dep-1",
@@ -268,6 +275,19 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 	}
 	if rbs, err := repo.ListRollbacks(ctx, "no-dep"); err != nil || len(rbs) != 0 {
 		t.Fatalf("ListRollbacks empty: %+v err=%v", rbs, err)
+	}
+
+	// --- device state counts ---
+	states, err := repo.DeviceStateCounts(ctx)
+	if err != nil {
+		t.Fatalf("DeviceStateCounts: %v", err)
+	}
+	var stateTotal int64
+	for _, n := range states {
+		stateTotal += n
+	}
+	if stateTotal < 1 {
+		t.Fatalf("DeviceStateCounts total want >=1, got %d (%+v)", stateTotal, states)
 	}
 
 	// --- delta artifacts ---

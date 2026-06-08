@@ -608,13 +608,23 @@ func (r *PostgresRepository) ListAudit(ctx context.Context, f AuditFilter) ([]Au
 		limit = 50
 	}
 	start := decodeCursor(f.Cursor)
+	// Zero time => unbounded (the $5/$6 IS NULL guard skips the bound).
+	var since, until any
+	if !f.Since.IsZero() {
+		since = f.Since
+	}
+	if !f.Until.IsZero() {
+		until = f.Until
+	}
 	const q = `
 SELECT audit_id, user_id, actor_subject, action, resource_type, resource_id, details,
        ip_address, user_agent, created_at
 FROM helix_ota.audit_logs
 WHERE ($1='' OR action=$1) AND ($2='' OR resource_type=$2)
+  AND ($5::timestamptz IS NULL OR created_at >= $5)
+  AND ($6::timestamptz IS NULL OR created_at <= $6)
 ORDER BY seq OFFSET $3 LIMIT $4`
-	rows, err := r.pool.Query(ctx, q, f.Action, f.ResourceType, start, limit+1)
+	rows, err := r.pool.Query(ctx, q, f.Action, f.ResourceType, start, limit+1, since, until)
 	if err != nil {
 		return nil, "", err
 	}
@@ -667,6 +677,29 @@ FROM helix_ota.delta_artifacts WHERE base_artifact_id=$1 AND target_artifact_id=
 		return DeltaArtifact{}, ErrNotFound
 	}
 	return d, err
+}
+
+// DeviceStateCounts returns fleet device counts keyed by last-known update state
+// (empty bucketed as "unknown"), for /telemetry/overview.
+func (r *PostgresRepository) DeviceStateCounts(ctx context.Context) (map[string]int64, error) {
+	const q = `
+SELECT COALESCE(NULLIF(update_state,''),'unknown') AS state, COUNT(*)
+FROM helix_ota.devices GROUP BY state`
+	rows, err := r.pool.Query(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make(map[string]int64)
+	for rows.Next() {
+		var state string
+		var n int64
+		if serr := rows.Scan(&state, &n); serr != nil {
+			return nil, serr
+		}
+		out[state] = n
+	}
+	return out, rows.Err()
 }
 
 // --- rollback history ---

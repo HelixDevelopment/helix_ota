@@ -469,6 +469,22 @@ func (m *MemoryRepository) FindDelta(_ context.Context, baseArtifactID, targetAr
 	return DeltaArtifact{}, ErrNotFound
 }
 
+// DeviceStateCounts returns the fleet device count keyed by last-known update
+// state (empty/never-reported bucketed as "unknown"), for /telemetry/overview.
+func (m *MemoryRepository) DeviceStateCounts(_ context.Context) (map[string]int64, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make(map[string]int64)
+	for _, d := range m.devices {
+		state := d.UpdateState
+		if state == "" {
+			state = "unknown"
+		}
+		out[state]++
+	}
+	return out, nil
+}
+
 // AppendRollback appends a rollback/abort record (append-only).
 func (m *MemoryRepository) AppendRollback(_ context.Context, r RollbackRecord) error {
 	m.mu.Lock()
@@ -514,6 +530,12 @@ func (m *MemoryRepository) ListAudit(_ context.Context, f AuditFilter) ([]AuditE
 			continue
 		}
 		if f.ResourceType != "" && e.ResourceType != f.ResourceType {
+			continue
+		}
+		if !f.Since.IsZero() && e.CreatedAt.Before(f.Since) {
+			continue
+		}
+		if !f.Until.IsZero() && e.CreatedAt.After(f.Until) {
 			continue
 		}
 		matched = append(matched, e)
