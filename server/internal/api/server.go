@@ -141,6 +141,10 @@ func (s *Server) Router() *gin.Engine {
 		auth.GET("/deployments/:deploymentId/rollout", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRollout)
 		auth.POST("/deployments/:deploymentId/rollout/evaluate", requireRole(RoleOperator, RoleAdmin), s.handleEvaluateRollout)
 
+		// Server-driven recall (rollback) + history (rollback_ux.md §7).
+		auth.POST("/deployments/:deploymentId/recall", requireRole(RoleOperator, RoleAdmin), s.handleRecall)
+		auth.GET("/deployments/:deploymentId/rollbacks", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListRollbacks)
+
 		auth.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
 		auth.POST("/client/telemetry", requireRole(RoleDevice), s.handleClientTelemetry)
 
