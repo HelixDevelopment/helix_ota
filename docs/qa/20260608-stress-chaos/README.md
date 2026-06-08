@@ -27,3 +27,13 @@ rate-limit / concurrency-cap middleware (e.g. token-bucket per client/IP, or a
 bounded in-flight semaphore) before any public exposure. Tracked here as a
 security-hardening gap; the test verifies graceful-under-flood + recovery, and
 will assert load-shedding (429s) once a limiter lands.
+
+### UPDATE — recommendation IMPLEMENTED (2026-06-08)
+The "no rate-limiting" finding above is now addressed: an **in-flight cap
+middleware** (`maxInflightMiddleware`, env `HELIX_MAX_INFLIGHT`, default 0=off)
+sheds excess concurrency with **429 RATE_LIMITED** + `Retry-After`. Proven by
+`TestMaxInflightShedsUnderFlood` (cap=1 under 300 concurrent → 244 shed / 56
+served / responsive post-flood, race-clean) and `TestMaxInflightDisabledByDefault`
+(0 sheds when off — existing behaviour preserved). Operative recommendation now:
+**set `HELIX_MAX_INFLIGHT` to a host-appropriate bound before public exposure**
+(a per-IP token-bucket remains a future refinement on top of the global cap).

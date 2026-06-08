@@ -111,8 +111,10 @@ func (s *Server) newID() string { return s.newIDFn() }
 func (s *Server) Router() *gin.Engine {
 	r := gin.New()
 	// compressionMiddleware negotiates Brotli -> gzip -> identity and sets
-	// `Vary: Accept-Encoding` (superseding the bare varyMiddleware).
-	r.Use(recoveryMiddleware(), requestIDMiddleware(), compressionMiddleware())
+	// `Vary: Accept-Encoding` (superseding the bare varyMiddleware). The optional
+	// in-flight cap (HELIX_MAX_INFLIGHT) sheds excess load with 429 before any
+	// handler work — DoS protection, default-off.
+	r.Use(recoveryMiddleware(), requestIDMiddleware(), maxInflightMiddleware(s.cfg.MaxInflight), compressionMiddleware())
 
 	// Health/readiness are unversioned, unauthenticated operational probes.
 	r.GET("/healthz", s.handleHealthz)
