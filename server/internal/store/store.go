@@ -123,6 +123,19 @@ type AuditEntry struct {
 	CreatedAt    time.Time
 }
 
+// DeltaArtifact links a base artifact + a target artifact to a generated delta
+// payload (migration 004 delta_artifacts; delta_updates_design.md §4). A device
+// on the base can fetch the small delta instead of the full target payload.
+type DeltaArtifact struct {
+	ID               string
+	BaseArtifactID   string
+	TargetArtifactID string
+	SHA256           string
+	Size             int64
+	StorageRef       string
+	CreatedAt        time.Time
+}
+
 // RollbackRecord is one append-only rollback/abort audit row (migration 002
 // rollback_history; rollback_ux.md). Kind is "abort" (halt forward progress) or
 // "rollback" (server-driven recall to a previous release).
@@ -207,6 +220,10 @@ type Repository interface {
 	// Rollback history (rollback_ux.md): append-only abort/recall audit.
 	AppendRollback(ctx context.Context, r RollbackRecord) error
 	ListRollbacks(ctx context.Context, deploymentID string) ([]RollbackRecord, error)
+
+	// Delta artifacts (delta_updates_design.md §4): base->target delta lookup.
+	CreateDelta(ctx context.Context, d DeltaArtifact) error
+	FindDelta(ctx context.Context, baseArtifactID, targetArtifactID string) (DeltaArtifact, error)
 
 	// Device groups (operational_endpoints.md §6). A duplicate group name is a
 	// conflict; membership add/remove is idempotent and requires the group to

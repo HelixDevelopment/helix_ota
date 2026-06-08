@@ -270,6 +270,23 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("ListRollbacks empty: %+v err=%v", rbs, err)
 	}
 
+	// --- delta artifacts ---
+	if err := repo.CreateDelta(ctx, DeltaArtifact{ID: "d-1", BaseArtifactID: "art-base",
+		TargetArtifactID: "art-1", SHA256: "deltahash", Size: 512, StorageRef: "s3://d/1", CreatedAt: ts}); err != nil {
+		t.Fatalf("CreateDelta: %v", err)
+	}
+	// Duplicate (base,target) -> conflict.
+	if err := repo.CreateDelta(ctx, DeltaArtifact{ID: "d-2", BaseArtifactID: "art-base",
+		TargetArtifactID: "art-1", CreatedAt: ts}); !errors.Is(err, ErrConflict) {
+		t.Fatalf("duplicate delta pair want ErrConflict, got %v", err)
+	}
+	if d, err := repo.FindDelta(ctx, "art-base", "art-1"); err != nil || d.ID != "d-1" || d.Size != 512 {
+		t.Fatalf("FindDelta: %+v err=%v", d, err)
+	}
+	if _, err := repo.FindDelta(ctx, "art-base", "no-target"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("FindDelta unknown want ErrNotFound, got %v", err)
+	}
+
 	// --- idempotency ---
 	if _, ok := repo.GetIdempotent(ctx, "k1"); ok {
 		t.Fatalf("GetIdempotent before put should be absent")
