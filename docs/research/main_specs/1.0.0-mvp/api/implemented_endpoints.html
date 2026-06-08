@@ -694,36 +694,45 @@ handler compares <code>claims.Subject</code> to the path
 non-privileged caller reading another device.</li>
 <li><strong>Maps to:</strong>
 <code>handlers_telemetry.go:handleDeviceTelemetry</code>.</li>
-<li><strong>Request:</strong> no body, no query parameters consumed by
-the handler.</li>
-<li><strong>Response 200</strong> (<code>TelemetryHistory</code>):</li>
+<li><strong>Request:</strong> no body. Optional query params
+<code>?limit</code> (1–200, default 50; out-of-range → <code>400</code>)
+and <code>?cursor</code> (opaque non-negative offset from a prior
+<code>next_cursor</code>; malformed → <code>400</code>).</li>
+<li><strong>Response 200</strong> (<code>TelemetryHistory</code>),
+<strong>newest-first</strong>, cursor-paginated:</li>
 </ul>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;device_id&quot;</span><span class="fu">:</span> <span class="st">&quot;8f3a...&quot;</span><span class="fu">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;events&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;event&quot;</span><span class="fu">:</span> <span class="st">&quot;download_started&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;event&quot;</span><span class="fu">:</span> <span class="st">&quot;success&quot;</span><span class="fu">,</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.1.0&quot;</span><span class="fu">,</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;deployment_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...&quot;</span><span class="fu">,</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;error_code&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;detail&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:15:00Z&quot;</span><span class="fu">,</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;received_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:15:01Z&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:16:00Z&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;received_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:16:01Z&quot;</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;next_cursor&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li><strong>Key fields</strong> (<code>TelemetryEventView</code>):
 <code>event</code> (<code>otaprotocol.TelemetryEvent</code>),
 <code>version</code>, <code>deployment_id</code>,
 <code>error_code</code>, <code>detail</code> (all omitempty),
-<code>timestamp</code>, <code>received_at</code>. Events are returned in
-insertion order (the store contract <code>TelemetryForDevice</code>,
-<code>store.go:179–181</code>).</li>
+<code>timestamp</code>, <code>received_at</code>. Items are
+<strong>newest-first</strong>; <code>next_cursor</code> is
+<code>null</code> on the last page. (Spec’s per-item
+<code>duration_ms</code>/<code>bytes_transferred</code> are DEFERRED —
+not ingested yet; spec_impl_alignment.md row 4. Pagination is
+handler-side over the bounded per-device history; a store-level keyset
+paginate is a future optimisation.)</li>
 <li><strong>Status codes:</strong> <code>200</code> OK;
-<code>403 FORBIDDEN</code> (cross-device <code>device</code> token);
-<code>500 INTERNAL</code>
+<code>400 VALIDATION_FAILED</code> (bad
+<code>limit</code>/<code>cursor</code>); <code>403 FORBIDDEN</code>
+(cross-device <code>device</code> token); <code>500 INTERNAL</code>
 (<code>"could not read telemetry"</code>).</li>
 </ul>
 <h3 id="get-apiv1telemetryoverview">5.2 GET
@@ -1209,20 +1218,18 @@ is <code>AuditLogList</code>.</li>
 <p><strong>Telemetry (<code>operational_endpoints.md</code> §5 vs
 <code>handlers_telemetry.go</code>):</strong></p>
 <ul>
-<li><code>GET /devices/{id}/telemetry</code>: the spec specifies
-pagination (<code>?limit</code>/<code>?cursor</code>), filters
-(<code>?event_type</code>, <code>?since</code>, <code>?until</code>,
-<code>?deployment_id</code>), newest-first ordering, and an
-<code>items</code> array with
-<code>id</code>/<code>success</code>/<code>duration_ms</code>/<code>bytes_transferred</code>.
-The built handler takes <strong>no query params</strong>, returns the
-full history in <strong>insertion order</strong> under an
-<strong><code>events</code></strong> key, and the per-event view is
-<code>{event, version, deployment_id, error_code, detail, timestamp, received_at}</code>
-— no <code>id</code>, <code>success</code>, <code>duration_ms</code>, or
-<code>bytes_transferred</code>. It does <strong>not</strong> emit
-<code>404</code> for an unknown device (an empty history is
-returned).</li>
+<li><code>GET /devices/{id}/telemetry</code>: <strong>RESOLVED (commit
+pending)</strong> — now <strong>newest-first</strong>, cursor-paginated
+(<code>?limit</code>/<code>?cursor</code>), with the container key
+<code>items</code> (was <code>events</code>) and a
+<code>next_cursor</code>. DEFERRED (not yet WIDENed): the richer
+per-event fields
+<code>id</code>/<code>success</code>/<code>duration_ms</code>/<code>bytes_transferred</code>
+(UNVERIFIED ingest — the event source does not carry them yet) and the
+<code>?event_type</code>/<code>?since</code>/
+<code>?until</code>/<code>?deployment_id</code> filters. It still does
+<strong>not</strong> emit <code>404</code> for an unknown device (an
+empty page is returned).</li>
 <li><code>GET /telemetry/overview</code>: the spec specifies a rich
 aggregate (<code>scope</code>, <code>devices_total</code>,
 <code>devices_reporting</code>, <code>by_state</code> latest-per-device,

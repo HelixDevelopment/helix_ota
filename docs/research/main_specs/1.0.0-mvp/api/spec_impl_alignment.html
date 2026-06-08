@@ -213,9 +213,16 @@ group row 6 id-key <code>id</code>→<code>group_id</code> + row 8
 member-add → batch <code>{device_ids}</code> → 200
 <code>{added, already_member, not_found}</code>
 (device-registration-aware); <strong>row 1 audit <code>actor</code> →
-object <code>{user_id, subject}</code></strong>. Remaining: row 4
-(per-device telemetry <code>events</code>→<code>items</code> +
-pagination + newest-first), <code>GET /groups/{id}/members</code>
+object <code>{user_id, subject}</code></strong>; <strong>row 4
+structural</strong> — per-device telemetry
+<code>events</code>→<code>items</code> + <code>next_cursor</code>,
+<strong>newest-first</strong>, <code>?limit</code>/<code>?cursor</code>
+pagination (handler-side over bounded history). Remaining: row 4
+DEFERRED bits (richer per-item fields
+<code>duration_ms</code>/<code>bytes_transferred</code> — UNVERIFIED
+ingest;
+<code>?event_type</code>/<code>?since</code>/<code>?until</code>/<code>?deployment_id</code>
+filters), <code>GET /groups/{id}/members</code>
 <code>items[]</code>+<code>added_at</code> (needs a store
 membership-timestamp change), row 7 (group list pagination).</td>
 </tr>
