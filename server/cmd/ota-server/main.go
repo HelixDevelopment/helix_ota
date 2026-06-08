@@ -14,6 +14,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"net/http"
 	"os"
@@ -24,6 +25,7 @@ import (
 	"github.com/HelixDevelopment/helix_ota/server/internal/config"
 	"github.com/HelixDevelopment/helix_ota/server/internal/health"
 	"github.com/HelixDevelopment/helix_ota/server/internal/store"
+	"github.com/HelixDevelopment/helix_ota/server/internal/transport"
 )
 
 func main() {
@@ -66,8 +68,32 @@ func main() {
 
 	router := srv.Router()
 
+	// When TLS material is configured, serve the control plane over HTTP/3
+	// (QUIC) with automatic HTTP/2 fallback via the transport package
+	// (ADR-0004). Otherwise serve plain HTTP for local development.
+	if cfg.TLSCertFile != "" && cfg.TLSKeyFile != "" {
+		cert, certErr := tls.LoadX509KeyPair(cfg.TLSCertFile, cfg.TLSKeyFile)
+		if certErr != nil {
+			log.Fatalf("ota-server: load TLS keypair: %v", certErr)
+		}
+		addr := ":" + cfg.HTTPSPort
+		tsrv, tErr := transport.New(transport.Config{
+			Addr:    addr,
+			Handler: router,
+			TLSConf: &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS13},
+		})
+		if tErr != nil {
+			log.Fatalf("ota-server: transport: %v", tErr)
+		}
+		log.Printf("ota-server: serving HTTP/3 (QUIC) + HTTP/2 on %s (base path %s)", addr, cfg.APIBasePath)
+		if err := tsrv.Start(); err != nil {
+			log.Fatalf("ota-server: serve: %v", err)
+		}
+		return
+	}
+
 	addr := ":" + cfg.Port
-	log.Printf("ota-server: listening on %s (base path %s)", addr, cfg.APIBasePath)
+	log.Printf("ota-server: listening on %s (plain HTTP, base path %s)", addr, cfg.APIBasePath)
 	httpServer := &http.Server{
 		Addr:    addr,
 		Handler: router,

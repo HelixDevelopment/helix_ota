@@ -15,8 +15,10 @@ import (
 
 // Default values used when the corresponding environment variable is unset.
 const (
-	// DefaultPort is the TCP port the HTTP server listens on.
+	// DefaultPort is the TCP port the plain-HTTP server listens on.
 	DefaultPort = "8080"
+	// DefaultHTTPSPort is the port for the TLS HTTP/2 + HTTP/3 listeners.
+	DefaultHTTPSPort = "8443"
 	// DefaultAPIBasePath is the REST base path (endpoints.md §2).
 	DefaultAPIBasePath = "/api/v1"
 	// DefaultPollInterval is the device update-check cadence base (endpoints.md
@@ -70,6 +72,15 @@ type Config struct {
 	// configurations that inject the key by other means (e.g. tests); the upload
 	// handler rejects uploads when no trusted key is configured.
 	ArtifactPublicKey []byte
+
+	// TLSCertFile / TLSKeyFile enable the HTTP/3 (QUIC) + HTTP/2 transport. When
+	// BOTH are set the control plane is served over HTTP/3 with automatic HTTP/2
+	// fallback (ADR-0004) on HTTPSPort; otherwise it serves plain HTTP on Port
+	// (development). Supplied via HELIX_TLS_CERT / HELIX_TLS_KEY.
+	TLSCertFile string
+	TLSKeyFile  string
+	// HTTPSPort is the port for the TLS HTTP/2 (TCP) + HTTP/3 (UDP) listeners.
+	HTTPSPort string
 }
 
 // Load builds a Config from the process environment, applying defaults for any
@@ -85,6 +96,9 @@ func Load() (Config, error) {
 		DeviceTokenTTL:  DefaultDeviceTokenTTL,
 		MaxUploadBytes:  DefaultMaxUploadBytes,
 		ArtifactBaseURL: getEnv("HELIX_ARTIFACT_BASE_URL", DefaultArtifactBaseURL),
+		TLSCertFile:     os.Getenv("HELIX_TLS_CERT"),
+		TLSKeyFile:      os.Getenv("HELIX_TLS_KEY"),
+		HTTPSPort:       getEnv("HELIX_HTTPS_PORT", DefaultHTTPSPort),
 	}
 
 	var err error

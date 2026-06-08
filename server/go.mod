@@ -7,12 +7,13 @@ require (
 	github.com/HelixDevelopment/ota-protocol v0.1.0
 	github.com/HelixDevelopment/ota-rollout-engine v0.1.0
 	github.com/HelixDevelopment/ota-telemetry-schema v0.1.0
+	github.com/andybalholm/brotli v1.2.1
 	github.com/gin-gonic/gin v1.10.1
 	github.com/jackc/pgx/v5 v5.10.0
+	github.com/quic-go/quic-go v0.59.0
 )
 
 require (
-	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -20,11 +21,13 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/quic-go/qpack v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 )
 
 require (
 	digital.vasic.containers v0.0.0-00010101000000-000000000000
+	digital.vasic.http3 v0.0.0-00010101000000-000000000000
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -59,3 +62,5 @@ require (
 )
 
 replace digital.vasic.containers => ../containers
+
+replace digital.vasic.http3 => ../submodules/http3
