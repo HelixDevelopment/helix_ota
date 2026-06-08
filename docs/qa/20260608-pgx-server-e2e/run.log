@@ -1,0 +1,39 @@
+# Helix OTA — e2e challenge against a PostgreSQL-backed server (pgx)
+Run: 2026-06-08T14:05:14Z  HELIX_DATABASE_URL=postgres@127.0.0.1:55447
+2026/06/08 19:05:14 ota-server: persistence = PostgreSQL (pgx)
+----
+== Helix OTA operational + rollout E2E challenge ==
+base_url=http://127.0.0.1:8080 user=admin@helix.test run=e2e-1780927514-85119
+
+[32m[PASS][0m GET /healthz -> 200
+[32m[PASS][0m POST /auth/login (HTTP 200)
+[32m[PASS][0m login token_type is Bearer
+[32m[PASS][0m access_token is a signed claims blob carrying sub + admin role
+[32m[PASS][0m anti-bluff: unauthenticated GET /telemetry/overview -> 401 (auth enforced)
+[32m[PASS][0m POST /devices/register (HTTP 201)
+[32m[PASS][0m device registration returned a device_token
+[32m[PASS][0m GET /devices/{id}/status (HTTP 200)
+[32m[PASS][0m device status echoes device_id
+[32m[PASS][0m POST /groups (HTTP 201)
+[32m[PASS][0m group create echoes name
+[32m[PASS][0m GET /groups/{id} (HTTP 200)
+[32m[PASS][0m GET group echoes name
+[32m[PASS][0m POST /groups/{id}/members (add device) (HTTP 204)
+[32m[PASS][0m GET /groups/{id}/members (HTTP 200)
+[32m[PASS][0m member list contains the added device_id
+[32m[PASS][0m GET /telemetry/overview (HTTP 200)
+[32m[PASS][0m telemetry overview has total + event_counts
+[32m[PASS][0m GET /audit (HTTP 200)
+[32m[PASS][0m audit log is non-empty (3 entries)
+[32m[PASS][0m audit log contains GROUP_CREATE (the group we created was audited)
+[32m[PASS][0m audit log contains GROUP_MEMBER_CREATE (member-add was audited)
+[32m[PASS][0m anti-bluff: GET reads are not audited (only mutations)
+[32m[PASS][0m GET /deployments/{absent}/rollout -> 404 (HTTP 404)
+[32m[PASS][0m POST /deployments/{absent}/rollout -> 404 (deployment-existence gate) (HTTP 404)
+[33m[SKIP][0m full pipeline (upload->release->deploy->rollout create/get/evaluate): requires a server-config-coupled signed artifact; set HELIX_E2E_TRY_PIPELINE=1 + HELIX_E2E_VERIFIED_RELEASE_ID=<id> to drive it. Rollout ROUTES were still asserted deterministically above (step 12).
+[32m[PASS][0m DELETE /groups/{id}/members/{deviceId} -> 204 (HTTP 204)
+[32m[PASS][0m DELETE /groups/{id} -> 204 (HTTP 204)
+[32m[PASS][0m GET /groups/{deleted} -> 404 (deletion is real) (HTTP 404)
+
+== summary: 28 passed, 0 failed, 1 skipped ==
+RESULT: PASS
