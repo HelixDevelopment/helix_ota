@@ -2,10 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-08 |
 | Last modified | 2026-06-08 |
-| Status | planned (research-routed outline — depth follows 1.0.0-MVP and 1.0.1-staged-rollout) |
+| Status | **SUPERSEDED — folded into 1.0.1** (operator decision 2026-06-08) |
+| Superseded-Details | End-user / operator rollback is now part of **1.0.1** (the 1.0.1 outline always carried "End-User Rollback" in its title). This dir is retained as a pointer per §11.4.124 (investigate-before-remove), NOT deleted. The rollback mechanics here remain the design reference; their canonical home is `1.0.1-staged-rollout/`. The DB backing — `rollback_history` — is in **migration 002** (`1.0.0-mvp/database/migrations/002_staged_rollout.up.sql`), already real-DB validated. The `1.0.2` version slot is free; delta-updates stays at `1.0.3`. |
 | Status summary | Folds addition-#3's `ROLLBACK_DESIGN.md` into the canonical numbering. Numbering is LOCKED per synthesis §10 K8: staged-rollout owns **1.0.1**, so rollback lands at **1.0.2** (the source doc self-numbered 1.0.1; re-based here). Scope is the **operator/server-triggered + user-initiated + multi-version superset** of rollback. Automatic A/B boot-failure rollback is already an MVP guarantee (AOSP boot-control HAL) and is **not** new work here — this phase adds the human/operator-driven paths on top of it. |
 | Issues | Source doc carries the addition-#3 stack drift (RSA/mTLS/`rollouts`+`updates` vocabulary, `/api/v1/...` paths, "automatic rollback" framed as new). All re-based onto locked decisions below. Multi-version / true-downgrade is explicitly out of A/B's single-previous-slot reach and needs its own sub-design. Scope boundary with 1.0.1 end-user-rollback bullet must be settled (see §scope_boundary_vs_1_0_1). |
 | Issues summary | Accept the rollback mechanics; reject the divergent stack/vocabulary; do not double-count automatic boot-failure rollback. |
