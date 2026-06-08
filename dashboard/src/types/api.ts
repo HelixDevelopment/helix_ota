@@ -224,9 +224,14 @@ export interface DeviceGroupMembers {
 
 // --- audit (design §6; audit viewer is G3/1.0.1, route deferred) ------------
 
+export interface AuditActor {
+  user_id?: string;
+  subject: string;
+}
+
 export interface AuditEntry {
   id: string;
-  actor: string;
+  actor: AuditActor;
   action: string;
   at: string;
   request_id?: string;

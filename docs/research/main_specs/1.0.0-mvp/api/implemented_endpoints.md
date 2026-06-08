@@ -127,7 +127,7 @@ Reads the audit trail. Admin-only.
   "items": [
     {
       "id": "9c2f...",
-      "actor": "admin@example.com",
+      "actor": { "user_id": "", "subject": "admin@example.com" },
       "action": "DEPLOYMENT_CREATE",
       "resource_type": "deployment",
       "resource_id": "d12b...",
@@ -141,8 +141,9 @@ Reads the audit trail. Admin-only.
 }
 ```
 
-- **Key fields** (`AuditLogEntry`): `id`, `actor` (a **flat string** — the actor subject, falling
-  back to the user id; `audit_wire.go:toAuditLogEntry`), `action`, `resource_type`,
+- **Key fields** (`AuditLogEntry`): `id`, `actor` (an **object** `{ user_id, subject }` —
+  `user_id` is the durable users-row key (empty/omitted when the actor doesn't resolve to a row),
+  `subject` is the token subject; `audit_wire.go:AuditActor`/`toAuditLogEntry`), `action`, `resource_type`,
   `resource_id` (omitempty), `details` (string→string map, omitempty), `ip_address` (omitempty),
   `user_agent` (omitempty), `created_at`. `next_cursor` is `*string` (JSON `null` when exhausted).
 - **Status codes:** `200` OK; `400 VALIDATION_FAILED` (bad `limit`, or non-RFC3339 `since`/`until`);
@@ -509,8 +510,8 @@ since been closed in code are marked **RESOLVED** with the landing commit.
 
 **Audit (`operational_endpoints.md` §4 vs `handlers_audit.go`):**
 
-- The spec's `actor` is a nested object `{ user_id, subject }`; the built `AuditLogEntry.actor` is
-  a **flat string** (subject, falling back to user id).
+- **RESOLVED (commit pending):** `AuditLogEntry.actor` is now the spec's nested object
+  `{ user_id, subject }` (WIDENed to match the spec; `user_id` omitempty when unresolved).
 - **RESOLVED (commit `028e656`):** the audit handler now also consumes `?since` and `?until`
   (RFC3339; bad format → `400`), implementing the spec's time-window filter (`store.AuditFilter.Since`/
   `.Until`). The remaining gap is `?actor`/`?resource_id` filtering, which is still **not**
