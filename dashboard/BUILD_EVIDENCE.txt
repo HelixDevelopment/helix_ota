@@ -128,3 +128,70 @@ dist/index.html                  0.59 kB │ gzip:  0.43 kB
 dist/assets/index-CJ4q6gl6.js  195.83 kB │ gzip: 62.30 kB │ map: 816.90 kB
 ✓ built in 491ms
 build exit code: 0
+
+================================================================================
+Captured: 2026-06-08T16:02:24Z (real output, no bluff per Constitution §11.4)
+Host: Darwin 24.5.0 arm64
+node: v22.22.3   npm: 10.9.8
+Directory: /Volumes/T7/Projects/helix_ota/dashboard
+
+Change: Fleshed out functional dashboard screens consuming the now-complete API.
+  - types/api.ts: ALIGNED to the REAL server wire (server/internal/api/*.go):
+    * rollout — replaced the stale percentage/paused model with the phase-based
+      model: RolloutPhaseSpec, RolloutCreate {phases}, RolloutState
+      {status,current_phase,phases,updated_at}, RolloutVerdict
+      {success_rate,error_rate,post_boot_health_failed}, RolloutDecision
+      {action,reason,state}.
+    * recall — added RecallRequest {to_release_id,reason?}, RollbackRecord,
+      RollbackList (POST /deployments/{id}/recall + GET .../rollbacks).
+    * telemetry — TelemetryEventView {event,version?,timestamp,received_at,…};
+      TelemetryHistory.items + next_cursor:null; TelemetryOverview
+      {event_counts,total,failure_rate,by_state} (was total_devices/
+      by_update_state/by_version — those fields do not exist on the server).
+    * audit — AuditEntry {actor{subject,user_id?},action,resource_type,
+      resource_id?,ip_address?,created_at}; AuditQuery {action,resource_type,
+      since,until,limit,cursor}.
+    * groups — DeviceGroup/DeviceGroupCreate gained optional description.
+  - api/client.ts: createRollout / evaluateRollout (phase model),
+    recallDeployment / listRollbacks, listAudit(AuditQuery) with since/until.
+  - screens/FleetScreen.tsx: rewritten to consume telemetry overview
+    failure_rate (% + bar) + by_state + event_counts tables; device telemetry
+    uses TelemetryEventView; graceful 404 empty states.
+  - screens/DeploymentsScreen.tsx: rollout panel rewritten to the real API
+    (start phased plan / phase table / evaluate verdict → engine decision);
+    new RecallPanel (recall to a release + rollback history).
+  - screens/GroupsScreen.tsx (NEW): list (member_count), create (name +
+    description), detail with batch add-members showing added/already_member/
+    not_found dispositions + members list with added_at.
+  - screens/AuditScreen.tsx (NEW): since/until datetime filter + action/
+    resource_type filters; table shows actor.subject (+user_id), action,
+    resource, ip, created_at.
+  - App.tsx routes + AppShell.tsx nav: added Groups + Audit.
+  - Auth/refresh layer left fully intact.
+
+=== command: npm run typecheck  (tsc --noEmit, app tsconfig + node tsconfig) ===
+
+> ota-dashboard@1.0.0-mvp typecheck
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json
+
+typecheck exit code: 0
+
+=== command: npm run build  (tsc --noEmit x2 && vite build) ===
+
+> ota-dashboard@1.0.0-mvp build
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 46 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.59 kB │ gzip:  0.43 kB
+dist/assets/index-BySoCjgI.js  209.44 kB │ gzip: 65.11 kB │ map: 860.19 kB
+✓ built in 682ms
+build exit code: 0
+
+=== screens present in source (src/screens) ===
+ArtifactUploadScreen.tsx  AuditScreen.tsx  DeploymentsScreen.tsx
+FleetScreen.tsx  GroupsScreen.tsx  LoginScreen.tsx  OverviewScreen.tsx
+ReleasesScreen.tsx

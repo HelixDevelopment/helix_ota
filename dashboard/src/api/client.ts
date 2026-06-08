@@ -13,6 +13,7 @@ import type {
   Artifact,
   ArtifactUploadMetadata,
   AuditList,
+  AuditQuery,
   Deployment,
   DeploymentCreate,
   DeploymentStatus,
@@ -25,11 +26,16 @@ import type {
   DeviceStatus,
   HealthStatus,
   LoginRequest,
+  RecallRequest,
   Release,
   ReleaseCreate,
   ReleaseList,
-  RolloutCommand,
+  RollbackList,
+  RollbackRecord,
+  RolloutCreate,
+  RolloutDecision,
   RolloutState,
+  RolloutVerdict,
   TelemetryHistory,
   TelemetryOverview,
   TokenResponse,
@@ -234,17 +240,43 @@ export class ApiClient {
     return this.json<DeploymentStatus>(`/deployments/${encodeURIComponent(id)}`);
   }
 
-  // Rollout panel (staged rollout API is G7/1.0.1, routes flagged UNVERIFIED — design §13).
+  // Staged rollout (1.0.1). GET state degrades gracefully (404 when the
+  // deployment has no rollout). POST creates+starts a phase plan.
   getRollout(deploymentId: string): Promise<RolloutState> {
     return this.json<RolloutState>(
       `/deployments/${encodeURIComponent(deploymentId)}/rollout`,
     );
   }
 
-  postRollout(deploymentId: string, cmd: RolloutCommand): Promise<RolloutState> {
+  createRollout(deploymentId: string, req: RolloutCreate): Promise<RolloutState> {
     return this.json<RolloutState>(
       `/deployments/${encodeURIComponent(deploymentId)}/rollout`,
-      { method: "POST", body: cmd },
+      { method: "POST", body: req },
+    );
+  }
+
+  // Apply a health verdict to the current phase; returns the engine decision.
+  evaluateRollout(
+    deploymentId: string,
+    verdict: RolloutVerdict,
+  ): Promise<RolloutDecision> {
+    return this.json<RolloutDecision>(
+      `/deployments/${encodeURIComponent(deploymentId)}/rollout/evaluate`,
+      { method: "POST", body: verdict },
+    );
+  }
+
+  // Server-driven recall (rollback) of a deployment to a previous-good release.
+  recallDeployment(deploymentId: string, req: RecallRequest): Promise<RollbackRecord> {
+    return this.json<RollbackRecord>(
+      `/deployments/${encodeURIComponent(deploymentId)}/recall`,
+      { method: "POST", body: req },
+    );
+  }
+
+  listRollbacks(deploymentId: string): Promise<RollbackList> {
+    return this.json<RollbackList>(
+      `/deployments/${encodeURIComponent(deploymentId)}/rollbacks`,
     );
   }
 
@@ -293,10 +325,12 @@ export class ApiClient {
     );
   }
 
-  // --- audit (design §6; G3/1.0.1) -----------------------------------------
-
-  listAudit(query?: { limit?: number; cursor?: string }): Promise<AuditList> {
-    return this.json<AuditList>("/audit", { query });
+  // --- audit (operational_endpoints.md §4; admin-only) ----------------------
+  // Supports ?action/?resource_type filters + ?since/?until RFC3339 bounds.
+  listAudit(query?: AuditQuery): Promise<AuditList> {
+    // Spread into a plain record so the typed AuditQuery interface satisfies the
+    // RequestOptions.query index signature.
+    return this.json<AuditList>("/audit", { query: query ? { ...query } : undefined });
   }
 
   // --- health (best-effort; not a defined MVP route — design §8) ------------

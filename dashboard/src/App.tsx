@@ -23,6 +23,8 @@ import {
   DeploymentList,
 } from "./screens/DeploymentsScreen";
 import { DeviceDetail, FleetHealth } from "./screens/FleetScreen";
+import { GroupCreateScreen, GroupDetail, GroupList } from "./screens/GroupsScreen";
+import { AuditScreen } from "./screens/AuditScreen";
 
 export function App() {
   return (
@@ -55,6 +57,10 @@ export function App() {
             <Route path="deployments/:deploymentId" element={<DeploymentDetail />} />
             <Route path="fleet" element={<FleetHealth />} />
             <Route path="fleet/:deviceId" element={<DeviceDetail />} />
+            <Route path="groups" element={<GroupList />} />
+            <Route path="groups/new" element={<GroupCreateScreen />} />
+            <Route path="groups/:groupId" element={<GroupDetail />} />
+            <Route path="audit" element={<AuditScreen />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
