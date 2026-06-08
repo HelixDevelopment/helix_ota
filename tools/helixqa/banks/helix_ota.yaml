@@ -221,3 +221,42 @@ bank:
       skip_lines:
         - "full pipeline (upload->release->deploy->rollout create/get/evaluate): requires a server-config-coupled signed artifact ... (SKIP)"
       evidence_artifact: tests/e2e/RUN_EVIDENCE.txt
+
+    - id: HOTA-PIPELINE-SIGNED
+      title: Signed artifact full pipeline reaches a delta-bearing update check
+      capability_area: artifact-pipeline-signed
+      dispatch_command: >-
+        bash tests/e2e/pipeline_signed.sh
+      pass_criterion: >-
+        With a real ephemeral ed25519 key configured on the server, the full happy
+        path PASSes end to end: upload signed BASE+TARGET -> 201 (verified=true);
+        releases -> 201; deployment -> 201; rollout create -> 201, get -> 200,
+        evaluate -> 200 (action advance); POST /deltas -> 201; GET /client/update
+        (device on base) -> 200 carrying both the full payload AND a populated
+        .delta (base_version + matching delta sha256). Anti-bluff control: a bogus
+        signature -> 422 SIGNATURE_INVALID (the server genuinely verifies). Keys are
+        ephemeral (mktemp, rm'd on exit; §11.4.10). 32 passed / 0 failed / 0 skipped.
+      asserted_lines:
+        - "upload signed base v1.0.0 -> 201 (verified true)"
+        - "GET /client/update -> 200 with populated .delta (base_version 1.0.0)"
+        - "bogus signature -> 422 SIGNATURE_INVALID"
+      evidence_artifact: tests/e2e/PIPELINE_EVIDENCE.txt
+
+    - id: HOTA-SECURITY-PROBES
+      title: Adversarial security probes (authn/authz/ownership/injection/trust-boundary)
+      capability_area: security
+      dispatch_command: >-
+        bash tests/security/security_probes.sh
+      pass_criterion: >-
+        Black-box adversarial suite against the live server: unauthenticated calls
+        -> 401; device-role token on operator/admin routes -> 403; cross-device
+        telemetry read/write -> 403 (own -> 200); forged/mutated/empty JWT -> 401;
+        SQL/XSS/NoSQL/path-traversal inputs are inert (no 5xx; stored verbatim or
+        400/404); malformed + 1 MiB JSON -> 400 not 5xx; trust boundary — an
+        attacker-supplied public_key form field -> 422 (the verify key is config-only).
+        37 passed / 0 failed / 0 skipped.
+      asserted_lines:
+        - "unauthenticated -> 401 across telemetry/audit/groups/devices"
+        - "device-role on operator/admin routes -> 403"
+        - "attacker-supplied public_key -> 422 (config-only trust boundary)"
+      evidence_artifact: tests/security/RUN_EVIDENCE.txt
