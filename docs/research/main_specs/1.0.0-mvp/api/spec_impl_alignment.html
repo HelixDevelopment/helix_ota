@@ -190,7 +190,7 @@ OTA — Spec-vs-Implementation Alignment Decision Memo (operational
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Last modified</td>
@@ -202,24 +202,25 @@ OTA — Spec-vs-Implementation Alignment Decision Memo (operational
 </tr>
 <tr>
 <td>Status</td>
-<td>active (decision memo — additive WIDENs landed; breaking ones
+<td>active (decision memo — all additive WIDENs landed; breaking ones
 pending operator ruling)</td>
 </tr>
 <tr>
-<td>Landed (2026-06-08, operator-approved additive WIDENs, commit
-028e656)</td>
+<td>Landed (2026-06-08, operator-approved additive WIDENs)</td>
 <td><strong>Row 2 (audit query filters)</strong> —
-<code>?since</code>/<code>?until</code> RFC3339 bounds implemented on
-<code>GET /audit</code> (memory + pgx, real-DB parity). <strong>Row 5
-core (telemetry overview)</strong> —
+<code>?since</code>/<code>?until</code> RFC3339 bounds on
+<code>GET /audit</code> (028e656). <strong>Row 5 core (telemetry
+overview)</strong> —
 <code>failure_rate = failure/(success+failure)</code> +
-<code>by_state</code> (device-state map) added to
-<code>GET /telemetry/overview</code>; both additive (new optional params
-/ new JSON fields), wire-compatible, no contract break. Remaining rows
-(1 audit actor object, 4 per-device telemetry
-pagination/<code>events</code>→<code>items</code>, 8 batch member-add)
-are BREAKING wire changes still gated behind an operator WIDEN/TRIM
-ruling.</td>
+<code>by_state</code> (028e656). <strong>Row 6 partial
+(<code>member_count</code>)</strong> — added to <code>GroupView</code>
+on get/list/update (live count via <code>ListGroupMembers</code>). All
+three additive (new optional params / new JSON fields), wire-compatible,
+real-DB parity where a store change applied. Remaining rows (1 audit
+actor object, 4 per-device telemetry
+pagination/<code>events</code>→<code>items</code>, 8 batch member-add,
+plus the <code>id</code>→<code>group_id</code> rename) are BREAKING wire
+changes still gated behind an operator WIDEN/TRIM ruling.</td>
 </tr>
 <tr>
 <td>Status summary</td>
