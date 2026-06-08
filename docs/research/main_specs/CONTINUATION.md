@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
-| Status | active — paused end of day, resume tomorrow with "continue" |
+| Last modified | 2026-06-08 |
+| Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
 
 ## How to resume
@@ -21,6 +21,16 @@ Type **`continue`** in a new session. Read this file + the memory index first. A
 - New submodule repos auto-created PUBLIC on GitHub + GitLab (pre-authorized).
 - `docs/research/main_specs/additions/` files are authoritative input — always analyze + fold in.
 - Commit + push to ALL upstreams regularly. Merge to `main` when a milestone is done.
+
+## Session 2026-06-08 update (DONE, on `main`, pushed all 4 upstreams)
+
+- **Constitution submodule relocated** `HelixConstitution/` → **`constitution/`** (repo/URL unchanged) via `git mv`; fixed the only filesystem path refs (`tests/test_strategy.md`, `additions/initial_research_01.md`) incl. their pre-existing off-by-one link depth. Prose "HelixConstitution" clause citations (the repo NAME) intentionally left.
+- **Inheritance wired**: parent `CLAUDE.md`, `AGENTS.md`, `docs/guides/HELIX_OTA_CONSTITUTION.md` inherit from the submodule; `tests/inheritance_gate.sh` (5 invariants, matches the exact §11.4 forensic-anchor heading) + `tests/test_constitution_inheritance.sh` (gate green clean + **§1.1 paired-mutation proven** via `constitution/meta_test_inheritance.sh` + recursive submodule pointer check) + `tests/pre_build_verification.sh` + installed pre-commit hook. All 6 owned `ota-*` submodules carry CLAUDE.md+AGENTS.md inheritance pointers (pushed github+gitlab; gitlinks bumped to `v0.1.0-1-g…`). Commits ee5dc7d, e11a221.
+- **All 3 additions processed** (operator mandate — nothing skipped): per-input exhaustive inventories in `research/additions_analysis/0{1,2,3}_analysis.md`; `research/additions_synthesis.md` → **Rev 2** with consolidated 14-gap register (§8), new-work routing (§9), addition-#3 conflict reconciliation (§10, locks Gin/ed25519/JWT/releases+deployments/≥90%), future-phase catalogue (§11), UNVERIFIED register (§12). MVP-critical **G1 (anti-downgrade invariant)** implemented as regression tests; `handleClientUpdate` 79.3%→86.2%. Commit 629b4eb.
+- **Constitution path is now `constitution/`** — update any new references accordingly.
+
+### Carried-forward gaps from the additions (routed, not blockers)
+Dashboard spec/repo (G6), full staged-rollout engine spec 1.0.1 (G7), audit subsystem (G3), telemetry read/analytics API (G4), device-group CRUD (G5), CI/governance (G10), NFR/load harness (G12). See `additions_synthesis.md` §8/§9. Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
 
 ## DONE (verified, on `main`, pushed)
 
