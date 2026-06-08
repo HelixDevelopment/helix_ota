@@ -245,6 +245,12 @@ func (r *PostgresRepository) GetRelease(ctx context.Context, releaseID string) (
 	return scanRelease(r.pool.QueryRow(ctx, releaseSelect+` WHERE release_id=$1`, releaseID))
 }
 
+func (r *PostgresRepository) ReleaseByVersion(ctx context.Context, os otaprotocol.OSType, targetModel, version string) (Release, error) {
+	return scanRelease(r.pool.QueryRow(ctx,
+		releaseSelect+` WHERE os_type=$1 AND target_model=$2 AND version=$3 ORDER BY seq LIMIT 1`,
+		string(os), targetModel, version))
+}
+
 // LatestRelease reduces with the validator's dotted comparator in Go, matching
 // MemoryRepository's S4 monotonicity semantics exactly.
 func (r *PostgresRepository) LatestRelease(ctx context.Context, os otaprotocol.OSType, targetModel string) (Release, error) {

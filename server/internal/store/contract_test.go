@@ -97,6 +97,13 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 	if got, err := repo.GetRelease(ctx, "rel-1"); err != nil || got.Version != "1.0.0" {
 		t.Fatalf("GetRelease: %+v err=%v", got, err)
 	}
+	// ReleaseByVersion resolves an exact os+target+version (delta base lookup).
+	if got, err := repo.ReleaseByVersion(ctx, otaprotocol.OSAndroid, "OrangePi5Max", "1.2.0"); err != nil || got.ReleaseID != "rel-2" {
+		t.Fatalf("ReleaseByVersion: %+v err=%v", got, err)
+	}
+	if _, err := repo.ReleaseByVersion(ctx, otaprotocol.OSAndroid, "OrangePi5Max", "9.9.9"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("ReleaseByVersion unknown want ErrNotFound, got %v", err)
+	}
 	// LatestRelease uses the dotted comparator: 1.2.0 > 1.0.0.
 	if latest, err := repo.LatestRelease(ctx, otaprotocol.OSAndroid, "OrangePi5Max"); err != nil || latest.Version != "1.2.0" {
 		t.Fatalf("LatestRelease want 1.2.0, got %+v err=%v", latest, err)
