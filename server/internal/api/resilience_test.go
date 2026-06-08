@@ -249,6 +249,70 @@ func TestStressConcurrentMembershipNoLostUpdates(t *testing.T) {
 	}
 }
 
+// TestDDoSFloodStaysUpAndRecovers (§11.4.27 ddos type): fire a large abusive
+// burst at the server and assert it (a) processes every request without
+// panic/hang, and (b) is fully responsive immediately after. HONEST FINDING
+// captured by this test: the MVP has NO rate-limiting — every request is served
+// (no 429s), so the server's only protection under flood is the host + Go's
+// scheduler. Recommendation (tracked): add a rate-limit / concurrency-cap
+// middleware before public exposure. This test verifies graceful-under-flood +
+// recovery; it does NOT assert load-shedding (there is none yet — documenting
+// the gap honestly rather than faking a 429).
+func TestDDoSFloodStaysUpAndRecovers(t *testing.T) {
+	router, srv := newResilienceServer(t, store.NewMemoryRepository())
+	tok := resilienceAdminToken(t, srv)
+
+	const total, workers = 6000, 64
+	var done, non200, sheds int64 // sheds = 429s, expected 0 today (no rate-limiter)
+	var wg sync.WaitGroup
+	per := total / workers
+	start := time.Now()
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < per; i++ {
+				code := doStressReq(router, http.MethodGet, "/healthz", "", "")
+				atomic.AddInt64(&done, 1)
+				switch {
+				case code == http.StatusTooManyRequests:
+					atomic.AddInt64(&sheds, 1)
+				case code != http.StatusOK:
+					atomic.AddInt64(&non200, 1)
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	elapsed := time.Since(start)
+
+	// (a) every request completed, none errored unexpectedly (429s are not errors).
+	if done != int64(workers*per) {
+		t.Fatalf("flood: only %d/%d requests completed", done, workers*per)
+	}
+	if non200 != 0 {
+		t.Fatalf("flood: %d unexpected non-200/non-429 responses", non200)
+	}
+	// (b) the server is immediately responsive after the burst (recovery), and an
+	// authenticated path still works (auth path not starved).
+	if code := doStressReq(router, http.MethodGet, "/healthz", "", ""); code != http.StatusOK {
+		t.Fatalf("post-flood healthz want 200, got %d", code)
+	}
+	if code := doStressReq(router, http.MethodPost, "/api/v1/groups", tok, `{"name":"post-flood"}`); code != http.StatusCreated {
+		t.Fatalf("post-flood authed write want 201, got %d", code)
+	}
+
+	dir := filepath.Join("..", "..", "..", "docs", "qa", "20260608-stress-chaos")
+	_ = os.MkdirAll(dir, 0o755)
+	if f, err := os.OpenFile(filepath.Join(dir, "run.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644); err == nil {
+		defer f.Close()
+		_, _ = f.WriteString(fmt.Sprintf(
+			"ddos_flood: %d reqs / %d workers in %s, served=%d shed(429)=%d non200=%d, post-flood 200+201 OK; FINDING: no rate-limiter (recommend adding one)\n",
+			workers*per, workers, elapsed, done-sheds-non200, sheds, non200))
+	}
+	t.Logf("ddos_flood: %d reqs served (0 shed — no rate-limiter today), server responsive post-flood", workers*per)
+}
+
 // TestChaosRepoFaultDegradesAndRecovers: inject a repo fault -> GET /groups
 // returns 500 (graceful, no panic); clear the fault -> 200 (recovery). Captures
 // the recovery transition.

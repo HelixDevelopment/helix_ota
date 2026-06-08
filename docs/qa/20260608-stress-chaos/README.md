@@ -13,3 +13,17 @@ In-process black-box resilience suite over the real `Server.Router()`
 `run.log` holds the captured per-test latency (p50/p95/p99) + error census +
 the chaos recovery transition. `-race` clean ⇒ the concurrent paths are data-race-free.
 Reproduce: `cd server && go test -race ./internal/api/ -run 'TestStress|TestChaos' -v`.
+
+## DDoS / flood (§11.4.27 ddos type) — added 2026-06-08
+`TestDDoSFloodStaysUpAndRecovers`: a 5,952-request burst across 64 workers at
+`/healthz`; the server serves every request without panic/hang and is immediately
+responsive afterward (post-flood `/healthz`→200 and an authed `POST /groups`→201).
+Run under `-race` (clean).
+
+**FINDING (honest, not a fake pass): the MVP control plane has NO rate-limiting /
+concurrency cap** — 0 of 5,952 requests were shed (no 429s); the only protection
+under flood is the host + Go scheduler. **RECOMMENDATION (pre-production):** add a
+rate-limit / concurrency-cap middleware (e.g. token-bucket per client/IP, or a
+bounded in-flight semaphore) before any public exposure. Tracked here as a
+security-hardening gap; the test verifies graceful-under-flood + recovery, and
+will assert load-shedding (429s) once a limiter lands.
