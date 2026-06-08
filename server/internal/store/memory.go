@@ -293,8 +293,13 @@ func (m *MemoryRepository) GetIdempotent(_ context.Context, key string) (string,
 }
 
 // PutIdempotent records an Idempotency-Key -> result id mapping.
+// PutIdempotent records the result for an Idempotency-Key. It is first-write-wins:
+// a replayed request must return the ORIGINAL result, so an existing key is never
+// overwritten (matches the pgx repository's ON CONFLICT DO NOTHING).
 func (m *MemoryRepository) PutIdempotent(_ context.Context, key, resultID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.idem[key] = resultID
+	if _, exists := m.idem[key]; !exists {
+		m.idem[key] = resultID
+	}
 }
