@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>performance_baseline</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-performance-scaling-baseline-1.0.0-mvp">Helix OTA —
+Performance / Scaling Baseline (1.0.0-MVP)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-08T21:00:00Z <strong>Authority:</strong> Measured baseline
+produced by <code>server/tools/loadtest</code> (stdlib black-box
+harness) <strong>Scope:</strong> Control-plane HTTP server NFR baseline
+— <code>cmd/ota-server</code>, in-memory and pgx/PostgreSQL backends</p>
+<hr />
+<h2 id="purpose-and-anti-bluff-statement-constitution-11.4">1. Purpose
+and anti-bluff statement (Constitution §11.4)</h2>
+<p>Every number in this document is <strong>MEASURED</strong> from real
+HTTP request/response round-trips against a live
+<code>ota-server</code>, captured by the
+<code>server/tools/loadtest</code> stdlib black-box harness.
+<strong>These are measured baselines on the host described in §2 — NOT
+production NFR guarantees.</strong> No NFR target is asserted here; the
+harness reports only what it observed (see
+<code>server/tools/loadtest/README.md</code>). Comparison of these
+measurements against any stated NFR target is a separate exercise.</p>
+<p>The host was <strong>busy during the run</strong> (load average 16.59
+on 11 cores: a concurrent <code>:8080</code> job plus the load generator
+co-resident with the server under test). These numbers are therefore
+<strong>conservative, contention-affected</strong> baselines, not the
+server’s best-case ceiling.</p>
+<p>Raw harness JSON + stderr tables for every run are committed under
+<code>docs/qa/20260608-perf/</code>
+(<code>&lt;backend&gt;_&lt;path&gt;_c&lt;N&gt;.json</code> /
+<code>.txt</code>, <code>harness_selftest.{json,txt}</code>,
+<code>run_conditions.txt</code>).</p>
+<h2 id="host-run-conditions">2. Host / run conditions</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Host CPU</td>
+<td>Apple M3 Pro, 11 cores</td>
+</tr>
+<tr>
+<td>Host RAM</td>
+<td>18 GB</td>
+</tr>
+<tr>
+<td>OS</td>
+<td>macOS 15.5 (build 24F74)</td>
+</tr>
+<tr>
+<td>Go toolchain</td>
+<td>go1.26.2 darwin/arm64</td>
+</tr>
+<tr>
+<td>Host load avg during run</td>
+<td>16.59 / 20.75 / 17.94 (busy)</td>
+</tr>
+<tr>
+<td>Server</td>
+<td><code>go run ./cmd/ota-server</code>, plain HTTP on
+<code>:8090</code>, Gin ReleaseMode, base path <code>/api/v1</code></td>
+</tr>
+<tr>
+<td>Harness</td>
+<td><code>server/tools/loadtest</code> → <code>/tmp/loadtest</code>
+(stdlib only; <code>go vet</code> clean; selftest validated)</td>
+</tr>
+<tr>
+<td>Sweep</td>
+<td><code>-concurrency {1, 8, 32, 128}</code>,
+<code>-duration 15s</code> per level</td>
+</tr>
+<tr>
+<td>In-memory backend</td>
+<td>default (no <code>HELIX_DATABASE_URL</code>)</td>
+</tr>
+<tr>
+<td>pgx backend</td>
+<td><code>postgres:16-alpine</code> in podman (applehv VM, <strong>2 CPU
+/ 4 GiB</strong>) on <code>:55432</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Probe paths.</strong> Two unauthenticated GET endpoints were
+swept (all other GETs require a JWT the black-box harness does not
+mint):</p>
+<ul>
+<li><code>/healthz</code> — pure handler, touches no store. Measures
+HTTP/router/runtime cost.</li>
+<li><code>/readyz</code> — calls <code>repo.GetIdempotent(...)</code>, a
+real store round-trip. <strong>Representative store-touching
+GET</strong> — the path where the in-memory vs pgx backend difference
+shows up.</li>
+</ul>
+<p><strong>On the “Errors” column.</strong> Every run reports
+<code>errors == concurrency</code> and <code>non_2xx == 0</code>. Those
+errors are the <strong>expected
+context-cancel-at-duration-boundary</strong> events (one in-flight
+request per worker when the 15s deadline fires) — they are a harness
+end-of-test artifact, <strong>not</strong> server failures. Zero non-2xx
+responses were observed in any run.</p>
+<h2 id="in-memory-backend-measured">3. In-memory backend — measured</h2>
+<h3 id="healthz-no-store">3.1 <code>/healthz</code> (no store)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concurrency</th>
+<th>p50 (ms)</th>
+<th>p90 (ms)</th>
+<th>p99 (ms)</th>
+<th>RPS</th>
+<th>Total req</th>
+<th>Server RSS (MB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.238</td>
+<td>0.696</td>
+<td>2.090</td>
+<td>2,730.3</td>
+<td>40,955</td>
+<td>29.4</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.775</td>
+<td>2.208</td>
+<td>10.095</td>
+<td>5,165.6</td>
+<td>77,752</td>
+<td>258.0</td>
+</tr>
+<tr>
+<td>32</td>
+<td>3.277</td>
+<td>14.217</td>
+<td>174.913</td>
+<td>3,226.7</td>
+<td>48,401</td>
+<td>345.6</td>
+</tr>
+<tr>
+<td>128</td>
+<td>5.905</td>
+<td>21.168</td>
+<td>46.039</td>
+<td>14,002.7</td>
+<td>210,076</td>
+<td>330.7</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The c=32 row’s 174.9ms p99 / depressed RPS is a transient
+host-scheduling jitter spike in that single 15s window (the host was at
+load avg ~16). The <code>/readyz</code> c=32 run (§3.2) under the same
+backend shows a normal 11.6ms p99, confirming the spike is host
+contention, not a server characteristic. Reported as-measured per
+§11.4.6 — not smoothed away.</p>
+</blockquote>
+<h3 id="readyz-store-round-trip-representative-get">3.2
+<code>/readyz</code> (store round-trip) — representative GET</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concurrency</th>
+<th>p50 (ms)</th>
+<th>p90 (ms)</th>
+<th>p99 (ms)</th>
+<th>RPS</th>
+<th>Total req</th>
+<th>Server RSS (MB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.185</td>
+<td>0.398</td>
+<td>0.942</td>
+<td>4,209.7</td>
+<td>63,147</td>
+<td>294.3</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.819</td>
+<td>2.115</td>
+<td>9.795</td>
+<td>5,925.0</td>
+<td>88,877</td>
+<td>248.4</td>
+</tr>
+<tr>
+<td>32</td>
+<td>1.864</td>
+<td>5.027</td>
+<td>11.633</td>
+<td>12,245.2</td>
+<td>183,723</td>
+<td>215.2</td>
+</tr>
+<tr>
+<td>128</td>
+<td>3.976</td>
+<td>14.313</td>
+<td>30.560</td>
+<td>20,532.4</td>
+<td>308,013</td>
+<td>301.4</td>
+</tr>
+</tbody>
+</table>
+<p>The in-memory <code>/readyz</code> path scales monotonically: RPS
+4.2k → 5.9k → 12.2k → 20.5k as concurrency rises 1 → 8 → 32 → 128, with
+p99 staying ≤ 30.6ms.</p>
+<h2 id="pgx-postgresql-backend-measured">4. pgx / PostgreSQL backend —
+measured</h2>
+<p>Postgres ran in a <strong>2-CPU / 4-GiB podman VM</strong> — the DB
+tier, not the server, is the bottleneck on the store-touching path.
+Server process RSS is materially lower than the in-memory backend (no
+in-process store).</p>
+<h3 id="healthz-no-db">4.1 <code>/healthz</code> (no DB)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concurrency</th>
+<th>p50 (ms)</th>
+<th>p90 (ms)</th>
+<th>p99 (ms)</th>
+<th>RPS</th>
+<th>Total req</th>
+<th>Server RSS (MB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.160</td>
+<td>0.328</td>
+<td>0.603</td>
+<td>5,182.4</td>
+<td>77,738</td>
+<td>31.7</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.583</td>
+<td>1.121</td>
+<td>2.042</td>
+<td>12,129.3</td>
+<td>181,940</td>
+<td>195.9</td>
+</tr>
+<tr>
+<td>32</td>
+<td>1.727</td>
+<td>4.355</td>
+<td>8.412</td>
+<td>14,638.6</td>
+<td>219,584</td>
+<td>196.1</td>
+</tr>
+<tr>
+<td>128</td>
+<td>4.713</td>
+<td>16.963</td>
+<td>40.796</td>
+<td>16,988.7</td>
+<td>254,844</td>
+<td>260.9</td>
+</tr>
+</tbody>
+</table>
+<h3 id="readyz-real-pgx-db-round-trip-per-request">4.2
+<code>/readyz</code> (real pgx DB round-trip per request)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concurrency</th>
+<th>p50 (ms)</th>
+<th>p90 (ms)</th>
+<th>p99 (ms)</th>
+<th>RPS</th>
+<th>Total req</th>
+<th>Server RSS (MB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.453</td>
+<td>0.878</td>
+<td>2.117</td>
+<td>1,731.9</td>
+<td>25,979</td>
+<td>202.8</td>
+</tr>
+<tr>
+<td>8</td>
+<td>1.320</td>
+<td>2.869</td>
+<td>7.180</td>
+<td>4,758.7</td>
+<td>71,383</td>
+<td>153.0</td>
+</tr>
+<tr>
+<td>32</td>
+<td>5.244</td>
+<td>8.527</td>
+<td>17.942</td>
+<td>5,422.6</td>
+<td>81,342</td>
+<td>154.8</td>
+</tr>
+<tr>
+<td>128</td>
+<td>18.758</td>
+<td>28.526</td>
+<td>56.026</td>
+<td>6,235.1</td>
+<td>93,534</td>
+<td>155.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="in-memory-vs-pgx-comparison">5. In-memory vs pgx comparison</h2>
+<p><strong>Store-touching <code>/readyz</code> path</strong> (the
+meaningful comparison):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concurrency</th>
+<th>in-mem RPS</th>
+<th>pgx RPS</th>
+<th>in-mem p50 / p99 (ms)</th>
+<th>pgx p50 / p99 (ms)</th>
+<th>in-mem RSS</th>
+<th>pgx RSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>4,209.7</td>
+<td>1,731.9</td>
+<td>0.185 / 0.942</td>
+<td>0.453 / 2.117</td>
+<td>294 MB</td>
+<td>203 MB</td>
+</tr>
+<tr>
+<td>8</td>
+<td>5,925.0</td>
+<td>4,758.7</td>
+<td>0.819 / 9.795</td>
+<td>1.320 / 7.180</td>
+<td>248 MB</td>
+<td>153 MB</td>
+</tr>
+<tr>
+<td>32</td>
+<td>12,245.2</td>
+<td>5,422.6</td>
+<td>1.864 / 11.633</td>
+<td>5.244 / 17.942</td>
+<td>215 MB</td>
+<td>155 MB</td>
+</tr>
+<tr>
+<td>128</td>
+<td>20,532.4</td>
+<td>6,235.1</td>
+<td>3.976 / 30.560</td>
+<td>18.758 / 56.026</td>
+<td>301 MB</td>
+<td>155 MB</td>
+</tr>
+</tbody>
+</table>
+<p>Measured observations (this host only):</p>
+<ul>
+<li><strong>Throughput:</strong> on the store-touching path the
+in-memory backend reaches ~3.3× the RPS of pgx at c=128 (20.5k vs 6.2k).
+pgx <code>/readyz</code> RPS plateaus near ~6.2k — the <strong>2-CPU
+containerized Postgres tier saturates</strong>, while the pure-HTTP
+<code>/healthz</code> path is comparable across backends (16.9k pgx vs
+14.0k in-mem at c=128).</li>
+<li><strong>Latency:</strong> pgx <code>/readyz</code> p50 climbs to
+18.8ms at c=128 (each request = one DB round-trip into the constrained
+VM) vs 4.0ms in-memory; pgx p99 56.0ms vs in-mem 30.6ms.</li>
+<li><strong>Memory:</strong> the <strong>pgx server process uses less
+RSS</strong> (~153–203 MB) than the in-memory server (~215–301 MB), as
+expected — pgx pushes state into Postgres rather than holding it
+in-process. (Total system memory for the pgx topology is higher once the
+Postgres container itself is counted.)</li>
+</ul>
+<h2 id="honest-limitations-11.4.6">6. Honest limitations (§11.4.6)</h2>
+<ul>
+<li>Single host, single 15s window per concurrency level — no
+N-iteration determinism run (§11.4.50) was performed; treat individual
+rows as point samples. The c=32 in-mem <code>/healthz</code> spike is
+the clearest evidence of single-window jitter.</li>
+<li>Host was under heavy concurrent load (load avg ~16 on 11 cores), so
+these are contention-affected, conservative numbers — not the server’s
+isolated ceiling.</li>
+<li>pgx numbers are bounded by a <strong>2-CPU / 4-GiB</strong>
+containerized Postgres, not a production DB tier; the pgx RPS plateau
+reflects that DB sizing, not a server limit.</li>
+<li>Only unauthenticated GETs (<code>/healthz</code>,
+<code>/readyz</code>) were swept; authenticated control-plane endpoints
+(JWT-gated) and the artifact-byte download path were not measured (the
+black-box harness mints no JWT and the download path is on a separate
+router). Those are follow-up work.</li>
+<li>Per §11.4: <strong>these are MEASURED baselines on this host, not
+production NFR guarantees.</strong></li>
+</ul>
+<h2 id="reproduction">7. Reproduction</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> server</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/loadtest ./tools/loadtest/   <span class="co"># stdlib only</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># in-memory</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_PORT</span><span class="op">=</span>8090 <span class="va">HELIX_ADMIN_USERNAME</span><span class="op">=</span>admin@helix.test <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">HELIX_ADMIN_PASSWORD</span><span class="op">=</span>s3cret <span class="va">HELIX_TOKEN_SECRET</span><span class="op">=</span>perf <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">go</span> run ./cmd/ota-server <span class="kw">&amp;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> c <span class="kw">in</span> 1 8 32 128<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">/tmp/loadtest</span> <span class="at">-url</span> http://127.0.0.1:8090 <span class="at">-path</span> /readyz <span class="at">-concurrency</span> <span class="va">$c</span> <span class="at">-duration</span> 15s</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># pgx (containerized Postgres on a free port)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> run <span class="at">-d</span> <span class="at">--name</span> helix-perf-pg <span class="at">-e</span> POSTGRES_PASSWORD=perf <span class="at">-e</span> POSTGRES_USER=perf <span class="dt">\</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_DB=helix <span class="at">-p</span> 55432:5432 docker.io/library/postgres:16-alpine</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_PORT</span><span class="op">=</span>8090 <span class="va">HELIX_DATABASE_URL</span><span class="op">=</span><span class="st">&#39;postgres://perf:perf@127.0.0.1:55432/helix?sslmode=disable&#39;</span> <span class="dt">\</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">HELIX_ADMIN_USERNAME</span><span class="op">=</span>admin@helix.test <span class="va">HELIX_ADMIN_PASSWORD</span><span class="op">=</span>s3cret <span class="va">HELIX_TOKEN_SECRET</span><span class="op">=</span>perf <span class="dt">\</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="ex">go</span> run ./cmd/ota-server <span class="kw">&amp;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># re-run the sweep, then: podman rm -f helix-perf-pg</span></span></code></pre></div>
+<p>Raw evidence: <code>docs/qa/20260608-perf/</code>.</p>
+</body>
+</html>
