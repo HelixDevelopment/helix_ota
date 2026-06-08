@@ -2,10 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-08 |
 | Last modified | 2026-06-08 |
-| Status | planned (spec — depth follows 1.0.0-MVP sibling specs) |
+| Status | partially implemented (recall endpoint = forward-fix shipped) |
+| Decision (2026-06-08, operator) | **Honor AVB — recall is forward-fix only.** A recall NEVER ships an image below the device's bootloader rollback index. `POST /deployments/{id}/recall` (IMPLEMENTED, `handlers_recall.go`) supersedes the current deployment and creates a NEW active deployment of the chosen target release; the update-check anti-downgrade invariant guarantees no device is offered a version ≤ its current, so AVB anti-rollback is honored by construction. A genuine sub-index downgrade is NOT offered (would require a deliberate operator-gated mechanism + matching rollback-index bump — out of scope). This resolves threat_model §11 item 11. |
 | Status summary | The product/UX spec for **end-user / operator rollback in phase 1.0.1**. The operator ratified end-user rollback INTO 1.0.1 (2026-06-08), folding the former `1.0.2-rollback/` design reference into this phase. Specifies the three rollback trigger types (automatic A/B boot-failure — already an MVP guarantee; server/operator-driven recall to N-1; user-initiated device-local), the operator dashboard UX, the device-side/user-initiated path and its A/B single-previous-slot constraints, the REST surface (an operator **recall** endpoint extending the existing rollout API, writing a `rollback_history` row), the cardinal data-safety invariant (never leave a device unbootable / never touch `userdata`), and how rollback composes with staged-rollout halt/abort. |
 | Scope | Reuses the **existing** migration-002 `rollback_history` table (`1.0.0-mvp/database/migrations/002_staged_rollout.up.sql`) — does NOT invent a new table. Extends the **existing** rollout API (`server/internal/api/handlers_rollout.go`, routes in `server/internal/api/server.go`) — does NOT redesign it. |
 | Issues | Merge-window / boot-success timing values are UNVERIFIED on the Orange Pi 5 Max (see §10). Multi-version / true-downgrade is OUT of A/B single-previous-slot reach (deferred, §6). The persistent-store (pgx) recall path is gated on the migration-002 `StoragePort` landing (per phase README "REMAINING"). |
