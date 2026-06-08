@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>operational_endpoints</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">operational_endpoints</h1>
+</header>
+<h1
+id="helix-ota-operational-rest-api-audit-telemetry-read-device-group-endpoints">Helix
+OTA — Operational REST API: Audit, Telemetry-Read &amp; Device-Group
+Endpoints</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active (deferred-phase specification — not in the 1.0.0-MVP built
+surface)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Prose specification of three <strong>operational</strong>
+<code>/api/v1</code> API areas deferred out of 1.0.0-MVP and routed by
+<code>additions_synthesis.md</code> §8 (gap register) / §9 (new work
+items): <strong>(A) Audit subsystem</strong> — a mutating-action audit
+middleware that writes the canonical <code>audit_logs</code> table (G3),
+plus a <code>GET /audit</code> query endpoint and the
+<code>AppendAudit</code> repository method; <strong>(B) Telemetry
+reads</strong> — <code>GET /devices/{deviceId}/telemetry</code>
+per-device history and <code>GET /telemetry/overview</code> fleet
+aggregates over the already-built <code>telemetry_events</code> ingest
+path (G4); <strong>(C) Device-group CRUD + membership</strong> over the
+existing <code>device_groups</code> / <code>device_group_members</code>
+tables (G5). This document extends, and is subordinate to, <a
+href="endpoints.md"><code>endpoints.md</code></a>: all conventions (base
+path, error envelope, RBAC roles, transport/compression, pagination) are
+inherited from there and only the deltas are stated here.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>These endpoints are <strong>NOT implemented</strong> in
+<code>server/internal/api</code> as of this revision: there is no audit
+middleware, no telemetry read side, and no group-CRUD routes
+(<code>additions_synthesis.md</code> §8 G3/G4/G5 — “PARTIAL”, confirmed
+against the built handler set this pass). The <code>audit_logs</code>,
+<code>device_groups</code>, <code>device_group_members</code>, and
+<code>telemetry_events</code> <strong>tables already exist</strong> in
+<code>database/migrations/001_initial_schema.up.sql</code> (verified).
+HelixConstitution clause numbers (§11.4.6 no-guessing, §11.4.74
+catalogue-first, §11.4.61 ToC, §1 four-layer) are carried from corpus
+convention and are <strong>UNVERIFIED</strong> against the authoritative
+Constitution text (it is not present in this repository). Concrete
+rate-limit numbers, retention windows, and aggregate index/perf behavior
+are <strong>UNVERIFIED</strong> until set from MVP load tests. See §10
+for the full register.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 1: first specification of the three deferred operational areas;
+maps each endpoint to the existing error envelope + RBAC roles; proposes
+the new <code>Repository</code> methods (<code>AppendAudit</code>,
+<code>ListAudit</code>, <code>TelemetryForDevice</code>,
+<code>TelemetryOverview</code>, and group CRUD) against the persistence
+seam in <code>server/internal/store/store.go</code>; reconciles the
+schema’s <code>target_type IN ('all','group','device')</code> and the
+API’s group narrowing.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>When these land in the build: wire the audit middleware on the
+protected route group <strong>after</strong> <code>requireRole</code> so
+only authorized mutating actions are logged; add the read routes behind
+<code>viewer</code>; add group CRUD behind
+<code>operator</code>/<code>admin</code>; bind concrete
+<code>limit</code>/window numbers from load tests; confirm the
+<code>database</code> brick exposes the proposed query methods (or
+implement in the pgx repository); add per-endpoint OpenTelemetry span
+names; extend <code>openapi.yaml</code> with these paths so the
+source-presence/artifact gates (§9) can diff them one-to-one.</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Helix OTA control-plane team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><a href="endpoints.md"><code>endpoints.md</code></a> (parent REST
+spec — conventions, error model, RBAC); <a
+href="openapi.yaml"><code>openapi.yaml</code></a>; <a
+href="../database/migrations/001_initial_schema.up.sql"><code>../database/migrations/001_initial_schema.up.sql</code></a>
+(<code>audit_logs</code>, <code>device_groups</code>,
+<code>device_group_members</code>, <code>telemetry_events</code>); <a
+href="../../research/additions_synthesis.md"><code>../../research/additions_synthesis.md</code></a>
+(§8 G3/G4/G5, §9 items 3/4/5); <a
+href="../security/signing_verification.md"><code>../security/signing_verification.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose_and_scope">purpose_and_scope</a></li>
+<li><a href="#2-inherited_conventions">inherited_conventions</a></li>
+<li><a
+href="#3-rbac_role_map_for_these_endpoints">rbac_role_map_for_these_endpoints</a></li>
+<li><a href="#4-part_a_audit_subsystem">part_a_audit_subsystem</a>
+<ul>
+<li><a href="#41-audit_middleware_write_path">4.1
+audit_middleware_write_path</a></li>
+<li><a href="#42-append_audit_repo_method">4.2
+append_audit_repo_method</a></li>
+<li><a href="#43-get_audit_query_endpoint">4.3
+get_audit_query_endpoint</a></li>
+</ul></li>
+<li><a href="#5-part_b_telemetry_reads">part_b_telemetry_reads</a>
+<ul>
+<li><a href="#51-get_device_telemetry_history">5.1
+get_device_telemetry_history</a></li>
+<li><a href="#52-get_telemetry_overview_aggregates">5.2
+get_telemetry_overview_aggregates</a></li>
+<li><a href="#53-telemetry_read_repo_methods">5.3
+telemetry_read_repo_methods</a></li>
+</ul></li>
+<li><a href="#6-part_c_device_group_crud">part_c_device_group_crud</a>
+<ul>
+<li><a href="#61-create_group">6.1 create_group</a></li>
+<li><a href="#62-list_and_read_groups">6.2 list_and_read_groups</a></li>
+<li><a href="#63-update_and_delete_group">6.3
+update_and_delete_group</a></li>
+<li><a href="#64-membership_endpoints">6.4 membership_endpoints</a></li>
+<li><a href="#65-group_crud_repo_methods">6.5
+group_crud_repo_methods</a></li>
+</ul></li>
+<li><a href="#7-error_model_mapping">error_model_mapping</a></li>
+<li><a href="#8-status_code_summary">status_code_summary</a></li>
+<li><a href="#9-testing_four_layer">testing_four_layer</a></li>
+<li><a
+href="#10-anti_bluff_unverified_register">anti_bluff_unverified_register</a></li>
+</ol>
+<hr />
+<h2 id="purpose_and_scope">1. purpose_and_scope</h2>
+<p>This document specifies three <strong>operational</strong> API areas
+that the synthesis routed out of the 1.0.0-MVP built surface and into
+the next operational/compliance phase
+(<code>additions_synthesis.md</code> §8 G3/G4/G5, §9 items 3/4/5). They
+are <strong>deferred</strong> — none are MVP blockers — but each has a
+canonical database table <strong>already created</strong> in
+<code>database/migrations/001_initial_schema.up.sql</code>, so the
+schema half is done and only the write/read path and routes are
+missing.</p>
+<p>In scope:</p>
+<ul>
+<li><strong>(A) Audit</strong> (G3 / §9.3) — a cross-cutting middleware
+that appends one <code>audit_logs</code> row per successful
+<strong>mutating</strong> admin/operator action, the
+<code>AppendAudit</code> repository method it calls, and a
+<code>GET /api/v1/audit</code> query endpoint for reading the
+trail.</li>
+<li><strong>(B) Telemetry reads</strong> (G4 / §9.4) — the
+<strong>read</strong> side of telemetry:
+<code>GET /api/v1/devices/{deviceId}/telemetry</code> (per-device event
+history) and <code>GET /api/v1/telemetry/overview</code> (fleet
+aggregates). Telemetry <strong>ingest</strong>
+(<code>POST /api/v1/client/telemetry</code>,
+<code>endpoints.md §12.2</code>) is already built; this adds the
+read/analytics surface over the same <code>telemetry_events</code>
+rows.</li>
+<li><strong>(C) Device groups</strong> (G5 / §9.5) — full CRUD over
+<code>device_groups</code> plus membership add/remove/list over
+<code>device_group_members</code>, so an operator can build the cohorts
+that <code>POST /api/v1/deployments</code>
+(<code>endpoints.md §11</code>) already narrows by
+<code>group</code>.</li>
+</ul>
+<p>Out of scope: the staged-rollout engine (G7,
+<code>1.0.1-staged-rollout/</code>), the React dashboard (G6,
+<code>dashboard/</code>), mandatory-update/deadline semantics (G8), and
+tamper-event/rollout-halt (G9). These endpoints are the data <strong>the
+dashboard consumes</strong>, but the dashboard UI itself is a separate
+spec.</p>
+<p>This spec is <strong>subordinate to</strong> <a
+href="endpoints.md"><code>endpoints.md</code></a>: everything in its §2
+(conventions), §3 (transport/compression), §4 (auth/RBAC), §5 (rate
+limiting), and §6 (error model) applies unchanged. Only the deltas are
+restated here.</p>
+<h2 id="inherited_conventions">2. inherited_conventions</h2>
+<p>Inherited verbatim from <code>endpoints.md</code> (not
+re-specified):</p>
+<ul>
+<li><strong>Base path</strong> <code>/api/v1</code>; media type
+<code>application/json; charset=utf-8</code>; RFC-3339 UTC timestamps;
+opaque server-issued string ids (UUIDs in the schema).</li>
+<li><strong>Pagination</strong> (<code>endpoints.md §2</code>): list
+endpoints accept <code>?limit</code> (default 50, max 200) and
+<code>?cursor</code> (opaque); responses carry <code>next_cursor</code>
+(null when exhausted). The audit and telemetry-history lists below use
+this pattern unchanged.</li>
+<li><strong>Transport/compression</strong>
+(<code>endpoints.md §3</code>): all responses here are control-plane
+JSON, so they participate in <code>br</code> → <code>gzip</code> →
+<code>identity</code> negotiation with
+<code>Vary: Accept-Encoding</code>. None of these endpoints touch the
+artifact-byte path.</li>
+<li><strong>Auth header</strong>
+<code>Authorization: Bearer &lt;JWT&gt;</code>;
+<code>authMiddleware</code> verifies, <code>requireRole</code> enforces
+(<code>endpoints.md §4</code>; built in
+<code>server/internal/api/middleware.go</code>).</li>
+<li><strong>Error envelope</strong> (<code>endpoints.md §6</code>): the
+single
+<code>{ "error": { code, message, request_id, details[] } }</code> shape
+with the enumerated <code>code</code> set. This spec adds <strong>no new
+error codes</strong> — see §7 for the mapping of each failure to an
+existing code.</li>
+<li><strong>Correlation</strong> <code>X-Request-Id</code> on every
+response; mirrored into <code>error.request_id</code>.</li>
+</ul>
+<h2 id="rbac_role_map_for_these_endpoints">3.
+rbac_role_map_for_these_endpoints</h2>
+<p>Roles are the four from <code>endpoints.md §4.2</code>
+(<code>admin</code>, <code>operator</code>, <code>viewer</code>,
+<code>device</code>), enforced by the built <code>requireRole</code>
+middleware. Route → minimum role for the endpoints in this document:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Route</th>
+<th>Method</th>
+<th>Min role</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/audit</code></td>
+<td><code>GET</code></td>
+<td><code>admin</code></td>
+<td>Audit trail is sensitive (who-did-what); read restricted to
+<code>admin</code> (tighter than the <code>viewer</code>-readable status
+routes).</td>
+</tr>
+<tr>
+<td><code>/devices/{deviceId}/telemetry</code></td>
+<td><code>GET</code></td>
+<td><code>viewer</code></td>
+<td>Same read tier as <code>GET /devices/{deviceId}/status</code>
+(<code>endpoints.md §8.2</code>). A <code>device</code> token MAY read
+<strong>only its own</strong> id (own-resource rule,
+<code>endpoints.md §4.2</code>); a wrong-device <code>device</code>
+token → <code>403</code>.</td>
+</tr>
+<tr>
+<td><code>/telemetry/overview</code></td>
+<td><code>GET</code></td>
+<td><code>viewer</code></td>
+<td>Fleet-wide aggregate; no device-scoped access (a <code>device</code>
+token is <code>403</code>).</td>
+</tr>
+<tr>
+<td><code>/groups</code></td>
+<td><code>POST</code></td>
+<td><code>operator</code></td>
+<td>Cohort creation is an operator provisioning action.</td>
+</tr>
+<tr>
+<td><code>/groups</code>, <code>/groups/{groupId}</code></td>
+<td><code>GET</code></td>
+<td><code>viewer</code></td>
+<td>Read tier.</td>
+</tr>
+<tr>
+<td><code>/groups/{groupId}</code></td>
+<td><code>PATCH</code></td>
+<td><code>operator</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>/groups/{groupId}</code></td>
+<td><code>DELETE</code></td>
+<td><code>admin</code></td>
+<td>Destructive; restricted to <code>admin</code>. Cascade detaches
+membership rows (FK <code>ON DELETE CASCADE</code>) but
+<code>deployments.target_group_id</code> is
+<code>ON DELETE SET NULL</code> (schema), so a deleted group does not
+orphan a deployment.</td>
+</tr>
+<tr>
+<td><code>/groups/{groupId}/members</code></td>
+<td><code>GET</code></td>
+<td><code>viewer</code></td>
+<td>List membership.</td>
+</tr>
+<tr>
+<td><code>/groups/{groupId}/members</code></td>
+<td><code>POST</code></td>
+<td><code>operator</code></td>
+<td>Add device(s) to a group.</td>
+</tr>
+<tr>
+<td><code>/groups/{groupId}/members/{deviceId}</code></td>
+<td><code>DELETE</code></td>
+<td><code>operator</code></td>
+<td>Remove one device.</td>
+</tr>
+</tbody>
+</table>
+<p><code>admin</code> inherits every
+<code>operator</code>/<code>viewer</code> capability (role hierarchy is
+expressed by listing all accepted roles in
+<code>requireRole(...)</code>, as in the built router
+<code>server.go</code>). Authorization failures follow
+<code>endpoints.md §4.2</code>: missing/invalid token →
+<code>401 UNAUTHENTICATED</code>; valid token lacking the role or
+crossing device ownership → <code>403 FORBIDDEN</code>.</p>
+<h2 id="part_a_audit_subsystem">4. part_a_audit_subsystem</h2>
+<p>Gap <strong>G3</strong> (<code>additions_synthesis.md</code> §8 /
+§9.3): “Spec an audit middleware + <code>AppendAudit</code> repo
+method.” The <code>audit_logs</code> table already exists (schema lines
+367–384) with columns <code>id</code>, <code>user_id</code> (nullable,
+<code>ON DELETE SET NULL</code> so the record outlives the actor),
+<code>action</code>, <code>resource_type</code>,
+<code>resource_id</code>, <code>details</code> (JSONB),
+<code>ip_address</code> (INET), <code>user_agent</code>,
+<code>created_at</code>, and four indexes (<code>user</code>,
+<code>action</code>, <code>(resource_type, resource_id)</code>,
+<code>created_at</code>).</p>
+<h3 id="audit_middleware_write_path">4.1
+audit_middleware_write_path</h3>
+<p>A Gin middleware (<code>auditMiddleware</code>) appended to the
+<strong>protected</strong> route group records every <strong>successful
+mutating</strong> admin/operator action.</p>
+<ul>
+<li><strong>Placement (ordering is load-bearing):</strong> it runs
+<strong>after</strong> <code>authMiddleware</code> and
+<strong>after</strong> <code>requireRole</code>, so (a) the principal’s
+<code>sub</code> is available from the verified claims, and (b) a
+request rejected by RBAC (<code>401</code>/<code>403</code>) is
+<strong>not</strong> audited as an action (it never ran). It writes
+<strong>after</strong> the handler completes (<code>c.Next()</code> then
+inspect <code>c.Writer.Status()</code>), so only an action that actually
+succeeded is logged.</li>
+<li><strong>Which requests are audited:</strong> mutating methods only —
+<code>POST</code>, <code>PUT</code>, <code>PATCH</code>,
+<code>DELETE</code> — and only when the response status is a success
+(<code>2xx</code>). Read methods (<code>GET</code>) and failed mutations
+are <strong>not</strong> written (failed mutations are already visible
+in request logs/metrics; auditing them would let a probing attacker
+flood the trail). The <code>GET /audit</code> read endpoint (§4.3) is
+itself <strong>not</strong> audited (no infinite self-reference; reads
+are not actions).</li>
+<li><strong>Row mapping</strong> (one <code>audit_logs</code> row per
+audited request):
+<ul>
+<li><code>user_id</code> ← the <code>users.id</code> for the
+authenticated principal. The token <code>sub</code>
+(<code>Claims.Subject</code>) is the device/user subject; for human
+operators it resolves to a <code>users</code> row. If the subject does
+not resolve to a <code>users</code> row (e.g. a provisioning token),
+<code>user_id</code> is left <code>NULL</code> (the column is nullable
+by design) and the subject is preserved in
+<code>details.actor_subject</code>.</li>
+<li><code>action</code> ← a stable verb derived from method + route,
+SCREAMING_SNAKE_CASE, e.g. <code>ARTIFACT_UPLOAD</code>,
+<code>RELEASE_CREATE</code>, <code>DEPLOYMENT_CREATE</code>,
+<code>DEVICE_REGISTER</code>, <code>GROUP_CREATE</code>,
+<code>GROUP_UPDATE</code>, <code>GROUP_DELETE</code>,
+<code>GROUP_MEMBER_ADD</code>, <code>GROUP_MEMBER_REMOVE</code>.
+(Indexed by <code>idx_audit_logs_action</code>.)</li>
+<li><code>resource_type</code> ← the noun (<code>artifact</code>,
+<code>release</code>, <code>deployment</code>, <code>device</code>,
+<code>group</code>, <code>group_member</code>).</li>
+<li><code>resource_id</code> ← the affected resource id (from the path
+param, or the created id returned in the <code>2xx</code> body).
+<code>NULL</code> when not resolvable.</li>
+<li><code>details</code> ← a JSONB redacted summary: never the full
+request body, <strong>never</strong> secrets, passwords, tokens,
+signatures, or password hashes (the <code>recovery</code>/redaction
+discipline from <code>endpoints.md §6</code> applies). Safe fields only
+(e.g. <code>{"version":"1.1.0","strategy":"all-targets"}</code>).</li>
+<li><code>ip_address</code> ← <code>c.ClientIP()</code> (respecting the
+trusted-proxy config); <code>user_agent</code> ← the
+<code>User-Agent</code> header (truncated to a safe length).</li>
+<li><code>created_at</code> ← DB default <code>now()</code>.</li>
+</ul></li>
+<li><strong>Failure isolation:</strong> an audit-write failure MUST NOT
+fail the user’s already-successful request (the action happened; the
+response was already chosen). The write is best-effort with respect to
+the response status, but a write error is logged to observability and
+surfaced as a monitored metric (a persistently failing audit sink is an
+operational alert via <code>Herald</code>, not a <code>500</code> to the
+caller). (UNVERIFIED: whether compliance posture requires
+<strong>synchronous, fail-closed</strong> auditing — if so, this flips
+to writing before the <code>2xx</code> is flushed and failing the
+request on write error; left as a deferred-phase decision, see
+§10.)</li>
+<li><strong>Reuse (catalogue-first, §11.4.74 UNVERIFIED):</strong> the
+middleware is wired in the existing <code>middleware.go</code> alongside
+<code>authMiddleware</code>/<code>requireRole</code>; persistence goes
+through the <code>Repository</code> seam (§4.2), not direct SQL in the
+handler. No new transport or auth logic is hand-rolled.</li>
+</ul>
+<h3 id="append_audit_repo_method">4.2 append_audit_repo_method</h3>
+<p>New method on the <code>store.Repository</code> interface
+(<code>server/internal/store/store.go</code>), plus a domain struct. No
+transport types cross the seam (per the store package doc comment).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// AuditEntry is one persisted admin/operator action (audit_logs). Maps 1:1 to</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// the schema columns; UserID is empty when the actor does not resolve to a</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// users row (the column is nullable by design).</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AuditEntry <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    ID           <span class="dt">string</span>            <span class="co">// audit_logs.id (server-minted)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    UserID       <span class="dt">string</span>            <span class="co">// users.id; empty =&gt; NULL</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    ActorSubject <span class="dt">string</span>            <span class="co">// token sub, preserved in details when UserID empty</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Action       <span class="dt">string</span>            <span class="co">// SCREAMING_SNAKE_CASE verb</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    ResourceType <span class="dt">string</span>            <span class="co">// artifact|release|deployment|device|group|group_member</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    ResourceID   <span class="dt">string</span>            <span class="co">// affected id; empty =&gt; NULL</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    Details      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span>    <span class="co">// redacted JSONB summary (no secrets)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    IPAddress    <span class="dt">string</span>            <span class="co">// INET (string form)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    UserAgent    <span class="dt">string</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    CreatedAt    time<span class="op">.</span>Time</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// AuditFilter narrows a GET /audit query (§4.3). Zero-value fields are ignored.</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AuditFilter <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    Actor        <span class="dt">string</span>    <span class="co">// users.id OR token subject</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    Action       <span class="dt">string</span>    <span class="co">// exact action verb</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    ResourceType <span class="dt">string</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    ResourceID   <span class="dt">string</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    Since        time<span class="op">.</span>Time <span class="co">// created_at &gt;= Since</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    Until        time<span class="op">.</span>Time <span class="co">// created_at &lt;  Until</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    Limit        <span class="dt">int</span>       <span class="co">// pagination (default 50, max 200)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    Cursor       <span class="dt">string</span>    <span class="co">// opaque</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Append-only audit write (G3). Best-effort relative to the request (§4.1):</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">// a write error is returned to the middleware, which logs/metrics it but does</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co">// NOT fail the user&#39;s already-successful action.</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>AppendAudit<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> e AuditEntry<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co">// Paginated, filtered audit read backing GET /audit (§4.3). Newest-first.</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>ListAudit<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> f AuditFilter<span class="op">)</span> <span class="op">(</span>entries <span class="op">[]</span>AuditEntry<span class="op">,</span> nextCursor <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<p>The in-memory <code>MemoryRepository</code> implements both (append
+to a slice, filter+page in memory) so the api seam stays testable
+without PostgreSQL; the pgx implementation issues an <code>INSERT</code>
+and a filtered, index-backed
+<code>SELECT ... ORDER BY created_at DESC</code> (the
+<code>idx_audit_logs_*</code> indexes cover the filter columns).</p>
+<h3 id="get_audit_query_endpoint">4.3 get_audit_query_endpoint</h3>
+<p><code>GET /api/v1/audit</code> — read the audit trail.</p>
+<ul>
+<li><strong>Auth:</strong> <code>admin</code> (§3). A
+<code>viewer</code>/<code>operator</code> token → <code>403</code>.</li>
+<li><strong>Query parameters</strong> (all optional; combine with AND):
+<code>?actor=</code> (users.id or subject), <code>?action=</code>,
+<code>?resource_type=</code>, <code>?resource_id=</code>,
+<code>?since=</code> (RFC-3339), <code>?until=</code> (RFC-3339), plus
+the inherited <code>?limit</code> / <code>?cursor</code>.</li>
+<li><strong>Response 200</strong> (<code>AuditList</code>): newest-first
+page.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;9c2f...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;actor&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;user_id&quot;</span><span class="fu">:</span> <span class="st">&quot;1a2b...uuid&quot;</span><span class="fu">,</span> <span class="dt">&quot;subject&quot;</span><span class="fu">:</span> <span class="st">&quot;admin@example.com&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;DEPLOYMENT_CREATE&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;resource_type&quot;</span><span class="fu">:</span> <span class="st">&quot;deployment&quot;</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;resource_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;details&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;release_id&quot;</span><span class="fu">:</span> <span class="st">&quot;r77e...uuid&quot;</span><span class="fu">,</span> <span class="dt">&quot;strategy&quot;</span><span class="fu">:</span> <span class="st">&quot;all-targets&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;ip_address&quot;</span><span class="fu">:</span> <span class="st">&quot;203.0.113.7&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;user_agent&quot;</span><span class="fu">:</span> <span class="st">&quot;helix-dashboard/1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;created_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:15:00Z&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;next_cursor&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><strong>Status codes:</strong> <code>200</code> OK;
+<code>400 VALIDATION_FAILED</code> (malformed
+<code>since</code>/<code>until</code>/<code>limit</code>);
+<code>401 UNAUTHENTICATED</code>; <code>403 FORBIDDEN</code> (not
+<code>admin</code>); <code>429 RATE_LIMITED</code>.</li>
+<li><strong>Immutability:</strong> the audit trail is <strong>read-only
+over the API</strong> — there is no <code>POST</code>,
+<code>PATCH</code>, or <code>DELETE /audit</code>. Rows are written only
+by the middleware (§4.1). Retention/rotation is an operational (DB-side)
+concern, <strong>UNVERIFIED</strong> here (no retention window is
+asserted — §10).</li>
+</ul>
+<h2 id="part_b_telemetry_reads">5. part_b_telemetry_reads</h2>
+<p>Gap <strong>G4</strong> (<code>additions_synthesis.md</code> §8 /
+§9.4): “Spec read endpoints in <code>endpoints.md</code>;
+dashboard/monitoring phase.” Ingest is already built
+(<code>POST /api/v1/client/telemetry</code>,
+<code>endpoints.md §12.2</code>, schema-validated via
+<code>ota-telemetry-schema</code>); the <code>telemetry_events</code>
+table exists (schema lines 329–361) with a canonical 8-value
+<code>event_type</code> CHECK (<code>download_started</code>,
+<code>download_complete</code>, <code>installing</code>,
+<code>installed</code>, <code>verifying</code>, <code>success</code>,
+<code>failure</code>, <code>rollback</code>) and indexes on
+<code>device_id</code>, <code>deployment_id</code>,
+<code>event_type</code>, <code>created_at</code>. This part adds
+<strong>only reads</strong> — no new ingest, no schema change.</p>
+<h3 id="get_device_telemetry_history">5.1
+get_device_telemetry_history</h3>
+<p><code>GET /api/v1/devices/{deviceId}/telemetry</code> — the
+per-device event history.</p>
+<ul>
+<li><strong>Auth:</strong> <code>viewer</code> (admin/operator/viewer).
+A <code>device</code> token MAY read <strong>only its own</strong>
+<code>deviceId</code> (own-resource rule,
+<code>endpoints.md §4.2</code>); a <code>device</code> token for another
+id → <code>403</code>.</li>
+<li><strong>Query parameters</strong> (optional):
+<code>?event_type=</code> (one of the 8 canonical values),
+<code>?since=</code> / <code>?until=</code> (RFC-3339),
+<code>?deployment_id=</code> (narrow to one deployment), plus inherited
+<code>?limit</code> / <code>?cursor</code>. Ordered
+<strong>newest-first</strong> by <code>created_at</code>.</li>
+<li><strong>Response 200</strong> (<code>TelemetryHistory</code>):</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;device_id&quot;</span><span class="fu">:</span> <span class="st">&quot;8f3a...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;e01a...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;deployment_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;event_type&quot;</span><span class="fu">:</span> <span class="st">&quot;failure&quot;</span><span class="fu">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;error_code&quot;</span><span class="fu">:</span> <span class="st">&quot;PAYLOAD_VERIFICATION_FAILED&quot;</span><span class="fu">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;error_message&quot;</span><span class="fu">:</span> <span class="st">&quot;FILE_HASH mismatch&quot;</span><span class="fu">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;duration_ms&quot;</span><span class="fu">:</span> <span class="dv">41230</span><span class="fu">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;bytes_transferred&quot;</span><span class="fu">:</span> <span class="dv">379074366</span><span class="fu">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;created_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:20:00Z&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;next_cursor&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Fields map directly to <code>telemetry_events</code> columns;
+<code>version</code> is read from the row <code>metadata</code> JSONB
+(ingest stores the reported <code>version</code> there per the telemetry
+codec). The read surface does <strong>not</strong> invent fields not
+present in the ingested rows.</p>
+<ul>
+<li><strong>Status codes:</strong> <code>200</code> OK;
+<code>400 VALIDATION_FAILED</code> (bad
+<code>event_type</code>/time/limit); <code>401</code>/<code>403</code>;
+<code>404 NOT_FOUND</code> (no such device);
+<code>429 RATE_LIMITED</code>.</li>
+</ul>
+<h3 id="get_telemetry_overview_aggregates">5.2
+get_telemetry_overview_aggregates</h3>
+<p><code>GET /api/v1/telemetry/overview</code> — fleet-wide /
+per-deployment aggregate counters for the monitoring dashboard.</p>
+<ul>
+<li><strong>Auth:</strong> <code>viewer</code>. A <code>device</code>
+token → <code>403</code> (no device-scoped aggregate).</li>
+<li><strong>Query parameters</strong> (optional):
+<code>?deployment_id=</code> (scope the aggregate to one deployment;
+omitted ⇒ whole fleet), <code>?since=</code> / <code>?until=</code>
+(RFC-3339 window over <code>created_at</code>), <code>?os=</code>
+(narrow by device os). <strong>No pagination</strong> — this is a single
+aggregate object.</li>
+<li><strong>Response 200</strong> (<code>TelemetryOverview</code>):
+counts grouped by terminal/lifecycle state, derived with the
+<strong>latest-event-per-device</strong> rule already used by
+<code>deriveProgress</code> (<code>handlers_deployment.go</code>), so
+the overview and the per-deployment progress
+(<code>endpoints.md §11.2</code>) agree by construction.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scope&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;deployment_id&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;os&quot;</span><span class="fu">:</span> <span class="st">&quot;android&quot;</span><span class="fu">,</span> <span class="dt">&quot;since&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;until&quot;</span><span class="fu">:</span> <span class="kw">null</span> <span class="fu">},</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;devices_total&quot;</span><span class="fu">:</span> <span class="dv">1240</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;devices_reporting&quot;</span><span class="fu">:</span> <span class="dv">1190</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;by_state&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;pending&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;downloading&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;installing&quot;</span><span class="fu">:</span> <span class="dv">12</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;installed&quot;</span><span class="fu">:</span> <span class="dv">8</span><span class="fu">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;verifying&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;succeeded&quot;</span><span class="fu">:</span> <span class="dv">1100</span><span class="fu">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failed&quot;</span><span class="fu">:</span> <span class="dv">36</span><span class="fu">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rolled_back&quot;</span><span class="fu">:</span> <span class="dv">0</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;event_counts&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;download_started&quot;</span><span class="fu">:</span> <span class="dv">1188</span><span class="fu">,</span> <span class="dt">&quot;download_complete&quot;</span><span class="fu">:</span> <span class="dv">1160</span><span class="fu">,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;installing&quot;</span><span class="fu">:</span> <span class="dv">1152</span><span class="fu">,</span> <span class="dt">&quot;installed&quot;</span><span class="fu">:</span> <span class="dv">1140</span><span class="fu">,</span> <span class="dt">&quot;verifying&quot;</span><span class="fu">:</span> <span class="dv">1136</span><span class="fu">,</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success&quot;</span><span class="fu">:</span> <span class="dv">1100</span><span class="fu">,</span> <span class="dt">&quot;failure&quot;</span><span class="fu">:</span> <span class="dv">36</span><span class="fu">,</span> <span class="dt">&quot;rollback&quot;</span><span class="fu">:</span> <span class="dv">0</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="fl">0.030</span><span class="fu">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;generated_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:25:00Z&quot;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><code>by_state</code> uses the <strong>latest event per
+device</strong> (one device counted once); <code>event_counts</code> is
+the <strong>raw event tally</strong> over the window (a device
+contributes multiple events). The two are intentionally different
+denominators and are labelled as such.</li>
+<li><code>failure_rate</code> =
+<code>by_state.failed / devices_reporting</code> (0 when
+<code>devices_reporting</code> is 0; never divides by zero).
+<code>rolled_back</code> is sourced from the <code>rollback</code> event
+(MVP records the event; the full rollback engine is <code>1.0.2</code>,
+<code>additions_synthesis.md</code> §11).</li>
+<li><strong>Status codes:</strong> <code>200</code> OK;
+<code>400 VALIDATION_FAILED</code> (bad scope/time);
+<code>401</code>/<code>403</code>; <code>404 NOT_FOUND</code> (when
+<code>?deployment_id=</code> names a non-existent deployment);
+<code>429</code>.</li>
+<li><strong>Performance/UNVERIFIED:</strong> the aggregate is computed
+over <code>telemetry_events</code> filtered by the existing indexes;
+whether a materialized rollup is needed at fleet scale is
+<strong>UNVERIFIED</strong> until measured (no NFR number asserted —
+<code>additions_synthesis.md</code> §8 G12, §10 below).</li>
+</ul>
+<h3 id="telemetry_read_repo_methods">5.3
+telemetry_read_repo_methods</h3>
+<p>New read methods on <code>store.Repository</code> (the built
+interface already has <code>AppendTelemetry</code> +
+<code>TelemetryForDeployment</code>; these add the device-history and
+overview reads):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TelemetryFilter narrows a per-device history query (§5.1).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TelemetryFilter <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    DeviceID     <span class="dt">string</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    EventType    <span class="dt">string</span>    <span class="co">// one of the 8 canonical values; empty =&gt; all</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    DeploymentID <span class="dt">string</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    Since<span class="op">,</span> Until time<span class="op">.</span>Time</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    Limit        <span class="dt">int</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    Cursor       <span class="dt">string</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">// OverviewFilter scopes the aggregate (§5.2). All fields optional.</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OverviewFilter <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    DeploymentID <span class="dt">string</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    OSType       otaprotocol<span class="op">.</span>OSType</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    Since<span class="op">,</span> Until time<span class="op">.</span>Time</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">// TelemetryOverview is the aggregate result (§5.2) — latest-event-per-device</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">// state counts plus raw event tallies over the window.</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TelemetryOverview <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    DevicesTotal     <span class="dt">int</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    DevicesReporting <span class="dt">int</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    ByState          <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">int</span> <span class="co">// pending|downloading|...|rolled_back</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    EventCounts      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">int</span> <span class="co">// the 8 canonical event types</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    GeneratedAt      time<span class="op">.</span>Time</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Per-device telemetry history backing GET /devices/{id}/telemetry (§5.1),</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="co">// newest-first, paginated.</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>TelemetryForDevice<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> f TelemetryFilter<span class="op">)</span> <span class="op">(</span>recs <span class="op">[]</span>TelemetryRecord<span class="op">,</span> nextCursor <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co">// Fleet/deployment aggregate backing GET /telemetry/overview (§5.2).</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>TelemetryOverviewAgg<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> f OverviewFilter<span class="op">)</span> <span class="op">(</span>TelemetryOverview<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<p>The in-memory implementation iterates its event slice (filter +
+latest-per-device fold), reusing the same logic as the built
+<code>deriveProgress</code>; the pgx implementation uses the
+<code>created_at</code> / <code>device_id</code> /
+<code>event_type</code> indexes and a
+<code>DISTINCT ON (device_id) ... ORDER BY device_id, created_at DESC</code>
+for the latest-per-device fold. (UNVERIFIED: that the
+<code>database</code> brick exposes a helper for
+<code>DISTINCT ON</code> / windowed reads — otherwise implemented
+directly in the pgx repo.)</p>
+<h2 id="part_c_device_group_crud">6. part_c_device_group_crud</h2>
+<p>Gap <strong>G5</strong> (<code>additions_synthesis.md</code> §8 /
+§9.5): “Spec group endpoints + repo methods.” The
+<code>device_groups</code> table (schema 109–116: <code>id</code>,
+<code>name</code> UNIQUE, <code>description</code>,
+<code>filter_criteria</code> JSONB, <code>created_at</code>) and
+<code>device_group_members</code> (118–130: composite PK
+<code>(group_id, device_id)</code>, both FKs
+<code>ON DELETE CASCADE</code>, <code>added_at</code>) already exist.
+<code>deployments.target_group_id</code> already references
+<code>device_groups(id)</code> (<code>ON DELETE SET NULL</code>), and
+<code>POST /api/v1/deployments</code> already accepts a
+<code>group</code> narrowing (<code>endpoints.md §11.1</code>); this
+part lets an operator <strong>create and populate</strong> those
+cohorts.</p>
+<p>A group is <strong>static or dynamic</strong>: static membership
+lives in <code>device_group_members</code>; a dynamic selector lives in
+<code>filter_criteria</code> (JSONB). MVP-of-this-phase supports
+<strong>static membership fully</strong>; dynamic
+<code>filter_criteria</code> is <strong>stored and returned but its
+evaluation is UNVERIFIED</strong> (the selector language is not yet
+specified — §10).</p>
+<h3 id="create_group">6.1 create_group</h3>
+<p><code>POST /api/v1/groups</code></p>
+<ul>
+<li><strong>Auth:</strong> <code>operator</code>. Accepts optional
+<code>Idempotency-Key</code> (<code>endpoints.md §2</code>).</li>
+<li><strong>Request body</strong> (<code>GroupCreate</code>):</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;field-fleet-a&quot;</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;EU-west production Orange Pi 5 Max fleet&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;filter_criteria&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;metadata.region&quot;</span><span class="fu">:</span> <span class="st">&quot;eu-west&quot;</span> <span class="fu">}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>name</code> is required and must be unique (DB
+<code>device_groups_name_uniq</code>). <code>filter_criteria</code> is
+optional JSONB (null ⇒ static-only group).</p>
+<ul>
+<li><strong>Response 201</strong> (<code>Group</code>):</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;group_id&quot;</span><span class="fu">:</span> <span class="st">&quot;g55a...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;field-fleet-a&quot;</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;EU-west production Orange Pi 5 Max fleet&quot;</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;filter_criteria&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;metadata.region&quot;</span><span class="fu">:</span> <span class="st">&quot;eu-west&quot;</span> <span class="fu">},</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;member_count&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;created_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:30:00Z&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><strong>Status codes:</strong> <code>201</code>; <code>200</code>
+(idempotent replay); <code>400 VALIDATION_FAILED</code> (missing/blank
+<code>name</code>); <code>401</code>/<code>403</code>;
+<code>409 CONFLICT</code> (name already exists); <code>429</code>.</li>
+</ul>
+<h3 id="list_and_read_groups">6.2 list_and_read_groups</h3>
+<ul>
+<li><code>GET /api/v1/groups</code> — <strong>Auth</strong>
+<code>viewer</code>; paginated (<code>endpoints.md §2</code>); optional
+<code>?name=</code> prefix filter. Response <code>GroupList</code>
+<code>{ items: [Group], next_cursor }</code>.</li>
+<li><code>GET /api/v1/groups/{groupId}</code> — <strong>Auth</strong>
+<code>viewer</code>; response <code>Group</code> (with current
+<code>member_count</code>); <code>404 NOT_FOUND</code> if absent.</li>
+</ul>
+<h3 id="update_and_delete_group">6.3 update_and_delete_group</h3>
+<ul>
+<li><code>PATCH /api/v1/groups/{groupId}</code> — <strong>Auth</strong>
+<code>operator</code>. Partial update of <code>description</code> and/or
+<code>filter_criteria</code> (and <code>name</code>, subject to the
+uniqueness constraint). Body is a sparse <code>GroupUpdate</code>; only
+present fields change. Response <code>200</code> <code>Group</code>.
+<code>404</code> if absent; <code>409 CONFLICT</code> if a
+<code>name</code> change collides.</li>
+<li><code>DELETE /api/v1/groups/{groupId}</code> — <strong>Auth</strong>
+<code>admin</code> (destructive, §3). Deletes the group; membership rows
+cascade-delete (FK), and any <code>deployments.target_group_id</code>
+referencing it is set <code>NULL</code> (FK), so no deployment is
+orphaned. Response <code>204 No Content</code>. <code>404</code> if
+absent. (UNVERIFIED policy decision: whether an <strong>active</strong>
+deployment targeting the group should <strong>block</strong> deletion
+with <code>409</code> instead of <code>SET NULL</code> — left as a
+deferred-phase choice, §10.)</li>
+</ul>
+<h3 id="membership_endpoints">6.4 membership_endpoints</h3>
+<p>Membership operates on <code>device_group_members</code>. Device ids
+in request bodies are the external <code>device_id</code> (the registry
+identity, <code>endpoints.md §8.1</code>), resolved to the internal
+<code>devices.id</code> for the FK.</p>
+<ul>
+<li><code>GET /api/v1/groups/{groupId}/members</code> —
+<strong>Auth</strong> <code>viewer</code>; paginated. Response
+<code>GroupMemberList</code>:</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;group_id&quot;</span><span class="fu">:</span> <span class="st">&quot;g55a...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;device_id&quot;</span><span class="fu">:</span> <span class="st">&quot;8f3a...uuid&quot;</span><span class="fu">,</span> <span class="dt">&quot;added_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T10:31:00Z&quot;</span> <span class="fu">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;next_cursor&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><code>POST /api/v1/groups/{groupId}/members</code> —
+<strong>Auth</strong> <code>operator</code>. Add one or more devices.
+Body <code>GroupMemberAdd</code>:</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;device_ids&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;8f3a...uuid&quot;</span><span class="ot">,</span> <span class="st">&quot;7b2c...uuid&quot;</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<p>Response <code>200</code> <code>GroupMemberAddResult</code>
+<code>{ "added": 2, "already_member": 0, "not_found": [] }</code>.
+Adding an already-present <code>(group_id, device_id)</code> is
+<strong>idempotent</strong> (counted in <code>already_member</code>, not
+an error — the composite PK makes a re-add a no-op via upsert). A
+<code>device_id</code> that does not resolve to a registered device is
+returned in <code>not_found</code> and the request still succeeds with
+the resolvable ones (partial success is reported, not a hard
+<code>404</code> for the whole batch). <code>404 NOT_FOUND</code> is
+reserved for a missing <strong>group</strong>.</p>
+<ul>
+<li><code>DELETE /api/v1/groups/{groupId}/members/{deviceId}</code> —
+<strong>Auth</strong> <code>operator</code>. Remove one device. Response
+<code>204 No Content</code>. <code>404 NOT_FOUND</code> if the group
+does not exist; removing a device that is not a member is
+<strong>idempotent</strong> (<code>204</code>, not <code>404</code> —
+DELETE is idempotent on absence).</li>
+</ul>
+<h3 id="group_crud_repo_methods">6.5 group_crud_repo_methods</h3>
+<p>New methods + structs on <code>store.Repository</code>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Group is a device cohort (device_groups). MemberCount is derived, not stored.</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Group <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    GroupID        <span class="dt">string</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    Name           <span class="dt">string</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    Description    <span class="dt">string</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    FilterCriteria <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">any</span> <span class="co">// device_groups.filter_criteria (nullable)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    MemberCount    <span class="dt">int</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    CreatedAt      time<span class="op">.</span>Time</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">// GroupMember is one static membership row (device_group_members).</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> GroupMember <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    GroupID   <span class="dt">string</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    DeviceID  <span class="dt">string</span>    <span class="co">// external device_id</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    AddedAt   time<span class="op">.</span>Time</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co">// GroupFilter narrows GET /groups (§6.2).</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> GroupFilter <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    NamePrefix <span class="dt">string</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    Limit      <span class="dt">int</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    Cursor     <span class="dt">string</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Group CRUD (§6.1–6.3).</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>CreateGroup<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> g Group<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>GetGroup<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> groupID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>Group<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>ListGroups<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> f GroupFilter<span class="op">)</span> <span class="op">(</span>groups <span class="op">[]</span>Group<span class="op">,</span> nextCursor <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>UpdateGroup<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> g Group<span class="op">)</span> <span class="dt">error</span> <span class="co">// sparse-applied by the handler</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>DeleteGroup<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> groupID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="co">// Membership (§6.4). AddGroupMembers is idempotent on the composite PK and</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="co">// returns the per-device outcome; resolution of device_id -&gt; devices.id happens</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="co">// in the repo. RemoveGroupMember is idempotent on absence.</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>AddGroupMembers<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> groupID <span class="dt">string</span><span class="op">,</span> deviceIDs <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="op">(</span>added<span class="op">,</span> alreadyMember <span class="dt">int</span><span class="op">,</span> notFound <span class="op">[]</span><span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>ListGroupMembers<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> groupID <span class="dt">string</span><span class="op">,</span> limit <span class="dt">int</span><span class="op">,</span> cursor <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>members <span class="op">[]</span>GroupMember<span class="op">,</span> nextCursor <span class="dt">string</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>RemoveGroupMember<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> groupID<span class="op">,</span> deviceID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<p><code>CreateGroup</code>/<code>UpdateGroup</code> return
+<code>ErrConflict</code> on the unique-name violation (mapped to
+<code>409 CONFLICT</code> by the handler, matching the built
+<code>ErrConflict</code>→<code>409</code> convention).
+<code>GetGroup</code>/ membership methods return
+<code>ErrNotFound</code> for a missing group (→ <code>404</code>). The
+in-memory repo implements all of these so the routes are testable
+without PostgreSQL.</p>
+<h2 id="error_model_mapping">7. error_model_mapping</h2>
+<p>No new error codes are introduced (per <code>endpoints.md §6</code>
+enumerated set, mirrored in <code>server/internal/api/errors.go</code>).
+Each failure maps to an existing code:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>HTTP</th>
+<th><code>code</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing/invalid/expired bearer token</td>
+<td>401</td>
+<td><code>UNAUTHENTICATED</code></td>
+</tr>
+<tr>
+<td>Authenticated but lacks the route’s role, or <code>device</code>
+token crossing ownership (§5.1)</td>
+<td>403</td>
+<td><code>FORBIDDEN</code></td>
+</tr>
+<tr>
+<td>Malformed body, bad
+<code>since</code>/<code>until</code>/<code>limit</code>, blank
+<code>name</code>, bad <code>event_type</code></td>
+<td>400</td>
+<td><code>VALIDATION_FAILED</code> (+ <code>details[]</code>)</td>
+</tr>
+<tr>
+<td>Group / device / deployment id not found</td>
+<td>404</td>
+<td><code>NOT_FOUND</code></td>
+</tr>
+<tr>
+<td>Duplicate group <code>name</code> (create or rename)</td>
+<td>409</td>
+<td><code>CONFLICT</code></td>
+</tr>
+<tr>
+<td>Rate limit exceeded</td>
+<td>429</td>
+<td><code>RATE_LIMITED</code> (+ <code>Retry-After</code>)</td>
+</tr>
+<tr>
+<td>Unhandled server fault (via <code>recovery</code> brick)</td>
+<td>500</td>
+<td><code>INTERNAL</code> (no disclosure)</td>
+</tr>
+</tbody>
+</table>
+<p>The audit-write failure path (§4.1) is <strong>not</strong> a
+caller-visible error — it does not map to a <code>code</code>; it is
+logged/metric’d and (if persistent) alerted via <code>Herald</code>. The
+error envelope shape and
+<code>respondError</code>/<code>respondValidation</code> helpers
+(<code>errors.go</code>) are reused unchanged.</p>
+<h2 id="status_code_summary">8. status_code_summary</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning in these endpoints</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200</td>
+<td>OK (audit list, telemetry read/overview, group read/list/update,
+member add)</td>
+<td>§4.3, §5.1, §5.2, §6.2, §6.3, §6.4</td>
+</tr>
+<tr>
+<td>201</td>
+<td>Created (group)</td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td>204</td>
+<td>No Content (group delete, member remove)</td>
+<td>§6.3, §6.4</td>
+</tr>
+<tr>
+<td>400</td>
+<td><code>VALIDATION_FAILED</code></td>
+<td>all write/query routes</td>
+</tr>
+<tr>
+<td>401</td>
+<td><code>UNAUTHENTICATED</code></td>
+<td>all routes</td>
+</tr>
+<tr>
+<td>403</td>
+<td><code>FORBIDDEN</code> (role/ownership)</td>
+<td>all routes</td>
+</tr>
+<tr>
+<td>404</td>
+<td><code>NOT_FOUND</code></td>
+<td>single-resource reads, member ops, scoped overview</td>
+</tr>
+<tr>
+<td>409</td>
+<td><code>CONFLICT</code> (duplicate group name)</td>
+<td>§6.1, §6.3</td>
+</tr>
+<tr>
+<td>429</td>
+<td><code>RATE_LIMITED</code></td>
+<td>all rate-limited routes (<code>endpoints.md §5</code>)</td>
+</tr>
+<tr>
+<td>500</td>
+<td><code>INTERNAL</code> (no disclosure)</td>
+<td>any (via <code>recovery</code> brick)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="testing_four_layer">9. testing_four_layer</h2>
+<p>Per <code>endpoints.md §14</code> / master §13 / Constitution §1
+(UNVERIFIED clause), every change ships four layers with no-bluff
+positive evidence. The audit write path is treated as <strong>safety/
+compliance-critical</strong> and targets the ≥90% floor.</p>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> Each route here is registered
+on the Gin router under <code>/api/v1/...</code> (<code>/audit</code>,
+<code>/devices/:deviceId/telemetry</code>,
+<code>/telemetry/overview</code>, <code>/groups</code>,
+<code>/groups/:groupId</code>, <code>/groups/:groupId/members</code>,
+<code>/groups/:groupId/members/:deviceId</code>); each new
+<code>Repository</code> method (<code>AppendAudit</code>,
+<code>ListAudit</code>, <code>TelemetryForDevice</code>,
+<code>TelemetryOverviewAgg</code>, <code>CreateGroup</code> …) is
+declared and implemented by the in-memory repo;
+<code>openapi.yaml</code> gains the matching paths and they diff
+one-to-one against the route table.</li>
+<li><strong>Artifact gate (bytes shipped).</strong> Boot the server;
+assert the live route table exposes these paths with the specified
+methods and roles, and that <code>auditMiddleware</code> is mounted
+<strong>after</strong> <code>requireRole</code> on the protected group
+(ordering assertion — a mutating <code>2xx</code> produces exactly one
+<code>audit_logs</code> row; a <code>403</code> produces
+<strong>zero</strong>).</li>
+<li><strong>Runtime / integration.</strong> Against a running monolith +
+PostgreSQL: <code>operator</code> creates a group → adds members →
+creates an all-targets deployment narrowed by that group → device
+reports telemetry → <code>GET /devices/{id}/telemetry</code> returns the
+history → <code>GET /telemetry/overview</code> aggregate matches the
+per-deployment progress (<code>endpoints.md §11.2</code>) →
+<code>GET /audit</code> (as <code>admin</code>) shows the
+<code>GROUP_CREATE</code> + <code>DEPLOYMENT_CREATE</code> rows and
+<strong>no</strong> row for the <code>GET</code>s. Negative:
+<code>viewer</code> hitting <code>/audit</code> → <code>403</code>;
+<code>device</code> token reading another device’s telemetry →
+<code>403</code>; duplicate group name → <code>409</code>; deleting a
+group <code>SET NULL</code>s a referencing deployment without orphaning
+it.</li>
+<li><strong>Mutation meta-test (PASS→FAIL on negation).</strong> Mutate
+and assert the suite flips: move <code>auditMiddleware</code>
+<strong>before</strong> <code>requireRole</code> (must fail the “403
+writes zero audit rows” test); make the audit write include the request
+body verbatim (must fail the “no-secrets in details” redaction test);
+change the overview to count all events instead of latest-per-device
+(must fail the “overview agrees with deployment progress” test); drop
+the <code>device</code> own-ownership check on
+<code>/devices/{id}/telemetry</code> (must fail the <code>403</code>
+cross-device test). A mutation that breaks no test exposes a coverage
+hole and is itself a defect.</li>
+</ol>
+<h2 id="anti_bluff_unverified_register">10.
+anti_bluff_unverified_register</h2>
+<p>Per Constitution §11.4.6 (no-guessing) / §7.1 (no-bluff), the
+following MUST NOT be propagated as fact:</p>
+<ul>
+<li><strong>Not built yet.</strong> Audit middleware, the
+<code>GET /audit</code> endpoint, telemetry read endpoints, and group
+CRUD routes do <strong>not</strong> exist in
+<code>server/internal/api</code> as of this revision
+(<code>additions_synthesis.md</code> §8 G3/G4/G5 — confirmed against the
+built handler set this pass). The backing tables
+(<code>audit_logs</code>, <code>device_groups</code>,
+<code>device_group_members</code>, <code>telemetry_events</code>)
+<strong>do</strong> exist in <code>001_initial_schema.up.sql</code>
+(verified).</li>
+<li><strong>Proposed, not merged.</strong> Every <code>Repository</code>
+method in §4.2/§5.3/§6.5 is a <strong>proposal</strong> against
+<code>store.go</code>; the interface today carries only
+<code>AppendTelemetry</code>/<code>TelemetryForDeployment</code> on the
+telemetry side and has <strong>no</strong> audit or group methods
+(verified).</li>
+<li><strong>Audit posture.</strong> Whether compliance requires
+<strong>synchronous, fail-closed</strong> auditing (write before the
+<code>2xx</code>, fail the request on write error) vs. the best-effort
+post-response write specified in §4.1 is <strong>UNVERIFIED</strong> — a
+deferred-phase decision.</li>
+<li><strong>Group deletion vs active deployment.</strong> Whether an
+active deployment targeting a group should <strong>block</strong> delete
+(<code>409</code>) instead of the schema’s <code>SET NULL</code> is
+<strong>UNVERIFIED</strong> (§6.3).</li>
+<li><strong>Dynamic <code>filter_criteria</code>.</strong> The selector
+language for dynamic groups is <strong>not specified</strong>;
+<code>filter_criteria</code> is stored/returned but its
+<strong>evaluation</strong> is UNVERIFIED — static membership is the
+supported path this phase (§6).</li>
+<li><strong>Aggregate performance.</strong> Whether
+<code>GET /telemetry/overview</code> needs a materialized rollup at
+fleet scale is <strong>UNVERIFIED</strong> until measured; no NFR number
+(10k devices, &lt;100ms, 99.9%) is asserted
+(<code>additions_synthesis.md</code> §8 G12).</li>
+<li><strong>Rate limits / retention.</strong> Concrete
+<code>limit</code> values and any audit/telemetry retention window are
+<strong>UNVERIFIED</strong> until set from MVP load tests
+(<code>endpoints.md §5</code> continuation).</li>
+<li><strong>Catalogue brick surfaces.</strong> That the
+<code>database</code> brick exposes helpers for <code>DISTINCT ON</code>
+/ windowed reads, and that <code>Herald</code> is the audit-failure
+alerting path, are reused <strong>assumptions</strong> (UNVERIFIED —
+<code>submodule_reuse_map.md</code> §5; §11.4.74).</li>
+<li><strong>Constitution clause numbers</strong> (§11.4.6, §11.4.74,
+§11.4.61, §1) are carried from corpus convention and remain
+<strong>UNVERIFIED</strong> against the authoritative Constitution text
+(not present in this repository).</li>
+</ul>
+</body>
+</html>

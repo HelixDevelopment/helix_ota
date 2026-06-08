@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>rollout_engine</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">rollout_engine</h1>
+</header>
+<h1 id="helix-ota-1.0.1-staged-rollout-engine-specification">Helix OTA —
+1.0.1 Staged-Rollout Engine Specification</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active (closes gap G7 in
+<code>research/additions_synthesis.md</code> §8)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Full specification of the Helix OTA staged-rollout engine for phase
+1.0.1: percentage phases (5/10/30/50/100) gated by success/error
+thresholds with pause/halt-on-breach; the lifecycle operations
+(start/pause/resume/abort/rollback); deterministic cohort assignment;
+and the control-plane REST surface (Gin) that drives the reusable
+<code>ota-rollout-engine</code> brick. The engine itself is
+<strong>reused, not reinvented</strong> — this spec wires the existing
+brick (<code>submodules/ota-rollout-engine</code>) and adds the
+control-plane layer the brick deliberately does not provide (HTTP,
+persistence, pause/resume/abort/rollback). Companion DDL: <a
+href="migration_002_design.md"><code>migration_002_design.md</code></a>.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The brick exposes <code>Create/Start/Evaluate</code> and a
+terminal-state model (<code>pending/active/halted/held/completed</code>)
+but has <strong>no native pause/resume/abort/rollback</strong> verbs —
+those are control-plane responsibilities layered over the brick’s
+storage port (§5). Health-verdict aggregation (telemetry →
+<code>HealthVerdict</code>) is owned by
+<code>telemetry_processing</code>, referenced here, not specified here.
+TUF metadata storage is deferred (note in §11).</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Engine reused as-is; lifecycle verbs the brick lacks are specified
+as a thin control-plane state machine over the brick, not as brick
+changes.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Promotes the <code>1.0.1-staged-rollout/README.md</code> §2 seed
+into a full, code-actionable engine spec reflecting the brick’s
+<strong>real</strong> Go API as built in
+<code>submodules/ota-rollout-engine</code> (<code>types.go</code>,
+<code>engine.go</code>, <code>verdict.go</code>, <code>decide.go</code>,
+<code>cohort.go</code>, <code>ports.go</code>).</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Spec body now matches the shipped brick API exactly; no invented
+engine functions.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Implement the control-plane <code>rollout</code> package wiring the
+brick to a <code>database</code>-backed <code>StoragePort</code> (§6),
+the scheduler that drives <code>Evaluate</code> (§7), and the REST
+routes (§8); land migration <code>002_*</code>
+(<code>migration_002_design.md</code>); four-layer + mutation tests per
+§10.</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Helix OTA control-plane team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><a
+href="migration_002_design.md"><code>migration_002_design.md</code></a>;
+<a href="README.md"><code>README.md</code></a>; <a
+href="../1.0.0-mvp/api/endpoints.md"><code>../1.0.0-mvp/api/endpoints.md</code></a>;
+<a
+href="../1.0.0-mvp/database/migrations/001_initial_schema.up.sql"><code>../1.0.0-mvp/database/migrations/001_initial_schema.up.sql</code></a>;
+<a
+href="../research/additions_synthesis.md"><code>../research/additions_synthesis.md</code></a>
+(§8 G7, §10 K6/K8); <code>submodules/ota-rollout-engine</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">table of contents</h2>
+<ul>
+<li><a href="#1-purpose-and-scope">§1. purpose and scope</a></li>
+<li><a href="#2-reused-brick--real-api-surface">§2. reused brick — real
+api surface</a></li>
+<li><a href="#3-percentage-phases-and-thresholds">§3. percentage phases
+and thresholds</a></li>
+<li><a href="#4-deterministic-cohort-assignment">§4. deterministic
+cohort assignment</a></li>
+<li><a href="#5-lifecycle-operations">§5. lifecycle operations</a></li>
+<li><a href="#6-persistence--storage-port-over-postgres">§6. persistence
+— storage port over postgres</a></li>
+<li><a href="#7-evaluation-loop-and-health-verdict">§7. evaluation loop
+and health verdict</a></li>
+<li><a href="#8-rollout-rest-api-gin">§8. rollout rest api
+(gin)</a></li>
+<li><a href="#9-decoupling-and-catalogue-reuse">§9. decoupling and
+catalogue reuse</a></li>
+<li><a href="#10-testing-four-layer">§10. testing (four-layer)</a></li>
+<li><a href="#11-tuf-metadata-note-deferred">§11. tuf metadata note
+(deferred)</a></li>
+<li><a href="#12-anti-bluff--unverified-register">§12. anti-bluff /
+unverified register</a></li>
+</ul>
+<hr />
+<h2 id="purpose-and-scope">§1. purpose and scope</h2>
+<p>Phase 1.0.1 turns the MVP’s all-targets, all-at-once delivery into a
+<strong>safe, staged rollout</strong>: a release reaches the fleet in
+ordered percentage phases, each gated on telemetry-derived success/error
+thresholds, with <strong>automatic halt-on-breach</strong> and operator
+lifecycle controls (start/pause/resume/abort/rollback). This is the
+phase where the <code>ota-rollout-engine</code> submodule graduates from
+scaffold to wired-in (<code>README.md</code> §1).</p>
+<p>Per <code>additions_synthesis.md</code> §10 K6/K8, <strong>staged
+rollout owns 1.0.1</strong> (rollback → 1.0.2, delta → 1.0.3) and the
+MVP is all-targets-only; nothing in this spec changes the MVP contract.
+The MVP already reserves the seam:
+<code>deployments.rollout_strategy</code> is JSONB defaulting to
+<code>{"mode":"all_at_once"}</code> (migration 001), and the deployment
+API reserves a <code>strategy</code> field (<code>endpoints.md</code>
+§11). A staged deployment writes a <code>staged</code> strategy and
+populates the new tables defined in
+<code>migration_002_design.md</code>.</p>
+<p><strong>Reuse mandate (Constitution §11.4.74 catalogue-first,
+UNVERIFIED clause):</strong> the decision core — phase model, threshold
+gating, halt-wins safety invariant, deterministic cohorts, idempotent
+transitions — is the existing brick. This spec <strong>does not
+re-specify those</strong>; it specifies only the control-plane layer the
+brick intentionally omits (it is HTTP-free and storage-agnostic by
+design, <code>README.md</code> “Boundary”).</p>
+<p>In scope: phase/threshold semantics as the brick implements them;
+deterministic cohort assignment as the brick implements it; the
+lifecycle verbs the control plane adds over the brick; the
+Postgres-backed <code>StoragePort</code>; the evaluation scheduler; the
+REST API. Out of scope: telemetry aggregation into a
+<code>HealthVerdict</code> (owned by <code>telemetry_processing</code>);
+device-side TUF (<code>README.md</code> §4); end-user rollback UX
+(1.0.2, <code>README.md</code> §5 — this spec’s “rollback” is the
+server-driven recall-to-previous-release operation, §5.5).</p>
+<h2 id="reused-brick-real-api-surface">§2. reused brick — real api
+surface</h2>
+<p>The brick lives at <code>submodules/ota-rollout-engine</code> (Go
+module <code>github.com/HelixDevelopment/ota-rollout-engine</code>,
+Apache-2.0). The control plane imports it; it MUST NOT fork or
+reimplement it. The surface below is transcribed from the
+<strong>shipped source</strong> (not invented).</p>
+<h3 id="types-types.go">§2.1 types (<code>types.go</code>)</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Phase <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    Percentage       <span class="dt">int</span>           <span class="co">// cumulative cohort %, strictly increasing, in (0,100]; last must be 100</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    SuccessThreshold <span class="dt">float64</span>       <span class="co">// success_rate (fraction [0,1]) required to advance</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    ErrorThreshold   <span class="dt">float64</span>       <span class="co">// error_rate (fraction [0,1]) that triggers HALT</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Duration         time<span class="op">.</span>Duration <span class="co">// evaluation window; 0 = &quot;no time bound&quot;, judged purely on thresholds</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    AutoProgress     <span class="dt">bool</span>          <span class="co">// true = auto-advance on success; false = HOLD for operator</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Status <span class="dt">string</span> <span class="co">// &quot;pending&quot; | &quot;active&quot; | &quot;halted&quot; | &quot;held&quot; | &quot;completed&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> State <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    DeploymentID   <span class="dt">string</span>    <span class="co">// rollout key (== StoragePort key)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    Phases         <span class="op">[]</span>Phase   <span class="co">// immutable validated plan</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    CurrentPhase   <span class="dt">int</span>       <span class="co">// cursor into Phases</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    Status         Status</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    PhaseStartedAt time<span class="op">.</span>Time <span class="co">// set by engine via Clock</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    UpdatedAt      time<span class="op">.</span>Time</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Status</code> values (from <code>types.go</code>):
+<code>StatusPending</code>, <code>StatusActive</code>,
+<code>StatusHalted</code>, <code>StatusHeld</code>,
+<code>StatusCompleted</code>. <code>StatusHalted</code> is documented
+in-brick as “safety-critical; never auto-resumes”.</p>
+<p>Plan validation (<code>validatePhases</code>) rejects: empty phase
+list (<code>ErrNoPhases</code>); a percentage outside
+<code>(0,100]</code> (<code>ErrPercentageRange</code>);
+non-strictly-increasing percentages
+(<code>ErrPercentageNotMonotonic</code>); a threshold outside
+<code>[0,1]</code> (<code>ErrThresholdRange</code>); a negative duration
+(<code>ErrDurationNegative</code>); and a final phase that is not
+<code>100</code> (<code>ErrFinalPercentageNot100</code>). The control
+plane MUST surface these as <code>400 VALIDATION_FAILED</code> (§8.2),
+mapping each sentinel to a <code>details</code> entry.</p>
+<h3 id="engine-ports-engine.go-ports.go">§2.2 engine + ports
+(<code>engine.go</code>, <code>ports.go</code>)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> New<span class="op">(</span>store StoragePort<span class="op">,</span> clock Clock<span class="op">)</span> <span class="op">(*</span>Engine<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>e <span class="op">*</span>Engine<span class="op">)</span> Create<span class="op">(</span>ctx<span class="op">,</span> deploymentID <span class="dt">string</span><span class="op">,</span> phases <span class="op">[]</span>Phase<span class="op">)</span> <span class="op">(</span>State<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>e <span class="op">*</span>Engine<span class="op">)</span> Start<span class="op">(</span>ctx<span class="op">,</span> deploymentID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>State<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>e <span class="op">*</span>Engine<span class="op">)</span> Evaluate<span class="op">(</span>ctx<span class="op">,</span> deploymentID <span class="dt">string</span><span class="op">,</span> v HealthVerdict<span class="op">)</span> <span class="op">(</span>Decision<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> StoragePort <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    Load<span class="op">(</span>ctx<span class="op">,</span> deploymentID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>State<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// ErrNotFound (wrapped) when absent</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    Save<span class="op">(</span>ctx<span class="op">,</span> state State<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Clock <span class="kw">interface</span> <span class="op">{</span> Now<span class="op">()</span> time<span class="op">.</span>Time <span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewSystemClock<span class="op">()</span> Clock</span></code></pre></div>
+<p>The engine is “stateless beyond its ports”: all rollout state lives
+behind <code>StoragePort</code>; the only clock is the injected
+<code>Clock</code>. <code>Create</code> is idempotent-overwrite;
+<code>Start</code> is idempotent on an already-active rollout and errors
+from a terminal state. <strong>The brick provides no <code>Pause</code>,
+<code>Resume</code>, <code>Abort</code>, or <code>Rollback</code>
+method</strong> — see §5.</p>
+<h3 id="verdict-decision-verdict.go-decide.go">§2.3 verdict + decision
+(<code>verdict.go</code>, <code>decide.go</code>)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HealthVerdict <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    SuccessRate          <span class="dt">float64</span> <span class="co">// [0,1] = count(success)/count(terminal)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ErrorRate            <span class="dt">float64</span> <span class="co">// [0,1] = count(failure)/count(terminal)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    PostBootHealthFailed <span class="dt">bool</span>    <span class="co">// post-boot health-window breach -&gt; abort</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Decision <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Action       Action  <span class="co">// &quot;halt&quot; | &quot;advance&quot; | &quot;hold&quot; | &quot;complete&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    Reason       Reason</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    Status       Status</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    DeviceStatus otaprotocol<span class="op">.</span>DeviceDeploymentStatus <span class="co">// reuses the shared per-device enum</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>Decision.DeviceStatus</code> reuses <code>ota-protocol</code>’s
+<code>DeviceDeploymentStatus</code>
+(<code>pending/downloading/installing/verifying/success/failed/rolled_back</code>)
+so the rollout speaks the same per-device vocabulary as migration 001’s
+<code>device_deployments.status</code>.</p>
+<p>The decision precedence (the <strong>safety invariant</strong>, from
+<code>decide.go</code>, in order) is:</p>
+<ol type="1">
+<li><code>PostBootHealthFailed</code> → <strong>HALT</strong>
+(<code>ReasonPostBootFailed</code>).</li>
+<li><code>ErrorRate &gt;= ErrorThreshold</code> → <strong>HALT</strong>
+(<code>ReasonErrorThreshold</code>) — checked <strong>before</strong>
+the success path, so a simultaneous error+success breach halts. “Halt
+wins over advance.”</li>
+<li><code>SuccessRate &gt;= SuccessThreshold</code> → final phase
+<strong>COMPLETE</strong>; else <code>AutoProgress</code>
+<strong>ADVANCE</strong> (reset phase clock); else <strong>HOLD</strong>
+(<code>ReasonAutoProgressOff</code>, → <code>StatusHeld</code>).</li>
+<li>window still open (or <code>Duration == 0</code>) →
+<strong>HOLD</strong> (<code>ReasonWindowOpen</code>, stays
+<code>active</code>).</li>
+<li>window elapsed, bar not met → <strong>HOLD</strong>
+(<code>ReasonWindowExpired</code>, → <code>StatusHeld</code>).</li>
+</ol>
+<p>Threshold comparisons are <code>&gt;=</code> (a rate exactly at the
+threshold is a breach / a pass). The control plane MUST NOT re-derive or
+override this ordering; it consumes <code>Decision</code>.</p>
+<h2 id="percentage-phases-and-thresholds">§3. percentage phases and
+thresholds</h2>
+<p>A staged rollout is an ordered <code>[]Phase</code>. The canonical
+default plan (synthesis §3, <code>README.md</code> §1) is <strong>5 → 10
+→ 30 → 50 → 100</strong>, each cumulative. Because
+<code>Percentage</code> is cumulative and strictly increasing and cohort
+membership is monotonic (§4), phase <em>N</em>’s cohort is a superset of
+phase <em>N-1</em>’s — the rollout only ever grows the exposed
+fleet.</p>
+<p>Example plan (the API request shape is §8.2):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Percentage (cumulative)</th>
+<th>success_threshold</th>
+<th>error_threshold</th>
+<th>duration</th>
+<th>auto_progress</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>5</td>
+<td>0.95</td>
+<td>0.02</td>
+<td>6h</td>
+<td>true</td>
+</tr>
+<tr>
+<td>2</td>
+<td>10</td>
+<td>0.95</td>
+<td>0.02</td>
+<td>6h</td>
+<td>true</td>
+</tr>
+<tr>
+<td>3</td>
+<td>30</td>
+<td>0.97</td>
+<td>0.01</td>
+<td>12h</td>
+<td>true</td>
+</tr>
+<tr>
+<td>4</td>
+<td>50</td>
+<td>0.98</td>
+<td>0.01</td>
+<td>12h</td>
+<td>false (operator gate)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>100</td>
+<td>0.98</td>
+<td>0.01</td>
+<td>24h</td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+<p>Thresholds are <strong>fractions in <code>[0,1]</code></strong> (not
+percents) — enforced by <code>validatePhases</code>. The default numeric
+values above are <strong>operator-tunable defaults, UNVERIFIED as
+production constants</strong> (they are not measured; set them per
+release from the <code>config</code> brick). <code>duration</code> is
+the evaluation window; <code>0</code> means “no time bound — hold until
+the success bar is met”. <code>auto_progress=false</code> on phase 4
+illustrates an operator checkpoint: the engine reaches <code>held</code>
+with <code>ReasonAutoProgressOff</code> and waits for an explicit resume
+(§5.4).</p>
+<p>The brick <strong>requires the final phase to be 100</strong>
+(<code>ErrFinalPercentageNot100</code>): a staged rollout must be able
+to converge on the whole fleet. A plan that should stop short of 100 is
+not expressible as a single rollout; the operator aborts (§5.5)
+instead.</p>
+<h2 id="deterministic-cohort-assignment">§4. deterministic cohort
+assignment</h2>
+<p>Cohort membership is the brick’s <code>cohort.go</code>
+(<code>InCohort</code>), reused verbatim:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> InCohort<span class="op">(</span>deviceID<span class="op">,</span> deploymentID <span class="dt">string</span><span class="op">,</span> cumulativePercentage <span class="dt">int</span><span class="op">)</span> <span class="dt">bool</span></span></code></pre></div>
+<p>A device is in the cohort iff its <strong>stable bucket</strong> is
+strictly less than the cumulative percentage:</p>
+<pre><code>bucket(deviceID, deploymentID) = FNV-1a(deviceID || 0x00 || deploymentID) mod 100
+member  ⇔  bucket &lt; cumulativePercentage</code></pre>
+<p>Properties the control plane relies on (from the brick docs):</p>
+<ul>
+<li><strong>Deterministic across processes/architectures</strong> —
+FNV-1a (stdlib <code>hash/fnv</code>), not Go’s randomized map hash, so
+every server computes the same bucket for the same device.</li>
+<li><strong>Stable</strong> — a pure function of
+<code>(deviceID, deploymentID)</code>; never depends on time, phase, or
+call order. A device stays in its cohort across re-evaluation (no
+flapping in/out).</li>
+<li><strong>Monotonic</strong> — member at percentage <code>p</code> ⇒
+member at every <code>q &gt;= p</code>. This is what makes the
+5→10→30→50→100 progression only ever add devices.</li>
+<li>The salt is the <strong>deployment id</strong>, so the same device
+lands in different buckets for different rollouts (no systematic
+always-canary device across releases).</li>
+<li><code>cumulativePercentage &lt;= 0</code> selects nobody;
+<code>&gt;= 100</code> selects everybody.</li>
+</ul>
+<p><strong>Where it is used.</strong> On a device update-check
+(<code>endpoints.md</code> §12.1), for a device whose release is
+governed by a staged deployment, the control plane:</p>
+<ol type="1">
+<li>loads the rollout <code>State</code> (§6) and reads
+<code>CurrentPhase</code> → cumulative <code>Percentage</code>;</li>
+<li>calls
+<code>InCohort(deviceID, deploymentID, percentage)</code>;</li>
+<li>if <strong>true</strong> and the rollout <code>Status</code> is
+<code>active</code>, offers the update (<code>200</code>); if
+<strong>false</strong>, or the rollout is
+<code>pending</code>/<code>halted</code>/<code>held</code>, returns
+<code>204</code> (not yet in cohort / not eligible). The existing
+anti-downgrade invariant (synthesis §8 G1) still applies on top.</li>
+</ol>
+<p>Cohort assignment is read-only and side-effect-free — it never writes
+state, so the update-check stays cheap and the cohort is recomputed
+identically on every poll.</p>
+<h2 id="lifecycle-operations">§5. lifecycle operations</h2>
+<p>The operator-facing verbs are <strong>start / pause / resume / abort
+/ rollback</strong>. The brick natively provides only
+<code>Create</code>, <code>Start</code>, and <code>Evaluate</code> with
+the terminal-state model
+<code>pending/active/halted/held/completed</code>. The remaining verbs
+are a <strong>thin control-plane state machine layered over the brick’s
+<code>StoragePort</code></strong> — the control plane reads/writes
+<code>State</code> (and the <code>rollouts</code> row,
+<code>migration_002_design.md</code>) without forking the brick. This
+keeps the brick’s safety invariant authoritative while adding the
+operational controls 1.0.1 needs.</p>
+<blockquote>
+<p>Design note (anti-bluff): pause/resume/abort/rollback are <strong>NOT
+brick methods</strong> (verified against <code>engine.go</code>).
+Implementing them as control-plane transitions over the persisted
+<code>State.Status</code> is the chosen design; it does not require
+brick changes. The mapping below is the spec’s decision, not an existing
+brick API.</p>
+</blockquote>
+<h3 id="status-model-brick-control-plane">§5.1 status model (brick ∪
+control-plane)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Status</th>
+<th>Source</th>
+<th>Meaning</th>
+<th>Auto-resumes?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pending</code></td>
+<td>brick</td>
+<td>created, not started</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><code>active</code></td>
+<td>brick</td>
+<td>a phase is running and being evaluated</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><code>held</code></td>
+<td>brick</td>
+<td>window expired below bar, or <code>auto_progress=false</code> —
+awaits operator</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>halted</code></td>
+<td>brick</td>
+<td>error-threshold/post-boot breach (safety)</td>
+<td><strong>never</strong></td>
+</tr>
+<tr>
+<td><code>completed</code></td>
+<td>brick</td>
+<td>final (100%) phase met its bar</td>
+<td>terminal</td>
+</tr>
+<tr>
+<td><code>paused</code></td>
+<td>control plane</td>
+<td>operator-suspended (no evaluation advances it)</td>
+<td>only via resume</td>
+</tr>
+<tr>
+<td><code>aborted</code></td>
+<td>control plane</td>
+<td>operator cancelled the whole rollout</td>
+<td>terminal</td>
+</tr>
+<tr>
+<td><code>rolled_back</code></td>
+<td>control plane</td>
+<td>operator recalled the fleet to the previous release</td>
+<td>terminal</td>
+</tr>
+</tbody>
+</table>
+<p><code>paused/aborted/rolled_back</code> live in the
+<code>rollouts</code> table’s own status column
+(<code>migration_002_design.md</code> §3.2), layered over — not inside —
+the brick <code>State.Status</code>. The control plane is the single
+writer that reconciles the two (§6.3).</p>
+<h3 id="start">§5.2 start</h3>
+<p><code>POST .../rollout/start</code> →
+<code>Engine.Start(ctx, deploymentID)</code>:
+<code>pending → active</code>, stamps <code>PhaseStartedAt</code>.
+Idempotent on an already-active rollout (brick guarantee). Errors from a
+terminal status. Sets the <code>deployments.status</code> to
+<code>active</code> and the <code>rollouts</code> status to
+<code>active</code>.</p>
+<h3 id="pause">§5.3 pause</h3>
+<p><code>POST .../rollout/pause</code>: control-plane-only. Allowed from
+<code>active</code> or <code>held</code>. The control plane sets the
+<code>rollouts</code> status to <code>paused</code> and <strong>stops
+feeding verdicts to <code>Evaluate</code></strong> (the scheduler skips
+paused rollouts, §7). The brick <code>State</code> is left untouched (no
+phase clock reset), so the evaluation window is effectively frozen at
+the wall-clock sense only insofar as the scheduler does not call
+<code>Evaluate</code>; because the brick judges the window off
+<code>PhaseStartedAt</code> vs <code>Clock.Now()</code>, <strong>pausing
+does not extend the brick’s window</strong> — on resume a
+<code>Duration</code>-bounded phase may already be expired and resolve
+to <code>held</code>. This is the chosen, documented behavior
+(UNVERIFIED whether operators want true window-freezing; if so, that is
+a brick change tracked in §12, not assumed here).</p>
+<h3 id="resume">§5.4 resume</h3>
+<p><code>POST .../rollout/resume</code>: allowed from
+<code>paused</code> or <code>held</code>.</p>
+<ul>
+<li>From <code>paused</code>: clear <code>paused</code>, restore the
+underlying brick status (<code>active</code>/<code>held</code>), and
+re-enable scheduler evaluation.</li>
+<li>From <code>held</code>: the operator decision after an
+<code>auto_progress=false</code> checkpoint or a window-expired hold.
+Resume calls <code>Engine.Evaluate</code> once more with the latest
+verdict; if the success bar is met it advances (or completes). For an
+operator who wants to advance a <code>held</code> rollout that has
+<strong>not</strong> met the bar, that is an explicit override and is
+<strong>out of scope for 1.0.1</strong> (the engine will re-hold) —
+UNVERIFIED requirement (§12).</li>
+</ul>
+<h3 id="abort">§5.5 abort</h3>
+<p><code>POST .../rollout/abort</code>: allowed from any non-terminal
+status. Control-plane-only, terminal: sets <code>rollouts</code> status
+<code>aborted</code>, <code>deployments.status = cancelled</code>, stops
+scheduler evaluation, and ceases offering the update to not-yet-updated
+devices (cohort check returns <code>204</code> for an aborted rollout,
+§4). Devices already updated are <strong>not</strong> reverted — abort
+halts forward progress only. Reverting them is <strong>rollback</strong>
+(§5.6). Abort records an entry in <code>rollback_history</code> with
+<code>kind = 'abort'</code> for audit
+(<code>migration_002_design.md</code> §3.3).</p>
+<h3 id="rollback-server-driven-recall">§5.6 rollback (server-driven
+recall)</h3>
+<p><code>POST .../rollout/rollback</code>: allowed from
+<code>active</code>, <code>held</code>, <code>halted</code>,
+<code>paused</code>, or <code>aborted</code>. This is the
+<strong>server-driven recall-to-previous-release</strong> operation (not
+end-user rollback, which is 1.0.2). It:</p>
+<ol type="1">
+<li>terminates the current rollout (<code>rollouts</code> status
+<code>rolled_back</code>);</li>
+<li>identifies the <strong>previous good release</strong> for the same
+<code>os</code>+<code>target_model</code> (the release the target
+devices were on before this deployment);</li>
+<li>creates a <strong>new deployment</strong> of that previous release
+to the affected cohort (reusing the normal deploy path), so devices
+receive a forward update <em>back to</em> N-1. On Android A/B this is a
+normal forward apply to the prior image; it MUST respect the
+anti-downgrade / rollback-index invariant — a recall is an
+<em>authorized</em> downgrade and requires the prior image’s
+rollback-index to still be acceptable (<code>README.md</code> §5;
+UNVERIFIED interplay with AVB rollback-index, §12);</li>
+<li>writes a <code>rollback_history</code> row
+(<code>kind = 'rollback'</code>, <code>from_release_id</code>,
+<code>to_release_id</code>, <code>deployment_id</code>,
+<code>triggered_by</code>).</li>
+</ol>
+<p>Per §10 K8, full end-user/multi-version rollback is 1.0.2; this 1.0.1
+operation is the server-initiated recall only.</p>
+<h3 id="lifecycle-transition-table">§5.7 lifecycle transition table</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>From  Op</th>
+<th>start</th>
+<th>pause</th>
+<th>resume</th>
+<th>abort</th>
+<th>rollback</th>
+<th>evaluate→halt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pending</td>
+<td>active</td>
+<td>—</td>
+<td>—</td>
+<td>aborted</td>
+<td>rolled_back</td>
+<td>—</td>
+</tr>
+<tr>
+<td>active</td>
+<td>(noop)</td>
+<td>paused</td>
+<td>—</td>
+<td>aborted</td>
+<td>rolled_back</td>
+<td>halted</td>
+</tr>
+<tr>
+<td>held</td>
+<td>—</td>
+<td>paused</td>
+<td>active/held*</td>
+<td>aborted</td>
+<td>rolled_back</td>
+<td>halted</td>
+</tr>
+<tr>
+<td>paused</td>
+<td>—</td>
+<td>(noop)</td>
+<td>active/held</td>
+<td>aborted</td>
+<td>rolled_back</td>
+<td>— (not evaluated)</td>
+</tr>
+<tr>
+<td>halted</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>aborted</td>
+<td>rolled_back</td>
+<td>(noop)</td>
+</tr>
+<tr>
+<td>completed</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>rolled_back</td>
+<td>(noop)</td>
+</tr>
+<tr>
+<td>aborted/rolled_back</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>* resume from <code>held</code> re-evaluates (§5.4). A blank cell is
+a <code>409 CONFLICT</code> (illegal transition, §8).
+<code>halted</code> <strong>never</strong> auto-resumes; the only ways
+out are <code>abort</code> or <code>rollback</code>.</p>
+<h2 id="persistence-storage-port-over-postgres">§6. persistence —
+storage port over postgres</h2>
+<h3 id="binding">§6.1 binding</h3>
+<p>The control plane implements <code>rollout.StoragePort</code> over
+the <code>database</code> brick (Postgres, schema
+<code>helix_ota</code>), backed by the <code>rollouts</code> +
+<code>deployment_phases</code> tables
+(<code>migration_002_design.md</code>).
+<code>New(store, NewSystemClock())</code> constructs the engine once at
+startup; the store is request-scoped only insofar as it carries the
+<code>*sql.Tx</code>/pool.</p>
+<h3 id="load-save-mapping">§6.2 load / save mapping</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th><code>rollout.State</code> field</th>
+<th>Postgres source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DeploymentID</code></td>
+<td><code>rollouts.deployment_id</code> (the key)</td>
+</tr>
+<tr>
+<td><code>Phases</code></td>
+<td><code>deployment_phases</code> rows for the deployment, ordered by
+<code>phase_index</code> → <code>[]Phase</code></td>
+</tr>
+<tr>
+<td><code>CurrentPhase</code></td>
+<td><code>rollouts.current_phase</code></td>
+</tr>
+<tr>
+<td><code>Status</code></td>
+<td><code>rollouts.engine_status</code> (brick status; distinct from the
+control-plane <code>rollouts.status</code>, §6.3)</td>
+</tr>
+<tr>
+<td><code>PhaseStartedAt</code></td>
+<td><code>rollouts.phase_started_at</code></td>
+</tr>
+<tr>
+<td><code>UpdatedAt</code></td>
+<td><code>rollouts.updated_at</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>Load</code> returns <code>rollout.ErrNotFound</code> (wrapped)
+when no <code>rollouts</code> row exists for the deployment, per the
+port contract. <code>Save</code> upserts the <code>rollouts</code>
+cursor columns in one statement; the immutable
+<code>deployment_phases</code> rows are written once at create and never
+updated by <code>Save</code> (the brick treats <code>Phases</code> as
+immutable).</p>
+<h3 id="two-status-columns-engine-vs-control-plane">§6.3 two status
+columns (engine vs control-plane)</h3>
+<p><code>rollouts</code> carries <strong>both</strong> the brick
+<code>engine_status</code>
+(<code>pending/active/halted/held/completed</code>) and the
+control-plane <code>status</code> (adds
+<code>paused/aborted/rolled_back</code>). The control plane is the
+<strong>single writer</strong> that keeps them consistent: brick-driven
+transitions (start, evaluate) write <code>engine_status</code>;
+operator-driven transitions (pause/abort/rollback) write
+<code>status</code>; resume reconciles <code>status</code> back to
+mirror <code>engine_status</code>. The cohort/update-check eligibility
+check (§4) gates on <strong>both</strong>: a device is eligible iff
+<code>engine_status = active</code> AND
+<code>status NOT IN (paused, aborted, rolled_back)</code>.</p>
+<h3 id="concurrency">§6.4 concurrency</h3>
+<p>The brick states concurrency control over a given deployment id is
+“the storage layer’s responsibility”. The <code>StoragePort</code>
+implementation MUST serialize
+<code>Load</code>→<code>Evaluate</code>→<code>Save</code> for one
+deployment with <code>SELECT ... FOR UPDATE</code> on the
+<code>rollouts</code> row (or an equivalent advisory lock) so two
+concurrent evaluations cannot race the cursor. (UNVERIFIED: whether the
+<code>database</code> brick exposes a row-lock helper — wire if present,
+else raw <code>FOR UPDATE</code>.)</p>
+<h2 id="evaluation-loop-and-health-verdict">§7. evaluation loop and
+health verdict</h2>
+<p>The brick does not ingest telemetry; it consumes a
+<code>HealthVerdict</code> per evaluation (<code>verdict.go</code>).
+1.0.1 adds a <strong>scheduler</strong> that, on a fixed tick
+(configurable via <code>config</code>, default UNVERIFIED — set from
+load tests), for each <code>active</code>, non-<code>paused</code>
+rollout:</p>
+<ol type="1">
+<li>asks <code>telemetry_processing</code> for the current phase
+cohort’s <code>HealthVerdict</code> (<code>SuccessRate</code>,
+<code>ErrorRate</code>, <code>PostBootHealthFailed</code>) computed over
+the cohort’s terminal devices (<code>telemetry_processing</code> §4 —
+referenced, not specified here);</li>
+<li>calls <code>Engine.Evaluate(ctx, deploymentID, verdict)</code>;</li>
+<li>acts on the returned <code>Decision</code>: on <code>halt</code>
+raise a <code>Herald</code> alert + mark <code>deployments.status</code>
+accordingly and write a <code>rollback_history</code> audit row if
+policy auto-rollbacks on halt (operator-config, default
+<strong>halt-and-hold</strong>, not auto-rollback — UNVERIFIED policy
+default, §12); on
+<code>advance</code>/<code>complete</code>/<code>hold</code> simply
+persist (the brick already did, via <code>Save</code>).</li>
+</ol>
+<p>The scheduler is the <strong>only</strong> caller of
+<code>Evaluate</code> (single writer per §6.4). A device telemetry
+report does <strong>not</strong> directly drive the engine; it updates
+<code>device_deployments</code> / <code>telemetry_events</code>, and the
+next scheduler tick re-derives the verdict. This decouples the
+high-volume telemetry path from the rollout decision (Constitution
+§11.4.28 decoupling).</p>
+<p><code>Evaluate</code> is idempotent at a terminal status
+(halted/completed) — the scheduler may safely re-tick a finished
+rollout; it writes nothing.</p>
+<h2 id="rollout-rest-api-gin">§8. rollout rest api (gin)</h2>
+<p>Extends the MVP REST conventions (<code>endpoints.md</code> §2–§6):
+base path <code>/api/v1</code>, Gin (<code>gin-gonic</code>),
+<code>application/json; charset=utf-8</code>, OAuth2/JWT + RBAC, the
+<code>Error</code> envelope
+(<code>code</code>/<code>message</code>/<code>request_id</code>/<code>details</code>),
+Brotli/gzip negotiation, <code>X-Request-Id</code>. New routes hang off
+the existing deployment resource. <strong>RBAC:</strong> all rollout
+write verbs require <code>operator</code>; reads require
+<code>viewer</code> (mirrors <code>endpoints.md</code> §4.2).</p>
+<h3 id="route-summary">§8.1 route summary</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + path</th>
+<th>Op</th>
+<th>Min role</th>
+<th>Maps to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /api/v1/deployments/{id}/rollout</code></td>
+<td>create staged plan</td>
+<td>operator</td>
+<td><code>Engine.Create</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/deployments/{id}/rollout/start</code></td>
+<td>start</td>
+<td>operator</td>
+<td><code>Engine.Start</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/deployments/{id}/rollout/pause</code></td>
+<td>pause</td>
+<td>operator</td>
+<td>control-plane (§5.3)</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/deployments/{id}/rollout/resume</code></td>
+<td>resume</td>
+<td>operator</td>
+<td>control-plane + <code>Engine.Evaluate</code> (§5.4)</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/deployments/{id}/rollout/abort</code></td>
+<td>abort</td>
+<td>operator</td>
+<td>control-plane (§5.5)</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/deployments/{id}/rollout/rollback</code></td>
+<td>server-driven recall</td>
+<td>operator</td>
+<td>control-plane (§5.6)</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/deployments/{id}/rollout</code></td>
+<td>read rollout state</td>
+<td>viewer</td>
+<td><code>StoragePort.Load</code> projection</td>
+</tr>
+</tbody>
+</table>
+<p>A staged deployment is created with the MVP
+<code>POST /api/v1/deployments</code> (<code>endpoints.md</code> §11)
+using <code>strategy: "staged"</code> (the new accepted value alongside
+<code>all-targets</code>); the rollout plan is then attached with
+<code>POST .../rollout</code>. Creating the plan before
+<code>start</code> keeps the deployment in
+<code>draft</code>/<code>active</code> per the MVP status model.</p>
+<h3 id="create-post-apiv1deploymentsidrollout">§8.2 create —
+<code>POST /api/v1/deployments/{id}/rollout</code></h3>
+<ul>
+<li><strong>Auth:</strong> <code>operator</code>. Accepts optional
+<code>Idempotency-Key</code> (mirrors <code>endpoints.md</code>
+§2).</li>
+<li><strong>Request body</strong> (<code>RolloutCreate</code>):</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;phases&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;percentage&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span>   <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span> <span class="dt">&quot;error_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.02</span><span class="fu">,</span> <span class="dt">&quot;duration&quot;</span><span class="fu">:</span> <span class="st">&quot;6h&quot;</span><span class="fu">,</span>  <span class="dt">&quot;auto_progress&quot;</span><span class="fu">:</span> <span class="kw">true</span>  <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;percentage&quot;</span><span class="fu">:</span> <span class="dv">10</span><span class="fu">,</span>  <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span> <span class="dt">&quot;error_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.02</span><span class="fu">,</span> <span class="dt">&quot;duration&quot;</span><span class="fu">:</span> <span class="st">&quot;6h&quot;</span><span class="fu">,</span>  <span class="dt">&quot;auto_progress&quot;</span><span class="fu">:</span> <span class="kw">true</span>  <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;percentage&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span>  <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.97</span><span class="fu">,</span> <span class="dt">&quot;error_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.01</span><span class="fu">,</span> <span class="dt">&quot;duration&quot;</span><span class="fu">:</span> <span class="st">&quot;12h&quot;</span><span class="fu">,</span> <span class="dt">&quot;auto_progress&quot;</span><span class="fu">:</span> <span class="kw">true</span>  <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;percentage&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span>  <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.98</span><span class="fu">,</span> <span class="dt">&quot;error_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.01</span><span class="fu">,</span> <span class="dt">&quot;duration&quot;</span><span class="fu">:</span> <span class="st">&quot;12h&quot;</span><span class="fu">,</span> <span class="dt">&quot;auto_progress&quot;</span><span class="fu">:</span> <span class="kw">false</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;percentage&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.98</span><span class="fu">,</span> <span class="dt">&quot;error_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.01</span><span class="fu">,</span> <span class="dt">&quot;duration&quot;</span><span class="fu">:</span> <span class="st">&quot;24h&quot;</span><span class="fu">,</span> <span class="dt">&quot;auto_progress&quot;</span><span class="fu">:</span> <span class="kw">true</span>  <span class="fu">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>duration</code> is an RFC-3339-duration-style Go string
+(<code>"6h"</code>, <code>"30m"</code>); the server parses it to
+<code>time.Duration</code>.
+<code>success_threshold</code>/<code>error_threshold</code> are
+fractions in <code>[0,1]</code>. The server calls
+<code>Engine.Create</code>, which runs <code>validatePhases</code>; each
+brick sentinel maps to a <code>details</code> entry under
+<code>400 VALIDATION_FAILED</code>:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Brick error</th>
+<th><code>details.issue</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ErrNoPhases</code></td>
+<td>“at least one phase is required”</td>
+</tr>
+<tr>
+<td><code>ErrPercentageRange</code></td>
+<td>“phase percentage must be in (0,100]”</td>
+</tr>
+<tr>
+<td><code>ErrPercentageNotMonotonic</code></td>
+<td>“phase percentages must strictly increase”</td>
+</tr>
+<tr>
+<td><code>ErrThresholdRange</code></td>
+<td>“thresholds must be fractions in [0,1]”</td>
+</tr>
+<tr>
+<td><code>ErrDurationNegative</code></td>
+<td>“phase duration must not be negative”</td>
+</tr>
+<tr>
+<td><code>ErrFinalPercentageNot100</code></td>
+<td>“final phase percentage must be 100”</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Response 201</strong> (<code>Rollout</code>): the persisted
+plan + <code>engine_status: "pending"</code>,
+<code>status: "pending"</code>, <code>current_phase: 0</code>.</li>
+<li><strong>Status codes:</strong> <code>201</code>; <code>200</code>
+(idempotent replay); <code>400 VALIDATION_FAILED</code>;
+<code>401</code>/<code>403</code>; <code>404 NOT_FOUND</code>
+(deployment); <code>409 CONFLICT</code> (deployment already has a
+rollout, or is not a <code>staged</code> deployment);
+<code>429</code>.</li>
+</ul>
+<h3 id="lifecycle-verbs-start-pause-resume-abort-rollback">§8.3
+lifecycle verbs — <code>start</code> / <code>pause</code> /
+<code>resume</code> / <code>abort</code> / <code>rollback</code></h3>
+<p>Each is a bodyless <code>POST</code> (optionally
+<code>{ "reason": "..." }</code> for audit). Responses return the
+updated <code>Rollout</code> projection. Common status codes:
+<code>200</code> OK; <code>401</code>/<code>403</code>;
+<code>404 NOT_FOUND</code>; <code>409 CONFLICT</code> (illegal
+transition per §5.7). <code>rollback</code> additionally returns the
+newly-created recall <code>deployment_id</code> in the body.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">Rollout</span> <span class="er">projection</span> <span class="er">(GET</span> <span class="er">and</span> <span class="er">lifecycle</span> <span class="er">responses)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;deployment_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...uuid&quot;</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;engine_status&quot;</span><span class="fu">:</span> <span class="st">&quot;active&quot;</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;active&quot;</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;current_phase&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;current_percentage&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;phase_started_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T09:00:00Z&quot;</span><span class="fu">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;phases&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">/*</span> <span class="er">RolloutCreate</span> <span class="er">phases</span><span class="ot">,</span> <span class="er">with</span> <span class="er">per-phase</span> <span class="er">index</span> <span class="er">*/</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;updated_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-08T12:00:00Z&quot;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="read-get-apiv1deploymentsidrollout">§8.4 read —
+<code>GET /api/v1/deployments/{id}/rollout</code></h3>
+<ul>
+<li><strong>Auth:</strong> <code>viewer</code>. Returns the
+<code>Rollout</code> projection (above) from
+<code>StoragePort.Load</code>.</li>
+<li><strong>Status codes:</strong> <code>200</code>;
+<code>401</code>/<code>403</code>; <code>404 NOT_FOUND</code> (no
+rollout for the deployment).</li>
+</ul>
+<h3 id="device-update-check-interaction">§8.5 device update-check
+interaction</h3>
+<p>The MVP <code>GET /api/v1/client/update</code>
+(<code>endpoints.md</code> §12.1) gains a staged branch: for a device
+governed by a <code>staged</code> deployment, the handler applies §4
+cohort + §6.3 eligibility before offering <code>200</code>; otherwise
+<code>204</code>. The response body shape is unchanged — staged rollout
+changes <em>who</em> gets the <code>200</code>, not the contract. No new
+device-facing fields in 1.0.1.</p>
+<h2 id="decoupling-and-catalogue-reuse">§9. decoupling and catalogue
+reuse</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Source (reused)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase model, threshold gating, halt-wins, deterministic cohort,
+idempotent transitions</td>
+<td><code>ota-rollout-engine</code> (the brick — NOT reimplemented)</td>
+</tr>
+<tr>
+<td>Per-device status vocabulary</td>
+<td><code>ota-protocol</code> <code>DeviceDeploymentStatus</code> (via
+<code>Decision.DeviceStatus</code>)</td>
+</tr>
+<tr>
+<td>Persistence (<code>StoragePort</code> impl)</td>
+<td><code>database</code> brick → <code>rollouts</code> +
+<code>deployment_phases</code>
+(<code>migration_002_design.md</code>)</td>
+</tr>
+<tr>
+<td>Health verdict (telemetry → <code>HealthVerdict</code>)</td>
+<td><code>telemetry_processing</code> +
+<code>ota-telemetry-schema</code> (referenced, owns aggregation)</td>
+</tr>
+<tr>
+<td>Halt alerting</td>
+<td><code>Herald</code></td>
+</tr>
+<tr>
+<td>HTTP/transport/auth/limits</td>
+<td>Gin +
+<code>http3</code>/<code>middleware</code>/<code>ratelimiter</code>/<code>auth</code>/<code>security</code>
+(as <code>endpoints.md</code> §15)</td>
+</tr>
+<tr>
+<td>Scheduler tick interval, threshold defaults, lock helper</td>
+<td><code>config</code> brick</td>
+</tr>
+</tbody>
+</table>
+<p>Decoupling (Constitution §11.4.28, UNVERIFIED clause): the brick has
+<strong>no HTTP and no OS specifics</strong> (<code>README.md</code>
+“Boundary”); this spec keeps it that way — transport, persistence, and
+telemetry aggregation are all outside the brick, wired by the control
+plane. The brick stays reusable by other fleet projects.</p>
+<h2 id="testing-four-layer">§10. testing (four-layer)</h2>
+<p>Per <code>endpoints.md</code> §14 / Constitution §1 (four-layer +
+mutation). The rollout decision path and the cohort path are
+<strong>safety-critical → ≥90% coverage</strong> (synthesis §8
+C8/K7).</p>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> Each rollout route
+(<code>§8.1</code>) is registered on the Gin router; the
+<code>RolloutCreate</code>/<code>Rollout</code> schemas exist in the API
+contract; the control-plane <code>StoragePort</code> impl satisfies
+<code>rollout.StoragePort</code>; the brick is imported (not
+vendored-and-edited).</li>
+<li><strong>Artifact gate (bytes shipped).</strong> Boot the server;
+assert the rollout routes appear in the live route table and migration
+<code>002</code> is applied (the
+<code>rollouts</code>/<code>deployment_phases</code>/
+<code>rollback_history</code> tables exist).</li>
+<li><strong>Runtime / integration.</strong> End-to-end on the dev stack
+(monolith + Postgres): create staged deployment → attach 5/10/30/50/100
+plan → start → feed verdicts via the scheduler → <code>advance</code>
+through phases → <code>complete</code>; negative: a verdict with
+<code>error_rate &gt;= threshold</code> <strong>halts</strong> and a
+halted rollout never auto-resumes; <code>auto_progress=false</code>
+phase reaches <code>held</code>; pause→resume; abort stops offering the
+update (cohort returns <code>204</code>); rollback creates the recall
+deployment + <code>rollback_history</code> row. <strong>Brick-level
+property tests already exist</strong> (<code>engine_test.go</code>,
+<code>cohort_test.go</code>, <code>decide_test.go</code>) — the control
+plane MUST NOT duplicate them; it tests the wiring (persistence
+round-trip, REST mapping, eligibility).</li>
+<li><strong>Mutation meta-test.</strong> Mutate and assert PASS→FAIL:
+invert the §4 eligibility (<code>InCohort</code>) so an out-of-cohort
+device is offered (must fail the cohort test); map a brick
+<code>halt</code> <code>Decision</code> to “continue” in the scheduler
+(must fail the halt test); drop the
+<code>status NOT IN (paused,aborted,rolled_back)</code> clause from §6.3
+eligibility (must fail the abort test); reverse a §5.7
+illegal-transition <code>409</code> (must fail the lifecycle test). The
+brick’s own halt-wins / deterministic-cohort mutation coverage is its
+responsibility (<code>README.md</code>).</li>
+</ol>
+<h2 id="tuf-metadata-note-deferred">§11. tuf metadata note
+(deferred)</h2>
+<p>Device-side TUF/Uptane trust is <strong>deferred</strong>
+(<code>README.md</code> §4; ADR-0002; synthesis §10 K2/C5). This engine
+spec does <strong>not</strong> add TUF metadata tables or fields; the
+artifact trust model in 1.0.1 remains MVP plain-signing (ed25519 +
+SHA-256 + AVB) layered byte-identically so TUF drops in later without
+rework (<code>endpoints.md</code> §1). TUF metadata storage
+(<code>tuf_metadata</code> / Director+Image repository split) is tracked
+for a <strong>later 1.0.1 sub-spec or 1.0.2</strong>, and is called out
+as a deferred, explicitly-not-created concern in
+<code>migration_002_design.md</code> §5 so the DDL is
+forward-compatible. Adding TUF must not require changing the
+<code>rollouts</code>/<code>deployment_phases</code> schema (the rollout
+engine is trust-model-agnostic).</p>
+<h2 id="anti-bluff-unverified-register">§12. anti-bluff / unverified
+register</h2>
+<p>Per Constitution §11.4.6 (no-guessing) / §7.1 (no-bluff); these MUST
+NOT be propagated as fact.</p>
+<ul>
+<li><strong>Pause/resume/abort/rollback are NOT brick methods.</strong>
+Verified against <code>engine.go</code>: the brick exposes only
+<code>Create</code>/<code>Start</code>/<code>Evaluate</code>. The
+lifecycle verbs are a control-plane state machine over the persisted
+<code>State</code>/<code>rollouts</code> row (§5) — that is this spec’s
+<strong>design decision</strong>, not an existing API.</li>
+<li><strong>Pause does not freeze the brick’s evaluation window</strong>
+(§5.3): the brick judges the window off <code>PhaseStartedAt</code> vs
+<code>Clock.Now()</code>, which the control plane does not rewind.
+Whether operators require true window-freezing is
+<strong>UNVERIFIED</strong>; if required it is a brick change, not
+assumed here.</li>
+<li><strong>Threshold/percentage/duration defaults</strong> in §3
+(5/10/30/50/100; 0.95–0.98 success; 0.01–0.02 error; 6h/12h/24h) are
+<strong>operator-tunable defaults, never measured</strong> — set per
+release from <code>config</code> and MVP load data.</li>
+<li><strong>Scheduler tick interval</strong> and the
+<strong>auto-rollback-on-halt policy default</strong> (§7) are
+<strong>UNVERIFIED</strong> — bind from load tests; the spec’s stated
+default is halt-and-hold (no auto-rollback).</li>
+<li><strong>Override-advance of a <code>held</code> rollout that has not
+met the bar</strong> (§5.4) is <strong>out of scope / UNVERIFIED
+requirement</strong> for 1.0.1; the engine re-holds.</li>
+<li><strong>AVB rollback-index interplay with server-driven
+recall</strong> (§5.6) is <strong>UNVERIFIED</strong> — an authorized
+recall to N-1 must still satisfy the device’s rollback-index; the exact
+interplay is the <code>research/stacks/android-avb-rollback.md</code>
+open item (<code>README.md</code> §5).</li>
+<li><strong><code>database</code> brick row-lock / idempotency helper
+surfaces</strong> (§6.4) are <strong>UNVERIFIED</strong> — wire if
+present, else raw <code>SELECT ... FOR UPDATE</code>.</li>
+<li><strong><code>telemetry_processing</code> §4 verdict-aggregation
+contract</strong> is referenced, not inspected in this pass —
+<strong>UNVERIFIED</strong> that it emits exactly
+<code>{SuccessRate, ErrorRate, PostBootHealthFailed}</code>; the field
+set is taken from the brick’s <code>HealthVerdict</code> (verified) and
+the consumer side must match it.</li>
+<li><strong>HelixConstitution clause numbers</strong> (§11.4.74,
+§11.4.28, §11.4.6, §7.1, §1) are carried from corpus convention and
+remain <strong>UNVERIFIED</strong> against the authoritative text (the
+Constitution file is not present in this repo), consistent with
+<code>endpoints.md</code> §16.</li>
+</ul>
+</body>
+</html>

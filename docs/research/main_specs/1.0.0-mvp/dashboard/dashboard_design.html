@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>dashboard_design</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">dashboard_design</h1>
+</header>
+<h1 id="helix-ota-1.0.0-mvp-react-dashboard-design-specification">Helix
+OTA — 1.0.0-MVP React Dashboard Design Specification</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Full design specification of the Helix OTA
+<strong>1.0.0-MVP</strong> operator dashboard: a React single-page
+application that consumes the <code>/api/v1</code> REST control plane
+(<a href="../api/endpoints.md"><code>../api/endpoints.md</code></a>).
+Covers secure login (OAuth2 ROPC → JWT access token + rotating refresh
+token), artifact upload (<code>multipart/form-data</code> with the S1–S6
+validation-feedback chain), release/deployment management (all-targets
+for MVP), and fleet-health + telemetry views. Specifies the component
+architecture reusing the <code>*-React</code> catalogue bricks, the
+route map, the auth-context/state model, and a screen→endpoint
+API-client mapping. Plans the NEW public dashboard repository (GitHub +
+GitLab) per locked decision D4. Closes gap <strong>G6</strong> in <a
+href="../../research/additions_synthesis.md"><code>../../research/additions_synthesis.md</code></a>
+§8 / §9.1 — the single largest missing document.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The three <code>*-React</code> submodules
+(<code>UI-Components-React</code>,
+<code>Dashboard-Analytics-React</code>, <code>Auth-Context-React</code>)
+are named in the master design §10 / D7 but are <strong>NOT on the
+verified catalogue</strong> (<a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>
+§7 explicitly omits them); their existence, ownership, and public API
+are <strong>UNVERIFIED</strong> (see §13). HelixConstitution clause
+numbers (§11.4.6, §11.4.4, §11.4.61, §11.4.74, §11.4.28, §7.1) are
+carried from corpus convention and are <strong>UNVERIFIED</strong>
+against the authoritative Constitution text. The artifact-download path
+Range/HTTP-3 semantics consumed indirectly here are UNVERIFIED pending
+ADR-0004 §6. No dashboard code exists yet; this is a design, not an
+as-built.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Inspect the three <code>*-React</code> bricks’ real public surface
+and remove the UNVERIFIED tags or substitute a verified component
+library (§13.1); create the PUBLIC <code>ota-dashboard</code> repo on
+GitHub + GitLab and mirror to GitFlic/GitVerse (§11); pin the
+framework/build toolchain (Vite vs Next; §3.2) once the brick toolchain
+is confirmed; bind concrete telemetry-read endpoints once gap G4 lands
+(telemetry read API is PARTIAL in MVP — §9.3); add the four-layer test
+harness (§12).</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Helix OTA dashboard team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><a href="../api/endpoints.md"><code>../api/endpoints.md</code></a>;
+<a href="../api/openapi.yaml"><code>../api/openapi.yaml</code></a>; <a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>;
+<a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>../../00-master/2026-06-07-helix-ota-design.md</code></a>;
+<a
+href="../../research/additions_synthesis.md"><code>../../research/additions_synthesis.md</code></a>;
+<a
+href="../security/signing_verification.md"><code>../security/signing_verification.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table_of_contents">table_of_contents</h2>
+<ol type="1">
+<li><a href="#1-purpose_and_scope">purpose_and_scope</a></li>
+<li><a href="#2-conventions">conventions</a></li>
+<li><a
+href="#3-technology_stack_and_build">technology_stack_and_build</a></li>
+<li><a href="#4-component_architecture">component_architecture</a></li>
+<li><a href="#5-catalogue_brick_reuse">catalogue_brick_reuse</a></li>
+<li><a href="#6-route_map">route_map</a></li>
+<li><a href="#7-state_and_auth_context">state_and_auth_context</a></li>
+<li><a
+href="#8-api_client_and_screen_endpoint_mapping">api_client_and_screen_endpoint_mapping</a></li>
+<li><a href="#9-screen_specifications">screen_specifications</a>
+<ul>
+<li><a href="#91-login_screen">9.1 login_screen</a></li>
+<li><a href="#92-artifact_upload_screen">9.2
+artifact_upload_screen</a></li>
+<li><a href="#93-release_and_deployment_management">9.3
+release_and_deployment_management</a></li>
+<li><a href="#94-fleet_health_and_telemetry_views">9.4
+fleet_health_and_telemetry_views</a></li>
+</ul></li>
+<li><a
+href="#10-security_considerations">security_considerations</a></li>
+<li><a
+href="#11-new_public_repository_plan">new_public_repository_plan</a></li>
+<li><a href="#12-testing_four_layer">testing_four_layer</a></li>
+<li><a
+href="#13-anti_bluff_unverified_register">anti_bluff_unverified_register</a></li>
+<li><a
+href="#14-compliance_notes_helixconstitution">compliance_notes_helixconstitution</a></li>
+</ol>
+<hr />
+<h2 id="purpose_and_scope">1. purpose_and_scope</h2>
+<p>This document specifies the design of the Helix OTA
+<strong>1.0.0-MVP</strong> operator dashboard: a browser-based
+single-page application (SPA) that lets an authenticated operator
+<strong>log in, upload and validate OTA artifacts, publish releases,
+create all-targets deployments, and observe fleet health +
+telemetry</strong>. It is the human front end to the REST control plane
+defined in <a
+href="../api/endpoints.md"><code>../api/endpoints.md</code></a>; it owns
+<strong>no</strong> OTA business logic of its own — every state-changing
+action is a call to a documented <code>/api/v1</code> endpoint.</p>
+<p>The dashboard is mandated by locked decision <strong>D7</strong>
+(“React dashboard”) and the master architecture §4 (the
+<code>Dashboard (React)</code> plane that <code>--&gt; API</code>). It
+closes consolidated gap <strong>G6</strong> (“React dashboard
+(upload→deploy→fleet/telemetry view) … MISSING — no spec, repo, or code
+anywhere. Largest single doc gap.”) and the routed work item §9.1 in <a
+href="../../research/additions_synthesis.md"><code>../../research/additions_synthesis.md</code></a>.</p>
+<p><strong>In scope (MVP):</strong></p>
+<ul>
+<li>Secure login — OAuth2 Resource Owner Password Credentials → JWT
+access token + opaque rotating refresh token (<code>endpoints.md</code>
+§4.1, §7).</li>
+<li>Artifact upload — <code>multipart/form-data</code> with
+<code>file</code> + <code>metadata</code> parts and the S1–S6
+validation-feedback chain surfaced to the operator
+(<code>endpoints.md</code> §9.1).</li>
+<li>Release management — create/list/read releases
+(<code>endpoints.md</code> §10).</li>
+<li>Deployment management — create/read <strong>all-targets</strong>
+deployments (<code>endpoints.md</code> §11); staged/percentage rollout
+UI is <strong>deferred to 1.0.1</strong> with the engine (G7).</li>
+<li>Device registry views — device list + per-device status
+(<code>endpoints.md</code> §8.2).</li>
+<li>Fleet-health + telemetry views — deployment progress aggregates
+(<code>endpoints.md</code> §11.2) and device status; <strong>richer
+telemetry read/aggregation is PARTIAL</strong> (gap G4) and the
+dashboard degrades gracefully where those endpoints are not yet built
+(§9.4).</li>
+</ul>
+<p><strong>Out of scope (MVP):</strong> staged-rollout controls (1.0.1,
+G7); device-group CRUD UI (1.0.1, G5); audit-log viewer (1.0.1, G3);
+user/RBAC administration UI; end-user/ multi-version rollback UI
+(1.0.2+); any non-Android fleet view. These are noted at their screens
+so the layout reserves space without a breaking redesign.</p>
+<h2 id="conventions">2. conventions</h2>
+<ul>
+<li><strong>Headings:</strong> <code>lowercase_snake_case</code> per the
+gap-G6 spec convention requested for this document.</li>
+<li><strong>Endpoint references</strong> are written
+<code>METHOD /api/v1/&lt;path&gt;</code> and always trace to a named
+section in <a
+href="../api/endpoints.md"><code>../api/endpoints.md</code></a>.</li>
+<li><strong>Brick references</strong> name the
+catalogue/<code>*-React</code> submodule and tag
+<strong>UNVERIFIED</strong> where the public surface was not inspected
+in this revision (§13).</li>
+<li><strong>Identifiers</strong> (<code>release_id</code>,
+<code>deployment_id</code>, <code>device_id</code>,
+<code>artifact_id</code>) are treated as <strong>opaque server-issued
+strings</strong> (<code>endpoints.md</code> §2); the dashboard never
+parses or mints them.</li>
+<li><strong>Timestamps</strong> are RFC 3339 UTC strings, rendered to
+the operator’s locale at the edge.</li>
+<li><strong>S1–S6</strong> denotes the artifact validation-feedback
+chain (defined in §9.2); it maps onto the server upload checks and error
+codes in <code>endpoints.md</code> §9.1.</li>
+</ul>
+<h2 id="technology_stack_and_build">3. technology_stack_and_build</h2>
+<h3 id="framework">3.1 framework</h3>
+<ul>
+<li><strong>React</strong> SPA (mandated by D7 / master §4). TypeScript
+throughout for type-safe binding to the <code>ota-protocol</code> wire
+types (the dashboard mirrors the protocol DTOs as generated/ hand-kept
+TypeScript interfaces; the OpenAPI contract <a
+href="../api/openapi.yaml"><code>../api/openapi.yaml</code></a> is the
+source of truth and SHOULD drive client-type generation).</li>
+<li><strong>Routing:</strong> declarative client-side router with nested
+protected routes (§6).</li>
+<li><strong>Server-state / data fetching:</strong> a query-cache layer
+(request dedup, cache, retry, background refresh) wraps the API client
+(§8) so telemetry/fleet views can poll without bespoke effect code.</li>
+<li><strong>Forms + validation:</strong> schema-validated forms for
+login (§9.1) and upload metadata (§9.2), mirroring the server’s
+validation so obvious errors are caught client-side before the request
+(the <strong>server remains authoritative</strong> — client validation
+is UX only).</li>
+</ul>
+<h3 id="build-and-toolchain">3.2 build and toolchain</h3>
+<p>The concrete build toolchain (e.g. <strong>Vite</strong> SPA vs a
+<strong>Next.js</strong> static-export SPA) is <strong>deferred until
+the <code>*-React</code> bricks’ toolchain is inspected</strong> (§13):
+the dashboard MUST adopt whatever the reused bricks already standardize
+on rather than introduce a divergent build (catalogue-first, §11.4.74).
+Hard requirements regardless of toolchain:</p>
+<ul>
+<li>Static, CDN-deployable build artifacts (no SSR data dependency on
+secrets); the SPA talks only to <code>/api/v1</code> at runtime.</li>
+<li>Runtime config (<code>API base URL</code>, feature flags for
+deferred screens) injected at deploy time, not hard-coded — mirrors the
+server <code>config</code> brick philosophy.</li>
+<li>Runs on the <code>containers</code> substrate (master §3 / §11.4.76)
+for the dev stack and CI build.</li>
+</ul>
+<p><strong>UNVERIFIED:</strong> the bricks’ actual framework/bundler
+choice; do not assert Vite or Next until confirmed.</p>
+<h2 id="component_architecture">4. component_architecture</h2>
+<p>The SPA is a layered composition. Top to bottom: <strong>routing
+shell → auth/session context → feature screens → reusable UI primitives
+→ the typed API client</strong>. Business state lives in the server; the
+dashboard holds only session + view state (§7).</p>
+<pre><code>AppRoot
+├── AuthProvider                  (Auth-Context-React — session, tokens, refresh) [UNVERIFIED brick]
+│   └── ApiClientProvider         (typed fetch client; injects bearer; 401→refresh)
+│       └── Router
+│           ├── PublicRoute  /login                 → LoginScreen
+│           └── ProtectedRoute (requires session)
+│               └── AppShell      (UI-Components-React — nav, header, toasts) [UNVERIFIED]
+│                   ├── /                            → DashboardOverview      (Dashboard-Analytics-React) [UNVERIFIED]
+│                   ├── /artifacts/upload            → ArtifactUploadScreen
+│                   ├── /releases, /releases/:id     → ReleaseList / ReleaseDetail
+│                   ├── /deployments, /deployments/:id → DeploymentList / DeploymentDetail
+│                   └── /fleet, /fleet/:deviceId     → FleetHealth / DeviceDetail
+└── (cross-cutting) ErrorBoundary, ToastHost, RoleGate</code></pre>
+<p><strong>Component layers</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Responsibility</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AuthProvider</code> / session</td>
+<td>Hold tokens, expose <code>login/logout/refresh</code>, gate
+routes.</td>
+<td><code>Auth-Context-React</code> (UNVERIFIED) wrapped by Helix
+glue.</td>
+</tr>
+<tr>
+<td><code>ApiClientProvider</code></td>
+<td>Single typed client; attaches <code>Authorization: Bearer</code>,
+<code>Accept-Encoding: br, gzip</code>; transparent 401→refresh→retry;
+maps the §6 error envelope to typed errors.</td>
+<td>Helix-local (no auth/transport logic re-implemented; §5).</td>
+</tr>
+<tr>
+<td><code>AppShell</code> / primitives</td>
+<td>Layout, nav, tables, forms, modals, toasts, badges, file-drop.</td>
+<td><code>UI-Components-React</code> (UNVERIFIED).</td>
+</tr>
+<tr>
+<td>Analytics widgets</td>
+<td>Fleet KPIs, deployment-progress charts, status distributions.</td>
+<td><code>Dashboard-Analytics-React</code> (UNVERIFIED).</td>
+</tr>
+<tr>
+<td>Feature screens</td>
+<td>The four screen families (§9), each thin over the API client.</td>
+<td>Helix-local.</td>
+</tr>
+<tr>
+<td><code>RoleGate</code></td>
+<td>Hide/disable actions above the session’s RBAC role (§7.3).</td>
+<td>Helix-local, fed by <code>roles</code> claim.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decoupling (§11.4.28):</strong> UI primitives carry no API
+knowledge; the API client carries no view logic; screens orchestrate the
+two. This mirrors the server’s seam discipline and keeps the brick
+boundaries clean.</p>
+<h2 id="catalogue_brick_reuse">5. catalogue_brick_reuse</h2>
+<p>Per catalogue-first (§11.4.74) the dashboard composes from the three
+<code>*-React</code> bricks named in master §10 / D7 — <strong>but their
+catalogue membership and public API are UNVERIFIED</strong> (<a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>
+§7 deliberately omits them from the verified catalogue §9). No bespoke
+equivalents are built where a brick covers the need; where a brick
+cannot be confirmed, §13.1 defines the fallback.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Brick</th>
+<th>Class</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session / token context, login/logout/refresh, route guarding</td>
+<td><code>Auth-Context-React</code></td>
+<td>reuse (UNVERIFIED)</td>
+<td>Wraps OAuth2/JWT client-side; Helix wires policies + the
+<code>/auth/*</code> calls (§7, §9.1). No token logic hand-rolled.</td>
+</tr>
+<tr>
+<td>UI primitives — layout, nav, tables, forms, modals, toasts,
+file-drop</td>
+<td><code>UI-Components-React</code></td>
+<td>reuse (UNVERIFIED)</td>
+<td>All screens compose these; no bespoke design system.</td>
+</tr>
+<tr>
+<td>Analytics/visualization — KPI tiles, charts, status
+distributions</td>
+<td><code>Dashboard-Analytics-React</code></td>
+<td>reuse (UNVERIFIED)</td>
+<td>Powers the overview + fleet/telemetry views (§9.4).</td>
+</tr>
+<tr>
+<td>Typed transport to <code>/api/v1</code> (bearer, Brotli accept,
+error mapping)</td>
+<td>Helix-local <code>ApiClientProvider</code></td>
+<td>new (thin glue)</td>
+<td>Not a brick concern; mirrors server transport contract
+(<code>endpoints.md</code> §3, §6). No auth/crypto re-implemented —
+tokens come from <code>Auth-Context-React</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Upstream-addition candidates (extend, contributed back —
+never forked), each UNVERIFIED pending brick inspection:</strong> a
+<code>multipart</code> file-upload-with-progress primitive in
+<code>UI-Components-React</code> (for §9.2) and a transparent
+<strong>refresh-rotation interceptor</strong> in
+<code>Auth-Context-React</code> (for §7.2) if not already present.</p>
+<h2 id="route_map">6. route_map</h2>
+<p>All routes except <code>/login</code> are wrapped by
+<code>ProtectedRoute</code> (requires a valid session; §7). Routes whose
+underlying endpoint is <strong>deferred</strong> are listed but rendered
+behind a feature flag / “available in 1.0.1” placeholder so the IA is
+stable.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Path</th>
+<th>Screen</th>
+<th>Primary endpoint(s)</th>
+<th>Min role</th>
+<th>MVP?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/login</code></td>
+<td>LoginScreen</td>
+<td><code>POST /auth/login</code>, <code>POST /auth/refresh</code></td>
+<td>none (public)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>DashboardOverview</td>
+<td><code>GET /releases</code>, <code>GET /deployments/{id}</code>
+(recent), <code>GET /devices/{id}/status</code> (sampled)</td>
+<td>viewer</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/artifacts/upload</code></td>
+<td>ArtifactUploadScreen</td>
+<td><code>POST /artifacts/upload</code></td>
+<td>operator</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/artifacts/:artifactId</code></td>
+<td>ArtifactDetail</td>
+<td><code>GET /artifacts/{artifactId}</code></td>
+<td>viewer</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/releases</code></td>
+<td>ReleaseList</td>
+<td><code>GET /releases</code></td>
+<td>viewer</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/releases/new</code></td>
+<td>ReleaseCreate</td>
+<td><code>POST /releases</code></td>
+<td>operator</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/releases/:releaseId</code></td>
+<td>ReleaseDetail</td>
+<td><code>GET /releases/{releaseId}</code></td>
+<td>viewer</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/deployments</code></td>
+<td>DeploymentList</td>
+<td><code>GET /deployments/{id}</code> (per row)</td>
+<td>viewer</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/deployments/new</code></td>
+<td>DeploymentCreate</td>
+<td><code>POST /deployments</code></td>
+<td>operator</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/deployments/:deploymentId</code></td>
+<td>DeploymentDetail</td>
+<td><code>GET /deployments/{deploymentId}</code></td>
+<td>viewer</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>/fleet</code></td>
+<td>FleetHealth</td>
+<td>device list + <code>GET /devices/{id}/status</code>; telemetry
+overview (G4, PARTIAL)</td>
+<td>viewer</td>
+<td>partial</td>
+</tr>
+<tr>
+<td><code>/fleet/:deviceId</code></td>
+<td>DeviceDetail</td>
+<td><code>GET /devices/{deviceId}/status</code>; per-device telemetry
+history (G4, PARTIAL)</td>
+<td>viewer</td>
+<td>partial</td>
+</tr>
+<tr>
+<td><code>/rollouts/*</code></td>
+<td>(staged rollout)</td>
+<td>staged-rollout API (1.0.1, G7)</td>
+<td>—</td>
+<td><strong>deferred</strong></td>
+</tr>
+<tr>
+<td><code>/groups/*</code></td>
+<td>(device-group CRUD)</td>
+<td>group API (1.0.1, G5)</td>
+<td>—</td>
+<td><strong>deferred</strong></td>
+</tr>
+<tr>
+<td><code>/audit</code></td>
+<td>(audit log viewer)</td>
+<td>audit API (1.0.1, G3)</td>
+<td>—</td>
+<td><strong>deferred</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notes:</strong> there is no
+<code>GET /releases</code>-list-less fallback — list endpoints are
+paginated (<code>?limit</code>/<code>?cursor</code>,
+<code>endpoints.md</code> §2) and the tables consume
+<code>next_cursor</code>. A <code>GET /deployments</code> <em>list</em>
+endpoint is <strong>not</strong> defined in <code>endpoints.md</code>
+(only <code>GET /deployments/{id}</code>); the DeploymentList screen
+therefore composes its rows from the deployment ids surfaced by
+releases/overview, and <strong>a deployments-list endpoint is flagged as
+a follow-up requirement</strong> (see §13, server-side gap) — the
+dashboard does not invent it.</p>
+<h2 id="state_and_auth_context">7. state_and_auth_context</h2>
+<h3 id="state-model">7.1 state model</h3>
+<p>Two kinds of state, deliberately separated:</p>
+<ul>
+<li><strong>Session/auth state</strong> (client-owned, in
+<code>AuthProvider</code>): access token (in memory), refresh token (see
+§10 for storage), decoded claims (<code>sub</code>, <code>roles</code>,
+<code>exp</code>), authentication status, and the current principal.
+This is the only long-lived client state.</li>
+<li><strong>Server state</strong> (cache-owned, in the query layer):
+releases, deployments, devices, artifacts, telemetry — never duplicated
+into a global store; fetched, cached, and invalidated by the query cache
+keyed on the endpoint + params. Mutations
+(<code>POST /artifacts/upload</code>, <code>/releases</code>,
+<code>/deployments</code>) invalidate the relevant list caches on
+success.</li>
+<li><strong>Ephemeral view state</strong> (component-local): form
+inputs, modal open/close, upload progress, pagination cursors.</li>
+</ul>
+<p>There is <strong>no</strong> Redux-style global business store; the
+server is the single source of truth (matches the master decoupling
+stance).</p>
+<h3 id="auth-context-jwt-refresh-rotation">7.2 auth context (JWT +
+refresh rotation)</h3>
+<p>The <code>AuthProvider</code> (over <code>Auth-Context-React</code>,
+UNVERIFIED) implements the OAuth2 flow from <code>endpoints.md</code> §4
+/ §7:</p>
+<ol type="1">
+<li><strong>Login</strong> — <code>POST /api/v1/auth/login</code> with
+<code>{username, password}</code> → <code>TokenResponse</code>
+<code>{access_token, token_type:"Bearer", expires_in (≈900s), refresh_token, roles}</code>.
+The access JWT is held <strong>in memory</strong>; the refresh token is
+persisted per §10.</li>
+<li><strong>Authenticated calls</strong> —
+<code>ApiClientProvider</code> attaches
+<code>Authorization: Bearer &lt;access&gt;</code> to every
+<code>/api/v1</code> request and <code>Accept-Encoding: br, gzip</code>
+(<code>endpoints.md</code> §3).</li>
+<li><strong>Silent renewal with rotation</strong> — on a
+<code>401 UNAUTHENTICATED</code> (or proactively before
+<code>exp</code>), call <code>POST /api/v1/auth/refresh</code> with the
+stored refresh token → a <strong>new</strong> access+refresh pair; the
+<strong>old refresh token is invalidated server-side (rotation,
+<code>endpoints.md</code> §7.2)</strong> and the stored one is
+overwritten. The original request is retried once. A single in-flight
+refresh is shared across concurrent 401s (no refresh stampede).</li>
+<li><strong>Failed refresh</strong> — if refresh returns
+<code>401</code> (expired/revoked/already-rotated), the session is
+cleared and the user is redirected to <code>/login</code> with a
+“session expired” notice.</li>
+<li><strong>Logout</strong> — clear in-memory access token and stored
+refresh token; redirect to <code>/login</code>. (Server-side refresh
+revocation endpoint is not defined in <code>endpoints.md</code> MVP;
+client-side clear is the MVP behavior — flagged in §13.)</li>
+</ol>
+<h3 id="rbac-in-the-ui">7.3 rbac in the ui</h3>
+<p>The <code>roles</code> claim drives a <code>RoleGate</code> that
+hides/disables actions the principal cannot perform, mirroring the
+server route policy (<code>endpoints.md</code> §4.2):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Dashboard capability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>admin</code></td>
+<td>Everything below, plus (future) user/audit admin.</td>
+</tr>
+<tr>
+<td><code>operator</code></td>
+<td>Upload artifacts, create releases, create deployments; all
+reads.</td>
+</tr>
+<tr>
+<td><code>viewer</code></td>
+<td>Read-only: lists + detail for releases, deployments, devices,
+telemetry.</td>
+</tr>
+<tr>
+<td><code>device</code></td>
+<td><strong>N/A</strong> — device tokens never reach the dashboard; the
+SPA is for human roles.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>RoleGate</code> is <strong>UX only</strong>; the server
+enforces RBAC authoritatively and returns <code>403 FORBIDDEN</code>
+regardless of what the UI shows.</p>
+<h2 id="api_client_and_screen_endpoint_mapping">8.
+api_client_and_screen_endpoint_mapping</h2>
+<p>A single typed <code>ApiClientProvider</code> is the only thing that
+talks to <code>/api/v1</code>. It: attaches the bearer token and
+<code>Accept-Encoding: br, gzip</code>; sends/receives
+<code>application/json</code> (except the multipart upload, §9.2);
+echoes <code>X-Request-Id</code> into error toasts for correlation; and
+maps the server error envelope (<code>endpoints.md</code> §6:
+<code>{error:{code,message,request_id,details[]}}</code>) into typed
+client errors so each screen can render field-level <code>details</code>
+and the stable <code>code</code>.</p>
+<p><strong>Screen → endpoint matrix</strong> (every screen traces to
+documented endpoints):</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Action</th>
+<th>Endpoint (<code>endpoints.md</code> §)</th>
+<th>Success</th>
+<th>Key error codes surfaced</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoginScreen</td>
+<td>submit credentials</td>
+<td><code>POST /auth/login</code> (§7.1)</td>
+<td>200 <code>TokenResponse</code></td>
+<td>400 VALIDATION_FAILED, 401 UNAUTHENTICATED, 429 RATE_LIMITED</td>
+</tr>
+<tr>
+<td>(any)</td>
+<td>silent renew</td>
+<td><code>POST /auth/refresh</code> (§7.2)</td>
+<td>200 <code>TokenResponse</code></td>
+<td>401 (→ logout), 429</td>
+</tr>
+<tr>
+<td>ArtifactUploadScreen</td>
+<td>upload + validate</td>
+<td><code>POST /artifacts/upload</code> (§9.1)</td>
+<td>201 <code>Artifact</code></td>
+<td>400, 413 PAYLOAD_TOO_LARGE, 415 UNSUPPORTED_MEDIA_TYPE, 422
+HASH_MISMATCH, 422 SIGNATURE_INVALID</td>
+</tr>
+<tr>
+<td>ArtifactDetail</td>
+<td>read metadata</td>
+<td><code>GET /artifacts/{id}</code> (§9.2)</td>
+<td>200 <code>Artifact</code></td>
+<td>404 NOT_FOUND</td>
+</tr>
+<tr>
+<td>ReleaseCreate</td>
+<td>publish release</td>
+<td><code>POST /releases</code> (§10.1)</td>
+<td>201 <code>Release</code></td>
+<td>404 (artifact), 409 VERSION_NOT_MONOTONIC, 409 CONFLICT, 400</td>
+</tr>
+<tr>
+<td>ReleaseList</td>
+<td>list</td>
+<td><code>GET /releases</code> (§10.2)</td>
+<td>200 <code>ReleaseList</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>ReleaseDetail</td>
+<td>read</td>
+<td><code>GET /releases/{id}</code> (§10.2)</td>
+<td>200 <code>Release</code></td>
+<td>404</td>
+</tr>
+<tr>
+<td>DeploymentCreate</td>
+<td>deploy (all-targets)</td>
+<td><code>POST /deployments</code> (§11.1)</td>
+<td>201 <code>Deployment</code></td>
+<td>400 (non-<code>all-targets</code> strategy), 404 (release), 409
+CONFLICT</td>
+</tr>
+<tr>
+<td>DeploymentDetail</td>
+<td>progress</td>
+<td><code>GET /deployments/{id}</code> (§11.2)</td>
+<td>200 <code>DeploymentStatus</code> (+
+<code>{pending,downloading,installed,succeeded,failed}</code>)</td>
+<td>404</td>
+</tr>
+<tr>
+<td>FleetHealth / DeviceDetail</td>
+<td>device status</td>
+<td><code>GET /devices/{deviceId}/status</code> (§8.2)</td>
+<td>200 <code>DeviceStatus</code></td>
+<td>404</td>
+</tr>
+<tr>
+<td>DeviceRegister (admin)</td>
+<td>provision device</td>
+<td><code>POST /devices/register</code> (§8.1)</td>
+<td>201 <code>DeviceRegistered</code></td>
+<td>409 CONFLICT, 400</td>
+</tr>
+<tr>
+<td>FleetHealth (telemetry)</td>
+<td>aggregates / history</td>
+<td>telemetry read API (<strong>G4 PARTIAL</strong>)</td>
+<td>—</td>
+<td>gracefully empty until built (§9.4)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Health endpoint:</strong> the SPA may surface a server-health
+badge from the platform health endpoint if exposed;
+<code>endpoints.md</code> does not define a public <code>/health</code>
+JSON route in MVP, so the badge is <strong>best-effort and flagged
+UNVERIFIED</strong> (§13) rather than asserted.</p>
+<h2 id="screen_specifications">9. screen_specifications</h2>
+<h3 id="login_screen">9.1 login_screen</h3>
+<p><strong>Goal:</strong> authenticate an operator and establish a
+session.</p>
+<ul>
+<li><strong>Layout:</strong> centered card (from
+<code>UI-Components-React</code>, UNVERIFIED) — username (email),
+password, submit; inline error region; disabled submit while
+in-flight.</li>
+<li><strong>Validation (client, UX only):</strong> non-empty username +
+password before enabling submit.</li>
+<li><strong>Flow:</strong> submit → <code>POST /api/v1/auth/login</code>
+(§7.1). On <code>200</code>, store tokens (§7.2 / §10) and redirect to
+the originally requested protected route (or <code>/</code>). On
+<code>401 UNAUTHENTICATED</code>, show “invalid credentials” without
+revealing which field. On <code>429 RATE_LIMITED</code>, show a “too
+many attempts, retry after N seconds” message sourced from
+<code>Retry-After</code> (login is strictly rate-limited server-side,
+<code>endpoints.md</code> §5).</li>
+<li><strong>Security:</strong> password is never logged or placed in
+URL/query; submitted over TLS; the field uses <code>type=password</code>
++ autocomplete <code>current-password</code>.</li>
+</ul>
+<h3 id="artifact_upload_screen">9.2 artifact_upload_screen</h3>
+<p><strong>Goal:</strong> upload an OTA artifact and surface the
+server-side validation result, step by step, as the <strong>S1–S6
+validation-feedback chain</strong>.</p>
+<ul>
+<li><strong>Inputs:</strong> a file drop-zone (<code>.zip</code> /
+<code>payload.bin</code>) + a metadata form binding the
+<code>ArtifactUploadMetadata</code> fields (<code>endpoints.md</code>
+§9.1): <code>sha256</code> (lowercase hex), <code>signature</code>
+(base64 detached), <code>version</code>, <code>os</code>,
+<code>target_model</code>, and the AOSP streaming fields
+<code>file_hash</code>/<code>file_size</code>/<code>metadata_hash</code>/<code>metadata_size</code>/<code>payload_offset</code>/
+<code>payload_size</code>. The operator MAY paste a precomputed
+<code>sha256</code>; the client MAY also compute it in-browser for an
+early local mismatch warning (server remains authoritative).</li>
+<li><strong>Request:</strong> <code>POST /api/v1/artifacts/upload</code>
+as <code>multipart/form-data</code> with parts <code>file</code>
+(binary, <code>ZIP_STORED</code>) and <code>metadata</code> (JSON), with
+an upload <strong>progress bar</strong> (extend candidate on
+<code>UI-Components-React</code>, §5).</li>
+</ul>
+<p><strong>S1–S6 validation-feedback chain</strong> (UI states mapped
+onto the server pipeline + <code>endpoints.md</code> §9.1 checks/codes;
+the dashboard renders each as a step that turns green/red as the single
+server response resolves — the server returns one terminal result, so
+S1–S4 client states are <em>pre-flight/progress</em> and S5/S6 reflect
+the server verdict):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Meaning</th>
+<th>Surfaced from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S1 structure / media type</strong></td>
+<td>File selected, type/size sane before send.</td>
+<td>client pre-check; server <code>415 UNSUPPORTED_MEDIA_TYPE</code> /
+<code>400 VALIDATION_FAILED</code></td>
+</tr>
+<tr>
+<td><strong>S2 size within cap</strong></td>
+<td>Under the configured size limit.</td>
+<td>client pre-check; server <code>413 PAYLOAD_TOO_LARGE</code></td>
+</tr>
+<tr>
+<td><strong>S3 metadata complete</strong></td>
+<td>All required <code>metadata</code> fields present +
+well-formed.</td>
+<td>client schema validation; server <code>400 VALIDATION_FAILED</code>
+with <code>details[]</code></td>
+</tr>
+<tr>
+<td><strong>S4 hash match</strong></td>
+<td>Computed SHA-256 of bytes == declared <code>sha256</code>.</td>
+<td><strong>server</strong> <code>422 HASH_MISMATCH</code> (verified
+server-side; client may pre-warn)</td>
+</tr>
+<tr>
+<td><strong>S5 signature valid</strong></td>
+<td>Detached signature verifies against the trusted key.</td>
+<td><strong>server</strong> <code>422 SIGNATURE_INVALID</code></td>
+</tr>
+<tr>
+<td><strong>S6 stored / verified</strong></td>
+<td>Artifact persisted (<code>ZIP_STORED</code>),
+<code>verified=true</code>.</td>
+<td><strong>server</strong> <code>201 Artifact</code>
+<code>{artifact_id, verified:true, storage_ref, …}</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Ordering note (gap G2):</strong> <code>endpoints.md</code>
+§9.1 lists hash (S4) before signature (S5); the spec carries the
+<strong>hash-before-signature</strong> order, but the exact S2-before-S3
+vs S4-before-S5 ordering inside <code>ota-artifact-validator</code> is
+<strong>UNVERIFIED</strong> at brick level (G2 / <a
+href="../security/signing_verification.md"><code>../security/signing_verification.md</code></a>).
+The UI MUST render whatever terminal <code>error.code</code> the server
+returns and MUST NOT assert an ordering the server didn’t confirm.</p>
+</blockquote>
+<ul>
+<li><strong>Success:</strong> on <code>201</code>, show the
+<code>Artifact</code> summary and a primary CTA “Create release from
+this artifact” → prefilled ReleaseCreate (§9.3).</li>
+<li><strong>Errors:</strong> each <code>4xx</code> maps to the
+corresponding S-step turning red with the server <code>message</code> +
+<code>details[]</code>; the operator can fix metadata and resubmit
+without re-selecting the file.</li>
+</ul>
+<h3 id="release_and_deployment_management">9.3
+release_and_deployment_management</h3>
+<p><strong>Releases</strong></p>
+<ul>
+<li><strong>ReleaseList</strong> — paginated table
+(<code>GET /releases</code>, filters
+<code>?os</code>/<code>?target_model</code>/ <code>?status</code>);
+columns: version, os, target_model, status, created_at; row →
+ReleaseDetail.</li>
+<li><strong>ReleaseCreate</strong> — form binding
+<code>ReleaseCreate</code> (<code>endpoints.md</code> §10.1):
+<code>artifact_id</code> (prefilled from §9.2), <code>version</code>,
+<code>os</code>, <code>target_model</code>, <code>notes</code>,
+<code>min_current_version</code>. Submit → <code>POST /releases</code>.
+Surface <code>409 VERSION_NOT_MONOTONIC</code> prominently (“version
+must be strictly greater than the latest release for this os + target”)
+and <code>404</code> if the artifact is unknown/unverified.</li>
+<li><strong>ReleaseDetail</strong> — read-only <code>Release</code>;
+primary CTA “Deploy this release” → DeploymentCreate prefilled.</li>
+</ul>
+<p><strong>Deployments (all-targets for MVP)</strong></p>
+<ul>
+<li><strong>DeploymentCreate</strong> — form binding
+<code>DeploymentCreate</code> (<code>endpoints.md</code> §11.1):
+<code>release_id</code> (prefilled), <code>strategy</code>
+(<strong>locked to <code>all-targets</code></strong> in MVP; the control
+is a disabled/single-value selector with an inline “staged rollout
+arrives in 1.0.1” note — any other value yields <code>400</code>),
+optional <code>group</code>. Submit → <code>POST /deployments</code>;
+show <code>409 CONFLICT</code> if an active deployment already targets
+the set.</li>
+<li><strong>DeploymentDetail</strong> —
+<code>GET /deployments/{id}</code> → <code>DeploymentStatus</code> with
+the aggregate progress
+<code>{pending, downloading, installed, succeeded, failed}</code>
+rendered as a progress bar + counts (chart via
+<code>Dashboard-Analytics-React</code>, UNVERIFIED). Auto-refresh on the
+query-cache poll interval. <strong>No pause/resume/abort controls in
+MVP</strong> (those belong to the staged-rollout lifecycle, G7/1.0.1);
+the layout reserves the action row.</li>
+</ul>
+<h3 id="fleet_health_and_telemetry_views">9.4
+fleet_health_and_telemetry_views</h3>
+<p><strong>Goal:</strong> give the operator fleet-wide health and
+per-device drill-down.</p>
+<ul>
+<li><strong>FleetHealth</strong> — a device list with health badges and
+KPI tiles (online/last-seen, current-version distribution, in-progress
+vs failed counts). Per-row/per-device status comes from
+<code>GET /api/v1/devices/{deviceId}/status</code>
+(<code>endpoints.md</code> §8.2) returning <code>DeviceStatus</code>
+<code>{current_version, target_version, last_seen, update_state, active_slot, health}</code>.
+<code>update_state</code> is the 7-value <code>UpdateState</code> enum
+(<code>idle</code>,<code>download_started</code>,
+<code>installing</code>,<code>installed</code>,<code>verifying</code>,<code>success</code>,<code>failure</code>).</li>
+<li><strong>DeviceDetail</strong> — full <code>DeviceStatus</code> +
+(when G4 lands) a telemetry event history for the device. Telemetry
+events are the 6-value <code>TelemetryEventType</code>
+(<code>download_started</code>,<code>installing</code>,<code>installed</code>,<code>verifying</code>,<code>success</code>,<code>failure</code>
+— <strong>no <code>idle</code></strong>, <code>endpoints.md</code>
+§12.2).</li>
+<li><strong>Telemetry read API is PARTIAL (gap G4):</strong> ingest
+(<code>POST /client/telemetry</code>) exists, but read/aggregation
+endpoints (per-device history, <code>/telemetry/overview</code>) are
+<strong>not yet specified</strong> (<code>additions_synthesis.md</code>
+§8 G4). The dashboard therefore:
+<ol type="1">
+<li>derives what it can from <code>DeviceStatus</code> +
+<code>DeploymentStatus</code> aggregates (both MVP), and</li>
+<li>renders telemetry-history panels in a <strong>graceful
+empty/“available when the telemetry read API ships” state</strong>
+rather than calling an undefined endpoint. The dashboard does
+<strong>not</strong> invent telemetry-read routes; it binds them when G4
+specifies them.</li>
+</ol></li>
+</ul>
+<h2 id="security_considerations">10. security_considerations</h2>
+<ul>
+<li><strong>Token storage:</strong> the <strong>access JWT lives in
+memory only</strong> (cleared on reload; re-minted via refresh). The
+<strong>refresh token</strong> storage trades off XSS vs CSRF: the
+preferred MVP option is a <strong>secure, <code>HttpOnly</code>,
+<code>SameSite=Strict</code> cookie set by the server</strong> so JS
+cannot read it (mitigates XSS exfiltration) —
+<strong>UNVERIFIED</strong> whether the MVP auth flow /
+<code>auth</code> brick issues the refresh token as a cookie vs a JSON
+body field (<code>endpoints.md</code> §7.1 shows it in the JSON body).
+If it is JSON-only, the fallback is in-memory + re-login on reload,
+<strong>never</strong> <code>localStorage</code> for the refresh token.
+This choice is flagged for confirmation in §13.</li>
+<li><strong>Refresh rotation</strong> (§7.2) limits the blast radius of
+a leaked refresh token: each use invalidates the prior token
+server-side.</li>
+<li><strong>Transport:</strong> TLS 1.3 only; HTTP/3→HTTP/2 negotiated
+by the server (<code>endpoints.md</code> §3); the SPA sends
+<code>Accept-Encoding: br, gzip</code> and never downgrades.</li>
+<li><strong>No secrets in the bundle:</strong> signing keys, server
+secrets, and the build-pipeline private key are <strong>never</strong>
+present in the SPA. The dashboard only ever holds the operator’s
+short-lived tokens.</li>
+<li><strong>RBAC is server-authoritative</strong> (§7.3); the UI’s
+<code>RoleGate</code> is defense-in-UX only.</li>
+<li><strong>Content Security Policy:</strong> restrict
+<code>connect-src</code> to the API origin, disallow inline script, set
+<code>frame-ancestors 'none'</code>; X-Content-Type-Options
+<code>nosniff</code>. (Concrete CSP header values are a deployment
+concern — flagged, not asserted here.)</li>
+<li><strong>Error hygiene:</strong> the SPA renders the safe server
+<code>message</code> + <code>code</code> + <code>request_id</code>
+(<code>endpoints.md</code> §6) and never surfaces stack traces; it logs
+no tokens.</li>
+</ul>
+<h2 id="new_public_repository_plan">11. new_public_repository_plan</h2>
+<p>Per locked decision <strong>D4</strong> (master §2/§10: “New reusable
+submodules get PUBLIC repos auto-created on GitHub + GitLab”), the
+dashboard ships as a <strong>NEW public repository</strong>
+(<code>additions_synthesis.md</code> §9.1 routes G6 to “new public
+repo”).</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Repo name</td>
+<td><code>ota-dashboard</code> (aligns with the <code>ota-*</code>
+NEW-submodule naming in master §10).</td>
+</tr>
+<tr>
+<td>Visibility</td>
+<td><strong>PUBLIC</strong> (D4).</td>
+</tr>
+<tr>
+<td>Hosts</td>
+<td><strong>GitHub + GitLab</strong> (D4), mirrored to <strong>GitFlic +
+GitVerse</strong> per the multi-upstream push convention
+(<code>additions_synthesis.md</code> §4; master §10 “tag
+mirroring”).</td>
+</tr>
+<tr>
+<td>Org / owner</td>
+<td>Same org pattern as the OTA submodules (the
+<code>HelixDevelopment</code>/OTA org used for <code>helix_ota</code>;
+the <code>vasic-digital</code> org is for catalogue bricks).
+<strong>UNVERIFIED</strong> which exact org owns the dashboard repo —
+confirm before creation.</td>
+</tr>
+<tr>
+<td>Boundary</td>
+<td>UI only — consumes <code>/api/v1</code>; holds no OTA business
+logic; depends on <code>ota-protocol</code> (TypeScript wire types) +
+the three <code>*-React</code> bricks. Decoupled, independently testable
+(§11.4.28).</td>
+</tr>
+<tr>
+<td>Contents</td>
+<td>the React SPA, the typed API client, the four screen families, CI
+(build + four-layer tests + bundle/secret guard), container build on the
+<code>containers</code> substrate.</td>
+</tr>
+<tr>
+<td>Pre-creation gate</td>
+<td>Listed here in the MVP spec <strong>before</strong> repo creation
+(master §10 “final list confirmed in the MVP spec immediately before
+creation”).</td>
+</tr>
+<tr>
+<td>Multi-upstream</td>
+<td>submodule-commit-first + tag mirroring across all four hosts (master
+§13 governance row).</td>
+</tr>
+</tbody>
+</table>
+<p>The three <code>*-React</code> bricks are <strong>consumed</strong>,
+not created here; if any does not exist as a real reusable repo, §13.1
+governs the fallback (it does not become a silently-invented
+dependency).</p>
+<h2 id="testing_four_layer">12. testing_four_layer</h2>
+<p>Per master §13 / Constitution §1 four-layer testing with no-bluff
+positive evidence (§7.1). Safety-relevant UI paths here are <strong>the
+upload S1–S6 feedback</strong> (§9.2) and <strong>the
+auth/refresh-rotation flow</strong> (§7.2).</p>
+<ol type="1">
+<li><strong>source-presence gate.</strong> Static assertion that the
+code artifacts implementing this spec exist: every route in §6 has a
+screen component; every screen’s API call targets a documented
+<code>endpoints.md</code> route; the typed client’s request DTOs match
+<code>ota-protocol</code> / <code>openapi.yaml</code>. Fails if a screen
+calls an undefined endpoint or a route has no component.</li>
+<li><strong>artifact gate (bundle shipped).</strong> Build the SPA and
+assert the <em>built</em> bundle: it contains the four screen families,
+contains <strong>no</strong> secret/private-key material (secret-scan
+guard), and pins <code>connect-src</code> to the API origin in the
+emitted CSP. Boot the SPA against a mock <code>/api/v1</code> and assert
+the route table renders.</li>
+<li><strong>runtime / integration.</strong> Component + end-to-end tests
+against a mocked (and, in the dev stack, real containerized) control
+plane:
+<code>login → 200 tokens → upload valid artifact → S6 verified:true → create release → create all-targets deployment → deployment progress renders → device status renders</code>.
+Negatives: bad credentials → 401 message; tampered artifact upload →
+<strong>S5 SIGNATURE_INVALID</strong> rendered red; non-monotonic
+release → 409 surfaced; a <code>401</code> mid-session triggers
+<strong>refresh-rotation</strong> and a single transparent retry; failed
+refresh → redirect to <code>/login</code>; a <code>viewer</code> session
+has operator actions gated.</li>
+<li><strong>mutation meta-test (PASS→FAIL on negation).</strong> Mutate
+the UI and assert the suite flips: drop the bearer header in the client
+(auth integration tests must fail); make the upload screen ignore
+<code>422 SIGNATURE_INVALID</code> and show success (S5 negative test
+must fail); disable refresh rotation so the old token is reused
+(rotation test must fail); remove the <code>RoleGate</code> (the
+viewer-gating test must fail). A mutation that breaks nothing exposes a
+coverage hole.</li>
+</ol>
+<h2 id="anti_bluff_unverified_register">13.
+anti_bluff_unverified_register</h2>
+<p>Per HelixConstitution §7.1 / §11.4.6 (anti-bluff / no-guessing), the
+following MUST NOT be propagated as fact:</p>
+<ul>
+<li><strong>The three <code>*-React</code> bricks</strong>
+(<code>UI-Components-React</code>,
+<code>Dashboard-Analytics-React</code>, <code>Auth-Context-React</code>)
+are named in master §10 / D7 but are <strong>NOT on the verified
+catalogue</strong> (<a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>
+§7 explicitly omits them). Their existence, ownership, repos, and public
+APIs are <strong>UNVERIFIED</strong>. Every “reuse” of them in §4/§5 is
+conditional on inspection.</li>
+<li><strong>Toolchain</strong> (Vite vs Next; bundler; component-library
+internals) is <strong>UNVERIFIED</strong>; deferred to brick inspection
+(§3.2). Do not assert a build tool.</li>
+<li><strong>Refresh-token transport</strong> (cookie vs JSON body) and a
+server-side <strong>refresh-revocation/ logout</strong> endpoint are
+<strong>UNVERIFIED</strong> against the MVP auth flow
+(<code>endpoints.md</code> §7 shows the refresh token in the JSON body
+and defines no logout route). §10 picks the safer cookie option but
+flags it.</li>
+<li><strong><code>GET /deployments</code> list endpoint</strong> and a
+public <strong><code>/health</code> JSON endpoint</strong> are
+<strong>not defined</strong> in <code>endpoints.md</code> MVP; the
+DeploymentList screen and the health badge are noted as
+<strong>server-side follow-ups</strong>, not invented client routes (§6,
+§8).</li>
+<li><strong>Telemetry read/aggregation API (gap G4)</strong> is
+<strong>PARTIAL/undefined</strong>; the fleet/telemetry views degrade
+gracefully and bind it only when G4 specifies it (§9.4).</li>
+<li><strong><code>ota-artifact-validator</code> S2-before-S3 /
+hash-before-signature ordering (gap G2)</strong> is
+<strong>UNVERIFIED</strong> at brick level; the UI renders the server’s
+terminal <code>error.code</code> and asserts no ordering (§9.2).</li>
+<li><strong>The dashboard repo’s owning org</strong> is
+<strong>UNVERIFIED</strong> — confirm before creation (§11).</li>
+<li><strong>HelixConstitution clause numbers</strong> (§11.4.6, §11.4.4,
+§11.4.61, §11.4.74, §11.4.28, §7.1) are carried from corpus convention
+and are <strong>UNVERIFIED</strong> against the authoritative
+Constitution text.</li>
+</ul>
+<h3 id="fallback-if-a--react-brick-is-unconfirmed">13.1 fallback if a
+<code>*-React</code> brick is unconfirmed</h3>
+<p>If, on inspection, a <code>*-React</code> brick does not exist or
+does not cover the need, the dashboard substitutes a <strong>single,
+well-established, verified third-party library</strong> for that concern
+(a component library for <code>UI-Components-React</code>; a charting
+library for <code>Dashboard-Analytics-React</code>; an OIDC/JWT
+client-context for <code>Auth-Context-React</code>), recorded as a
+corrected binding here and in the reuse map — <strong>never</strong> a
+silently-invented dependency, and only after the catalogue-first check
+fails (§11.4.74).</p>
+<h2 id="compliance_notes_helixconstitution">14.
+compliance_notes_helixconstitution</h2>
+<blockquote>
+<p>Clause numbers are carried from corpus convention and are
+<strong>UNVERIFIED</strong> against the authoritative Constitution text
+(the Constitution file is not present in this repository).</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause (label)</th>
+<th>How this spec complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.61 (ToC mandatory)</td>
+<td>Metadata table first, ToC immediately after, numbered +
+anchored.</td>
+</tr>
+<tr>
+<td>§7.1 / §11.4.6 (anti-bluff / no-guessing)</td>
+<td>Every brick, endpoint, and toolchain claim traces to
+<code>endpoints.md</code> / master / reuse-map or is tagged
+<strong>UNVERIFIED</strong> (§13); the unconfirmed <code>*-React</code>
+bricks, refresh-token transport, deferred endpoints, and clause numbers
+are never asserted as fact.</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first reuse)</td>
+<td>Composes from the <code>*-React</code> bricks where they can be
+confirmed; a fallback (§13.1) only after the catalogue-first check
+fails; no auth/transport logic hand-rolled (tokens from the auth brick,
+contract from <code>ota-protocol</code>/<code>openapi.yaml</code>).</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>UI primitives carry no API knowledge; the API client carries no view
+logic; the dashboard holds no OTA business logic (§4).</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§12 defines source-presence → artifact/bundle → runtime/integration
+→ mutation meta-test; safety focus on upload S1–S6 + refresh
+rotation.</td>
+</tr>
+<tr>
+<td>D4 (PUBLIC new repos)</td>
+<td><code>ota-dashboard</code> planned PUBLIC on GitHub + GitLab,
+mirrored to GitFlic/GitVerse, listed before creation (§11).</td>
+</tr>
+<tr>
+<td>D7 (React dashboard)</td>
+<td>React SPA over <code>/api/v1</code>; login + upload + deploy +
+fleet/telemetry (§9).</td>
+</tr>
+<tr>
+<td>LOCKED stack honored</td>
+<td>Consumes the Go + Gin + Brotli + HTTP/3→HTTP/2 REST surface
+(<code>Accept-Encoding: br, gzip</code>; §3, §8); REST primary; no
+gRPC.</td>
+</tr>
+<tr>
+<td>LOCKED scope honored</td>
+<td>All-targets deployments only (staged rollout deferred to 1.0.1, G7);
+no rollback/group/audit UI in MVP — reserved, not built (§1, §6).</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

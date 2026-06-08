@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03_analysis</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">03_analysis</h1>
+</header>
+<h1
+id="helix-ota-analysis-of-addition-3-initial_research_03helix_ota_big">Helix
+OTA — Analysis of Addition #3
+(<code>initial_research_03/helix_ota_big/</code>)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Exhaustive requirement-by-requirement analysis of the large
+generated research/design corpus in
+<code>additions/initial_research_03/helix_ota_big/</code> (26 markdown
+files, ~36k lines). Maps every requirement to the current canonical spec
+corpus (<code>docs/research/main_specs/</code>) and the ACTUALLY-BUILT
+server (<code>server/</code>). Reconciles the addition’s own
+<code>CODE_REVIEW_AND_GAP_ANALYSIS.md</code> against the real build,
+flags conflicts with locked decisions, and catalogues future-phase docs
+to their versioned dirs. This is Rev-1 coverage of addition #3 — the
+prior <code>additions_synthesis.md</code> (Rev 1) did NOT cover it.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The addition is a parallel, self-consistent-but-divergent
+generation: different module path
+(<code>vasic-digital/helix-ota-server</code> vs built
+<code>HelixDevelopment/helix_ota</code>), different HTTP framework (chi
+vs LOCKED Gin), different crypto (RSA-4096/RSA-PSS vs built ed25519),
+different domain vocabulary (<code>updates</code>+<code>rollouts</code>
+vs canonical <code>releases</code>+<code>deployments</code>), and mTLS
+device auth vs built JWT-bearer. Its internal <code>CODE_REVIEW</code>
+audits the addition against ITSELF, not against the built system — its
+findings are re-scored here against the real build.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Treated as authoritative INPUT (D5) but NOT as canonical: where it
+conflicts with locked decisions or the built server, the locked/built
+side wins; reusable material is folded forward.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Addition #3 fully processed (priority docs read in full / deep;
+future-phase docs catalogued).</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>All 26 <code>.md</code> files inventoried; binaries/exports
+(.pdf/.docx/.html/.tar/.zip) intentionally skipped as duplicates.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Fold accepted MVP gaps (user/device-group/api-key CRUD,
+telemetry-event endpoint, mandatory-update behavior, anti-rollback
+check, tamper-event, one-active-deployment-per-group constraint) into
+<code>endpoints.md</code>/<code>schema.md</code>/<code>server/</code>.
+Route future-phase material into the versioned dirs listed in §6. Re-run
+when addition #4 lands.</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Helix OTA spec-analysis</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><a
+href="../additions_synthesis.md"><code>additions_synthesis.md</code></a>;
+<a
+href="../../1.0.0-mvp/api/endpoints.md"><code>../../1.0.0-mvp/api/endpoints.md</code></a>;
+<a
+href="../../1.0.0-mvp/database/schema.md"><code>../../1.0.0-mvp/database/schema.md</code></a>;
+<a
+href="../../1.0.0-mvp/server/architecture.md"><code>../../1.0.0-mvp/server/architecture.md</code></a>;
+<a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>../../00-master/2026-06-07-helix-ota-design.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-method-and-evidence-base">§1. method and evidence
+base</a></li>
+<li><a href="#2-document-inventory">§2. document inventory</a></li>
+<li><a href="#3-requirement-inventory-table">§3. requirement inventory
+table</a></li>
+<li><a
+href="#4-conflicts-with-locked-decisions-and-the-built-server">§4.
+conflicts with locked decisions and the built server</a></li>
+<li><a
+href="#5-reconciling-the-additions-code_review-against-the-actual-build">§5.
+reconciling the addition’s code_review against the actual build</a></li>
+<li><a href="#6-future-phase-catalogue">§6. future-phase
+catalogue</a></li>
+<li><a href="#7-folding-actions-summary">§7. folding actions
+summary</a></li>
+</ul>
+<h2 id="method-and-evidence-base">§1. method and evidence base</h2>
+<p>Three lenses per the operator mandate (D5; Constitution §11.4.6
+no-guessing, §11.4 anti-bluff): <strong>extract</strong> reusable
+material, <strong>reconcile</strong> against the canonical corpus +
+built code, <strong>route</strong> each element to its destination.
+Evidence cited by file. Claims that could not be verified against the
+built code or live sources are marked <strong>UNVERIFIED</strong>.</p>
+<p><strong>Built-server ground truth</strong> (read this revision):
+<code>server/internal/api/server.go</code> (Gin router + routes),
+<code>wire.go</code> (wire types), <code>store/store.go</code>
+(Repository + domain structs), <code>handlers_client.go</code>,
+<code>handlers_deployment.go</code>. Key facts:</p>
+<ul>
+<li>Module: <code>github.com/HelixDevelopment/helix_ota/server</code>;
+depends on <code>HelixDevelopment/ota-protocol</code>,
+<code>ota-artifact-validator</code>, <code>ota-telemetry-schema</code>,
+<code>ota-rollout-engine</code>.</li>
+<li>HTTP framework: <strong>Gin</strong> (<code>gin-gonic</code>) —
+matches LOCKED D6.</li>
+<li>Persistence: <strong>in-memory</strong>
+<code>MemoryRepository</code> (<code>store/memory.go</code>);
+pgx/PostgreSQL is a documented future target (<code>store.go</code>
+header, <code>architecture.md §4</code>). No DB built yet.</li>
+<li>Domain vocabulary: <strong>devices → artifacts → releases →
+deployments → telemetry</strong>. Deployment strategy =
+<code>all-targets</code> only; staged rollout deferred to 1.0.1 (routes
+the cohort check through <code>ota-rollout-engine.InCohort</code> so the
+staged engine drops in).</li>
+<li>Artifact signing: <strong>ed25519 detached signature +
+SHA-256</strong> (<code>server.go</code> <code>ed25519.PublicKey</code>,
+<code>pubKey</code>), not RSA-4096.</li>
+<li>Auth: <strong>JWT bearer</strong> (<code>TokenSigner</code>,
+<code>authMiddleware</code>, RBAC roles admin/operator/viewer/device).
+No mTLS in the built server.</li>
+<li>Device endpoints: <code>GET /client/update</code> (204/200) and
+<code>POST /client/telemetry</code>; device acts only on its own token
+subject.</li>
+</ul>
+<p><strong>Canonical corpus ground truth</strong>:
+<code>endpoints.md</code> (rev 2), <code>schema.md</code>,
+<code>architecture.md</code>, master design. These match the built
+server closely (Gin, releases/deployments, all-targets MVP, opaque IDs,
+SHA-256+signature+AVB, staged rollout → 1.0.1, TUF → 1.0.1+).</p>
+<h2 id="document-inventory">§2. document inventory</h2>
+<p>Base: <code>additions/initial_research_03/helix_ota_big/</code>. 26
+<code>.md</code> files. Binaries/exports (.pdf/.docx/.html/.tar/.zip)
+intentionally not opened (duplicate renderings of the
+<code>.md</code>).</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Document (path)</th>
+<th>Lines</th>
+<th>What it specifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D0</td>
+<td><code>CODE_REVIEW_AND_GAP_ANALYSIS.md</code></td>
+<td>539</td>
+<td>Independent review of the addition’s OWN docs. 11 CRITICAL + 9 HIGH
++ 8 MEDIUM + 7 LOW gaps; all are internal contradictions (endpoint
+paths, enum sets, ID convention, validation order, Go module path)
+between the addition’s own files. Reconciled in §5.</td>
+</tr>
+<tr>
+<td>D1</td>
+<td><code>README.md</code></td>
+<td>153</td>
+<td>Project overview, version roadmap matrix, doc index, vasic-digital
+submodule list, 8 new <code>helix-*</code> submodules. Module org:
+<code>HelixDevelopment</code> + <code>vasic-digital</code>. RSA-4096 +
+SHA-256 + A/B; plugin OS-adapter vision.</td>
+</tr>
+<tr>
+<td>D2</td>
+<td><code>1.0.0-mvp/server/SERVER_IMPLEMENTATION.md</code></td>
+<td>3968</td>
+<td>Full Go server design: project layout (chi router,
+<code>internal/handler|service|repository|model|validation</code>),
+<code>go.mod</code>
+(<code>github.com/vasic-digital/helix-ota-server</code>, chi, pgx, RSA),
+service interfaces
+(UpdateService/DeviceService/RolloutService/ArtifactService/TelemetryService/AuthService),
+rollout decision engine (DRAFT→RUNNING→PAUSED/HALTED→COMPLETED,
+deterministic SHA-256 device bucketing, dwell-time advance, auto-halt on
+failure-rate), validation pipeline
+(Structure→Hash→Signature→Compatibility, streaming SHA-256, RSA-PSS
+verify, worker pool), mTLS device enrollment, telemetry, background
+jobs, middleware, main, submodule integration.</td>
+</tr>
+<tr>
+<td>D3</td>
+<td><code>1.0.0-mvp/client/android/ANDROID_CLIENT_DESIGN.md</code></td>
+<td>3202</td>
+<td>Android 15 / RK3588 client: Virtual A/B (Seamless v2),
+<code>update_engine</code> Binder IPC + <code>ApplyPayload</code>, A/B
+partition layout, OTA
+zip/<code>payload.bin</code>/<code>payload_properties.txt</code>/<code>care_map.pb</code>
+handling, resumable Range download, SHA-256+RSA verification engine,
+AOSP build integration (<code>/system/priv-app</code>), UX, Go client
+SDK (gomobile AAR).</td>
+</tr>
+<tr>
+<td>D4</td>
+<td><code>1.0.0-mvp/docs/api/REST_API_SPECIFICATION.md</code></td>
+<td>3333</td>
+<td>REST surface: auth (login/refresh/logout/TOTP), device mgmt
+(<code>/devices/register</code>), artifact mgmt
+(<code>/artifacts/upload</code>, <code>/artifacts/{id}/download</code>),
+update check (<code>POST /updates/check</code>), rollout mgmt
+(<code>/rollouts</code>), telemetry/reporting, Dashboard WebSocket
+(underspecified), Go struct appendix, error/rate-limit appendices
+(clipped).</td>
+</tr>
+<tr>
+<td>D5</td>
+<td><code>1.0.0-mvp/docs/VERSION_ROADMAP.md</code></td>
+<td>800</td>
+<td>Version contract MVP→Rollback→Delta→Linux→Windows→Universal. MVP
+feature lists (server/client/dashboard) + acceptance criteria.
+Conflicting endpoint paths (<code>POST /devices</code>,
+<code>GET /devices/{id}/update-check</code>,
+<code>POST /artifacts</code>).</td>
+</tr>
+<tr>
+<td>D6</td>
+<td><code>1.0.0-mvp/docs/architecture/SYSTEM_ARCHITECTURE.md</code></td>
+<td>2795</td>
+<td>Full system architecture; Go structs (Device/Rollout), service
+decomposition, NotificationService/DashboardSession, validation chain
+(Hash-first). Conflicts with DB schema on field names (per D0).</td>
+</tr>
+<tr>
+<td>D7</td>
+<td><code>1.0.0-mvp/docs/database/DATABASE_SCHEMA.md</code></td>
+<td>1691</td>
+<td>PostgreSQL 16 DDL: UUID v4 PKs, enums (rollout_status,
+device_status, upload_status, os_type CHECK), tables (devices,
+device_groups, artifacts, updates, rollouts, rollout_stages, telemetry
+partitioned, users, api_keys, audit), indexes, partitioning, migration
+strategy.</td>
+</tr>
+<tr>
+<td>D8</td>
+<td><code>1.0.0-mvp/docs/security/SECURITY_ARCHITECTURE.md</code></td>
+<td>1908</td>
+<td>STRIDE threat model; transport (mTLS), artifact security (SHA-256 +
+RSA + chain), authn/authz (JWT + RBAC matrix + API keys + TOTP), device
+identity/cert provisioning, update-safety guarantees, server security,
+compliance/audit, security testing.</td>
+</tr>
+<tr>
+<td>D9</td>
+<td><code>1.0.0-mvp/docs/submodules/NEW_SUBMODULE_SPECIFICATIONS.md</code></td>
+<td>2351</td>
+<td>Specs for 8 new <code>helix-*</code> submodules (server, client-sdk,
+android, dashboard, update-engine, artifact-validator, rollout-engine,
+device-identity). Module path <code>dev.helix.ota.*</code> (conflicts
+with D2). Container integration, release checklist, dependency
+matrix.</td>
+</tr>
+<tr>
+<td>D10</td>
+<td><code>1.0.0-mvp/docs/testing/TESTING_STRATEGY.md</code></td>
+<td>2043</td>
+<td>Four-layer fix verification, mutation testing (≥85%),
+unit/integration/e2e/HIL, anti-bluff; CI/CD section clipped.</td>
+</tr>
+<tr>
+<td>D11</td>
+<td><code>1.0.0-mvp/docs/deployment/DEPLOYMENT_GUIDE.md</code></td>
+<td>1996</td>
+<td>Docker/K8s deployment; env vars; monitoring; DR (referenced, partly
+missing).</td>
+</tr>
+<tr>
+<td>D12</td>
+<td><code>1.0.0-mvp/docs/research/OTA_SYSTEMS_RESEARCH.md</code></td>
+<td>1964</td>
+<td>Survey of existing OTA solutions (overlaps canonical
+<code>research/ota_landscape_report.md</code> +
+<code>research/stacks/</code>).</td>
+</tr>
+<tr>
+<td>D13</td>
+<td><code>1.0.0-mvp/containers/docker-compose.yml</code></td>
+<td>793</td>
+<td>Full stack: Traefik (TLS/ACME/mTLS forwarding), helix-ota-server
+(chi per comment), dashboard (React/nginx), PostgreSQL 16 (tuned), Redis
+7, MinIO (SSE, versioning), <strong>HashiCorp Vault</strong> (transit
+RSA-4096 signing, kv-v2, TOTP), minio-init, vault-init, db-migrate.</td>
+</tr>
+<tr>
+<td>D14</td>
+<td><code>1.0.1-rollback/docs/ROLLBACK_DESIGN.md</code></td>
+<td>2127</td>
+<td>1.0.1 rollback: auto (boot-failure) / server-triggered /
+user-initiated; rollback vs downgrade; version-history mgmt; data
+safety; rollback API; Go + Kotlin reference impls.</td>
+</tr>
+<tr>
+<td>D15</td>
+<td><code>1.0.2-delta-updates/docs/DELTA_UPDATES_DESIGN.md</code></td>
+<td>1969</td>
+<td>1.0.2 delta/differential OTA; AOSP block diffs;
+<code>helix-delta-gen</code> submodule; delta selection; 60–90%
+bandwidth reduction; DB+API additions; benchmarks.</td>
+</tr>
+<tr>
+<td>D16</td>
+<td><code>1.1.0-linux-support/docs/LINUX_OTA_RESEARCH.md</code></td>
+<td>2373</td>
+<td>1.1.0 Linux OTA: apt/rpm-ostree/pacman/generic A/B rootfs; OSAdapter
+plugin interface; new submodules; migration path.</td>
+</tr>
+<tr>
+<td>D17</td>
+<td><code>1.2.0-windows-support/docs/WINDOWS_OTA_RESEARCH.md</code></td>
+<td>2909</td>
+<td>1.2.0 Windows OTA: WUA/WSUS/WUfB/Intune; Windows Service client;
+MSI/MSIX; Windows security (code signing); Windows adapter;
+submodules.</td>
+</tr>
+<tr>
+<td>D18</td>
+<td><code>2.0.0-multi-os-universal/docs/MULTI_OS_UNIVERSAL_DESIGN.md</code></td>
+<td>1466</td>
+<td>2.0.0 universal: dynamically-loaded OS-adapter plugin system; OS
+catalog; OS-agnostic pipeline; cross-OS dashboard + dependency
+coordination; plugin manifest.</td>
+</tr>
+<tr>
+<td>D19–D26</td>
+<td><code>1.0.0-mvp/docs/diagrams/*.md</code> (8 files)</td>
+<td>79–258 ea</td>
+<td>Mermaid: high-level arch, update flow, rollout flow, client state
+machine, artifact validation, database ER, security layers, container
+arch. Overlap canonical <code>00-master/diagrams/</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="requirement-inventory-table">§3. requirement inventory
+table</h2>
+<p>Coverage is vs the union of the <strong>canonical corpus</strong> and
+the <strong>built server</strong>. “Built” = present in
+<code>server/</code>. “Corpus” = present in a spec doc. Source §s
+reference the addition.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>ReqID</th>
+<th>Requirement (source)</th>
+<th>Category</th>
+<th>Coverage</th>
+<th>Conflict?</th>
+<th>Folding action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R01</td>
+<td>Device registration endpoint</td>
+<td>API</td>
+<td>COVERED — built <code>POST /devices/register</code> (server.go:119);
+corpus <code>endpoints.md §8.1</code>. Addition self-conflicts on path
+(D0/C1).</td>
+<td>Addition C1 N/A vs build (build already canonical).</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>R02</td>
+<td>Device registration body fields</td>
+<td>API/Model</td>
+<td>PARTIAL — built
+<code>DeviceRegistration{hardware_id,model,os,os_version,current_version,group,metadata}</code>
+(wire.go:41). Addition wants
+<code>slot_suffix</code>,<code>hardware_fingerprint</code>.</td>
+<td>Addition uses RSA/mTLS-era fields.</td>
+<td>Consider optional
+<code>slot_suffix</code>/<code>hardware_fingerprint</code> in metadata;
+not MVP-blocking.</td>
+</tr>
+<tr>
+<td>R03</td>
+<td>Update check (device-facing)</td>
+<td>API</td>
+<td>COVERED — built <code>GET /client/update</code> 204/200
+(handlers_client.go); corpus <code>endpoints.md §12.1</code>. Addition
+self-conflicts GET vs POST (D0/C3).</td>
+<td>Build/corpus chose <code>GET /client/update</code>; addition’s
+<code>POST /updates/check</code> rejected.</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>R04</td>
+<td>Artifact upload + validation</td>
+<td>API</td>
+<td>COVERED — built <code>POST /artifacts/upload</code> (multipart,
+ed25519 verify); corpus <code>endpoints.md §9.1</code>,
+<code>artifact_validation.md</code>.</td>
+<td>Addition path <code>/artifacts</code> (roadmap) vs
+<code>/artifacts/upload</code>.</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>R05</td>
+<td>Artifact download w/ Range, identity encoding</td>
+<td>API</td>
+<td>COVERED — corpus <code>endpoints.md §3/§12.1</code> (ZIP_STORED,
+identity, Range mandatory); built returns reference URL
+(<code>artifactURL</code>). Byte-serving path = Storage brick.</td>
+<td>None.</td>
+<td>Confirm Storage-brick Range serving (UNVERIFIED, ADR-0004 §6).</td>
+</tr>
+<tr>
+<td>R06</td>
+<td>Release create/list/get</td>
+<td>API</td>
+<td>COVERED — built <code>/releases</code> CRUD (server.go:125-127);
+corpus <code>endpoints.md §10</code>. Addition has no “release” concept
+(uses “update”).</td>
+<td>Vocabulary: addition <code>Update</code> ≈ canonical
+<code>Release</code>.</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>R07</td>
+<td>Deployment (all-targets) create/get</td>
+<td>API</td>
+<td>COVERED — built <code>/deployments</code> (handlers_deployment.go);
+corpus <code>endpoints.md §11</code>.</td>
+<td>Addition uses <code>rollouts</code> (staged) at MVP.</td>
+<td>None (staged → 1.0.1).</td>
+</tr>
+<tr>
+<td>R08</td>
+<td>Staged/phased rollout engine (5/10/30/50/100, dwell, auto-halt)</td>
+<td>Rollout</td>
+<td>PARTIAL/DEFERRED — corpus defers to
+<strong>1.0.1-staged-rollout</strong>; built routes cohort via
+<code>ota-rollout-engine.InCohort</code>. Addition gives a full Go
+decision engine (SERVER_IMPL §4).</td>
+<td>Timing: addition puts full engine in MVP; locked scope = 1.0.1.</td>
+<td>Fold addition’s decision-engine algorithm into
+<code>1.0.1-staged-rollout/</code> as design seed.</td>
+</tr>
+<tr>
+<td>R09</td>
+<td>Deterministic device→cohort hashing</td>
+<td>Rollout</td>
+<td>COVERED — built <code>rollout.InCohort</code> seam; addition
+<code>SelectForPercentage</code> (SERVER_IMPL §4.3) is a compatible
+reference.</td>
+<td>None.</td>
+<td>Cross-check hashing approach when staged engine authored.</td>
+</tr>
+<tr>
+<td>R10</td>
+<td>Telemetry ingest (batch)</td>
+<td>API</td>
+<td>COVERED — built <code>POST /client/telemetry</code> (batch,
+schema-validated); corpus <code>endpoints.md §12.2</code>,
+<code>telemetry_processing.md</code>.</td>
+<td>Addition splits device-status vs telemetry-events (D0/H9).</td>
+<td>See R26.</td>
+</tr>
+<tr>
+<td>R11</td>
+<td>Auth: login/refresh + JWT + RBAC</td>
+<td>Security</td>
+<td>COVERED — built <code>/auth/login</code>,<code>/auth/refresh</code>,
+<code>TokenSigner</code>, roles admin/operator/viewer/device.</td>
+<td>Addition adds logout + TOTP.</td>
+<td>TOTP/logout optional hardening; note for 1.0.1.</td>
+</tr>
+<tr>
+<td>R12</td>
+<td>Artifact integrity: SHA-256 + signature, server+device</td>
+<td>Security</td>
+<td>COVERED — built ed25519 detached sig + SHA-256; corpus
+<code>signing_verification.md</code>.</td>
+<td><strong>CONFLICT</strong>: addition mandates <strong>RSA-4096 /
+RSA-PSS</strong> (SERVER_IMPL §5.4, compose Vault
+<code>type=rsa-4096</code>). Build = ed25519.</td>
+<td>Keep ed25519 (built+canonical). See §4.</td>
+</tr>
+<tr>
+<td>R13</td>
+<td>A/B + AVB/dm-verity + auto boot-failure rollback</td>
+<td>Client/Safety</td>
+<td>COVERED — corpus master §1,
+<code>client_android/update_engine_integration.md</code>,
+<code>research/stacks/android-avb-rollback.md</code>. Addition D3 is a
+strong reference.</td>
+<td>None (agrees).</td>
+<td>Fold AOSP nano-detail from D3 into <code>client_android/</code>
+where deeper than current.</td>
+</tr>
+<tr>
+<td>R14</td>
+<td>Virtual A/B + payload.bin + applyPayload headers</td>
+<td>Client</td>
+<td>COVERED — corpus
+<code>research/stacks/android15-virtual-ab.md</code>,
+<code>update_engine_integration.md</code>. D3 adds depth (snapuserd,
+COW, super_a/b).</td>
+<td>None.</td>
+<td>Fold D3 depth into <code>update_engine_integration.md</code> (cite
+UNVERIFIED AOSP specifics).</td>
+</tr>
+<tr>
+<td>R15</td>
+<td>Validation chain order</td>
+<td>Security/Safety</td>
+<td>COVERED (different order) — corpus/built validate signature+hash;
+addition D0/C9 mandates
+<strong>Hash→Signature→Structure→Compatibility</strong>. Built uses
+<code>ota-artifact-validator</code>.</td>
+<td>Addition self-conflicts (SYS_ARCH Hash-first vs SERVER_IMPL
+Structure-first).</td>
+<td>Verify <code>ota-artifact-validator</code> enforces
+hash-before-signature; document order in
+<code>artifact_validation.md</code> (UNVERIFIED current order).</td>
+</tr>
+<tr>
+<td>R16</td>
+<td>Anti-rollback / downgrade prevention</td>
+<td>Safety</td>
+<td><strong>MISSING</strong> (MVP-critical) — addition SA2: no
+<code>target_version &gt; device.current_version</code> server+client
+check. Built <code>handleClientUpdate</code> compares versions for
+steady-state (≥ ⇒ 204) but does NOT forbid a release whose version &lt;
+device. Corpus <code>endpoints.md §2</code> says monotonicity enforced
+on release creation only.</td>
+<td>None (gap on both sides).</td>
+<td>Add explicit downgrade-prevention check to update-check + release
+validation; doc in
+<code>endpoints.md</code>/<code>artifact_validation.md</code>.</td>
+</tr>
+<tr>
+<td>R17</td>
+<td>One active rollout/deployment per group</td>
+<td>Rollout</td>
+<td>PARTIAL — built rejects overlapping active deployment per target set
+(<code>ActiveDeploymentForTarget</code> → 409,
+handlers_deployment.go:65). Addition M6 wants DB partial-unique
+index.</td>
+<td>None (build already guards; DB index pending pgx).</td>
+<td>When pgx lands, add partial unique index per
+<code>schema.md</code>.</td>
+</tr>
+<tr>
+<td>R18</td>
+<td>Mandatory update enforcement behavior</td>
+<td>API/Client</td>
+<td><strong>MISSING</strong> — addition M7:
+<code>mandatory</code>/<code>deadline</code> semantics undefined. Not in
+built update-check (no mandatory field) nor corpus.</td>
+<td>None.</td>
+<td>Define mandatory/deadline behavior in
+<code>endpoints.md §12.1</code> + client design (1.0.1 candidate).</td>
+</tr>
+<tr>
+<td>R19</td>
+<td>User management CRUD</td>
+<td>API</td>
+<td><strong>MISSING</strong> — addition H1; RBAC matrix exists (D8) but
+no user CRUD. Built has static <code>UserDirectory</code> only
+(server.go:22). Corpus: not specified.</td>
+<td>None.</td>
+<td>Add user CRUD to <code>endpoints.md</code> (admin-only) — post-MVP
+unless dashboard needs it.</td>
+</tr>
+<tr>
+<td>R20</td>
+<td>Device-group management CRUD</td>
+<td>API</td>
+<td><strong>MISSING</strong> — addition H2. Built carries
+<code>group</code> as a device string field; no group entity. Corpus:
+deployments accept optional <code>group</code>.</td>
+<td>None.</td>
+<td>Add device-group CRUD when fleet segmentation lands (1.0.1).</td>
+</tr>
+<tr>
+<td>R21</td>
+<td>API-key management CRUD</td>
+<td>Security/API</td>
+<td><strong>MISSING</strong> — addition H3; D8 defines key format but no
+CRUD. Built: none.</td>
+<td>None.</td>
+<td>Defer; JWT-bearer covers MVP. Note for hardening.</td>
+</tr>
+<tr>
+<td>R22</td>
+<td>Dashboard WebSocket/SSE wire protocol</td>
+<td>API</td>
+<td><strong>MISSING</strong> — addition H4 (under-specified even in
+addition). Built: none. Corpus: none.</td>
+<td>None.</td>
+<td>Defer to dashboard design (not yet authored — see R23).</td>
+</tr>
+<tr>
+<td>R23</td>
+<td>Dashboard Web UI design doc</td>
+<td>Dashboard</td>
+<td><strong>MISSING</strong> — addition H5; no dashboard design at
+parity with client. Corpus: no dashboard design doc yet.</td>
+<td>None.</td>
+<td>Author <code>dashboard/</code> design when dashboard phase
+starts.</td>
+</tr>
+<tr>
+<td>R24</td>
+<td>Go Client SDK design doc</td>
+<td>Client</td>
+<td>PARTIAL — addition H6 wants full SDK doc; corpus has
+<code>client_android/integration_guide.md</code>+<code>build_integration.md</code>.
+gomobile AAR constraints (addition L7) undocumented.</td>
+<td>None.</td>
+<td>Add gomobile-AAR constraints note to
+<code>client_android/</code>.</td>
+</tr>
+<tr>
+<td>R25</td>
+<td>Rollout/Device model ↔︎ DB alignment</td>
+<td>Model</td>
+<td>PARTIAL — addition H7/H8 are internal addition mismatches. Built
+uses flat <code>store.*</code> structs (no DB yet). Canonical
+<code>schema.md</code> is the target.</td>
+<td>Addition self-conflict only.</td>
+<td>Align Go structs to <code>schema.md</code> when pgx
+implemented.</td>
+</tr>
+<tr>
+<td>R26</td>
+<td>Telemetry event endpoint (rich events) distinct from device
+status</td>
+<td>API</td>
+<td>PARTIAL — addition H9. Built telemetry IS event-based
+(<code>ota-telemetry-schema</code>,
+EventDownloadStarted/Installing/Success/Failure). Per-device event
+history (<code>GET /devices/{id}/events</code>) +
+<code>/telemetry/overview</code> not built.</td>
+<td>None.</td>
+<td>Add read endpoints for telemetry history/overview when dashboard
+needs them.</td>
+</tr>
+<tr>
+<td>R27</td>
+<td>Tampered-artifact server-side alerting
+(<code>SECURITY_TAMPER_DETECTED</code>)</td>
+<td>Security</td>
+<td><strong>MISSING</strong> — addition SA3. Built: device HASH_MISMATCH
+not specially handled; corpus: general failure-rate only.</td>
+<td>None.</td>
+<td>Define tamper event type that halts rollout + alerts; route to
+<code>1.0.1-staged-rollout/</code> + threat model.</td>
+</tr>
+<tr>
+<td>R28</td>
+<td>mTLS device transport</td>
+<td>Security</td>
+<td>NOT-BUILT — addition mandates mTLS (SECURITY §3, compose Traefik
+device router). Built uses <strong>device JWT bearer</strong>; corpus
+<code>transport_security.md</code> = HTTP/3→HTTP/2 + bearer.</td>
+<td><strong>CONFLICT</strong> w/ built (JWT) — see §4.</td>
+<td>Keep JWT-bearer for MVP; mTLS optional hardening (note in
+<code>security/</code>).</td>
+</tr>
+<tr>
+<td>R29</td>
+<td>Vault for signing/secrets</td>
+<td>Deployment/Security</td>
+<td>NOT-BUILT — addition compose runs Vault (transit RSA-4096, kv-v2,
+TOTP). Built: key via config/ed25519. Corpus
+<code>key_management.md</code> = <code>security</code> brick + container
+secrets first (§11.4.74).</td>
+<td>Partial conflict (RSA-4096 in Vault).</td>
+<td>Evaluate <code>security</code> brick + container secrets before
+Vault (matches synthesis §5 C correction).</td>
+</tr>
+<tr>
+<td>R30</td>
+<td>Traefik ingress / TLS / ACME</td>
+<td>Deployment</td>
+<td>PARTIAL — addition compose uses Traefik. Built: plain Gin +
+<code>/healthz</code>,<code>/readyz</code>. Corpus
+<code>deployment/overview.md</code>.</td>
+<td>None (ingress is deploy-time).</td>
+<td>Reuse <code>containers</code> substrate; Traefik optional.</td>
+</tr>
+<tr>
+<td>R31</td>
+<td>Redis cache/session/ratelimit</td>
+<td>Infra</td>
+<td>OPTIONAL — addition compose requires Redis. Built: none.
+Corpus/synthesis C7: prefer <code>cache</code> brick; Redis only if
+needed.</td>
+<td>None.</td>
+<td>Keep optional via <code>cache</code> brick.</td>
+</tr>
+<tr>
+<td>R32</td>
+<td>PostgreSQL schema
+(devices/artifacts/releases/rollouts/telemetry/users/groups/api_keys/audit)</td>
+<td>DB</td>
+<td>PARTIAL — canonical <code>schema.md</code> exists; built store is
+in-memory (no DB). Addition D7 is a richer reference (partitioning,
+indexes, enums, audit).</td>
+<td>Enum/ID conflicts are addition-internal (D0/C5–C8,C11).</td>
+<td>When pgx implemented, mine D7 for partitioning/index/audit detail;
+reconcile enums to canonical wire values.</td>
+</tr>
+<tr>
+<td>R33</td>
+<td>Mutation testing ≥85%, four-layer verification</td>
+<td>Testing</td>
+<td>COVERED — corpus <code>tests/test_strategy.md</code>,
+<code>VALIDATION_EVIDENCE.md</code>; addition D10 agrees.</td>
+<td>Coverage % (85 vs 90) — synthesis C8 floor ≥90 for safety
+paths.</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>R34</td>
+<td>Containerized via <code>containers</code> submodule</td>
+<td>Deployment</td>
+<td>COVERED — master §3; addition compose self-contained.</td>
+<td>None.</td>
+<td>Re-base addition compose onto <code>containers</code>
+substrate.</td>
+</tr>
+<tr>
+<td>R35</td>
+<td>8 new <code>helix-*</code> submodules</td>
+<td>Submodules</td>
+<td>PARTIAL/DIVERGENT — addition D9 names
+<code>helix-ota-server/-client-sdk/-android/-dashboard/-update-engine/-artifact-validator/-rollout-engine/-device-identity</code>.
+Built repos are
+<code>ota-protocol/ota-artifact-validator/ota-telemetry-schema/ota-rollout-engine</code>
+under <code>HelixDevelopment</code>.</td>
+<td><strong>CONFLICT</strong>: names + module paths differ; addition
+uses <code>dev.helix.ota.*</code> (D9) AND
+<code>vasic-digital/helix-ota-server</code> (D2) — self-conflict
+(D0/C10).</td>
+<td>Canonical = built <code>HelixDevelopment/ota-*</code> repos. Map
+addition’s submodule intents to existing repos in
+<code>submodule_reuse_map.md</code>.</td>
+</tr>
+<tr>
+<td>R36</td>
+<td>OS-adapter seam (universality)</td>
+<td>Architecture</td>
+<td>COVERED — master §4 OS-adapter seam; addition D16/D18
+elaborate.</td>
+<td>None.</td>
+<td>Fold into future-OS phase dirs (§6).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conflicts-with-locked-decisions-and-the-built-server">§4.
+conflicts with locked decisions and the built server</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Addition position</th>
+<th>Locked / built reality</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X1</td>
+<td><strong>chi</strong> router (<code>go-chi/chi/v5</code>, SERVER_IMPL
+§1–2; compose comment “Chi router”)</td>
+<td>LOCKED <strong>Gin</strong> (D6); built uses Gin
+(<code>server.go</code>).</td>
+<td><strong>Gin wins.</strong> Discard chi. The addition’s
+handler/service/repository layering is still a useful reference for
+internal seams (ADR-0003 modular monolith).</td>
+</tr>
+<tr>
+<td>X2</td>
+<td><strong>RSA-4096 / RSA-PSS</strong> artifact signing (SERVER_IMPL
+§5.4; README; compose Vault <code>type=rsa-4096</code>)</td>
+<td>Built <strong>ed25519</strong> detached signature + SHA-256
+(<code>server.go</code>, <code>ota-artifact-validator</code>); corpus
+<code>signing_verification.md</code>.</td>
+<td><strong>ed25519 wins</strong> (built + canonical). RSA-4096 is
+heavier and not what’s implemented. If RSA support is ever desired it
+must be an additive, justified ADR change — not a silent swap.</td>
+</tr>
+<tr>
+<td>X3</td>
+<td><strong>mTLS</strong> device transport + Device CA provisioning
+(SECURITY §3/§6; compose device-mtls router)</td>
+<td>Built <strong>device JWT bearer</strong>; corpus
+<code>transport_security.md</code> (HTTP/3→HTTP/2 + bearer).</td>
+<td><strong>JWT-bearer wins for MVP.</strong> mTLS is a valid hardening
+path; record as optional in <code>security/</code> but do not block
+MVP.</td>
+</tr>
+<tr>
+<td>X4</td>
+<td>Module path <code>github.com/vasic-digital/helix-ota-server</code>
+(D2) <strong>and</strong> <code>dev.helix.ota.*</code> (D9)</td>
+<td>Built <code>github.com/HelixDevelopment/helix_ota/server</code>;
+deps under <code>HelixDevelopment/ota-*</code>.</td>
+<td><strong>Built path wins.</strong> Addition is internally
+inconsistent (its own C10).</td>
+</tr>
+<tr>
+<td>X5</td>
+<td>Domain vocabulary <strong><code>updates</code> +
+<code>rollouts</code></strong> at MVP (D4/D6/D7)</td>
+<td>Built/canonical <strong><code>releases</code> +
+<code>deployments</code></strong>; staged <code>rollouts</code> deferred
+to 1.0.1.</td>
+<td><strong>releases/deployments wins.</strong> Addition
+<code>Update</code>→<code>Release</code>, addition <code>Rollout</code>→
+(deployment now / staged-rollout 1.0.1).</td>
+</tr>
+<tr>
+<td>X6</td>
+<td><strong>Full staged-rollout decision engine in MVP</strong>
+(SERVER_IMPL §4)</td>
+<td>Locked scope: MVP = all-targets; staged → 1.0.1 (master §1
+non-goals; built <code>strategyAllTargets</code>).</td>
+<td><strong>Defer.</strong> Keep the engine algorithm as a 1.0.1 design
+seed (high-quality reference).</td>
+</tr>
+<tr>
+<td>X7</td>
+<td><strong>Vault</strong> as signing/secret store (compose)</td>
+<td>Corpus: <code>security</code> brick + container secrets first
+(§11.4.74); synthesis C7-adjacent.</td>
+<td><strong>Catalogue-first.</strong> Evaluate <code>security</code>
+brick before adopting Vault.</td>
+</tr>
+<tr>
+<td>X8</td>
+<td>UUID-v4 PKs exposed; OR prefixed string IDs (D7 vs D5/D6 —
+addition’s own C11)</td>
+<td>Built/canonical: <strong>opaque server-issued strings</strong>,
+UUID-formatted in OpenAPI, treated opaque by clients
+(<code>endpoints.md §2</code>, <code>newRandomID</code>).</td>
+<td><strong>Opaque-string wins.</strong> Internal UUID vs external-id
+split (addition’s own recommendation) already satisfied by the opaque-id
+convention.</td>
+</tr>
+<tr>
+<td>X9</td>
+<td>Coverage target <strong>85%</strong> (D5/D10)</td>
+<td>Synthesis C8: floor <strong>≥90%</strong> for safety-critical paths
+(signing/apply/rollout-gate).</td>
+<td>≥90% floor for safety paths; 85% elsewhere acceptable.</td>
+</tr>
+</tbody>
+</table>
+<p>No conflict was found with: A/B+AVB+auto-rollback, SHA-256 integrity,
+staged percentages (5/10/30/50/100), telemetry event stream,
+PostgreSQL+MinIO, containerization, REST-primary, mutation/four-layer
+testing — these AGREE with locked decisions and are high-confidence
+inputs.</p>
+<h2
+id="reconciling-the-additions-code_review-against-the-actual-build">§5.
+reconciling the addition’s code_review against the actual build</h2>
+<p>The addition’s <code>CODE_REVIEW_AND_GAP_ANALYSIS.md</code> (D0)
+audits the <strong>addition’s own documents against each other</strong>.
+It does NOT see the built server. Re-scored against the real build +
+canonical corpus:</p>
+<p><strong>CRITICALs that are NOT real against the build (already
+resolved by canonical choices):</strong></p>
+<ul>
+<li><strong>C1 (device-register path), C3 (update-check method/path), C4
+(artifact-upload path):</strong> The built server already fixed
+canonical paths — <code>POST /devices/register</code>,
+<code>GET /client/update</code>, <code>POST /artifacts/upload</code>.
+The addition’s contradictions are artifacts of its own multi-author
+generation; not blockers for Helix.</li>
+<li><strong>C5/C6/C8 (rollout/device/validation status enums diverge
+across addition docs):</strong> Built uses typed enums from
+<code>ota-protocol</code>/<code>ota-telemetry-schema</code> (single
+source). No three-way enum drift in the real system. Real residual:
+ensure wire enum strings are documented (mostly done in
+<code>endpoints.md</code> rev 2 — telemetry 6-value enum vs 7-value
+update-state).</li>
+<li><strong>C7 (os_type CHECK vs API enum):</strong> Built has no DB
+yet; <code>defaultAndroidPolicy</code> accepts Android only (Phase-1).
+When pgx lands, use application-level validation (not a brittle CHECK) —
+matches addition’s own recommendation.</li>
+<li><strong>C10 (Go module path):</strong> Built path is canonical
+(<code>HelixDevelopment/helix_ota</code>). Addition’s two-path conflict
+is moot.</li>
+<li><strong>C11 (UUID vs prefixed string IDs):</strong> Resolved by the
+opaque-id convention (X8).</li>
+<li><strong>C2 (registration body schema drift):</strong> Built body is
+canonical (<code>DeviceRegistration</code>). Optional
+<code>slot_suffix</code>/<code>hardware_fingerprint</code> are the only
+real takeaways (R02).</li>
+</ul>
+<p><strong>Findings that ARE real gaps against the current build
+(MVP-relevant first):</strong></p>
+<ul>
+<li><strong>SA2 / “anti-rollback protection” (→ R16): REAL,
+MVP-critical.</strong> No explicit
+<code>target_version &gt; device.current_version</code> downgrade block
+exists in the built update-check or release validation. Steady-state
+<code>≥ ⇒ 204</code> is not a downgrade guard. <strong>Add server-side +
+(spec) client-side downgrade prevention.</strong></li>
+<li><strong>C9 / SA1 “validation chain order” (→ R15): REAL but
+indirect.</strong> Built validation lives in
+<code>ota-artifact-validator</code>; the hash-before-signature ordering
+must be <strong>verified</strong> there and documented. (UNVERIFIED
+current order in the external module.)</li>
+<li><strong>M6 “concurrent rollout overlap” (→ R17): PARTIALLY
+real.</strong> Built already 409s on overlapping active deployment per
+target set; the DB partial-unique index is a future-pgx hardening, not a
+current bug.</li>
+<li><strong>M7 “mandatory update behavior” (→ R18): REAL gap</strong>
+(undefined everywhere).</li>
+<li><strong>H1/H2/H3 (user / device-group / api-key CRUD → R19/R20/R21):
+REAL gaps</strong> (not built, not in corpus). Severity is post-MVP
+unless the dashboard needs them.</li>
+<li><strong>H4 (WebSocket protocol → R22), H5 (dashboard design → R23),
+H6/L7 (SDK doc + gomobile constraints → R24): REAL doc gaps</strong>
+(dashboard phase not yet authored).</li>
+<li><strong>H9 (telemetry history/overview reads → R26): PARTIALLY
+real</strong> — ingest is built; read/aggregate endpoints are not.</li>
+<li><strong>SA3 (tamper-detected event → R27): REAL gap.</strong></li>
+<li><strong>M1 (download URL signing): REAL but a documented design
+choice</strong> — built returns a reference URL; pre-signed vs
+direct-auth must be decided in <code>endpoints.md</code>/Storage-brick
+(UNVERIFIED which the Storage brick provides).</li>
+<li><strong>M2–M5, L1–L6 (provisioning guide, AOSP integration guide,
+CI/CD doc, migration strategy, runbooks, <code>.env.example</code>,
+SLOs, backup/restore): REAL doc gaps</strong>, low priority; route to
+ops/security/infra docs as those phases land.</li>
+</ul>
+<p><strong>Net:</strong> Most of the addition’s 11 CRITICALs are
+self-referential and already settled by the canonical build. The
+genuinely actionable, build-relevant items are <strong>R16
+(anti-rollback — MVP-critical), R18 (mandatory-update), R15 (verify
+validation order), R27 (tamper event), R26 (telemetry reads), and the
+CRUD/doc gaps R19–R24.</strong></p>
+<h2 id="future-phase-catalogue">§6. future-phase catalogue</h2>
+<p>Each future-phase doc maps to an existing versioned dir under
+<code>docs/research/main_specs/</code>. The addition uses
+<code>1.0.1-rollback</code> / <code>1.0.2-delta-updates</code> /
+<code>1.1.0-linux-support</code> / <code>1.2.0-windows-support</code> /
+<code>2.0.0-multi-os-universal</code>; the canonical corpus currently
+has <code>1.0.1-staged-rollout</code>, <code>1.X-linux</code>,
+<code>1.X-windows</code>, <code>1.X-other-os</code>. Note the
+<strong>numbering divergence</strong>: addition slots rollback at 1.0.1
+and delta at 1.0.2, whereas canonical reserves <strong>1.0.1 for
+staged-rollout</strong> (locked: staged rollout is the first post-MVP
+increment). Recommendation: keep canonical 1.0.1 = staged-rollout; place
+addition’s rollback/delta material as <strong>1.0.2 / 1.0.3</strong> (or
+sub-sections) so the staged-rollout engine — which both depend on —
+lands first.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Addition doc</th>
+<th>Material</th>
+<th>Destination dir</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D14 ROLLBACK_DESIGN (1.0.1)</td>
+<td>server-triggered + user-initiated + multi-version rollback, version
+history, rollback API, Go/Kotlin impls</td>
+<td><strong><code>1.0.X-rollback/</code></strong> (new; suggest 1.0.2
+after staged-rollout)</td>
+<td>Auto boot-failure rollback is ALREADY MVP (A/B+AVB). This doc covers
+the <em>added</em> rollback types — matches locked
+“end-user/multi-version rollback deferred past MVP”.</td>
+</tr>
+<tr>
+<td>D15 DELTA_UPDATES (1.0.2)</td>
+<td>AOSP block-diff deltas, <code>helix-delta-gen</code>, delta
+selection, DB+API additions, benchmarks</td>
+<td><strong><code>1.0.X-delta-updates/</code></strong> (suggest
+1.0.3)</td>
+<td>Aligns with ADR-0005 (delta updates). Fold benchmarks as UNVERIFIED
+until measured.</td>
+</tr>
+<tr>
+<td>D16 LINUX_OTA_RESEARCH (1.1.0)</td>
+<td>apt/rpm-ostree/pacman/generic A/B; OSAdapter interface; migration
+path</td>
+<td><strong><code>1.X-linux/</code></strong> (exists)</td>
+<td>Strong research; reconcile OSAdapter interface with master §4
+OS-adapter seam.</td>
+</tr>
+<tr>
+<td>D17 WINDOWS_OTA_RESEARCH (1.2.0)</td>
+<td>WUA/WSUS/WUfB/Intune; Windows Service client; MSI/MSIX;
+code-signing</td>
+<td><strong><code>1.X-windows/</code></strong> (exists)</td>
+<td>“augment not replace Windows Update” thesis.</td>
+</tr>
+<tr>
+<td>D18 MULTI_OS_UNIVERSAL (2.0.0)</td>
+<td>dynamic OS-adapter plugin system; cross-OS dashboard + dependency
+coordination; plugin manifest</td>
+<td><strong><code>1.X-other-os/</code></strong> (exists) or new
+<code>2.0.0-multi-os-universal/</code></td>
+<td>Plugin/manifest design = the universality endgame; reconcile with
+OS-adapter seam.</td>
+</tr>
+<tr>
+<td>D12 OTA_SYSTEMS_RESEARCH</td>
+<td>OTA solution survey</td>
+<td>merge into <code>research/ota_landscape_report.md</code> +
+<code>research/stacks/</code></td>
+<td>Likely redundant with existing landscape report; diff before
+folding.</td>
+</tr>
+<tr>
+<td>D19–D26 diagrams</td>
+<td>Mermaid arch/flow/state/ER/security/container</td>
+<td>merge into <code>00-master/diagrams/</code></td>
+<td>De-dup against existing diagrams.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="folding-actions-summary">§7. folding actions summary</h2>
+<p><strong>MVP-critical (do for 1.0.0):</strong> 1. <strong>R16
+anti-rollback / downgrade prevention</strong> — add
+<code>target_version &gt; device.current_version</code> enforcement
+server-side (update-check) + release validation; document in
+<code>endpoints.md §12.1</code> and <code>artifact_validation.md</code>.
+(Addition SA2.) 2. <strong>R15 validation-order verification</strong> —
+verify <code>ota-artifact-validator</code> performs
+hash-before-signature; document the order (currently UNVERIFIED).
+(Addition C9/SA1.)</p>
+<p><strong>Near-term / 1.0.1 candidates:</strong> 3. <strong>R18
+mandatory-update behavior</strong> (M7) — define
+<code>mandatory</code>/<code>deadline</code> semantics. 4. <strong>R27
+tamper event</strong> (SA3) — <code>SECURITY_TAMPER_DETECTED</code>
+halts rollout + alerts; into <code>1.0.1-staged-rollout/</code> +
+<code>00-master/threat_model.md</code>. 5. <strong>R08 staged-rollout
+engine</strong> — fold addition’s decision-engine algorithm (dwell,
+auto-halt, deterministic bucketing) into
+<code>1.0.1-staged-rollout/</code> as the design seed. 6. <strong>R17
+one-active-per-group DB index</strong> when pgx lands.</p>
+<p><strong>Doc/phase work (route, don’t build now):</strong> 7. R19–R24
+(user/group/api-key CRUD, WebSocket protocol, dashboard design,
+SDK+gomobile doc) → respective phase docs. 8. R32 — mine D7
+(DATABASE_SCHEMA) for partitioning/index/audit detail when authoring the
+pgx implementation; reconcile enums to canonical wire strings. 9.
+Future-phase docs D14–D18 → versioned dirs per §6 (mind the 1.0.1
+numbering divergence: staged-rollout stays 1.0.1).</p>
+<p><strong>Reject (conflict with locked/built):</strong> chi (X1),
+RSA-4096 swap (X2), mTLS-only MVP transport (X3),
+<code>vasic-digital</code>/<code>dev.helix.ota.*</code> module paths
+(X4), <code>updates</code>/<code>rollouts</code> MVP vocabulary (X5),
+Vault-first secrets (X7), exposed-UUID PKs (X8). Reuse their surrounding
+design ideas where additive and justified.</p>
+<p><em>End of addition #3 analysis.</em></p>
+</body>
+</html>
