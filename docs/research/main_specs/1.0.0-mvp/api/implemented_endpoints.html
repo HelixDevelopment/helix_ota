@@ -789,7 +789,9 @@ is <strong>required</strong> — blank →
 <code>400 VALIDATION_FAILED</code>
 (<code>details:[{field:"name",issue:"required"}]</code>).</li>
 <li><strong>Response 201</strong> (<code>GroupView</code>):
-<code>{ "id", "name", "description"(omitempty), "created_at" }</code>.</li>
+<code>{ "id", "name", "description"(omitempty), "member_count", "created_at" }</code>
+(<code>member_count</code> is the live membership count; 0 for a
+just-created group).</li>
 <li><strong>Status codes:</strong> <code>201</code> Created;
 <code>400 VALIDATION_FAILED</code> (malformed body / blank name);
 <code>409 CONFLICT</code> (<code>store.ErrConflict</code> →
@@ -1237,11 +1239,13 @@ query scoping, which are still <strong>not</strong> implemented.</li>
 <code>handlers_group.go</code>):</strong></p>
 <ul>
 <li>The built <code>GroupView</code> is
-<code>{ id, name, description, created_at }</code> — there is
-<strong>no</strong> <code>filter_criteria</code> and <strong>no</strong>
-<code>member_count</code> (the spec’s <code>Group</code> carries both).
-The response key for the id is <code>id</code>, not the spec’s
-<code>group_id</code>.</li>
+<code>{ id, name, description, member_count, created_at }</code>.
+<code>member_count</code> is now implemented (LANDED, additive — the
+WIDEN of spec row 6, commit pending); <code>filter_criteria</code> is
+still <strong>not</strong> present (dynamic membership deferred — MVP is
+static-only). The response key for the id is <code>id</code>, not the
+spec’s <code>group_id</code> (TRIM recommendation, not yet amended in
+the prose spec).</li>
 <li><code>GET /groups</code> has <strong>no pagination</strong> (no
 <code>?name</code>/<code>?limit</code>/<code>?cursor</code>); the spec
 specifies a paginated <code>GroupList</code>.</li>

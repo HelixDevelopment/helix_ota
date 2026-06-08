@@ -236,7 +236,7 @@ Wire types: `handlers_group.go`. Store seam: `store.go` (`CreateGroup`, `GetGrou
 - **Roles:** `operator`, `admin` (`server.go:169`). **Maps to:** `handleCreateGroup`.
 - **Request body** (`GroupCreate`): `{ "name": "...", "description": "..." }`. `name` is
   **required** — blank → `400 VALIDATION_FAILED` (`details:[{field:"name",issue:"required"}]`).
-- **Response 201** (`GroupView`): `{ "id", "name", "description"(omitempty), "created_at" }`.
+- **Response 201** (`GroupView`): `{ "id", "name", "description"(omitempty), "member_count", "created_at" }` (`member_count` is the live membership count; 0 for a just-created group).
 - **Status codes:** `201` Created; `400 VALIDATION_FAILED` (malformed body / blank name);
   `409 CONFLICT` (`store.ErrConflict` → `"a group with that name already exists"`);
   `500 INTERNAL`.
@@ -536,9 +536,10 @@ since been closed in code are marked **RESOLVED** with the landing commit.
 
 **Groups (`operational_endpoints.md` §6 vs `handlers_group.go`):**
 
-- The built `GroupView` is `{ id, name, description, created_at }` — there is **no**
-  `filter_criteria` and **no** `member_count` (the spec's `Group` carries both). The response key
-  for the id is `id`, not the spec's `group_id`.
+- The built `GroupView` is `{ id, name, description, member_count, created_at }`. `member_count`
+  is now implemented (LANDED, additive — the WIDEN of spec row 6, commit pending); `filter_criteria`
+  is still **not** present (dynamic membership deferred — MVP is static-only). The response key for
+  the id is `id`, not the spec's `group_id` (TRIM recommendation, not yet amended in the prose spec).
 - `GET /groups` has **no pagination** (no `?name`/`?limit`/`?cursor`); the spec specifies a
   paginated `GroupList`.
 - `POST /groups/{id}/members` accepts a **single** `{ "device_id": "..." }` and returns `204`; the

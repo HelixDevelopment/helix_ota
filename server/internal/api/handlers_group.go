@@ -29,6 +29,7 @@ type GroupView struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description,omitempty"`
+	MemberCount int       `json:"member_count"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
@@ -50,6 +51,22 @@ type GroupMembers struct {
 
 func toGroupView(g store.Group) GroupView {
 	return GroupView{ID: g.ID, Name: g.Name, Description: g.Description, CreatedAt: g.CreatedAt}
+}
+
+func toGroupViewWithCount(g store.Group, members int) GroupView {
+	v := toGroupView(g)
+	v.MemberCount = members
+	return v
+}
+
+// groupViewWithMembers builds a GroupView whose member_count reflects the live
+// membership (best-effort: a count error degrades to 0, never fails the read).
+func (s *Server) groupViewWithMembers(c *gin.Context, g store.Group) GroupView {
+	members, err := s.repo.ListGroupMembers(c.Request.Context(), g.ID)
+	if err != nil {
+		return toGroupView(g)
+	}
+	return toGroupViewWithCount(g, len(members))
 }
 
 // --- handlers ---
@@ -84,7 +101,7 @@ func (s *Server) handleListGroups(c *gin.Context) {
 	}
 	items := make([]GroupView, 0, len(groups))
 	for _, g := range groups {
-		items = append(items, toGroupView(g))
+		items = append(items, s.groupViewWithMembers(c, g))
 	}
 	c.JSON(http.StatusOK, GroupList{Items: items})
 }
@@ -95,7 +112,7 @@ func (s *Server) handleGetGroup(c *gin.Context) {
 		respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
 		return
 	}
-	c.JSON(http.StatusOK, toGroupView(g))
+	c.JSON(http.StatusOK, s.groupViewWithMembers(c, g))
 }
 
 func (s *Server) handleUpdateGroup(c *gin.Context) {
@@ -125,7 +142,7 @@ func (s *Server) handleUpdateGroup(c *gin.Context) {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not update group")
 		return
 	}
-	c.JSON(http.StatusOK, toGroupView(existing))
+	c.JSON(http.StatusOK, s.groupViewWithMembers(c, existing))
 }
 
 func (s *Server) handleDeleteGroup(c *gin.Context) {

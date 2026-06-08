@@ -62,6 +62,50 @@ func TestAuditSinceUntilFilter(t *testing.T) {
 	}
 }
 
+// TestGroupMemberCount exercises the additive member_count field on GroupView.
+func TestGroupMemberCount(t *testing.T) {
+	env := newTestEnv(t)
+	tok := env.adminToken()
+
+	cw := env.doJSON(http.MethodPost, "/api/v1/groups", tok, GroupCreate{Name: "fleet-a"})
+	if cw.Code != http.StatusCreated {
+		t.Fatalf("create group want 201, got %d (%s)", cw.Code, cw.Body.String())
+	}
+	var g GroupView
+	env.decode(cw, &g)
+	if g.MemberCount != 0 {
+		t.Fatalf("new group member_count want 0, got %d", g.MemberCount)
+	}
+	for _, dev := range []string{"dev-a", "dev-b"} {
+		if w := env.doJSON(http.MethodPost, "/api/v1/groups/"+g.ID+"/members", tok, MemberAdd{DeviceID: dev}); w.Code != http.StatusNoContent {
+			t.Fatalf("add member %s want 204, got %d", dev, w.Code)
+		}
+	}
+	// GET reflects the live count.
+	gw := env.do(http.MethodGet, "/api/v1/groups/"+g.ID, tok, nil, "")
+	var got GroupView
+	env.decode(gw, &got)
+	if got.MemberCount != 2 {
+		t.Fatalf("group member_count want 2, got %d", got.MemberCount)
+	}
+	// List reflects it too.
+	lw := env.do(http.MethodGet, "/api/v1/groups", tok, nil, "")
+	var list GroupList
+	env.decode(lw, &list)
+	found := false
+	for _, it := range list.Items {
+		if it.ID == g.ID {
+			found = true
+			if it.MemberCount != 2 {
+				t.Fatalf("listed group member_count want 2, got %d", it.MemberCount)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("group not in list")
+	}
+}
+
 // TestTelemetryOverviewFailureRateAndByState exercises the additive
 // failure_rate + by_state fields on GET /telemetry/overview.
 func TestTelemetryOverviewFailureRateAndByState(t *testing.T) {
