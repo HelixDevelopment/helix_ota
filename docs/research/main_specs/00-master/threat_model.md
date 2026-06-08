@@ -2,14 +2,14 @@
 
 | Field | Value |
 | --- | --- |
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
+| Last modified | 2026-06-08 |
 | Status | active |
-| Status summary | STRIDE-based threat model for the Helix OTA 1.0.0-MVP: native Android 15 A/B (`update_engine` + AVB/dm-verity + auto-rollback) on device, a custom Go + Gin control plane, a React dashboard, and a PostgreSQL + MinIO/S3 artifact store. Enumerates twelve OTA-relevant threats with attack, impact, the mitigation actually present in the locked MVP design, and residual risk. Distinguishes MVP-shipped controls from the TUF/Uptane hardening deferred to 1.0.1+ per ADR-0002. |
+| Status summary | STRIDE-based threat model for the Helix OTA 1.0.0-MVP: native Android 15 A/B (`update_engine` + AVB/dm-verity + auto-rollback) on device, a custom Go + Gin control plane, a React dashboard, and a PostgreSQL + MinIO/S3 artifact store. Enumerates twelve OTA-relevant threats with attack, impact, the mitigation actually present in the locked MVP design, and residual risk. Distinguishes MVP-shipped controls from the TUF/Uptane hardening deferred to 1.0.1+ per ADR-0002. **Revision 2** adds §4.13 — operational / rollout / recall endpoint threats (audit-log integrity + the reads-not-audited / failed-mutations-not-audited design choice; device-only-own-telemetry IDOR; device-group membership authorization; staged-rollout abuse + HALT-wins safety; recall/rollback authorization + the recall-vs-anti-downgrade tension), grounded in the implemented `server/internal/api` handlers + per-route RBAC in `server.go` + the append-only audit/rollback store. |
 | Issues | Several mitigations depend on items the underlying research carried as UNVERIFIED (RK3588 / Orange Pi 5 Max AVB lock state, rollback-index storage backend, Android 15 `IBootControl` AIDL surface, catalogue-brick fit for TUF primitives, HelixConstitution clause text). These are marked UNVERIFIED inline and must close before the related residual-risk claims become firm. |
 | Fixed | N/A (initial revision). |
-| Continuation | (1) On ADR-0002 1.0.1+ adoption, add TUF/Uptane threat rows (rollback/freeze/mix-and-match/mirror-denial/key-compromise-recovery) and downgrade the residual risk in §4.3, §4.4, §4.5; (2) re-verify the AVB/rollback residual claims (§4.3, §4.12) once the board AVB lock state and rollback-index backend are byte-confirmed; (3) confirm `security` / `Security-KMP` catalogue-brick coverage of the signing/verify seam (§4.1, §4.2); (4) reconcile cited §11.4.x clause numbers against the authoritative HelixConstitution. |
+| Continuation | (1) On ADR-0002 1.0.1+ adoption, add TUF/Uptane threat rows (rollback/freeze/mix-and-match/mirror-denial/key-compromise-recovery) and downgrade the residual risk in §4.3, §4.4, §4.5; (2) re-verify the AVB/rollback residual claims (§4.3, §4.12) once the board AVB lock state and rollback-index backend are byte-confirmed; (3) confirm `security` / `Security-KMP` catalogue-brick coverage of the signing/verify seam (§4.1, §4.2); (4) reconcile cited §11.4.x clause numbers against the authoritative HelixConstitution; (5) **§4.13 open items:** resolve the recall-vs-anti-downgrade tension (§4.13.5) — whether a server-driven recall to N-1 is intended to bypass the on-device AVB rollback-index, and if so by what operator-gated mechanism — this needs an operator/architecture decision (per §11.4.6 it is carried UNVERIFIED, not guessed); confirm whether append-only is enforced at the DB grant level (no UPDATE/DELETE privilege on `audit_logs` / `rollback_history`) or only at the repository-interface level (§4.13.1); decide whether failed mutations and authorization denials warrant a separate security-event log (§4.13.1). |
 
 ## Table of contents
 
@@ -29,6 +29,12 @@
    - [4.10 Telemetry spoofing](#410-telemetry-spoofing)
    - [4.11 Denial of update](#411-denial-of-update)
    - [4.12 Slot corruption](#412-slot-corruption)
+   - [4.13 Operational / rollout / recall endpoint threats](#413-operational--rollout--recall-endpoint-threats)
+     - [4.13.1 Audit-log integrity / tampering + the reads-not-audited / failed-mutations-not-audited design choice](#4131-audit-log-integrity--tampering--the-reads-not-audited--failed-mutations-not-audited-design-choice)
+     - [4.13.2 Device-only-own-telemetry authorization (IDOR on GET /devices/{id}/telemetry)](#4132-device-only-own-telemetry-authorization-idor-on-get-devicesidtelemetry)
+     - [4.13.3 Device-group membership authorization](#4133-device-group-membership-authorization)
+     - [4.13.4 Staged-rollout abuse (create / evaluate; HALT-wins as a safety control)](#4134-staged-rollout-abuse-create--evaluate-halt-wins-as-a-safety-control)
+     - [4.13.5 Recall / rollback authorization + anti-downgrade interplay](#4135-recall--rollback-authorization--anti-downgrade-interplay)
 5. [Residual-risk summary](#5-residual-risk-summary)
 6. [Compliance notes (HelixConstitution)](#6-compliance-notes-helixconstitution)
 7. [Open / UNVERIFIED items](#7-open--unverified-items)
@@ -126,9 +132,15 @@ stream; the on-device slot/rollback-index state.
 | 4.10 | Telemetry spoofing | x | x | x | | x | |
 | 4.11 | Denial of update | | | | | x | |
 | 4.12 | Slot corruption | | x | | | x | |
+| 4.13 | Operational / rollout / recall endpoints | x | x | x | x | x | x |
 
 (S = Spoofing, T = Tampering, R = Repudiation, I = Information disclosure, D = Denial of
 service, E = Elevation of privilege.)
+
+Threat 4.13 spans the full STRIDE set because it bundles five distinct endpoint-class
+sub-threats (audit tampering/repudiation, telemetry IDOR information-disclosure + privilege,
+group-membership privilege, rollout-abuse DoS/tampering, recall-abuse tampering/DoS); the
+per-sub-threat STRIDE focus is stated inline in §4.13.x.
 
 ## 4. Threats
 
@@ -441,6 +453,259 @@ service, E = Elevation of privilege.)
   does not hold** and must be re-rated. Closing the board-conformance items (Continuation §13 of
   the AVB note) is a prerequisite for treating this residual as firm.
 
+### 4.13 Operational / rollout / recall endpoint threats
+
+This subsection models the operational, staged-rollout, and recall endpoints implemented this
+session under `server/internal/api`, traced to the concrete per-route RBAC wired in
+`server.go`'s protected group (every protected route runs `authMiddleware()` →
+`requireRole(...)` → handler → `auditMiddleware()`, in that order). Unlike §4.1–§4.12 (which
+trace to the locked design / ADRs), the mitigations here are read directly from the shipped Go
+handlers; where a claim depends on something not present in the read code (e.g. DB-level
+grants, the actual N-1 re-deploy path), it is marked **UNVERIFIED** per §11.4.6.
+
+**Verified RBAC, per endpoint (from `server.go` lines 125–167):**
+
+| Method + route | `requireRole(...)` | Handler |
+|---|---|---|
+| `GET /audit` | **admin only** | `handleListAudit` |
+| `GET /devices/:deviceId/telemetry` | viewer, operator, admin, **device** | `handleDeviceTelemetry` |
+| `GET /telemetry/overview` | viewer, operator, admin | `handleTelemetryOverview` |
+| `POST /groups` | operator, admin | `handleCreateGroup` |
+| `GET /groups`, `GET /groups/:groupId` | viewer, operator, admin | `handleListGroups` / `handleGetGroup` |
+| `PATCH /groups/:groupId` | operator, admin | `handleUpdateGroup` |
+| `DELETE /groups/:groupId` | **admin only** | `handleDeleteGroup` |
+| `GET /groups/:groupId/members` | viewer, operator, admin | `handleListGroupMembers` |
+| `POST /groups/:groupId/members` | operator, admin | `handleAddGroupMember` |
+| `DELETE /groups/:groupId/members/:deviceId` | operator, admin | `handleRemoveGroupMember` |
+| `POST /deployments/:deploymentId/rollout` | operator, admin | `handleCreateRollout` |
+| `GET /deployments/:deploymentId/rollout` | viewer, operator, admin | `handleGetRollout` |
+| `POST /deployments/:deploymentId/rollout/evaluate` | operator, admin | `handleEvaluateRollout` |
+| `POST /deployments/:deploymentId/recall` | operator, admin | `handleRecall` |
+| `GET /deployments/:deploymentId/rollbacks` | viewer, operator, admin | `handleListRollbacks` |
+
+`requireRole` (`middleware.go`) admits a request if the JWT carries **any** allowed role;
+`isPrivileged(claims)` is true for admin **or** operator **or** viewer (`handlers_device.go`),
+and the `device` role is never privileged. These are load-bearing for §4.13.2.
+
+#### 4.13.1 Audit-log integrity / tampering + the reads-not-audited / failed-mutations-not-audited design choice
+
+- **STRIDE:** Repudiation, Tampering (and the *gap* is an Information-disclosure / accountability risk).
+- **Attack:** An operator/admin performs a sensitive action (publish, deploy, rollout-create,
+  recall, group change) and later denies it; or an attacker who reaches the store attempts to
+  alter/delete audit rows to erase their tracks; or an attacker exploits the *known design
+  choice* that **reads and failed mutations are not audited** to probe the system (enumerate
+  resources via GETs, or hammer mutations that fail authorization/validation) without leaving an
+  audit trail.
+- **Impact:** Loss of operator accountability / non-repudiation; an erased or incomplete audit
+  trail undermining incident forensics; reconnaissance (read access, brute-force, authorization
+  probing) that is invisible in the audit log.
+- **Mitigation in our design (as implemented):**
+  - **Append-only store.** The `store.Repository` interface exposes only `AppendAudit` + `ListAudit`
+    for audit (and `AppendRollback` + `ListRollbacks` for rollback) — **there is no Update or
+    Delete method for either log**. The Postgres impl is INSERT-only (`AppendAudit` is a single
+    `INSERT INTO helix_ota.audit_logs ...`; `postgres.go`) with a monotonic `seq` column driving
+    `ORDER BY seq`; the in-memory impl is a `[]AuditEntry` slice documented "append-only". So
+    tampering via the application's own data path is not possible — there is no code path that
+    mutates or removes an audit row.
+  - **Correct middleware ordering.** `auditMiddleware()` runs **after** `authMiddleware()` +
+    `requireRole(...)` and **after** the handler (`c.Next()` first), then logs **only** when the
+    method is mutating (`POST/PUT/PATCH/DELETE`) **and** the response status is 2xx. Because it
+    runs after RBAC, an **RBAC-rejected request is never audited** (no log spam from denied
+    probes), and the **verified subject** (`claims.Subject`) is available to attribute the action.
+  - **No id leakage into the action verb.** `deriveAuditAction` uses the gin **route template**
+    (`c.FullPath()`), not the raw path, and drops `:`/`*` path-param placeholders, so resource
+    ids never end up in the free-text `action` string; the specific id is captured separately in
+    the structured `resource_id` field via `auditResourceID`. This keeps the action vocabulary a
+    stable SCREAMING_SNAKE_CASE set and avoids accidental disclosure of ids in an aggregate verb.
+  - **Read restricted.** `GET /audit` is **admin-only** (`requireRole(RoleAdmin)`), so the trail
+    itself is not readable by operator/viewer/device.
+  - **Best-effort, fail-open write.** A failing audit sink does **not** fail the user's
+    already-successful request (`_ = s.repo.AppendAudit(...)`). This is a deliberate
+    availability-over-completeness choice and is the integrity *gap* below.
+- **Residual risk:** **Moderate.**
+  - **The "reads not audited" choice is intentional and documented** in the handler
+    (`auditMiddleware` doc comment): reads (GET) and failed mutations are out of audit scope.
+    Consequence: enumeration via GETs, and authorization-probing / brute-force via *failed*
+    mutations, leave **no audit trail**. For a system whose primary audit purpose is operator
+    accountability for state changes this is reasonable, but it means the audit log is **not** a
+    security-event log and cannot be relied on for intrusion detection. Whether a separate
+    security-event log (auth failures, RBAC denials, repeated 4xx) is warranted is an open
+    decision (Continuation item 5).
+  - **The "failed mutations not audited" choice** means a mutation that passes RBAC but fails in
+    the handler (validation/conflict/500) is invisible — an attacker cannot see *attempted*
+    privileged actions that errored out. Combined with the best-effort write, a successful action
+    whose audit write *fails* is also silently unlogged.
+  - **Append-only is enforced at the repository-interface + SQL-statement level, not (in the read
+    code) at the DB-grant level.** **UNVERIFIED:** whether the deployment revokes UPDATE/DELETE on
+    `helix_ota.audit_logs` / `rollback_history` from the application DB role. If the app role
+    retains UPDATE/DELETE, a SQL-injection or compromised-credential path could still tamper rows
+    despite the Go interface omitting those methods. This should close at the migration/grant
+    level. (Cross-ref §4.8 dashboard auth — a JWT-forging or RBAC-bypass attacker who reaches
+    admin can read the trail but still cannot delete it through the app.)
+
+#### 4.13.2 Device-only-own-telemetry authorization (IDOR on GET /devices/{id}/telemetry)
+
+- **STRIDE:** Information disclosure, Elevation of privilege.
+- **Attack:** A device (holding a `device`-role token bound to its own id) requests
+  `GET /devices/{otherDeviceId}/telemetry` to read another device's telemetry history — a classic
+  **IDOR** (insecure direct object reference): the resource id is in the path and the route admits
+  the `device` role, so RBAC alone (which only checks *role*, not *which* object) would let any
+  device read any device's telemetry.
+- **Impact:** Cross-device disclosure of telemetry (install/verify/success/failure events, error
+  codes, versions) — fleet-member privacy leak and reconnaissance of other devices' update state.
+- **Mitigation in our design (as implemented):** `handleDeviceTelemetry` performs an explicit
+  **object-level subject check after the role check**: it loads `claims` and, if the caller is
+  **not** privileged (`!isPrivileged(claims)` — i.e. it is a bare `device` token) **and** the
+  token subject does not equal the path `deviceId`, it returns **403 Forbidden** ("a device may
+  read only its own telemetry"). Privileged callers (viewer/operator/admin) may read any device's
+  telemetry by design (fleet operators need cross-device visibility). This is the correct
+  IDOR mitigation pattern: route-level RBAC gates the *role*, the handler gates the *object*. The
+  identical pattern is used for `GET /devices/:deviceId/status` (`handlers_device.go:92`), so the
+  control is consistent across the two device-scoped reads.
+- **Residual risk:** **Low — for this endpoint, conditional on token integrity.** The IDOR is
+  closed for the `device` role by the subject check. The residual is upstream: the check trusts
+  `claims.Subject`, so it is only as strong as the device-identity token (cf. §4.7 device
+  impersonation — a stolen/forged device token lets the holder read *that device's* telemetry, and
+  the MVP does not commit to mTLS). `GET /telemetry/overview` returns only **aggregate fleet
+  counts by event type** (no per-device rows) and is **not** offered to the `device` role
+  (viewer+ only), so it is not an IDOR surface. **UNVERIFIED:** that `claims.Subject` for a device
+  token is exactly the registered `deviceId` (token minting binds subject=deviceId in
+  `handlers_device.go`, but the production device-identity binding strength is the §4.7 UNVERIFIED
+  KeyStore item).
+
+#### 4.13.3 Device-group membership authorization
+
+- **STRIDE:** Elevation of privilege, Tampering.
+- **Attack:** A low-privilege actor attempts to create/rename/delete device groups or add/remove
+  group members — e.g. to construct a rollout cohort that includes or excludes specific devices,
+  or to delete a group out from under an in-flight rollout.
+- **Impact:** Manipulation of the *targeting substrate* for rollouts (groups define cohorts);
+  unauthorized reshaping of which devices receive an update, or denial by deleting/emptying a
+  group. Group membership is a security-relevant input to the rollout/deploy decision.
+- **Mitigation in our design (as implemented):** Group **writes are operator/admin only**
+  (`POST /groups`, `PATCH /groups/:groupId`, `POST/DELETE .../members` all
+  `requireRole(RoleOperator, RoleAdmin)`); **group deletion is admin-only**
+  (`DELETE /groups/:groupId` → `requireRole(RoleAdmin)`) — a deliberately tighter gate than member
+  edits, reflecting that destroying a group is higher-blast-radius than adjusting membership.
+  Reads (`GET /groups`, `GET /groups/:groupId`, `GET .../members`) are viewer+. The `device` role
+  has **no** access to any group endpoint (not in any group route's allow-list), so a device
+  cannot enumerate or alter cohort structure. Every successful group mutation is **audited**
+  (§4.13.1): `auditMiddleware` derives `GROUP_CREATE`/`GROUP_UPDATE`/`GROUP_DELETE` and, for the
+  members sub-route, rewrites the resource to `group_member` with `GROUP_MEMBER_CREATE/DELETE`
+  (`deriveAuditAction` special-cases the trailing `members` segment), so add/remove-member actions
+  are attributable to the operator subject.
+- **Residual risk:** **Moderate.** Authorization is **role-coarse, not group-scoped**: any
+  operator can edit **any** group (there is no per-group ownership / ACL — the handlers take only
+  `groupId` and the role, never an ownership check). In a multi-tenant or
+  separation-of-duties deployment this is over-broad; for the single-fleet MVP it is acceptable.
+  Member-add validates only that `device_id` is non-empty and that the group exists
+  (`AddGroupMember` returns `ErrNotFound` for a missing group) — **UNVERIFIED** whether the added
+  `device_id` must reference a registered device (the read handler does not enforce device
+  existence), so a typo'd or non-existent device id can be added to a group; impact is low (it
+  simply never matches a real device) but it pollutes cohort data.
+
+#### 4.13.4 Staged-rollout abuse (create / evaluate; HALT-wins as a safety control)
+
+- **STRIDE:** Denial of service, Tampering, Elevation of privilege.
+- **Attack:** An actor with rollout rights (operator/admin) — or an attacker who reaches those
+  rights via §4.8 — creates a malicious/garbage rollout plan, or feeds a forged health verdict to
+  `POST .../rollout/evaluate` to **force-advance a bad rollout** (suppress a halt) or
+  **force-halt a good one** (DoS the update channel). Because `evaluate` accepts a client-supplied
+  `RolloutVerdict` (`success_rate`, `error_rate`, `post_boot_health_failed`), the verdict is an
+  attacker-influençable input to the gate.
+- **Impact:** A bad release advanced fleet-wide (chains into §4.1/§4.3 impact); or a good rollout
+  stuck/halted (denial of update, §4.11); or wasted rollout state.
+- **Mitigation in our design (as implemented):**
+  - **Authorization.** Create + evaluate are **operator/admin** (`requireRole(RoleOperator,
+    RoleAdmin)`); read is viewer+. The `device` role cannot create or evaluate a rollout. Both
+    mutations are **audited** on 2xx (§4.13.1).
+  - **Plan validation in the brick.** `handleCreateRollout` delegates to the `ota-rollout-engine`
+    brick (`s.rollout.CreateAndStart`); the handler doc records the brick validates the phase plan
+    (strictly-increasing percentages ending at 100, thresholds in [0,1]) and a plan violation maps
+    to **400** — so a garbage plan is rejected at creation, not silently started.
+  - **Existence checks.** `handleCreateRollout` first loads the deployment (404 if absent);
+    `handleEvaluateRollout` maps `engine.ErrNotFound` to 404 — so rollouts cannot be created/driven
+    for non-existent deployments.
+  - **HALT-wins as a safety control.** The evaluate path returns the engine decision
+    (advance / hold / halt / complete). The engine's halt-on-breach is the **fail-safe** default:
+    a verdict that breaches the error/health threshold halts the rollout rather than advancing.
+    This is the safety-relevant property — the *only* way an attacker-forged verdict causes
+    fleet-wide harm is by **suppressing** a halt (reporting a healthy verdict for an unhealthy
+    cohort), not by injecting one; a forged *unhealthy* verdict can only halt (deny), which is the
+    safe direction. (Cross-ref §4.10 telemetry spoofing — the verdict that *should* feed evaluate
+    is telemetry-derived; in 1.0.1+ the evaluate input must be bound to aggregated, device-identity
+    -gated telemetry rather than a free client body, or the gate is only as trustworthy as whoever
+    can call evaluate.)
+- **Residual risk:** **Moderate.** The dominant residual is that **`evaluate` trusts a
+  client-supplied verdict body** — it is not, in the read code, computed server-side from
+  stored telemetry. An operator (or §4.8 attacker with operator rights) can therefore submit a
+  fabricated healthy verdict to suppress a halt. HALT-wins bounds the *unhealthy* direction
+  (forced halt = DoS only), but the *suppress-halt* direction is not mitigated at this layer and
+  depends entirely on who can authenticate as operator/admin. **UNVERIFIED:** whether the brick or
+  a future wiring computes the verdict from `repo` telemetry (§4.10) rather than the request body;
+  and the exact halt-precedence semantics ("HALT-wins") are asserted from the handler's documented
+  decision set, not from reading the brick's evaluator — carried UNVERIFIED against the brick
+  source.
+
+#### 4.13.5 Recall / rollback authorization + anti-downgrade interplay
+
+- **STRIDE:** Tampering, Denial of service, Repudiation.
+- **Attack:** An actor with recall rights (operator/admin) — or a §4.8 attacker who reaches them —
+  issues `POST /deployments/{id}/recall` to roll a deployment's release back to a chosen
+  `to_release_id`. The security tension is that a **recall to N-1 is, by intent, a downgrade** of
+  the deployed release — the same *shape* of action that the **anti-downgrade guarantee**
+  (server-side version monotonicity at upload + on-device AVB rollback-index, §4.3) exists to
+  *prevent* when an attacker mounts it (§4.3 rollback/downgrade attack). The model must
+  distinguish "operator-gated legitimate recall" from "attacker downgrade".
+- **Impact:** If recall could silently override anti-downgrade, an attacker who obtains operator
+  rights would have a *sanctioned* path to push the fleet back to vulnerable firmware — collapsing
+  §4.3's protection. Conversely, if anti-downgrade is absolute, a legitimate emergency recall to a
+  known-good N-1 may be blocked on-device.
+- **Mitigation in our design (as implemented):**
+  - **Authorization + audit.** Recall is **operator/admin** (`requireRole(RoleOperator,
+    RoleAdmin)`); the device role cannot trigger a recall. The action is **audited** on 2xx
+    (`DEPLOYMENT_*` verb via `auditMiddleware`), and additionally `handleRecall` records a
+    dedicated **append-only `rollback_history` row** (`AppendRollback`, INSERT-only, kind=`rollback`,
+    `from_release_id`=the deployment's current release, `to_release_id`=requested, `triggered_by`=
+    `claims.Subject`, optional `reason`). So a recall is non-repudiable and attributable on two
+    independent append-only trails.
+  - **Validation gates.** `handleRecall` requires the deployment to exist (404), `to_release_id`
+    non-empty (400), the deployment to have a current release to roll back *from* (400), and the
+    **target release to exist** (404) — so a recall cannot point at a non-existent release.
+  - **Recall is the audited control + record, not (yet) the re-deploy.** The handler's own doc is
+    explicit: "The actual N-1 re-deployment is the deployment engine's job (tracked separately);
+    this endpoint is the audited control + record." If an active rollout exists it is intended to
+    be marked rolled-back via an abort evaluation. So at this layer recall **records intent**; it
+    does not itself bypass any device-side check.
+  - **The anti-downgrade invariant is bootloader-enforced on-device (§4.3 layer 2).** The AVB
+    rollback-index check is enforced by the bootloader, which the Helix agent and control plane
+    cannot weaken. A recall to N-1 that shares the *same* rollback index as N would be permitted by
+    the bootloader (rollback indexes bump only at security milestones); a recall to an N-1 with a
+    *lower* rollback index would be **rejected by the bootloader** regardless of operator intent.
+- **Residual risk:** **Moderate, and the recall-vs-anti-downgrade tension is explicitly an open
+  decision.**
+  - **The interplay is currently a documented seam, not a resolved mechanism.** Because the
+    implemented `handleRecall` only records the rollback intent and defers the actual re-deploy to
+    a separate (not-yet-read) deployment-engine path, **how a recall to a lower-rollback-index N-1
+    actually reconciles with the bootloader's anti-downgrade is UNVERIFIED.** Two outcomes are
+    possible and the code read does not decide between them: (a) the recall is honored at the
+    server (record + re-deploy) but the device's bootloader still **refuses** to boot an image
+    below the stored rollback index — so the recall silently fails on-device for security-milestone
+    downgrades; or (b) a future mechanism deliberately allows the downgrade (e.g. signing an N-1
+    image that carries an acceptable rollback index, or an operator-gated rollback-index exception).
+    **Per §11.4.6 this is not guessed** — it is flagged for an operator/architecture decision
+    (Continuation item 5).
+  - **Recall is operator-gated by design, which is the intended distinguisher** from the §4.3
+    attacker downgrade: a §4.3 attacker without operator rights and without the signing key cannot
+    forge a recall, and even an attacker *with* operator rights produces an attributable,
+    append-only `rollback_history` + audit record. The recall path therefore does not *add* a new
+    unauthenticated downgrade vector beyond §4.8 (whoever can authenticate as operator). The open
+    risk is the *legitimate-but-abused* operator and the unresolved on-device reconciliation, not a
+    new anonymous attack surface.
+  - **The literal label "G1" for the anti-downgrade guarantee is UNVERIFIED** against the design
+    corpus: the master design (§ "Hard guarantees", line ~121) and §4.3 here name it "version
+    monotonicity" / "anti-downgrade", not "G1". The *mechanism* is verified; the *label* is not.
+
 ## 5. Residual-risk summary
 
 | # | Threat | MVP residual | Fully closed by |
@@ -457,6 +722,11 @@ service, E = Elevation of privilege.)
 | 4.10 | Telemetry spoofing | Moderate | TLS + device identity + threshold aggregation (MVP); per-cohort gate re-eval (1.0.1+) |
 | 4.11 | Denial of update | Moderate | rate-limit/jitter + safe A/B degrade (MVP); TUF anti-freeze/anti-mirror (1.0.1+) |
 | 4.12 | Slot corruption | Low (board-conditional) | AVB/dm-verity/update_verifier/auto-rollback (MVP, AOSP-owned) |
+| 4.13.1 | Audit-log integrity + reads/failed-mutations not audited | Moderate | append-only store + admin-only read + ordered middleware (MVP); DB-grant revoke + separate security-event log (open) |
+| 4.13.2 | Telemetry IDOR (own-device-only) | Low (token-conditional) | handler subject check + role gate (MVP); hardened device identity / mTLS (§4.7, 1.0.1+) |
+| 4.13.3 | Device-group membership authorization | Moderate | operator/admin writes + admin-only delete + audit (MVP); per-group ACL / scoping (future) |
+| 4.13.4 | Staged-rollout abuse | Moderate | operator/admin + brick plan-validation + HALT-wins fail-safe (MVP); server-computed verdict from telemetry (1.0.1+, §4.10) |
+| 4.13.5 | Recall vs anti-downgrade tension | Moderate (open decision) | operator-gated + dual append-only trails + bootloader rollback-index (MVP); on-device recall reconciliation = operator decision |
 
 **Headline.** The two **High, explicitly accepted** residuals — **signing-key compromise (4.2)**
 and **build-pipeline supply-chain (4.9)** — are the same single-signing-key exposure that
