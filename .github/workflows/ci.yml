@@ -1,0 +1,126 @@
+# Helix OTA — Continuous Integration
+#
+# Closes gap G10 (docs/research/main_specs/research/additions_synthesis.md §8/§9 item 6):
+# CI / governance scaffolding. Every step here references commands/scripts that
+# actually exist in this repo.
+#
+# Submodules: this repo wires several submodules via .gitmodules (constitution,
+# containers, submodules/ota-*). The constitution gate and the Go build both
+# need them, so all checkout steps use `submodules: recursive`.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # (a) Constitution inheritance gate — Constitution §1.1 / §11.4 anti-bluff.
+  #     Runs tests/test_constitution_inheritance.sh, which proves the gate
+  #     PASSes on a clean tree AND FAILs under the §1.1 paired mutation.
+  #     Needs the `constitution` submodule (meta_test_inheritance.sh) and the
+  #     owned ota-* submodules, hence submodules: recursive.
+  constitution-inheritance:
+    name: Constitution inheritance gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run constitution inheritance gate
+        run: bash tests/test_constitution_inheritance.sh
+
+  # (b) Go build + vet + gofmt + test for the server module.
+  #     IMPORTANT: we run `go test ./...` WITHOUT the `integration` build tag.
+  #     The integration test in server/internal/store/postgres_integration_test.go
+  #     is guarded by `//go:build integration` and requires podman/Docker plus the
+  #     `containers` submodule via a replace directive — none of which run in the
+  #     default CI job. The default `go test ./...` skips it by design.
+  go:
+    name: Go build / vet / gofmt / test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+
+      - name: gofmt check
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "${unformatted}" ]; then
+            echo "The following files are not gofmt-clean:"
+            echo "${unformatted}"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go build
+        run: go build ./...
+
+      - name: go test (no integration tag)
+        run: go test ./...
+
+      # --- Advisory security steps (non-blocking) -------------------------
+      # The following two steps are ADVISORY only: they install and run
+      # third-party scanners and are marked continue-on-error so a finding or a
+      # transient install failure never fails the build. Promote to blocking
+      # once the findings backlog is triaged.
+
+      # govulncheck — Go vulnerability database scan (advisory).
+      - name: govulncheck (advisory, non-blocking)
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          "$(go env GOPATH)/bin/govulncheck" ./...
+
+      # gosec — Go static security analyzer (advisory).
+      - name: gosec (advisory, non-blocking)
+        continue-on-error: true
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          "$(go env GOPATH)/bin/gosec" ./...
+
+  # (optional) Documentation export — scripts/export_docs.sh needs pandoc and
+  # mermaid-cli (mmdc), which may be absent. The whole job is marked
+  # continue-on-error so its absence/failure never blocks CI (advisory).
+  docs-export:
+    name: Docs export (advisory, non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install doc tooling (advisory)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+          npm install -g @mermaid-js/mermaid-cli || true
+
+      - name: Export docs
+        run: bash scripts/export_docs.sh
