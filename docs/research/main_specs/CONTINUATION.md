@@ -83,10 +83,16 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 
 **WIDEN ruling status: COMPLETE** except two legitimately-parked items: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) **blocked on UNVERIFIED ingest** (event source must carry them first) + the per-device telemetry filters; group/members list pagination (row 7) **deferred** (groups bounded — memo's own recommendation). Both need either ingest work or an operator nudge; not autonomously actionable now.
 
+### Round 8 — "all of it" wave (operator: do all frontiers)
+- **Server-side delta-selection** (9179d0a): ota-protocol `UpdateAvailable.Delta` (brick 7d18edc, pushed; server builds via dev `replace`); store `ReleaseByVersion` (memory+pgx, real-DB parity); update-check resolves current→base artifact→`FindDelta` → offers delta + full fallback; `TestClientUpdateOffersDelta`.
+- **Device-side delta-apply** (ota-android-agent, pushed + gitlink): pure `DeltaApplyDecision` (USE_DELTA vs FULL_PAYLOAD), 11 tests, `:core` 47/0 real Gradle.
+- **Operator cleanup** (DONE): `vasic-digital/containers` + `HelixConstitution` GitLab mirrors flipped **private→public** (re-read-verified); CODEOWNERS `@milos85vasic` confirmed.
+- **OpenAPI** synced to all widened/new endpoints + `UpdateAvailable.delta`; **§11.4.65** corpus export coverage (46 html+pdf pairs).
+
 ### NEXT wave (still open)
-1. **Device-side Android** (the substantial remaining feature work, Kotlin `ota-android-agent`/`ota-update-engine-bridge`): (a) update-check delta-selection — map device current-version → base artifact → `FindDelta` (server-side hook) + device payload apply; (b) device-side TUF (gomobile-go-tuf/v2 per the decision memo, gated on an arm64 `.so`-size/JNI measurement first).
-2. **Parked WIDEN bits** (operator nudge or ingest work): row-4 richer telemetry fields (blocked on UNVERIFIED ingest) + per-device filters; group/members list pagination (deferred).
-3. CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
+1. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware (operator/hardware).
+2. **Device payload-apply integration** — wire `DeltaApplyDecision` into the on-device apply path (`:android`/update_engine) — needs a real device to validate end-to-end.
+3. **Parked WIDEN bits**: row-4 richer telemetry fields (blocked on UNVERIFIED ingest) + per-device filters; group/members list pagination (deferred, groups bounded).
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
