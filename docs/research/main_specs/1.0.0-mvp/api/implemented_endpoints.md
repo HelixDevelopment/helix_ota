@@ -494,6 +494,14 @@ The audit **write** path is not an endpoint but is the source of every `GET /aud
 recorded here for completeness (`handlers_audit.go:auditMiddleware`, wired on the protected group
 at `server.go:130`).
 
+**In-flight cap (DoS protection, cross-cutting).** `maxInflightMiddleware`
+(`rate_limit.go`, wired router-wide at `server.go:115`) bounds concurrent in-flight
+requests to `HELIX_MAX_INFLIGHT` (default `0` = disabled). When the cap is reached,
+excess requests are shed **before** any handler work with `429 RATE_LIMITED` +
+`Retry-After: 1`. Default-off preserves existing behaviour; enabling it is the
+recommended pre-production DoS protection (proven by `TestMaxInflightShedsUnderFlood`).
+Any endpoint below may therefore additionally return `429` when the cap is enabled.
+
 - **Placement (load-bearing):** mounted on the `auth` group **with** `authMiddleware` and **after**
   `requireRole` on each route, and writes **after** the handler (`c.Next()` then inspect
   `c.Writer.Status()`). So an RBAC-rejected (`401`/`403`) request is never audited, and only a
