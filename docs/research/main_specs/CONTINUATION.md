@@ -89,9 +89,17 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **Operator cleanup** (DONE): `vasic-digital/containers` + `HelixConstitution` GitLab mirrors flipped **private→public** (re-read-verified); CODEOWNERS `@milos85vasic` confirmed.
 - **OpenAPI** synced to all widened/new endpoints + `UpdateAvailable.delta`; **§11.4.65** corpus export coverage (46 html+pdf pairs).
 
-### NEXT wave (still open)
-1. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware (operator/hardware).
+### Round 9 — hardware-free QA wave (operator: "all of it", no Orange Pi tonight)
+- **Stress + chaos** (§11.4.85, 5363511): race-clean in-process suite — 200 concurrent creates (0 err, p99 6.4ms), 2400 sustained reads (0 err), 60-device membership contention → no lost updates, chaos fault→500→recover→200. Evidence `docs/qa/20260608-stress-chaos/`.
+- **Full-pipeline e2e + security** (e7e1a1c): `tests/e2e/pipeline_signed.sh` (real ed25519-signed artifact → upload→release→deploy→rollout→delta-bearing update; bogus-sig→422) 32/0/0 — **closes the artifact-pipeline SKIP**; `tests/security/security_probes.sh` (authn/authz/ownership/injection/trust-boundary) 37/0/0. Both re-run in-tree.
+- **Performance/NFR + scaling** (7b75212): real memory-vs-pgx concurrency sweep — in-mem 20.5k RPS @ c=128 p99 30.6ms; pgx ~6.2k plateau (2-CPU container). `docs/research/main_specs/1.0.0-mvp/nfr/performance_baseline.md`.
+- **Dashboard build-out + Playwright** (just landed): functional Fleet/Deployments+Recall/Groups/Audit screens on the real API; tsc+build exit 0; **Playwright 5/5** vs a live server.
+- **Coverage ledger** (§11.4.25) + **HelixQA bank** now 8 challenges (incl. signed-pipeline + security).
+
+### NEXT wave (still open — all hardware/ingest-gated)
+1. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware.
 2. **Device payload-apply integration** — wire `DeltaApplyDecision` into the on-device apply path (`:android`/update_engine) — needs a real device to validate end-to-end.
+3. **Parked WIDEN bits**: row-4 richer telemetry fields (blocked on UNVERIFIED ingest); telemetry per-device filters; group/members list pagination (deferred).
 3. **Parked WIDEN bits**: row-4 richer telemetry fields (blocked on UNVERIFIED ingest) + per-device filters; group/members list pagination (deferred, groups bounded).
 
 ### Carried-forward gaps register
