@@ -100,7 +100,9 @@ func (s *Server) newID() string { return s.newIDFn() }
 // probes.
 func (s *Server) Router() *gin.Engine {
 	r := gin.New()
-	r.Use(recoveryMiddleware(), requestIDMiddleware(), varyMiddleware())
+	// compressionMiddleware negotiates Brotli -> gzip -> identity and sets
+	// `Vary: Accept-Encoding` (superseding the bare varyMiddleware).
+	r.Use(recoveryMiddleware(), requestIDMiddleware(), compressionMiddleware())
 
 	// Health/readiness are unversioned, unauthenticated operational probes.
 	r.GET("/healthz", s.handleHealthz)
