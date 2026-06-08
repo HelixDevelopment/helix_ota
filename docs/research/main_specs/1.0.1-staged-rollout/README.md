@@ -2,9 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
+| Last modified | 2026-06-08 |
+| Implementation status (2026-06-08) | **Engine + schema landed.** Migration 002 (`deployment_phases`/`rollouts`/`rollback_history`) is real-DB validated; the staged-rollout Go engine is wired via the `ota-rollout-engine` brick with REST `POST/GET /deployments/{id}/rollout` + `/evaluate` (create→start→advance→complete, halt-on-error-breach) — see `server/internal/rollout` + `server/internal/api/handlers_rollout.go`. End-user rollback is in 1.0.1 per the operator decision (its `rollback_history` table is migration 002). REMAINING: pgx StoragePort over migration 002 tables; device-side TUF; rollback UX. |
 | Status | planned (outline — depth follows 1.0.0-MVP) |
 | Status summary | The first post-MVP phase. Turns the MVP's all-at-once delivery into a safe, observable, **staged rollout** with automatic health-gated halt; adds **device-side trust enforcement** (TUF) and **end-user rollback** (explicitly deferred from MVP). Grounded in ADR-0001..0005 and the stack notes (hawkBit cascading rollouts, Foundries wave state machine, Memfault one-click abort, balena update-lock, go-tuf/v2). |
 | Issues | Scope boundary with 1.0.2 (delta updates) to be finalized; device-side TUF client (gomobile vs hand-rolled Kotlin) needs the spike from ADR-0002. |

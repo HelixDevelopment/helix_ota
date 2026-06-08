@@ -2,9 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-08 |
+| Operator decision (2026-06-08) | End-user rollback is in **1.0.1** (with staged-rollout), not 1.0.2 — §10 K8 + §11 updated. G3/G4/G5 operational endpoints + the staged-rollout engine + migration 002 are now IMPLEMENTED and real-DB/real-brick verified (see §8.1). |
 | Status | active |
 | Status summary | Deep analysis of **all three** operator-supplied inputs in `docs/research/main_specs/additions/` — `initial_research_01.md`, `initial_research_02.md`, and the large `initial_research_03/helix_ota_big/` corpus (26 markdown design docs: SERVER_IMPLEMENTATION, ANDROID_CLIENT_DESIGN, REST_API_SPECIFICATION, VERSION_ROADMAP, ROLLBACK/DELTA/LINUX/WINDOWS/MULTI-OS research, CODE_REVIEW_AND_GAP_ANALYSIS). Extracts every reusable element, maps each to a phase/spec/code destination, and records every contradiction (between inputs, against locked decisions, against the Constitution) with a resolution rule. This document is the traceability bridge between operator input and the canonical specs. Per-input exhaustive inventories live in `additions_analysis/0{1,2,3}_analysis.md`; §8–§12 below consolidate them. |
 | Issues | Inputs conflict on wrapped-engine (Mender vs hawkBit), topology (modular vs microservices), router (chi vs Gin), signing (RSA vs ed25519), transport auth (mTLS vs JWT), TUF-now vs deferred, and the staged-rollout-in-MVP question. All resolved in §5 + §10 in favor of the locked decisions / ADRs. |
@@ -161,7 +162,7 @@ built server). Re-scored against the actual `server/` build and locked decisions
 | K5 | Vocabulary `updates`+`rollouts` | canonical `releases`+`deployments` | **releases/deployments**; staged rollouts → 1.0.1. |
 | K6 | Full staged-rollout engine in MVP | locked all-targets-only MVP | engine = **1.0.1** design seed. |
 | K7 | Coverage 85% | ≥90% safety-critical floor (§1/C8) | **≥90%** floor on safety paths. |
-| K8 | Numbering: rollback@1.0.1, delta@1.0.2 | canonical reserves **1.0.1 = staged-rollout** | staged-rollout stays 1.0.1; rollback→**1.0.2**, delta→**1.0.3** (aligns ADR-0005). |
+| K8 | Numbering: rollback@1.0.1, delta@1.0.2 | **operator decision (2026-06-08)** | **end-user rollback is in 1.0.1** (with staged-rollout) — backed by migration 002's `rollback_history` table (real-DB validated). `1.0.2` slot is now **folded into 1.0.1** (the `1.0.2-rollback/` dir is marked superseded, not deleted, per §11.4.124). delta stays **1.0.3** (aligns ADR-0005). |
 
 **Addition-#3 "CRITICAL" findings that are NOT real against the build** (artifacts of its
 own multi-author generation): endpoint-path drift (C1/C3/C4), enum drift (C5/C6/C8),
@@ -177,7 +178,7 @@ phase dirs; numbering reconciled per K8 (staged-rollout owns 1.0.1):
 
 | Addition-#3 doc | Destination dir | Notes |
 |---|---|---|
-| `ROLLBACK_DESIGN.md` (server-triggered + user-initiated + multi-version) | `1.0.2-rollback/` | Auto boot-failure rollback is already MVP; this is the *operator/user-initiated* superset. |
+| `ROLLBACK_DESIGN.md` (server-triggered + user-initiated + multi-version) | **`1.0.1-staged-rollout/`** | Operator decision 2026-06-08: end-user rollback moved INTO 1.0.1. Auto boot-failure rollback is already MVP; this is the *operator/user-initiated* superset, backed by migration 002 `rollback_history`. `1.0.2-rollback/` is kept as a superseded pointer. |
 | `DELTA_UPDATES_DESIGN.md` | `1.0.3-delta-updates/` | Aligns ADR-0005 (AOSP block diffs vs custom). |
 | `LINUX_OTA_RESEARCH.md` (RAUC/SWUpdate/Mender) | `1.X-linux/` | Per-OS adapter behind the universality seam. |
 | `WINDOWS_OTA_RESEARCH.md` | `1.X-windows/` | Per-OS adapter. |
