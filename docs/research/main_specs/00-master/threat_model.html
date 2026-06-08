@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>threat_model</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-threat-model-1.0.0-mvp">Helix OTA — Threat Model
+(1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>STRIDE-based threat model for the Helix OTA 1.0.0-MVP: native
+Android 15 A/B (<code>update_engine</code> + AVB/dm-verity +
+auto-rollback) on device, a custom Go + Gin control plane, a React
+dashboard, and a PostgreSQL + MinIO/S3 artifact store. Enumerates twelve
+OTA-relevant threats with attack, impact, the mitigation actually
+present in the locked MVP design, and residual risk. Distinguishes
+MVP-shipped controls from the TUF/Uptane hardening deferred to 1.0.1+
+per ADR-0002. <strong>Revision 2</strong> adds §4.13 — operational /
+rollout / recall endpoint threats (audit-log integrity + the
+reads-not-audited / failed-mutations-not-audited design choice;
+device-only-own-telemetry IDOR; device-group membership authorization;
+staged-rollout abuse + HALT-wins safety; recall/rollback authorization +
+the recall-vs-anti-downgrade tension), grounded in the implemented
+<code>server/internal/api</code> handlers + per-route RBAC in
+<code>server.go</code> + the append-only audit/rollback store.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Several mitigations depend on items the underlying research carried
+as UNVERIFIED (RK3588 / Orange Pi 5 Max AVB lock state, rollback-index
+storage backend, Android 15 <code>IBootControl</code> AIDL surface,
+catalogue-brick fit for TUF primitives, HelixConstitution clause text).
+These are marked UNVERIFIED inline and must close before the related
+residual-risk claims become firm.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>(1) On ADR-0002 1.0.1+ adoption, add TUF/Uptane threat rows
+(rollback/freeze/mix-and-match/mirror-denial/key-compromise-recovery)
+and downgrade the residual risk in §4.3, §4.4, §4.5; (2) re-verify the
+AVB/rollback residual claims (§4.3, §4.12) once the board AVB lock state
+and rollback-index backend are byte-confirmed; (3) confirm
+<code>security</code> / <code>Security-KMP</code> catalogue-brick
+coverage of the signing/verify seam (§4.1, §4.2); (4) reconcile cited
+§11.4.x clause numbers against the authoritative HelixConstitution; (5)
+<strong>§4.13 open items:</strong> resolve the recall-vs-anti-downgrade
+tension (§4.13.5) — whether a server-driven recall to N-1 is intended to
+bypass the on-device AVB rollback-index, and if so by what
+operator-gated mechanism — this needs an operator/architecture decision
+(per §11.4.6 it is carried UNVERIFIED, not guessed); confirm whether
+append-only is enforced at the DB grant level (no UPDATE/DELETE
+privilege on <code>audit_logs</code> / <code>rollback_history</code>) or
+only at the repository-interface level (§4.13.1); decide whether failed
+mutations and authorization denials warrant a separate security-event
+log (§4.13.1).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-scope-and-method">Purpose, scope, and
+method</a></li>
+<li><a href="#2-system-under-analysis-locked-architecture">System under
+analysis (locked architecture)</a></li>
+<li><a href="#3-trust-boundaries-assets-and-stride-coverage">Trust
+boundaries, assets, and STRIDE coverage</a></li>
+<li><a href="#4-threats">Threats</a>
+<ul>
+<li><a href="#41-forged--malicious-artifact-upload">4.1 Forged /
+malicious artifact upload</a></li>
+<li><a href="#42-signature--signing-key-compromise">4.2 Signature /
+signing-key compromise</a></li>
+<li><a href="#43-rollback--downgrade-attack">4.3 Rollback / downgrade
+attack</a></li>
+<li><a href="#44-mix-and-match-partial--inconsistent-release">4.4
+Mix-and-match (partial / inconsistent release)</a></li>
+<li><a href="#45-endless-data--decompression-bomb">4.5 Endless-data /
+decompression-bomb</a></li>
+<li><a href="#46-mitm-on-poll--download">4.6 MITM on poll /
+download</a></li>
+<li><a href="#47-device-impersonation">4.7 Device impersonation</a></li>
+<li><a href="#48-dashboard-authentication--authorization-bypass">4.8
+Dashboard authentication / authorization bypass</a></li>
+<li><a href="#49-build-pipeline-supply-chain-compromise">4.9
+Build-pipeline supply-chain compromise</a></li>
+<li><a href="#410-telemetry-spoofing">4.10 Telemetry spoofing</a></li>
+<li><a href="#411-denial-of-update">4.11 Denial of update</a></li>
+<li><a href="#412-slot-corruption">4.12 Slot corruption</a></li>
+<li><a href="#413-operational--rollout--recall-endpoint-threats">4.13
+Operational / rollout / recall endpoint threats</a>
+<ul>
+<li><a
+href="#4131-audit-log-integrity--tampering--the-reads-not-audited--failed-mutations-not-audited-design-choice">4.13.1
+Audit-log integrity / tampering + the reads-not-audited /
+failed-mutations-not-audited design choice</a></li>
+<li><a
+href="#4132-device-only-own-telemetry-authorization-idor-on-get-devicesidtelemetry">4.13.2
+Device-only-own-telemetry authorization (IDOR on GET
+/devices/{id}/telemetry)</a></li>
+<li><a href="#4133-device-group-membership-authorization">4.13.3
+Device-group membership authorization</a></li>
+<li><a
+href="#4134-staged-rollout-abuse-create--evaluate-halt-wins-as-a-safety-control">4.13.4
+Staged-rollout abuse (create / evaluate; HALT-wins as a safety
+control)</a></li>
+<li><a
+href="#4135-recall--rollback-authorization--anti-downgrade-interplay">4.13.5
+Recall / rollback authorization + anti-downgrade interplay</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#5-residual-risk-summary">Residual-risk summary</a></li>
+<li><a href="#6-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#7-open--unverified-items">Open / UNVERIFIED items</a></li>
+<li><a href="#8-sources">Sources</a></li>
+</ol>
+<hr />
+<h2 id="purpose-scope-and-method">1. Purpose, scope, and method</h2>
+<p>This document is the STRIDE threat model for the
+<strong>1.0.0-MVP</strong> of Helix OTA. It analyses only what the MVP
+ships per the locked architecture in <a
+href="./2026-06-07-helix-ota-design.md"><code>2026-06-07-helix-ota-design.md</code></a>
+§4–§9 and the phased trust decision in <a
+href="../research/adr/adr-0002-supply-chain-trust.md"><code>../research/adr/adr-0002-supply-chain-trust.md</code></a>.
+It does <strong>not</strong> model controls deferred to 1.0.1+; where a
+threat is only fully closed by a deferred control, that fact is stated
+explicitly and reflected in the residual risk.</p>
+<p><strong>Method.</strong> Each threat is described by: <strong>STRIDE
+category</strong>, <strong>attack</strong> (how it is mounted),
+<strong>impact</strong> (what it costs if it succeeds),
+<strong>mitigation in our design</strong> (the control actually present
+in the MVP, traced to a design/ADR section), and <strong>residual
+risk</strong> (what remains after the MVP control, including reliance on
+deferred work).</p>
+<p><strong>Anti-bluff (§7.1 / §11.4.6 / §11.4.123).</strong> No facts,
+citations, or capabilities are fabricated. Every mitigation traces to a
+cited section of the master design, ADR-0002, or the AVB/rollback
+research note. Items the underlying research carried as unconfirmed are
+marked <strong>UNVERIFIED</strong>; a mitigation that depends on an
+UNVERIFIED fact does not yield a firm residual claim until that fact
+closes. Submodules are named only from the verified catalogue
+(<code>documentation_standards.md</code> §9); none are invented.</p>
+<p><strong>MVP trust floor (the baseline every threat is measured
+against).</strong> Per ADR-0002 §4.1, the MVP ships <strong>plain
+per-artifact trust</strong>: SHA-256 (and SHA-512 where available) + a
+detached signature, verified <strong>server-side on upload</strong> and
+<strong>device-side before apply</strong>, plus <strong>AVB</strong> and
+the A/B engine’s own payload-signature check. <strong>TUF/Uptane is
+explicitly deferred to 1.0.1+</strong> (ADR-0002 §4.3; master §1
+non-goals). The MVP therefore knowingly retains a
+<strong>single-signing-key exposure</strong> and does
+<strong>not</strong> mitigate the rollback / fast-forward /
+indefinite-freeze / mix-and-match / malicious-mirror /
+key-compromise-recovery classes that TUF closes (ADR-0002 §3.1, §5.2).
+This model makes that retained exposure explicit per threat rather than
+implying coverage the MVP does not have.</p>
+<h2 id="system-under-analysis-locked-architecture">2. System under
+analysis (locked architecture)</h2>
+<p>From master design §4 (locked, not re-decided here):</p>
+<ul>
+<li><strong>Dashboard (React):</strong> secure login, artifact upload,
+rollout control, fleet health. Reuses <code>UI-Components-React</code>,
+<code>Dashboard-Analytics-React</code>, <code>Auth-Context-React</code>
+(master §10).</li>
+<li><strong>Control plane (Go + Gin):</strong> REST <code>/api/v1</code>
+over <strong>HTTP/3 (QUIC) primary → HTTP/2 fallback</strong>,
+<strong>Brotli</strong> with gzip fallback (master §3). Sub-units:
+artifact intake + validation + signing-verify (<code>ART</code>),
+rollout engine (<code>ROLL</code>), device registry + inventory
+(<code>DEV</code>), telemetry ingest (<code>TEL</code>), auth/RBAC
+(<code>AUTH</code>). Reuses <code>auth</code>, <code>security</code>,
+<code>database</code>, <code>Storage</code>, <code>observability</code>,
+<code>eventbus</code>, <code>ratelimiter</code>,
+<code>middleware</code>, <code>http3</code>, <code>recovery</code>,
+<code>Herald</code>, <code>config</code>, <code>cache</code> (master
+§10).</li>
+<li><strong>Data plane:</strong> PostgreSQL (relational), MinIO/S3
+(artifact blobs), OpenTelemetry/Prometheus (master §3, §9).</li>
+<li><strong>Device (Android 15, Orange Pi 5 Max / RK3588):</strong> KMP
+OTA agent (poll → download → verify → apply → report),
+<code>update_engine</code> (Virtual A/B + compression), <strong>AVB /
+dm-verity + <code>boot_control</code></strong> (master §4). Reuses
+<code>Auth-KMP</code>, <code>Security-KMP</code>,
+<code>Storage-KMP</code>, <code>Config-KMP</code> (master §10).</li>
+<li><strong>Build pipeline:</strong> emits the flashing image + OTA
+<code>.zip</code> + mandatory hash file; a <strong>build-pipeline
+private key signs</strong> and the <strong>public key lives in the
+device trust store</strong> (master §1, §6).</li>
+</ul>
+<p>For 1.0.0 the rollout is <strong>all-at-once</strong>; the
+staged-rollout engine lands in 1.0.1 (master §5, §8). The
+artifact-validator, rollout-engine, protocol types, the
+<code>update_engine</code> bridge, and the OS-adapter are separate
+decoupled modules (master §4, §10 new-submodule boundaries:
+<code>ota-protocol</code>, <code>ota-artifact-validator</code>,
+<code>ota-rollout-engine</code>, <code>ota-update-engine-bridge</code>,
+<code>ota-android-agent</code>, <code>ota-telemetry-schema</code>).</p>
+<h2 id="trust-boundaries-assets-and-stride-coverage">3. Trust
+boundaries, assets, and STRIDE coverage</h2>
+<p><strong>Trust boundaries.</strong> (B1) Internet ↔︎ control plane
+(device poll/download + dashboard). (B2) Dashboard operator ↔︎ control
+plane (admin actions). (B3) Control plane ↔︎ data plane (PostgreSQL,
+MinIO/S3, OTEL). (B4) Build pipeline ↔︎ artifact store / signing key.
+(B5) Control plane ↔︎ device fleet. (B6) On-device: Android userspace
+(agent) ↔︎ bootloader/AVB/<code>boot_control</code> (the safety boundary
+AOSP owns, not Helix — <code>android-avb-rollback.md</code> §10).</p>
+<p><strong>Primary assets.</strong> The signing private key; the device
+trust store (public key); OTA artifacts + their hashes/signatures in
+MinIO/S3; the release/deployment + device-inventory records in
+PostgreSQL; operator credentials / RBAC state; device identity tokens;
+telemetry stream; the on-device slot/rollback-index state.</p>
+<p><strong>STRIDE coverage map</strong> (threat → primary STRIDE
+categories):</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Threat</th>
+<th style="text-align: center;">S</th>
+<th style="text-align: center;">T</th>
+<th style="text-align: center;">R</th>
+<th style="text-align: center;">I</th>
+<th style="text-align: center;">D</th>
+<th style="text-align: center;">E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1</td>
+<td>Forged / malicious artifact upload</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Signature / key compromise</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Rollback / downgrade</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Mix-and-match</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Endless-data / decompression-bomb</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>MITM on poll / download</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Device impersonation</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+</tr>
+<tr>
+<td>4.8</td>
+<td>Dashboard auth bypass</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+</tr>
+<tr>
+<td>4.9</td>
+<td>Build-pipeline supply-chain</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+</tr>
+<tr>
+<td>4.10</td>
+<td>Telemetry spoofing</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.11</td>
+<td>Denial of update</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.12</td>
+<td>Slot corruption</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>4.13</td>
+<td>Operational / rollout / recall endpoints</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+<td style="text-align: center;">x</td>
+</tr>
+</tbody>
+</table>
+<p>(S = Spoofing, T = Tampering, R = Repudiation, I = Information
+disclosure, D = Denial of service, E = Elevation of privilege.)</p>
+<p>Threat 4.13 spans the full STRIDE set because it bundles five
+distinct endpoint-class sub-threats (audit tampering/repudiation,
+telemetry IDOR information-disclosure + privilege, group-membership
+privilege, rollout-abuse DoS/tampering, recall-abuse tampering/DoS); the
+per-sub-threat STRIDE focus is stated inline in §4.13.x.</p>
+<h2 id="threats">4. Threats</h2>
+<h3 id="forged-malicious-artifact-upload">4.1 Forged / malicious
+artifact upload</h3>
+<ul>
+<li><strong>STRIDE:</strong> Tampering, Elevation of privilege.</li>
+<li><strong>Attack:</strong> An actor with upload access (or who reaches
+the intake API) submits a crafted or arbitrary file as an OTA artifact —
+wrong package, trojaned package, structurally malformed archive, or a
+file whose declared hash does not match its bytes — aiming to get it
+published and deployed to the fleet.</li>
+<li><strong>Impact:</strong> If accepted and deployed, fleet-wide
+installation of attacker-chosen firmware; potential mass device
+compromise. This directly violates the operator “safe upload” guarantee
+(master §1).</li>
+<li><strong>Mitigation in our design:</strong> Mandatory
+<strong>server-side validation on upload</strong> — structure, hash,
+signature, version monotonicity, and target compatibility — before a
+release can be published (master §5, §6; ADR-0002 §4.1). Validation is
+an isolated, independently testable unit
+(<code>ota-artifact-validator</code>; master §4, §10), OS-aware via
+plugins with no transport coupling. The signing/verify seam is routed
+through the verified <code>security</code> / <code>Security-KMP</code>
+bricks (ADR-0002 §4.2). The device <strong>re-verifies before
+apply</strong> (master §6), so an artifact that bypasses server intake
+still fails on-device, and the A/B engine performs its <strong>own
+payload-signature check</strong> (ADR-0002 §4.1). Safety-critical
+signing-verify path targets ≥90% coverage under the four-layer +
+mutation regime (master §13).</li>
+<li><strong>Residual risk:</strong> <strong>Low-to-moderate.</strong>
+Forgery without the signing key is rejected at two independent gates
+plus the engine check. The dominant residual is the <strong>single
+signing key</strong>: an attacker who <em>holds the key</em> (see §4.2)
+defeats this entirely, because plain signing “covers the wrong/arbitrary
+file class <strong>only if</strong> the signing key is intact” (ADR-0002
+§1, “Why plain signing is not enough”). TUF target-metadata + thresholds
+that would harden this are <strong>deferred to 1.0.1+</strong> (ADR-0002
+§4.3). <strong>UNVERIFIED:</strong> whether <code>security</code> /
+<code>Security-KMP</code> actually host the verify primitives without
+bespoke crypto (ADR-0002 §8 item 9).</li>
+</ul>
+<h3 id="signature-signing-key-compromise">4.2 Signature / signing-key
+compromise</h3>
+<ul>
+<li><strong>STRIDE:</strong> Spoofing, Tampering, Elevation of
+privilege.</li>
+<li><strong>Attack:</strong> The attacker steals or coerces use of the
+<strong>build-pipeline private key</strong> (or any online copy of it in
+the control plane), then signs arbitrary firmware that passes every
+signature check end-to-end.</li>
+<li><strong>Impact:</strong> Total break of artifact trust — the
+attacker can ship arbitrary, validly-signed firmware to the entire
+fleet. ADR-0002 §2 names the online Go control plane as “a single,
+attractive signing-key target.”</li>
+<li><strong>Mitigation in our design:</strong> MVP keeps the signing key
+as the <strong>build-pipeline</strong> key, not a routinely-online
+control-plane key; the <strong>public</strong> key (not the private key)
+lives in the device trust store (master §1, §6). Defense-in-depth that
+limits blast radius even with a compromised payload path:
+<strong>AVB</strong> + <strong>dm-verity</strong> + the A/B
+<strong>payload check</strong> + server-side upload verification
+(ADR-0002 §5.2 interim depth). Key custody is routed through
+<code>security</code> / <code>Security-KMP</code> (ADR-0002 §4.2).</li>
+<li><strong>Residual risk:</strong> <strong>High and explicitly accepted
+for MVP.</strong> ADR-0002 §5.2 states plainly: “MVP retains a
+single-signing-key exposure (no
+rollback/freeze/mix-and-match/mirror-denial mitigation until 1.0.1+).”
+There is <strong>no threshold signing, no offline-key custody, and no
+key-compromise <em>recovery</em> path in the MVP</strong> — those are
+TUF/Uptane properties scheduled for 1.0.1+ (ADR-0002 §3.2
+“key-compromise resilience via thresholds + offline keys”; §4.3 steps
+3–4). A stolen key is a fleet-wide compromise until rotation, and even
+rotation has no metadata-driven revocation in the MVP. This is the
+single most important residual risk in the MVP and is the explicit
+motivation for ADR-0002’s phased adoption.</li>
+</ul>
+<h3 id="rollback-downgrade-attack">4.3 Rollback / downgrade attack</h3>
+<ul>
+<li><strong>STRIDE:</strong> Tampering, Denial of service.</li>
+<li><strong>Attack:</strong> The attacker replays an older,
+<strong>validly-signed</strong> release (a prior-version OTA
+<code>.zip</code> that still carries a legitimate signature) to push
+devices back to firmware with known vulnerabilities — a
+downgrade/rollback that plain signing alone does not detect, since the
+old artifact’s signature is genuine.</li>
+<li><strong>Impact:</strong> Fleet returned to vulnerable firmware;
+subsequent exploitation of the re-introduced vulnerabilities.</li>
+<li><strong>Mitigation in our design:</strong> Two layers. (1)
+<strong>Server-side version monotonicity</strong> is part of mandatory
+upload validation (master §5) and an anti-downgrade/bootloader version
+check is part of the security model (master §6). (2) On-device
+<strong>AVB rollback-index / anti-downgrade</strong>: each image carries
+a rollback index, the device keeps a stored rollback index in
+tamper-evident storage, and boot is permitted only if
+<code>image.rollback_index &gt;= stored_rollback_index</code>, with the
+load-bearing ordering rule that the slot is marked SUCCESSFUL
+<strong>before</strong> the stored index is bumped
+(<code>android-avb-rollback.md</code> §2, §8). This rollback-index
+protection is <strong>bootloader-enforced, not OS-enforced</strong>, so
+the Helix agent cannot weaken it and an attacker in userspace cannot
+bypass it.</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong> The
+bootloader rollback index blocks downgrade <em>across a rollback-index
+increment</em> but does <strong>not</strong> block replay of an older
+release that shares the same rollback index (rollback indexes are bumped
+at security milestones, not every build), and the MVP has no metadata
+layer enforcing per-release freshness/expiry. ADR-0002 §3.1 lists
+rollback and “fast-forward” among the classes plain signing does
+<strong>not</strong> mitigate; full protection (TUF timestamp/snapshot
+freshness + monotonic version metadata) is <strong>deferred to
+1.0.1+</strong> (ADR-0002 §4.3, §5.1). <strong>UNVERIFIED:</strong>
+whether the RK3588 / Orange Pi 5 Max build ships a conformant locked AVB
+and the rollback-index storage backend (RPMB vs persistent partition vs
+TEE) — if the board is not AVB-locked, layer (2) does not hold
+(<code>android-avb-rollback.md</code> §Issues, §12; ADR-0002 §8 item
+8).</li>
+</ul>
+<h3 id="mix-and-match-partial-inconsistent-release">4.4 Mix-and-match
+(partial / inconsistent release)</h3>
+<ul>
+<li><strong>STRIDE:</strong> Tampering.</li>
+<li><strong>Attack:</strong> The attacker serves a combination of
+artifacts/metadata that were never released together — e.g. a valid
+payload paired with a different release’s valid hash file, or partial
+per-partition images — so each piece is individually authentic but the
+<em>set</em> is inconsistent.</li>
+<li><strong>Impact:</strong> Devices apply an incoherent firmware
+combination, risking malfunction or a downgrade of one component while
+others advance; defeats the “consistent release” assumption.</li>
+<li><strong>Mitigation in our design:</strong> The MVP treats every
+artifact as an <strong>opaque target identified by path + length +
+SHA-256</strong> with its own signature (ADR-0002 §4.2), and validation
+checks <strong>target compatibility</strong> and version monotonicity at
+upload (master §5). The native A/B apply is <strong>atomic to the
+inactive slot</strong> and the engine verifies its <strong>own
+payload</strong> as a single unit before commit (master §4; ADR-0002
+§4.1), which constrains the device to apply one coherent payload rather
+than an assembled mixture. AVB authenticates the top-level
+<code>vbmeta</code> which transitively authenticates each protected
+partition’s descriptors (<code>android-avb-rollback.md</code> §2, §3),
+so partition-level substitution within a booted image is detected.</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong> The MVP
+has <strong>no release-level metadata that binds the full set of targets
+together</strong> (the snapshot/targets binding that TUF provides).
+ADR-0002 §3.1 explicitly lists <strong>mix-and-match</strong> among the
+classes plain signing does <strong>not</strong> close; full mitigation
+is <strong>deferred to 1.0.1+</strong> (ADR-0002 §3.2, §5.1). Within a
+single signed payload the engine + AVB constrain coherence; across
+separately-served artifacts/metadata the binding is weak until TUF
+lands.</li>
+</ul>
+<h3 id="endless-data-decompression-bomb">4.5 Endless-data /
+decompression-bomb</h3>
+<ul>
+<li><strong>STRIDE:</strong> Denial of service.</li>
+<li><strong>Attack:</strong> A malicious or man-in-the-middle response
+feeds the device (or the server intake) an unbounded/oversized stream,
+or a small artifact that decompresses to an enormous size — exhausting
+disk, memory, or download budget. The transport uses
+<strong>Brotli</strong> content compression (master §3), which is an
+attack surface for decompression bombs.</li>
+<li><strong>Impact:</strong> Device storage/memory exhaustion or wedged
+download; server-side resource exhaustion at intake; failed or stalled
+updates across the fleet (a denial-of-update vector, cf. §4.11).</li>
+<li><strong>Mitigation in our design:</strong> <strong>Length is part of
+the target identity</strong> — every artifact is identified by
+<strong>path + length + SHA-256</strong> (ADR-0002 §4.2), so the
+expected byte length is known in advance and an over-long stream is
+detectable. The MVP uses <strong>local-verified-file apply</strong>: the
+artifact is fully downloaded and <strong>verified locally before
+apply</strong>, chosen over streaming an unverified payload straight to
+<code>applyPayload</code> (ADR-0002 §4.1) — verification gates apply, so
+an oversized/garbage stream is rejected before it reaches
+<code>update_engine</code>. Server intake validates structure and hash
+before publish (master §5). <code>ratelimiter</code> and
+<code>middleware</code> bricks are available on the control-plane path
+(master §10).</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong>
+“Endless-data” is named by ADR-0002 §3.2 among the classes a TUF
+metadata layer closes (TUF target length is authenticated by signed
+metadata, not merely declared); in the MVP the length comes from the
+artifact record rather than from signed, freshness-checked metadata, so
+a compromised metadata path (cf. §4.2) could mis-state it. The
+<strong>download-buffer / decompression bounds in the agent and the
+intake size caps are implementation details not fixed in the locked
+design</strong> and must be specified in the component specs —
+<strong>UNVERIFIED</strong> at this revision.</li>
+</ul>
+<h3 id="mitm-on-poll-download">4.6 MITM on poll / download</h3>
+<ul>
+<li><strong>STRIDE:</strong> Spoofing, Tampering, Information
+disclosure.</li>
+<li><strong>Attack:</strong> A network attacker intercepts the
+device↔︎control-plane poll/report or the artifact download, attempting to
+inject a malicious response, strip transport security, or read
+device/fleet data in transit.</li>
+<li><strong>Impact:</strong> Injected fake “update available” pointing
+at a malicious artifact, suppressed updates, or disclosure of device
+identifiers/telemetry.</li>
+<li><strong>Mitigation in our design:</strong> <strong>TLS 1.3</strong>
+on all device↔︎server traffic; <strong>HTTP/3 (QUIC)</strong> primary
+with <strong>HTTP/2 fallback</strong> (master §3, §6) — QUIC carries TLS
+1.3 by construction. Even if the transport were broken, the
+<strong>artifact is re-verified on-device before apply</strong> by hash
++ signature, plus the A/B payload check and AVB (master §6; ADR-0002
+§4.1), so an injected artifact without a valid signature is rejected at
+the device gate. <strong>Mutual-TLS is recorded as evaluated</strong>
+for device identity (master §6).</li>
+<li><strong>Residual risk:</strong> <strong>Low for artifact
+integrity</strong> (signature + hash verification is
+transport-independent), <strong>moderate for confidentiality and for
+“fake availability” denial</strong>: the MVP commits to TLS 1.3 but
+<strong>does not mandate certificate pinning or mTLS</strong> (mTLS is
+only “evaluated”, master §6), so a device that trusts a rogue CA could
+be fed forged availability/metadata responses (a denial-of-update vector
+even though it cannot forge the artifact itself). The MVP also has no
+signed, freshness-checked metadata to authenticate the
+<em>availability</em> response itself (a TUF property deferred to
+1.0.1+, ADR-0002 §3.2 “malicious-mirror denial”).</li>
+</ul>
+<h3 id="device-impersonation">4.7 Device impersonation</h3>
+<ul>
+<li><strong>STRIDE:</strong> Spoofing, Repudiation, Information
+disclosure, Elevation of privilege.</li>
+<li><strong>Attack:</strong> An actor presents a forged or stolen device
+identity to the control plane to enroll a fake device, pull releases
+targeted at another device, or poison inventory/telemetry as if it were
+a legitimate fleet member.</li>
+<li><strong>Impact:</strong> Skewed rollout cohorts and fleet-health
+data; unauthorized access to releases; inventory poisoning; repudiation
+of which device did what.</li>
+<li><strong>Mitigation in our design:</strong> <strong>Device identity
+is a token bound to a hardware id via the Android KeyStore</strong>
+(master §6), and <strong>mutual-TLS is recorded as evaluated</strong>
+(master §6). The device identity/auth path reuses <code>auth</code>
+(server) and <code>Auth-KMP</code> / <code>Security-KMP</code> (device)
+(master §10). Device registry + inventory is a distinct unit
+(<code>DEV</code>; master §4). <code>api_keys</code> and
+<code>devices</code> are first-class data-model entities (master §7),
+and <strong>every admin action is audited</strong> (master §6)
+supporting non-repudiation on the operator side.</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong>
+KeyStore-bound tokens raise the bar, but the MVP <strong>does not commit
+to mTLS</strong> (only evaluated) and the per-device “what should this
+device install” Director-style targeting is <strong>deferred</strong> —
+ADR-0002 §4.2 only <em>reserves</em> the per-device decision for a
+future Director repo. Token theft from a rooted/compromised device, and
+the absence of per-device signed targeting in the MVP, remain open.
+<strong>UNVERIFIED:</strong> the strength of KeyStore binding on the
+specific RK3588 / Orange Pi 5 Max build (board TEE specifics are carried
+UNVERIFIED in <code>android-avb-rollback.md</code> §12).</li>
+</ul>
+<h3 id="dashboard-authentication-authorization-bypass">4.8 Dashboard
+authentication / authorization bypass</h3>
+<ul>
+<li><strong>STRIDE:</strong> Spoofing, Repudiation, Elevation of
+privilege.</li>
+<li><strong>Attack:</strong> An attacker bypasses dashboard login,
+escalates a low-privilege operator to release/deploy rights,
+fixates/replays a session, or reaches a privileged <code>/api/v1</code>
+endpoint directly without going through the UI.</li>
+<li><strong>Impact:</strong> Unauthorized upload/publish/deploy (which
+then chains into §4.1), tampering with rollout or device records, and
+loss of operator accountability.</li>
+<li><strong>Mitigation in our design:</strong> <strong>OAuth2 / JWT with
+RBAC</strong> in the <code>AUTH</code> unit (master §4, §6), reusing the
+<code>auth</code> brick and (dashboard) <code>Auth-Context-React</code>
+(master §10). RBAC distinguishes operator roles; <code>users</code>,
+<code>api_keys</code>, and <code>audit_logs</code> are first-class
+data-model entities and <strong>every admin action is logged</strong>
+(master §6, §7) for non-repudiation. <code>ratelimiter</code>,
+<code>middleware</code>, and <code>recovery</code> bricks harden the API
+edge (master §10). The REST surface is the single mandated entry
+(<code>/api/v1</code>) with gRPC internal-only (master §3), reducing the
+privileged attack surface.</li>
+<li><strong>Residual risk:</strong> <strong>Moderate,
+implementation-dependent.</strong> The design names RBAC, JWT, and audit
+logging but the <strong>concrete role matrix, token lifetime/refresh,
+and per-endpoint authorization checks are component-spec details not
+fixed in the locked design</strong> — UNVERIFIED at this revision and
+the main place real bypass bugs would live. Audit logging is stated for
+“admin actions”; whether it covers all state-changing API calls is
+unspecified. No MFA is committed in the MVP.</li>
+</ul>
+<h3 id="build-pipeline-supply-chain-compromise">4.9 Build-pipeline
+supply-chain compromise</h3>
+<ul>
+<li><strong>STRIDE:</strong> Spoofing, Tampering, Repudiation, Elevation
+of privilege.</li>
+<li><strong>Attack:</strong> The attacker compromises the build pipeline
+upstream of signing — poisoned dependency, malicious build step, or
+tampered build host — so that a <strong>trojaned artifact is signed by
+the legitimate key</strong> and emitted as a normal release with a valid
+hash file.</li>
+<li><strong>Impact:</strong> Same end state as §4.2 (validly-signed
+malicious firmware fleet-wide), but reached by subverting the build
+rather than stealing the key — and harder to detect because every
+downstream check passes.</li>
+<li><strong>Mitigation in our design:</strong> ADR-0002 §2 names “the
+online Go control plane is a single, attractive signing-key target” and
+frames compromise-resilience as a core driver. MVP controls that
+<em>limit</em> (not prevent) blast radius: the
+<strong>detached-signature + hash artifact integrity</strong> is
+verified server-side and device-side (master §6; ADR-0002 §4.1); the
+signing seam is built <strong>MVP-forward behind a
+<code>go-securesystemslib</code>-compatible
+<code>signature.Signer</code> abstraction</strong> so a future TUF role
+signer (offline keys, thresholds) drops in without rework (ADR-0002
+§4.2); AVB + dm-verity + A/B payload check are independent on-device
+layers (master §6).</li>
+<li><strong>Residual risk:</strong> <strong>High and explicitly accepted
+for MVP.</strong> The MVP has <strong>no provenance / attestation /
+reproducible-build / threshold-signing control</strong> that would catch
+a <em>validly signed but trojaned</em> artifact — these are precisely
+the TUF/Uptane “compromise resilience” properties <strong>deferred to
+1.0.1+</strong> (ADR-0002 §3.2, §4.3 step 5 dual-repo Director+Image
+split, §5.2). The MVP-forward signer abstraction reduces <em>future</em>
+rework but provides <strong>no MVP-time mitigation</strong> against
+build subversion. This is a deliberate, documented gap in the phased
+decision, not an oversight.</li>
+</ul>
+<h3 id="telemetry-spoofing">4.10 Telemetry spoofing</h3>
+<ul>
+<li><strong>STRIDE:</strong> Spoofing, Tampering, Repudiation, Denial of
+service.</li>
+<li><strong>Attack:</strong> An attacker submits fabricated telemetry
+events
+(<code>download_started/installing/installed/verifying/success/failure</code>
++ error codes/health; master §9) — either inflating success or
+fabricating failures — to mislead fleet health and, in later phases,
+manipulate the rollout halt/advance logic that consumes these metrics
+(master §8, §9).</li>
+<li><strong>Impact:</strong> Wrong fleet-health picture; masked real
+failures or false alarms via <code>Herald</code> alerting (master §9);
+in 1.0.1+ this could <strong>drive the staged-rollout gate the wrong
+way</strong> (force-halt a good rollout, or suppress halt on a bad one)
+— master §8 notes metrics drive the halt logic.</li>
+<li><strong>Mitigation in our design:</strong> Telemetry is ingested
+over the <strong>same TLS 1.3 device↔︎server channel</strong> and from
+<strong>devices identified by KeyStore-bound tokens</strong> (master
+§6), so anonymous spoofing requires a valid device identity (cf. §4.7).
+The telemetry schema is a distinct, shared, codec-defined contract
+(<code>ota-telemetry-schema</code>; master §10), and ingest is an
+isolated unit (<code>TEL</code>) feeding OpenTelemetry/Prometheus via
+the <code>observability</code> brick (master §4, §9). Rollout halt logic
+uses <strong>success/error thresholds over a cohort</strong> rather than
+single events (master §8), diluting individual spoofed events.</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong> Telemetry
+events are <strong>not individually signed</strong> in the MVP, so a
+compromised/impersonated device (cf. §4.7) can submit plausible false
+events within its own identity. For 1.0.0 the rollout is
+<strong>all-at-once</strong> (master §5), so the telemetry→rollout-gate
+manipulation impact is <strong>deferred until staged rollout lands in
+1.0.1</strong> — at which point per-cohort thresholds plus
+device-identity binding must be re-evaluated as a control.
+Threshold-based aggregation limits, but does not eliminate, coordinated
+multi-device telemetry poisoning.</li>
+</ul>
+<h3 id="denial-of-update">4.11 Denial of update</h3>
+<ul>
+<li><strong>STRIDE:</strong> Denial of service.</li>
+<li><strong>Attack:</strong> The attacker prevents devices from
+receiving/applying legitimate updates — flooding the poll/download
+endpoints, exhausting artifact-store bandwidth, withholding responses at
+a malicious mirror, or wedging downloads (cf. §4.5, §4.6) — so a needed
+security fix never reaches the fleet.</li>
+<li><strong>Impact:</strong> Fleet stuck on vulnerable/buggy firmware;
+the operator loses the ability to ship a fix or a recall. (This is the
+inverse of the “safe upload / granular rollout” guarantees —
+availability of the update channel itself.)</li>
+<li><strong>Mitigation in our design:</strong> <strong>Poll interval is
+15 min + jitter, configurable</strong> (master §2 D7, §5) — jitter
+spreads load and avoids thundering-herd self-DoS, and the configurable
+interval lets operators back off under stress. <code>ratelimiter</code>,
+<code>middleware</code>, and <code>recovery</code> bricks protect the
+control-plane edge; <code>cache</code> is available; artifacts are
+served from MinIO/S3 over the <code>Storage</code> brick (master §10).
+<strong>Failed/withheld updates degrade safely:</strong> native A/B
+means a device that cannot complete an update simply <strong>keeps
+running its current good slot</strong> — a denial-of-update never bricks
+a device (master §1 zero-corruption;
+<code>android-avb-rollback.md</code> §9). Scalability “single board →
+millions” is an operator hard guarantee (master §1).</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong>
+Availability hardening in the MVP is generic (rate limiting, jitter,
+CDN-able object store) rather than OTA-specific; there is <strong>no
+signed, freshness-checked metadata to detect a malicious-mirror
+<em>freeze</em> attack</strong> (serving stale “no update” indefinitely)
+— ADR-0002 §3.1, §3.2 name <strong>indefinite-freeze</strong> and
+<strong>malicious-mirror denial</strong> among classes only TUF closes,
+<strong>deferred to 1.0.1+</strong>. The MVP can be silently frozen by a
+mirror/MITM that withholds updates without the device detecting
+staleness. Concrete rate-limit thresholds and capacity sizing are
+component-spec / deployment details — <strong>UNVERIFIED</strong> at
+this revision.</li>
+</ul>
+<h3 id="slot-corruption">4.12 Slot corruption</h3>
+<ul>
+<li><strong>STRIDE:</strong> Tampering, Denial of service.</li>
+<li><strong>Attack:</strong> The inactive slot is corrupted — by a
+malicious/partial payload, a bit-flip during write, storage faults, or
+an attacker tampering with on-device partition data — such that booting
+it would yield a broken or compromised system.</li>
+<li><strong>Impact:</strong> Without protection, a corrupt slot could
+brick the device or boot a tampered system — a direct hit on the
+operator “zero system corruption” hard guarantee (master §1).</li>
+<li><strong>Mitigation in our design:</strong> This is the
+strongest-covered threat because the MVP <strong>delegates the safety
+boundary to AOSP + the bootloader</strong> and the Helix agent only
+drives documented APIs (<code>android-avb-rollback.md</code> §10; master
+§6). The chain: (1) <strong>atomic A/B write to the <em>inactive</em>
+slot</strong> — the running slot is never touched (master §4); (2)
+<strong><code>update_verifier</code></strong> on first boot into the new
+slot reads the <strong>care map</strong> and forces dm-verity to verify
+every written block <strong>before the slot is committed</strong>
+(<code>android-avb-rollback.md</code> §2, §6); (3)
+<strong>dm-verity</strong> per-block SHA-256 hash-tree verification with
+a single AVB-authenticated root hash, returning <strong>EIO</strong> on
+mismatch, with <strong>FEC</strong> tolerating isolated bit-rot
+(<code>android-avb-rollback.md</code> §2, §4); (4) <strong>automatic
+rollback</strong>: a freshly-activated slot starts not-successful with a
+positive <code>slot-retry-count</code>; if it is never marked SUCCESSFUL
+the bootloader marks it unbootable and <strong>falls back to the prior
+known-good slot</strong> — this is <strong>bootloader-enforced, not
+OS-enforced</strong> (<code>android-avb-rollback.md</code> §2, §7).
+Helix <strong>MUST NOT</strong> flip slot flags, write rollback indexes,
+regenerate/strip vbmeta, disable verity, or call
+<code>markBootSuccessful</code> itself
+(<code>android-avb-rollback.md</code> §10). The device path is validated
+by an emulated A/B apply plus a real Orange Pi 5 Max plan including a
+<strong>corrupt-slot → confirm A/B fallback</strong> test (master
+§13).</li>
+<li><strong>Residual risk:</strong> <strong>Low — conditional on board
+conformance.</strong> When the chain is intact, a corrupt slot cannot
+brick the device or boot tampered code: it fails verification and the
+bootloader falls back. The residual is the <strong>UNVERIFIED board
+reality</strong>: whether the RK3588 / Orange Pi 5 Max build actually
+ships a conformant <code>boot_control</code> HAL + <strong>locked
+AVB</strong>, the exact <code>slot-retry-count</code> default, the
+rollback-index storage backend, and the Android 15
+<code>IBootControl</code> AIDL surface are all carried UNVERIFIED
+(<code>android-avb-rollback.md</code> §Issues, §12; ADR-0002 §8 item 8).
+<strong>If AVB is not locked on the shipped board, this entire residual
+claim does not hold</strong> and must be re-rated. Closing the
+board-conformance items (Continuation §13 of the AVB note) is a
+prerequisite for treating this residual as firm.</li>
+</ul>
+<h3 id="operational-rollout-recall-endpoint-threats">4.13 Operational /
+rollout / recall endpoint threats</h3>
+<p>This subsection models the operational, staged-rollout, and recall
+endpoints implemented this session under
+<code>server/internal/api</code>, traced to the concrete per-route RBAC
+wired in <code>server.go</code>’s protected group (every protected route
+runs <code>authMiddleware()</code> → <code>requireRole(...)</code> →
+handler → <code>auditMiddleware()</code>, in that order). Unlike
+§4.1–§4.12 (which trace to the locked design / ADRs), the mitigations
+here are read directly from the shipped Go handlers; where a claim
+depends on something not present in the read code (e.g. DB-level grants,
+the actual N-1 re-deploy path), it is marked <strong>UNVERIFIED</strong>
+per §11.4.6.</p>
+<p><strong>Verified RBAC, per endpoint (from <code>server.go</code>
+lines 125–167):</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + route</th>
+<th><code>requireRole(...)</code></th>
+<th>Handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /audit</code></td>
+<td><strong>admin only</strong></td>
+<td><code>handleListAudit</code></td>
+</tr>
+<tr>
+<td><code>GET /devices/:deviceId/telemetry</code></td>
+<td>viewer, operator, admin, <strong>device</strong></td>
+<td><code>handleDeviceTelemetry</code></td>
+</tr>
+<tr>
+<td><code>GET /telemetry/overview</code></td>
+<td>viewer, operator, admin</td>
+<td><code>handleTelemetryOverview</code></td>
+</tr>
+<tr>
+<td><code>POST /groups</code></td>
+<td>operator, admin</td>
+<td><code>handleCreateGroup</code></td>
+</tr>
+<tr>
+<td><code>GET /groups</code>, <code>GET /groups/:groupId</code></td>
+<td>viewer, operator, admin</td>
+<td><code>handleListGroups</code> / <code>handleGetGroup</code></td>
+</tr>
+<tr>
+<td><code>PATCH /groups/:groupId</code></td>
+<td>operator, admin</td>
+<td><code>handleUpdateGroup</code></td>
+</tr>
+<tr>
+<td><code>DELETE /groups/:groupId</code></td>
+<td><strong>admin only</strong></td>
+<td><code>handleDeleteGroup</code></td>
+</tr>
+<tr>
+<td><code>GET /groups/:groupId/members</code></td>
+<td>viewer, operator, admin</td>
+<td><code>handleListGroupMembers</code></td>
+</tr>
+<tr>
+<td><code>POST /groups/:groupId/members</code></td>
+<td>operator, admin</td>
+<td><code>handleAddGroupMember</code></td>
+</tr>
+<tr>
+<td><code>DELETE /groups/:groupId/members/:deviceId</code></td>
+<td>operator, admin</td>
+<td><code>handleRemoveGroupMember</code></td>
+</tr>
+<tr>
+<td><code>POST /deployments/:deploymentId/rollout</code></td>
+<td>operator, admin</td>
+<td><code>handleCreateRollout</code></td>
+</tr>
+<tr>
+<td><code>GET /deployments/:deploymentId/rollout</code></td>
+<td>viewer, operator, admin</td>
+<td><code>handleGetRollout</code></td>
+</tr>
+<tr>
+<td><code>POST /deployments/:deploymentId/rollout/evaluate</code></td>
+<td>operator, admin</td>
+<td><code>handleEvaluateRollout</code></td>
+</tr>
+<tr>
+<td><code>POST /deployments/:deploymentId/recall</code></td>
+<td>operator, admin</td>
+<td><code>handleRecall</code></td>
+</tr>
+<tr>
+<td><code>GET /deployments/:deploymentId/rollbacks</code></td>
+<td>viewer, operator, admin</td>
+<td><code>handleListRollbacks</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>requireRole</code> (<code>middleware.go</code>) admits a
+request if the JWT carries <strong>any</strong> allowed role;
+<code>isPrivileged(claims)</code> is true for admin <strong>or</strong>
+operator <strong>or</strong> viewer (<code>handlers_device.go</code>),
+and the <code>device</code> role is never privileged. These are
+load-bearing for §4.13.2.</p>
+<h4
+id="audit-log-integrity-tampering-the-reads-not-audited-failed-mutations-not-audited-design-choice">4.13.1
+Audit-log integrity / tampering + the reads-not-audited /
+failed-mutations-not-audited design choice</h4>
+<ul>
+<li><strong>STRIDE:</strong> Repudiation, Tampering (and the
+<em>gap</em> is an Information-disclosure / accountability risk).</li>
+<li><strong>Attack:</strong> An operator/admin performs a sensitive
+action (publish, deploy, rollout-create, recall, group change) and later
+denies it; or an attacker who reaches the store attempts to alter/delete
+audit rows to erase their tracks; or an attacker exploits the <em>known
+design choice</em> that <strong>reads and failed mutations are not
+audited</strong> to probe the system (enumerate resources via GETs, or
+hammer mutations that fail authorization/validation) without leaving an
+audit trail.</li>
+<li><strong>Impact:</strong> Loss of operator accountability /
+non-repudiation; an erased or incomplete audit trail undermining
+incident forensics; reconnaissance (read access, brute-force,
+authorization probing) that is invisible in the audit log.</li>
+<li><strong>Mitigation in our design (as implemented):</strong>
+<ul>
+<li><strong>Append-only store.</strong> The
+<code>store.Repository</code> interface exposes only
+<code>AppendAudit</code> + <code>ListAudit</code> for audit (and
+<code>AppendRollback</code> + <code>ListRollbacks</code> for rollback) —
+<strong>there is no Update or Delete method for either log</strong>. The
+Postgres impl is INSERT-only (<code>AppendAudit</code> is a single
+<code>INSERT INTO helix_ota.audit_logs ...</code>;
+<code>postgres.go</code>) with a monotonic <code>seq</code> column
+driving <code>ORDER BY seq</code>; the in-memory impl is a
+<code>[]AuditEntry</code> slice documented “append-only”. So tampering
+via the application’s own data path is not possible — there is no code
+path that mutates or removes an audit row.</li>
+<li><strong>Correct middleware ordering.</strong>
+<code>auditMiddleware()</code> runs <strong>after</strong>
+<code>authMiddleware()</code> + <code>requireRole(...)</code> and
+<strong>after</strong> the handler (<code>c.Next()</code> first), then
+logs <strong>only</strong> when the method is mutating
+(<code>POST/PUT/PATCH/DELETE</code>) <strong>and</strong> the response
+status is 2xx. Because it runs after RBAC, an <strong>RBAC-rejected
+request is never audited</strong> (no log spam from denied probes), and
+the <strong>verified subject</strong> (<code>claims.Subject</code>) is
+available to attribute the action.</li>
+<li><strong>No id leakage into the action verb.</strong>
+<code>deriveAuditAction</code> uses the gin <strong>route
+template</strong> (<code>c.FullPath()</code>), not the raw path, and
+drops <code>:</code>/<code>*</code> path-param placeholders, so resource
+ids never end up in the free-text <code>action</code> string; the
+specific id is captured separately in the structured
+<code>resource_id</code> field via <code>auditResourceID</code>. This
+keeps the action vocabulary a stable SCREAMING_SNAKE_CASE set and avoids
+accidental disclosure of ids in an aggregate verb.</li>
+<li><strong>Read restricted.</strong> <code>GET /audit</code> is
+<strong>admin-only</strong> (<code>requireRole(RoleAdmin)</code>), so
+the trail itself is not readable by operator/viewer/device.</li>
+<li><strong>Best-effort, fail-open write.</strong> A failing audit sink
+does <strong>not</strong> fail the user’s already-successful request
+(<code>_ = s.repo.AppendAudit(...)</code>). This is a deliberate
+availability-over-completeness choice and is the integrity <em>gap</em>
+below.</li>
+</ul></li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong>
+<ul>
+<li><strong>The “reads not audited” choice is intentional and
+documented</strong> in the handler (<code>auditMiddleware</code> doc
+comment): reads (GET) and failed mutations are out of audit scope.
+Consequence: enumeration via GETs, and authorization-probing /
+brute-force via <em>failed</em> mutations, leave <strong>no audit
+trail</strong>. For a system whose primary audit purpose is operator
+accountability for state changes this is reasonable, but it means the
+audit log is <strong>not</strong> a security-event log and cannot be
+relied on for intrusion detection. Whether a separate security-event log
+(auth failures, RBAC denials, repeated 4xx) is warranted is an open
+decision (Continuation item 5).</li>
+<li><strong>The “failed mutations not audited” choice</strong> means a
+mutation that passes RBAC but fails in the handler
+(validation/conflict/500) is invisible — an attacker cannot see
+<em>attempted</em> privileged actions that errored out. Combined with
+the best-effort write, a successful action whose audit write
+<em>fails</em> is also silently unlogged.</li>
+<li><strong>Append-only is enforced at the repository-interface +
+SQL-statement level, not (in the read code) at the DB-grant
+level.</strong> <strong>UNVERIFIED:</strong> whether the deployment
+revokes UPDATE/DELETE on <code>helix_ota.audit_logs</code> /
+<code>rollback_history</code> from the application DB role. If the app
+role retains UPDATE/DELETE, a SQL-injection or compromised-credential
+path could still tamper rows despite the Go interface omitting those
+methods. This should close at the migration/grant level. (Cross-ref §4.8
+dashboard auth — a JWT-forging or RBAC-bypass attacker who reaches admin
+can read the trail but still cannot delete it through the app.)</li>
+</ul></li>
+</ul>
+<h4
+id="device-only-own-telemetry-authorization-idor-on-get-devicesidtelemetry">4.13.2
+Device-only-own-telemetry authorization (IDOR on GET
+/devices/{id}/telemetry)</h4>
+<ul>
+<li><strong>STRIDE:</strong> Information disclosure, Elevation of
+privilege.</li>
+<li><strong>Attack:</strong> A device (holding a
+<code>device</code>-role token bound to its own id) requests
+<code>GET /devices/{otherDeviceId}/telemetry</code> to read another
+device’s telemetry history — a classic <strong>IDOR</strong> (insecure
+direct object reference): the resource id is in the path and the route
+admits the <code>device</code> role, so RBAC alone (which only checks
+<em>role</em>, not <em>which</em> object) would let any device read any
+device’s telemetry.</li>
+<li><strong>Impact:</strong> Cross-device disclosure of telemetry
+(install/verify/success/failure events, error codes, versions) —
+fleet-member privacy leak and reconnaissance of other devices’ update
+state.</li>
+<li><strong>Mitigation in our design (as implemented):</strong>
+<code>handleDeviceTelemetry</code> performs an explicit
+<strong>object-level subject check after the role check</strong>: it
+loads <code>claims</code> and, if the caller is <strong>not</strong>
+privileged (<code>!isPrivileged(claims)</code> — i.e. it is a bare
+<code>device</code> token) <strong>and</strong> the token subject does
+not equal the path <code>deviceId</code>, it returns <strong>403
+Forbidden</strong> (“a device may read only its own telemetry”).
+Privileged callers (viewer/operator/admin) may read any device’s
+telemetry by design (fleet operators need cross-device visibility). This
+is the correct IDOR mitigation pattern: route-level RBAC gates the
+<em>role</em>, the handler gates the <em>object</em>. The identical
+pattern is used for <code>GET /devices/:deviceId/status</code>
+(<code>handlers_device.go:92</code>), so the control is consistent
+across the two device-scoped reads.</li>
+<li><strong>Residual risk:</strong> <strong>Low — for this endpoint,
+conditional on token integrity.</strong> The IDOR is closed for the
+<code>device</code> role by the subject check. The residual is upstream:
+the check trusts <code>claims.Subject</code>, so it is only as strong as
+the device-identity token (cf. §4.7 device impersonation — a
+stolen/forged device token lets the holder read <em>that device’s</em>
+telemetry, and the MVP does not commit to mTLS).
+<code>GET /telemetry/overview</code> returns only <strong>aggregate
+fleet counts by event type</strong> (no per-device rows) and is
+<strong>not</strong> offered to the <code>device</code> role (viewer+
+only), so it is not an IDOR surface. <strong>UNVERIFIED:</strong> that
+<code>claims.Subject</code> for a device token is exactly the registered
+<code>deviceId</code> (token minting binds subject=deviceId in
+<code>handlers_device.go</code>, but the production device-identity
+binding strength is the §4.7 UNVERIFIED KeyStore item).</li>
+</ul>
+<h4 id="device-group-membership-authorization">4.13.3 Device-group
+membership authorization</h4>
+<ul>
+<li><strong>STRIDE:</strong> Elevation of privilege, Tampering.</li>
+<li><strong>Attack:</strong> A low-privilege actor attempts to
+create/rename/delete device groups or add/remove group members — e.g. to
+construct a rollout cohort that includes or excludes specific devices,
+or to delete a group out from under an in-flight rollout.</li>
+<li><strong>Impact:</strong> Manipulation of the <em>targeting
+substrate</em> for rollouts (groups define cohorts); unauthorized
+reshaping of which devices receive an update, or denial by
+deleting/emptying a group. Group membership is a security-relevant input
+to the rollout/deploy decision.</li>
+<li><strong>Mitigation in our design (as implemented):</strong> Group
+<strong>writes are operator/admin only</strong>
+(<code>POST /groups</code>, <code>PATCH /groups/:groupId</code>,
+<code>POST/DELETE .../members</code> all
+<code>requireRole(RoleOperator, RoleAdmin)</code>); <strong>group
+deletion is admin-only</strong> (<code>DELETE /groups/:groupId</code> →
+<code>requireRole(RoleAdmin)</code>) — a deliberately tighter gate than
+member edits, reflecting that destroying a group is higher-blast-radius
+than adjusting membership. Reads (<code>GET /groups</code>,
+<code>GET /groups/:groupId</code>, <code>GET .../members</code>) are
+viewer+. The <code>device</code> role has <strong>no</strong> access to
+any group endpoint (not in any group route’s allow-list), so a device
+cannot enumerate or alter cohort structure. Every successful group
+mutation is <strong>audited</strong> (§4.13.1):
+<code>auditMiddleware</code> derives
+<code>GROUP_CREATE</code>/<code>GROUP_UPDATE</code>/<code>GROUP_DELETE</code>
+and, for the members sub-route, rewrites the resource to
+<code>group_member</code> with <code>GROUP_MEMBER_CREATE/DELETE</code>
+(<code>deriveAuditAction</code> special-cases the trailing
+<code>members</code> segment), so add/remove-member actions are
+attributable to the operator subject.</li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong>
+Authorization is <strong>role-coarse, not group-scoped</strong>: any
+operator can edit <strong>any</strong> group (there is no per-group
+ownership / ACL — the handlers take only <code>groupId</code> and the
+role, never an ownership check). In a multi-tenant or
+separation-of-duties deployment this is over-broad; for the single-fleet
+MVP it is acceptable. Member-add validates only that
+<code>device_id</code> is non-empty and that the group exists
+(<code>AddGroupMember</code> returns <code>ErrNotFound</code> for a
+missing group) — <strong>UNVERIFIED</strong> whether the added
+<code>device_id</code> must reference a registered device (the read
+handler does not enforce device existence), so a typo’d or non-existent
+device id can be added to a group; impact is low (it simply never
+matches a real device) but it pollutes cohort data.</li>
+</ul>
+<h4
+id="staged-rollout-abuse-create-evaluate-halt-wins-as-a-safety-control">4.13.4
+Staged-rollout abuse (create / evaluate; HALT-wins as a safety
+control)</h4>
+<ul>
+<li><strong>STRIDE:</strong> Denial of service, Tampering, Elevation of
+privilege.</li>
+<li><strong>Attack:</strong> An actor with rollout rights
+(operator/admin) — or an attacker who reaches those rights via §4.8 —
+creates a malicious/garbage rollout plan, or feeds a forged health
+verdict to <code>POST .../rollout/evaluate</code> to
+<strong>force-advance a bad rollout</strong> (suppress a halt) or
+<strong>force-halt a good one</strong> (DoS the update channel). Because
+<code>evaluate</code> accepts a client-supplied
+<code>RolloutVerdict</code> (<code>success_rate</code>,
+<code>error_rate</code>, <code>post_boot_health_failed</code>), the
+verdict is an attacker-influençable input to the gate.</li>
+<li><strong>Impact:</strong> A bad release advanced fleet-wide (chains
+into §4.1/§4.3 impact); or a good rollout stuck/halted (denial of
+update, §4.11); or wasted rollout state.</li>
+<li><strong>Mitigation in our design (as implemented):</strong>
+<ul>
+<li><strong>Authorization.</strong> Create + evaluate are
+<strong>operator/admin</strong>
+(<code>requireRole(RoleOperator, RoleAdmin)</code>); read is viewer+.
+The <code>device</code> role cannot create or evaluate a rollout. Both
+mutations are <strong>audited</strong> on 2xx (§4.13.1).</li>
+<li><strong>Plan validation in the brick.</strong>
+<code>handleCreateRollout</code> delegates to the
+<code>ota-rollout-engine</code> brick
+(<code>s.rollout.CreateAndStart</code>); the handler doc records the
+brick validates the phase plan (strictly-increasing percentages ending
+at 100, thresholds in [0,1]) and a plan violation maps to
+<strong>400</strong> — so a garbage plan is rejected at creation, not
+silently started.</li>
+<li><strong>Existence checks.</strong> <code>handleCreateRollout</code>
+first loads the deployment (404 if absent);
+<code>handleEvaluateRollout</code> maps <code>engine.ErrNotFound</code>
+to 404 — so rollouts cannot be created/driven for non-existent
+deployments.</li>
+<li><strong>HALT-wins as a safety control.</strong> The evaluate path
+returns the engine decision (advance / hold / halt / complete). The
+engine’s halt-on-breach is the <strong>fail-safe</strong> default: a
+verdict that breaches the error/health threshold halts the rollout
+rather than advancing. This is the safety-relevant property — the
+<em>only</em> way an attacker-forged verdict causes fleet-wide harm is
+by <strong>suppressing</strong> a halt (reporting a healthy verdict for
+an unhealthy cohort), not by injecting one; a forged <em>unhealthy</em>
+verdict can only halt (deny), which is the safe direction. (Cross-ref
+§4.10 telemetry spoofing — the verdict that <em>should</em> feed
+evaluate is telemetry-derived; in 1.0.1+ the evaluate input must be
+bound to aggregated, device-identity -gated telemetry rather than a free
+client body, or the gate is only as trustworthy as whoever can call
+evaluate.)</li>
+</ul></li>
+<li><strong>Residual risk:</strong> <strong>Moderate.</strong> The
+dominant residual is that <strong><code>evaluate</code> trusts a
+client-supplied verdict body</strong> — it is not, in the read code,
+computed server-side from stored telemetry. An operator (or §4.8
+attacker with operator rights) can therefore submit a fabricated healthy
+verdict to suppress a halt. HALT-wins bounds the <em>unhealthy</em>
+direction (forced halt = DoS only), but the <em>suppress-halt</em>
+direction is not mitigated at this layer and depends entirely on who can
+authenticate as operator/admin. <strong>UNVERIFIED:</strong> whether the
+brick or a future wiring computes the verdict from <code>repo</code>
+telemetry (§4.10) rather than the request body; and the exact
+halt-precedence semantics (“HALT-wins”) are asserted from the handler’s
+documented decision set, not from reading the brick’s evaluator —
+carried UNVERIFIED against the brick source.</li>
+</ul>
+<h4 id="recall-rollback-authorization-anti-downgrade-interplay">4.13.5
+Recall / rollback authorization + anti-downgrade interplay</h4>
+<ul>
+<li><strong>STRIDE:</strong> Tampering, Denial of service,
+Repudiation.</li>
+<li><strong>Attack:</strong> An actor with recall rights
+(operator/admin) — or a §4.8 attacker who reaches them — issues
+<code>POST /deployments/{id}/recall</code> to roll a deployment’s
+release back to a chosen <code>to_release_id</code>. The security
+tension is that a <strong>recall to N-1 is, by intent, a
+downgrade</strong> of the deployed release — the same <em>shape</em> of
+action that the <strong>anti-downgrade guarantee</strong> (server-side
+version monotonicity at upload + on-device AVB rollback-index, §4.3)
+exists to <em>prevent</em> when an attacker mounts it (§4.3
+rollback/downgrade attack). The model must distinguish “operator-gated
+legitimate recall” from “attacker downgrade”.</li>
+<li><strong>Impact:</strong> If recall could silently override
+anti-downgrade, an attacker who obtains operator rights would have a
+<em>sanctioned</em> path to push the fleet back to vulnerable firmware —
+collapsing §4.3’s protection. Conversely, if anti-downgrade is absolute,
+a legitimate emergency recall to a known-good N-1 may be blocked
+on-device.</li>
+<li><strong>Mitigation in our design (as implemented):</strong>
+<ul>
+<li><strong>Authorization + audit.</strong> Recall is
+<strong>operator/admin</strong>
+(<code>requireRole(RoleOperator, RoleAdmin)</code>); the device role
+cannot trigger a recall. The action is <strong>audited</strong> on 2xx
+(<code>DEPLOYMENT_*</code> verb via <code>auditMiddleware</code>), and
+additionally <code>handleRecall</code> records a dedicated
+<strong>append-only <code>rollback_history</code> row</strong>
+(<code>AppendRollback</code>, INSERT-only, kind=<code>rollback</code>,
+<code>from_release_id</code>=the deployment’s current release,
+<code>to_release_id</code>=requested, <code>triggered_by</code>=
+<code>claims.Subject</code>, optional <code>reason</code>). So a recall
+is non-repudiable and attributable on two independent append-only
+trails.</li>
+<li><strong>Validation gates.</strong> <code>handleRecall</code>
+requires the deployment to exist (404), <code>to_release_id</code>
+non-empty (400), the deployment to have a current release to roll back
+<em>from</em> (400), and the <strong>target release to exist</strong>
+(404) — so a recall cannot point at a non-existent release.</li>
+<li><strong>Recall is the audited control + record, not (yet) the
+re-deploy.</strong> The handler’s own doc is explicit: “The actual N-1
+re-deployment is the deployment engine’s job (tracked separately); this
+endpoint is the audited control + record.” If an active rollout exists
+it is intended to be marked rolled-back via an abort evaluation. So at
+this layer recall <strong>records intent</strong>; it does not itself
+bypass any device-side check.</li>
+<li><strong>The anti-downgrade invariant is bootloader-enforced
+on-device (§4.3 layer 2).</strong> The AVB rollback-index check is
+enforced by the bootloader, which the Helix agent and control plane
+cannot weaken. A recall to N-1 that shares the <em>same</em> rollback
+index as N would be permitted by the bootloader (rollback indexes bump
+only at security milestones); a recall to an N-1 with a <em>lower</em>
+rollback index would be <strong>rejected by the bootloader</strong>
+regardless of operator intent.</li>
+</ul></li>
+<li><strong>Residual risk:</strong> <strong>Moderate, and the
+recall-vs-anti-downgrade tension is explicitly an open
+decision.</strong>
+<ul>
+<li><strong>The interplay is currently a documented seam, not a resolved
+mechanism.</strong> Because the implemented <code>handleRecall</code>
+only records the rollback intent and defers the actual re-deploy to a
+separate (not-yet-read) deployment-engine path, <strong>how a recall to
+a lower-rollback-index N-1 actually reconciles with the bootloader’s
+anti-downgrade is UNVERIFIED.</strong> Two outcomes are possible and the
+code read does not decide between them: (a) the recall is honored at the
+server (record + re-deploy) but the device’s bootloader still
+<strong>refuses</strong> to boot an image below the stored rollback
+index — so the recall silently fails on-device for security-milestone
+downgrades; or (b) a future mechanism deliberately allows the downgrade
+(e.g. signing an N-1 image that carries an acceptable rollback index, or
+an operator-gated rollback-index exception). <strong>Per §11.4.6 this is
+not guessed</strong> — it is flagged for an operator/architecture
+decision (Continuation item 5).</li>
+<li><strong>Recall is operator-gated by design, which is the intended
+distinguisher</strong> from the §4.3 attacker downgrade: a §4.3 attacker
+without operator rights and without the signing key cannot forge a
+recall, and even an attacker <em>with</em> operator rights produces an
+attributable, append-only <code>rollback_history</code> + audit record.
+The recall path therefore does not <em>add</em> a new unauthenticated
+downgrade vector beyond §4.8 (whoever can authenticate as operator). The
+open risk is the <em>legitimate-but-abused</em> operator and the
+unresolved on-device reconciliation, not a new anonymous attack
+surface.</li>
+<li><strong>The literal label “G1” for the anti-downgrade guarantee is
+UNVERIFIED</strong> against the design corpus: the master design (§
+“Hard guarantees”, line ~121) and §4.3 here name it “version
+monotonicity” / “anti-downgrade”, not “G1”. The <em>mechanism</em> is
+verified; the <em>label</em> is not.</li>
+</ul></li>
+</ul>
+<h2 id="residual-risk-summary">5. Residual-risk summary</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Threat</th>
+<th>MVP residual</th>
+<th>Fully closed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1</td>
+<td>Forged / malicious artifact upload</td>
+<td>Low–moderate (key-dependent)</td>
+<td>dual-gate verify (MVP) + TUF targets/thresholds (1.0.1+)</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Signature / key compromise</td>
+<td><strong>High (accepted)</strong></td>
+<td>TUF thresholds + offline keys (1.0.1+)</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Rollback / downgrade</td>
+<td>Moderate</td>
+<td>AVB rollback-index (MVP, board-conditional) + TUF freshness
+(1.0.1+)</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Mix-and-match</td>
+<td>Moderate</td>
+<td>atomic payload + AVB (MVP) + TUF snapshot binding (1.0.1+)</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Endless-data</td>
+<td>Moderate</td>
+<td>length+hash verify-before-apply (MVP) + TUF authenticated length
+(1.0.1+)</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>MITM on poll / download</td>
+<td>Low (integrity) / moderate (confidentiality +
+fake-availability)</td>
+<td>TLS 1.3 + device re-verify (MVP); pinning/mTLS + signed metadata
+(1.0.1+)</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Device impersonation</td>
+<td>Moderate</td>
+<td>KeyStore-bound token (MVP); mTLS + Director per-device targeting
+(1.0.1+)</td>
+</tr>
+<tr>
+<td>4.8</td>
+<td>Dashboard auth bypass</td>
+<td>Moderate (impl-dependent)</td>
+<td>OAuth2/JWT/RBAC + audit (MVP); spec-level role matrix/MFA</td>
+</tr>
+<tr>
+<td>4.9</td>
+<td>Build-pipeline supply-chain</td>
+<td><strong>High (accepted)</strong></td>
+<td>TUF/Uptane compromise resilience + dual-repo (1.0.1+)</td>
+</tr>
+<tr>
+<td>4.10</td>
+<td>Telemetry spoofing</td>
+<td>Moderate</td>
+<td>TLS + device identity + threshold aggregation (MVP); per-cohort gate
+re-eval (1.0.1+)</td>
+</tr>
+<tr>
+<td>4.11</td>
+<td>Denial of update</td>
+<td>Moderate</td>
+<td>rate-limit/jitter + safe A/B degrade (MVP); TUF
+anti-freeze/anti-mirror (1.0.1+)</td>
+</tr>
+<tr>
+<td>4.12</td>
+<td>Slot corruption</td>
+<td>Low (board-conditional)</td>
+<td>AVB/dm-verity/update_verifier/auto-rollback (MVP, AOSP-owned)</td>
+</tr>
+<tr>
+<td>4.13.1</td>
+<td>Audit-log integrity + reads/failed-mutations not audited</td>
+<td>Moderate</td>
+<td>append-only store + admin-only read + ordered middleware (MVP);
+DB-grant revoke + separate security-event log (open)</td>
+</tr>
+<tr>
+<td>4.13.2</td>
+<td>Telemetry IDOR (own-device-only)</td>
+<td>Low (token-conditional)</td>
+<td>handler subject check + role gate (MVP); hardened device identity /
+mTLS (§4.7, 1.0.1+)</td>
+</tr>
+<tr>
+<td>4.13.3</td>
+<td>Device-group membership authorization</td>
+<td>Moderate</td>
+<td>operator/admin writes + admin-only delete + audit (MVP); per-group
+ACL / scoping (future)</td>
+</tr>
+<tr>
+<td>4.13.4</td>
+<td>Staged-rollout abuse</td>
+<td>Moderate</td>
+<td>operator/admin + brick plan-validation + HALT-wins fail-safe (MVP);
+server-computed verdict from telemetry (1.0.1+, §4.10)</td>
+</tr>
+<tr>
+<td>4.13.5</td>
+<td>Recall vs anti-downgrade tension</td>
+<td>Moderate (open decision)</td>
+<td>operator-gated + dual append-only trails + bootloader rollback-index
+(MVP); on-device recall reconciliation = operator decision</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Headline.</strong> The two <strong>High, explicitly
+accepted</strong> residuals — <strong>signing-key compromise
+(4.2)</strong> and <strong>build-pipeline supply-chain (4.9)</strong> —
+are the same single-signing-key exposure that ADR-0002 §5.2 documents
+and that motivates the phased TUF/Uptane adoption. The on-device
+<strong>zero-corruption</strong> posture (4.12, and the safe-degrade in
+4.3/4.11) is <strong>strong but conditional on the board actually
+shipping locked AVB</strong> — an UNVERIFIED item that must close.</p>
+<h2 id="compliance-notes-helixconstitution">6. Compliance notes
+(HelixConstitution)</h2>
+<blockquote>
+<p>Clause numbers/labels follow the corpus convention; the authoritative
+HelixConstitution text is not present in this repository, so clause
+wording is <strong>UNVERIFIED</strong> against the source (consistent
+with <code>documentation_standards.md</code> §8 and ADR-0002 §7).</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>Label (per corpus)</th>
+<th>How this document complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.61</td>
+<td>Table of contents mandatory</td>
+<td>Metadata table first, ToC immediately after (this doc top).</td>
+</tr>
+<tr>
+<td>§7.1</td>
+<td>No-bluff / evidence-only</td>
+<td>Every mitigation cites a master/ADR/AVB-note section; no capability
+is claimed that the MVP does not ship.</td>
+</tr>
+<tr>
+<td>§11.4.6</td>
+<td>No-guessing</td>
+<td>Unconfirmed facts (board AVB lock, rollback-index backend, AIDL
+surface, RBAC details, brick fit) carried as
+<strong>UNVERIFIED</strong>, never invented.</td>
+</tr>
+<tr>
+<td>§11.4.123</td>
+<td>Rock-solid-proof</td>
+<td><strong>Unmappable-until-Constitution-present</strong> (per ADR-0002
+§7): the clause text is not in-repo, so a definitive mapping is out of
+scope; provisionally, every High/board-conditional residual is tied to a
+named, scheduled closure (1.0.1+ or AVB-note Continuation) rather than
+asserted as resolved. <strong>UNVERIFIED</strong> against clause
+text.</td>
+</tr>
+<tr>
+<td>§11.4.74</td>
+<td>Catalogue-first reuse</td>
+<td>Only verified catalogue submodules referenced (<code>auth</code>,
+<code>security</code>, <code>database</code>, <code>Storage</code>,
+<code>observability</code>, <code>eventbus</code>,
+<code>ratelimiter</code>, <code>middleware</code>, <code>http3</code>,
+<code>recovery</code>, <code>Herald</code>, <code>config</code>,
+<code>cache</code>; <code>Auth-KMP</code>, <code>Security-KMP</code>,
+<code>Storage-KMP</code>, <code>Config-KMP</code>; dashboard React
+bricks); none invented.</td>
+</tr>
+<tr>
+<td>§11.4.28</td>
+<td>Decoupling</td>
+<td>Threats mapped to the decoupled units/boundaries (validator, rollout
+engine, protocol, update-engine bridge, telemetry schema) per master
+§4/§10.</td>
+</tr>
+<tr>
+<td>§1 / §1.1</td>
+<td>Four-layer testing + mutation</td>
+<td>Safety-critical signing-verify/apply/rollout-gate paths target ≥90%
+under the four-layer + mutation regime (master §13), referenced in §4.1,
+§4.12.</td>
+</tr>
+<tr>
+<td>§11.4.125</td>
+<td>Code-review gate</td>
+<td>This document is subject to the mandatory adversarial code-review
+subagent before acceptance (master §14).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-unverified-items">7. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>Board AVB conformance</strong> — whether the RK3588 / Orange
+Pi 5 Max build ships a conformant <code>boot_control</code> HAL +
+<strong>locked AVB</strong>; the <code>slot-retry-count</code> default;
+the rollback-index storage backend (RPMB vs persistent partition vs
+TEE); the Android 15 <code>IBootControl</code> AIDL surface.
+<strong>UNVERIFIED.</strong> Gates the firmness of §4.3 and §4.12
+residuals. (<code>android-avb-rollback.md</code> §Issues, §12; ADR-0002
+§8 item 8.)</li>
+<li><strong>Catalogue-brick fit for the signing/verify seam</strong> —
+whether <code>security</code> / <code>Security-KMP</code> host the
+verify (and future TUF-role) primitives without bespoke crypto.
+<strong>UNVERIFIED.</strong> (ADR-0002 §8 item 9.) Affects §4.1,
+§4.2.</li>
+<li><strong>Dashboard authorization specifics</strong> — concrete RBAC
+role matrix, token lifetime/refresh, per-endpoint authorization, audit
+coverage of all state-changing calls, MFA. <strong>UNVERIFIED</strong>
+(component-spec level). Affects §4.8.</li>
+<li><strong>Resource-bound specifics</strong> — agent download-buffer /
+decompression caps, intake size caps, and control-plane rate-limit
+thresholds / capacity sizing. <strong>UNVERIFIED</strong>
+(component-spec / deployment level). Affects §4.5, §4.11.</li>
+<li><strong>mTLS / certificate pinning decision</strong> — recorded only
+as “evaluated” in the MVP (master §6); not committed. Affects §4.6,
+§4.7.</li>
+<li><strong>HelixConstitution clause text</strong> — not in-repo; all
+§11.4.x citations <strong>UNVERIFIED</strong> against the source
+(documentation_standards §8; ADR-0002 §7).</li>
+<li><strong>Deferred TUF/Uptane controls</strong> — rollback-freshness,
+snapshot/target binding, authenticated length, anti-freeze/anti-mirror,
+threshold + offline-key compromise resilience, and per-device Director
+targeting are <strong>scheduled for 1.0.1+</strong> (ADR-0002 §4.3) and
+are <strong>not</strong> MVP mitigations; this document treats them as
+future closures, not current controls.</li>
+<li><strong>Audit-log DB-grant enforcement</strong> — append-only is
+enforced at the <code>store.Repository</code> interface (no
+Update/Delete) + INSERT-only SQL; <strong>UNVERIFIED</strong> whether
+the deployment revokes UPDATE/DELETE on
+<code>helix_ota.audit_logs</code> / <code>rollback_history</code> from
+the app DB role. Affects §4.13.1.</li>
+<li><strong>Security-event vs audit log</strong> — reads and failed
+mutations are intentionally <strong>not</strong> audited (handler doc);
+whether a separate security-event log (auth failures, RBAC denials,
+repeated 4xx) is warranted is an open decision. Affects §4.13.1.</li>
+<li><strong>Rollout <code>evaluate</code> verdict source</strong> —
+<code>POST .../rollout/evaluate</code> accepts a client-supplied
+<code>RolloutVerdict</code>; <strong>UNVERIFIED</strong> whether the
+verdict is (or will be) computed server-side from stored telemetry
+instead of trusting the request body, and the exact HALT-precedence
+semantics in the <code>ota-rollout-engine</code> brick (asserted from
+handler doc, not read from brick source). Affects §4.13.4 (cross-ref
+§4.10).</li>
+<li><strong>Recall ↔︎ anti-downgrade reconciliation</strong> —
+<code>handleRecall</code> records intent + an append-only
+<code>rollback_history</code> row but defers the actual N-1 re-deploy to
+a separate deployment-engine path not read here; <strong>how a recall to
+a lower-rollback-index N-1 reconciles with the bootloader-enforced AVB
+anti-downgrade (§4.3) is UNVERIFIED and needs an operator/architecture
+decision</strong> (honor-but-device-refuses vs deliberate operator-gated
+downgrade mechanism). Affects §4.13.5. <strong>RESOLVED (2026-06-08,
+operator): honor AVB — recall is FORWARD-FIX ONLY.</strong>
+<code>handleRecall</code> now supersedes the current deployment +
+creates a NEW active deployment of the target release; the update-check
+anti-downgrade invariant ensures no device is offered a version ≤ its
+current, so the bootloader-enforced AVB anti-rollback is honored by
+construction. A true sub-rollback-index downgrade is NOT offered. No
+longer an open decision.</li>
+<li><strong>“G1” label</strong> — the prompt-supplied label “G1
+anti-downgrade invariant” is <strong>UNVERIFIED</strong> against the
+design corpus, which names the guarantee “version monotonicity” /
+“anti-downgrade”; the mechanism is verified, the literal label is not.
+Affects §4.13.5.</li>
+<li><strong>Group member device-existence + per-group scoping</strong> —
+member-add validates non-empty <code>device_id</code> + group existence
+but <strong>UNVERIFIED</strong> whether it requires a
+<em>registered</em> device; authorization is role-coarse (any operator
+edits any group), no per-group ACL. Affects §4.13.3.</li>
+</ol>
+<h2 id="sources">8. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>:</p>
+<ul>
+<li><a
+href="./2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— §1 (vision, hard guarantees, non-goals), §2 (locked decisions), §3
+(stack), §4 (architecture, decoupling), §5 (MVP definition), §6
+(security &amp; trust model), §7 (data model), §8 (rollout engine), §9
+(telemetry), §10 (submodule reuse + new repos), §13 (testing), §14
+(execution / code-review).</li>
+<li><a
+href="../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— §1 (why plain signing is not enough), §2 (decision drivers), §3.1–§3.2
+(plain-signing gap; attack classes TUF closes), §4.1 (MVP trust model),
+§4.2 (MVP-forward signer interface), §4.3 (1.0.1+ sequencing), §5.1–§5.2
+(consequences), §7 (compliance notes), §8 (open/UNVERIFIED).</li>
+<li><a
+href="../research/stacks/android-avb-rollback.md"><code>research/stacks/android-avb-rollback.md</code></a>
+— §2 (executive summary), §3 (AVB chain of trust), §4 (dm-verity + FEC),
+§5 (<code>boot_control</code> HAL), §6 (<code>update_verifier</code>),
+§7 (automatic rollback), §8 (rollback-index / anti-downgrade), §9
+(zero-corruption guarantee), §10 (agent MUST/MUST-NOT), §12
+(open/UNVERIFIED), Issues + Continuation (board specifics).</li>
+<li><a
+href="./documentation_standards.md"><code>00-master/documentation_standards.md</code></a>
+— §2 (metadata table), §3 (ToC requirement, §11.4.61), §8
+(anti-bluff/UNVERIFIED), §9 (canonical submodule catalogue).</li>
+</ul>
+<p><strong>§4.13 — implemented handlers (read directly, not via design
+docs).</strong> All paths relative to the repository root:</p>
+<ul>
+<li><code>server/internal/api/server.go</code> — protected route group +
+per-route <code>requireRole(...)</code> RBAC (lines 122–168), middleware
+ordering <code>authMiddleware()</code> → <code>auditMiddleware()</code>,
+public auth endpoints. Source of the §4.13 RBAC table.</li>
+<li><code>server/internal/api/handlers_audit.go</code> —
+<code>auditMiddleware</code> (runs after handler + RBAC; mutating
+<ul>
+<li>2xx only; reads/failed mutations not audited; best-effort write),
+<code>deriveAuditAction</code> (route-template not raw path;
+<code>members</code> → <code>group_member</code>),
+<code>auditResourceID</code>, <code>handleListAudit</code> (admin-only).
+§4.13.1.</li>
+</ul></li>
+<li><code>server/internal/api/handlers_telemetry.go</code> —
+<code>handleDeviceTelemetry</code> object-level subject check
+(<code>!isPrivileged(claims) &amp;&amp; claims.Subject != deviceID</code>
+→ 403), <code>handleTelemetryOverview</code> (aggregate-only).
+§4.13.2.</li>
+<li><code>server/internal/api/handlers_group.go</code> — group + member
+CRUD handlers. §4.13.3.</li>
+<li><code>server/internal/api/handlers_rollout.go</code> —
+<code>handleCreateRollout</code> (brick plan-validation → 400),
+<code>handleGetRollout</code>, <code>handleEvaluateRollout</code>
+(client-supplied <code>RolloutVerdict</code>; decision set
+advance/hold/halt/complete). §4.13.4.</li>
+<li><code>server/internal/api/handlers_recall.go</code> —
+<code>handleRecall</code> (records intent + append-only
+<code>rollback_history</code>; defers N-1 re-deploy),
+<code>handleListRollbacks</code>. §4.13.5.</li>
+<li><code>server/internal/api/handlers_device.go</code> —
+<code>isPrivileged</code> (admin OR operator OR viewer; device never
+privileged), device-status subject check. §4.13.2.</li>
+<li><code>server/internal/api/middleware.go</code> —
+<code>requireRole</code> (any-allowed-role), <code>claimsFrom</code>.
+§4.13 RBAC.</li>
+<li><code>server/internal/api/token.go</code> — role constants
+(<code>admin</code>/<code>operator</code>/<code>viewer</code>/<code>device</code>).
+§4.13 RBAC.</li>
+<li><code>server/internal/store/store.go</code> —
+<code>Repository</code> interface exposing only
+<code>AppendAudit</code>/<code>ListAudit</code>
+<ul>
+<li><code>AppendRollback</code>/<code>ListRollbacks</code> (no
+Update/Delete → append-only). §4.13.1, §4.13.5.</li>
+</ul></li>
+<li><code>server/internal/store/postgres.go</code> +
+<code>memory.go</code> — INSERT-only audit/rollback impls with monotonic
+<code>seq</code> ordering. §4.13.1, §4.13.5.</li>
+</ul>
+</body>
+</html>
