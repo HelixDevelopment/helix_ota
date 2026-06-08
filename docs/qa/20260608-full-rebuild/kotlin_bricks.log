@@ -1,0 +1,162 @@
+================================================================================
+Helix OTA — Kotlin bricks :core JVM unit-test verification
+================================================================================
+Run date    : 2026-06-08
+Host        : darwin 24.5.0 (macOS 15.5, aarch64)
+Toolchain   : Gradle 9.5.0 (system `gradle`; no ./gradlew wrapper present in either
+              submodule); Kotlin 2.3.20 (Gradle-bundled). Launcher JVM 25.0.2.
+              core modules target jvmToolchain(17); Homebrew openjdk@17 17.0.19
+              made discoverable via each submodule's gradle.properties
+              org.gradle.java.installations.paths.
+Scope       : :core JVM unit tests only (pure Kotlin/JVM, no Android plugin,
+              no device/emulator). :android modules are OUT OF SCOPE (AGP 8.5.2 +
+              com.android.library; per each brick's CLAUDE.md/BUILD_STATUS.md, AGP
+              on Gradle 9.5 is not supported here) — recorded as not-run-without-SDK.
+Source modified: NO. Committed: NO. (build/ dirs are gitignored, left in place.)
+
+================================================================================
+SUMMARY
+================================================================================
+ota-update-engine-bridge :core:test  -> BUILD SUCCESSFUL | 27/27 passed | 0 failures | 0 skipped | 100%
+ota-android-agent        :core:test  -> BUILD SUCCESSFUL | 47/47 passed | 0 failures | 0 skipped | 100%
+:android (both bricks)               -> NOT RUN (out of scope; AGP-on-Gradle-9.5 unsupported / Android library module)
+
+================================================================================
+BRICK 1 — ota-update-engine-bridge
+  cmd: gradle :core:test --console=plain --no-daemon
+  cwd: /Volumes/T7/Projects/helix_ota/submodules/ota-update-engine-bridge
+================================================================================
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:processResources NO-SOURCE
+> Task :core:processTestResources NO-SOURCE
+> Task :core:compileKotlin
+> Task :core:compileJava NO-SOURCE
+> Task :core:classes UP-TO-DATE
+> Task :core:jar
+> Task :core:compileTestKotlin
+> Task :core:compileTestJava NO-SOURCE
+> Task :core:testClasses UP-TO-DATE
+
+> Task :core:test
+
+ApplyRequestTest > https_url_is_streaming_not_local() PASSED
+ApplyRequestTest > rejects_non_positive_size() PASSED
+ApplyRequestTest > rejects_blank_url() PASSED
+ApplyRequestTest > local_file_url_is_local_not_streaming() PASSED
+ApplyRequestTest > rejects_negative_offset() PASSED
+ApplyRequestTest > headersArray_delegates_to_payload_properties_in_order() PASSED
+ApplyRequestTest > offset_and_size_describe_payload_entry() PASSED
+EngineErrorTest > maps_every_known_error_code() PASSED
+EngineErrorTest > unknown_codes_outside_known_set_map_to_unknown() PASSED
+EngineErrorTest > constants_match_spec_table_section_5() PASSED
+EngineErrorTest > unverified_13_to_50_range_maps_to_unknown() PASSED
+EngineErrorTest > isSuccess_only_true_for_success() PASSED
+EngineStatusTest > negative_and_large_unknown_codes_map_to_unknown() PASSED
+EngineStatusTest > maps_every_known_status_code_0_through_9() PASSED
+EngineStatusTest > constants_match_spec_table_section_4() PASSED
+EngineStatusTest > isNeedReboot_only_true_for_status_6() PASSED
+EngineStatusTest > unknown_code_is_preserved_not_dropped() PASSED
+PayloadPropertiesTest > parse_rejects_missing_key() PASSED
+PayloadPropertiesTest > constructor_rejects_negative_sizes() PASSED
+PayloadPropertiesTest > parse_rejects_malformed_line_without_equals() PASSED
+PayloadPropertiesTest > parse_then_headersArray_round_trips() PASSED
+PayloadPropertiesTest > parse_rejects_non_numeric_size() PASSED
+PayloadPropertiesTest > headers_keys_appear_in_canonical_position_order() PASSED
+PayloadPropertiesTest > parse_rejects_duplicate_key() PASSED
+PayloadPropertiesTest > headersArray_has_exact_order_FILE_HASH_FILE_SIZE_METADATA_HASH_METADATA_SIZE() PASSED
+PayloadPropertiesTest > parse_rejects_unexpected_key() PASSED
+PayloadPropertiesTest > parse_tolerates_reordered_lines_blank_lines_and_whitespace() PASSED
+
+BUILD SUCCESSFUL in 25s
+4 actionable tasks: 4 executed
+
+HTML report (core/build/reports/tests/test/index.html) counters:
+  tests=27  failures=0  skipped=0  duration=0.893s  successful=100%
+
+================================================================================
+BRICK 2 — ota-android-agent
+  cmd: gradle :core:test --rerun-tasks --console=plain --no-daemon
+       (first run was UP-TO-DATE from cache; --rerun-tasks forced a real execution)
+  cwd: /Volumes/T7/Projects/helix_ota/submodules/ota-android-agent
+  note: harmless warning "Directory '/opt/homebrew/Cellar/openjdk@21/...' ... does
+        not exist" — an extra toolchain path hint in gradle.properties that is absent;
+        Gradle fell back to the present openjdk@17 and the build succeeded.
+================================================================================
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:processResources NO-SOURCE
+> Task :core:processTestResources NO-SOURCE
+> Task :core:compileKotlin
+> Task :core:compileJava NO-SOURCE
+> Task :core:classes UP-TO-DATE
+> Task :core:jar
+> Task :core:compileTestKotlin
+> Task :core:compileTestJava NO-SOURCE
+> Task :core:testClasses UP-TO-DATE
+
+> Task :core:test
+
+DeltaApplyDecisionTest > fullPayload_whenDeltaMalformed_nonPositiveSize() PASSED
+DeltaApplyDecisionTest > fullPayload_whenDeviceStateBlank() PASSED
+DeltaApplyDecisionTest > mutationImmunity_baseMatchGateIsLoadBearing() PASSED
+DeltaApplyDecisionTest > baseHashComparison_isCaseInsensitiveAndTrimmed() PASSED
+DeltaApplyDecisionTest > useDelta_whenBaseVersionAndHashMatch() PASSED
+DeltaApplyDecisionTest > fullPayload_whenDeltaMalformed_blankUrl() PASSED
+DeltaApplyDecisionTest > fullPayload_whenBaseVersionMismatch() PASSED
+DeltaApplyDecisionTest > fullPayload_whenDeltaMalformed_blankBaseFields() PASSED
+DeltaApplyDecisionTest > fullPayload_whenBaseHashMismatch() PASSED
+DeltaApplyDecisionTest > ordering_malformedTakesPrecedenceOverMismatch() PASSED
+DeltaApplyDecisionTest > fullPayload_whenNoDeltaOffered() PASSED
+JitterTest > seededRng_isDeterministic() PASSED
+JitterTest > zeroBase_stillBoundedByJitter() PASSED
+JitterTest > delayWithinBounds_overManySeededDraws() PASSED
+JitterTest > negativeJitter_throws() PASSED
+JitterTest > negativeBase_throws() PASSED
+JitterTest > zeroJitter_returnsExactlyBase() PASSED
+PollStateMachineTest > illegalTransition_onApplyStartFromDownloaded_throws() PASSED
+PollStateMachineTest > verifyReject_terminatesHardFailure_neverReachesApply() PASSED
+PollStateMachineTest > terminalFlags() PASSED
+PollStateMachineTest > illegalTransition_onVerifyFromIdle_throws() PASSED
+PollStateMachineTest > poll_transientError_terminatesRetry() PASSED
+PollStateMachineTest > downloadFailure_terminatesRetry() PASSED
+PollStateMachineTest > fullHappyPath_pollToApplySuccess() PASSED
+PollStateMachineTest > applyThrow_terminatesRetry() PASSED
+PollStateMachineTest > illegalTransition_onDownloadFromIdle_throws() PASSED
+PollStateMachineTest > poll_noUpdate_terminatesSuccess() PASSED
+CodecRoundTripTest > payloadProperties_asHeaderArray_matchesApplyPayloadContract() PASSED
+CodecRoundTripTest > updateState_hasSevenValues_includingIdle() PASSED
+CodecRoundTripTest > telemetryReport_roundTrip_allSixEventTypes() PASSED
+CodecRoundTripTest > telemetryAck_roundTrip() PASSED
+CodecRoundTripTest > updateAvailable_parsesSpecExampleShape() PASSED
+CodecRoundTripTest > telemetryReport_roundTrip_nullHealthAndDeployment() PASSED
+CodecRoundTripTest > json_escapesAndUnescapesSpecialChars() PASSED
+CodecRoundTripTest > updateAvailable_roundTrip() PASSED
+CodecRoundTripTest > updateCheckRequest_roundTrip_withNullVersion() PASSED
+CodecRoundTripTest > telemetryEvent_hasExactlySixValues_noIdle() PASSED
+CodecRoundTripTest > fromWire_unknownValue_throws() PASSED
+VerifyBeforeApplyTest > apply_whenHashMatchesAndSignatureValid() PASSED
+VerifyBeforeApplyTest > reject_malformed_whenActualBlank() PASSED
+VerifyBeforeApplyTest > reject_signatureInvalid_evenWhenHashMatches() PASSED
+VerifyBeforeApplyTest > mutationImmunity_invertedHashCompareWouldFlipDecision() PASSED
+VerifyBeforeApplyTest > ordering_malformedTakesPrecedenceOverHashAndSignature() PASSED
+VerifyBeforeApplyTest > ordering_hashMismatchTakesPrecedenceOverSignature() PASSED
+VerifyBeforeApplyTest > hashComparison_isCaseInsensitiveAndTrimmed() PASSED
+VerifyBeforeApplyTest > reject_malformed_whenExpectedEmpty() PASSED
+VerifyBeforeApplyTest > reject_hashMismatch() PASSED
+
+BUILD SUCCESSFUL in 15s
+4 actionable tasks: 4 executed
+
+HTML report (core/build/reports/tests/test/index.html) counters:
+  tests=47  failures=0  skipped=0  duration=0.858s  successful=100%
+
+================================================================================
+:android MODULES — NOT RUN (honest, not a failure)
+================================================================================
+Both bricks declare an :android module (com.android.library / AGP 8.5.2 +
+kotlin.android). Per each brick's CLAUDE.md + BUILD_STATUS.md, AGP on Gradle 9.5
+is not supported in this environment (Kotlin MPP does not build on Gradle 9.5).
+The :core module is the fully-tested deliverable and was the in-scope target.
+The :android build was deliberately NOT attempted here (out of scope). An
+Android SDK IS installed at ~/Library/Android/sdk, but the blocker is the
+AGP-on-Gradle-9.5 toolchain incompatibility documented by the project, not a
+missing SDK. Status: not-run.
