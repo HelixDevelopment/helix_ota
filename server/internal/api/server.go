@@ -12,6 +12,7 @@ import (
 
 	"github.com/HelixDevelopment/helix_ota/server/internal/config"
 	"github.com/HelixDevelopment/helix_ota/server/internal/health"
+	"github.com/HelixDevelopment/helix_ota/server/internal/rollout"
 	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
 
@@ -33,6 +34,7 @@ type Server struct {
 	pubKey  ed25519.PublicKey
 	target  otavalidator.TargetPolicy
 	refresh *refreshStore
+	rollout *rollout.Service
 	nowFn   func() time.Time
 	newIDFn func() string
 }
@@ -84,6 +86,7 @@ func NewServer(opts Options) *Server {
 		pubKey:  pubKey,
 		target:  policy,
 		refresh: newRefreshStore(),
+		rollout: rollout.NewService(now),
 		nowFn:   now,
 		newIDFn: newID,
 	}
@@ -131,6 +134,12 @@ func (s *Server) Router() *gin.Engine {
 
 		auth.POST("/deployments", requireRole(RoleOperator, RoleAdmin), s.handleCreateDeployment)
 		auth.GET("/deployments/:deploymentId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetDeployment)
+
+		// Staged rollout (1.0.1-staged-rollout/rollout_engine.md §8) — reuses the
+		// ota-rollout-engine brick. Create/start + evaluate are operator/admin.
+		auth.POST("/deployments/:deploymentId/rollout", requireRole(RoleOperator, RoleAdmin), s.handleCreateRollout)
+		auth.GET("/deployments/:deploymentId/rollout", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRollout)
+		auth.POST("/deployments/:deploymentId/rollout/evaluate", requireRole(RoleOperator, RoleAdmin), s.handleEvaluateRollout)
 
 		auth.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
 		auth.POST("/client/telemetry", requireRole(RoleDevice), s.handleClientTelemetry)
