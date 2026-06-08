@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>schema</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-1.0.0-mvp-database-schema">Helix OTA — 1.0.0-MVP
+Database Schema</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Canonical 1.0.0-MVP relational data model for the Helix OTA Go
+control plane: the <code>helix_ota</code> PostgreSQL schema,
+entity-relationship description, table-by-table rationale, constraints,
+indexes, and the four-layer testing plan. Backed by real, executed
+migration DDL
+(<code>migrations/001_initial_schema.{up,down}.sql</code>).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Relative telemetry-vs-rollout volume is UNVERIFIED (ADR-0003 §3.2);
+HelixConstitution clause numbers (§11.4.x) are carried from the corpus
+convention and are UNVERIFIED; precise public surfaces of the
+<code>database</code>/<code>auth</code>/<code>security</code>/<code>Storage</code>
+catalogue submodules are UNVERIFIED (submodule_reuse_map.md).</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: clarified §5.6 version monotonicity is app-layer (Go
+publish-time), not a DB constraint; reworded §5.9 event vocabulary as
+derived/extended from master §9; added PII handling note; aligned §6/§10
+constraint count ordering.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>When ADR-0001 (hawkBit) is un-gated, add the deferred
+<code>rollouts</code> bridge table in a later migration; when the
+staged-rollout engine lands (1.0.1) add <code>deployment_phases</code> +
+<code>device_deployments.phase_id</code>; when end-user/multi-version
+rollback lands (1.0.1) add <code>rollback_history</code>. Set numeric
+partition/retention policy for <code>telemetry_events</code> and
+<code>audit_logs</code> from MVP load-test data (currently UNVERIFIED).
+Confirm the <code>database</code> submodule migration runner is the one
+driving these files.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-locked-stack-and-strategy-alignment">Locked-stack and
+strategy alignment</a></li>
+<li><a href="#3-the-helix_ota-schema">The <code>helix_ota</code>
+schema</a></li>
+<li><a href="#4-entity-relationship-description">Entity-relationship
+description</a></li>
+<li><a href="#5-table-by-table-rationale">Table-by-table rationale</a>
+<ul>
+<li><a href="#51-users">5.1 users</a></li>
+<li><a href="#52-api_keys">5.2 api_keys</a></li>
+<li><a href="#53-devices">5.3 devices</a></li>
+<li><a href="#54-device_groups-and-device_group_members">5.4
+device_groups and device_group_members</a></li>
+<li><a href="#55-artifacts-and-artifact_versions">5.5 artifacts and
+artifact_versions</a></li>
+<li><a href="#56-releases">5.6 releases</a></li>
+<li><a href="#57-deployments">5.7 deployments</a></li>
+<li><a href="#58-device_deployments">5.8 device_deployments</a></li>
+<li><a href="#59-telemetry_events">5.9 telemetry_events</a></li>
+<li><a href="#510-audit_logs">5.10 audit_logs</a></li>
+</ul></li>
+<li><a href="#6-constraints-summary">Constraints summary</a></li>
+<li><a href="#7-index-summary-and-query-drivers">Index summary and query
+drivers</a></li>
+<li><a href="#8-deferred-to-101-not-in-this-schema">Deferred to 1.0.1
+(NOT in this schema)</a></li>
+<li><a href="#9-submodule-reuse">Submodule reuse</a></li>
+<li><a href="#10-migration-files">Migration files</a></li>
+<li><a href="#11-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#12-anti-bluff--unverified-register">Anti-bluff /
+UNVERIFIED register</a></li>
+<li><a href="#13-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table, per <a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code>
+§3</a>.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies the relational data model for <strong>Helix
+OTA 1.0.0-MVP</strong> — the control-plane state persisted in
+PostgreSQL. It is the design rationale that accompanies the executable
+DDL in <a
+href="migrations/001_initial_schema.up.sql"><code>migrations/001_initial_schema.up.sql</code></a>
+and its reverse <a
+href="migrations/001_initial_schema.down.sql"><code>migrations/001_initial_schema.down.sql</code></a>.</p>
+<p>The schema is deliberately <strong>MVP-scoped</strong>. It covers the
+end-to-end MVP happy path from the master design §5: <em>admin logs in →
+uploads signed OTA <code>.zip</code> + hash → server validates →
+publishes release → deploys (all-at-once for MVP) → device polls,
+downloads, re-verifies, applies via <code>update_engine</code>, reboots
+→ telemetry success/failure with automatic A/B rollback on boot
+failure.</em> Staged-rollout phasing and end-user/multi-version rollback
+are <strong>deferred to 1.0.1</strong> and are explicitly absent here
+(§8). [master design §1 non-goals, §5, §7]</p>
+<p>The entity list is taken verbatim from the master design §7 (“base
+schema … 02 as the richer base, normalized”) and the operator brief;
+field-level detail is normalized from <a
+href="../../additions/initial_research_02.md"><code>additions/initial_research_02.md</code>
+§4</a>. [master design §7]</p>
+<h2 id="locked-stack-and-strategy-alignment">2. Locked-stack and
+strategy alignment</h2>
+<p>The schema honors the locked decisions without re-opening them:</p>
+<ul>
+<li><strong>Persistence = PostgreSQL</strong> (relational state) +
+<strong>MinIO/S3</strong> (artifact blobs). The DB stores metadata and
+the <strong>object key</strong> of each blob
+(<code>artifacts.file_path</code>), never the bytes — blobs live in
+<code>Storage</code>. [master design §3; D7]</li>
+<li><strong>Modular monolith (ADR-0003).</strong> One Go binary,
+therefore <strong>one PostgreSQL schema</strong>
+(<code>helix_ota</code>) with internal module boundaries mirrored by
+table groupings (artifact-validator, rollout-engine, device registry,
+telemetry). A future service split is a lift-out, not a re-shard.
+[ADR-0003 §3]</li>
+<li><strong>Wrapped engine gated (ADR-0001).</strong> hawkBit is the
+front-runner but GATED; the AOSP-native-only Go rollout engine is the
+pre-authorized fallback. The MVP schema therefore commits <strong>no
+<code>hawkbit_*</code> columns</strong> (draft 02’s
+<code>rollouts.hawkbit_rollout_id</code> is deferred with the rest of
+the staged-rollout machinery, §8). [ADR-0001 §4, §5.3]</li>
+<li><strong>Signing + SHA-256 + AVB for MVP; TUF deferred
+(ADR-0002).</strong> <code>artifacts</code> carries
+<code>checksum_sha256</code> (mandatory), <code>checksum_sha512</code>
+(where available), and a detached <code>signature</code> column — the
+MVP trust model. The signing interface is MVP-forward so TUF/Uptane
+drops in at 1.0.1 without a destructive migration. [ADR-0002 §4.1, §4.2;
+master design §6]</li>
+<li><strong>Transport is out of scope for the DB.</strong>
+HTTP/3→HTTP/2, Brotli, REST <code>/api/v1</code>, optional internal gRPC
+are transport concerns (<code>http3</code>, <code>middleware</code>,
+<code>ota-protocol</code>); they touch no table here. [master design §3;
+submodule_reuse_map Transport row]</li>
+</ul>
+<h2 id="the-helix_ota-schema">3. The <code>helix_ota</code> schema</h2>
+<p>All control-plane objects live in a dedicated
+<strong><code>helix_ota</code></strong> PostgreSQL schema rather than
+<code>public</code>.</p>
+<p>Rationale:</p>
+<ul>
+<li><strong>Co-tenancy isolation.</strong> If ADR-0001’s hawkBit is
+adopted, hawkBit runs on its own PostgreSQL schema/instance (hawkBit
+recommends a separate schema). A dedicated <code>helix_ota</code> schema
+guarantees the Helix-authored tables never collide with a co-located
+hawkBit schema. [ADR-0001 §3.1; ADR-0003 §3]</li>
+<li><strong>Clean teardown / least privilege.</strong> The control-plane
+role can be scoped to <code>helix_ota</code>; the down migration drops
+the schema with <code>RESTRICT</code>, failing loudly if any unexpected
+object remains.</li>
+<li><strong>Forward-compatible.</strong> 1.0.1 additions
+(<code>deployment_phases</code>, <code>rollouts</code>,
+<code>rollback_history</code>) land in the same schema; a service split
+(ADR-0003 §3.2) can later move a table group out without renaming.</li>
+</ul>
+<p>The migration sets <code>search_path = helix_ota, public</code> for
+its session and <code>CREATE EXTENSION IF NOT EXISTS pgcrypto</code> so
+<code>gen_random_uuid()</code> is available on PostgreSQL &lt; 13 (it is
+core on 13+).</p>
+<h2 id="entity-relationship-description">4. Entity-relationship
+description</h2>
+<p>Twelve tables in four functional clusters. UUID primary keys
+throughout (<code>gen_random_uuid()</code>); all timestamps are
+<code>TIMESTAMPTZ DEFAULT now()</code>.</p>
+<p><strong>Identity &amp; access</strong> — <code>users</code> 1—N
+<code>api_keys</code>; <code>users</code> is referenced (nullable,
+audit-preserving) by <code>artifacts.uploaded_by</code>,
+<code>releases.published_by</code>, <code>deployments.created_by</code>,
+and <code>audit_logs.user_id</code>.</p>
+<p><strong>Fleet</strong> — <code>devices</code> N—M
+<code>device_groups</code> through the composite-PK join
+<code>device_group_members</code>.</p>
+<p><strong>Artifacts → releases → deployments</strong> (the supply
+chain): <code>artifacts</code> 1—N <code>artifact_versions</code>;
+<code>artifacts</code> 1—N <code>releases</code> (a release pins one
+validated artifact + channel); <code>releases</code> 1—N
+<code>deployments</code>; a <code>deployments</code> row targets all / a
+group / a single device; <code>deployments</code> 1—N
+<code>device_deployments</code> (one row per targeted device, unique on
+<code>(deployment_id, device_id)</code>).</p>
+<p><strong>Observability</strong> — <code>telemetry_events</code>
+references <code>devices</code> and <code>deployments</code>
+(<code>ON DELETE SET NULL</code>, history survives deletion);
+<code>audit_logs</code> references <code>users</code> (also
+<code>SET NULL</code>).</p>
+<pre class="mermaid"><code>erDiagram
+    users ||--o{ api_keys : &quot;owns&quot;
+    users ||--o{ artifacts : &quot;uploaded_by&quot;
+    users ||--o{ releases : &quot;published_by&quot;
+    users ||--o{ deployments : &quot;created_by&quot;
+    users ||--o{ audit_logs : &quot;actor&quot;
+    devices ||--o{ device_group_members : &quot;&quot;
+    device_groups ||--o{ device_group_members : &quot;&quot;
+    artifacts ||--o{ artifact_versions : &quot;versions&quot;
+    artifacts ||--o{ releases : &quot;published as&quot;
+    releases ||--o{ deployments : &quot;delivered by&quot;
+    deployments ||--o{ device_deployments : &quot;per-device state&quot;
+    devices ||--o{ device_deployments : &quot;target&quot;
+    devices ||--o{ telemetry_events : &quot;reports&quot;
+    deployments ||--o{ telemetry_events : &quot;about&quot;
+    device_groups ||--o{ deployments : &quot;target (group)&quot;
+    devices ||--o{ deployments : &quot;target (device)&quot;</code></pre>
+<p>(Diagram source is Mermaid per <a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code>
+§6</a>.)</p>
+<h2 id="table-by-table-rationale">5. Table-by-table rationale</h2>
+<h3 id="users">5.1 users</h3>
+<p>Dashboard/API operators — the RBAC subjects. Identity, password
+verification, token issue/verify, and RBAC enforcement are <strong>owned
+by the <code>auth</code>/<code>security</code> catalogue
+submodules</strong>; this table is the relational projection the control
+plane joins against for ownership and audit. <code>role</code> is
+constrained to <code>('admin','operator','viewer')</code>.
+<code>username</code> and <code>email</code> are unique.
+<code>is_active</code> supports soft disable without deletion (FKs from
+audit/artifacts must survive). [submodule_reuse_map Auth row; master
+design §6]</p>
+<h3 id="api_keys">5.2 api_keys</h3>
+<p>Non-interactive credentials (the CI build pipeline that signs and
+uploads artifacts; automation). Only <code>key_hash</code> is persisted
+(unique) — cleartext is shown once at issue. <code>permissions</code> is
+JSONB (scope set). <code>expires_at</code> is CHECK-constrained to be
+after <code>created_at</code>; <code>revoked_at</code> allows revocation
+without deletion. FK to <code>users</code> is
+<code>ON DELETE CASCADE</code> (a deleted user’s keys go with it).</p>
+<h3 id="devices">5.3 devices</h3>
+<p>Fleet inventory. <code>device_id</code> is the <strong>stable
+external identity</strong> (unique) — a token bound to the hardware id
+(Android KeyStore, master §6), distinct from the surrogate
+<code>id</code>. <code>os_type</code> is CHECK-constrained to
+<code>('android','linux','windows','other')</code>:
+<strong><code>'android'</code> is the only Phase-1 value</strong>, but
+the column exists so the OS-adapter seam (ADR-0003 §3.1) is schema-ready
+without a later migration.
+<code>status ('active','inactive','blocked')</code> gates eligibility.
+<code>last_seen_at</code> is updated on each poll (15 min + jitter, D7).
+<code>metadata</code> JSONB holds free-form device attributes used by
+dynamic group <code>filter_criteria</code>. [master design §6; ADR-0003
+§3.1]</p>
+<h3 id="device_groups-and-device_group_members">5.4 device_groups and
+device_group_members</h3>
+<p><code>device_groups</code> are named cohorts;
+<code>filter_criteria</code> JSONB carries a <strong>dynamic</strong>
+selector (evaluated against <code>devices.metadata</code>), while
+<code>device_group_members</code> records <strong>static</strong>
+membership. The join uses a composite primary key
+<code>(group_id, device_id)</code> — the natural key, no surrogate
+needed — and cascades on deletion of either side. A secondary index on
+<code>device_id</code> answers “which groups is this device in?”.
+<code>name</code> is unique.</p>
+<h3 id="artifacts-and-artifact_versions">5.5 artifacts and
+artifact_versions</h3>
+<p><code>artifacts</code> is one uploaded OTA blob’s metadata. Key
+design points:</p>
+<ul>
+<li><strong><code>file_path</code> is the Storage object key</strong>,
+not a local FS path — bytes live in MinIO/S3 behind the
+<code>Storage</code> submodule. [submodule_reuse_map Storage row]</li>
+<li><strong>Integrity (ADR-0002 MVP trust model):</strong>
+<code>checksum_sha256 CHAR(64) NOT NULL</code>, with a CHECK that it
+matches <code>^[0-9a-f]{64}$</code>;
+<code>checksum_sha512 CHAR(128)</code> (nullable, “where available”)
+with an analogous CHECK; a detached <code>signature TEXT</code>.
+Verified server-side on upload by <code>ota-artifact-validator</code>
+and device-side before apply. [ADR-0002 §4.1; master design §6]</li>
+<li><strong><code>artifact_type</code></strong> defaults to
+<code>'full'</code>; <code>'incremental'</code>/<code>'delta'</code> are
+allowed by the CHECK but <strong>unused at MVP</strong> — delta updates
+are ADR-0005, deferred. [master design §1 non-goals; ADR-0005]</li>
+<li><strong><code>upload_status ('pending','validating','validated','failed')</code></strong>
+mirrors the validation pipeline (structure → hash → signature → version
+monotonicity → target compatibility, master §5);
+<code>validation_errors</code> JSONB records failures. Only
+<code>validated</code> artifacts may be published.</li>
+<li><strong>Uniqueness:</strong> <code>(name, os_type, version)</code>
+is unique — one artifact per OS per version.</li>
+<li><code>uploaded_by</code> FK is <code>ON DELETE SET NULL</code>
+(artifact provenance outlives the uploader).</li>
+</ul>
+<p><code>artifact_versions</code> carries version lineage
+(<code>changelog</code>, <code>release_notes</code>) and an
+<code>is_latest</code> flag made safe by a <strong>partial unique
+index</strong> (<code>WHERE is_latest</code>) guaranteeing at most one
+latest per artifact. <code>(artifact_id, version)</code> is unique.</p>
+<h3 id="releases">5.6 releases</h3>
+<p>The master design §7 lists <code>releases</code> as a
+<strong>first-class entity distinct from deployments</strong>: a
+<em>release</em> is the published, deployable unit an admin creates from
+a validated artifact before deploying. Separating release (publish) from
+deployment (deliver) lets one release feed multiple deployments
+(e.g. group A now, group B later). <strong>Version monotonicity is
+enforced at publish time in the Go control plane (application layer),
+NOT by a database constraint</strong> — the DB only enforces uniqueness
+via <code>releases_channel_version_uniq</code> (<code>channel</code> +
+<code>version</code>) and <code>artifacts_name_os_version_uniq</code>
+(<code>(name, os_type, version)</code>).
+<code>channel ('stable','beta','canary','internal')</code> +
+<code>version</code> is unique.
+<code>status ('draft','published','superseded','withdrawn')</code> with
+a CHECK that a <code>published</code> release has
+<code>published_at</code> set. FK to <code>artifacts</code> is
+<code>ON DELETE RESTRICT</code> (cannot delete an artifact that has
+releases). [master design §5, §7]</p>
+<h3 id="deployments">5.7 deployments</h3>
+<p>An instruction to deliver a <code>release</code> to a target set. For
+MVP the <strong>only supported strategy is all-at-once</strong> (master
+§5: “staged engine lands 1.0.1”); <code>rollout_strategy</code> JSONB
+defaults to <code>{"mode":"all_at_once"}</code> and is kept as JSONB so
+a 1.0.1 staged config drops in without a column migration. Targeting
+uses <code>target_type ('all','group','device')</code> plus nullable
+<code>target_group_id</code>/<code>target_device_id</code>, made
+consistent by a <strong>table CHECK</strong>: <code>'all'</code> has
+neither ref, <code>'group'</code> has exactly the group ref,
+<code>'device'</code> has exactly the device ref. <code>status</code>
+includes
+<code>('draft','active','paused','completed','failed','cancelled')</code>.
+A time-ordering CHECK ensures
+<code>completed_at &gt;= started_at</code>. FK to <code>releases</code>
+is <code>RESTRICT</code>; target FKs are <code>SET NULL</code>.
+<strong>Deferred:</strong> <code>deployment_phases</code> and the
+hawkBit <code>rollouts</code> bridge (§8). [master design §5, §8;
+ADR-0001 §4]</p>
+<h3 id="device_deployments">5.8 device_deployments</h3>
+<p>Per-device delivery state — the join recording what each device
+actually did for a deployment, one row per
+<code>(deployment_id, device_id)</code> (unique). <code>status</code>
+tracks the device lifecycle
+<code>('pending','downloading','installing','verifying','success','failed','rolled_back')</code>,
+where <code>rolled_back</code> records the <strong>automatic A/B
+boot-failure rollback</strong> that IS in MVP (distinct from the
+deferred end-user rollback). <code>progress NUMERIC(5,2)</code> is
+CHECK-bounded to <code>0.00–100.00</code>;
+<code>retry_count &gt;= 0</code>. The MVP omits draft 02’s
+<code>phase_id</code> (staged phases are 1.0.1). FKs cascade on
+deployment/device deletion. [master design §1 (auto-rollback in MVP),
+§5]</p>
+<h3 id="telemetry_events">5.9 telemetry_events</h3>
+<p>Device-reported event stream (master §9). <strong>Renamed from draft
+02’s <code>update_metrics</code> to the master’s canonical
+<code>telemetry_events</code>.</strong> This is the higher-volume,
+append-mostly table and the first scale-split candidate after the
+rollout engine (ADR-0003 §3.2 trigger #1 — relative volume is
+<strong>UNVERIFIED</strong>, to be set from MVP load tests).
+<code>event_type</code> is CHECK-constrained to a device vocabulary
+derived from master §9, extended with <code>download_complete</code> and
+<code>rollback</code>:
+<code>('download_started','download_complete','installing','installed','verifying','success','failure','rollback')</code>.
+<code>duration_ms</code>/<code>bytes_transferred</code> are CHECK
+<code>&gt;= 0</code> when present.
+<code>device_id</code>/<code>deployment_id</code> FKs are
+<code>ON DELETE SET NULL</code> so telemetry history survives
+device/deployment deletion. Metrics from this table drive the (1.0.1)
+rollout halt logic and the operator-required problem detection. [master
+design §9; ADR-0003 §3.2]</p>
+<h3 id="audit_logs">5.10 audit_logs</h3>
+<p>Every admin/operator action — master §6 mandates “every admin action
+logged”. Append-only: <code>action</code>, <code>resource_type</code>,
+nullable <code>resource_id</code>, <code>details</code> JSONB,
+<code>ip_address INET</code>, <code>user_agent</code>.
+<code>user_id</code> FK is <code>ON DELETE SET NULL</code> so the audit
+record outlives the actor (a security requirement). Indexed by user,
+action, <code>(resource_type, resource_id)</code>, and time. [master
+design §6]</p>
+<p><strong>PII handling note:</strong> <code>users.email</code>,
+<code>audit_logs.ip_address</code>, and
+<code>audit_logs.user_agent</code> are stored in
+<strong>plaintext</strong>; <code>users.password_hash</code> and
+<code>api_keys.key_hash</code> are <strong>hashed</strong> (never stored
+in cleartext). Encryption-at-rest and a retention/erasure policy for
+these fields are <strong>UNVERIFIED / future</strong> (not specified or
+implemented at MVP).</p>
+<h2 id="constraints-summary">6. Constraints summary</h2>
+<p>Verified counts from applying the up migration to PostgreSQL 16 (see
+§10): <strong>12 primary keys, 16 foreign keys, 23 CHECK constraints, 9
+UNIQUE constraints, 45 indexes.</strong></p>
+<ul>
+<li><strong>UUID PKs</strong> on all 12 tables
+(<code>device_group_members</code> uses a composite natural PK).</li>
+<li><strong>CHECK constraints</strong> enforce: enumerated
+<code>role</code>/<code>status</code>/<code>os_type</code>/<code>channel</code>/<code>event_type</code>/
+<code>target_type</code>/<code>artifact_type</code>/<code>upload_status</code>
+values (replacing draft 02’s bare comment-strings); SHA-256/512 hex
+format and length; non-negative sizes/durations/retries; progress 0–100;
+release publish consistency; deployment target/type consistency;
+deployment time ordering; api-key expiry ordering.</li>
+<li><strong>FK delete behavior</strong> is chosen per relationship:
+<code>CASCADE</code> for owned children (<code>api_keys</code>,
+<code>device_group_members</code>, <code>device_deployments</code>);
+<code>RESTRICT</code> for supply-chain parents that must not vanish
+under a referent (<code>artifacts</code>←<code>releases</code>,
+<code>releases</code>←<code>deployments</code>); <code>SET NULL</code>
+for provenance/audit/telemetry references that must survive actor/target
+deletion.</li>
+</ul>
+<h2 id="index-summary-and-query-drivers">7. Index summary and query
+drivers</h2>
+<p>Indexes follow draft 02 §4 plus query-driven additions:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Index</th>
+<th>Drives query</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>idx_devices_os_type</code>, <code>idx_devices_status</code>,
+<code>idx_devices_last_seen</code></td>
+<td>fleet filtering; stale-device detection</td>
+</tr>
+<tr>
+<td><code>idx_api_keys_user</code></td>
+<td>list a user’s keys; auth lookups</td>
+</tr>
+<tr>
+<td><code>idx_dgm_device</code></td>
+<td>“which groups is this device in?”</td>
+</tr>
+<tr>
+<td><code>idx_artifacts_os_type</code>,
+<code>idx_artifacts_version</code>,
+<code>idx_artifacts_status</code></td>
+<td>artifact browse + validation-queue</td>
+</tr>
+<tr>
+<td><code>idx_artifact_versions_one_latest</code> (partial unique)</td>
+<td>single-latest invariant + latest lookup</td>
+</tr>
+<tr>
+<td><code>idx_releases_artifact</code>,
+<code>idx_releases_status</code>, <code>idx_releases_channel</code></td>
+<td>release listing per channel/state</td>
+</tr>
+<tr>
+<td><code>idx_deployments_release</code>,
+<code>idx_deployments_status</code></td>
+<td>active-deployment dashboard</td>
+</tr>
+<tr>
+<td><code>idx_device_deployments_status</code>,
+<code>idx_device_deployments_device</code></td>
+<td>per-deployment progress; device history</td>
+</tr>
+<tr>
+<td><code>idx_telemetry_events_device/deployment/type/created</code></td>
+<td>telemetry rollups, time-range scans, halt-logic feed</td>
+</tr>
+<tr>
+<td><code>idx_audit_logs_user/action/resource/created</code></td>
+<td>audit search by actor, action, resource, time</td>
+</tr>
+</tbody>
+</table>
+<p>UNIQUE constraints also create supporting indexes
+(e.g. <code>devices.device_id</code>, <code>users.email</code>).
+<strong>UNVERIFIED:</strong> time-series partitioning / retention for
+<code>telemetry_events</code> and <code>audit_logs</code> is not set at
+MVP — pending load-test data (ADR-0003 §3.2). [additions 02 §4]</p>
+<h2 id="deferred-to-1.0.1-not-in-this-schema">8. Deferred to 1.0.1 (NOT
+in this schema)</h2>
+<p>These entities from draft 02 / master §7 are <strong>intentionally
+absent</strong> and are NOT created by this migration:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Deferred entity</th>
+<th>Why deferred</th>
+<th>Owning decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deployment_phases</code></td>
+<td>Staged-rollout phasing (5/10/30/…/100 %) lands in 1.0.1
+<code>1.0.1-staged-rollout/</code>; MVP is all-at-once.</td>
+<td>master §1 non-goals, §5, §8</td>
+</tr>
+<tr>
+<td><code>rollouts</code> (incl. <code>hawkbit_rollout_id</code>)</td>
+<td>hawkBit is GATED (front-runner, not committed); committing a hawkBit
+bridge column now would presume an un-closed decision.</td>
+<td>ADR-0001 §4, §5.3</td>
+</tr>
+<tr>
+<td><code>rollback_history</code></td>
+<td>End-user / multi-version rollback is a 1.0.1 non-goal;
+<strong>automatic A/B boot-failure rollback IS in MVP</strong> and is
+captured by <code>device_deployments.status='rolled_back'</code> +
+<code>telemetry_events.event_type='rollback'</code>, needing no separate
+table.</td>
+<td>master §1 non-goals</td>
+</tr>
+<tr>
+<td>TUF metadata tables</td>
+<td>TUF/Uptane device-side trust is 1.0.1 hardening; MVP uses signing +
+SHA-256 + AVB, with the <code>signature</code> column MVP-forward.</td>
+<td>ADR-0002 §4.1–§4.3</td>
+</tr>
+<tr>
+<td>Delta-artifact tables / columns</td>
+<td>Delta updates are ADR-0005 (deferred); <code>artifact_type</code>
+already reserves <code>'delta'</code>/<code>'incremental'</code>.</td>
+<td>master §1 non-goals; ADR-0005</td>
+</tr>
+</tbody>
+</table>
+<h2 id="submodule-reuse">9. Submodule reuse</h2>
+<p>Per catalogue-first (§11.4.74, UNVERIFIED) and <a
+href="../../00-master/submodule_reuse_map.md"><code>submodule_reuse_map.md</code></a>:</p>
+<ul>
+<li><strong><code>database</code></strong> owns the migration runner,
+connection pooling, and the storage-port the rollout/registry modules
+persist through. Helix OTA writes DDL/queries against it; no bespoke
+driver code. (UNVERIFIED: exact <code>database</code> migration-runner
+API.)</li>
+<li><strong><code>Storage</code></strong> (and <code>Storage-KMP</code>)
+holds artifact bytes (MinIO/S3); <code>artifacts.file_path</code> is its
+object key. The DB never stores blobs.</li>
+<li><strong><code>auth</code>/<code>security</code></strong> own
+identity/RBAC/crypto; <code>users</code>/<code>api_keys</code> are the
+relational projection only. SHA-256/512 + signature-verify primitives
+for <code>ota-artifact-validator</code> come from <code>security</code>
+(UNVERIFIED that the primitives are exposed as needed).</li>
+<li><strong><code>observability</code>/<code>Herald</code></strong>
+consume <code>telemetry_events</code> for dashboards/alerting; the
+schema + codecs live in the NEW <code>ota-telemetry-schema</code>
+submodule.</li>
+<li>Wire/manifest types (used to read/write these rows over REST) come
+from the NEW <code>ota-protocol</code> submodule. No invented submodule
+names are used (§7.1). [submodule_reuse_map §3, §4]</li>
+</ul>
+<h2 id="migration-files">10. Migration files</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a
+href="migrations/001_initial_schema.up.sql"><code>migrations/001_initial_schema.up.sql</code></a></td>
+<td>Creates the <code>helix_ota</code> schema and all 12 tables,
+constraints, and indexes. Wrapped in a single transaction.</td>
+</tr>
+<tr>
+<td><a
+href="migrations/001_initial_schema.down.sql"><code>migrations/001_initial_schema.down.sql</code></a></td>
+<td>Drops all tables in <strong>strict reverse dependency
+order</strong>, then drops the schema with <code>RESTRICT</code>. Does
+not drop the shared <code>pgcrypto</code> extension.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Validation performed (not asserted — executed):</strong> both
+migrations were applied to a throwaway <strong>PostgreSQL 16.14</strong>
+cluster. Result: 12 tables, 12 PK + 16 FK + 23 CHECK + 9 UNIQUE
+constraints, 45 indexes; a bad-SHA-256 insert was correctly rejected by
+<code>artifacts_sha256_chk</code>; the down migration left zero
+<code>helix_ota</code> objects; and a clean re-apply of the up migration
+succeeded. This is the artifact gate of §11.</p>
+<h2 id="testing-four-layer">11. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 / master design §13, every change ships four
+layers with no-bluff positive evidence (§7.1). For this schema:</p>
+<ol type="1">
+<li><strong>Source-presence gate.</strong> Assert the artifacts exist
+and contain the required objects: <code>schema.md</code>,
+<code>001_initial_schema.up.sql</code>,
+<code>001_initial_schema.down.sql</code> are present; the up file
+contains <code>CREATE SCHEMA helix_ota</code> and a
+<code>CREATE TABLE helix_ota.&lt;name&gt;</code> for each of the 12
+tables; the down file contains a matching <code>DROP TABLE</code> for
+each. A grep/AST check, not a claim.</li>
+<li><strong>Artifact gate (bytes shipped).</strong> Apply
+<code>001_initial_schema.up.sql</code> to a real PostgreSQL instance and
+assert the realized catalog: exactly 12 tables in
+<code>helix_ota</code>; expected PK/FK/CHECK/ UNIQUE/index counts (§6:
+12/16/23/9/45); every CHECK present
+(e.g. <code>artifacts_sha256_chk</code>,
+<code>deployments_target_ref_chk</code>). <strong>Executed in §10 on PG
+16.14.</strong></li>
+<li><strong>Runtime / integration.</strong> Exercise the schema with the
+control plane: insert a <code>user</code> → <code>api_key</code> →
+<code>artifact</code> (validated) → <code>release</code> (published) →
+<code>deployment</code> (all_at_once) → <code>device_deployment</code>
+rows → <code>telemetry_events</code>, asserting (a) every CHECK rejects
+out-of-domain values (bad <code>os_type</code>, progress &gt; 100,
+mismatched <code>target_type</code>/refs, non-hex checksum, bad
+<code>event_type</code>); (b) FK delete behaviors
+(<code>CASCADE</code>/<code>RESTRICT</code>/<code>SET NULL</code>) fire
+as designed;
+<ol start="3" type="a">
+<li>the partial unique <code>is_latest</code> index forbids two latest
+versions; (d) up→down→up round-trips cleanly. (down→up round-trip
+executed in §10.)</li>
+</ol></li>
+<li><strong>Mutation meta-test (PASS→FAIL on negation).</strong> A test
+that, when a constraint is <em>removed or inverted</em>, must flip from
+PASS to FAIL — proving the test actually exercises the constraint.
+Examples: drop <code>artifacts_sha256_chk</code> → the “bad-checksum
+rejected” test must FAIL; widen
+<code>device_deployments_progress_chk</code> → the “progress &gt; 100
+rejected” test must FAIL; invert <code>deployments_target_ref_chk</code>
+→ the “group deployment without group_id rejected” test must FAIL. Any
+constraint whose negation does not break a test is untested and the
+meta-test flags it.</li>
+</ol>
+<p>Safety-critical relevance: <code>artifacts</code> integrity CHECKs
+(signing/hash) sit on the verify-before-apply path floored at ≥90%
+coverage (master §13; ADR-0002 §7).</p>
+<h2 id="anti-bluff-unverified-register">12. Anti-bluff / UNVERIFIED
+register</h2>
+<p>Per §7.1 / §11.4.6 / §11.4.123 (UNVERIFIED clause numbers, <a
+href="../../00-master/documentation_standards.md"><code>documentation_standards.md</code>
+§8</a>):</p>
+<ul>
+<li><strong>UNVERIFIED:</strong> relative volume of
+<code>telemetry_events</code> vs rollout traffic (ADR-0003 §3.2, no load
+figures in sources).</li>
+<li><strong>UNVERIFIED:</strong> HelixConstitution clause numbers (§1,
+§7.1, §11.4.6, §11.4.28, §11.4.61, §11.4.74, §11.4.123) — carried from
+corpus convention, not cross-checked against the constitution text.</li>
+<li><strong>UNVERIFIED:</strong> precise public surfaces of
+<code>database</code>, <code>auth</code>, <code>security</code>,
+<code>Storage</code> (submodule_reuse_map.md Continuation) — “satisfies”
+claims are conditional on inspection.</li>
+<li><strong>UNVERIFIED:</strong> time-series partitioning/retention
+thresholds for
+<code>telemetry_events</code>/<code>audit_logs</code>.</li>
+<li><strong>VERIFIED (executed):</strong> the DDL is valid PostgreSQL
+16; the constraint/index counts; the bad-checksum rejection; the down
+migration fully reverses the up (§10).</li>
+<li>No fabricated submodule names, columns, or hawkBit specifics are
+committed; gated/deferred items are marked, not invented.</li>
+</ul>
+<h2 id="sources">13. Sources</h2>
+<ul>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>../../00-master/2026-06-07-helix-ota-design.md</code></a>
+— master design (§5 MVP path, §6 trust, §7 entity list, §9 telemetry
+vocabulary, §13 testing).</li>
+<li><a
+href="../../00-master/documentation_standards.md"><code>../../00-master/documentation_standards.md</code></a>
+— metadata/ToC (§2, §3, §11.4.61), anti-bluff (§8), submodule catalogue
+(§9).</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>../../00-master/submodule_reuse_map.md</code></a>
+— component→submodule bindings, NEW-submodule boundaries.</li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>../../research/adr/adr-0001-wrapped-engine.md</code></a>
+— hawkBit gated; no committed <code>hawkbit_*</code> columns at
+MVP.</li>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>../../research/adr/adr-0002-supply-chain-trust.md</code></a>
+— signing + SHA-256 + AVB for MVP; TUF deferred; MVP-forward signing
+interface.</li>
+<li><a
+href="../../research/adr/adr-0003-server-topology.md"><code>../../research/adr/adr-0003-server-topology.md</code></a>
+— modular monolith → one schema; telemetry split trigger.</li>
+<li><a
+href="../../research/adr/adr-0005-delta-updates.md"><code>../../research/adr/adr-0005-delta-updates.md</code></a>
+— delta updates deferred (<code>artifact_type</code> reserves the
+values).</li>
+<li><a
+href="../../additions/initial_research_02.md"><code>../../additions/initial_research_02.md</code></a>
+§4 — richer base schema and index list, normalized into this
+design.</li>
+</ul>
+</body>
+</html>

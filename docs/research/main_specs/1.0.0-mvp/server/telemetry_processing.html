@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>telemetry_processing</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="mvp-telemetry-processing-health">1.0.0-MVP — Telemetry
+Processing &amp; Health</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Specifies the server-side telemetry pipeline for 1.0.0-MVP: device
+event ingest → OpenTelemetry/Prometheus → fleet health, the
+halt-on-failure inputs the rollout-engine consumes, and the post-boot
+health window + auto canary-abort concept carried forward from the
+research (active in 1.0.1 staged rollout). Composes from the
+<code>observability</code>/<code>Herald</code> catalogue bricks and the
+NEW <code>ota-telemetry-schema</code> module; runs inside the
+modular-monolith binary (ADR-0003).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Staged rollout (and thus auto canary-abort) lands in 1.0.1, not MVP
+— MVP ingests and surfaces health and supports one-click manual abort;
+auto-abort is the forward concept. Post-boot health-window
+duration/criteria are operator-configurable and UNVERIFIED (no fixed
+figure in sources; draft phase durations are non-binding).
+<code>observability</code>/<code>Herald</code> public surfaces are
+UNVERIFIED. HelixConstitution clause numbers are UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: added the safety invariant that <strong>halt wins over
+advance</strong> when both error- and success-thresholds could trigger
+in the same window (safety-critical rollout-gate; guarded by the §10
+mutation meta-test).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Pin the <code>ota-telemetry-schema</code> event/metric enums +
+codecs before repo creation; confirm <code>observability</code>
+(OpenTelemetry/Prometheus) and <code>Herald</code> (alert channels)
+public surfaces; set health-window duration + canary success/error
+thresholds from MVP/1.0.1 data and record them; wire the rollout-engine
+telemetry-signal port (see architecture §5.1) to the health-signal
+output here.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-event-ingest">Event ingest</a></li>
+<li><a
+href="#3-processing-pipeline-ingest--otelprometheus--health">Processing
+pipeline (ingest → OTel/Prometheus → health)</a></li>
+<li><a href="#4-fleet-health-model">Fleet health model</a></li>
+<li><a
+href="#5-halt-on-failure-inputs-rollout-engine-contract">Halt-on-failure
+inputs (rollout-engine contract)</a></li>
+<li><a href="#6-post-boot-health-window--auto-canary-abort">Post-boot
+health window + auto canary-abort</a></li>
+<li><a href="#7-alerting--notifications">Alerting &amp;
+notifications</a></li>
+<li><a href="#8-mvp-vs-101-boundary">MVP vs 1.0.1 boundary</a></li>
+<li><a href="#9-catalogue-first-composition">Catalogue-first
+composition</a></li>
+<li><a href="#10-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#11-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#12-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#13-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies how the Helix OTA control plane
+<strong>ingests device telemetry, processes it through
+OpenTelemetry/Prometheus, derives fleet health, and feeds the
+rollout-engine’s halt-on-failure logic</strong> — and carries forward
+the <strong>post-boot health window + automatic canary-abort</strong>
+concept from the research as the forward design (active in 1.0.1 staged
+rollout). [master §9]</p>
+<p>It satisfies the operator “observability” hard guarantee:
+<em>tracking/measurement/critical-data capture to detect and report
+problems.</em> [master §1]</p>
+<p>This logic lives in the <code>telemetry-ingest</code> seam, with the
+event/metric <strong>schema + codecs</strong> in the NEW
+<code>ota-telemetry-schema</code> module (shared by server + agents;
+<strong>no transport, no storage</strong>). The pipeline/export and
+alerting reuse <code>observability</code> + <code>Herald</code>. It runs
+inside the single modular-monolith binary at MVP and is the
+<strong>second split candidate</strong> (after rollout-engine) if a
+scale trigger fires. [architecture §4, §9; submodule-reuse-map
+§3/§4]</p>
+<p><strong>MVP boundary:</strong> MVP <strong>ingests events, drives
+OpenTelemetry/Prometheus, surfaces dashboard health, and supports manual
+(one-click) abort.</strong> The <strong>automatic</strong> canary-abort
+tied to a post-boot health window is the forward concept that activates
+with the staged rollout engine in <strong>1.0.1</strong>, because MVP
+deploys all-at-once (the staged engine lands 1.0.1). [master §1
+non-goals, §5, §8]</p>
+<h2 id="event-ingest">2. Event ingest</h2>
+<p>Devices report a status event stream over the locked transport (HTTPS
+poll/report; HTTP/3→HTTP/2, REST <code>/api/v1</code>; control-plane
+JSON is Brotli/gzip-compressed — telemetry is control-plane traffic, not
+artifact traffic). [adr-0004 §1, §4; master §9]</p>
+<p>The device event lifecycle (from the master design + drafts): [master
+§9; drafts initial_research §5.3]</p>
+<pre><code>download_started → installing → installed → verifying → (success | failure)</code></pre>
+<p>Each event carries at least:
+<code>{device_id, deployment_id, status, progress, error_code/message, system_health, timestamp}</code>
+(schema owned by <code>ota-telemetry-schema</code>; the draft
+<code>StatusReport</code> shape is a design reference). [drafts
+initial_research_02 §5; master §9]</p>
+<p>Ingest responsibilities (the <code>telemetry-ingest</code> seam): -
+Authenticate the reporting device (device token bound to hardware id;
+<code>auth</code>/<code>security</code>). [master §6] - Validate the
+event against the <code>ota-telemetry-schema</code> codec; reject
+malformed events (no silent acceptance). - Normalize and forward to the
+processing pipeline (§3); persist raw events / derived metrics in
+<code>database</code> (<code>telemetry_events</code> /
+<code>update_metrics</code>). [master §7] - Emit a <strong>health
+signal</strong> consumable by the rollout-engine’s telemetry-signal port
+(§5). [architecture §5.1]</p>
+<h2 id="processing-pipeline-ingest-otelprometheus-health">3. Processing
+pipeline (ingest → OTel/Prometheus → health)</h2>
+<pre class="mermaid"><code>graph LR
+    AGENT[&quot;Android agent (KMP)&quot;] --&gt;|&quot;HTTPS poll/report (REST /api/v1, Brotli)&quot;| ING[&quot;telemetry-ingest (seam)&quot;]
+    ING --&gt; SCHEMA[&quot;ota-telemetry-schema (validate/decode)&quot;]
+    ING --&gt; DB[(database: telemetry_events / update_metrics)]
+    ING --&gt; OTEL[&quot;observability (OpenTelemetry → Prometheus)&quot;]
+    OTEL --&gt; HEALTH[&quot;fleet health model (§4)&quot;]
+    HEALTH --&gt; ROLL[&quot;rollout-engine telemetry-signal port (§5)&quot;]
+    HEALTH --&gt; HERALD[&quot;Herald (alerts §7)&quot;]
+    HEALTH --&gt; DASH[&quot;Dashboard health view&quot;]</code></pre>
+<p>The pipeline maps directly to master §9: <em>device event stream →
+ingest → OpenTelemetry/Prometheus → dashboard health + alerting via
+<code>Herald</code>; metrics drive the rollout halt logic (§8) and
+problem detection/reporting.</em> [master §9]</p>
+<h2 id="fleet-health-model">4. Fleet health model</h2>
+<p>Health is computed <strong>per deployment</strong> (and per
+phase/cohort in 1.0.1) from the event stream: [master §8, §9]</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Derived from</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Success rate</strong></td>
+<td>count(<code>success</code>) / count(devices in cohort that reached a
+terminal state)</td>
+<td>rollout success-threshold check (§5)</td>
+</tr>
+<tr>
+<td><strong>Error/failure rate</strong></td>
+<td>count(<code>failure</code>) / count(cohort terminal)</td>
+<td>rollout error-threshold check (§5); alerting (§7)</td>
+</tr>
+<tr>
+<td><strong>In-flight progress</strong></td>
+<td>distribution over
+<code>download_started/installing/installed/verifying</code></td>
+<td>dashboard; stuck-device detection</td>
+</tr>
+<tr>
+<td><strong>Post-boot health</strong></td>
+<td><code>verifying → success</code> confirmation within the health
+window (§6)</td>
+<td>canary-abort decision (§6, 1.0.1)</td>
+</tr>
+<tr>
+<td><strong>System health</strong></td>
+<td>device-reported <code>system_health</code> field</td>
+<td>problem detection/reporting (operator requirement)</td>
+</tr>
+</tbody>
+</table>
+<p>Health is the <strong>single source of truth</strong> for both the
+rollout halt decision (§5) and alerting (§7). It is derived from
+Prometheus metrics produced via
+<code>observability</code>/OpenTelemetry, not recomputed ad hoc. [master
+§9]</p>
+<h2 id="halt-on-failure-inputs-rollout-engine-contract">5.
+Halt-on-failure inputs (rollout-engine contract)</h2>
+<p>The rollout-engine is OS-agnostic and <strong>HTTP-free</strong>; it
+consumes telemetry <strong>signals</strong> through a port (it contains
+no ingest itself). This section defines the signals telemetry processing
+supplies. [architecture §5.1; master §8; submodule-reuse-map §4]</p>
+<p>The engine config is ordered phases
+<code>{percentage, success_threshold, error_threshold, duration, auto_progress}</code>;
+it <strong>starts a phase, targets the phase cohort, monitors telemetry,
+halts/pauses on error-threshold breach, advances on success-threshold
+within duration.</strong> [master §8]</p>
+<p>Signals supplied to the engine’s telemetry-signal port:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Meaning</th>
+<th>Engine decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>error_rate ≥ error_threshold</code> (phase cohort)</td>
+<td>failures exceed the phase’s tolerance</td>
+<td><strong>halt/pause</strong> (and alert §7)</td>
+</tr>
+<tr>
+<td><code>success_rate ≥ success_threshold</code> within
+<code>duration</code></td>
+<td>phase met its bar in time</td>
+<td><strong>advance</strong> to next phase</td>
+</tr>
+<tr>
+<td><code>success_rate &lt; success_threshold</code> at
+<code>duration</code> expiry</td>
+<td>phase did not meet its bar</td>
+<td><strong>hold/pause</strong> (operator decision)</td>
+</tr>
+<tr>
+<td><code>post_boot_health_failed</code> (cohort, within window §6)</td>
+<td>canary devices unhealthy after boot</td>
+<td><strong>abort</strong> (auto in 1.0.1; manual at MVP)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Safety invariant — halt wins over advance.</strong> If,
+within the same evaluation window, both the error-threshold
+(<code>error_rate ≥ error_threshold</code>) and the success-threshold
+(<code>success_rate ≥ success_threshold</code>) conditions could
+trigger, the engine MUST take the <strong>halt/pause</strong> decision,
+never <strong>advance</strong>. The rollout-gate is safety-critical:
+when in doubt, stop. This precedence is a hard rule the gate enforces
+and the mutation meta-test (§10 layer 4) guards — an implementation that
+advances despite a concurrent error-threshold breach is a failure.</p>
+<p>The signal contract is identical whether the rollout-engine fronts
+hawkBit (wrap) or is the Go-native engine (fallback) — the wrap/fallback
+choice (ADR-0001) does not change what telemetry must supply.
+[architecture §5.1; adr-0001 §4] The rollout-gate is
+<strong>safety-critical (≥90% coverage)</strong>, so these signals and
+their thresholds are deterministically testable (fake clock + fake
+telemetry). [master §8, §13; adr-0003 §6]</p>
+<blockquote>
+<p><strong>MVP note:</strong> MVP deploys all-at-once, so the per-phase
+signals above are produced and surfaced, but <strong>automatic</strong>
+halt/advance is a 1.0.1 staged-rollout capability; at MVP these drive
+<strong>dashboard health + manual abort</strong>. [master §5, §8]</p>
+</blockquote>
+<h2 id="post-boot-health-window-auto-canary-abort">6. Post-boot health
+window + auto canary-abort</h2>
+<p>This is the forward concept carried from the research drafts and the
+master design, made explicit here. [drafts initial_research §5.3; drafts
+initial_research_02 §6; master §8, §9]</p>
+<p><strong>Post-boot health window.</strong> After a device applies an
+update and reboots, it reports <code>verifying</code> and runs a
+<strong>post-boot health check</strong>; on success it reports
+<code>success</code>, otherwise <code>failure</code>. [drafts
+initial_research §5.3] The <strong>window</strong> is the bounded period
+during which a freshly-updated device must confirm health
+(<code>verifying → success</code>) before it is counted healthy. If the
+device does not confirm within the window, it is treated as a
+<strong>post-boot failure</strong> for the cohort’s health math (§4).
+The <strong>window duration and success criteria are
+operator-configurable</strong>; <strong>no fixed figure is
+asserted</strong> — the drafts’ phase durations are explicitly
+non-binding. [adr-0003 §3.2 (draft constants non-binding); master §8]
+On-device, this layers on top of <code>update_engine</code>’s own
+guarantee: <code>update_verifier</code> marks the slot successful, and a
+failed boot triggers <strong>automatic A/B rollback</strong>
+independently of the server. [drafts initial_research_02 §1; master §1,
+§6]</p>
+<p><strong>Auto canary-abort (1.0.1).</strong> The first rollout phase
+is the <strong>canary</strong> (smallest cohort, e.g. the draft’s 5%
+“Canary” with
+<code>success_threshold</code>/<code>error_threshold</code>). [drafts
+initial_research_02 §6] If, within the post-boot health window, the
+canary cohort’s post-boot failure/error rate breaches the phase’s
+<code>error_threshold</code>, the rollout-engine <strong>auto-aborts the
+rollout</strong> (<code>pause_on_error</code> /
+<code>rollback_on_critical_failure</code> in the draft strategy) and
+raises an alert (§7), rather than advancing to wider cohorts. [drafts
+initial_research_02 §6; master §8] This is the Memfault-style
+“server-side one-click abort” made automatic by the health window — the
+pattern ADR-0001 names for the Go-native engine. [adr-0001 §3.3]</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Cohort as Canary cohort
+    participant TEL as telemetry-ingest
+    participant H as health model
+    participant RE as rollout-engine
+    Cohort-&gt;&gt;TEL: verifying / success / failure (post-boot)
+    TEL-&gt;&gt;H: events within health window
+    H-&gt;&gt;RE: post_boot_health_failed? (rate vs error_threshold)
+    alt within window, breach
+        RE-&gt;&gt;RE: ABORT (auto in 1.0.1; manual at MVP)
+        RE-&gt;&gt;TEL: emit alert (Herald §7)
+    else healthy within window
+        RE-&gt;&gt;RE: advance to next phase
+    end</code></pre>
+<p><strong>MVP vs 1.0.1:</strong> at <strong>MVP</strong> the post-boot
+health window is <strong>observed and surfaced</strong> (events
+ingested, health computed, dashboard + manual one-click abort
+available); <strong>automatic</strong> canary-abort activates with the
+<strong>1.0.1</strong> staged rollout engine. [master §1 non-goals, §5,
+§8]</p>
+<blockquote>
+<p><strong>UNVERIFIED:</strong> window duration, canary cohort size, and
+success/error thresholds — no binding figures exist in the sources
+(draft constants are non-binding); set from data and record. [adr-0003
+§3.2; master §8]</p>
+</blockquote>
+<h2 id="alerting-notifications">7. Alerting &amp; notifications</h2>
+<p>Health breaches and aborts dispatch alerts via
+<strong><code>Herald</code></strong> (alert routing) with internal
+domain-event fan-out via <strong><code>eventbus</code></strong>; the
+control plane <strong>publishes</strong> events and does not implement a
+notifier. [master §9; submodule-reuse-map §3] Triggers: error-threshold
+breach (§5), post-boot health-window failure / canary-abort (§6), and
+stuck/unreporting devices (§4). Alert channel coverage by
+<code>Herald</code> is <strong>UNVERIFIED</strong>. [submodule-reuse-map
+§3]</p>
+<h2 id="mvp-vs-1.0.1-boundary">8. MVP vs 1.0.1 boundary</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>1.0.0-MVP</th>
+<th>1.0.1 (staged rollout)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Event ingest (§2)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>OpenTelemetry/Prometheus + dashboard health (§3, §4)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Persist <code>telemetry_events</code> / <code>update_metrics</code>
+(§2)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Halt-on-failure <strong>signals</strong> computed (§5)</td>
+<td>yes (surfaced)</td>
+<td>yes (drive engine)</td>
+</tr>
+<tr>
+<td><strong>Automatic</strong> halt/advance per phase (§5)</td>
+<td>no (all-at-once)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Post-boot health window <strong>observed</strong> (§6)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><strong>Automatic</strong> canary-abort (§6)</td>
+<td>no (manual one-click)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Alerting via <code>Herald</code> (§7)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<p>This boundary follows the master non-goals (staged rollout +
+automatic phase control land 1.0.1) while keeping MVP fully observable
+and manually controllable. [master §1, §5, §8]</p>
+<h2 id="catalogue-first-composition">9. Catalogue-first composition</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Brick / module</th>
+<th>Class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Event/metric schema + codecs</td>
+<td><code>ota-telemetry-schema</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td>Telemetry pipeline / export (OpenTelemetry → Prometheus)</td>
+<td><code>observability</code></td>
+<td>reuse (UNVERIFIED surface)</td>
+</tr>
+<tr>
+<td>Alert routing</td>
+<td><code>Herald</code></td>
+<td>reuse (UNVERIFIED surface)</td>
+</tr>
+<tr>
+<td>Internal domain-event fan-out</td>
+<td><code>eventbus</code></td>
+<td>reuse</td>
+</tr>
+<tr>
+<td>Event + derived-metric persistence</td>
+<td><code>database</code> (PostgreSQL)</td>
+<td>reuse</td>
+</tr>
+<tr>
+<td>Device auth on report</td>
+<td><code>auth</code>, <code>security</code></td>
+<td>reuse</td>
+</tr>
+</tbody>
+</table>
+<p>The schema module carries <strong>no transport, no storage</strong>;
+only canonical catalogue names used (none invented).
+[submodule-reuse-map §3/§4]</p>
+<h2 id="testing-four-layer">10. Testing (four-layer)</h2>
+<p>The rollout-gate fed by these signals is <strong>safety-critical
+(≥90% coverage)</strong> with mutation immunity. [master §13; adr-0003
+§6]</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What it asserts for telemetry processing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Source-presence gate</strong></td>
+<td><code>ota-telemetry-schema</code> defines the event/metric enums +
+codecs; the <code>telemetry-ingest</code> seam exposes the health-signal
+port;
+<code>observability</code>/<code>Herald</code>/<code>eventbus</code>/<code>database</code>
+are wired (not re-implemented); health-window + threshold config keys
+exist.</td>
+</tr>
+<tr>
+<td><strong>2. Artifact gate</strong></td>
+<td>The telemetry path ships in the control-plane binary; ingested
+events produce Prometheus metrics via <code>observability</code> (assert
+metrics are emitted); persisted
+<code>telemetry_events</code>/<code>update_metrics</code> rows are
+written; telemetry travels as Brotli/gzip control-plane JSON (never on
+the artifact <code>identity</code> path).</td>
+</tr>
+<tr>
+<td><strong>3. Runtime / integration</strong></td>
+<td>Feed a synthetic event stream
+(<code>download_started…success/failure</code>); assert success/error
+rates compute correctly; cross an error-threshold and assert a
+<code>halt/pause</code> signal is produced and an alert is dispatched;
+simulate post-boot health-window expiry without <code>success</code> and
+assert <code>post_boot_health_failed</code>; (1.0.1) assert auto
+canary-abort fires on canary breach within the window. Use a
+<strong>fake clock + fake telemetry</strong> for determinism.</td>
+</tr>
+<tr>
+<td><strong>4. Mutation meta-test</strong></td>
+<td>Negate a halt invariant (e.g. let the engine advance despite an
+error-threshold breach, or count a window-expired device as healthy) and
+assert the rollout-gate test flips <strong>PASS→FAIL</strong>. The
+safety of halt-on-failure / canary-abort is proven by the negation
+breaking the gate.</td>
+</tr>
+</tbody>
+</table>
+<p>No-bluff positive evidence only (§7.1, UNVERIFIED). [adr-0003 §6]
+On-device, the post-boot/A-B-rollback path is validated on the real
+Orange Pi 5 Max plan (download→verify→apply→reboot→verify;
+corrupt-slot→confirm A/B fallback). [master §13]</p>
+<h2 id="compliance-notes-helixconstitution">11. Compliance notes
+(HelixConstitution)</h2>
+<blockquote>
+<p>Clause numbers carried from the corpus convention;
+<strong>UNVERIFIED</strong> against the authoritative text.
+[submodule-reuse-map §7]</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>How telemetry processing complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1 observability guarantee</td>
+<td>Event ingest → OTel/Prometheus → health detects and reports
+problems; alerting via <code>Herald</code> (§3, §4, §7). [master §1,
+§9]</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>Schema (<code>ota-telemetry-schema</code>) is
+transport/storage-free; ingest supplies signals to the rollout-engine
+via a port; engine contains no ingest (§2, §5). [architecture §5.1]</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first)</td>
+<td>Pipeline/alerting reuse
+<code>observability</code>/<code>Herald</code>/<code>eventbus</code>;
+only the schema is new (§9). [master §10]</td>
+</tr>
+<tr>
+<td>§11.4.6 / §11.4.8 (no-guessing / research-first)</td>
+<td>Health-window/threshold figures carried <strong>UNVERIFIED</strong>
+(draft constants non-binding); MVP-vs-1.0.1 boundary set on the master
+non-goals, not invented (§6, §8). [adr-0003 §3.2]</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§10 testing; the halt-on-failure/canary-abort path floored ≥90% with
+mutation immunity. [master §13]</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>Halt/abort behaviour proven by negation flipping the gate (§10 layer
+4) + on-device A/B-fallback validation, not by assertion.
+<strong>UNVERIFIED</strong> against clause text. [master §13]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-unverified-items">12. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>Health-window duration, canary cohort size, success/error
+thresholds</strong> — no binding figures in sources (draft constants
+non-binding). <strong>UNVERIFIED.</strong> [adr-0003 §3.2; master
+§8]</li>
+<li><strong><code>observability</code> (OpenTelemetry/Prometheus) and
+<code>Herald</code> (alert channels) public surfaces</strong> — not
+inspected this revision. <strong>UNVERIFIED.</strong>
+[submodule-reuse-map §7]</li>
+<li><strong><code>ota-telemetry-schema</code> event/metric enums +
+codecs</strong> — to pin before repo creation. [master §10]</li>
+<li><strong>Telemetry-vs-rollout volume asymmetry</strong> (telemetry
+plausibly higher-volume → second split candidate) —
+<strong>UNVERIFIED</strong>; confirm via MVP load tests. [adr-0003 §3.2;
+architecture §9]</li>
+<li><strong>Constitution clause numbers</strong> — carried from corpus
+convention. <strong>UNVERIFIED.</strong></li>
+</ol>
+<h2 id="sources">13. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>.</p>
+<ul>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— §1 observability guarantee + non-goals, §5 MVP flow, §8 staged rollout
+engine, §9 telemetry &amp; observability, §13 testing.</li>
+<li><a
+href="../../research/adr/adr-0003-server-topology.md"><code>research/adr/adr-0003-server-topology.md</code></a>
+— telemetry as second split candidate, draft constants non-binding,
+rollout-gate ≥90% floor.</li>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>research/adr/adr-0004-transport.md</code></a>
+— telemetry is control-plane traffic (Brotli/gzip), distinct from the
+artifact <code>identity</code> path.</li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>research/adr/adr-0001-wrapped-engine.md</code></a>
+— Memfault one-click-abort pattern; signal contract identical across
+wrap/fallback.</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>00-master/submodule_reuse_map.md</code></a>
+— <code>ota-telemetry-schema</code> boundary;
+<code>observability</code>/<code>Herald</code>/<code>eventbus</code>
+bindings.</li>
+<li><a
+href="../../additions/initial_research.md"><code>additions/initial_research.md</code></a>
+— post-boot health check + recovery flow (device lifecycle).</li>
+<li><a
+href="../../additions/initial_research_02.md"><code>additions/initial_research_02.md</code></a>
+— canary phase + rollout strategy config (<code>pause_on_error</code>,
+<code>rollback_on_critical_failure</code>); <code>update_verifier</code>
+slot-success.</li>
+<li><a href="architecture.md"><code>architecture.md</code></a> — the
+<code>telemetry-ingest</code> seam and rollout-engine telemetry-signal
+port this spec feeds.</li>
+</ul>
+</body>
+</html>
