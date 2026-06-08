@@ -46,7 +46,7 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 
 ### NEXT wave (still open)
 1. **Operator decision applied**: end-user rollback stays in **1.0.1** (with staged-rollout). Docs reconciliation (synthesis §10 K8 + 1.0.1/1.0.2 dir renumber) still pending — the agent wave for it was rate-limited; redo.
-2. **Implement** the staged-rollout engine + migration `002_*` (per `1.0.1-staged-rollout/`); now includes end-user rollback.
+2. **Staged-rollout engine** (per `1.0.1-staged-rollout/`): migration `002_*` (deployment_phases/rollouts/rollback_history) is DONE + real-DB validated (commit e14942a, evidence `docs/qa/20260608-migration-002/`). REMAINING: the Go engine — a `StoragePort` adapter over the `ota-rollout-engine` brick + rollout REST endpoints (start/pause/resume/abort/rollback). End-user rollback included per operator decision.
 3. **Dashboard repo** scaffold (G6); **G12** NFR/load harness; **G11** verify/create ota-* public repos; confirm CODEOWNERS GitHub handle. (These 5-6-agent wave items were rate-limited mid-session — redo when limits recover.)
 
 ### Carried-forward gaps register
