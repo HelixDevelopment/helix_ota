@@ -78,13 +78,15 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **Group** (a91271b + 02ad2d0): `id`→`group_id`; batch member-add → 200 `{added, already_member, not_found}`. Server+tests+e2e(36/0/1)+dashboard+bank+docs.
 - **Audit** (fbaefbe): `actor` → object `{user_id, subject}`. Server+test+dashboard+docs.
 - **Telemetry per-device** (2a48ab5): `events`→`items`, newest-first, `?limit`/`?cursor`+`next_cursor`. Server+tests+dashboard+docs.
-- Each: full default suite green, all wire consumers updated in lockstep, `spec_impl_alignment.md` rows 6/8/1/4-structural RESOLVED.
+- **GET /members** (3b4b1d8 + e2e): `device_ids[]` → `items[]` of `{device_id, added_at}`; store gained `device_group_members.added_at` + `ListGroupMembersDetailed` (memory+pgx, real-DB parity); e2e 39/0/1.
+- Each: full default suite green, all wire consumers updated in lockstep, `spec_impl_alignment.md` rows 6/8/1/4-structural + GET-members RESOLVED.
+
+**WIDEN ruling status: COMPLETE** except two legitimately-parked items: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) **blocked on UNVERIFIED ingest** (event source must carry them first) + the per-device telemetry filters; group/members list pagination (row 7) **deferred** (groups bounded — memo's own recommendation). Both need either ingest work or an operator nudge; not autonomously actionable now.
 
 ### NEXT wave (still open)
-1. **Remaining WIDEN bits**: `GET /groups/{id}/members` `items[]`+`added_at` (needs a store membership-timestamp change); group-list pagination (row 7); row-4 richer telemetry fields `duration_ms`/`bytes_transferred` — **blocked on UNVERIFIED ingest** (the event source must carry them first) + the per-device filters.
-2. **Device-side TUF implementation** (gomobile-go-tuf/v2 per the decision memo; needs the arm64 `.so`-size/JNI measurement gate first) — Kotlin `ota-android-agent`/`ota-update-engine-bridge`.
-3. **Delta-updates device-side** — update-check delta-selection (map device current-version → base artifact → `FindDelta`) + device payload apply.
-4. CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
+1. **Device-side Android** (the substantial remaining feature work, Kotlin `ota-android-agent`/`ota-update-engine-bridge`): (a) update-check delta-selection — map device current-version → base artifact → `FindDelta` (server-side hook) + device payload apply; (b) device-side TUF (gomobile-go-tuf/v2 per the decision memo, gated on an arm64 `.so`-size/JNI measurement first).
+2. **Parked WIDEN bits** (operator nudge or ingest work): row-4 richer telemetry fields (blocked on UNVERIFIED ingest) + per-device filters; group/members list pagination (deferred).
+3. CODEOWNERS GitHub handle; make `vasic-digital/containers` + `HelixConstitution` GitLab mirrors public (or document GitHub-canonical) per the G11 audit.
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
