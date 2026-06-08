@@ -625,6 +625,48 @@ ORDER BY seq OFFSET $3 LIMIT $4`
 	return out, next, nil
 }
 
+// --- rollback history ---
+
+func (r *PostgresRepository) AppendRollback(ctx context.Context, rec RollbackRecord) error {
+	details, err := jsonbOf(orEmptyMap(rec.Details))
+	if err != nil {
+		return err
+	}
+	const q = `
+INSERT INTO helix_ota.rollback_history
+ (rollback_id, deployment_id, kind, from_release_id, to_release_id, recall_deployment_id,
+  reason, triggered_by, details, created_at)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
+	_, err = r.pool.Exec(ctx, q, rec.ID, rec.DeploymentID, rec.Kind, rec.FromReleaseID,
+		rec.ToReleaseID, rec.RecallDeploymentID, rec.Reason, rec.TriggeredBy, details, rec.CreatedAt)
+	return err
+}
+
+func (r *PostgresRepository) ListRollbacks(ctx context.Context, deploymentID string) ([]RollbackRecord, error) {
+	const q = `
+SELECT rollback_id, deployment_id, kind, from_release_id, to_release_id, recall_deployment_id,
+       reason, triggered_by, details, created_at
+FROM helix_ota.rollback_history WHERE deployment_id=$1 ORDER BY seq`
+	rows, err := r.pool.Query(ctx, q, deploymentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []RollbackRecord
+	for rows.Next() {
+		var rec RollbackRecord
+		var details []byte
+		if serr := rows.Scan(&rec.ID, &rec.DeploymentID, &rec.Kind, &rec.FromReleaseID,
+			&rec.ToReleaseID, &rec.RecallDeploymentID, &rec.Reason, &rec.TriggeredBy,
+			&details, &rec.CreatedAt); serr != nil {
+			return nil, serr
+		}
+		_ = json.Unmarshal(details, &rec.Details)
+		out = append(out, rec)
+	}
+	return out, rows.Err()
+}
+
 // --- idempotency ---
 
 func (r *PostgresRepository) GetIdempotent(ctx context.Context, key string) (string, bool) {
