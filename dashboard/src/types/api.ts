@@ -126,20 +126,72 @@ export interface DeploymentStatus {
   created_at: string;
 }
 
-// Rollout (design DeploymentsScreen rollout panel; staged rollout API is G7/1.0.1).
-// The dashboard surfaces a read view + a guarded write call; the routes themselves
-// are flagged UNVERIFIED (design §13) and degrade gracefully.
+// Rollout (staged-rollout API, 1.0.1). Phase-based model mirroring the server
+// wire (handlers_rollout.go): a rollout is a strictly-increasing list of phases
+// (percentage ending at 100, thresholds in [0,1]) advanced by health verdicts.
+// GET returns the current state; POST creates+starts; POST /evaluate applies a
+// health verdict and returns the engine decision. Routes degrade gracefully
+// when the deployment has no rollout yet (404).
+export interface RolloutPhaseSpec {
+  percentage: number; // 1..100, strictly increasing, last == 100
+  success_threshold: number; // [0,1]
+  error_threshold: number; // [0,1]
+  duration_seconds: number;
+  auto_progress: boolean;
+}
+
+export interface RolloutCreate {
+  phases: RolloutPhaseSpec[];
+}
+
 export interface RolloutState {
   deployment_id: DeploymentId;
-  strategy: string;
-  percentage: number; // 0..100
-  paused: boolean;
+  status: string; // e.g. running, halted, completed, rolled_back
+  current_phase: number; // 0-based index into phases
+  phases: RolloutPhaseSpec[];
   updated_at: string;
 }
 
-export interface RolloutCommand {
-  percentage?: number;
-  paused?: boolean;
+// POST /deployments/{id}/rollout/evaluate body — telemetry-derived health
+// summary for the current phase cohort.
+export interface RolloutVerdict {
+  success_rate: number; // [0,1]
+  error_rate: number; // [0,1]
+  post_boot_health_failed: boolean;
+}
+
+// Response to an evaluation: the engine decision + the resulting state.
+export interface RolloutDecision {
+  action: string; // advance | hold | halt | complete (engine vocabulary)
+  reason: string;
+  state: RolloutState;
+}
+
+// --- recall / rollback (rollback_ux.md §7) ----------------------------------
+
+// POST /deployments/{id}/recall body — server-driven rollback of the current
+// release back to a previous-good release (forward-fix supersede semantics).
+export interface RecallRequest {
+  to_release_id: ReleaseId;
+  reason?: string;
+}
+
+// A rollback_history row (response to recall + GET /deployments/{id}/rollbacks).
+export interface RollbackRecord {
+  id: string;
+  deployment_id: DeploymentId;
+  kind: string; // rollback | abort
+  from_release_id?: string;
+  to_release_id?: string;
+  recall_deployment_id?: string;
+  reason?: string;
+  triggered_by?: string;
+  details?: Record<string, string>;
+  created_at: string;
+}
+
+export interface RollbackList {
+  items: RollbackRecord[];
 }
 
 // --- devices + telemetry (design §9.4, endpoints §8 / §12) ------------------
@@ -165,25 +217,35 @@ export interface DeviceStatus {
 
 export type TelemetryEventType = Exclude<UpdateState, "idle">;
 
-export interface TelemetryEvent {
-  device_id: DeviceId;
-  event_type: TelemetryEventType;
-  at: string;
+// One telemetry-history row (handlers_telemetry.go TelemetryEventView). `event`
+// is the wire event-type string; the extra projection fields are optional.
+export interface TelemetryEventView {
+  event: string;
+  version?: string;
+  deployment_id?: string;
+  error_code?: string;
   detail?: string;
+  timestamp: string; // device-reported time, RFC 3339
+  received_at: string; // server ingest time, RFC 3339
 }
 
-// Telemetry read API is PARTIAL (gap G4); these shapes are best-effort and the
-// screens render a graceful empty state when the endpoints are not yet built.
+// GET /devices/{id}/telemetry — newest-first, cursor-paginated. next_cursor is
+// null on the last page.
 export interface TelemetryHistory {
   device_id: DeviceId;
-  items: TelemetryEvent[];
-  next_cursor?: string | null;
+  items: TelemetryEventView[];
+  next_cursor: string | null;
 }
 
+// GET /telemetry/overview — fleet-wide aggregates (handlers_telemetry.go).
+//  - event_counts: count keyed by telemetry event type
+//  - failure_rate: failure / (success + failure) terminal outcomes, 0..1
+//  - by_state: fleet device count keyed by last-known update state
 export interface TelemetryOverview {
-  total_devices: number;
-  by_update_state: Partial<Record<UpdateState, number>>;
-  by_version: Record<string, number>;
+  event_counts: Record<string, number>;
+  total: number;
+  failure_rate: number;
+  by_state: Record<string, number>;
 }
 
 // --- groups (design DeploymentCreate group; group CRUD is G5/1.0.1) ---------
@@ -191,14 +253,17 @@ export interface TelemetryOverview {
 export interface DeviceGroup {
   group_id: string;
   name: string;
+  description?: string;
   member_count: number;
   created_at: string; // RFC 3339 UTC
 }
 
 export interface DeviceGroupCreate {
   name: string;
+  description?: string;
 }
 
+// GET /groups returns { items } (no cursor pagination in MVP).
 export interface DeviceGroupList {
   items: DeviceGroup[];
   next_cursor?: string;
@@ -230,24 +295,41 @@ export interface DeviceGroupMembers {
   items: DeviceGroupMember[];
 }
 
-// --- audit (design §6; audit viewer is G3/1.0.1, route deferred) ------------
+// --- audit (operational_endpoints.md §4; admin-only GET /audit) -------------
 
+// Who performed an audited action. `subject` is always set; `user_id` is empty
+// when the actor did not resolve to a durable users row.
 export interface AuditActor {
   user_id?: string;
   subject: string;
 }
 
+// One audit_logs row (audit_wire.go AuditLogEntry).
 export interface AuditEntry {
   id: string;
   actor: AuditActor;
-  action: string;
-  at: string;
-  request_id?: string;
+  action: string; // SCREAMING_SNAKE verb, e.g. RELEASE_CREATE
+  resource_type: string;
+  resource_id?: string;
+  details?: Record<string, string>;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string; // RFC 3339 UTC
 }
 
 export interface AuditList {
   items: AuditEntry[];
-  next_cursor?: string;
+  next_cursor: string | null;
+}
+
+// Optional ?since/?until RFC3339 time bounds + ?action/?resource_type filters.
+export interface AuditQuery {
+  action?: string;
+  resource_type?: string;
+  since?: string; // RFC 3339
+  until?: string; // RFC 3339
+  limit?: number; // [1,200]
+  cursor?: string;
 }
 
 // --- health (endpoints does not define a public /health in MVP; best-effort) -

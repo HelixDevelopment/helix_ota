@@ -38,6 +38,8 @@ const NAV: { to: string; label: string }[] = [
   { to: "/releases", label: "Releases" },
   { to: "/deployments", label: "Deployments" },
   { to: "/fleet", label: "Fleet" },
+  { to: "/groups", label: "Groups" },
+  { to: "/audit", label: "Audit" },
 ];
 
 export function AppShell() {
