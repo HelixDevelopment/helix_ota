@@ -88,3 +88,43 @@ dist/index.html                  0.59 kB │ gzip:  0.43 kB
 dist/assets/index-Bj2Qft4z.js  195.83 kB │ gzip: 62.31 kB │ map: 816.90 kB
 ✓ built in 568ms
 build exit code: 0
+
+================================================================================
+Captured: 2026-06-08T20:18:00Z (real output, no bluff per Constitution §11.4)
+Host: Darwin 24.5.0 arm64
+node: v22.22.3   npm: 10.9.8
+Directory: /Volumes/T7/Projects/helix_ota/dashboard
+
+Change: GET /groups/{id}/members response RESHAPE (breaking wire change) — typed client.
+  - Wire was { group_id, device_ids: string[] }; now
+    { group_id: string; items: { device_id: string; added_at: string }[] }.
+  - types/api.ts: added DeviceGroupMember { device_id: DeviceId; added_at: string };
+    DeviceGroupMembers is now { group_id: string; items: DeviceGroupMember[] }
+    (was { group_id, device_ids: DeviceId[] }).
+  - api/client.ts: getGroupMembers(groupId) return type unchanged at the call site
+    (Promise<DeviceGroupMembers>) — it inherits the new shape automatically.
+  - No caller reads .device_ids off the members response (the getGroupMembers result is
+    not consumed by any screen yet); the only .device_ids in the tree is on the unrelated
+    DeviceGroupMembersAdd REQUEST type, which is intentionally left intact. Type-only fix.
+
+=== command: npm run typecheck  (tsc --noEmit, app tsconfig + node tsconfig) ===
+
+> ota-dashboard@1.0.0-mvp typecheck
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json
+
+typecheck exit code: 0
+
+=== command: npm run build  (tsc --noEmit x2 && vite build) ===
+
+> ota-dashboard@1.0.0-mvp build
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 44 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.59 kB │ gzip:  0.43 kB
+dist/assets/index-CJ4q6gl6.js  195.83 kB │ gzip: 62.30 kB │ map: 816.90 kB
+✓ built in 491ms
+build exit code: 0
