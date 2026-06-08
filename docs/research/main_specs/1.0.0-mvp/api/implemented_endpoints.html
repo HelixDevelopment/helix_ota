@@ -642,7 +642,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;9c2f...&quot;</span><span class="fu">,</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;actor&quot;</span><span class="fu">:</span> <span class="st">&quot;admin@example.com&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;actor&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;user_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span> <span class="dt">&quot;subject&quot;</span><span class="fu">:</span> <span class="st">&quot;admin@example.com&quot;</span> <span class="fu">},</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;DEPLOYMENT_CREATE&quot;</span><span class="fu">,</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;resource_type&quot;</span><span class="fu">:</span> <span class="st">&quot;deployment&quot;</span><span class="fu">,</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;resource_id&quot;</span><span class="fu">:</span> <span class="st">&quot;d12b...&quot;</span><span class="fu">,</span></span>
@@ -656,14 +656,17 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li><strong>Key fields</strong> (<code>AuditLogEntry</code>):
-<code>id</code>, <code>actor</code> (a <strong>flat string</strong> —
-the actor subject, falling back to the user id;
-<code>audit_wire.go:toAuditLogEntry</code>), <code>action</code>,
-<code>resource_type</code>, <code>resource_id</code> (omitempty),
-<code>details</code> (string→string map, omitempty),
-<code>ip_address</code> (omitempty), <code>user_agent</code>
-(omitempty), <code>created_at</code>. <code>next_cursor</code> is
-<code>*string</code> (JSON <code>null</code> when exhausted).</li>
+<code>id</code>, <code>actor</code> (an <strong>object</strong>
+<code>{ user_id, subject }</code> — <code>user_id</code> is the durable
+users-row key (empty/omitted when the actor doesn’t resolve to a row),
+<code>subject</code> is the token subject;
+<code>audit_wire.go:AuditActor</code>/<code>toAuditLogEntry</code>),
+<code>action</code>, <code>resource_type</code>,
+<code>resource_id</code> (omitempty), <code>details</code>
+(string→string map, omitempty), <code>ip_address</code> (omitempty),
+<code>user_agent</code> (omitempty), <code>created_at</code>.
+<code>next_cursor</code> is <code>*string</code> (JSON <code>null</code>
+when exhausted).</li>
 <li><strong>Status codes:</strong> <code>200</code> OK;
 <code>400 VALIDATION_FAILED</code> (bad <code>limit</code>, or
 non-RFC3339 <code>since</code>/<code>until</code>);
@@ -1187,10 +1190,10 @@ landing commit.</p>
 <p><strong>Audit (<code>operational_endpoints.md</code> §4 vs
 <code>handlers_audit.go</code>):</strong></p>
 <ul>
-<li>The spec’s <code>actor</code> is a nested object
-<code>{ user_id, subject }</code>; the built
-<code>AuditLogEntry.actor</code> is a <strong>flat string</strong>
-(subject, falling back to user id).</li>
+<li><strong>RESOLVED (commit pending):</strong>
+<code>AuditLogEntry.actor</code> is now the spec’s nested object
+<code>{ user_id, subject }</code> (WIDENed to match the spec;
+<code>user_id</code> omitempty when unresolved).</li>
 <li><strong>RESOLVED (commit <code>028e656</code>):</strong> the audit
 handler now also consumes <code>?since</code> and <code>?until</code>
 (RFC3339; bad format → <code>400</code>), implementing the spec’s

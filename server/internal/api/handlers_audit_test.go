@@ -37,8 +37,8 @@ func TestAuditRecordsSuccessfulMutation(t *testing.T) {
 	if e.Action != "DEVICE_REGISTER" || e.ResourceType != "device" {
 		t.Fatalf("audit entry action/resource mismatch: %+v", e)
 	}
-	if e.Actor != "admin@helix.test" {
-		t.Fatalf("audit actor mismatch: %q", e.Actor)
+	if e.Actor.Subject != "admin@helix.test" {
+		t.Fatalf("audit actor mismatch: %+v", e.Actor)
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 // holds the redacted Details map.
 type AuditLogEntry struct {
 	ID           string            `json:"id"`
-	Actor        string            `json:"actor"`
+	Actor        AuditActor        `json:"actor"`
 	Action       string            `json:"action"`
 	ResourceType string            `json:"resource_type"`
 	ResourceID   string            `json:"resource_id,omitempty"`
@@ -21,6 +21,15 @@ type AuditLogEntry struct {
 	CreatedAt    time.Time         `json:"created_at"`
 }
 
+// AuditActor identifies who performed an audited action
+// (operational_endpoints.md §4.2): the durable users-row key (UserID, nullable)
+// plus the token Subject. Subject is always set; UserID is empty when the actor
+// did not resolve to a users row.
+type AuditActor struct {
+	UserID  string `json:"user_id,omitempty"`
+	Subject string `json:"subject"`
+}
+
 // AuditLogList is the paged GET /audit body.
 type AuditLogList struct {
 	Items      []AuditLogEntry `json:"items"`
@@ -28,13 +37,13 @@ type AuditLogList struct {
 }
 
 func toAuditLogEntry(e store.AuditEntry) AuditLogEntry {
-	actor := e.ActorSubject
-	if actor == "" {
-		actor = e.UserID
+	subject := e.ActorSubject
+	if subject == "" {
+		subject = e.UserID
 	}
 	return AuditLogEntry{
 		ID:           e.ID,
-		Actor:        actor,
+		Actor:        AuditActor{UserID: e.UserID, Subject: subject},
 		Action:       e.Action,
 		ResourceType: e.ResourceType,
 		ResourceID:   e.ResourceID,
