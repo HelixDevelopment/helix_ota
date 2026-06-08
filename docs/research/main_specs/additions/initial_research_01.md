@@ -362,7 +362,7 @@ For **1.0.0‑mvp**, the repository `helix_ota` will have:
 ```
 helix_ota/
 ├── .gitmodules
-├── HelixConstitution/ (submodule)
+├── constitution/ (submodule)
 ├── containers/ (submodule vasic-digital/containers)
 ├── phase/
 │   ├── 1.0.0-mvp/
