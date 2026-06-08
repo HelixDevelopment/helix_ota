@@ -155,6 +155,15 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 	if evs, err := repo.TelemetryForDeployment(ctx, "no-dep"); err != nil || len(evs) != 0 {
 		t.Fatalf("TelemetryForDeployment empty: %+v err=%v", evs, err)
 	}
+	// Device history + fleet counts.
+	devEvs, err := repo.TelemetryForDevice(ctx, "dev-1")
+	if err != nil || len(devEvs) != 2 {
+		t.Fatalf("TelemetryForDevice: %+v err=%v", devEvs, err)
+	}
+	counts, err := repo.TelemetryEventCounts(ctx)
+	if err != nil || counts[string(otaprotocol.EventDownloadStarted)] != 1 || counts[string(otaprotocol.EventSuccess)] != 1 {
+		t.Fatalf("TelemetryEventCounts: %+v err=%v", counts, err)
+	}
 
 	// --- audit ---
 	if err := repo.AppendAudit(ctx, AuditEntry{ID: "aud-1", ActorSubject: "admin@helix.test",

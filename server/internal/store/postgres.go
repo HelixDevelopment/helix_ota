@@ -416,6 +416,49 @@ FROM helix_ota.telemetry_events WHERE deployment_id=$1 ORDER BY seq`
 	return out, rows.Err()
 }
 
+// TelemetryForDevice returns a device's event history in insertion order.
+func (r *PostgresRepository) TelemetryForDevice(ctx context.Context, deviceID string) ([]TelemetryRecord, error) {
+	const q = `
+SELECT device_id, deployment_id, event, version, error_code, detail, timestamp, received_at
+FROM helix_ota.telemetry_events WHERE device_id=$1 ORDER BY seq`
+	rows, err := r.pool.Query(ctx, q, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []TelemetryRecord
+	for rows.Next() {
+		var rec TelemetryRecord
+		var event string
+		if serr := rows.Scan(&rec.DeviceID, &rec.DeploymentID, &event, &rec.Version,
+			&rec.ErrorCode, &rec.Detail, &rec.Timestamp, &rec.ReceivedAt); serr != nil {
+			return nil, serr
+		}
+		rec.Event = otaprotocol.TelemetryEvent(event)
+		out = append(out, rec)
+	}
+	return out, rows.Err()
+}
+
+// TelemetryEventCounts returns fleet-wide counts keyed by event type.
+func (r *PostgresRepository) TelemetryEventCounts(ctx context.Context) (map[string]int64, error) {
+	rows, err := r.pool.Query(ctx, `SELECT event, COUNT(*) FROM helix_ota.telemetry_events GROUP BY event`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	counts := make(map[string]int64)
+	for rows.Next() {
+		var event string
+		var n int64
+		if serr := rows.Scan(&event, &n); serr != nil {
+			return nil, serr
+		}
+		counts[event] = n
+	}
+	return counts, rows.Err()
+}
+
 // --- audit ---
 
 func (r *PostgresRepository) AppendAudit(ctx context.Context, e AuditEntry) error {

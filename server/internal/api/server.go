@@ -135,6 +135,10 @@ func (s *Server) Router() *gin.Engine {
 		auth.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
 		auth.POST("/client/telemetry", requireRole(RoleDevice), s.handleClientTelemetry)
 
+		// Telemetry reads (operational_endpoints.md §5). Device may read its own.
+		auth.GET("/devices/:deviceId/telemetry", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceTelemetry)
+		auth.GET("/telemetry/overview", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleTelemetryOverview)
+
 		// Audit log read (operational_endpoints.md §4.3) — admin only.
 		auth.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
 	}
