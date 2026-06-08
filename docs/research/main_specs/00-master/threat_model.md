@@ -791,7 +791,11 @@ conditional on the board actually shipping locked AVB** — an UNVERIFIED item t
     not read here; **how a recall to a lower-rollback-index N-1 reconciles with the
     bootloader-enforced AVB anti-downgrade (§4.3) is UNVERIFIED and needs an operator/architecture
     decision** (honor-but-device-refuses vs deliberate operator-gated downgrade mechanism).
-    Affects §4.13.5.
+    Affects §4.13.5. **RESOLVED (2026-06-08, operator): honor AVB — recall is FORWARD-FIX ONLY.**
+    `handleRecall` now supersedes the current deployment + creates a NEW active deployment of the
+    target release; the update-check anti-downgrade invariant ensures no device is offered a
+    version ≤ its current, so the bootloader-enforced AVB anti-rollback is honored by construction.
+    A true sub-rollback-index downgrade is NOT offered. No longer an open decision.
 12. **"G1" label** — the prompt-supplied label "G1 anti-downgrade invariant" is **UNVERIFIED**
     against the design corpus, which names the guarantee "version monotonicity" / "anti-downgrade";
     the mechanism is verified, the literal label is not. Affects §4.13.5.

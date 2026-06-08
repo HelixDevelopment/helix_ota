@@ -253,7 +253,7 @@ End-User / Operator Rollback UX</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -265,7 +265,20 @@ End-User / Operator Rollback UX</h1>
 </tr>
 <tr>
 <td>Status</td>
-<td>planned (spec — depth follows 1.0.0-MVP sibling specs)</td>
+<td>partially implemented (recall endpoint = forward-fix shipped)</td>
+</tr>
+<tr>
+<td>Decision (2026-06-08, operator)</td>
+<td><strong>Honor AVB — recall is forward-fix only.</strong> A recall
+NEVER ships an image below the device’s bootloader rollback index.
+<code>POST /deployments/{id}/recall</code> (IMPLEMENTED,
+<code>handlers_recall.go</code>) supersedes the current deployment and
+creates a NEW active deployment of the chosen target release; the
+update-check anti-downgrade invariant guarantees no device is offered a
+version ≤ its current, so AVB anti-rollback is honored by construction.
+A genuine sub-index downgrade is NOT offered (would require a deliberate
+operator-gated mechanism + matching rollback-index bump — out of scope).
+This resolves threat_model §11 item 11.</td>
 </tr>
 <tr>
 <td>Status summary</td>
