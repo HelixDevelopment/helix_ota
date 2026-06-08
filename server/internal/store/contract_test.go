@@ -236,6 +236,24 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("ListAudit filtered: %+v err=%v", filtered, err)
 	}
 
+	// --- rollback history ---
+	if err := repo.AppendRollback(ctx, RollbackRecord{ID: "rb-1", DeploymentID: "dep-1",
+		Kind: "rollback", FromReleaseID: "rel-2", ToReleaseID: "rel-1", RecallDeploymentID: "dep-2",
+		Reason: "halt", Details: map[string]string{"error_rate": "0.5"}, CreatedAt: ts}); err != nil {
+		t.Fatalf("AppendRollback: %v", err)
+	}
+	if err := repo.AppendRollback(ctx, RollbackRecord{ID: "rb-2", DeploymentID: "dep-1",
+		Kind: "abort", Reason: "operator", CreatedAt: ts}); err != nil {
+		t.Fatalf("AppendRollback abort: %v", err)
+	}
+	rbs, err := repo.ListRollbacks(ctx, "dep-1")
+	if err != nil || len(rbs) != 2 || rbs[0].Kind != "rollback" || rbs[0].ToReleaseID != "rel-1" || rbs[1].Kind != "abort" {
+		t.Fatalf("ListRollbacks: %+v err=%v", rbs, err)
+	}
+	if rbs, err := repo.ListRollbacks(ctx, "no-dep"); err != nil || len(rbs) != 0 {
+		t.Fatalf("ListRollbacks empty: %+v err=%v", rbs, err)
+	}
+
 	// --- idempotency ---
 	if _, ok := repo.GetIdempotent(ctx, "k1"); ok {
 		t.Fatalf("GetIdempotent before put should be absent")

@@ -123,6 +123,22 @@ type AuditEntry struct {
 	CreatedAt    time.Time
 }
 
+// RollbackRecord is one append-only rollback/abort audit row (migration 002
+// rollback_history; rollback_ux.md). Kind is "abort" (halt forward progress) or
+// "rollback" (server-driven recall to a previous release).
+type RollbackRecord struct {
+	ID                 string
+	DeploymentID       string
+	Kind               string // abort | rollback
+	FromReleaseID      string
+	ToReleaseID        string
+	RecallDeploymentID string
+	Reason             string
+	TriggeredBy        string
+	Details            map[string]string
+	CreatedAt          time.Time
+}
+
 // Group is a named device cohort (device_groups; operational_endpoints.md §6).
 type Group struct {
 	ID          string
@@ -186,6 +202,10 @@ type Repository interface {
 	// Audit (operational_endpoints.md §4): append-only admin/operator action log.
 	AppendAudit(ctx context.Context, e AuditEntry) error
 	ListAudit(ctx context.Context, f AuditFilter) ([]AuditEntry, string, error)
+
+	// Rollback history (rollback_ux.md): append-only abort/recall audit.
+	AppendRollback(ctx context.Context, r RollbackRecord) error
+	ListRollbacks(ctx context.Context, deploymentID string) ([]RollbackRecord, error)
 
 	// Device groups (operational_endpoints.md §6). A duplicate group name is a
 	// conflict; membership add/remove is idempotent and requires the group to

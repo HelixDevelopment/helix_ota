@@ -117,6 +117,26 @@ CREATE TABLE IF NOT EXISTS helix_ota.audit_logs (
 CREATE INDEX IF NOT EXISTS idx_audit_action   ON helix_ota.audit_logs (action);
 CREATE INDEX IF NOT EXISTS idx_audit_resource ON helix_ota.audit_logs (resource_type, resource_id);
 
+CREATE TABLE IF NOT EXISTS helix_ota.rollback_history (
+    seq                  BIGSERIAL PRIMARY KEY,
+    rollback_id          TEXT        NOT NULL,
+    deployment_id        TEXT        NOT NULL DEFAULT '',
+    kind                 TEXT        NOT NULL,
+    from_release_id      TEXT        NOT NULL DEFAULT '',
+    to_release_id        TEXT        NOT NULL DEFAULT '',
+    recall_deployment_id TEXT        NOT NULL DEFAULT '',
+    reason               TEXT        NOT NULL DEFAULT '',
+    triggered_by         TEXT        NOT NULL DEFAULT '',
+    details              JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    created_at           TIMESTAMPTZ NOT NULL,
+    CONSTRAINT rollback_history_kind_chk CHECK (kind IN ('abort','rollback')),
+    CONSTRAINT rollback_history_kind_ref_chk CHECK (
+        (kind = 'rollback' AND from_release_id <> '' AND to_release_id <> '')
+        OR (kind = 'abort' AND from_release_id = '' AND to_release_id = '')
+    )
+);
+CREATE INDEX IF NOT EXISTS idx_rollback_history_deployment ON helix_ota.rollback_history (deployment_id);
+
 CREATE TABLE IF NOT EXISTS helix_ota.idempotency_keys (
     key        TEXT PRIMARY KEY,
     result_id  TEXT        NOT NULL,

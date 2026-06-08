@@ -23,6 +23,7 @@ type MemoryRepository struct {
 	deployments map[string]Deployment // by deploymentID
 	telemetry   []TelemetryRecord     // append-only event log
 	audit       []AuditEntry          // append-only admin/operator action log
+	rollbacks   []RollbackRecord      // append-only rollback/abort log
 	groups      map[string]Group      // by groupID
 	grpOrder    []string              // insertion order for stable listing
 	grpByName   map[string]string     // name -> groupID (uniqueness)
@@ -427,6 +428,27 @@ func (m *MemoryRepository) RemoveGroupMember(_ context.Context, groupID, deviceI
 		}
 	}
 	return nil // idempotent
+}
+
+// AppendRollback appends a rollback/abort record (append-only).
+func (m *MemoryRepository) AppendRollback(_ context.Context, r RollbackRecord) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.rollbacks = append(m.rollbacks, r)
+	return nil
+}
+
+// ListRollbacks returns the rollback records for a deployment in insertion order.
+func (m *MemoryRepository) ListRollbacks(_ context.Context, deploymentID string) ([]RollbackRecord, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []RollbackRecord
+	for _, r := range m.rollbacks {
+		if r.DeploymentID == deploymentID {
+			out = append(out, r)
+		}
+	}
+	return out, nil
 }
 
 // AppendAudit appends an admin/operator action to the audit log.
