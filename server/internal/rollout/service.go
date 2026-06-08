@@ -12,14 +12,20 @@ import (
 // evaluate) so handlers never touch the engine/port directly.
 type Service struct {
 	engine *engine.Engine
-	store  *MemoryStore
+	store  engine.StoragePort
 }
 
-// NewService builds a Service backed by an in-memory store and the given clock.
+// NewService builds a Service backed by an in-memory store and the given clock
+// (the MVP default — no database required to run).
 func NewService(now func() time.Time) *Service {
-	st := NewMemoryStore()
-	eng, _ := engine.New(st, ClockFunc(now)) // store+clock non-nil => never errors
-	return &Service{engine: eng, store: st}
+	return NewServiceWithStore(NewMemoryStore(), now)
+}
+
+// NewServiceWithStore builds a Service over any engine.StoragePort (e.g. the
+// pgx PostgresStore for production) and the given clock.
+func NewServiceWithStore(store engine.StoragePort, now func() time.Time) *Service {
+	eng, _ := engine.New(store, ClockFunc(now)) // store+clock non-nil => never errors
+	return &Service{engine: eng, store: store}
 }
 
 // CreateAndStart validates + persists the plan and activates the first phase.
