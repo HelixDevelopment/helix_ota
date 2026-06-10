@@ -1,0 +1,247 @@
+<h1 id="helix-ota-emulated-virtual-device-testing-strategy">Helix OTA —
+Emulated / Virtual Device Testing Strategy</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-10T00:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active — Tier-1 in progress</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The tiered plan for exercising the OTA stack against device-shaped
+targets without (Tier-1) and with (Tier-2/3) real Android A/B +
+hardware. Tier boundaries are FACT, established from the host’s
+available runtimes and the <code>containers</code> submodule’s
+capabilities — not guesses.</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Helix OTA control-plane / device-integration team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><code>docs/research/main_specs/CONTINUATION.md</code>;
+<code>docs/RESUMPTION.md</code>; <code>containers/</code> submodule
+(<code>vasic-digital/containers</code>, §11.4.76);
+<code>submodules/ota-protocol</code>,
+<code>submodules/ota-android-agent</code>,
+<code>submodules/ota-update-engine-bridge</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="purpose">1. Purpose</h2>
+<p>The control plane (<code>server/</code>), the
+<code>ota-protocol</code> wire contract, and the device-side decision
+logic (<code>ota-android-agent</code> <code>DeltaApplyDecision</code>,
+<code>ota-update-engine-bridge</code>) must be validated against
+device-shaped targets. The realistic targets — RK3588 / Orange Pi 5 Max
+— are not always available, and the real Android A/B update path
+(<code>update_engine</code> + AVB/dm-verity + auto-rollback) cannot run
+on the current Apple-Silicon development host. This doc records the
+tiered plan that lets each layer be exercised at the highest fidelity
+the available environment allows, with an honest boundary on what each
+environment can and cannot prove.</p>
+<h2 id="tiers-fact">2. Tiers (FACT)</h2>
+<h3
+id="tier-1-protocol-level-device-emulator-runnable-on-this-macos-host-now">Tier-1
+— protocol-level device emulator (runnable on THIS macOS host NOW)</h3>
+<ul>
+<li><strong>What:</strong> a podman container running a Go
+<code>ota-device-emulator</code> that speaks the <strong>real
+<code>ota-protocol</code></strong> to a live control plane and walks the
+full OTA lifecycle: <strong>register → update-check → telemetry → delta
+→ rollout → recall</strong>.</li>
+<li><strong>Why it is real (not a mock):</strong> the emulator uses the
+actual <code>ota-protocol</code> types and the actual HTTP
+<code>/api/v1</code> surface — it is a real client of the real server,
+not an in-process fake. Per §11.4.27, integration/e2e tiers exercise the
+real, fully implemented system; the emulator stands in only for the
+device’s <em>physical</em> layer (no real <code>update_engine</code>, no
+real partitions), which Tier-1 explicitly does not claim to cover.</li>
+<li><strong>What it proves:</strong> wire-contract conformance,
+server-side flow correctness (anti-downgrade invariant, delta selection
++ full fallback, rollout cohort advancement, recall = forward-fix),
+telemetry ingest/read round-trips, multi-device fleet behaviour under
+concurrent emulated devices.</li>
+<li><strong>What it does NOT prove (honest boundary):</strong> real A/B
+slot switch, AVB/dm-verity verification on real partitions,
+auto-rollback on a corrupt slot, vendor HAL, U-Boot bootloader slot
+selection. Those are Tier-2/3.</li>
+<li><strong>Runtime:</strong> podman on this host (the same runtime the
+pgx integration + dev stack already use via the <code>containers</code>
+submodule). No KVM, no QEMU, no AVD required.</li>
+<li><strong>Status:</strong> <strong>in progress</strong> (this is the
+active PHASE).</li>
+</ul>
+<h3
+id="tier-2-cuttlefish-virtual-android-device-hosthardware-gated">Tier-2
+— Cuttlefish virtual Android device (host/hardware-gated)</h3>
+<ul>
+<li><strong>What:</strong> a Cuttlefish (<code>cvd</code>) virtual
+Android device running a real Android system image, exercising the
+<strong>real <code>update_engine</code> A/B flow + AVB/dm-verity +
+auto-rollback</strong> end-to-end, driven by the
+<code>ota-android-agent</code> +
+<code>ota-update-engine-bridge</code>.</li>
+<li><strong>What it proves:</strong> the device-side apply path the
+Tier-1 emulator stubs — real payload application to the inactive slot,
+post-reboot slot promotion, and corrupt-slot → auto-rollback.</li>
+<li><strong>Gate (FACT):</strong> Cuttlefish requires <strong>Linux with
+nested KVM</strong>. The current development host is Apple-Silicon using
+the <code>applehv</code> hypervisor, which <strong>cannot</strong> run
+Cuttlefish. Tier-2 therefore requires a Linux CI runner / Linux box with
+nested KVM.</li>
+<li><strong>Honest §11.4.112 boundary:</strong> Tier-2 is
+<strong>host/hardware-gated, NOT structurally impossible.</strong> It
+runs the moment a Linux + nested-KVM environment is available; the
+blocker is environment provisioning, not a platform/protocol
+impossibility.</li>
+<li><strong>Status:</strong> designed, not yet runnable (no Linux/KVM
+host attached).</li>
+</ul>
+<h3 id="tier-3-real-rk3588-orange-pi-5-max-hardware">Tier-3 — real
+RK3588 / Orange Pi 5 Max hardware</h3>
+<ul>
+<li><strong>What:</strong> the real target board(s) — full vendor HAL,
+real <strong>U-Boot slot-switch</strong>, <strong>dm-verity on real
+partitions</strong>, real <code>update_engine</code>, real auto-rollback
+on a genuinely corrupt slot.</li>
+<li><strong>What it proves:</strong> everything Tier-2 proves plus the
+vendor-specific bootloader and hardware-backed verification that only
+the physical SoC exercises.</li>
+<li><strong>Gate (FACT):</strong> requires the physical RK3588 / Orange
+Pi 5 Max board (operator hardware), per §11.4.133 target-hardware-safety
+discipline for any flash.</li>
+<li><strong>Honest §11.4.112 boundary:</strong> hardware-gated, NOT
+structurally impossible.</li>
+<li><strong>Status:</strong> pending hardware availability (the
+CONTINUATION NEXT-wave items 1–2 land here).</li>
+</ul>
+<h2 id="tier-coverage-matrix">3. Tier coverage matrix</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Tier-1 (podman emulator)</th>
+<th>Tier-2 (Cuttlefish)</th>
+<th>Tier-3 (RK3588)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ota-protocol</code> wire conformance</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Server flow:
+register/update-check/telemetry/delta/rollout/recall</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Anti-downgrade invariant</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Real <code>update_engine</code> A/B apply</td>
+<td>no</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>AVB / dm-verity verification</td>
+<td>no</td>
+<td>YES (virtual)</td>
+<td>YES (real partitions)</td>
+</tr>
+<tr>
+<td>Auto-rollback on corrupt slot</td>
+<td>no</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>U-Boot slot-switch / vendor HAL</td>
+<td>no</td>
+<td>no</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Runnable on this macOS host now</td>
+<td><strong>YES</strong></td>
+<td>no (Linux+KVM)</td>
+<td>no (hardware)</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="reuse-of-the-containers-submodule-11.4.76-extend-dont-reimplement-11.4.74">4.
+Reuse of the <code>containers</code> submodule (§11.4.76,
+extend-don’t-reimplement §11.4.74)</h2>
+<p>The <code>vasic-digital/containers</code> submodule
+(<code>digital.vasic.containers</code>) is the canonical
+containerization machinery and already provides the primitives each tier
+needs:</p>
+<ul>
+<li><strong><code>pkg/boot</code> + <code>pkg/compose</code> +
+<code>pkg/health</code></strong> — on-demand boot, compose
+orchestration, and readiness gating. Tier-1’s podman emulator + control
+plane stack boot via these (the same path the pgx integration test
+already uses), satisfying the §11.4.76 on-demand-infra invariant (the
+test entry point boots the infra; operators never start podman by
+hand).</li>
+<li><strong><code>pkg/emulator</code></strong> — multi-target Android
+emulator orchestration (AVD, <strong>x86_64</strong>, with KVM
+acceleration gating, AVD-lock clearing, orphan
+<code>qemu-system-*</code> reaping). Relevant to an x86_64-AVD variant
+of Tier-2 on a Linux/KVM host.</li>
+<li><strong><code>pkg/vm</code></strong> — QEMU VM orchestration
+(<strong>aarch64</strong> via <code>-machine virt</code> + AAVMF UEFI),
+the seam for an aarch64 virtual target on a KVM-capable host.</li>
+</ul>
+<p><strong>Extension policy:</strong> where a tier needs a primitive the
+submodule lacks (e.g. a Cuttlefish <code>cvd</code> lifecycle wrapper,
+or an OTA-specific device-emulator harness), we <strong>extend the
+submodule upstream via PR</strong> per §11.4.74 — never duplicate the
+machinery in-project. The Tier-1 <code>ota-device-emulator</code> itself
+is OTA-domain logic (it speaks <code>ota-protocol</code>), so it lives
+in the project; the boot/health/compose plumbing around it is the
+submodule’s job.</p>
+<h2 id="anti-bluff-posture-11.4-11.4.27-11.4.69">5. Anti-bluff posture
+(§11.4 / §11.4.27 / §11.4.69)</h2>
+<p>Each tier produces captured evidence under
+<code>docs/qa/&lt;run-id&gt;/</code>: Tier-1 captures the real
+request/response transcripts for the full lifecycle against a live
+server; Tier-2/3 add the on-device apply/rollback evidence. A tier
+claiming a PASS without exercising the real system at that tier’s
+fidelity is a §11.4 PASS-bluff. The tier boundaries above are stated as
+FACT precisely so no tier silently claims coverage it does not have.</p>

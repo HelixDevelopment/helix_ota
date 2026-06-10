@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-08 |
+| Last modified | 2026-06-10 |
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
 
@@ -81,7 +81,7 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **GET /members** (3b4b1d8 + e2e): `device_ids[]` → `items[]` of `{device_id, added_at}`; store gained `device_group_members.added_at` + `ListGroupMembersDetailed` (memory+pgx, real-DB parity); e2e 39/0/1.
 - Each: full default suite green, all wire consumers updated in lockstep, `spec_impl_alignment.md` rows 6/8/1/4-structural + GET-members RESOLVED.
 
-**WIDEN ruling status: COMPLETE** except two legitimately-parked items: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) **blocked on UNVERIFIED ingest** (event source must carry them first) + the per-device telemetry filters; group/members list pagination (row 7) **deferred** (groups bounded — memo's own recommendation). Both need either ingest work or an operator nudge; not autonomously actionable now.
+**WIDEN ruling status: COMPLETE** except two legitimately-parked items: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) **blocked on UNVERIFIED ingest** (event source must carry them first) + the per-device telemetry filters; group/members list pagination (row 7) **deferred** (groups bounded — memo's own recommendation). Both need either ingest work or an operator nudge; not autonomously actionable now. _(UPDATE 2026-06-10: the per-device telemetry **filters** + group/members list **pagination** are now DONE — shipped `50ef5c6`; see the "Session 2026-06-10 update" below. Only row-4 richer numeric fields remain parked on ingest.)_
 
 ### Round 8 — "all of it" wave (operator: do all frontiers)
 - **Server-side delta-selection** (9179d0a): ota-protocol `UpdateAvailable.Delta` (brick 7d18edc, pushed; server builds via dev `replace`); store `ReleaseByVersion` (memory+pgx, real-DB parity); update-check resolves current→base artifact→`FindDelta` → offers delta + full fallback; `TestClientUpdateOffersDelta`.
@@ -99,11 +99,18 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **DDoS/flood probe** (§11.4.27, 6d29fb8): 5,952-req burst served, responsive post-flood; surfaced the honest "no rate-limiter" finding.
 - **Rate-limit FEATURE** (1b97fc7): implemented the finding's fix — in-flight cap middleware (`HELIX_MAX_INFLIGHT`, default-off) sheds 429 RATE_LIMITED; proven cap=1/300-concurrent → 244 shed / 56 served / recovers. **§11.4.27 test-type matrix now complete** for the operational surface (unit/integration/e2e/security/ddos/scaling/chaos/stress/performance/benchmarking/ui/Challenges). Full rebuild+validate sweep green (`docs/qa/20260608-full-rebuild/`).
 
+## Session 2026-06-10 update (DONE, on `main`, pushed all 4 upstreams)
+
+- **Per-device telemetry filters + group/members pagination** (`50ef5c6`, `feat(api): per-device telemetry filters + group/members pagination`): closes the two previously-PARKED WIDEN bits — per-device telemetry now accepts the filter params, and the group/members list is paginated. **OpenAPI synced + redocly-clean.** These move out of the "parked WIDEN bits" list (no longer deferred).
+- **Dashboard client lockstep** (`b0b8ee2`, `chore(dashboard): sync API client to new pagination/filter params`): the dashboard API client updated in lockstep with the new pagination/filter params, so every wire consumer stays consistent (§11.4.92 cross-feature consistency). **HEAD is now `b0b8ee2`.**
+- **Emulator-driven device testing initiative started** — tiered plan captured as FACT in `docs/design/EMULATED_DEVICE_TESTING.md`. **Tier-1 (podman `ota-device-emulator` over real `ota-protocol`) is IN PROGRESS**; Tier-2 (Cuttlefish A/B, Linux+nested-KVM-gated) and Tier-3 (real RK3588, hardware-gated) are designed, host/hardware-gated (NOT structurally impossible per §11.4.112). Extends the `containers` submodule (`pkg/boot`/`compose`/`health` + `pkg/emulator` AVD-x86_64 + `pkg/vm` qemu-aarch64) per §11.4.76.
+- **Canonical §11.4.131 session-resumption file created** at `docs/RESUMPTION.md` — the fixed out-of-the-box entry point for any fresh session (SHORT + FULL variants, read-first handoff pointers, live-state anchors, PHASE/NEXT/terminal-goal, binding constraints). Point a new session at that one file.
+
 ### NEXT wave (still open — all hardware/ingest-gated)
 1. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware.
 2. **Device payload-apply integration** — wire `DeltaApplyDecision` into the on-device apply path (`:android`/update_engine) — needs a real device to validate end-to-end.
-3. **Parked WIDEN bits**: row-4 richer telemetry fields (blocked on UNVERIFIED ingest); telemetry per-device filters; group/members list pagination (deferred).
-3. **Parked WIDEN bits**: row-4 richer telemetry fields (blocked on UNVERIFIED ingest) + per-device filters; group/members list pagination (deferred, groups bounded).
+3. **Emulator-driven device testing** — tiered plan now in flight (`docs/design/EMULATED_DEVICE_TESTING.md`): **Tier-1 IN PROGRESS** (podman `ota-device-emulator` speaking real `ota-protocol` to the control plane — register→update-check→telemetry→delta→rollout→recall, runnable on this macOS host now); Tier-2 Cuttlefish A/B (Linux+nested-KVM-gated); Tier-3 real RK3588 (hardware-gated).
+4. **Parked WIDEN bits**: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) — still blocked on UNVERIFIED ingest (event source must carry them first). **Telemetry per-device filters + group/members list pagination are now DONE** (shipped this session, see below) — no longer parked.
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
