@@ -20,12 +20,18 @@ type TelemetryEventView struct {
 	Detail       string                     `json:"detail,omitempty"`
 	Timestamp    time.Time                  `json:"timestamp"`
 	ReceivedAt   time.Time                  `json:"received_at"`
+	// DurationMS / BytesTransferred surface the optional per-event annotations
+	// when the device reported them (spec_impl_alignment.md row 4). omitempty +
+	// pointer: a legacy event that never carried them is rendered without the key.
+	DurationMS       *int64 `json:"duration_ms,omitempty"`
+	BytesTransferred *int64 `json:"bytes_transferred,omitempty"`
 }
 
 // TelemetryHistory is the GET /devices/{id}/telemetry body — newest-first,
 // cursor-paginated (operational_endpoints.md §5). NextCursor is nil on the last
-// page. (Per-item duration_ms/bytes_transferred from the spec are deferred —
-// not ingested yet; see spec_impl_alignment.md row 4.)
+// page. Per-item duration_ms/bytes_transferred (spec_impl_alignment.md row 4)
+// are now ingested + persisted + surfaced on each TelemetryEventView (optional;
+// present only when the device reported them).
 type TelemetryHistory struct {
 	DeviceID   string               `json:"device_id"`
 	Items      []TelemetryEventView `json:"items"`
@@ -59,13 +65,15 @@ type TelemetryOverview struct {
 
 func toTelemetryView(r store.TelemetryRecord) TelemetryEventView {
 	return TelemetryEventView{
-		Event:        r.Event,
-		Version:      r.Version,
-		DeploymentID: r.DeploymentID,
-		ErrorCode:    r.ErrorCode,
-		Detail:       r.Detail,
-		Timestamp:    r.Timestamp,
-		ReceivedAt:   r.ReceivedAt,
+		Event:            r.Event,
+		Version:          r.Version,
+		DeploymentID:     r.DeploymentID,
+		ErrorCode:        r.ErrorCode,
+		Detail:           r.Detail,
+		Timestamp:        r.Timestamp,
+		ReceivedAt:       r.ReceivedAt,
+		DurationMS:       r.DurationMS,
+		BytesTransferred: r.BytesTransferred,
 	}
 }
 

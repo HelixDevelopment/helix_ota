@@ -190,6 +190,11 @@ type TelemetryEventWire struct {
 	Timestamp time.Time                  `json:"timestamp"`
 	ErrorCode *string                    `json:"error_code"`
 	Detail    *string                    `json:"detail"`
+	// DurationMS / BytesTransferred are the optional per-event annotations the
+	// device may report (spec_impl_alignment.md row 4). Pointers + omitempty:
+	// absent on legacy device payloads, byte-identical to before this addition.
+	DurationMS       *int64 `json:"duration_ms,omitempty"`
+	BytesTransferred *int64 `json:"bytes_transferred,omitempty"`
 }
 
 // TelemetryHealth is the optional device health block in a TelemetryReport.

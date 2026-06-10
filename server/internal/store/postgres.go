@@ -408,16 +408,17 @@ func (r *PostgresRepository) ListActiveDeployments(ctx context.Context) ([]Deplo
 func (r *PostgresRepository) AppendTelemetry(ctx context.Context, rec TelemetryRecord) error {
 	const q = `
 INSERT INTO helix_ota.telemetry_events
- (device_id, deployment_id, event, version, error_code, detail, timestamp, received_at)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
+ (device_id, deployment_id, event, version, error_code, detail, timestamp, received_at, duration_ms, bytes_transferred)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
 	_, err := r.pool.Exec(ctx, q, rec.DeviceID, rec.DeploymentID, string(rec.Event),
-		rec.Version, rec.ErrorCode, rec.Detail, rec.Timestamp, rec.ReceivedAt)
+		rec.Version, rec.ErrorCode, rec.Detail, rec.Timestamp, rec.ReceivedAt,
+		rec.DurationMS, rec.BytesTransferred)
 	return err
 }
 
 func (r *PostgresRepository) TelemetryForDeployment(ctx context.Context, deploymentID string) ([]TelemetryRecord, error) {
 	const q = `
-SELECT device_id, deployment_id, event, version, error_code, detail, timestamp, received_at
+SELECT device_id, deployment_id, event, version, error_code, detail, timestamp, received_at, duration_ms, bytes_transferred
 FROM helix_ota.telemetry_events WHERE deployment_id=$1 ORDER BY seq`
 	rows, err := r.pool.Query(ctx, q, deploymentID)
 	if err != nil {
@@ -429,7 +430,8 @@ FROM helix_ota.telemetry_events WHERE deployment_id=$1 ORDER BY seq`
 		var rec TelemetryRecord
 		var event string
 		if serr := rows.Scan(&rec.DeviceID, &rec.DeploymentID, &event, &rec.Version,
-			&rec.ErrorCode, &rec.Detail, &rec.Timestamp, &rec.ReceivedAt); serr != nil {
+			&rec.ErrorCode, &rec.Detail, &rec.Timestamp, &rec.ReceivedAt,
+			&rec.DurationMS, &rec.BytesTransferred); serr != nil {
 			return nil, serr
 		}
 		rec.Event = otaprotocol.TelemetryEvent(event)
@@ -441,7 +443,7 @@ FROM helix_ota.telemetry_events WHERE deployment_id=$1 ORDER BY seq`
 // TelemetryForDevice returns a device's event history in insertion order.
 func (r *PostgresRepository) TelemetryForDevice(ctx context.Context, deviceID string) ([]TelemetryRecord, error) {
 	const q = `
-SELECT device_id, deployment_id, event, version, error_code, detail, timestamp, received_at
+SELECT device_id, deployment_id, event, version, error_code, detail, timestamp, received_at, duration_ms, bytes_transferred
 FROM helix_ota.telemetry_events WHERE device_id=$1 ORDER BY seq`
 	rows, err := r.pool.Query(ctx, q, deviceID)
 	if err != nil {
@@ -453,7 +455,8 @@ FROM helix_ota.telemetry_events WHERE device_id=$1 ORDER BY seq`
 		var rec TelemetryRecord
 		var event string
 		if serr := rows.Scan(&rec.DeviceID, &rec.DeploymentID, &event, &rec.Version,
-			&rec.ErrorCode, &rec.Detail, &rec.Timestamp, &rec.ReceivedAt); serr != nil {
+			&rec.ErrorCode, &rec.Detail, &rec.Timestamp, &rec.ReceivedAt,
+			&rec.DurationMS, &rec.BytesTransferred); serr != nil {
 			return nil, serr
 		}
 		rec.Event = otaprotocol.TelemetryEvent(event)
