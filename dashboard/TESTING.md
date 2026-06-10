@@ -80,11 +80,14 @@ recipe the conductor can wire into the project's pre-build / release ritual.
 |---|---|---|---|---|---|---|
 | Login | e2e + smoke | — | — | (client validation) | submit-gate (component logic) | e2e (axe) |
 | Overview | component + e2e | component | component + e2e | component | — | component + e2e (axe) |
-| Releases (list) | e2e | — | e2e | — | create-action gated | (inherits shell) |
+| Releases (list) | e2e (empty + **populated**) | — | e2e | — | create-action gated | (inherits shell) |
 | Releases (create) | e2e | — | — | — | e2e submit-gate | — |
+| Releases (detail) | **e2e populated success path** + component (Overview row) | — | — | (via create error) | deploy-action gated e2e | — |
 | Deployments (list) | e2e | — | — | — | e2e lookup-gate | — |
 | Deployments (create) | e2e | — | — | — | e2e submit-gate | — |
-| Deployments (detail) | e2e | — | rollout + recall empty-states e2e | e2e (live 404) | recall-gate e2e | — |
+| Deployments (detail) | e2e empty + **e2e populated success path** | — | rollout + recall empty-states e2e | e2e (live 404) | recall-gate e2e | — |
+| Deployments (rollout panel) | **e2e populated phase table** | — | empty-state e2e | — | evaluate-gate e2e | — |
+| ArtifactUpload | **7 component tests** (render, file-select, pre-flight gate, submit→success card, 422/415 step-mapping, in-flight label) | — | — | ApiError step-mapping (S5/S1) | submit gate + file-select | — |
 | Fleet (overview) | smoke | — | smoke (0.0% rate) | — | — | — |
 | Groups (list) | e2e + smoke | — | smoke | — | — | — |
 | Groups (detail) | e2e | — | empty-members e2e | — | batch add-members e2e | — |
@@ -93,17 +96,35 @@ recipe the conductor can wire into the project's pre-build / release ritual.
 | API client | 12 unit tests (URL/query/bearer/401-refresh-retry/error-mapping) |
 | useApi hook | 4 unit tests (loading→data, loading→error, disabled, refetch) |
 
+### Signed-artifact seeding (how the populated detail paths are reached)
+
+`e2e/global-setup.ts` now mints an **ephemeral ed25519 keypair** every run, passes
+the raw 32-byte public key to the server via `HELIX_ARTIFACT_PUBKEY`, and stashes the
+private key in a gitignored `.e2e-artifact-key.json` (removed by `global-teardown.ts`;
+never committed — §11.4.10). `e2e/helpers.ts` `seedArtifact()` hand-builds a valid
+**ZIP_STORED** archive (`payload.bin`), computes the lowercase-hex SHA-256 over the
+whole zip, signs the **raw 32 digest bytes** with ed25519 (the exact server contract —
+see `tests/e2e/pipeline_signed.sh` + `ota-artifact-validator` `stages.go`), and uploads
+it via `POST /artifacts/upload`, asserting the real server returns `201` with
+`verified: true`. `seedRelease` / `seedDeployment` / `seedRollout` then drive the rest
+of the chain through the same `/api/v1` endpoints the SPA uses — no mocks (§11.4.27).
+`e2e/populated-detail.spec.ts` consumes these to render a **populated Release detail**,
+a **populated Deployment detail with a real staged-rollout phase table**, and a
+sink-side proof that the seeded artifact is stored + verified (§11.4.69).
+
+> **Shared-server note.** The single in-memory control plane is shared across all
+> specs, so once `populated-detail.spec.ts` seeds a release the global `/releases`
+> list is no longer empty. The `releases`/`smoke` "fresh server" assertions were
+> therefore relaxed to accept the empty-state **or** a populated table (the strict
+> empty-state assertion lives at the component layer in `OverviewScreen.test.tsx`).
+
 ### Honest gaps (not yet covered, and why)
 
-- **Releases/Deployments populated lists + a real Release/Deployment detail success
-  path:** seeding a release requires an uploaded **and verified** artifact (signed
-  upload via `POST /artifacts/upload`), which the e2e harness does not yet mint.
-  Detail success paths are therefore covered only at the error/empty level. The
-  `useApi`/screen success path IS covered at the component layer (Overview populated
-  row test).
-- **ArtifactUpload screen:** not covered — it requires a multipart file + signed
-  metadata; left for a follow-up that wires artifact seeding.
 - **Per-device Fleet detail success path:** the device-status success path needs a
   seeded device; covered at the empty/404 level only via the live overview.
 - **color-contrast at the component layer** is disabled under jsdom (no canvas) and
   is instead asserted in the real browser by `e2e/a11y.spec.ts`.
+
+*(Closed in this wave: the ArtifactUpload screen — now 7 component tests — and the
+populated Release/Deployment/rollout detail success paths — now real-signed-artifact
+e2e seeding + populated-detail e2e specs.)*

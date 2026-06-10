@@ -5,8 +5,11 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
 const PID_FILE = join(process.cwd(), ".e2e-server.pid");
+const KEY_FILE = join(process.cwd(), ".e2e-artifact-key.json");
 
 export default async function globalTeardown(): Promise<void> {
+  // Always remove the ephemeral signing key (§11.4.10 — never lingers/committed).
+  rmSync(KEY_FILE, { force: true });
   if (!existsSync(PID_FILE)) return;
   try {
     const pid = Number(readFileSync(PID_FILE, "utf8").trim());
