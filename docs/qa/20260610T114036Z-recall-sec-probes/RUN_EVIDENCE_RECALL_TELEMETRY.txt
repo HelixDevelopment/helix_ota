@@ -1,0 +1,51 @@
+== Helix OTA recall + telemetry security probe suite ==
+base_url=http://127.0.0.1:31424 run=secrt-1781092019-71424 evidence=docs/qa/20260610T114036Z-recall-sec-probes/RUN_EVIDENCE_RECALL_TELEMETRY.txt
+started: 2026-06-10T11:46:59Z
+
+building ota-server ...
+ed25519 signing available — booting WITH HELIX_ARTIFACT_PUBKEY (recall-validation fixture enabled)
+[PASS] self-hosted ota-server healthy on http://127.0.0.1:31424
+[PASS] admin login established (admin+operator+viewer)
+      device A=c0c28ef76c60c26a9ffb5f4bcb2b14a9  device B=eb83a4b4937a805c19c1a1558d3a58da
+
+--- provisioning signed deployment-with-release fixture (for V1/V2) ---
+[PASS] signed fixture ready: deployment 057e523af5d5ba9c64563571284daa63 on release 6c14f5e74f362be3331a433713d9a951 (prior=bf785fb0a53ce0999991972b7b7a3457)
+
+--- R. recall authz: only operator/admin may POST recall ---
+[PASS] R1 unauthenticated POST recall -> 401 (HTTP 401)
+[PASS] R2 device-role token POST recall (operator/admin only) -> 403 (HTTP 403)
+[PASS] R2b device token GET /client/update is ACCEPTED (token valid; R2 is RBAC) (HTTP 200)
+[PASS] R3 operator/admin token POST recall (valid) -> 201 (role allowed) (HTTP 201)
+
+--- V. recall validation: missing/unknown ids (real handler codes) ---
+[PASS] V1 recall missing to_release_id -> 400 (VALIDATION) (HTTP 400)
+[PASS] V1b missing to_release_id did not crash (no 5xx; HTTP 400)
+[PASS] V2 recall unknown to_release_id -> 404 (NOT_FOUND target release) (HTTP 404)
+[PASS] V2b unknown to_release_id did not crash (no 5xx; HTTP 404)
+[PASS] V3 recall unknown deployment id (authed operator) -> 404 (NOT_FOUND deployment) (HTTP 404)
+[PASS] V3b unknown deployment id did not crash (no 5xx; HTTP 404)
+
+--- O. telemetry ownership: a device reads only its OWN telemetry ---
+[PASS] O1 device A token GET device B telemetry -> 403 (HTTP 403)
+[PASS] O2 device A token GET its OWN telemetry -> 200 (HTTP 200)
+[PASS] O3 privileged (admin/viewer) token GET ANY device telemetry -> 200 (HTTP 200)
+
+--- F. telemetry filter validation: bad inputs -> 400 (real handler codes) ---
+[PASS] F1 unknown ?event -> 400 (closed-set validation) (HTTP 400)
+[PASS] F1b unknown ?event did not crash (no 5xx; HTTP 400)
+[PASS] F2 non-RFC3339 ?since -> 400 (HTTP 400)
+[PASS] F2b non-RFC3339 ?since did not crash (no 5xx; HTTP 400)
+[PASS] F3a ?limit=0 (below [1,200]) -> 400 (HTTP 400)
+[PASS] F3b ?limit=999 (above [1,200]) -> 400 (HTTP 400)
+[PASS] F3c ?limit=-1 (negative) -> 400 (HTTP 400)
+[PASS] F4 malformed ?cursor -> 400 (HTTP 400)
+[PASS] F4b malformed ?cursor did not crash (no 5xx; HTTP 400)
+[PASS] F5 valid ?event=success&limit=10&cursor=0 -> 200 (control) (HTTP 200)
+
+--- T. trust boundary: recall has NO request-supplied key path ---
+[PASS] T1 recall with injected public_key/signature fields is REJECTED 400 (strict bind; key never sourced) (HTTP 400)
+[PASS] T1b injected signing fields did not crash (no 5xx; HTTP 400)
+
+finished: 2026-06-10T11:47:01Z
+== summary: 28 passed, 0 failed, 0 skipped ==
+RESULT: PASS
