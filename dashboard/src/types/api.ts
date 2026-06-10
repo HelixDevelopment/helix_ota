@@ -290,9 +290,12 @@ export interface DeviceGroupMember {
   added_at: string;
 }
 
+// GET /groups/{id}/members is oldest-first and cursor-paginated; next_cursor is
+// absent/null on the last page (server: handlers_group.go:handleListGroupMembers).
 export interface DeviceGroupMembers {
   group_id: string;
   items: DeviceGroupMember[];
+  next_cursor?: string | null;
 }
 
 // --- audit (operational_endpoints.md §4; admin-only GET /audit) -------------
