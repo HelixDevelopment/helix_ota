@@ -84,7 +84,7 @@ console capture), `qemu_stdout.log` (accel evidence), and `boot_smoke_result.txt
 - `tests/emulator/tier1_avd_hvf_smoke.sh` (sibling P1/T1 AVD-on-HVF smoke)
 - `containers/pkg/vm` (QEMU aarch64 `virt`+UEFI orchestration the Tfw tier feeds)
 
-Last verified: 2026-06-10 — SKIP (exit 3) on this host (qemu not installed; honest
+Last verified: 2026-06-10 — P2 ACTIVE: qemu 11.0.1 installed, real aarch64 virt+edk2 UEFI boot reached the BdsDxe/UEFI-Shell milestone (out-of-the-box, qemu on PATH).
 prereq-absent skip, evidence written). Boot/milestone/cleanup path independently
 exercised via a fake-qemu harness emitting a real edk2 banner: PASS on the captured
 milestone + the live pid killed with no leak (harness probe-dir not committed).
