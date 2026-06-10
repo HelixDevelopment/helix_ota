@@ -56,6 +56,7 @@ OWNED_SUBMODULES=(
     submodules/ota-rollout-engine
     submodules/ota-update-engine-bridge
     submodules/ota-android-agent
+    submodules/helixqa
 )
 for sm in "${OWNED_SUBMODULES[@]}"; do
     d="${ROOT}/${sm}"
