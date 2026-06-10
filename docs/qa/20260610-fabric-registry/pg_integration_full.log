@@ -1,0 +1,36 @@
+=== RUN   TestMemoryRepositoryContract
+--- PASS: TestMemoryRepositoryContract (0.00s)
+=== RUN   TestFabricLeaseExclusivityGuard
+--- PASS: TestFabricLeaseExclusivityGuard (0.00s)
+=== RUN   TestFabricEvidenceNonEmpty
+--- PASS: TestFabricEvidenceNonEmpty (0.00s)
+=== RUN   TestDeviceCRUDAndConflict
+--- PASS: TestDeviceCRUDAndConflict (0.00s)
+=== RUN   TestReleaseLatestAndList
+--- PASS: TestReleaseLatestAndList (0.00s)
+=== RUN   TestDeploymentAndTelemetry
+--- PASS: TestDeploymentAndTelemetry (0.00s)
+=== RUN   TestIdempotency
+--- PASS: TestIdempotency (0.00s)
+=== RUN   TestArtifactCRUD
+--- PASS: TestArtifactCRUD (0.00s)
+=== RUN   TestPostgresFabricRegistry_Integration
+    postgres_fabric_integration_test.go:36: container runtime: podman
+    postgres_fabric_integration_test.go:75: fabric table present: helix_ota.fabric_nodes
+    postgres_fabric_integration_test.go:75: fabric table present: helix_ota.fabric_targets
+    postgres_fabric_integration_test.go:75: fabric table present: helix_ota.fabric_leases
+    postgres_fabric_integration_test.go:75: fabric table present: helix_ota.fabric_runs
+    postgres_fabric_integration_test.go:75: fabric table present: helix_ota.fabric_evidence
+    postgres_fabric_integration_test.go:82: exclusive-lease UNIQUE partial index present: uq_fabric_lease_active
+    postgres_fabric_integration_test.go:96: LEASE-UNIQUENESS: first lease L1 acquired (target=t1, owner=run-A)
+    postgres_fabric_integration_test.go:100: LEASE-UNIQUENESS: second lease L2 on t1 REJECTED by DB -> store: conflict (mapped to ErrConflict)
+    postgres_fabric_integration_test.go:111: LEASE-UNIQUENESS: DB row count of active leases on t1 = 1 (exactly one)
+    postgres_fabric_integration_test.go:121: EVIDENCE-CHECK: raw 0-byte INSERT REJECTED by DB CHECK -> ERROR: new row for relation "fabric_evidence" violates check constraint "fabric_evidence_byte_size_check" (SQLSTATE 23514)
+    postgres_fabric_integration_test.go:126: EVIDENCE-CHECK: non-empty (4096-byte) evidence accepted
+--- PASS: TestPostgresFabricRegistry_Integration (2.85s)
+=== RUN   TestPostgresRepositoryContract_Integration
+    postgres_integration_test.go:47: container runtime: podman
+    postgres_integration_test.go:80: boot summary: started=1 discovered=0 failed=0 in 675.431416ms
+--- PASS: TestPostgresRepositoryContract_Integration (2.51s)
+PASS
+ok  	github.com/HelixDevelopment/helix_ota/server/internal/store	5.885s

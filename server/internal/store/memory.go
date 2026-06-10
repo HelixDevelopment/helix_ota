@@ -31,6 +31,14 @@ type MemoryRepository struct {
 	grpByName   map[string]string        // name -> groupID (uniqueness)
 	members     map[string][]GroupMember // groupID -> ordered members (with join time)
 	idem        map[string]string        // Idempotency-Key -> resultID
+
+	// Emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql).
+	fabNodes    map[string]FabricNode       // by nodeID
+	fabTargets  map[string]FabricTarget     // by targetID
+	fabTgtOrder []string                    // insertion order for stable listing
+	fabLeases   map[string]FabricLease      // by leaseID
+	fabRuns     map[string]FabricRun        // by runID
+	fabEvidence map[string][]FabricEvidence // runID -> ordered evidence
 }
 
 // NewMemoryRepository constructs an empty in-memory repository.
@@ -45,6 +53,11 @@ func NewMemoryRepository() *MemoryRepository {
 		grpByName:   make(map[string]string),
 		members:     make(map[string][]GroupMember),
 		idem:        make(map[string]string),
+		fabNodes:    make(map[string]FabricNode),
+		fabTargets:  make(map[string]FabricTarget),
+		fabLeases:   make(map[string]FabricLease),
+		fabRuns:     make(map[string]FabricRun),
+		fabEvidence: make(map[string][]FabricEvidence),
 	}
 }
 

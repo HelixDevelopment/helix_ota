@@ -26,6 +26,10 @@ var (
 	// already registered with a different identity, or an overlapping active
 	// deployment).
 	ErrConflict = errors.New("store: conflict")
+	// ErrEvidenceEmpty indicates a fabric evidence artefact with a non-positive
+	// byte size was rejected (§11.4.69 — a 0-byte artefact can never satisfy a
+	// PASS). The pgx layer maps the CHECK violation to this same sentinel.
+	ErrEvidenceEmpty = errors.New("store: evidence artefact is empty")
 )
 
 // Device is the registry record for a provisioned device.
@@ -173,6 +177,83 @@ type GroupMember struct {
 	AddedAt  time.Time
 }
 
+// --- emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql) ---
+//
+// DESIGN REFINEMENT (§11.4.28): the fabric REGISTRY persistence lives in
+// helix_ota (this store seam), NOT in the reusable containers submodule's
+// pkg/fabric. The schema's tier/tech/target vocabulary (T0/T1/T2/T3/Tfw/Tcp,
+// rk3588, OrangePi5Max, the ota-protocol PASS-evidence rule) is PROJECT-SPECIFIC
+// to Helix OTA, so per §11.4.28(B) decoupling it must not be injected into the
+// project-agnostic containers brick. The generic scheduler/lease façade may still
+// live upstream in containers/pkg/fabric; the OTA-shaped registry tables are
+// modelled here, on the existing pgx/memory Repository seam.
+
+// FabricNode is a distributable execution node in the test fabric
+// (helix_ota.fabric_nodes; SCHEMA.sql). Capability flags gate which tiers it can
+// run (HVF vs KVM, arch).
+type FabricNode struct {
+	NodeID     string
+	Kind       string // 'dev-mac' | 'ci-linux-kvm' | 'lava-worker' | 'hil-host'
+	Arch       string // 'arm64' | 'x86_64'
+	HasKVM     bool
+	HasHVF     bool
+	Labels     map[string]string
+	LastSeenAt time.Time
+	CreatedAt  time.Time
+}
+
+// FabricTarget is an emulated/virtual/real target the fabric can run a job
+// against (helix_ota.fabric_targets). Tier mirrors DESIGN.md §2. An exclusive
+// target MUST be leased to exactly one run at a time (§11.4.119).
+type FabricTarget struct {
+	TargetID  string
+	Tier      string // 'T0'|'T1'|'T2'|'T3'|'Tfw'|'Tcp'
+	Tech      string // 'ota-device-emulator'|'avd-arm64'|'cuttlefish'|'rk3588'|...
+	Model     string // e.g. 'OrangePi5Max'
+	OSType    string // 'android' by default
+	Exclusive bool
+	NodeID    string // optional binding to a fabric node ("" == unbound)
+	Status    string // 'idle'|'leased'|'offline'
+	CreatedAt time.Time
+}
+
+// FabricLease is an exclusive hold on a target (§11.4.119). ReleaseAt zero/nil
+// means the lease is currently held; at most one ACTIVE lease may exist per
+// exclusive target (the SCHEMA.sql UNIQUE partial index + the memory guard).
+type FabricLease struct {
+	LeaseID    string
+	TargetID   string
+	Owner      string // the run/stream holding it
+	AcquiredAt time.Time
+	ReleaseAt  *time.Time // nil while held
+}
+
+// FabricRun is one test run on a target (helix_ota.fabric_runs). Verdict uses
+// the closed §11.4.45 vocabulary.
+type FabricRun struct {
+	RunID      string
+	TargetID   string
+	TestType   string // 'unit'|'integration'|'e2e'|'security'|'chaos'|'stress'|'challenge'|...
+	TestRef    string // script/path/bank-id dispatched
+	Verdict    string // 'PASS'|'FAIL'|'SKIP'|'PENDING_FORENSICS'|'OPERATOR-BLOCKED'|'PENDING'
+	SkipReason string
+	StartedAt  time.Time
+	EndedAt    *time.Time
+}
+
+// FabricEvidence is one evidence-ledger row (helix_ota.fabric_evidence). A PASS
+// run MUST link >=1 non-empty artefact (§11.4.69): ByteSize MUST be > 0, enforced
+// by a CHECK in pgx and a guard in memory.
+type FabricEvidence struct {
+	EvidenceID string
+	RunID      string
+	Kind       string // 'transcript'|'screencap'|'ab-slot'|'dm-verity'|'latency'|'sink-probe'|...
+	Path       string // docs/qa/<run-id>/... (§11.4.83)
+	ByteSize   int64  // non-empty by construction (> 0)
+	SHA256     string
+	CreatedAt  time.Time
+}
+
 // AuditFilter narrows an audit list query (operational_endpoints.md §4.3).
 // Since/Until are inclusive time bounds (zero value = unbounded).
 type AuditFilter struct {
@@ -264,4 +345,29 @@ type Repository interface {
 	// Idempotency support for register/deployment replay (endpoints.md §2).
 	GetIdempotent(ctx context.Context, key string) (string, bool)
 	PutIdempotent(ctx context.Context, key, resultID string)
+
+	// Emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql).
+	// A node/target is upsert-by-id; AcquireFabricLease enforces the exclusive
+	// single-active-lease invariant (§11.4.119) and returns ErrConflict when the
+	// exclusive target is already leased; AttachFabricEvidence rejects a 0-byte
+	// artefact with ErrEvidenceEmpty (§11.4.69).
+	CreateFabricNode(ctx context.Context, n FabricNode) error
+	GetFabricNode(ctx context.Context, nodeID string) (FabricNode, error)
+	CreateFabricTarget(ctx context.Context, t FabricTarget) error
+	GetFabricTarget(ctx context.Context, targetID string) (FabricTarget, error)
+	ListFabricTargets(ctx context.Context) ([]FabricTarget, error)
+	// AcquireFabricLease records an exclusive hold. For an exclusive target with
+	// an already-active (release_at NULL) lease it returns ErrConflict.
+	AcquireFabricLease(ctx context.Context, l FabricLease) error
+	// ReleaseFabricLease marks the lease released (release_at set). Idempotent;
+	// ErrNotFound when the lease id is unknown.
+	ReleaseFabricLease(ctx context.Context, leaseID string, releaseAt time.Time) error
+	ActiveFabricLease(ctx context.Context, targetID string) (FabricLease, error)
+	CreateFabricRun(ctx context.Context, r FabricRun) error
+	GetFabricRun(ctx context.Context, runID string) (FabricRun, error)
+	UpdateFabricRun(ctx context.Context, r FabricRun) error
+	// AttachFabricEvidence appends a non-empty evidence artefact to a run.
+	// ByteSize <= 0 returns ErrEvidenceEmpty; an unknown run id returns ErrNotFound.
+	AttachFabricEvidence(ctx context.Context, e FabricEvidence) error
+	ListFabricEvidence(ctx context.Context, runID string) ([]FabricEvidence, error)
 }
