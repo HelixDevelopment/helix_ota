@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Last modified | 2026-06-10T12:00:00Z |
 | Status | active — the §11.4.131 single canonical out-of-the-box session-resumption file |
 | Standard path | `docs/RESUMPTION.md` (this file — the fixed project-declared §11.4.131 entry point; do not move without a §11.4.66 operator decision) |
-| Status summary | Point any fresh session at THIS file. It carries a SHORT one-line resume + a FULL block, the read-first handoff docs, exact live-state anchors, current PHASE + NEXT + terminal goal, and the binding constraints. Moment-valid for HEAD `a839220` (2026-06-10) + this docs commit on top. |
+| Status summary | Point any fresh session at THIS file. It carries a SHORT one-line resume + a FULL block, the read-first handoff docs, exact live-state anchors, current PHASE + NEXT + terminal goal, and the binding constraints. Moment-valid for HEAD `93e6a2f` (2026-06-10) + this RESUMPTION commit on top. |
 
 ## SHORT — paste this first sentence into a fresh session
 
-> Read `docs/research/main_specs/CONTINUATION.md` first, run `git fetch --all --prune`, then continue the Helix OTA autonomous loop toward the next validated-and-published version tag — current PHASE is "emulator-driven device testing (Tier-1 in progress)"; HEAD is `a839220` (+ this docs commit) on `main` pushed to all 4 upstreams.
+> Read `docs/research/main_specs/CONTINUATION.md` first, run `git fetch --all --prune`, then continue the Helix OTA autonomous loop toward the next validated-and-published version tag — current PHASE is "emulator-driven device testing (Tier-1 in progress)"; HEAD is `93e6a2f` (+ this RESUMPTION commit) on `main` pushed to all 4 upstreams.
 
 ## FULL — detailed resumption block
 
@@ -23,7 +23,8 @@
 
 ### 1. Exact live-state anchors (moment-valid 2026-06-10)
 
-- **HEAD commit:** `a839220` — `test(qa): autonomous e2e + security + HelixQA for telemetry filters & pagination` (on `main`; this docs commit lands on top).
+- **HEAD commit:** `93e6a2f` — `docs: migrate ATM-001/002 -> Fixed, README Tracked-Items, HelixQA sweep evidence` (on `main`; this RESUMPTION commit lands on top).
+- **Waves 3–4 also shipped (on `main`):** `3c57867` closed both protocol gaps (UpdateAvailable.deployment_id [ota-protocol→7920842] + GET /deployments); `8c0521d` Tier-1 podman container e2e (PROVEN: control-plane container boots, ota-device-emu container runs the real round-trip — evidence docs/qa/20260610T105306Z/); `5d4920e` dashboard ArtifactUpload + populated-detail (Vitest 50, Playwright 20); submodule pins bumped — constitution `ba0f702`, ota-rollout-engine `7a90912`, ota-artifact-validator `77c6b48`, containers `845ad45`. Tracker live at docs/Issues.md (ATM-003/004 Operator-blocked: Tier-2 Cuttlefish-on-Linux-KVM / Tier-3 RK3588 hardware) + docs/Fixed.md.
 - **Just-shipped this session (on `main`, pushed all 4 upstreams):**
   - `50ef5c6` — `feat(api): per-device telemetry filters + group/members pagination` (OpenAPI synced, redocly-clean).
   - `b0b8ee2` — `chore(dashboard): sync API client to new pagination/filter params` (dashboard client lockstep).
