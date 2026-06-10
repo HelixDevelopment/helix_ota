@@ -286,9 +286,13 @@ export class ApiClient {
     return this.json<DeviceStatus>(`/devices/${encodeURIComponent(deviceId)}/status`);
   }
 
-  getDeviceTelemetry(deviceId: string): Promise<TelemetryHistory> {
+  getDeviceTelemetry(
+    deviceId: string,
+    query?: { limit?: number; cursor?: string; event?: string; since?: string; until?: string },
+  ): Promise<TelemetryHistory> {
     return this.json<TelemetryHistory>(
       `/devices/${encodeURIComponent(deviceId)}/telemetry`,
+      { query },
     );
   }
 
@@ -306,9 +310,13 @@ export class ApiClient {
     return this.json<DeviceGroup>("/groups", { method: "POST", body: req });
   }
 
-  getGroupMembers(groupId: string): Promise<DeviceGroupMembers> {
+  getGroupMembers(
+    groupId: string,
+    query?: { limit?: number; cursor?: string },
+  ): Promise<DeviceGroupMembers> {
     return this.json<DeviceGroupMembers>(
       `/groups/${encodeURIComponent(groupId)}/members`,
+      { query },
     );
   }
 
