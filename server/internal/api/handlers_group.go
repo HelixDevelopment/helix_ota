@@ -3,12 +3,38 @@ package api
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
+
+// parsePage reads the shared ?limit/?cursor pagination params. limit defaults to
+// def and is capped at max; cursor is a non-negative integer offset. On a
+// malformed value it writes a 400 VALIDATION_FAILED and returns ok=false.
+func parsePage(c *gin.Context, def, max int) (limit, offset int, ok bool) {
+	limit = def
+	if lim := c.Query("limit"); lim != "" {
+		n, err := strconv.Atoi(lim)
+		if err != nil || n < 1 || n > max {
+			respondValidation(c, "limit must be an integer in [1,"+strconv.Itoa(max)+"]",
+				ErrorDetail{Field: "limit", Issue: "out of range"})
+			return 0, 0, false
+		}
+		limit = n
+	}
+	if cur := c.Query("cursor"); cur != "" {
+		n, err := strconv.Atoi(cur)
+		if err != nil || n < 0 {
+			respondValidation(c, "cursor is malformed", ErrorDetail{Field: "cursor", Issue: "invalid"})
+			return 0, 0, false
+		}
+		offset = n
+	}
+	return limit, offset, true
+}
 
 // --- wire types (operational_endpoints.md §6) ---
 
@@ -33,9 +59,11 @@ type GroupView struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-// GroupList is the GET /groups body.
+// GroupList is the GET /groups body — cursor-paginated. NextCursor is nil on the
+// last page.
 type GroupList struct {
-	Items []GroupView `json:"items"`
+	Items      []GroupView `json:"items"`
+	NextCursor *string     `json:"next_cursor"`
 }
 
 // MemberAdd is the POST /groups/{id}/members body — a BATCH of device ids
@@ -58,10 +86,12 @@ type GroupMemberView struct {
 	AddedAt  time.Time `json:"added_at"`
 }
 
-// GroupMembers is the GET /groups/{id}/members body — items of {device_id, added_at}.
+// GroupMembers is the GET /groups/{id}/members body — items of {device_id,
+// added_at}, oldest-first and cursor-paginated. NextCursor is nil on the last page.
 type GroupMembers struct {
-	GroupID string            `json:"group_id"`
-	Items   []GroupMemberView `json:"items"`
+	GroupID    string            `json:"group_id"`
+	Items      []GroupMemberView `json:"items"`
+	NextCursor *string           `json:"next_cursor"`
 }
 
 func toGroupView(g store.Group) GroupView {
@@ -109,16 +139,25 @@ func (s *Server) handleCreateGroup(c *gin.Context) {
 }
 
 func (s *Server) handleListGroups(c *gin.Context) {
+	limit, offset, ok := parsePage(c, 50, 200)
+	if !ok {
+		return
+	}
 	groups, err := s.repo.ListGroups(c.Request.Context())
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not list groups")
 		return
 	}
-	items := make([]GroupView, 0, len(groups))
-	for _, g := range groups {
-		items = append(items, s.groupViewWithMembers(c, g))
+	items := make([]GroupView, 0, limit)
+	for i := offset; i < len(groups) && len(items) < limit; i++ {
+		items = append(items, s.groupViewWithMembers(c, groups[i]))
 	}
-	c.JSON(http.StatusOK, GroupList{Items: items})
+	body := GroupList{Items: items}
+	if next := offset + len(items); next < len(groups) {
+		nc := strconv.Itoa(next)
+		body.NextCursor = &nc
+	}
+	c.JSON(http.StatusOK, body)
 }
 
 func (s *Server) handleGetGroup(c *gin.Context) {
@@ -170,16 +209,25 @@ func (s *Server) handleDeleteGroup(c *gin.Context) {
 
 func (s *Server) handleListGroupMembers(c *gin.Context) {
 	groupID := c.Param("groupId")
+	limit, offset, ok := parsePage(c, 50, 200)
+	if !ok {
+		return
+	}
 	members, err := s.repo.ListGroupMembersDetailed(c.Request.Context(), groupID)
 	if err != nil {
 		respondError(c, http.StatusNotFound, CodeNotFound, "group not found")
 		return
 	}
-	items := make([]GroupMemberView, 0, len(members))
-	for _, m := range members {
-		items = append(items, GroupMemberView{DeviceID: m.DeviceID, AddedAt: m.AddedAt})
+	items := make([]GroupMemberView, 0, limit)
+	for i := offset; i < len(members) && len(items) < limit; i++ {
+		items = append(items, GroupMemberView{DeviceID: members[i].DeviceID, AddedAt: members[i].AddedAt})
 	}
-	c.JSON(http.StatusOK, GroupMembers{GroupID: groupID, Items: items})
+	body := GroupMembers{GroupID: groupID, Items: items}
+	if next := offset + len(items); next < len(members) {
+		nc := strconv.Itoa(next)
+		body.NextCursor = &nc
+	}
+	c.JSON(http.StatusOK, body)
 }
 
 func (s *Server) handleAddGroupMembers(c *gin.Context) {

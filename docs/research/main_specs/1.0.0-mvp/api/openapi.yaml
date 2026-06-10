@@ -14,6 +14,9 @@ info:
   title: Helix OTA Control Plane API
   version: 1.0.0-MVP
   summary: REST API for the Helix OTA modular-monolith control plane (Android 15 first).
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
   description: >
     Control-plane endpoints (auth, devices, artifacts, releases, deployments, client
     update-check + telemetry). JSON responses negotiate Brotli/gzip; the referenced
@@ -590,12 +593,17 @@ paths:
       summary: A device's telemetry event history, newest-first, cursor-paginated.
       description: >
         RBAC: admin/operator/viewer may read any device; a device-scoped token may read ONLY its own
-        deviceId (else 403). Items are newest-first; next_cursor is null on the last page
+        deviceId (else 403). Items are newest-first; next_cursor is null on the last page. Optional
+        filters narrow the history before pagination: ?event (a known telemetry event type, else 400),
+        and an inclusive RFC3339 [since,until] window matched on the event timestamp
         (handlers_telemetry.go:handleDeviceTelemetry).
       parameters:
         - $ref: '#/components/parameters/DeviceId'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
+        - { name: event, in: query, required: false, schema: { $ref: '#/components/schemas/TelemetryEventType' }, description: Filter to a single telemetry event type. }
+        - { name: since, in: query, required: false, schema: { type: string, format: date-time }, description: Inclusive RFC3339 lower bound on the event timestamp. }
+        - { name: until, in: query, required: false, schema: { type: string, format: date-time }, description: Inclusive RFC3339 upper bound on the event timestamp. }
       responses:
         '200':
           description: Telemetry history page.
@@ -647,8 +655,11 @@ paths:
     get:
       tags: [groups]
       operationId: listGroups
-      summary: List device groups (each with its live member_count).
-      description: RBAC viewer+ (handlers_group.go:handleListGroups).
+      summary: List device groups (each with its live member_count), cursor-paginated.
+      description: RBAC viewer+. next_cursor is null on the last page (handlers_group.go:handleListGroups).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: Groups.
@@ -718,10 +729,12 @@ paths:
     get:
       tags: [groups]
       operationId: listGroupMembers
-      summary: List a group's members with their join times.
-      description: RBAC viewer+ (handlers_group.go:handleListGroupMembers).
+      summary: List a group's members with their join times, oldest-first and cursor-paginated.
+      description: RBAC viewer+. next_cursor is null on the last page (handlers_group.go:handleListGroupMembers).
       parameters:
         - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: Group members.
@@ -1500,6 +1513,11 @@ components:
         items:
           type: array
           items: { $ref: '#/components/schemas/GroupView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+          description: Null on the last page.
 
     MemberAdd:
       type: object
@@ -1544,6 +1562,11 @@ components:
         items:
           type: array
           items: { $ref: '#/components/schemas/GroupMemberView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+          description: Null on the last page.
 
     # --- audit log read (handlers_audit.go / audit_wire.go) ---
     AuditActor:
@@ -1561,7 +1584,7 @@ components:
       properties:
         id: { type: string, format: uuid }
         actor: { $ref: '#/components/schemas/AuditActor' }
-        action: { type: string, description: SCREAMING_SNAKE_CASE verb, e.g. DEVICE_REGISTER. }
+        action: { type: string, description: "SCREAMING_SNAKE_CASE verb, e.g. DEVICE_REGISTER." }
         resource_type: { type: string, enum: [artifact, release, deployment, device, group, group_member] }
         resource_id: { type: string }
         details:
