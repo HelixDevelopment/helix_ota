@@ -1,0 +1,547 @@
+<h1 id="helix-ota">Helix OTA</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Project root README for Helix OTA — a universal, decoupled
+over-the-air update system (Go control plane + per-OS client
+SDKs/agents). First target is Android 15 on Orange Pi 5 Max. The project
+is currently in its specification/research phase: the authoritative
+design lives in the spec corpus under
+<code>docs/research/main_specs/</code>, and implementation follows that
+corpus.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The spec corpus entry point at <a
+href="docs/research/main_specs/README.md"><code>docs/research/main_specs/README.md</code></a>
+is referenced as the corpus index but is not yet present (UNVERIFIED);
+until it lands, start from the master design (§ links below). The six
+NEW <code>ota-*</code> submodule repositories are not yet created.
+HelixConstitution clause numbers are carried from the corpus convention
+and are UNVERIFIED against the authoritative constitution text.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Add the corpus index <code>README.md</code>; complete the
+per-component 1.0.0-MVP specs and the open ADRs; create the six PUBLIC
+<code>ota-*</code> repos on GitHub + GitLab; then begin implementation
+under the corpus.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-what-is-helix-ota">What is Helix OTA</a></li>
+<li><a href="#2-status">Status</a></li>
+<li><a href="#3-mandated-technology-stack">Mandated technology
+stack</a></li>
+<li><a href="#4-locked-architecture">Locked architecture</a></li>
+<li><a href="#5-specification-corpus">Specification corpus</a></li>
+<li><a href="#6-reusable-submodules">Reusable submodules</a></li>
+<li><a href="#7-governance--helixconstitution">Governance —
+HelixConstitution</a></li>
+<li><a href="#8-documentation-export-pipeline">Documentation export
+pipeline</a></li>
+<li><a href="#9-repository-layout">Repository layout</a></li>
+<li><a href="#10-tracked-items--status-documents">Tracked-Items + Status
+Documents</a></li>
+<li><a href="#11-license">License</a></li>
+</ol>
+<blockquote>
+<p>Per HelixConstitution §11.4.61 (UNVERIFIED clause number), every
+document carries the metadata table above followed by this table of
+contents.</p>
+</blockquote>
+<hr />
+<h2 id="what-is-helix-ota">1. What is Helix OTA</h2>
+<p>Helix OTA is a <strong>universal, generic, deeply decoupled</strong>
+over-the-air (OTA) update system. It comprises a server <strong>control
+plane</strong>, per-OS <strong>client SDKs/agents</strong>, and a
+dashboard, designed to be embeddable into any operating system.</p>
+<ul>
+<li><strong>First target:</strong> Android 15 (all flavors/variants) on
+the <strong>Orange Pi 5 Max</strong>, where the build pipeline emits
+flashing images plus an OTA update <code>.zip</code> and mandatory hash
+files.</li>
+<li><strong>Future targets:</strong> Linux (all flavors), Windows, and
+other upstream OSes via pluggable OS adapters. These are
+research/standards-survey only at this stage (<code>1.X-linux/</code>,
+<code>1.X-windows/</code>, <code>1.X-other-os/</code>).</li>
+</ul>
+<p>Operator-stated hard guarantees (from the master design):</p>
+<ul>
+<li><strong>Zero system corruption</strong> — an update must never brick
+a working device.</li>
+<li><strong>Safe upload</strong> — every OTA artifact passes mandatory
+validation before it can be deployed.</li>
+<li><strong>Granular rollout</strong> — deploy all at once, or in steps
+(5%, 10%, 30%, … 100%).</li>
+<li><strong>Observability</strong> — tracking/measurement/critical-data
+capture to detect and report problems.</li>
+<li><strong>Scalability</strong> — single board to millions of
+devices.</li>
+</ul>
+<h2 id="status">2. Status</h2>
+<p><strong>Specification / research phase.</strong> This repository
+currently contains the design and research corpus, the documentation
+export pipeline, and the submodule scaffolding tooling —
+<strong>not</strong> the implementation. Architecture and stack are
+locked (see below); component-level decisions that require evidence are
+deliberately deferred to the open ADRs. Implementation follows the
+corpus.</p>
+<p>No claim of working server, agent, or <code>ota-*</code> submodule
+code is made here; those do not yet exist (anti-bluff, HelixConstitution
+§7.1 / §11.4.6, UNVERIFIED clause numbers).</p>
+<h2 id="mandated-technology-stack">3. Mandated technology stack</h2>
+<p>The stack is locked by operator decision (master design §2 D6,
+§3):</p>
+<ul>
+<li><strong>Language / runtime:</strong> Go (control plane, rollout
+engine, validators); Kotlin/KMP (Android agent).</li>
+<li><strong>HTTP framework:</strong> <strong>Gin</strong>
+(<code>gin-gonic</code>).</li>
+<li><strong>Transport:</strong> <strong>HTTP/3 (QUIC)</strong> primary
+with automatic fallback to <strong>HTTP/2</strong> + standard
+compression; <strong>Brotli</strong> content compression with negotiated
+<strong>gzip</strong> fallback for older clients.</li>
+<li><strong>API surface:</strong> <strong>REST</strong> is the mandated
+primary surface (<code>/api/v1</code>) plus mandatory compatibility
+interfaces; gRPC is optional/internal only.</li>
+<li><strong>Persistence:</strong> PostgreSQL (relational), MinIO/S3
+(artifact blobs), optional Redis caching only where a measured need
+exists.</li>
+<li><strong>Observability:</strong> OpenTelemetry; Prometheus/Grafana
+surface.</li>
+</ul>
+<h2 id="locked-architecture">4. Locked architecture</h2>
+<p>Locked by operator decision (master design §2 D2):
+<strong>device-side native Android A/B</strong>
+(<code>update_engine</code> + AVB/dm-verity + automatic boot-failure
+rollback) <strong>plus a custom, decoupled Go control plane</strong>; an
+OSS engine is wrapped only where it adds value (and that choice is
+deferred to an evidence-based ADR, D3).</p>
+<p>Three planes plus infrastructure, with two deliberately extractable
+seams — the <strong>OS-adapter</strong> seam (universality) and the
+<strong>rollout-engine</strong> seam (OS-agnostic campaigns):</p>
+<ul>
+<li><strong>Control plane</strong> (Go + Gin, HTTP/3→HTTP/2, Brotli):
+REST API, artifact intake + validation, rollout engine, device registry,
+telemetry ingest, auth (OAuth2/JWT, RBAC).</li>
+<li><strong>Data plane:</strong> PostgreSQL, MinIO/S3,
+OpenTelemetry/Prometheus.</li>
+<li><strong>Device</strong> (Android 15 on Orange Pi 5 Max): KMP OTA
+agent (poll/download/verify), AOSP <code>update_engine</code> (Virtual
+A/B), AVB/dm-verity + <code>boot_control</code>.</li>
+<li><strong>Dashboard:</strong> React (login, upload, rollout, fleet
+health).</li>
+</ul>
+<p>Each unit follows the decoupling principle (one purpose, well-defined
+interface, independently testable; §11.4.28, UNVERIFIED).</p>
+<h2 id="specification-corpus">5. Specification corpus</h2>
+<p>The authoritative design and research live under <a
+href="docs/research/main_specs/"><code>docs/research/main_specs/</code></a>.
+The intended corpus index is <a
+href="docs/research/main_specs/README.md"><code>docs/research/main_specs/README.md</code></a>
+(not yet present — UNVERIFIED). Until it lands, the canonical entry
+points are:</p>
+<ul>
+<li><strong>Master design:</strong> <a
+href="docs/research/main_specs/00-master/2026-06-07-helix-ota-design.md"><code>docs/research/main_specs/00-master/2026-06-07-helix-ota-design.md</code></a></li>
+<li><strong>Submodule reuse map:</strong> <a
+href="docs/research/main_specs/00-master/submodule_reuse_map.md"><code>docs/research/main_specs/00-master/submodule_reuse_map.md</code></a></li>
+<li><strong>Documentation standards:</strong> <a
+href="docs/research/main_specs/00-master/documentation_standards.md"><code>docs/research/main_specs/00-master/documentation_standards.md</code></a></li>
+<li><strong>Architecture Decision Records (open):</strong> <a
+href="docs/research/main_specs/research/adr/"><code>docs/research/main_specs/research/adr/</code></a></li>
+</ul>
+<p>Corpus phases: <code>00-master/</code>, <code>research/</code>,
+<code>additions/</code>, <code>1.0.0-mvp/</code>,
+<code>1.0.1-staged-rollout/</code>, <code>1.X-linux/</code>,
+<code>1.X-windows/</code>, <code>1.X-other-os/</code>.</p>
+<h2 id="reusable-submodules">6. Reusable submodules</h2>
+<p>Helix OTA is <strong>catalogue-first</strong> (HelixConstitution
+§11.4.74, UNVERIFIED): every component is satisfied by an existing
+verified catalogue submodule where one exists; a NEW submodule is
+created only where the catalogue has no cover. See the <a
+href="docs/research/main_specs/00-master/submodule_reuse_map.md">submodule
+reuse map</a> for the full component → submodule bindings.</p>
+<p>Six <strong>NEW</strong> reusable, independently-versioned submodules
+are introduced because no catalogue submodule covers their purpose. Per
+locked decision D4 they get <strong>PUBLIC</strong> repositories on both
+GitHub and GitLab. <strong>These repos are not yet created</strong>
+(UNVERIFIED — URLs below are the planned canonical locations):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Submodule</th>
+<th>Purpose (decoupled boundary)</th>
+<th>GitHub</th>
+<th>GitLab</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ota-protocol</code></td>
+<td>Shared wire types, manifest schema, status/event enums (Go + KMP);
+pure contracts, no business logic.</td>
+<td>https://github.com/HelixDevelopment/ota-protocol</td>
+<td>https://gitlab.com/helixdevelopment1/ota-protocol</td>
+</tr>
+<tr>
+<td><code>ota-artifact-validator</code></td>
+<td>Structure/hash/signature/metadata validation pipeline; OS-aware via
+plugins, no transport.</td>
+<td>https://github.com/HelixDevelopment/ota-artifact-validator</td>
+<td>https://gitlab.com/helixdevelopment1/ota-artifact-validator</td>
+</tr>
+<tr>
+<td><code>ota-rollout-engine</code></td>
+<td>Staged-rollout + halt/advance logic, OS-agnostic; no HTTP, pure
+engine + storage port.</td>
+<td>https://github.com/HelixDevelopment/ota-rollout-engine</td>
+<td>https://gitlab.com/helixdevelopment1/ota-rollout-engine</td>
+</tr>
+<tr>
+<td><code>ota-update-engine-bridge</code></td>
+<td>Wrapper over AOSP <code>update_engine</code> /
+<code>boot_control</code>; Android-only, thin, testable.</td>
+<td>https://github.com/HelixDevelopment/ota-update-engine-bridge</td>
+<td>https://gitlab.com/helixdevelopment1/ota-update-engine-bridge</td>
+</tr>
+<tr>
+<td><code>ota-android-agent</code></td>
+<td>KMP device agent (poll/download/verify/apply/report); consumes
+protocol + bridge.</td>
+<td>https://github.com/HelixDevelopment/ota-android-agent</td>
+<td>https://gitlab.com/helixdevelopment1/ota-android-agent</td>
+</tr>
+<tr>
+<td><code>ota-telemetry-schema</code></td>
+<td>Telemetry event/metric schema + codecs; shared by server + agents,
+no transport/storage.</td>
+<td>https://github.com/HelixDevelopment/ota-telemetry-schema</td>
+<td>https://gitlab.com/helixdevelopment1/ota-telemetry-schema</td>
+</tr>
+</tbody>
+</table>
+<p>Reused catalogue submodules (verified canonical names from
+documentation standards §9) include <code>auth</code>,
+<code>security</code>, <code>database</code>, <code>Storage</code>,
+<code>observability</code>, <code>eventbus</code>,
+<code>ratelimiter</code>, <code>middleware</code>, <code>http3</code>,
+<code>mdns</code>, <code>recovery</code>, <code>Herald</code>,
+<code>config</code>, <code>discovery</code>, <code>cache</code>,
+<code>docs_chain</code> / <code>Document</code> /
+<code>Formatters</code>, <code>containers</code>, and the KMP set
+<code>Auth-KMP</code>, <code>Security-KMP</code>,
+<code>Storage-KMP</code>, <code>Config-KMP</code>. New repos can be
+bootstrapped with <a
+href="scripts/scaffold_submodule.sh"><code>scripts/scaffold_submodule.sh</code></a>,
+which scaffolds the README (metadata table), Apache-2.0 license,
+<code>.gitignore</code>, <code>docs/</code> and <code>tests/</code>
+placeholders, then configures and pushes the GitHub + GitLab
+remotes.</p>
+<h2 id="governance-helixconstitution">7. Governance —
+HelixConstitution</h2>
+<p>Helix OTA is governed by the <strong>HelixConstitution</strong>, the
+standards the corpus is authored against. Key rules applied throughout
+(clause numbers carried from the corpus convention and
+<strong>UNVERIFIED</strong> against the authoritative constitution
+text):</p>
+<ul>
+<li><strong>Four-layer testing + mutation meta-test</strong> (§1) —
+source-presence gate → artifact gate → runtime/integration → mutation
+meta-test, with no-bluff positive evidence.</li>
+<li><strong>Anti-bluff</strong> (§7.1 / §11.4.6) — no fabricated facts;
+anything unconfirmed is marked <code>UNVERIFIED</code>. This README
+follows that rule.</li>
+<li><strong>Catalogue-first reuse</strong> (§11.4.74) and the
+<strong>decoupling principle</strong> (§11.4.28).</li>
+<li><strong>Containers substrate</strong> (§11.4.76).</li>
+<li><strong>Metadata table + table of contents on every
+document</strong> (§11.4.61).</li>
+<li><strong>Subagent-driven authoring with a mandatory code-review
+gate</strong> (§11.4.20 / §11.4.125).</li>
+<li><strong>Multi-upstream mirroring</strong> (§2 / §2.1) — every repo
+is pushed to GitHub and GitLab.</li>
+</ul>
+<h2 id="documentation-export-pipeline">8. Documentation export
+pipeline</h2>
+<p>Canonical source is <strong>Markdown + Mermaid</strong>. The
+multi-format export pipeline <a
+href="scripts/export_docs.sh"><code>scripts/export_docs.sh</code></a>
+converts the corpus into HTML and DOCX (plus PDF when a LaTeX/PDF engine
+is available) and renders embedded Mermaid diagrams to SVG and PNG,
+writing outputs into per-directory <code>_exports/</code> folders.</p>
+<p>It <strong>degrades gracefully and honestly</strong>: each renderer
+(pandoc, mermaid-cli, a LaTeX/PDF engine) is probed at runtime, missing
+tools are logged as <code>SKIPPED</code> rather than failing the run,
+and a format is only reported as produced if its file actually exists
+(export pipeline notes, §11.4.65 / §7.1, UNVERIFIED clause numbers).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export the whole corpus (default target) or a single file/dir:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/export_docs.sh</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/export_docs.sh</span> docs/research/main_specs/00-master/2026-06-07-helix-ota-design.md</span></code></pre></div>
+<h2 id="repository-layout">9. Repository layout</h2>
+<pre><code>.
+├── README.md                 this file
+├── LICENSE                   Apache-2.0
+├── docs/
+│   ├── request/              operator request inputs
+│   └── research/main_specs/  authoritative design + research corpus (see §5)
+├── scripts/
+│   ├── export_docs.sh        multi-format documentation export pipeline (§8)
+│   └── scaffold_submodule.sh scaffold + push a new reusable submodule (§6)
+└── upstreams/                multi-upstream remote host definitions (GitHub, GitLab, …)</code></pre>
+<h2 id="tracked-items-status-documents">10. Tracked-Items + Status
+Documents</h2>
+<!-- doc-link-section:begin -->
+<p>Doc-map for the canonical tracker documents plus the key spec/status
+documents in the active spec corpus
+(<code>docs/research/main_specs/</code>). Each row links the canonical
+Markdown source plus its HTML/PDF exports where those siblings exist on
+disk; <code>Revision</code> and <code>Last modified</code> are read from
+each document’s own metadata header (<code>—</code> = absent). Every
+linked path was verified to exist on disk (HelixConstitution §11.4.57 /
+§7.1 anti-bluff, UNVERIFIED clause numbers).</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Document</th>
+<th>Last modified</th>
+<th>Revision</th>
+<th>Markdown</th>
+<th>HTML</th>
+<th>PDF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Issues — open workable items</td>
+<td>2026-06-10T18:30:00Z</td>
+<td>2</td>
+<td><a href="docs/Issues.md">md</a></td>
+<td><a href="docs/Issues.html">html</a></td>
+<td><a href="docs/Issues.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Issues Summary — open, short-form</td>
+<td>2026-06-10T18:30:00Z</td>
+<td>2</td>
+<td><a href="docs/Issues_Summary.md">md</a></td>
+<td><a href="docs/Issues_Summary.html">html</a></td>
+<td><a href="docs/Issues_Summary.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Fixed — closed workable items</td>
+<td>2026-06-10T18:30:00Z</td>
+<td>2</td>
+<td><a href="docs/Fixed.md">md</a></td>
+<td><a href="docs/Fixed.html">html</a></td>
+<td><a href="docs/Fixed.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Fixed Summary — closed, short-form</td>
+<td>2026-06-10T18:30:00Z</td>
+<td>2</td>
+<td><a href="docs/Fixed_Summary.md">md</a></td>
+<td><a href="docs/Fixed_Summary.html">html</a></td>
+<td><a href="docs/Fixed_Summary.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Session Resumption — canonical entry point</td>
+<td>2026-06-10T12:00:00Z</td>
+<td>2</td>
+<td><a href="docs/RESUMPTION.md">md</a></td>
+<td><a href="docs/RESUMPTION.html">html</a></td>
+<td><a href="docs/RESUMPTION.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Spec-corpus continuation / handoff</td>
+<td>2026-06-10</td>
+<td>3</td>
+<td><a href="docs/research/main_specs/CONTINUATION.md">md</a></td>
+<td><a href="docs/research/main_specs/CONTINUATION.html">html</a></td>
+<td><a href="docs/research/main_specs/CONTINUATION.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Additions synthesis (gap closure)</td>
+<td>2026-06-08</td>
+<td>3</td>
+<td><a
+href="docs/research/main_specs/research/additions_synthesis.md">md</a></td>
+<td><a
+href="docs/research/main_specs/research/additions_synthesis.html">html</a></td>
+<td><a
+href="docs/research/main_specs/research/additions_synthesis.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.0-MVP API — operational endpoints</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.0-MVP API — implemented endpoints</td>
+<td>2026-06-08T00:00:00Z</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.0-MVP dashboard design</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.1 staged rollout — overview (README)</td>
+<td>2026-06-08</td>
+<td>2</td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/README.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/README.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/README.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.1 staged rollout — rollout engine</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.1 staged rollout — migration 002 design</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.1 staged rollout — device TUF</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/device_tuf.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/device_tuf.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/device_tuf.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.1 staged rollout — rollback UX</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.3 delta updates — overview (README)</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.3-delta-updates/README.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.3-delta-updates/README.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.3-delta-updates/README.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>1.0.3 delta updates — design</td>
+<td>2026-06-08</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.md">md</a></td>
+<td><a
+href="docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.html">html</a></td>
+<td><a
+href="docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.pdf">pdf</a></td>
+</tr>
+<tr>
+<td>Repo public-visibility audit (gap G11)</td>
+<td>2026-06-08T00:00:00Z</td>
+<td>1</td>
+<td><a
+href="docs/research/main_specs/research/repo_audit.md">md</a></td>
+<td><a
+href="docs/research/main_specs/research/repo_audit.html">html</a></td>
+<td><a
+href="docs/research/main_specs/research/repo_audit.pdf">pdf</a></td>
+</tr>
+</tbody>
+</table>
+<!-- doc-link-section:end -->
+<h2 id="license">11. License</h2>
+<p>Apache-2.0. See <a href="LICENSE"><code>LICENSE</code></a>.</p>

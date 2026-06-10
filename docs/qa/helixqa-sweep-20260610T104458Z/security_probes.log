@@ -1,0 +1,61 @@
+== Helix OTA security probe suite ==
+base_url=http://127.0.0.1:8080 run=sec-1781088339-96029 evidence=/Volumes/T7/Projects/helix_ota/tests/security/RUN_EVIDENCE.txt
+started: 2026-06-10T10:45:39Z
+
+building ota-server ...
+[PASS] self-hosted ota-server healthy on http://127.0.0.1:8080
+[PASS] admin login established (fixtures only)
+      device A=68eb542c639be3812301cff730994973  device B=453b95d32c233645eed51576fd59b4a2
+
+--- A. unauthenticated access must be 401 ---
+[PASS] A1 unauth GET /telemetry/overview (HTTP 401)
+[PASS] A2 unauth GET /audit (HTTP 401)
+[PASS] A3 unauth POST /groups (mutation) (HTTP 401)
+[PASS] A4 unauth POST /devices/register (HTTP 401)
+[PASS] A5 unauth GET /client/update (HTTP 401)
+[PASS] A6 non-Bearer Authorization header -> 401 (HTTP 401)
+
+--- B. RBAC: device-role token on operator/admin routes must be 403 ---
+[PASS] B1 device token POST /groups (operator/admin only) (HTTP 403)
+[PASS] B2 device token GET /audit (admin only) (HTTP 403)
+[PASS] B3 device token POST /deltas (operator/admin only) (HTTP 403)
+[PASS] B4 device token GET /client/update is ACCEPTED (token is valid; B1-B3 are RBAC) (HTTP 204)
+
+--- C. resource ownership: a device may read only its OWN telemetry ---
+[PASS] C1 device A token GET device B telemetry -> 403 (HTTP 403)
+[PASS] C2 device A token GET its OWN telemetry -> 200 (ownership allows self) (HTTP 200)
+[PASS] C3 device A token POST telemetry FOR device B -> 403 (HTTP 403)
+
+--- D. token integrity: malformed/tampered tokens must be 401 ---
+[PASS] D1 garbage bearer token -> 401 (HTTP 401)
+[PASS] D2 admin token with FORGED signature -> 401 (sig verified) (HTTP 401)
+[PASS] D3 admin token with MUTATED claims (stale sig) -> 401 (HTTP 401)
+[PASS] D4 empty bearer token -> 401 (HTTP 401)
+
+--- E. injection strings must not 500 or leak (handled as 401/400/404) ---
+[PASS] E1 SQL-ish device id (unauth) -> 401 (auth precedes lookup) (HTTP 401)
+[PASS] E2 SQL-ish device id (authed) -> 404/400 not 5xx (HTTP 404)
+[PASS] E2b SQL-ish device id did not crash the server (no 5xx; HTTP 404)
+[PASS] E3 path-traversal artifact id -> 404/400 not 5xx (HTTP 404)
+[PASS] E3b path-traversal artifact id did not crash (no 5xx; HTTP 404)
+[PASS] E4 injection/XSS strings in group body -> 201/400 not 5xx (HTTP 201)
+[PASS] E4b injection body did not crash (no 5xx; HTTP 201)
+[PASS] E5 injection payload stored+returned as inert data (not interpreted)
+[PASS] E6 NoSQL-operator query params did not crash (no 5xx; HTTP 400)
+
+--- F. malformed / oversized JSON must be 400/413, never 500 ---
+[PASS] F1 malformed JSON body -> 400 (HTTP 400)
+[PASS] F1b malformed JSON did not crash (no 5xx; HTTP 400)
+[PASS] F2 truncated JSON body -> 400 (HTTP 400)
+[PASS] F3 wrong-typed field -> 400 (or accepted/conflict) not 5xx (HTTP 400)
+[PASS] F3b wrong-typed field did not crash (no 5xx; HTTP 400)
+[PASS] F4 1 MiB JSON body handled cleanly (400/413/201) not 5xx (HTTP 201)
+[PASS] F4b oversized body did not crash (no 5xx; HTTP 201)
+
+--- G. trust boundary: a request cannot supply the verification key ---
+[PASS] G1 upload with an attacker-supplied public_key field is rejected 422 SIGNATURE_INVALID (key is config-only)
+[PASS] G1b attacker-key upload did not crash (no 5xx; HTTP 422)
+
+finished: 2026-06-10T10:45:41Z
+== summary: 37 passed, 0 failed, 0 skipped ==
+RESULT: PASS

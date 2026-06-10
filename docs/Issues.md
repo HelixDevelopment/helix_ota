@@ -1,50 +1,13 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 1
-**Last modified:** 2026-06-10T16:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-10T18:30:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 ATM-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
 short-form companion is [`Issues_Summary.md`](Issues_Summary.md). Items
 surfaced during the 2026-06-10 emulator-driven device-testing session;
 HEAD at creation `a839220` + the docs commit on top.
-
----
-
-## §1. [ATM-001] Telemetry `deployment_id` not derivable from `otaprotocol.UpdateAvailable`
-
-**Status:** In progress
-**Type:** Bug
-
-A real device has no protocol-level way to obtain the `deployment_id`
-it must echo back in its telemetry. The server requires it
-(`server/internal/api/handlers_client.go`), but the protocol payload a
-device receives (`submodules/ota-protocol/types.go`,
-`UpdateAvailable`) carries no `deployment_id` field — so the device
-cannot supply a value it was never told. Surfaced by the Tier-1 Go
-device-emulator (`7dc3334`) when it tried to round-trip
-register → update-check → telemetry.
-
-A sibling agent is implementing the protocol-completeness fix this
-session (adding the field to the `ota-protocol` `UpdateAvailable`
-payload + wiring it through the server's update-check response). This
-tracker entry stays `In progress` until that fix lands with the
-RED→GREEN evidence under `docs/qa/<run-id>/`.
-
----
-
-## §2. [ATM-002] No `GET /deployments` list endpoint to enumerate deployments
-
-**Status:** In progress
-**Type:** Feature
-
-`server.go` exposes only `POST /deployments` (create) and
-`GET /deployments/{id}` (fetch one). There is no list endpoint to
-enumerate existing deployments, so neither the dashboard nor an
-operator/automation client can discover deployment IDs without already
-knowing them. A sibling agent is adding the `GET /deployments` list
-endpoint (with the same cursor-pagination convention as the
-group/members endpoints shipped in `50ef5c6`) this session.
 
 ---
 

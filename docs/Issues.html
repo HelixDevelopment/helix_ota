@@ -1,50 +1,13 @@
 <h1 id="helix-ota-issues-open-workable-items">Helix OTA — Issues (open
 workable items)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-10T16:00:00Z</p>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-10T18:30:00Z</p>
 <p>This is the canonical open-work tracker (§11.4.15 Status, §11.4.16
 Type, §11.4.54 ATM-NNN). Closed items migrate to <a
 href="Fixed.md"><code>Fixed.md</code></a>. The short-form companion is
 <a href="Issues_Summary.md"><code>Issues_Summary.md</code></a>. Items
 surfaced during the 2026-06-10 emulator-driven device-testing session;
 HEAD at creation <code>a839220</code> + the docs commit on top.</p>
-<hr />
-<h2
-id="atm-001-telemetry-deployment_id-not-derivable-from-otaprotocol.updateavailable">§1.
-[ATM-001] Telemetry <code>deployment_id</code> not derivable from
-<code>otaprotocol.UpdateAvailable</code></h2>
-<p><strong>Status:</strong> In progress <strong>Type:</strong> Bug</p>
-<p>A real device has no protocol-level way to obtain the
-<code>deployment_id</code> it must echo back in its telemetry. The
-server requires it
-(<code>server/internal/api/handlers_client.go</code>), but the protocol
-payload a device receives
-(<code>submodules/ota-protocol/types.go</code>,
-<code>UpdateAvailable</code>) carries no <code>deployment_id</code>
-field — so the device cannot supply a value it was never told. Surfaced
-by the Tier-1 Go device-emulator (<code>7dc3334</code>) when it tried to
-round-trip register → update-check → telemetry.</p>
-<p>A sibling agent is implementing the protocol-completeness fix this
-session (adding the field to the <code>ota-protocol</code>
-<code>UpdateAvailable</code> payload + wiring it through the server’s
-update-check response). This tracker entry stays
-<code>In progress</code> until that fix lands with the RED→GREEN
-evidence under <code>docs/qa/&lt;run-id&gt;/</code>.</p>
-<hr />
-<h2
-id="atm-002-no-get-deployments-list-endpoint-to-enumerate-deployments">§2.
-[ATM-002] No <code>GET /deployments</code> list endpoint to enumerate
-deployments</h2>
-<p><strong>Status:</strong> In progress <strong>Type:</strong>
-Feature</p>
-<p><code>server.go</code> exposes only <code>POST /deployments</code>
-(create) and <code>GET /deployments/{id}</code> (fetch one). There is no
-list endpoint to enumerate existing deployments, so neither the
-dashboard nor an operator/automation client can discover deployment IDs
-without already knowing them. A sibling agent is adding the
-<code>GET /deployments</code> list endpoint (with the same
-cursor-pagination convention as the group/members endpoints shipped in
-<code>50ef5c6</code>) this session.</p>
 <hr />
 <h2
 id="atm-003-emulator-tier-2-real-android-ab-update_engineavbdm-verity-auto-rollback-is-host-gated">§3.

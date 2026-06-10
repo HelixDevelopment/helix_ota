@@ -192,15 +192,20 @@ scripts/export_docs.sh docs/research/main_specs/00-master/2026-06-07-helix-ota-d
 ## 10. Tracked-Items + Status Documents
 
 <!-- doc-link-section:begin -->
-Doc-map for the key spec + status documents in the active spec corpus
-(`docs/research/main_specs/`). Each row links the canonical Markdown source plus its
+Doc-map for the canonical tracker documents plus the key spec/status documents in the active
+spec corpus (`docs/research/main_specs/`). Each row links the canonical Markdown source plus its
 HTML/PDF exports where those siblings exist on disk; `Revision` and `Last modified` are read
 from each document's own metadata header (`—` = absent). Every linked path was verified to exist
 on disk (HelixConstitution §11.4.57 / §7.1 anti-bluff, UNVERIFIED clause numbers).
 
 | Document | Last modified | Revision | Markdown | HTML | PDF |
 |---|---|---|---|---|---|
-| Spec-corpus continuation / handoff | 2026-06-08 | 2 | [md](docs/research/main_specs/CONTINUATION.md) | — | — |
+| Issues — open workable items | 2026-06-10T18:30:00Z | 2 | [md](docs/Issues.md) | [html](docs/Issues.html) | [pdf](docs/Issues.pdf) |
+| Issues Summary — open, short-form | 2026-06-10T18:30:00Z | 2 | [md](docs/Issues_Summary.md) | [html](docs/Issues_Summary.html) | [pdf](docs/Issues_Summary.pdf) |
+| Fixed — closed workable items | 2026-06-10T18:30:00Z | 2 | [md](docs/Fixed.md) | [html](docs/Fixed.html) | [pdf](docs/Fixed.pdf) |
+| Fixed Summary — closed, short-form | 2026-06-10T18:30:00Z | 2 | [md](docs/Fixed_Summary.md) | [html](docs/Fixed_Summary.html) | [pdf](docs/Fixed_Summary.pdf) |
+| Session Resumption — canonical entry point | 2026-06-10T12:00:00Z | 2 | [md](docs/RESUMPTION.md) | [html](docs/RESUMPTION.html) | [pdf](docs/RESUMPTION.pdf) |
+| Spec-corpus continuation / handoff | 2026-06-10 | 3 | [md](docs/research/main_specs/CONTINUATION.md) | [html](docs/research/main_specs/CONTINUATION.html) | [pdf](docs/research/main_specs/CONTINUATION.pdf) |
 | Additions synthesis (gap closure) | 2026-06-08 | 3 | [md](docs/research/main_specs/research/additions_synthesis.md) | [html](docs/research/main_specs/research/additions_synthesis.html) | [pdf](docs/research/main_specs/research/additions_synthesis.pdf) |
 | 1.0.0-MVP API — operational endpoints | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.pdf) |
 | 1.0.0-MVP API — implemented endpoints | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.pdf) |

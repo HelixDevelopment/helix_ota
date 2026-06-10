@@ -1,7 +1,7 @@
 <h1 id="helix-ota-fixed-closed-workable-items">Helix OTA — Fixed (closed
 workable items)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-10T16:00:00Z</p>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-10T18:30:00Z</p>
 <p>This is the canonical closed-archive tracker (§11.4.19 column
 alignment, §11.4.33 type-aware closure vocabulary, §11.4.54 ATM-NNN).
 Open items live in <a href="Issues.md"><code>Issues.md</code></a>; the
@@ -9,6 +9,38 @@ short-form companion is <a
 href="Fixed_Summary.md"><code>Fixed_Summary.md</code></a>. Sorted
 closure-date DESC. All commit hashes below were read from
 <code>git log</code>, not invented.</p>
+<hr />
+<h2
+id="atm-001-telemetry-deployment_id-not-derivable-from-otaprotocol.updateavailable">§1.
+[ATM-001] Telemetry <code>deployment_id</code> not derivable from
+<code>otaprotocol.UpdateAvailable</code></h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug</p>
+<p>Closed 2026-06-10 — commit <code>3c57867</code>
+<code>feat(api): close 2 protocol gaps — UpdateAvailable.deployment_id + GET /deployments</code>.
+The <code>ota-protocol</code> <code>UpdateAvailable</code> payload now
+carries the <code>deployment_id</code> field, wired through the server’s
+update-check response, so a real device can obtain and echo back the
+<code>deployment_id</code> its telemetry must supply (previously the
+server required it but the protocol never told the device). Proven by
+<code>TestEmulatorSelfServesDeploymentID</code> — the Tier-1 emulator
+round-trips register → update-check → telemetry self-serving the
+<code>deployment_id</code> end-to-end.</p>
+<hr />
+<h2
+id="atm-002-no-get-deployments-list-endpoint-to-enumerate-deployments">§2.
+[ATM-002] No <code>GET /deployments</code> list endpoint to enumerate
+deployments</h2>
+<p><strong>Status:</strong> Implemented (→ Fixed.md)
+<strong>Type:</strong> Feature</p>
+<p>Closed 2026-06-10 — commit <code>3c57867</code>
+<code>feat(api): close 2 protocol gaps — UpdateAvailable.deployment_id + GET /deployments</code>.
+A <code>GET /deployments</code> list endpoint now enumerates existing
+deployments with the same cursor-pagination convention as the
+group/members endpoints (<code>50ef5c6</code>), so the dashboard and
+operator/automation clients can discover deployment IDs without already
+knowing them. Proven by <code>TestDeploymentListReturnsActive</code> —
+the list endpoint returns the active deployments.</p>
 <hr />
 <h2 id="atm-005-per-device-telemetry-filters-event-since-until">§5.
 [ATM-005] Per-device telemetry filters (<code>?event</code> /
