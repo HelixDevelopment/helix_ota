@@ -143,6 +143,11 @@ func (s *Server) handleClientTelemetry(c *gin.Context) {
 			Event:        ev.Event,
 			Progress:     0,
 			Timestamp:    ev.Timestamp,
+			// Optional per-event annotations carried through to the canonical
+			// contract so the protocol validator rejects a negative value
+			// (§11.4.6) instead of silently persisting garbage.
+			DurationMS:       ev.DurationMS,
+			BytesTransferred: ev.BytesTransferred,
 		}
 		if ev.ErrorCode != nil {
 			report.ErrorCode = *ev.ErrorCode
@@ -154,12 +159,14 @@ func (s *Server) handleClientTelemetry(c *gin.Context) {
 		}
 
 		rec := store.TelemetryRecord{
-			DeviceID:     req.DeviceID,
-			DeploymentID: req.DeploymentID,
-			Event:        ev.Event,
-			Version:      ev.Version,
-			Timestamp:    ev.Timestamp,
-			ReceivedAt:   s.now(),
+			DeviceID:         req.DeviceID,
+			DeploymentID:     req.DeploymentID,
+			Event:            ev.Event,
+			Version:          ev.Version,
+			Timestamp:        ev.Timestamp,
+			ReceivedAt:       s.now(),
+			DurationMS:       ev.DurationMS,
+			BytesTransferred: ev.BytesTransferred,
 		}
 		if ev.ErrorCode != nil {
 			rec.ErrorCode = *ev.ErrorCode

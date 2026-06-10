@@ -296,7 +296,7 @@ func (d *Device) ApplyAndReport(ctx context.Context, upd *otaprotocol.UpdateAvai
 	depID := d.resolveDeploymentID(upd.DeploymentID)
 	var ack TelemetryAck
 	for _, ev := range lifecycle {
-		a, err := d.reportEvent(ctx, ev, upd.Version, nil, depID)
+		a, err := d.reportEvent(ctx, ev, upd.Version, nil, depID, lifecycleAnnotations(ev, upd.Size))
 		if err != nil {
 			return ack, fmt.Errorf("apply: report %s: %w", ev, err)
 		}
@@ -321,7 +321,7 @@ func (d *Device) ReportFailure(ctx context.Context, errorCode string) (Telemetry
 	ec := errorCode
 	// A failure report uses the operator-supplied fallback id: a rollback is not
 	// tied to a fresh update offer, so no protocol-supplied id is in hand here.
-	ack, err := d.reportEvent(ctx, otaprotocol.EventFailure, target, &ec, d.resolveDeploymentID(""))
+	ack, err := d.reportEvent(ctx, otaprotocol.EventFailure, target, &ec, d.resolveDeploymentID(""), eventAnnotations{})
 	if err != nil {
 		return ack, fmt.Errorf("report failure: %w", err)
 	}
@@ -343,9 +343,53 @@ func (d *Device) resolveDeploymentID(fromOffer string) string {
 	return d.cfg.DeploymentID
 }
 
+// eventAnnotations carries the optional per-event telemetry the device reports
+// alongside the lifecycle event (spec_impl_alignment.md row 4). Both fields are
+// nil when the device has nothing to report for that phase, so the emitted
+// payload stays byte-identical to a legacy report.
+type eventAnnotations struct {
+	durationMS       *int64
+	bytesTransferred *int64
+}
+
+// lifecycleAnnotations produces deterministic, realistic per-event
+// duration_ms/bytes_transferred for a given lifecycle event and full payload
+// size (spec_impl_alignment.md row 4). The values are a faithful model of a real
+// A/B apply (the emulator does not move bytes — see package doc), kept
+// deterministic so N-iteration runs are identical (§11.4.50):
+//   - bytes_transferred is the FULL payload size on download_started (the bytes
+//     the download will move) and on success (the bytes the apply consumed); the
+//     intermediate install/verify phases move no payload bytes, so they carry no
+//     byte count (nil => omitted).
+//   - duration_ms is a fixed, plausible per-phase elapsed time.
+//
+// payloadSize <= 0 (an offer without a size) yields no byte count, only the
+// phase duration.
+func lifecycleAnnotations(ev otaprotocol.TelemetryEvent, payloadSize int64) eventAnnotations {
+	durationFor := map[otaprotocol.TelemetryEvent]int64{
+		otaprotocol.EventDownloadStarted: 4200,
+		otaprotocol.EventInstalling:      9300,
+		otaprotocol.EventInstalled:       1100,
+		otaprotocol.EventVerifying:       2600,
+		otaprotocol.EventSuccess:         400,
+	}
+	var ann eventAnnotations
+	if d, ok := durationFor[ev]; ok {
+		dur := d
+		ann.durationMS = &dur
+	}
+	if payloadSize > 0 && (ev == otaprotocol.EventDownloadStarted || ev == otaprotocol.EventSuccess) {
+		sz := payloadSize
+		ann.bytesTransferred = &sz
+	}
+	return ann
+}
+
 // reportEvent posts a single-event telemetry batch and returns the 202 ack. The
 // depID is the already-resolved deployment id (protocol-supplied or fallback).
-func (d *Device) reportEvent(ctx context.Context, ev otaprotocol.TelemetryEvent, version string, errorCode *string, depID string) (TelemetryAck, error) {
+// ann carries the optional per-event duration_ms/bytes_transferred annotations
+// (zero value => both nil => omitted from the wire payload).
+func (d *Device) reportEvent(ctx context.Context, ev otaprotocol.TelemetryEvent, version string, errorCode *string, depID string, ann eventAnnotations) (TelemetryAck, error) {
 	d.mu.Lock()
 	devID := d.deviceID
 	devTok := d.deviceToken
@@ -359,10 +403,12 @@ func (d *Device) reportEvent(ctx context.Context, ev otaprotocol.TelemetryEvent,
 		DeploymentID: depID,
 		Events: []telemetryEventWire{
 			{
-				Event:     string(ev),
-				Version:   version,
-				Timestamp: d.now().UTC(),
-				ErrorCode: errorCode,
+				Event:            string(ev),
+				Version:          version,
+				Timestamp:        d.now().UTC(),
+				ErrorCode:        errorCode,
+				DurationMS:       ann.durationMS,
+				BytesTransferred: ann.bytesTransferred,
 			},
 		},
 	}
@@ -546,10 +592,12 @@ type deviceRegistered struct {
 }
 
 type telemetryEventWire struct {
-	Event     string    `json:"event"`
-	Version   string    `json:"version,omitempty"`
-	Timestamp time.Time `json:"timestamp"`
-	ErrorCode *string   `json:"error_code"`
+	Event            string    `json:"event"`
+	Version          string    `json:"version,omitempty"`
+	Timestamp        time.Time `json:"timestamp"`
+	ErrorCode        *string   `json:"error_code"`
+	DurationMS       *int64    `json:"duration_ms,omitempty"`
+	BytesTransferred *int64    `json:"bytes_transferred,omitempty"`
 }
 
 type telemetryReport struct {

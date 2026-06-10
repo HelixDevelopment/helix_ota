@@ -104,6 +104,12 @@ type TelemetryRecord struct {
 	Detail       string
 	Timestamp    time.Time
 	ReceivedAt   time.Time
+	// DurationMS / BytesTransferred are the optional per-event telemetry
+	// annotations from the spec (spec_impl_alignment.md row 4), nil when the
+	// device did not report them. Persisted nullable so a legacy event that omits
+	// them round-trips as nil (never as a misleading 0).
+	DurationMS       *int64
+	BytesTransferred *int64
 }
 
 // AuditEntry is one persisted admin/operator action (audit_logs;

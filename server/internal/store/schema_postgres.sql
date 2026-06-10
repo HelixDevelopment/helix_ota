@@ -71,17 +71,27 @@ CREATE TABLE IF NOT EXISTS helix_ota.deployments (
 CREATE INDEX IF NOT EXISTS idx_deployments_status ON helix_ota.deployments (status);
 
 CREATE TABLE IF NOT EXISTS helix_ota.telemetry_events (
-    seq           BIGSERIAL PRIMARY KEY,
-    device_id     TEXT        NOT NULL DEFAULT '',
-    deployment_id TEXT        NOT NULL DEFAULT '',
-    event         TEXT        NOT NULL,
-    version       TEXT        NOT NULL DEFAULT '',
-    error_code    TEXT        NOT NULL DEFAULT '',
-    detail        TEXT        NOT NULL DEFAULT '',
-    timestamp     TIMESTAMPTZ NOT NULL,
-    received_at   TIMESTAMPTZ NOT NULL
+    seq               BIGSERIAL PRIMARY KEY,
+    device_id         TEXT        NOT NULL DEFAULT '',
+    deployment_id     TEXT        NOT NULL DEFAULT '',
+    event             TEXT        NOT NULL,
+    version           TEXT        NOT NULL DEFAULT '',
+    error_code        TEXT        NOT NULL DEFAULT '',
+    detail            TEXT        NOT NULL DEFAULT '',
+    timestamp         TIMESTAMPTZ NOT NULL,
+    received_at       TIMESTAMPTZ NOT NULL,
+    -- Optional per-event telemetry annotations (spec_impl_alignment.md row 4).
+    -- NULLABLE so a legacy event that omits them stays NULL, never a misleading 0.
+    duration_ms       BIGINT,
+    bytes_transferred BIGINT
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_deployment ON helix_ota.telemetry_events (deployment_id);
+-- Additive, idempotent column adds for databases provisioned before the
+-- duration_ms/bytes_transferred annotations landed. ADD COLUMN IF NOT EXISTS is a
+-- no-op on a fresh schema (the columns are already in the CREATE above) and a
+-- safe forward-migration on an existing one (nullable, no default => no rewrite).
+ALTER TABLE helix_ota.telemetry_events ADD COLUMN IF NOT EXISTS duration_ms       BIGINT;
+ALTER TABLE helix_ota.telemetry_events ADD COLUMN IF NOT EXISTS bytes_transferred BIGINT;
 
 CREATE TABLE IF NOT EXISTS helix_ota.device_groups (
     seq         BIGSERIAL,
