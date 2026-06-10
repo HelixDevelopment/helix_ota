@@ -1,13 +1,13 @@
 == Helix OTA server-driven RECALL (forward-fix) lifecycle E2E ==
-base_url=http://127.0.0.1:52469 run=recall-1781091881-52432 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/RECALL_EVIDENCE.txt
-started: 2026-06-10T11:44:41Z
+base_url=http://127.0.0.1:64654 run=recall-1781101831-16557 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/RECALL_EVIDENCE.txt
+started: 2026-06-10T14:30:31Z
 openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
 
 [PASS] generated ephemeral ed25519 keypair (raw pubkey 32 bytes, base64 configured)
 building ota-server (go build ./cmd/ota-server) ...
 [PASS] go build ./cmd/ota-server succeeded
-server pid=52560 (port 52469), waiting for readiness ...
-[PASS] ota-server healthy on http://127.0.0.1:52469/healthz (HELIX_ARTIFACT_PUBKEY configured)
+server pid=16609 (port 64654), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:64654/healthz (HELIX_ARTIFACT_PUBKEY configured)
 [PASS] POST /auth/login (HTTP 200)
 [PASS] obtained admin access token
 [PASS] anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)
@@ -16,13 +16,13 @@ server pid=52560 (port 52469), waiting for readiness ...
 [PASS] POST /artifacts/upload (signed v1.2.0 forward-fix) (HTTP 201)
 [PASS] v1.2.0 artifact .verified == true
 [PASS] POST /releases (v1.1.0 current) (HTTP 201)
-      current_release_id(v1.1.0)=741e2a29bd61f3a0f223463d4f77948f
+      current_release_id(v1.1.0)=eaf99eb86e643748444f481756e13db1
 [PASS] POST /releases (v1.2.0 forward-fix) (HTTP 201)
-      forward_fix_release_id(v1.2.0)=42efb74c5e67628c8166c81b3fe11551
+      forward_fix_release_id(v1.2.0)=f8c74d8a6ab5d65ecc1b01d7de1f28b2
 [PASS] POST /deployments (v1.1.0 -> all-targets) = D1 (HTTP 201)
 [PASS] D1 starts ACTIVE
 [PASS] D1 points at the v1.1.0 release
-      D1 deployment_id=064de062b1dd273b2ad51914ecda7155
+      D1 deployment_id=61f701062a5bf1d2d48a46735998dbb0
 [PASS] POST /deployments/{D1}/recall (empty to_release_id) -> 400 (HTTP 400)
 [PASS] POST /deployments/{D1}/recall (absent target release) -> 404 (HTTP 404)
 [PASS] POST /deployments/{absent}/recall -> 404 (HTTP 404)
@@ -32,7 +32,7 @@ server pid=52560 (port 52469), waiting for readiness ...
 [PASS] rollback row .from_release_id == the v1.1.0 release (D1's current)
 [PASS] rollback row .to_release_id == the v1.2.0 forward-fix release
 [PASS] rollback row .details.mode == 'forward-fix'
-[PASS] rollback row carries a non-empty recall_deployment_id (02571ada035b5ed3cc1a06a1463fffe5)
+[PASS] rollback row carries a non-empty recall_deployment_id (3168ecc8309e12ce665dd27d1293f4ae)
 [PASS] rollback row records triggered_by (the recalling operator)
 [PASS] GET /deployments/{D1}/rollbacks -> 200 (HTTP 200)
 [PASS] rollback history is non-empty (1 row(s))
@@ -44,6 +44,6 @@ server pid=52560 (port 52469), waiting for readiness ...
 [PASS] recall deployment is ACTIVE
 [PASS] recall deployment points at the v1.2.0 forward-fix release
 
-finished: 2026-06-10T11:44:43Z
+finished: 2026-06-10T14:30:33Z
 == summary: 35 passed, 0 failed, 0 skipped ==
 RESULT: PASS

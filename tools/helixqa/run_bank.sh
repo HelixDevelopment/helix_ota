@@ -101,6 +101,16 @@ evidence_ok() {
   [ -s "$p" ]
 }
 
+# free_port prints an available TCP port so each self-hosting LIVE challenge boots
+# its server on an isolated port — never colliding with the shared server (the
+# HELIX_BASE_URL challenges target) or with each other (§11.4.119 single owner).
+free_port() {
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));print(s.getsockname()[1]);s.close()' 2>/dev/null && return 0
+  fi
+  echo $((20000 + (RANDOM % 20000)))
+}
+
 run_live_or_dry() {
   local pass=0 fail=0 skip=0 rc_overall=0
   local line cid dc ev
@@ -120,8 +130,21 @@ run_live_or_dry() {
       continue
     fi
     # LIVE: GATE 1 run the dispatch_command; GATE 2 evidence ledger.
+    # (1) Fill the secret-free bank placeholder <pw> from the env at run time
+    # (§11.4.10: the bank NEVER stores a real password; the operator supplies
+    # HELIX_ADMIN_PASSWORD, which we substitute here so the inline assignment
+    # does not shadow it with the literal "<pw>").
+    # (2) A self-hosting challenge (no inline HELIX_BASE_URL) boots its OWN
+    # server; give it a unique free HELIX_PORT so it never collides with the
+    # shared server the HELIX_BASE_URL challenges target, nor with a sibling.
+    local rdc="$dc"
+    if [ -n "${HELIX_ADMIN_PASSWORD:-}" ]; then rdc="${rdc//<pw>/$HELIX_ADMIN_PASSWORD}"; fi
+    case "$rdc" in
+      *HELIX_BASE_URL=*) : ;;
+      *) rdc="HELIX_PORT=$(free_port) $rdc" ;;
+    esac
     local out code
-    out="$(cd "$REPO_ROOT" && eval "$dc" 2>&1)"; code=$?
+    out="$(cd "$REPO_ROOT" && eval "$rdc" 2>&1)"; code=$?
     if [ "$code" -eq 3 ]; then
       printf '%s %s (dispatch SKIP exit 3 — prereq missing)\n' "$(c_yellow '[SKIP]')" "$cid"; skip=$((skip+1)); continue
     fi
