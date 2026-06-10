@@ -97,6 +97,24 @@ func (s *Server) handleCreateDeployment(c *gin.Context) {
 	c.JSON(http.StatusCreated, toDeployment(dep))
 }
 
+// handleListDeployments lists the active deployments (endpoints.md §11). It
+// reuses the store's ListActiveDeployments seam (the same source the device
+// update-check resolves against) so operators/agents can enumerate what is live
+// without guessing deployment ids. Viewer+ per the sibling list endpoints'
+// RBAC.
+func (s *Server) handleListDeployments(c *gin.Context) {
+	deps, err := s.repo.ListActiveDeployments(c.Request.Context())
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, CodeInternal, "could not list deployments")
+		return
+	}
+	items := make([]Deployment, 0, len(deps))
+	for _, d := range deps {
+		items = append(items, toDeployment(d))
+	}
+	c.JSON(http.StatusOK, DeploymentList{Items: items})
+}
+
 // handleGetDeployment reads a deployment with aggregate progress derived from
 // telemetry (endpoints.md §11.2).
 func (s *Server) handleGetDeployment(c *gin.Context) {

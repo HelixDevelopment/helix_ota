@@ -158,6 +158,14 @@ type Deployment struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
+// DeploymentList is the GET /deployments list body (DeploymentList schema): the
+// set of active deployments. NextCursor is reserved for future pagination parity
+// with ReleaseList (the MVP returns all active deployments in one page).
+type DeploymentList struct {
+	Items      []Deployment `json:"items"`
+	NextCursor *string      `json:"next_cursor"`
+}
+
 // DeploymentProgress is the aggregate progress block of DeploymentStatus.
 type DeploymentProgress struct {
 	Pending     int `json:"pending"`

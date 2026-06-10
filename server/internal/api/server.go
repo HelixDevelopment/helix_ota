@@ -147,6 +147,7 @@ func (s *Server) Router() *gin.Engine {
 		auth.GET("/releases/:releaseId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRelease)
 
 		auth.POST("/deployments", requireRole(RoleOperator, RoleAdmin), s.handleCreateDeployment)
+		auth.GET("/deployments", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDeployments)
 		auth.GET("/deployments/:deploymentId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetDeployment)
 
 		// Staged rollout (1.0.1-staged-rollout/rollout_engine.md §8) — reuses the

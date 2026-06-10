@@ -126,6 +126,35 @@ func TestClientUpdate200WhenBehind(t *testing.T) {
 	}
 }
 
+// TestClientUpdateCarriesDeploymentID proves the 200 update offer carries the
+// active deployment's id (closes the §11.4.6 protocol gap): a device can read
+// the deployment_id straight off its own update offer and echo it back in
+// telemetry, with no out-of-band operator step. The id must equal the active
+// deployment the server resolved.
+func TestClientUpdateCarriesDeploymentID(t *testing.T) {
+	env := newTestEnv(t)
+	dev := setupDeployment(t, env, "1.0.0", "1.1.0")
+
+	deps, _ := env.repo.ListActiveDeployments(nil)
+	if len(deps) != 1 {
+		t.Fatalf("expected exactly one active deployment, got %d", len(deps))
+	}
+	wantDep := deps[0].DeploymentID
+
+	w := env.do(http.MethodGet, "/api/v1/client/update", env.deviceToken(dev.DeviceID), nil, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("behind device want 200, got %d (%s)", w.Code, w.Body.String())
+	}
+	var upd otaprotocol.UpdateAvailable
+	env.decode(w, &upd)
+	if upd.DeploymentID == "" {
+		t.Fatalf("update offer missing deployment_id: %+v", upd)
+	}
+	if upd.DeploymentID != wantDep {
+		t.Fatalf("offer deployment_id = %q, want active deployment %q", upd.DeploymentID, wantDep)
+	}
+}
+
 func TestClientUpdate204WhenOnTarget(t *testing.T) {
 	env := newTestEnv(t)
 	// Device already at the release version -> 204.
