@@ -1,3 +1,180 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>spec_impl_alignment</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">spec_impl_alignment</h1>
+</header>
 <h1
 id="helix-ota-spec-vs-implementation-alignment-decision-memo-operational-apiv1">Helix
 OTA — Spec-vs-Implementation Alignment Decision Memo (operational
@@ -16,11 +193,11 @@ OTA — Spec-vs-Implementation Alignment Decision Memo (operational
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-10T00:00:00Z</td>
+<td>2026-06-10T14:50:00Z</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -31,7 +208,32 @@ OTA — Spec-vs-Implementation Alignment Decision Memo (operational
 <td>active (decision memo — additive + group breaking WIDENs landed;
 row-4 per-device telemetry <strong>filters</strong> + row-7
 group/members <strong>pagination</strong> RESOLVED 2026-06-10; row-4
-richer numeric fields still ingest-gated)</td>
+richer numeric fields
+<code>duration_ms</code>/<code>bytes_transferred</code> <strong>RESOLVED
+— now ingested end-to-end 2026-06-10</strong>)</td>
+</tr>
+<tr>
+<td>Landed (2026-06-10, telemetry numeric fields)</td>
+<td><strong>Row 4 richer fields RESOLVED</strong> — per-item
+<code>duration_ms</code> + <code>bytes_transferred</code> are now
+ingested end-to-end (<code>71be1cd</code>,
+<code>feat(telemetry): per-event duration_ms + bytes_transferred end-to-end (now ingested)</code>).
+The Tier-1 device emulator is now a real event source emitting
+<code>duration_ms</code> on every lifecycle event +
+<code>bytes_transferred</code> on download events; threaded additively
+emulator → server ingest (<code>handlers_client.go</code>) → store
+(memory + pgx, nullable cols) → read VIEW
+(<code>handlers_telemetry.go</code>, <code>omitempty</code>). This
+closes the previously-DEFERRED “blocked on UNVERIFIED ingest (§9)”
+qualifier — the §9 register is updated to FACT below. Anti-bluff
+evidence:
+<code>server/internal/deviceemu/telemetry_fields_test.go:TestEmulatorTelemetryFieldsEndToEnd</code>
+asserts the EXACT values flow emulator→server→read-API over real HTTP;
+<code>TestEmulatorTelemetryFieldsIngestMutation</code> is the §1.1
+paired mutation; real-Postgres parity proven via
+<code>server/internal/store/postgres_integration_test.go:TestPostgresRepositoryContract_Integration</code>
+(podman-booted PG, 0 skips). Evidence dir
+<code>docs/qa/20260610T140407Z-telemetry-fields/</code>.</td>
 </tr>
 <tr>
 <td>Landed (2026-06-10)</td>
@@ -41,9 +243,7 @@ the spec filter params (<code>50ef5c6</code>,
 OpenAPI synced + redocly-clean). <strong>Row 7 pagination</strong> —
 group + members list now paginated. Both previously-DEFERRED WIDEN bits
 are RESOLVED. Dashboard API client updated in lockstep
-(<code>b0b8ee2</code>). Still open on row 4: the richer per-item numeric
-fields <code>duration_ms</code>/<code>bytes_transferred</code>, blocked
-on UNVERIFIED ingest (§9).</td>
+(<code>b0b8ee2</code>).</td>
 </tr>
 <tr>
 <td>Operator ruling (2026-06-08)</td>
@@ -333,22 +533,27 @@ newest-first, <code>items[]</code> with
 <code>id/success/duration_ms/bytes_transferred</code></td>
 <td>newest-first <code>items[]</code> + <code>?limit/?cursor</code> (R7,
 2a48ab5) + filter params <strong>RESOLVED 2026-06-10
-(<code>50ef5c6</code>)</strong>; richer numeric fields still
-UNVERIFIED-ingest-gated
-(<code>handlers_telemetry.go:handleDeviceTelemetry</code>)</td>
-<td><strong>WIDEN-impl (phased) — filters LANDED 2026-06-10;
-<code>duration_ms</code>/<code>bytes_transferred</code> still deferred
-(ingest)</strong></td>
+(<code>50ef5c6</code>)</strong>; richer numeric fields
+<code>duration_ms</code>/<code>bytes_transferred</code> <strong>RESOLVED
+— ingested end-to-end 2026-06-10 (<code>71be1cd</code>)</strong>
+(<code>handlers_telemetry.go:handleDeviceTelemetry</code> /
+<code>TelemetryEventView</code> now exposes them with
+<code>omitempty</code>)</td>
+<td><strong>WIDEN-impl — FULLY RESOLVED 2026-06-10</strong></td>
 <td>Pagination + newest-first shipped R7; the
 <code>?event_type</code>/<code>?since</code>/<code>?until</code>/<code>?deployment_id</code>
-filters landed 2026-06-10. <code>duration_ms/bytes_transferred</code>
-depend on the telemetry ingest carrying them (UNVERIFIED §9) — still
-deferred until the event source supplies them.</td>
-<td><code>TelemetryEventView</code> wire unit test;
-<code>handleDeviceTelemetry</code> param/order tests;
-<code>store.TelemetryForDevice</code> → paginated/filtered store test;
-integration newest-first + filter test; bank: device-telemetry-history
-Challenge</td>
+filters landed <code>50ef5c6</code>;
+<code>duration_ms</code>/<code>bytes_transferred</code> now ingested
+end-to-end (<code>71be1cd</code>) — the Tier-1 emulator emits them,
+threaded additively emulator→server ingest→store (memory+pgx)→read VIEW.
+No longer a standing divergence.</td>
+<td><strong>PROVEN:</strong>
+<code>server/internal/deviceemu/telemetry_fields_test.go:TestEmulatorTelemetryFieldsEndToEnd</code>
+(exact-value flow over real HTTP) +
+<code>TestEmulatorTelemetryFieldsIngestMutation</code> (§1.1 pair);
+real-PG parity
+<code>server/internal/store/postgres_integration_test.go:TestPostgresRepositoryContract_Integration</code>;
+evidence <code>docs/qa/20260610T140407Z-telemetry-fields/</code></td>
 </tr>
 <tr>
 <td>5</td>
@@ -557,13 +762,17 @@ Biggest forensic value per unit work.</li>
 <code>by_state</code> is the fleet-health number operators watch during
 a rollout; additive response fields are non-breaking. Pairs naturally
 with the rollout/telemetry story.</li>
-<li><strong>Per-device telemetry pagination + newest-first + filters
-(row 4, fields phase-2) — THIRD.</strong> Prevents the unbounded-history
-payload cliff; defer
-<code>duration_ms</code>/<code>bytes_transferred</code> until the ingest
-is confirmed to supply them. Breaking key change
-(<code>events</code>→<code>items</code>) means it needs the operator
-decision + a consumer sweep, so it sits behind the additive wins.</li>
+<li><strong>Per-device telemetry pagination + newest-first + filters +
+rich fields (row 4) — FULLY LANDED 2026-06-10.</strong> Prevented the
+unbounded-history payload cliff (pagination + newest-first + filters,
+<code>50ef5c6</code>). The
+<code>duration_ms</code>/<code>bytes_transferred</code> fields —
+previously deferred until the ingest was confirmed to supply them — now
+ingest end-to-end (<code>71be1cd</code>): the Tier-1 emulator is the
+real event source. The breaking key change
+(<code>events</code>→<code>items</code>) landed with the dashboard
+client updated in lockstep. Row 4 is no longer a standing
+divergence.</li>
 <li><strong>Group member batch-add (row 8) — FOURTH.</strong> Real
 ergonomics win for cohort building; breaking shape change so it rides
 with row 4 under the operator decision.</li>
@@ -686,16 +895,27 @@ asserted as fact</strong> in this memo:</p>
 LOW/MED risk labels are estimates from reading the handlers + store
 seam, not from a spiked implementation. Absolute hours are not
 claimed.</li>
-<li><strong>UNVERIFIED — telemetry rich fields availability (row
-4).</strong> Whether <code>store.TelemetryRecord</code> / the
+<li><strong>RESOLVED — telemetry rich fields availability (row 4) (was
+UNVERIFIED; now FACT 2026-06-10, <code>71be1cd</code>).</strong> The
+earlier qualifier (“whether <code>store.TelemetryRecord</code> / the
 <code>ota-protocol</code> telemetry event already carries
-<code>duration_ms</code> / <code>bytes_transferred</code> (and
-<code>success</code> as a first-class field) was <strong>not</strong>
-confirmed; <code>handlers_telemetry.go</code>
-<code>TelemetryEventView</code> does not expose them, and the store
-record type was not read this pass. If the ingest does not supply them,
-widening to those fields would produce always-zero columns (a
-§11.4-bluff) — hence the “phase-2 / defer” qualifier on row 4.</li>
+<code>duration_ms</code> / <code>bytes_transferred</code>”) is no longer
+open: the Tier-1 device emulator was made a real event source that emits
+<code>duration_ms</code> on every lifecycle event +
+<code>bytes_transferred</code> on download events, threaded additively
+emulator → server ingest (<code>handlers_client.go</code>) → store
+(memory + pgx, nullable columns) → read VIEW
+(<code>handlers_telemetry.go</code> <code>TelemetryEventView</code>,
+<code>omitempty</code>). The “always-zero columns (§11.4-bluff)” risk is
+closed because the values are ingested end-to-end and asserted by
+exact-value tests — NOT a zero default. Proof:
+<code>server/internal/deviceemu/telemetry_fields_test.go:TestEmulatorTelemetryFieldsEndToEnd</code>
+<ul>
+<li><code>TestEmulatorTelemetryFieldsIngestMutation</code> (§1.1 pair) +
+real-PG parity
+<code>server/internal/store/postgres_integration_test.go:TestPostgresRepositoryContract_Integration</code>;
+evidence <code>docs/qa/20260610T140407Z-telemetry-fields/</code>.</li>
+</ul></li>
 <li><strong>UNVERIFIED — store-method availability for wider
 shapes.</strong> The wider audit filter, paginated telemetry query,
 latest-per-device overview aggregate (<code>DISTINCT ON</code>),
@@ -724,3 +944,5 @@ were read directly from the cited source files in
 <code>operational_endpoints.md</code> during this memo’s preparation
 (see §3).</li>
 </ul>
+</body>
+</html>
