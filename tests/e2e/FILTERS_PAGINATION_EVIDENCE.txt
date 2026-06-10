@@ -1,0 +1,66 @@
+== Helix OTA telemetry-filter + cursor-pagination E2E challenge ==
+base_url=http://127.0.0.1:8096 run=filt-1781086154-13882 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt
+started: 2026-06-10T10:09:14Z
+
+building ota-server (go build ./cmd/ota-server) ...
+[PASS] go build ./cmd/ota-server succeeded
+server pid=13918 (port 8096), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:8096/healthz (in-memory repo)
+[PASS] POST /auth/login (HTTP 200)
+[PASS] obtained admin access token
+[PASS] anti-bluff: unauthenticated GET /telemetry/overview -> 401 (auth enforced)
+
+-- FEATURE 1: per-device telemetry filters --
+[PASS] POST /devices/register (telemetry source device) (HTTP 201)
+      device_id=77a050203e1275adec6fe401ebc61418
+[PASS] POST /client/telemetry (seed 6 events) -> 202 (HTTP 202)
+[PASS] telemetry seed accepted all 6 events (accepted=6 rejected=0)
+[PASS] GET /devices/{id}/telemetry (unfiltered) (HTTP 200)
+[PASS] unfiltered telemetry returns all 6 seeded events
+[PASS] history is newest-first (item[0] is the failure event at the latest timestamp)
+[PASS] GET telemetry?event=installing (HTTP 200)
+[PASS] ?event=installing returns ONLY the 2 installing events (no other type leaked)
+[PASS] GET telemetry?event=success (HTTP 200)
+[PASS] ?event=success returns exactly the one success event
+[PASS] GET telemetry?event=<bogus> -> 400 (unknown event type rejected, not silently empty) (HTTP 400)
+[PASS] bogus event 400 carries VALIDATION_FAILED on field 'event'
+[PASS] GET telemetry?since=2026-01-01T10:05:00Z&until=2026-01-01T10:15:00Z (inclusive window) (HTTP 200)
+[PASS] since/until window returns exactly the 3 in-window events, none outside (inclusive bounds)
+[PASS] both window boundaries are INCLUSIVE (since=2026-01-01T10:05:00Z and until=2026-01-01T10:15:00Z are present)
+[PASS] GET telemetry?event=installing&since=2026-01-01T10:00:00Z&until=2026-01-01T10:05:00Z (HTTP 200)
+[PASS] combined event+window narrows to the single matching event
+[PASS] GET telemetry?since>until (empty window) (HTTP 200)
+[PASS] an inverted (since>until) window yields 0 items and null next_cursor
+[PASS] GET telemetry?limit=2 (page1) (HTTP 200)
+[PASS] telemetry page1 has 2 items + a non-null next_cursor (2)
+[PASS] telemetry cursor walk visited all 6 events across 3 pages with no overlap/gap
+
+-- FEATURE 2: group + group-members cursor pagination --
+[PASS] POST /groups (group 1) (HTTP 201)
+[PASS] POST /groups (group 2) (HTTP 201)
+[PASS] POST /groups (group 3) (HTTP 201)
+      created 3 groups
+[PASS] GET /groups?limit=2 (page1) (HTTP 200)
+[PASS] groups page1: exactly 2 items + a NON-null next_cursor (2)
+[PASS] GET /groups?limit=2&cursor=2 (page2) (HTTP 200)
+[PASS] groups page2: the remaining 1 item + null next_cursor (last page)
+[PASS] groups pagination has NO overlap and NO gap (union of pages = all 3 distinct groups)
+[PASS] POST /devices/register (member device 1) (HTTP 201)
+[PASS] POST /devices/register (member device 2) (HTTP 201)
+[PASS] POST /devices/register (member device 3) (HTTP 201)
+[PASS] POST /groups/{id}/members (batch add 3 devices) (HTTP 200)
+[PASS] batch-added all 3 registered devices to the group (.added has 3)
+[PASS] GET /groups/{id}/members?limit=2 (page1) (HTTP 200)
+[PASS] members page1: 2 items (each with added_at) + a NON-null next_cursor (2)
+[PASS] GET /groups/{id}/members?limit=2&cursor=2 (page2) (HTTP 200)
+[PASS] members page2: the remaining 1 member + null next_cursor (last page)
+[PASS] members pagination has NO overlap and NO gap (union of pages = all 3 distinct members)
+[PASS] GET /groups?limit=0 -> 400 (limit below range) (HTTP 400)
+[PASS] GET /groups?limit=201 -> 400 (limit above max 200) (HTTP 400)
+[PASS] GET /groups?cursor=<malformed> -> 400 (HTTP 400)
+[PASS] GET telemetry?limit=999 -> 400 (limit above max 200) (HTTP 400)
+[PASS] GET telemetry?cursor=-1 -> 400 (negative cursor) (HTTP 400)
+
+finished: 2026-06-10T10:09:16Z
+== summary: 50 passed, 0 failed, 0 skipped ==
+RESULT: PASS
