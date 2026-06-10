@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: 2026 Milos Vasic
+# SPDX-License-Identifier: Apache-2.0
+# =============================================================================
+# helix-deps.yaml — Submodule-Dependency Manifest (Constitution §11.4.31 / CONST-054)
+# -----------------------------------------------------------------------------
+# Machine-readable declaration of this project's OWN-ORG Git SSH dependencies so a
+# new consuming project (or a fresh clone) can reconstruct the dependency graph at
+# its root via `incorporate-submodule <ssh-url>` (recursive per §11.4.31), which
+# adds each dep at its canonical path, reads the dep's own helix-deps.yaml, recurses,
+# aborts on conflicting refs, and emits <root>/.helix-manifest.yaml.
+#
+# OWN-ORG scope (§11.4.28 / §11.4.79): only dependencies under the orgs we control
+# (HelixDevelopment, vasic-digital) are declared here. Third-party dependencies are
+# noted under `third_party:` for honesty but are NOT incorporated as own-org deps.
+#
+# GROUNDED IN REALITY (§11.4.6 — no invented refs): every `ssh_url` comes verbatim
+# from .gitmodules; every `ref` is the exact value reported by `git submodule status`
+# + `git -C <path> describe --tags --always` on 2026-06-10 (the authoritative
+# committed pointer). No ref here is guessed. `pinned_commit` is the committed
+# gitlink SHA; `describe` is the human-readable tag-relative form (or `heads/main`
+# for the two main-tracked submodules that carry no tag).
+#
+# LAYOUT (§11.4.28(C)): `grouped` = lives under <root>/submodules/<name>/;
+#   `flat` = lives directly under <root>/<name>/. Nested own-org submodule chains
+#   are FORBIDDEN — each dep is reached from the parent root, never nested.
+# =============================================================================
+schema_version: 1
+
+deps:
+  # --- Governance + infra (flat, at repo root) ---
+  - name: constitution
+    ssh_url: git@github.com:HelixDevelopment/HelixConstitution.git
+    ref: ba0f70272784927e0b64004cc941ae7199c87c12
+    describe: heads/main
+    layout: flat
+    why: >-
+      The Helix Constitution — canonical root governance (Constitution.md / CLAUDE.md
+      / AGENTS.md). Inherited unconditionally per §11.4.35; ships install_upstreams,
+      find_constitution.sh, and the inherited codegraph_*/workable-items tooling.
+
+  - name: containers
+    ssh_url: git@github.com:vasic-digital/containers.git
+    ref: 845ad4592f297e21f6a8ec2d2aafc7207d4b7847
+    describe: heads/main
+    layout: flat
+    why: >-
+      Containers submodule (§11.4.76) — Docker/Podman/Qemu/emulator containerization
+      means for running services + the OTA emulator fleet on-demand (pkg/boot,
+      pkg/compose, pkg/health).
+
+  # --- OTA building bricks (grouped, under submodules/) ---
+  - name: ota-protocol
+    ssh_url: git@github.com:HelixDevelopment/ota-protocol.git
+    ref: 3d360ab11578b5c873a026470015448422ec054c
+    describe: v0.1.0-6-g3d360ab
+    layout: grouped
+    why: "OTA wire-protocol types/contracts shared between control plane + agents."
+
+  - name: ota-artifact-validator
+    ssh_url: git@github.com:HelixDevelopment/ota-artifact-validator.git
+    ref: 77c6b4898672da3b24bba525f59b08eba3fede3b
+    describe: v0.1.0-4-g77c6b48
+    layout: grouped
+    why: "Artifact-signature / integrity verification brick (server trust boundary)."
+
+  - name: ota-rollout-engine
+    ssh_url: git@github.com:HelixDevelopment/ota-rollout-engine.git
+    ref: 7a90912454a1d0fc7d13e9678d687a732adf7573
+    describe: v0.1.0-4-g7a90912
+    layout: grouped
+    why: "Phased-rollout evaluation engine (rollout create/get/evaluate semantics)."
+
+  - name: ota-update-engine-bridge
+    ssh_url: git@github.com:HelixDevelopment/ota-update-engine-bridge.git
+    ref: 8bb8d2f9beb64e08243bd799bd805a11ba1eb6f2
+    describe: v0.1.0-3-g8bb8d2f
+    layout: grouped
+    why: >-
+      Android update_engine bridge (A/B + AVB/dm-verity) — Kotlin/AGP brick on the
+      RK3588 target side.
+
+  - name: ota-android-agent
+    ssh_url: git@github.com:HelixDevelopment/ota-android-agent.git
+    ref: 26bd0a29b33a6b70c679921440413972c39cdc88
+    describe: v0.1.0-5-g26bd0a2
+    layout: grouped
+    why: "Native Android OTA agent (device-side client; talks the ota-protocol wire)."
+
+  - name: ota-telemetry-schema
+    ssh_url: git@github.com:HelixDevelopment/ota-telemetry-schema.git
+    ref: 6239703a4812ddae7b146d67162b0eb6e06c7dc1
+    describe: v0.1.0-3-g6239703
+    layout: grouped
+    why: "Telemetry event schema shared by the agent + the control-plane ingest path."
+
+  - name: http3
+    ssh_url: git@github.com:vasic-digital/http3.git
+    ref: 101d75e79454b6f9f20c36175c253bb795941bbb
+    describe: heads/main
+    layout: grouped
+    why: "Own-org HTTP/3 (QUIC) transport brick used by the control plane / clients."
+
+  - name: helixqa
+    ssh_url: git@github.com:HelixDevelopment/HelixQA.git
+    ref: fe17c0885b2d93e4ac47ddc80388c302cf8cefa1
+    describe: v4.0.0-395-gfe17c08
+    layout: grouped
+    why: >-
+      HelixQA autonomous-QA + test-bank engine (§11.4.27). Provides the native
+      pkg/testbank schema this project's tools/helixqa/banks/helix_ota.test_cases.yaml
+      is authored against.
+
+# Third-party (NOT own-org) dependencies — declared for honesty per §11.4.74 / §11.4.79.
+# These are resolved by their language toolchain (go mod, etc.), NOT incorporated as
+# own-org submodules, and are EXCLUDED from the CodeGraph own-org index per §11.4.79.
+third_party:
+  - name: telebot
+    source: gopkg.in/telebot.v3
+    resolved_by: go-mod
+    note: >-
+      Third-party Telegram bot client (if pulled by any consuming Go module). NOT an
+      own-org dependency — declared here only so consumers do not mistake it for one.
+
+transitive_handling:
+  recursive: true
+  conflict_resolution: operator-required
+
+language_specific_subtree: false
