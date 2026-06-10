@@ -1,0 +1,59 @@
+== Helix OTA filter/pagination security probe suite ==
+base_url=http://127.0.0.1:8097 run=secf-1781086055-83551 evidence=/Volumes/T7/Projects/helix_ota/tests/security/RUN_EVIDENCE_FILTERS.txt
+started: 2026-06-10T10:07:35Z
+
+building ota-server ...
+[PASS] self-hosted ota-server healthy on http://127.0.0.1:8097
+[PASS] admin login established (fixtures only)
+      device A=2a16a5b871550fc8d88b47c5ad40b513  device B=3fee800e977e30dc1dfeec9a2ac21c0d
+
+--- H. ownership: telemetry filters must not bypass the per-device 403 ---
+[PASS] H1 device A GET device B telemetry ?event=success -> 403 (filter does not bypass ownership) (HTTP 403)
+[PASS] H2 device A GET device B telemetry ?since&until&limit -> 403 (window does not bypass ownership) (HTTP 403)
+[PASS] H3 device A GET its OWN telemetry ?event=success&limit=10 -> 200 (filter allowed for owner) (HTTP 200)
+[PASS] H4 device A GET device B telemetry ?event=bogus -> 403 (authz precedes validation; no leak) (HTTP 403)
+
+--- I. ?event closed-set validation: unknown event must be 400, not empty 200 ---
+[PASS] I1 owner GET telemetry ?event=bogus -> 400 (closed set, not silent-empty 200) (HTTP 400)
+[PASS] I1b unknown ?event did not crash (no 5xx; HTTP 400)
+[PASS] I2 owner GET telemetry ?event=installing (known enum) -> 200 (HTTP 200)
+
+--- J. injection in filter/pagination values must be 400, never 5xx/leak ---
+[PASS] J1 ?cursor=../../etc/passwd -> 400 (non-integer cursor rejected) (HTTP 400)
+[PASS] J1b traversal cursor did not crash (no 5xx; HTTP 400)
+[PASS] J1c traversal cursor not echoed (injected token not echoed in body)
+[PASS] J2 ?since='; DROP TABLE -> 400 (not RFC3339) (HTTP 400)
+[PASS] J2b SQL-ish since did not crash (no 5xx; HTTP 400)
+[PASS] J2c SQL-ish since not echoed (injected token not echoed in body)
+[PASS] J3 ?event=<script>alert(1)</script> -> 400 (closed set) (HTTP 400)
+[PASS] J3b XSS-ish event did not crash (no 5xx; HTTP 400)
+[PASS] J3c XSS-ish event not reflected (injected token not echoed in body)
+[PASS] J4 GET /groups ?cursor=../../etc -> 400 (parsePage rejects non-int) (HTTP 400)
+[PASS] J4b groups traversal cursor did not crash (no 5xx; HTTP 400)
+[PASS] J4c groups traversal cursor not echoed (injected token not echoed in body)
+[PASS] J5 GET /groups ?limit=1;SELECT -> 400 (non-int limit rejected) (HTTP 400)
+[PASS] J5b groups injection limit did not crash (no 5xx; HTTP 400)
+
+--- K. pagination params cannot escalate authz or leak cross-tenant data ---
+[PASS] K1 viewer-capable GET /groups ?limit=1 -> 200 (may list) (HTTP 200)
+[PASS] K1b /groups ?limit body is a group list (items/next_cursor) — no authz downgrade / cross-tenant leak via ?limit
+[PASS] K2 device token GET /groups ?limit=5&cursor=0 -> 403 (param does not escalate role) (HTTP 403)
+[PASS] K3 device token GET /groups/*/members ?limit=5 -> 403 (param does not escalate role) (HTTP 403)
+[PASS] K4 unauth GET /groups ?limit=10 -> 401 (pagination is not a public backdoor) (HTTP 401)
+
+--- L. limit out of range must be 400 on every paginated route ---
+[PASS] L1 telemetry ?limit=0 -> 400 (below range) (HTTP 400)
+[PASS] L2 telemetry ?limit=999 -> 400 (above range) (HTTP 400)
+[PASS] L3 telemetry ?limit=-5 -> 400 (negative) (HTTP 400)
+[PASS] L4 /groups ?limit=0 -> 400 (below range) (HTTP 400)
+[PASS] L5 /groups ?limit=999 -> 400 (above range) (HTTP 400)
+[PASS] L6 /groups ?limit=-5 -> 400 (negative) (HTTP 400)
+[PASS] L7 /groups ?limit=200 (max in-range) -> 200 (boundary accepted) (HTTP 200)
+[PASS] L8 telemetry ?limit=1 (min in-range) -> 200 (boundary accepted) (HTTP 200)
+[PASS] L9 /groups/{id}/members ?limit=0 -> 400 (below range) (HTTP 400)
+[PASS] L10 /groups/{id}/members ?limit=999 -> 400 (above range) (HTTP 400)
+[PASS] L11 /groups/{id}/members ?limit=10 (in-range) -> 200 (boundary accepted) (HTTP 200)
+
+finished: 2026-06-10T10:07:38Z
+== summary: 39 passed, 0 failed, 0 skipped ==
+RESULT: PASS

@@ -41,8 +41,8 @@
 bank:
   id: helix_ota_operational_rollout
   name: Helix OTA — operational + rollout E2E challenge bank
-  revision: 2
-  last_modified: "2026-06-08T12:00:00Z"
+  revision: 3
+  last_modified: "2026-06-10T10:10:00Z"
   description: >-
     Black-box, anti-bluff end-to-end challenges that drive the live ota-server
     REST API over real HTTP and assert real HTTP status codes plus key JSON
@@ -260,3 +260,57 @@ bank:
         - "device-role on operator/admin routes -> 403"
         - "attacker-supplied public_key -> 422 (config-only trust boundary)"
       evidence_artifact: tests/security/RUN_EVIDENCE.txt
+
+    - id: HOTA-FILTERS-PAGINATION
+      title: Telemetry filters (event/since/until) + group & member cursor pagination
+      capability_area: query-filters-pagination
+      # This challenge is FULLY SELF-HOSTING: it builds + boots its OWN ota-server
+      # (in-memory, ephemeral, port 8096), seeds real state via the real API, drives
+      # the two features over real HTTP, and tears the server down on every exit
+      # path (trap cleanup). It does NOT use the shared HELIX_BASE_URL server above,
+      # needs NO admin password (it mints an ephemeral one), and runs with zero
+      # manual steps (§11.4.98 full-automation). Re-runnable end-to-end any number
+      # of times (verified 2x, identical 50/0/0; §11.4.50).
+      dispatch_command: >-
+        bash tests/e2e/challenge_filters_pagination.sh
+      requires:
+        - bash
+        - go
+        - curl
+        - jq
+      pass_criterion: >-
+        Against a self-hosted live ota-server, with six telemetry events seeded at
+        distinct types + ascending RFC3339 timestamps (ingest .accepted==6 asserted,
+        so a green filter over un-ingested data is impossible):
+        FEATURE 1 (telemetry filters) —
+        GET /api/v1/devices/{id}/telemetry?event=installing returns ONLY the 2
+        installing events (no other type leaked); ?event=success returns exactly
+        the one success event; a BOGUS ?event= -> HTTP 400 VALIDATION_FAILED on
+        field "event" (no silent-empty, §11.4.6); ?since/?until is an INCLUSIVE
+        window (both boundary timestamps present, none outside); combined
+        event+window narrows to the single matching event; an inverted since>until
+        window -> 0 items + null next_cursor; ?limit=2 walks all 6 events across
+        pages via cursor with NO overlap/gap.
+        FEATURE 2 (cursor pagination) —
+        GET /api/v1/groups?limit=2 page1 -> exactly 2 items + a NON-null
+        next_cursor, page2 (cursor) -> the remaining 1 item + null next_cursor,
+        union = all 3 distinct groups (no overlap/gap);
+        GET /api/v1/groups/{id}/members?limit=2 paginates 3 members the same way
+        (each item carries a non-empty added_at); and limit/cursor bounds are
+        enforced (limit=0/201 and telemetry limit=999 -> 400, malformed/negative
+        cursor -> 400). 50 passed / 0 failed / 0 skipped; RESULT: PASS.
+      asserted_lines:
+        - "telemetry seed accepted all 6 events (accepted=6 rejected=0)"
+        - "?event=installing returns ONLY the 2 installing events (no other type leaked)"
+        - "GET telemetry?event=<bogus> -> 400 (unknown event type rejected, not silently empty) (HTTP 400)"
+        - "both window boundaries are INCLUSIVE (since=... and until=... are present)"
+        - "since/until window returns exactly the 3 in-window events, none outside (inclusive bounds)"
+        - "telemetry cursor walk visited all 6 events across 3 pages with no overlap/gap"
+        - "groups page1: exactly 2 items + a NON-null next_cursor"
+        - "groups page2: the remaining 1 item + null next_cursor (last page)"
+        - "groups pagination has NO overlap and NO gap (union of pages = all 3 distinct groups)"
+        - "members page1: 2 items (each with added_at) + a NON-null next_cursor"
+        - "members pagination has NO overlap and NO gap (union of pages = all 3 distinct members)"
+        - "GET /groups?limit=201 -> 400 (limit above max 200) (HTTP 400)"
+        - "GET telemetry?cursor=-1 -> 400 (negative cursor) (HTTP 400)"
+      evidence_artifact: tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt
