@@ -166,3 +166,71 @@ CREATE TABLE IF NOT EXISTS helix_ota.idempotency_keys (
     result_id  TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql,
+-- DESIGN.md §6). Additive + idempotent. PROJECT-SPECIFIC to Helix OTA's tier/
+-- target vocabulary (§11.4.28(B)) — modelled on this store seam, NOT in the
+-- reusable containers submodule.
+CREATE TABLE IF NOT EXISTS helix_ota.fabric_nodes (
+    node_id      TEXT        PRIMARY KEY,
+    kind         TEXT        NOT NULL,
+    arch         TEXT        NOT NULL,
+    has_kvm      BOOLEAN     NOT NULL DEFAULT FALSE,
+    has_hvf      BOOLEAN     NOT NULL DEFAULT FALSE,
+    labels       JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    last_seen_at TIMESTAMPTZ NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS helix_ota.fabric_targets (
+    target_id    TEXT        PRIMARY KEY,
+    tier         TEXT        NOT NULL,
+    tech         TEXT        NOT NULL,
+    model        TEXT        NOT NULL DEFAULT '',
+    os_type      TEXT        NOT NULL DEFAULT 'android',
+    exclusive    BOOLEAN     NOT NULL DEFAULT TRUE,
+    node_id      TEXT        REFERENCES helix_ota.fabric_nodes(node_id),
+    status       TEXT        NOT NULL DEFAULT 'idle',
+    created_at   TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_fabric_targets_tier   ON helix_ota.fabric_targets (tier);
+CREATE INDEX IF NOT EXISTS idx_fabric_targets_status ON helix_ota.fabric_targets (status);
+
+-- Exclusive lease (§11.4.119): the UNIQUE partial index guarantees at most one
+-- ACTIVE lease (release_at IS NULL) per target. The pgx AcquireFabricLease maps
+-- the resulting 23505 to store.ErrConflict; the memory repo enforces the same.
+CREATE TABLE IF NOT EXISTS helix_ota.fabric_leases (
+    lease_id    TEXT        PRIMARY KEY,
+    target_id   TEXT        NOT NULL REFERENCES helix_ota.fabric_targets(target_id),
+    owner       TEXT        NOT NULL,
+    acquired_at TIMESTAMPTZ NOT NULL,
+    release_at  TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_fabric_lease_active
+    ON helix_ota.fabric_leases (target_id) WHERE release_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS helix_ota.fabric_runs (
+    run_id      TEXT        PRIMARY KEY,
+    target_id   TEXT        NOT NULL REFERENCES helix_ota.fabric_targets(target_id),
+    test_type   TEXT        NOT NULL,
+    test_ref    TEXT        NOT NULL,
+    verdict     TEXT        NOT NULL DEFAULT 'PENDING',
+    skip_reason TEXT        NOT NULL DEFAULT '',
+    started_at  TIMESTAMPTZ NOT NULL,
+    ended_at    TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_fabric_runs_verdict ON helix_ota.fabric_runs (verdict);
+
+-- Evidence ledger (§11.4.69): a PASS run MUST link >=1 non-empty artefact. The
+-- byte_size > 0 CHECK makes a 0-byte "evidence" structurally impossible; the pgx
+-- AttachFabricEvidence maps the CHECK violation (23514) to store.ErrEvidenceEmpty.
+CREATE TABLE IF NOT EXISTS helix_ota.fabric_evidence (
+    evidence_id TEXT        PRIMARY KEY,
+    run_id      TEXT        NOT NULL REFERENCES helix_ota.fabric_runs(run_id),
+    kind        TEXT        NOT NULL,
+    path        TEXT        NOT NULL,
+    byte_size   BIGINT      NOT NULL CHECK (byte_size > 0),
+    sha256      TEXT        NOT NULL DEFAULT '',
+    created_at  TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_fabric_evidence_run ON helix_ota.fabric_evidence (run_id);

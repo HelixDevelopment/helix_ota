@@ -319,6 +319,9 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("FindDelta unknown want ErrNotFound, got %v", err)
 	}
 
+	// --- emulation test-fabric registry (SCHEMA.sql) ---
+	runFabricContract(t, repo, ts)
+
 	// --- idempotency ---
 	if _, ok := repo.GetIdempotent(ctx, "k1"); ok {
 		t.Fatalf("GetIdempotent before put should be absent")
