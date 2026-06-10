@@ -2,15 +2,30 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-10 |
+| Last modified | 2026-06-10T16:10:00Z |
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
 
+## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 8) FIRST
+
+The freshest live-state anchors are in **`docs/RESUMPTION.md`** (the §11.4.131 canonical
+entry). As of HEAD **`7035046`** the build is **GREEN across every achievable tier** —
+full proof in **`docs/qa/STABILITY_REPORT.md`**: Go (all tiers + `-race`), pgx integration,
+meta-test + run_bank self-test, dashboard 58, HelixQA LIVE bank 10/0, podman full-lifecycle +
+fleet 5/5 + recall-recovery, QEMU firmware tier (P2 active), AVD boot + on-device, submodule
+cores. Overnight additions (all pushed): P2 QEMU activated, run_bank `--self-test` in the
+pre-build gate, **HelixQA + Challenges submodules incorporated** (§11.4.27), stress/chaos
+test-hygiene fix. **No release tag** — §11.4.40 needs the on-device RK3588 tier (hardware-BLOCKED,
+§11.4.112), so a tag would be a bluff. BLOCKED (hardware): T2 Cuttlefish / GSI-A-B real-apply /
+T3 RK3588. DEFERRED (zero-risk): fabric scheduler P3 (unwired §11.4.124), HelixQA in-tree compile
+(`../containers` layout), PDF doc siblings (no weasyprint/LaTeX on host). Everything below this
+box is prior-wave history.
+
 ## How to resume
 
-Type **`continue`** in a new session. Read this file + the memory index first. All work is on `main` (latest commit pushed to all upstreams). Working branch history: foundation → research → MVP specs → submodule impls → server, each merged to `main`.
+Type **`continue`** in a new session. Read **`docs/RESUMPTION.md` Rev 8** + this file + the memory index first. All work is on `main` (latest commit pushed to all upstreams). Working branch history: foundation → research → MVP specs → submodule impls → server, each merged to `main`.
 
 ## Locked decisions (do not re-litigate)
 
