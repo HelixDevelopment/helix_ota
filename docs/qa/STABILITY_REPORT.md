@@ -25,6 +25,11 @@ genuinely require hardware this host lacks are listed honestly as BLOCKED
 | Go build / vet / gofmt | ✅ clean | `go build ./...`, `go vet ./...`, `gofmt -l` empty |
 | Go unit + integration (`go test ./...`) | ✅ all ok | all 8 internal pkgs |
 | Go `-race -count=1` (fresh, uncached) | ✅ exit 0 | api/config/deviceemu/fabric/health/rollout/store/transport |
+| §11.4.50 determinism soak — Go race ×5 (full module) | ✅ exit 0, 5/5 identical green | `docs/qa/20260610T1640Z-determinism-soak/determinism_soak_x5.log` |
+| §11.4.50 determinism soak — deep race ×10 (api/store/deviceemu/fabric) | ✅ exit 0 | rare-race discovery probe; `docs/qa/20260610T1640Z-determinism-soak/deep_race_soak_x10.log` |
+| §11.4.50 determinism — dashboard Vitest ×3 | ✅ 3/3 identical (58/58 each) | `docs/qa/20260610T1640Z-determinism-soak/dashboard_vitest_determinism_x3.txt` |
+| §11.4.27 resilience matrix (stress/chaos/DDoS/scaling/bench) | ✅ all PASS | concurrent pagination/boundary sweeps, flood-shed rate-limit, sustained reads, no-lost-update contention, DDoS-flood-recover, chaos repo-fault-recover, scaling concurrent-lifecycle, benchmarks (FindDelta 0-alloc) |
+| Sustained loadtest (ephemeral server, 30s, c=64) | ✅ 1,145,543 req, 38,184 rps, p99 7.2ms, **0 non-2xx** | `docs/qa/20260610T1640Z-determinism-soak/loadtest_soak.log`. Honest note (§11.4.6): 61 client-side "no-response" connection events (0.005%) under extreme local load — NOT server errors (zero 5xx/4xx); no perf regression vs prior NFR baseline. |
 | pgx PostgreSQL integration (`-tags integration`) | ✅ ok | real Postgres via containers submodule on podman, 0 skips; store cov 88.7%, rollout cov 71.8% |
 | Constitution inheritance gate | ✅ PASS | 5 invariants, `tests/inheritance_gate.sh` |
 | Constitution meta-test (§1.1) | ✅ PASS | gate real + mutation-proven + submodule pointer check |

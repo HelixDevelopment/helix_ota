@@ -257,6 +257,40 @@ BLOCKED (§11.4.112), never green-washed.</p>
 <td>api/config/deviceemu/fabric/health/rollout/store/transport</td>
 </tr>
 <tr>
+<td>§11.4.50 determinism soak — Go race ×5 (full module)</td>
+<td>✅ exit 0, 5/5 identical green</td>
+<td><code>docs/qa/20260610T1640Z-determinism-soak/determinism_soak_x5.log</code></td>
+</tr>
+<tr>
+<td>§11.4.50 determinism soak — deep race ×10
+(api/store/deviceemu/fabric)</td>
+<td>✅ exit 0</td>
+<td>rare-race discovery probe;
+<code>docs/qa/20260610T1640Z-determinism-soak/deep_race_soak_x10.log</code></td>
+</tr>
+<tr>
+<td>§11.4.50 determinism — dashboard Vitest ×3</td>
+<td>✅ 3/3 identical (58/58 each)</td>
+<td><code>docs/qa/20260610T1640Z-determinism-soak/dashboard_vitest_determinism_x3.txt</code></td>
+</tr>
+<tr>
+<td>§11.4.27 resilience matrix (stress/chaos/DDoS/scaling/bench)</td>
+<td>✅ all PASS</td>
+<td>concurrent pagination/boundary sweeps, flood-shed rate-limit,
+sustained reads, no-lost-update contention, DDoS-flood-recover, chaos
+repo-fault-recover, scaling concurrent-lifecycle, benchmarks (FindDelta
+0-alloc)</td>
+</tr>
+<tr>
+<td>Sustained loadtest (ephemeral server, 30s, c=64)</td>
+<td>✅ 1,145,543 req, 38,184 rps, p99 7.2ms, <strong>0
+non-2xx</strong></td>
+<td><code>docs/qa/20260610T1640Z-determinism-soak/loadtest_soak.log</code>.
+Honest note (§11.4.6): 61 client-side “no-response” connection events
+(0.005%) under extreme local load — NOT server errors (zero 5xx/4xx); no
+perf regression vs prior NFR baseline.</td>
+</tr>
+<tr>
 <td>pgx PostgreSQL integration (<code>-tags integration</code>)</td>
 <td>✅ ok</td>
 <td>real Postgres via containers submodule on podman, 0 skips; store cov
@@ -363,9 +397,16 @@ backend and no consumer here would be unwired speculative code
 <code>containers</code> at the repo root; a HelixQA-side layout
 assumption. helix_ota’s build is unaffected (it uses
 <code>tools/helixqa/run_bank.sh</code>, never compiles HelixQA).</li>
-<li><strong>PDF doc siblings (§11.4.65)</strong> — HTML siblings are in
-sync; PDF needs a LaTeX/weasyprint engine absent on this host
-(pre-existing documented gap). Not a build-stability concern.</li>
+<li><strong>Full-corpus PDF backfill (§11.4.65)</strong> — CORRECTED:
+<code>weasyprint</code> 66.0 + <code>pandoc</code> 3.9 ARE present; the
+handoff docs (RESUMPTION/CONTINUATION/this report) now carry fresh
+<code>.html</code>+<code>.pdf</code> siblings via
+<code>pandoc -s … &amp;&amp; weasyprint</code>. A one-shot pass to
+(re)generate <code>.pdf</code> siblings across the entire docs corpus is
+the only remaining PDF item — low-priority, non-blocking, not a
+build-stability concern. (<code>export_docs.sh</code>’s own LaTeX-based
+PDF path remains unavailable — no LaTeX engine — but the weasyprint
+pipeline supersedes it.)</li>
 </ul>
 <h2 id="release-tag-note-11.4.40-11.4.126">Release-tag note (§11.4.40 /
 §11.4.126)</h2>
