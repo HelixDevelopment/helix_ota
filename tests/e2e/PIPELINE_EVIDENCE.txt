@@ -1,32 +1,32 @@
 == Helix OTA SIGNED artifact-pipeline E2E ==
-base_url=http://127.0.0.1:64631 run=pipe-1781101828-16107 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/PIPELINE_EVIDENCE.txt
-started: 2026-06-10T14:30:28Z
+base_url=http://127.0.0.1:53874 run=pipe-1781106340-96991 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/PIPELINE_EVIDENCE.txt
+started: 2026-06-10T15:45:40Z
 
 openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
 [PASS] generated ephemeral ed25519 keypair (raw pubkey 32 bytes, base64 configured)
 building ota-server (go build ./cmd/ota-server) ...
 [PASS] go build ./cmd/ota-server succeeded
-server pid=16220 (port 64631), waiting for readiness ...
-[PASS] ota-server healthy on http://127.0.0.1:64631/healthz (HELIX_ARTIFACT_PUBKEY configured)
+server pid=97044 (port 53874), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:53874/healthz (HELIX_ARTIFACT_PUBKEY configured)
 [PASS] POST /auth/login (HTTP 200)
 [PASS] obtained admin access token
 [PASS] anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)
 [PASS] POST /artifacts/upload (signed BASE v1.0.0) (HTTP 201)
 [PASS] BASE artifact .verified == true
-      base_artifact_id=d49850ac732c090cd377a46b44c97f9c sha256=9738890c9d6d1328fbf3b09b0b379a686967567bd06820927ce41719eb3021a0
+      base_artifact_id=565e081cefba944ba06c9cea5f20e42b sha256=51d2a2f912844097197ea89abd3c87fce1d96de0dbf4f742ac2054cbe7c9e9dd
 [PASS] POST /artifacts/upload (signed TARGET v1.1.0) (HTTP 201)
 [PASS] TARGET artifact .verified == true
-      target_artifact_id=4a145e110497d917f727adfab97ab3c9 sha256=786055f8eec81a22d753eaf28968487204407c83fb7182330a47008cdd338314
+      target_artifact_id=0af4c5958a6603f971a2eac0d37f9b61 sha256=de98dc2ad8fa8447e1c426bc899bd9018df5ef359d5d6843917a1f1c3da38952
 [PASS] GET /artifacts/{id} (target) (HTTP 200)
 [PASS] GET artifact echoes target artifact_id
 [PASS] POST /releases (BASE v1.0.0) (HTTP 201)
-      base_release_id=7ca92f3dc998ad33c8e83f14969e45d6
+      base_release_id=705ab0dc03d3e4ec1efa38762e2d6434
 [PASS] POST /releases (TARGET v1.1.0) (HTTP 201)
-      target_release_id=fbed5953ddc71001e09afec14e33f1a5
+      target_release_id=2e117b8b1f5b2642eda9dcf2225d170d
 [PASS] POST /devices/register (device on 1.0.0) (HTTP 201)
-      device_id=3471c26589e610661a7f1a104f061fb8
+      device_id=bbedf4874d7bc4190a1e492ec2671e62
 [PASS] POST /deployments (target release) (HTTP 201)
-      deployment_id=7f9d3734207c1c90d3489a7534ae0348 target_count=1
+      deployment_id=c491da12146f33e1ed4e87000e4fadae target_count=1
 [PASS] POST /deployments/{id}/rollout (create) (HTTP 201)
 [PASS] rollout state echoes deployment_id
 [PASS] GET /deployments/{id}/rollout (HTTP 200)
@@ -34,7 +34,7 @@ server pid=16220 (port 64631), waiting for readiness ...
 [PASS] rollout evaluate returned decision action: advance
 [PASS] POST /deltas (register base->target delta) (HTTP 201)
 [PASS] delta echoes base_artifact_id
-      delta_id=7af12c9ae6fc6b84a67fc0fc08360002
+      delta_id=87b57cbb3d22a804956a25178f6b9fc6
 [PASS] GET /client/update (device on 1.0.0 -> sees 1.1.0) (HTTP 200)
 [PASS] update-check offers version 1.1.0
 [PASS] update-check release_id matches target release
@@ -43,9 +43,9 @@ server pid=16220 (port 64631), waiting for readiness ...
 [PASS] update-check INCLUDES a .delta block (delta-bearing update reached)
 [PASS] delta.base_version == 1.0.0 (the device's current)
 [PASS] delta.sha256 matches the registered delta
-      DELTA-BEARING UPDATE BODY: {"version":"1.1.0","release_id":"fbed5953ddc71001e09afec14e33f1a5","sha256":"786055f8eec81a22d753eaf28968487204407c83fb7182330a47008cdd338314","delta":{"base_version":"1.0.0","url":"https://artifacts.helix.example/7af12c9ae6fc6b84a67fc0fc08360002.zip","size":4096,"sha256":"9b1019a589afee4dad0d9404480ef0dae2f73d2d17900a0366944a1ca9dace77"}}
+      DELTA-BEARING UPDATE BODY: {"version":"1.1.0","release_id":"2e117b8b1f5b2642eda9dcf2225d170d","sha256":"de98dc2ad8fa8447e1c426bc899bd9018df5ef359d5d6843917a1f1c3da38952","delta":{"base_version":"1.0.0","url":"https://artifacts.helix.example/87b57cbb3d22a804956a25178f6b9fc6.zip","size":4096,"sha256":"e96703e60c44cf44c3cf4db585d34463f444818d29fd1a73274d12c02b62fdc7"}}
 [PASS] GET /client/update (device already on 1.1.0 -> 204 no-content) (HTTP 204)
 
-finished: 2026-06-10T14:30:31Z
+finished: 2026-06-10T15:45:42Z
 == summary: 32 passed, 0 failed, 0 skipped ==
 RESULT: PASS
