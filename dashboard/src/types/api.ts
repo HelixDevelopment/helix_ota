@@ -205,14 +205,23 @@ export type UpdateState =
   | "success"
   | "failure";
 
+// Nested health object of DeviceStatus (server wire.go DeviceHealth):
+// `{ ok, last_error_code }`. NOTE: this is an OBJECT, not a scalar string —
+// rendering it directly as a React child crashes ("Objects are not valid as a
+// React child"). The Fleet device-detail screen MUST project it to text.
+export interface DeviceHealth {
+  ok: boolean;
+  last_error_code?: string | null;
+}
+
 export interface DeviceStatus {
   device_id: DeviceId;
   current_version: string;
   target_version?: string;
-  last_seen: string;
+  last_seen?: string;
   update_state: UpdateState;
   active_slot?: string;
-  health?: string;
+  health: DeviceHealth;
 }
 
 export type TelemetryEventType = Exclude<UpdateState, "idle">;

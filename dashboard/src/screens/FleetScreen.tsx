@@ -165,8 +165,19 @@ export function DeviceDetail() {
               </Badge>
             </Row>
             <Row label="active_slot" value={status.data.active_slot ?? "—"} />
-            <Row label="last_seen" value={status.data.last_seen} />
-            <Row label="health" value={status.data.health ?? "—"} />
+            <Row label="last_seen" value={status.data.last_seen ?? "—"} />
+            <Row label="health">
+              {/* health is an OBJECT { ok, last_error_code } — project it to text
+                  (rendering the object directly crashes React). */}
+              <Badge tone={status.data.health.ok ? "ok" : "err"}>
+                {status.data.health.ok ? "ok" : "unhealthy"}
+              </Badge>
+              {status.data.health.last_error_code ? (
+                <span style={{ marginLeft: 8, fontFamily: "monospace", color: "#6b7280" }}>
+                  {status.data.health.last_error_code}
+                </span>
+              ) : null}
+            </Row>
           </dl>
         ) : null}
       </Card>

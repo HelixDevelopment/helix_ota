@@ -89,6 +89,7 @@ recipe the conductor can wire into the project's pre-build / release ritual.
 | Deployments (rollout panel) | **e2e populated phase table** | — | empty-state e2e | — | evaluate-gate e2e | — |
 | ArtifactUpload | **7 component tests** (render, file-select, pre-flight gate, submit→success card, 422/415 step-mapping, in-flight label) | — | — | ApiError step-mapping (S5/S1) | submit gate + file-select | — |
 | Fleet (overview) | smoke | — | smoke (0.0% rate) | — | — | — |
+| Fleet (device detail) | **e2e populated success path** + **5 component tests** (loading/populated/empty/404/error) | component + e2e | empty-telemetry component + 404 component | component (status 500) | — | — |
 | Groups (list) | e2e + smoke | — | smoke | — | — | — |
 | Groups (detail) | e2e | — | empty-members e2e | — | batch add-members e2e | — |
 | Audit | smoke | — | — | — | filter button smoke | — |
@@ -118,13 +119,38 @@ sink-side proof that the seeded artifact is stored + verified (§11.4.69).
 > therefore relaxed to accept the empty-state **or** a populated table (the strict
 > empty-state assertion lives at the component layer in `OverviewScreen.test.tsx`).
 
+### Device + telemetry seeding (how the populated Fleet device-detail is reached)
+
+`e2e/helpers.ts` `seedDeviceWithTelemetry()` registers a **real device** via the
+admin `POST /devices/register` (capturing its `device_token`) and ingests a batch of
+telemetry events through the **same** `POST /client/telemetry` endpoint a real device
+uses (`seedDevice` + `ingestTelemetry`). The server's `applyDeviceRuntime` promotes the
+latest event (`success`) into the device's last-known `update_state` + `current_version`,
+and the history endpoint returns the events **newest-first**. `e2e/fleet-detail.spec.ts`
+drives the `DeviceDetail` screen client-side (Fleet nav → "Open a device" form) to a
+**populated status card** + a **populated newest-first telemetry history table**, plus a
+sink-side API proof that the seeded device's status + history are genuinely stored
+(§11.4.69). A device-token telemetry batch requires a non-empty `deployment_id` (the
+schema validator), but the path does **not** FK-check it, so a placeholder is accepted —
+no deployment chain is needed just to seed device telemetry.
+
+> **Bug surfaced + fixed in this wave (§11.4.1/§11.4.108).** Seeding the device-status
+> success path exposed a real product defect: the dashboard typed `DeviceStatus.health`
+> as `string`, but the server wire shape is an **object** `{ ok, last_error_code }`. The
+> `DeviceDetail` screen rendered that object directly into a `<dd>`, throwing *"Objects
+> are not valid as a React child"* and blanking the whole device page. Fixed at source —
+> `src/types/api.ts` now declares `DeviceHealth` and `FleetScreen.tsx` projects it to an
+> `ok`/`unhealthy` badge. The e2e + the `FleetScreen.test.tsx` populated case both
+> regression-guard it (the page mounts + health renders as text, never the raw object).
+
 ### Honest gaps (not yet covered, and why)
 
-- **Per-device Fleet detail success path:** the device-status success path needs a
-  seeded device; covered at the empty/404 level only via the live overview.
 - **color-contrast at the component layer** is disabled under jsdom (no canvas) and
   is instead asserted in the real browser by `e2e/a11y.spec.ts`.
 
-*(Closed in this wave: the ArtifactUpload screen — now 7 component tests — and the
-populated Release/Deployment/rollout detail success paths — now real-signed-artifact
-e2e seeding + populated-detail e2e specs.)*
+*(Closed in this wave: the **per-device Fleet device-detail success path** — now real
+device + telemetry e2e seeding + a populated `fleet-detail` e2e spec + 5 `FleetScreen`
+component tests — which additionally surfaced + fixed the `health`-object render crash.
+Previously closed: the ArtifactUpload screen — 7 component tests — and the populated
+Release/Deployment/rollout detail success paths — real-signed-artifact e2e seeding +
+populated-detail e2e specs.)*
