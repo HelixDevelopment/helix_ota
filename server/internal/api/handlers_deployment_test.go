@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	otaprotocol "github.com/HelixDevelopment/ota-protocol"
@@ -52,6 +53,68 @@ func TestDeploymentCreateAllTargets(t *testing.T) {
 	// One targeted device, no telemetry yet -> pending=1.
 	if st.Progress.Pending != 1 {
 		t.Fatalf("progress pending want 1, got %+v", st.Progress)
+	}
+}
+
+// TestDeploymentListReturnsActive proves GET /deployments returns the active
+// deployments (closes the GAP the emulator surfaced: an operator/agent could
+// create a deployment but had no list endpoint to enumerate active ones). The
+// seeded deployment must appear with its id, release id, and active status.
+func TestDeploymentListReturnsActive(t *testing.T) {
+	env := newTestEnv(t)
+	registerDevice(t, env, DeviceRegistration{HardwareID: "list-hw", Model: "OrangePi5Max", OS: otaprotocol.OSAndroid})
+	relID := createReleaseFor(t, env, "1.1.0")
+	cw := env.doJSON(http.MethodPost, "/api/v1/deployments", env.adminToken(), DeploymentCreate{
+		ReleaseID: relID, Strategy: "all-targets",
+	})
+	if cw.Code != http.StatusCreated {
+		t.Fatalf("create deployment want 201, got %d (%s)", cw.Code, cw.Body.String())
+	}
+	var created Deployment
+	env.decode(cw, &created)
+
+	w := env.do(http.MethodGet, "/api/v1/deployments", env.adminToken(), nil, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("list deployments want 200, got %d (%s)", w.Code, w.Body.String())
+	}
+	var list DeploymentList
+	env.decode(w, &list)
+	if len(list.Items) != 1 {
+		t.Fatalf("want 1 active deployment, got %d: %+v", len(list.Items), list)
+	}
+	got := list.Items[0]
+	if got.DeploymentID != created.DeploymentID {
+		t.Fatalf("listed deployment id = %q, want %q", got.DeploymentID, created.DeploymentID)
+	}
+	if got.ReleaseID != relID {
+		t.Fatalf("listed release id = %q, want %q", got.ReleaseID, relID)
+	}
+	if got.Status != string(otaprotocol.DeploymentActive) {
+		t.Fatalf("listed status = %q, want active", got.Status)
+	}
+}
+
+// TestDeploymentListEmpty proves the list endpoint returns an empty (non-null)
+// items array when no deployments exist.
+func TestDeploymentListEmpty(t *testing.T) {
+	env := newTestEnv(t)
+	w := env.do(http.MethodGet, "/api/v1/deployments", env.adminToken(), nil, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("list deployments want 200, got %d (%s)", w.Code, w.Body.String())
+	}
+	if got := w.Body.String(); !strings.Contains(got, `"items":[]`) {
+		t.Fatalf("empty list must render items:[], got %s", got)
+	}
+}
+
+// TestDeploymentListForbidsDeviceToken proves the list endpoint is operator/
+// viewer-scoped: a device-scoped token is forbidden (matches the RBAC of the
+// sibling list endpoints).
+func TestDeploymentListForbidsDeviceToken(t *testing.T) {
+	env := newTestEnv(t)
+	w := env.do(http.MethodGet, "/api/v1/deployments", env.deviceToken("some-device"), nil, "")
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("device token on list deployments want 403, got %d (%s)", w.Code, w.Body.String())
 	}
 }
 

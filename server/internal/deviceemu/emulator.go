@@ -11,19 +11,18 @@
 // advances its in-memory CurrentVersion and reports the success lifecycle the
 // same way update_engine would.
 //
-// Protocol gap (FACT, §11.4.6): the telemetry-schema validator REQUIRES a
-// deployment_id (server/internal/api/handlers_client.go:135), but
-// otaprotocol.UpdateAvailable (submodules/ota-protocol/types.go:87-101) does
-// NOT expose one. A real device therefore cannot derive the deployment_id from
-// its update offer. The faithful resolution is operator-side: the principal that
-// created the deployment knows its id from the POST /deployments 201 body (or a
-// GET /deployments/{id}). The emulator accepts that id via Config.DeploymentID
-// (operator-supplied, out-of-band) and attaches it to every telemetry report —
-// mirroring how the server's own test seedTelemetry obtains it via
-// ListActiveDeployments. When no deployment_id is supplied, the emulator still
-// emits the lifecycle, and the server's schema validator rejects the events
-// (counted in TelemetryAck.rejected) — the emulator surfaces that honestly
-// rather than inventing an id.
+// Telemetry deployment_id (FACT, §11.4.6): the telemetry-schema validator
+// REQUIRES a deployment_id on every report (server/internal/api/
+// handlers_client.go). The device self-serves it from its OWN update offer:
+// otaprotocol.UpdateAvailable carries DeploymentID (the active deployment the
+// server resolved), so CheckUpdate hands the device the id end-to-end and
+// ApplyAndReport stamps it on every telemetry report — no out-of-band operator
+// step. Config.DeploymentID remains as an OVERRIDE/FALLBACK used only when an
+// offer carries no id (legacy offers) or for the failure/rollback path, which
+// is not tied to a fresh offer. When neither the offer nor the config supplies
+// an id, the emulator still emits the lifecycle and the server's schema
+// validator rejects the events (counted in TelemetryAck.rejected) — surfaced
+// honestly rather than inventing an id.
 package deviceemu
 
 import (
@@ -70,10 +69,11 @@ type Config struct {
 	// Group optionally places the device in a deployment target group.
 	Group string
 
-	// DeploymentID is the operator-supplied deployment id attached to telemetry.
-	// See the package-level protocol-gap note: it cannot be derived from the
-	// update offer, so the operator provides it. May be empty (telemetry then
-	// reports the lifecycle but the server's schema validator rejects it).
+	// DeploymentID is an OPTIONAL operator-supplied deployment id used only as a
+	// FALLBACK/OVERRIDE for telemetry: the device normally self-serves the id
+	// from its update offer (otaprotocol.UpdateAvailable.DeploymentID). It is
+	// consulted only when the offer carries no id (legacy offers) or on the
+	// failure/rollback path (not tied to a fresh offer). May be empty.
 	DeploymentID string
 
 	// HTTPClient is the transport. nil defaults to a client with a 30s timeout.
@@ -289,9 +289,14 @@ func (d *Device) ApplyAndReport(ctx context.Context, upd *otaprotocol.UpdateAvai
 		otaprotocol.EventVerifying,
 		otaprotocol.EventSuccess,
 	}
+	// Prefer the deployment_id the server supplied in the update offer (the
+	// device self-serves it — see package doc + §11.4.6 closure); fall back to
+	// the operator-supplied Config.DeploymentID only when the offer omits it
+	// (legacy offers). The chosen id is attached to every telemetry report.
+	depID := d.resolveDeploymentID(upd.DeploymentID)
 	var ack TelemetryAck
 	for _, ev := range lifecycle {
-		a, err := d.reportEvent(ctx, ev, upd.Version, nil)
+		a, err := d.reportEvent(ctx, ev, upd.Version, nil, depID)
 		if err != nil {
 			return ack, fmt.Errorf("apply: report %s: %w", ev, err)
 		}
@@ -314,7 +319,9 @@ func (d *Device) ReportFailure(ctx context.Context, errorCode string) (Telemetry
 	target := d.current
 	d.mu.Unlock()
 	ec := errorCode
-	ack, err := d.reportEvent(ctx, otaprotocol.EventFailure, target, &ec)
+	// A failure report uses the operator-supplied fallback id: a rollback is not
+	// tied to a fresh update offer, so no protocol-supplied id is in hand here.
+	ack, err := d.reportEvent(ctx, otaprotocol.EventFailure, target, &ec, d.resolveDeploymentID(""))
 	if err != nil {
 		return ack, fmt.Errorf("report failure: %w", err)
 	}
@@ -324,12 +331,24 @@ func (d *Device) ReportFailure(ctx context.Context, errorCode string) (Telemetry
 	return ack, nil
 }
 
-// reportEvent posts a single-event telemetry batch and returns the 202 ack.
-func (d *Device) reportEvent(ctx context.Context, ev otaprotocol.TelemetryEvent, version string, errorCode *string) (TelemetryAck, error) {
+// resolveDeploymentID picks the deployment id to stamp on telemetry: the
+// protocol-supplied id (from the update offer) wins; the operator-supplied
+// Config.DeploymentID is the fallback used only when the offer carries none.
+func (d *Device) resolveDeploymentID(fromOffer string) string {
+	if fromOffer != "" {
+		return fromOffer
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.cfg.DeploymentID
+}
+
+// reportEvent posts a single-event telemetry batch and returns the 202 ack. The
+// depID is the already-resolved deployment id (protocol-supplied or fallback).
+func (d *Device) reportEvent(ctx context.Context, ev otaprotocol.TelemetryEvent, version string, errorCode *string, depID string) (TelemetryAck, error) {
 	d.mu.Lock()
 	devID := d.deviceID
 	devTok := d.deviceToken
-	depID := d.cfg.DeploymentID
 	d.mu.Unlock()
 	if devTok == "" {
 		return TelemetryAck{}, fmt.Errorf("device not registered")
@@ -363,9 +382,14 @@ type Outcome struct {
 	ToVersion      string `json:"to_version,omitempty"`
 	OfferedVersion string `json:"offered_version,omitempty"`
 	DeltaOffered   bool   `json:"delta_offered"`
-	// TelemetryAccepted / Rejected are the FINAL success-batch ack counts. A
-	// non-zero Rejected with an empty DeploymentID is the §11.4.6 protocol-gap
-	// signal (the schema validator dropped the events for lack of a deployment_id).
+	// DeploymentID is the deployment id the device stamped on its telemetry — the
+	// one carried in the update offer (self-served, §11.4.6 closure) or, failing
+	// that, the operator-supplied Config.DeploymentID fallback.
+	DeploymentID string `json:"deployment_id,omitempty"`
+	// TelemetryAccepted / Rejected are the FINAL success-batch ack counts. With a
+	// non-empty DeploymentID the success lifecycle is ACCEPTED (rejected=0). A
+	// non-zero Rejected with an empty DeploymentID means neither the offer nor
+	// the config carried an id (the schema validator dropped the events).
 	TelemetryAccepted int    `json:"telemetry_accepted"`
 	TelemetryRejected int    `json:"telemetry_rejected"`
 	Healthy           bool   `json:"healthy"`
@@ -395,6 +419,7 @@ func (d *Device) RunOnce(ctx context.Context) (Outcome, error) {
 	}
 	out.OfferedVersion = upd.Version
 	out.DeltaOffered = upd.Delta != nil
+	out.DeploymentID = d.resolveDeploymentID(upd.DeploymentID)
 
 	ack, err := d.ApplyAndReport(ctx, upd)
 	if err != nil {
@@ -405,8 +430,8 @@ func (d *Device) RunOnce(ctx context.Context) (Outcome, error) {
 	out.TelemetryAccepted = ack.Accepted
 	out.TelemetryRejected = ack.Rejected
 	out.Healthy = d.Healthy()
-	if ack.Rejected > 0 && d.cfg.DeploymentID == "" {
-		out.Note = "telemetry rejected by schema validator: no deployment_id supplied (protocol gap, §11.4.6)"
+	if ack.Rejected > 0 && out.DeploymentID == "" {
+		out.Note = "telemetry rejected by schema validator: no deployment_id available from offer or config"
 	}
 	return out, nil
 }

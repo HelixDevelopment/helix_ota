@@ -334,6 +334,21 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '429': { $ref: '#/components/responses/RateLimited' }
+    get:
+      tags: [deployments]
+      operationId: listDeployments
+      summary: List active deployments.
+      description: >
+        Returns the set of currently-active deployments. Lets operators and agents enumerate what
+        is live (and read each deployment_id) without guessing ids. RBAC: viewer/operator/admin.
+      responses:
+        '200':
+          description: Active deployments.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeploymentList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   /deployments/{deploymentId}:
     get:
@@ -1199,6 +1214,19 @@ components:
                 succeeded: { type: integer, minimum: 0 }
                 failed: { type: integer, minimum: 0 }
 
+    DeploymentList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Deployment' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
     PayloadProperties:
       type: object
       description: >
@@ -1222,6 +1250,14 @@ components:
       additionalProperties: false
       properties:
         release_id: { type: string, format: uuid }
+        deployment_id:
+          type: string
+          format: uuid
+          description: >
+            Active deployment this offer belongs to. The device echoes it back in every
+            telemetry report (POST /client/telemetry requires deployment_id), so it can
+            self-serve the id from its own offer with no out-of-band step. Omitted for
+            legacy offers.
         version: { $ref: '#/components/schemas/SemVer' }
         url: { type: string, format: uri }
         offset:

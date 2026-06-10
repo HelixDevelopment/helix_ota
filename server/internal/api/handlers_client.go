@@ -67,7 +67,11 @@ func (s *Server) handleClientUpdate(c *gin.Context) {
 	}
 
 	update := otaprotocol.UpdateAvailable{
-		ReleaseID:         rel.ReleaseID,
+		ReleaseID: rel.ReleaseID,
+		// Carry the active deployment id so the device can echo it back in
+		// telemetry (POST /client/telemetry requires deployment_id) without an
+		// out-of-band operator step (§11.4.6 protocol-gap closure).
+		DeploymentID:      dep.DeploymentID,
 		Version:           rel.Version,
 		URL:               s.artifactURL(art.ArtifactID),
 		Offset:            art.PayloadProperties.MetadataSize, // payload offset within ZIP (best-effort)

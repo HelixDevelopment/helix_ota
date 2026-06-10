@@ -381,27 +381,89 @@ func TestEmulatorReportFailure(t *testing.T) {
 	verifyDeviceStatus(t, fx, opToken, dev.DeviceID(), "", false)
 }
 
-// TestEmulatorTelemetryProtocolGap is a FACT-grade probe of the §11.4.6
-// protocol gap: with NO operator-supplied deployment_id, the telemetry-schema
-// validator rejects the lifecycle events. The emulator surfaces this honestly
-// (rejected>0) instead of inventing an id.
-func TestEmulatorTelemetryProtocolGap(t *testing.T) {
+// TestEmulatorSelfServesDeploymentID is the §11.4.6 protocol-gap CLOSURE proof:
+// with NO operator-supplied Config.DeploymentID, the device self-serves the
+// deployment_id from its OWN update offer (otaprotocol.UpdateAvailable.
+// DeploymentID, populated by handleClientUpdate from the active deployment) and
+// echoes it on every telemetry report. The success lifecycle is therefore
+// ACCEPTED (rejected=0) end-to-end with zero out-of-band operator input, and the
+// id the device stamped equals the operator's active deployment id — proven by
+// reading the server-side telemetry history back over real HTTP.
+func TestEmulatorSelfServesDeploymentID(t *testing.T) {
 	fx := bootServer(t)
 	ctx := context.Background()
 	opToken := fx.operatorLogin(t)
-	const group = "gap-fleet"
-	_, _ = fx.stageDeployment(t, opToken, "4.0.0", group)
+	const group = "self-serve-fleet"
+	_, deploymentID := fx.stageDeployment(t, opToken, "4.0.0", group)
 
 	dev, err := deviceemu.New(deviceemu.Config{
 		BaseURL:        fx.baseURL,
 		AdminUser:      fx.adminUser,
 		AdminPass:      fx.adminPass,
-		HardwareID:     "rk3588-GAP01",
+		HardwareID:     "rk3588-SELFSERVE01",
 		Model:          fxModel,
 		OSType:         string(otaprotocol.OSAndroid),
 		CurrentVersion: "1.0.0",
 		Group:          group,
-		// DeploymentID intentionally omitted.
+		// DeploymentID intentionally omitted: the device must derive it from the
+		// update offer, NOT from operator-supplied config.
+	})
+	if err != nil {
+		t.Fatalf("new device: %v", err)
+	}
+
+	// The offer itself must carry the active deployment id (the source the device
+	// self-serves from).
+	if err := dev.Register(ctx); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	upd, onTarget, err := dev.CheckUpdate(ctx)
+	if err != nil {
+		t.Fatalf("check update: %v", err)
+	}
+	if onTarget || upd == nil {
+		t.Fatalf("expected an update offer, got onTarget=%v upd=%v", onTarget, upd)
+	}
+	if upd.DeploymentID != deploymentID {
+		t.Fatalf("offer deployment_id = %q, want active deployment %q", upd.DeploymentID, deploymentID)
+	}
+
+	// Apply+report using ONLY the offer-supplied id — telemetry must be accepted.
+	ack, err := dev.ApplyAndReport(ctx, upd)
+	if err != nil {
+		t.Fatalf("apply+report: %v", err)
+	}
+	if ack.Accepted != 1 || ack.Rejected != 0 {
+		t.Fatalf("self-served telemetry want accepted=1 rejected=0, got %+v (protocol gap NOT closed)", ack)
+	}
+
+	// Operator-side cross-check: the success telemetry the server persisted is
+	// bound to the operator's deployment id — proving the device stamped the
+	// right id end-to-end with no out-of-band input.
+	verifySuccessTelemetry(t, fx, opToken, dev.DeviceID(), deploymentID)
+}
+
+// TestEmulatorRunOnceSelfServes proves the orchestrated single-cycle path also
+// self-serves the deployment_id: RunOnce with NO Config.DeploymentID applies the
+// update and reports telemetry that is ACCEPTED, with Outcome.DeploymentID set
+// to the offer-supplied id.
+func TestEmulatorRunOnceSelfServes(t *testing.T) {
+	fx := bootServer(t)
+	ctx := context.Background()
+	opToken := fx.operatorLogin(t)
+	const group = "self-serve-runonce"
+	_, deploymentID := fx.stageDeployment(t, opToken, "5.0.0", group)
+
+	dev, err := deviceemu.New(deviceemu.Config{
+		BaseURL:        fx.baseURL,
+		AdminUser:      fx.adminUser,
+		AdminPass:      fx.adminPass,
+		HardwareID:     "rk3588-SELFSERVE02",
+		Model:          fxModel,
+		OSType:         string(otaprotocol.OSAndroid),
+		CurrentVersion: "1.0.0",
+		Group:          group,
+		// No Config.DeploymentID.
 	})
 	if err != nil {
 		t.Fatalf("new device: %v", err)
@@ -411,11 +473,13 @@ func TestEmulatorTelemetryProtocolGap(t *testing.T) {
 		t.Fatalf("run once: %v", err)
 	}
 	if !out.Applied {
-		t.Fatalf("update should still be offered+applied locally: %+v", out)
+		t.Fatalf("update should be offered+applied: %+v", out)
 	}
-	// The success batch's events are rejected for lack of deployment_id.
-	if out.TelemetryRejected == 0 {
-		t.Fatalf("expected telemetry rejected without deployment_id (protocol gap), got %+v", out)
+	if out.DeploymentID != deploymentID {
+		t.Fatalf("outcome deployment_id = %q, want %q", out.DeploymentID, deploymentID)
+	}
+	if out.TelemetryAccepted != 1 || out.TelemetryRejected != 0 {
+		t.Fatalf("self-served run-once telemetry want accepted=1 rejected=0, got %+v", out)
 	}
 }
 
