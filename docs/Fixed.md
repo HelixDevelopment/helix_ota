@@ -1,13 +1,46 @@
 # Helix OTA — Fixed (closed workable items)
 
-**Revision:** 1
-**Last modified:** 2026-06-10T16:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-10T18:30:00Z
 
 This is the canonical closed-archive tracker (§11.4.19 column alignment,
 §11.4.33 type-aware closure vocabulary, §11.4.54 ATM-NNN). Open items
 live in [`Issues.md`](Issues.md); the short-form companion is
 [`Fixed_Summary.md`](Fixed_Summary.md). Sorted closure-date DESC. All
 commit hashes below were read from `git log`, not invented.
+
+---
+
+## §1. [ATM-001] Telemetry `deployment_id` not derivable from `otaprotocol.UpdateAvailable`
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+
+Closed 2026-06-10 — commit `3c57867` `feat(api): close 2 protocol gaps —
+UpdateAvailable.deployment_id + GET /deployments`. The `ota-protocol`
+`UpdateAvailable` payload now carries the `deployment_id` field, wired
+through the server's update-check response, so a real device can obtain
+and echo back the `deployment_id` its telemetry must supply (previously
+the server required it but the protocol never told the device). Proven
+by `TestEmulatorSelfServesDeploymentID` — the Tier-1 emulator
+round-trips register → update-check → telemetry self-serving the
+`deployment_id` end-to-end.
+
+---
+
+## §2. [ATM-002] No `GET /deployments` list endpoint to enumerate deployments
+
+**Status:** Implemented (→ Fixed.md)
+**Type:** Feature
+
+Closed 2026-06-10 — commit `3c57867` `feat(api): close 2 protocol gaps —
+UpdateAvailable.deployment_id + GET /deployments`. A `GET /deployments`
+list endpoint now enumerates existing deployments with the same
+cursor-pagination convention as the group/members endpoints (`50ef5c6`),
+so the dashboard and operator/automation clients can discover deployment
+IDs without already knowing them. Proven by
+`TestDeploymentListReturnsActive` — the list endpoint returns the active
+deployments.
 
 ---
 
