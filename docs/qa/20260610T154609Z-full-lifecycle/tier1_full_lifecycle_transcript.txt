@@ -1,0 +1,156 @@
+[15:46:09Z] Tier-1 FULL-LIFECYCLE container E2E — run-id 20260610T154609Z
+[15:46:09Z] repo root: /Volumes/T7/Projects/helix_ota
+[15:46:09Z] evidence : /Volumes/T7/Projects/helix_ota/docs/qa/20260610T154609Z-full-lifecycle
+------------------------------------------------------------
+[15:46:09Z] PREFLIGHT: podman reachable + arch
+arm64 linux
+[15:46:09Z] openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
+------------------------------------------------------------
+[15:46:09Z] KEYS (0): mint ephemeral ed25519 artifact-trust keypair (never committed)
+[15:46:09Z]   raw pubkey 32 bytes, base64 configured for HELIX_ARTIFACT_PUBKEY
+------------------------------------------------------------
+[15:46:09Z] BUILD (a): cross-compile static linux/arm64 binaries on host
+[15:46:11Z] built: 5767330 /Volumes/T7/Projects/helix_ota/bin/ota-device-emu
+19792034 /Volumes/T7/Projects/helix_ota/bin/ota-server
+------------------------------------------------------------
+[15:46:11Z] BUILD (b): podman build control-plane image (ota-control-plane:dev)
+STEP 1/9: FROM alpine:3.21
+STEP 2/9: RUN apk add --no-cache ca-certificates wget && update-ca-certificates
+--> Using cache 188a6cb2780c4f09d97be01a1b5a414f73b11c3fcb820d4e0eabaf115b8f6849
+--> 188a6cb2780c
+STEP 3/9: RUN addgroup -S helix && adduser -S -G helix helix
+--> Using cache d5253254c9c50f8f747b658f81654028499220007b3385d5002d963f3e99c8b9
+--> d5253254c9c5
+STEP 4/9: COPY .docker-bin/ota-server /usr/local/bin/ota-server
+--> c15c79f24f79
+STEP 5/9: ENV HELIX_PORT=8080     HELIX_API_BASE_PATH=/api/v1
+--> eb9318ece6e2
+STEP 6/9: EXPOSE 8080
+--> 37b67acd30c3
+STEP 7/9: HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=12     CMD wget -qO- "http://127.0.0.1:${HELIX_PORT}/healthz" >/dev/null 2>&1 || exit 1
+time="2026-06-10T18:46:13+03:00" level=warning msg="HEALTHCHECK is not supported for OCI image format and will be ignored. Must use `docker` format"
+--> 3f66220992ef
+STEP 8/9: USER helix:helix
+time="2026-06-10T18:46:13+03:00" level=warning msg="HEALTHCHECK is not supported for OCI image format and will be ignored. Must use `docker` format"
+--> 52a21010efe9
+STEP 9/9: ENTRYPOINT ["/usr/local/bin/ota-server"]
+COMMIT ota-control-plane:dev
+time="2026-06-10T18:46:13+03:00" level=warning msg="HEALTHCHECK is not supported for OCI image format and will be ignored. Must use `docker` format"
+--> 33af8d56d83e
+Successfully tagged localhost/ota-control-plane:dev
+33af8d56d83ee0aa2c68bba7ac576e48069de34c4222750b12baae258ac31b4f
+[15:46:13Z] BUILD (b): podman build base ota-device-emu image (ota-device-emu:dev) [containers submodule]
+STEP 1/8: FROM alpine:3.21
+STEP 2/8: RUN apk add --no-cache ca-certificates && update-ca-certificates
+--> Using cache 6ffbe2ef93fcab502144177db0aac98bf9ca17ed77cc91675fbcdb51155f4cfa
+--> 6ffbe2ef93fc
+STEP 3/8: RUN addgroup -S ota && adduser -S -G ota ota
+--> Using cache 3c9eefedaf39d01b2e2a851689131994ea342c76cc3641838c3e0f40a3e9e8e8
+--> 3c9eefedaf39
+STEP 4/8: COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+--> Using cache d5c04aa6e68c192554cec684c30022a270c01f972d2c1baf139b9f44ab114de8
+--> d5c04aa6e68c
+STEP 5/8: RUN chmod +x /usr/local/bin/entrypoint.sh
+--> Using cache c50b0326abdc667b7ead0a89e4a41560a74047d78f2082c0347c13cacf47dcfb
+--> c50b0326abdc
+STEP 6/8: ENV OTA_DEVICE_EMU_BIN=/usr/local/bin/ota-device-emu
+--> Using cache c7c9a1c60eb0be839d0566896f2ad15f9801e2c2645021c7b9c6949c32d0c5ca
+--> c7c9a1c60eb0
+STEP 7/8: USER ota
+--> Using cache 54c52356a87d3a760839baa0ff72239371c9f9565451b964bcc3d4696959c622
+--> 54c52356a87d
+STEP 8/8: ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+--> Using cache ab33711dce93f8dd93d6934dc1ad2f5aeced1e88e37c1f2c5242a5b8fc458e52
+COMMIT ota-device-emu:dev
+--> ab33711dce93
+Successfully tagged localhost/ota-device-emu:dev
+ab33711dce93f8dd93d6934dc1ad2f5aeced1e88e37c1f2c5242a5b8fc458e52
+[15:46:13Z] BUILD (b): podman build derived emulator image (ota-device-emu-tier1:dev)
+STEP 1/2: FROM ota-device-emu:dev
+STEP 2/2: COPY ota-device-emu /usr/local/bin/ota-device-emu
+COMMIT ota-device-emu-tier1:dev
+--> 11a5a4b1b267
+Successfully tagged localhost/ota-device-emu-tier1:dev
+11a5a4b1b267a5e5f3e021de1e75c15d98cb1f1818c637e549f735db987cc63f
+------------------------------------------------------------
+[15:46:14Z] BOOT (c): create pod 'helix-tier1-full' (publish 8080)
+4f81df318ae1cbd913cd3733f59a13010914dc9d23c7e3dc3b82e9650e151d98
+[15:46:14Z] BOOT (c): start control-plane 'helix-cp' with HELIX_ARTIFACT_PUBKEY set
+9276a6e19557fa697f2ec38e7e209e466070ba9b968ac6e313c09ebe46a1c545
+------------------------------------------------------------
+[15:46:14Z] HEALTH (d): wait for control-plane /healthz + /api/v1/auth/login to answer
+[15:46:14Z]   /healthz -> 200, /api/v1/auth/login -> 401 (API base live, attempt 1)
+[15:46:14Z] control-plane boot log captured -> /Volumes/T7/Projects/helix_ota/docs/qa/20260610T154609Z-full-lifecycle/control_plane_boot.log
+------------------------------------------------------------
+[15:46:14Z] STAGE (e): operator stages a real deployment at v1.1.0 (> device v1.0.0)
+[15:46:14Z]   POST /auth/login -> HTTP 200
+[15:46:14Z]   obtained operator access token
+[15:46:14Z]   artifact upload -> HTTP 201 verified=true artifact_id=a44a5ec9b057c31bbbb9cc85ce558e28
+[15:46:14Z]   POST /releases (v1.1.0) -> HTTP 201
+[15:46:14Z]   release_id=711d9ca5d1847882e79b78439303a6e9
+[15:46:14Z]   POST /deployments (all-targets) -> HTTP 201
+[15:46:14Z]   deployment_id=7841becafb2e7598c8017cd467416c6f target_count=0
+------------------------------------------------------------
+[15:46:14Z] RUN 1 (f): emulator register -> 200 offer -> apply -> full telemetry lifecycle
+[15:46:14Z] emulator run-1 exit rc=0
+[15:46:14Z] emulator run-1 Outcome JSON:
+    {
+      "device_id": "da27f8d723f22ec6e48c5761eb20d993",
+      "on_target": false,
+      "applied": true,
+      "from_version": "1.0.0",
+      "to_version": "1.1.0",
+      "offered_version": "1.1.0",
+      "delta_offered": false,
+      "deployment_id": "7841becafb2e7598c8017cd467416c6f",
+      "telemetry_accepted": 1,
+      "telemetry_rejected": 0,
+      "healthy": true
+    }
+------------------------------------------------------------
+[15:46:14Z] ASSERT (g): full OTA lifecycle from the emulator Outcome
+[15:46:14Z]   [1/6] REGISTER ok: device_id=da27f8d723f22ec6e48c5761eb20d993
+[15:46:14Z]   [2/6] 200 UPDATE OFFER ok: offered_version=1.1.0 (device was behind)
+[15:46:14Z]   [3/6] DEPLOYMENT_ID ok: offer carried 7841becafb2e7598c8017cd467416c6f (== staged deployment)
+[15:46:14Z]   [4/6] APPLY+ADVANCE ok: 1.0.0 -> 1.1.0 (applied=true)
+[15:46:14Z]   [5/6] TELEMETRY ACCEPTED ok: accepted=1 rejected=0 healthy=true
+[15:46:14Z]   [6/6] cross-check server telemetry history: GET /devices/da27f8d723f22ec6e48c5761eb20d993/telemetry
+[15:46:14Z]   GET /devices/{id}/telemetry -> HTTP 200
+[15:46:14Z]   server telemetry history captured -> /Volumes/T7/Projects/helix_ota/docs/qa/20260610T154609Z-full-lifecycle/server_telemetry_history.json
+[15:46:14Z]     lifecycle event 'download_started' present in server history (count=1)
+[15:46:14Z]     lifecycle event 'installing' present in server history (count=1)
+[15:46:14Z]     lifecycle event 'installed' present in server history (count=1)
+[15:46:14Z]     lifecycle event 'verifying' present in server history (count=1)
+[15:46:14Z]     lifecycle event 'success' present in server history (count=1)
+[15:46:14Z]     server 'success' event carries deployment_id=7841becafb2e7598c8017cd467416c6f (== staged)
+------------------------------------------------------------
+[15:46:14Z] RUN 2 (i): same device re-checks -> must be ON-TARGET (204, no update)
+[15:46:15Z] emulator run-2 exit rc=0
+[15:46:15Z] emulator run-2 Outcome JSON:
+    {
+      "device_id": "da27f8d723f22ec6e48c5761eb20d993",
+      "on_target": true,
+      "applied": false,
+      "from_version": "1.1.0",
+      "delta_offered": false,
+      "telemetry_accepted": 0,
+      "telemetry_rejected": 0,
+      "healthy": true,
+      "note": "device on target — no update offered (204)"
+    }
+[15:46:15Z]   RUN 2 ok: on_target=true, applied=false (clean 204 on-target re-check)
+------------------------------------------------------------
+[15:46:15Z] RESULT: PASS — Tier-1 emulated-device FULL OTA LIFECYCLE proven END-TO-END on podman.
+[15:46:15Z]   staged        : artifact(201,verified) -> release 711d9ca5d1847882e79b78439303a6e9 -> deployment 7841becafb2e7598c8017cd467416c6f
+[15:46:15Z]   register      : device_id=da27f8d723f22ec6e48c5761eb20d993
+[15:46:15Z]   200 offer     : offered_version=1.1.0 carrying deployment_id=7841becafb2e7598c8017cd467416c6f
+[15:46:15Z]   apply         : 1.0.0 -> 1.1.0 (applied=true, version advanced)
+[15:46:15Z]   telemetry     : accepted=1 rejected=0 (download_started/installing/installed/verifying/success)
+[15:46:15Z]   server xcheck : GET /devices/da27f8d723f22ec6e48c5761eb20d993/telemetry shows the lifecycle w/ deployment_id
+[15:46:15Z]   re-check      : 204 on-target (device now on 1.1.0)
+[15:46:15Z]   evidence      : /Volumes/T7/Projects/helix_ota/docs/qa/20260610T154609Z-full-lifecycle/
+------------------------------------------------------------
+[15:46:15Z] Captured evidence directory: /Volumes/T7/Projects/helix_ota/docs/qa/20260610T154609Z-full-lifecycle
+------------------------------------------------------------
+[15:46:15Z] TEARDOWN: removing pod 'helix-tier1-full' (and its containers).
+[15:46:15Z] TEARDOWN done (exit rc=0).
