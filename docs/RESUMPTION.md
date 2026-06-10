@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
-| Last modified | 2026-06-10T12:00:00Z |
+| Revision | 5 |
+| Last modified | 2026-06-10T14:15:00Z |
 | Status | active — the §11.4.131 single canonical out-of-the-box session-resumption file |
 | Standard path | `docs/RESUMPTION.md` (this file — the fixed project-declared §11.4.131 entry point; do not move without a §11.4.66 operator decision) |
-| Status summary | Point any fresh session at THIS file. It carries a SHORT one-line resume + a FULL block, the read-first handoff docs, exact live-state anchors, current PHASE + NEXT + terminal goal, and the binding constraints. Moment-valid for HEAD `4658125` (2026-06-10) + this RESUMPTION commit on top. |
+| Status summary | Point any fresh session at THIS file. It carries a SHORT one-line resume + a FULL block, the read-first handoff docs, exact live-state anchors, current PHASE + NEXT + terminal goal, and the binding constraints. Moment-valid for HEAD `de87e21` (2026-06-10, wave 6) on `main` pushed to all 4 upstreams. NOTE: a shared session usage limit hit ~14:00 (resets 19:00 Asia/Almaty) and terminated the parallel background subagents — their in-progress work was continued + landed on the main stream (see §1). |
 
 ## SHORT — paste this first sentence into a fresh session
 
-> Read `docs/research/main_specs/CONTINUATION.md` first, run `git fetch --all --prune`, then continue the Helix OTA autonomous loop toward the next validated-and-published version tag — current PHASE is "emulator-driven device testing (Tier-1 in progress)"; HEAD is `4658125` (+ this RESUMPTION commit) on `main` pushed to all 4 upstreams.
+> Read `docs/research/main_specs/CONTINUATION.md` first, run `git fetch --all --prune`, then continue the Helix OTA autonomous loop toward the next validated-and-published version tag — current PHASE is "emulation test-fabric (research+design DONE, P1+ implementation NEXT) + HelixQA submodule wiring"; HEAD is `de87e21` on `main` pushed to all 4 upstreams.
 
 ## FULL — detailed resumption block
 
@@ -23,7 +23,17 @@
 
 ### 1. Exact live-state anchors (moment-valid 2026-06-10)
 
-- **HEAD commit:** `4658125` — `fix(dashboard): DeviceStatus.health is an object — fix Fleet-detail crash + cover` (on `main`; this RESUMPTION commit lands on top).
+- **HEAD commit:** `de87e21` — `docs(emulation): test-fabric DESIGN + ROADMAP + coverage plan + SCHEMA` (on `main`, pushed all 4 upstreams; this RESUMPTION update lands on top).
+- **Wave 6 shipped this session (2026-06-10, on `main`, all 4 upstreams):**
+  - `16b4b23` android gitlink → ota-android-agent `26bd0a2` (**:android AAR now builds** — root-caused to an unpinned `kotlin.android` plugin, NOT MPP; `:core` 47/0 green).
+  - `12087bc` **emulator failure→recall(forward-fix)→recovery e2e** (`TestRecallRecoveryE2E` PASS +`-race`; podman shell variant `tests/emulator/tier1_recall_recovery_e2e.sh` syntax-clean, **conductor must run it live**).
+  - `19e1346` **dashboard §11.4.135 regression guard** for the DeviceStatus.health-object crash (Vitest 58, RED/GREEN polarity).
+  - `3c85b14` **security probes** recall+telemetry 28/0 (surfaced a STRONGER trust boundary — strict `bindJSON` rejects injected keys 400).
+  - `88bd2c2` **recall lifecycle e2e** live 35/0 (`tests/e2e/recall_lifecycle.sh`).
+  - `5123e67` **HelixQA bluff audit + real bank runner** (`tools/helixqa/run_bank.sh`): VERDICT **HelixQA is NOT a bluff** — canonical engine gates on dispatch-exit-0 + non-empty evidence ledger + catches its own negation; the real gap was an INCORPORATION gap (§11.4.27, never wired as a submodule / bank never machine-executed). Runner: dry-run 10/0/0 + self-test PASS. Audit: `docs/research/helixqa_bluff_audit/REPORT.md`.
+  - `71be1cd` **per-event telemetry `duration_ms`+`bytes_transferred` end-to-end** (closed the parked WIDEN row-4): ota-protocol gitlink → `3d360ab` (additive, validation rejects negative), emulator emits → server ingest → store (memory+pgx) → read view; `TestEmulatorTelemetryFieldsEndToEnd` exact-value PASS + real-Postgres parity (`TestPostgresRepositoryContract_Integration`, podman PG, 0 skips).
+  - `8a03a63`+`de87e21` **emulation test-fabric research + full design** (`docs/research/emulation_infra/REPORT.md` cited; `docs/design/emulation_fabric/{DESIGN,ROADMAP,TEST_COVERAGE_PLAN}.md`+`SCHEMA.sql`) — tiers T0–T3/Tfw/Tcp, extends containers submodule, honest macOS-M3 KVM gaps.
+- **Conductor follow-ups (NOT yet done — pick these up next):** (1) run `tests/emulator/tier1_recall_recovery_e2e.sh` live on podman; (2) run `tools/helixqa/run_bank.sh` LIVE full-bank when streams quiescent; (3) HelixQA submodule WIRING per §11.4.27 (the operator's "update HelixQA submodule to latest" — pointer `bca3b36`; check HelixQA's own `.gitmodules` for the §11.4.28 nested-own-org-chain constraint FIRST); (4) emulation fabric implementation P1+ (ROADMAP.md); (5) `spec_impl_alignment.md` row-4 doc update (telemetry fields now ingested).
 - **Wave 5 shipped (on `main`):** `2391cb6` **full OTA lifecycle + multi-device fleet PROVEN on podman** (single device 1.0.0→1.1.0 with the complete download→success telemetry accepted; fleet 5/5 → 1.0.0→1.2.0; evidence `docs/qa/20260610T11191*/` + `...111928Z-fleet/`); `f5a3428` N-device scaling (50 concurrent, ~1580 ops/sec, 0 err, -race); `4658125` dashboard Fleet-detail + a real product bug fix (DeviceStatus.health object). **The emulator now fully runs+tests the codebase end-to-end on podman — the prior "honest gap" is closed.**
 - **NEXT non-blocked candidates:** richer telemetry ingest fields (duration_ms/bytes_transferred — needs the device to send them); a rollback/recall lifecycle e2e on the emulator (drive a failure event → recall forward-fix); migrate the dashboard health-bug to a Fixed.md ATM entry. **BLOCKED:** ATM-003 Tier-2 (Linux+KVM Cuttlefish, design ready in docs/design/CUTTLEFISH_TIER2.md) + ATM-004 Tier-3 (RK3588 hardware).
 - **Waves 3–4 also shipped (on `main`):** `3c57867` closed both protocol gaps (UpdateAvailable.deployment_id [ota-protocol→7920842] + GET /deployments); `8c0521d` Tier-1 podman container e2e (PROVEN: control-plane container boots, ota-device-emu container runs the real round-trip — evidence docs/qa/20260610T105306Z/); `5d4920e` dashboard ArtifactUpload + populated-detail (Vitest 50, Playwright 20); submodule pins bumped — constitution `ba0f702`, ota-rollout-engine `7a90912`, ota-artifact-validator `77c6b48`, containers `845ad45`. Tracker live at docs/Issues.md (ATM-003/004 Operator-blocked: Tier-2 Cuttlefish-on-Linux-KVM / Tier-3 RK3588 hardware) + docs/Fixed.md.
