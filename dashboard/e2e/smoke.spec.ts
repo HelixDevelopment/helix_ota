@@ -29,9 +29,16 @@ test("operator logs in and the Overview screen renders against the live API", as
   // After auth we land on "/" (Overview) and the nav shell appears.
   await expect(page.getByRole("heading", { name: "Overview", level: 1 })).toBeVisible();
   await expect(page.getByRole("link", { name: "Releases" })).toBeVisible();
-  // The "Recent releases" card hits GET /releases (empty list on a fresh server).
+  // The "Recent releases" card hits GET /releases. The card always renders; its
+  // body is the empty-state OR a populated table depending on whether another spec
+  // seeded a release into the shared in-memory server (populated-detail.spec.ts).
+  // The empty-state itself is asserted strictly at the component layer
+  // (src/screens/OverviewScreen.test.tsx). Here we only require the card to render
+  // a non-error releases surface against the live API.
   await expect(page.getByText("Recent releases")).toBeVisible();
-  await expect(page.getByText("No releases yet.")).toBeVisible();
+  await expect(page.getByText("No releases yet.").or(page.getByRole("table")).first()).toBeVisible();
+  // Whichever state, the releases fetch did NOT error.
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
 test("Fleet overview consumes the live telemetry overview endpoint", async ({ page }) => {
