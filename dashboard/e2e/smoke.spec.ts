@@ -47,7 +47,14 @@ test("Groups screen renders and lists from the live groups endpoint", async ({ p
   await login(page);
   await page.getByRole("link", { name: "Groups" }).click();
   await expect(page.getByRole("heading", { name: "Device groups", level: 1 })).toBeVisible();
-  await expect(page.getByText("No groups yet.")).toBeVisible();
+  // The screen consumes the live GET /groups endpoint. On a pristine server this is the
+  // empty state; if a prior spec seeded groups into the shared in-memory server the list
+  // table renders instead. Assert order-independently that one of the two live-data views
+  // appears (the "Refresh" button only renders once data has been fetched, proving the
+  // endpoint was consumed). The dedicated empty-state proof lives in groups-detail.spec.ts.
+  await expect(
+    page.getByText("No groups yet.").or(page.getByRole("button", { name: "Refresh" })),
+  ).toBeVisible();
 });
 
 test("Audit screen renders and consumes the live admin-only audit endpoint", async ({ page }) => {
