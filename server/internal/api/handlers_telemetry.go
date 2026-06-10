@@ -32,6 +32,19 @@ type TelemetryHistory struct {
 	NextCursor *string              `json:"next_cursor"`
 }
 
+// validTelemetryEvent reports whether s is one of the six known telemetry event
+// types (ota-protocol enums.go). The closed set keeps an unknown ?event= value a
+// 400 rather than a silently-empty result (§11.4.6 no-guessing).
+func validTelemetryEvent(s string) bool {
+	switch otaprotocol.TelemetryEvent(s) {
+	case otaprotocol.EventDownloadStarted, otaprotocol.EventInstalling, otaprotocol.EventInstalled,
+		otaprotocol.EventVerifying, otaprotocol.EventSuccess, otaprotocol.EventFailure:
+		return true
+	default:
+		return false
+	}
+}
+
 // TelemetryOverview is the GET /telemetry/overview body: fleet-wide counts by
 // event type (operational_endpoints.md §5).
 type TelemetryOverview struct {
@@ -84,21 +97,59 @@ func (s *Server) handleDeviceTelemetry(c *gin.Context) {
 		}
 		offset = n
 	}
+	// Optional filters (operational_endpoints.md §5): event type (closed set) and
+	// an RFC3339 [since,until] window — both bounds inclusive, matched on the event
+	// Timestamp. Filters apply BEFORE newest-first ordering + pagination.
+	eventFilter := c.Query("event")
+	if eventFilter != "" && !validTelemetryEvent(eventFilter) {
+		respondValidation(c, "event must be a known telemetry event type",
+			ErrorDetail{Field: "event", Issue: "unknown"})
+		return
+	}
+	var since, until time.Time
+	for field, set := range map[string]func(time.Time){
+		"since": func(t time.Time) { since = t },
+		"until": func(t time.Time) { until = t },
+	} {
+		if v := c.Query(field); v != "" {
+			t, perr := time.Parse(time.RFC3339, v)
+			if perr != nil {
+				respondValidation(c, field+" must be an RFC3339 timestamp",
+					ErrorDetail{Field: field, Issue: "not RFC3339"})
+				return
+			}
+			set(t)
+		}
+	}
 	recs, err := s.repo.TelemetryForDevice(c.Request.Context(), deviceID)
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not read telemetry")
 		return
 	}
-	// Newest-first: the store returns insertion order, so walk it in reverse.
+	// Newest-first with filters applied first: the store returns insertion order,
+	// so walk it in reverse, keep matching records, then page over the result.
 	// (Device history is bounded per device; a store-level keyset paginate is a
 	// future optimisation — spec_impl_alignment.md row 4.)
-	total := len(recs)
+	filtered := make([]store.TelemetryRecord, 0, len(recs))
+	for i := len(recs) - 1; i >= 0; i-- {
+		r := recs[i]
+		if eventFilter != "" && string(r.Event) != eventFilter {
+			continue
+		}
+		if !since.IsZero() && r.Timestamp.Before(since) {
+			continue
+		}
+		if !until.IsZero() && r.Timestamp.After(until) {
+			continue
+		}
+		filtered = append(filtered, r)
+	}
 	items := make([]TelemetryEventView, 0, limit)
-	for i := total - 1 - offset; i >= 0 && len(items) < limit; i-- {
-		items = append(items, toTelemetryView(recs[i]))
+	for i := offset; i < len(filtered) && len(items) < limit; i++ {
+		items = append(items, toTelemetryView(filtered[i]))
 	}
 	body := TelemetryHistory{DeviceID: deviceID, Items: items}
-	if next := offset + len(items); next < total {
+	if next := offset + len(items); next < len(filtered) {
 		nc := strconv.Itoa(next)
 		body.NextCursor = &nc
 	}
