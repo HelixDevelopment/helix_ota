@@ -1,0 +1,183 @@
+<h1 id="helix-ota-session-resumption-canonical-always-current">Helix OTA
+— Session Resumption (canonical, always-current)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-10T12:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active — the §11.4.131 single canonical out-of-the-box
+session-resumption file</td>
+</tr>
+<tr>
+<td>Standard path</td>
+<td><code>docs/RESUMPTION.md</code> (this file — the fixed
+project-declared §11.4.131 entry point; do not move without a §11.4.66
+operator decision)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Point any fresh session at THIS file. It carries a SHORT one-line
+resume + a FULL block, the read-first handoff docs, exact live-state
+anchors, current PHASE + NEXT + terminal goal, and the binding
+constraints. Moment-valid for HEAD <code>a839220</code> (2026-06-10) +
+this docs commit on top.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="short-paste-this-first-sentence-into-a-fresh-session">SHORT —
+paste this first sentence into a fresh session</h2>
+<blockquote>
+<p>Read <code>docs/research/main_specs/CONTINUATION.md</code> first, run
+<code>git fetch --all --prune</code>, then continue the Helix OTA
+autonomous loop toward the next validated-and-published version tag —
+current PHASE is “emulator-driven device testing (Tier-1 in progress)”;
+HEAD is <code>a839220</code> (+ this docs commit) on <code>main</code>
+pushed to all 4 upstreams.</p>
+</blockquote>
+<h2 id="full-detailed-resumption-block">FULL — detailed resumption
+block</h2>
+<h3 id="read-first-in-order">0. Read FIRST (in order)</h3>
+<ol type="1">
+<li><code>docs/research/main_specs/CONTINUATION.md</code> — the live
+work-state handoff (DONE / NEXT / locked decisions). <strong>This is the
+primary handoff doc.</strong></li>
+<li><code>.remember/remember.md</code> — present but currently empty; no
+extra state there.</li>
+<li><code>docs/design/EMULATED_DEVICE_TESTING.md</code> — the tiered
+emulator-testing plan (Tier-1/2/3) now in flight.</li>
+<li>Then run: <code>git fetch --all --prune</code> and reconcile
+<code>HEAD..@{u}</code> before any edit (§11.4.37
+fetch-before-edit).</li>
+</ol>
+<h3 id="exact-live-state-anchors-moment-valid-2026-06-10">1. Exact
+live-state anchors (moment-valid 2026-06-10)</h3>
+<ul>
+<li><strong>HEAD commit:</strong> <code>a839220</code> —
+<code>test(qa): autonomous e2e + security + HelixQA for telemetry filters &amp; pagination</code>
+(on <code>main</code>; this docs commit lands on top).</li>
+<li><strong>Just-shipped this session (on <code>main</code>, pushed all
+4 upstreams):</strong>
+<ul>
+<li><code>50ef5c6</code> —
+<code>feat(api): per-device telemetry filters + group/members pagination</code>
+(OpenAPI synced, redocly-clean).</li>
+<li><code>b0b8ee2</code> —
+<code>chore(dashboard): sync API client to new pagination/filter params</code>
+(dashboard client lockstep).</li>
+<li><code>7dc3334</code> —
+<code>feat(emulator): Tier-1 Go OTA device-emulator + resilience</code>
+(<code>server/internal/deviceemu</code> +
+<code>cmd/ota-device-emu</code>; surfaced the telemetry deployment_id
+protocol gap).</li>
+<li><code>fa571b8</code> —
+<code>test(dashboard): comprehensive UI testing system</code> (Vitest 43
++ Playwright 17 + a11y).</li>
+<li><code>a839220</code> —
+<code>test(qa): autonomous e2e (50/50) + security (39/39) + HelixQA bank</code>.</li>
+<li><strong><code>containers</code> submodule</strong> advanced to
+<code>845ad45</code> —
+<code>feat(emulator): ota-device-emu runtime image + on-demand boot recipe</code>
+(pushed to its github origin); parent gitlink bumped in this
+commit.</li>
+</ul></li>
+<li><strong>Branch:</strong> <code>main</code>. All work merges to
+<code>main</code>; commit + push fan out to all upstreams.</li>
+<li><strong>Upstreams (4):</strong> <code>github</code>
+(<code>git@github.com:HelixDevelopment/helix_ota.git</code>, also
+<code>origin</code> fetch), <code>gitlab</code>
+(<code>git@gitlab.com:helixdevelopment1/helix_ota.git</code>),
+<code>gitflic</code>
+(<code>git@gitflic.ru:helixdevelopment/helix_ota.git</code>),
+<code>gitverse</code>
+(<code>git@gitverse.ru:helixdevelopment/helix_ota.git</code>).
+<code>origin</code> push fans out to all four.</li>
+<li><strong>No in-flight background PIDs / detached pushes known at
+handoff time</strong> — verify with <code>git status</code> + check
+<code>qa-results/push_failures/</code> per §11.4.88 before assuming
+clean.</li>
+<li><strong>Container runtime on this host:</strong> <code>podman</code>
+(the pgx integration + dev stack boot via the <code>containers</code>
+submodule on podman). <strong>No host QEMU / no AVD / no nested KVM on
+this Apple-Silicon host</strong> — see binding constraints.</li>
+</ul>
+<h3 id="current-phase-immediate-next-terminal-goal">2. Current PHASE +
+immediate NEXT + terminal goal</h3>
+<ul>
+<li><strong>PHASE:</strong> Emulator-driven device testing —
+<strong>Tier-1 in progress</strong> (a podman container running a Go
+<code>ota-device-emulator</code> that speaks the real
+<code>ota-protocol</code> to the control plane). See
+<code>docs/design/EMULATED_DEVICE_TESTING.md</code>.</li>
+<li><strong>Immediate NEXT (priority order):</strong>
+<ol type="1">
+<li>Tier-1 emulator: stand up the podman
+<code>ota-device-emulator</code> exercising register → update-check →
+telemetry → delta → rollout → recall against a live control plane,
+capturing real evidence under <code>docs/qa/&lt;run-id&gt;/</code>.</li>
+<li>Remaining NEXT-wave items (hardware/ingest-gated): device-side TUF
+(gomobile-go-tuf/v2 — gated on real RK3588 <code>.so</code>/JNI
+measurement); device payload-apply integration
+(<code>DeltaApplyDecision</code> → update_engine, needs a real device);
+row-4 richer telemetry fields
+(<code>duration_ms</code>/<code>bytes_transferred</code> — blocked on
+UNVERIFIED ingest).</li>
+</ol></li>
+<li><strong>Terminal goal (loop stop condition A, §11.4.126):</strong> a
+new fully-validated-and-verified version (tag) created AND published
+across all owned submodules + main repo to all 4 upstreams.</li>
+</ul>
+<h3 id="binding-constraints-do-not-violate">3. Binding constraints (do
+not violate)</h3>
+<ul>
+<li><strong>Anti-bluff covenant §11.4</strong> — every PASS carries
+positive captured evidence; metadata-only / config-only /
+absence-of-error / grep-without-runtime PASS forbidden. Tests AND
+HelixQA Challenges bound equally.</li>
+<li><strong>Absolute no-force-push §11.4.113</strong> — force-push
+(<code>--force</code>, <code>--force-with-lease</code>,
+<code>+&lt;ref&gt;</code>) is STRICTLY forbidden on every
+repo/submodule. Integrate via fetch → merge-onto-latest-main →
+fast-forward push.</li>
+<li><strong>podman-only on this host</strong> — use the
+<code>containers</code> submodule
+(<code>vasic-digital/containers</code>, §11.4.76) for any containerized
+workload; never host-direct emulator/<code>adb</code>/<code>qemu</code>
+(§11.4.109 guard).</li>
+<li><strong>Tier-2 Android A/B is host-gated</strong> — real
+<code>update_engine</code> A/B + AVB/dm-verity auto-rollback needs
+Cuttlefish on a Linux + nested-KVM box; the Apple-Silicon
+<code>applehv</code> host cannot run it. NOT structurally impossible
+(§11.4.112) — host/hardware-gated only.</li>
+<li><strong>Exact naming/versions:</strong> Go module
+<code>github.com/HelixDevelopment/helix_ota/server</code>; submodules
+under <code>submodules/</code>; constitution submodule at
+<code>constitution/</code>. Toolchain: Go 1.26.2, Gradle 9.5 + Kotlin
+2.3.20 (AGP 8.5.2 + plain <code>kotlin.android</code> builds; Kotlin MPP
+does NOT). No LaTeX/drawio/plantuml/graphviz/docker on host; PDF export
+needs a LaTeX engine (not installed).</li>
+<li><strong>Commit/push discipline §2.1 + §11.4.88</strong> — commit +
+push to ALL 4 upstreams; pushes may run detached.</li>
+</ul>
+<h2 id="how-a-fresh-session-resumes-from-this-file-alone">How a fresh
+session resumes from this file alone</h2>
+<p>Given only this file’s path, a new agent: reads §0 handoff docs, runs
+<code>git fetch --all</code>, confirms HEAD against §1, picks up the §2
+PHASE/NEXT, and works under the §3 constraints toward the terminal goal
+— zero additional context required.</p>
