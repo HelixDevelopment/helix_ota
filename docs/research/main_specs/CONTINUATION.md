@@ -8,16 +8,20 @@
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
 
-## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 8) FIRST
+## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 9) FIRST
 
 The freshest live-state anchors are in **`docs/RESUMPTION.md`** (the §11.4.131 canonical
-entry). As of HEAD **`7035046`** the build is **GREEN across every achievable tier** —
-full proof in **`docs/qa/STABILITY_REPORT.md`**: Go (all tiers + `-race`), pgx integration,
-meta-test + run_bank self-test, dashboard 58, HelixQA LIVE bank 10/0, podman full-lifecycle +
-fleet 5/5 + recall-recovery, QEMU firmware tier (P2 active), AVD boot + on-device, submodule
-cores. Overnight additions (all pushed): P2 QEMU activated, run_bank `--self-test` in the
-pre-build gate, **HelixQA + Challenges submodules incorporated** (§11.4.27), stress/chaos
-test-hygiene fix. **No release tag** — §11.4.40 needs the on-device RK3588 tier (hardware-BLOCKED,
+entry). As of HEAD **`eb9e1c4`** the build is **GREEN across every achievable tier**, and
+during the 2026-06-10 overnight autonomous session (operator away-from-keyboard) **every
+achievable software tier was RE-RUN fresh on this exact HEAD and re-confirmed GREEN** (§11.4.132
+risk-ordered re-validation) — full proof in **`docs/qa/STABILITY_REPORT.md`** Rev 2: Go (all tiers
++ `-race -count=1`), pgx integration (store 88.7% / rollout 71.8% with `-tags integration`),
+inheritance gate, meta-test §1.1, dashboard 58/58 + typecheck, HelixQA LIVE bank 10/0 + dry-run
+10/0 + self-test §1.1, podman full-lifecycle + fleet 5/5 + recall-recovery 7/7, QEMU firmware
+tier, all Go submodule cores. Android bricks (`ota-android-agent` `1061015`, `ota-update-engine-bridge`
+`8bb8d2f`) are byte-identical to their prior proof (pins unchanged, trees clean at pin) — NOT
+re-run, to respect the §12.6 60%-memory ceiling alongside podman (honest §11.4.6/§11.4.101 call,
+not a re-run claim). **No release tag** — §11.4.40 needs the on-device RK3588 tier (hardware-BLOCKED,
 §11.4.112), so a tag would be a bluff. BLOCKED (hardware): T2 Cuttlefish / GSI-A-B real-apply /
 T3 RK3588. DEFERRED (zero-risk): fabric scheduler P3 (unwired §11.4.124), HelixQA in-tree compile
 (`../containers` layout), PDF doc siblings (no weasyprint/LaTeX on host). Everything below this

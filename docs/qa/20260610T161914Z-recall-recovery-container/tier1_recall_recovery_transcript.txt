@@ -1,0 +1,177 @@
+[16:19:14Z] Tier-1 RECALL/RECOVERY container E2E — run-id 20260610T161914Z
+[16:19:14Z] repo root: /Volumes/T7/Projects/helix_ota
+[16:19:14Z] evidence : /Volumes/T7/Projects/helix_ota/docs/qa/20260610T161914Z-recall-recovery-container
+------------------------------------------------------------
+[16:19:14Z] PREFLIGHT: podman reachable + arch
+arm64 linux
+[16:19:14Z] openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
+------------------------------------------------------------
+[16:19:14Z] KEYS (0): mint ephemeral ed25519 artifact-trust keypair (never committed)
+[16:19:14Z]   raw pubkey 32 bytes, base64 configured for HELIX_ARTIFACT_PUBKEY
+------------------------------------------------------------
+[16:19:14Z] BUILD (a): cross-compile static linux/arm64 binaries on host
+------------------------------------------------------------
+[16:19:15Z] BUILD (b): podman build control-plane image (ota-control-plane:dev)
+STEP 1/9: FROM alpine:3.21
+STEP 2/9: RUN apk add --no-cache ca-certificates wget && update-ca-certificates
+--> Using cache 188a6cb2780c4f09d97be01a1b5a414f73b11c3fcb820d4e0eabaf115b8f6849
+--> 188a6cb2780c
+STEP 3/9: RUN addgroup -S helix && adduser -S -G helix helix
+--> Using cache d5253254c9c50f8f747b658f81654028499220007b3385d5002d963f3e99c8b9
+--> d5253254c9c5
+STEP 4/9: COPY .docker-bin/ota-server /usr/local/bin/ota-server
+--> Using cache 02aae1d8aab97f73b2d798db49d9cc01641fe31b21e2d6f413aeea6acd900857
+--> 02aae1d8aab9
+STEP 5/9: ENV HELIX_PORT=8080     HELIX_API_BASE_PATH=/api/v1
+--> Using cache f2b1568f8951c1a4f4935924345e5f835c0da56b9860309e1413f394453e9b93
+--> f2b1568f8951
+STEP 6/9: EXPOSE 8080
+--> Using cache 0503a8895f7f149eb1fbc28fdb2fbc1feccb3f847a2fde3ea0bfac3952bedc15
+--> 0503a8895f7f
+STEP 7/9: HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=12     CMD wget -qO- "http://127.0.0.1:${HELIX_PORT}/healthz" >/dev/null 2>&1 || exit 1
+--> Using cache b9673acba3af10025f2990b63cc3956f6e80faeb191fc245a895bc3360cbfbb7
+--> b9673acba3af
+STEP 8/9: USER helix:helix
+--> Using cache 393ef10269da19fffe63c599bf4e7e0168e246ec97c0987ed59514abbac6f7bb
+--> 393ef10269da
+STEP 9/9: ENTRYPOINT ["/usr/local/bin/ota-server"]
+--> Using cache 55584925545085e0ebb5133c4280c42c17c428e625165f5f6cb4485f7a9e0068
+COMMIT ota-control-plane:dev
+--> 555849255450
+Successfully tagged localhost/ota-control-plane:dev
+55584925545085e0ebb5133c4280c42c17c428e625165f5f6cb4485f7a9e0068
+[16:19:15Z] BUILD (b): podman build base ota-device-emu image (ota-device-emu:dev) [containers submodule]
+STEP 1/8: FROM alpine:3.21
+STEP 2/8: RUN apk add --no-cache ca-certificates && update-ca-certificates
+--> Using cache 6ffbe2ef93fcab502144177db0aac98bf9ca17ed77cc91675fbcdb51155f4cfa
+--> 6ffbe2ef93fc
+STEP 3/8: RUN addgroup -S ota && adduser -S -G ota ota
+--> Using cache 3c9eefedaf39d01b2e2a851689131994ea342c76cc3641838c3e0f40a3e9e8e8
+--> 3c9eefedaf39
+STEP 4/8: COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+--> Using cache d5c04aa6e68c192554cec684c30022a270c01f972d2c1baf139b9f44ab114de8
+--> d5c04aa6e68c
+STEP 5/8: RUN chmod +x /usr/local/bin/entrypoint.sh
+--> Using cache c50b0326abdc667b7ead0a89e4a41560a74047d78f2082c0347c13cacf47dcfb
+--> c50b0326abdc
+STEP 6/8: ENV OTA_DEVICE_EMU_BIN=/usr/local/bin/ota-device-emu
+--> Using cache c7c9a1c60eb0be839d0566896f2ad15f9801e2c2645021c7b9c6949c32d0c5ca
+--> c7c9a1c60eb0
+STEP 7/8: USER ota
+--> Using cache 54c52356a87d3a760839baa0ff72239371c9f9565451b964bcc3d4696959c622
+--> 54c52356a87d
+STEP 8/8: ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+--> Using cache ab33711dce93f8dd93d6934dc1ad2f5aeced1e88e37c1f2c5242a5b8fc458e52
+COMMIT ota-device-emu:dev
+--> ab33711dce93
+Successfully tagged localhost/ota-device-emu:dev
+ab33711dce93f8dd93d6934dc1ad2f5aeced1e88e37c1f2c5242a5b8fc458e52
+[16:19:15Z] BUILD (b): podman build derived emulator image (ota-device-emu-tier1:dev)
+STEP 1/2: FROM ota-device-emu:dev
+STEP 2/2: COPY ota-device-emu /usr/local/bin/ota-device-emu
+--> Using cache 2128d2f6faf6db49bab30686b878ac000ee9ee09c7dd2f516b252a531b82a297
+COMMIT ota-device-emu-tier1:dev
+--> 2128d2f6faf6
+Successfully tagged localhost/ota-device-emu-tier1:dev
+2128d2f6faf6db49bab30686b878ac000ee9ee09c7dd2f516b252a531b82a297
+------------------------------------------------------------
+[16:19:16Z] BOOT (c): create pod 'helix-tier1-recall' (publish 8080)
+b77862ae39eca8de1d6048db3a4e04323bdce8a35b5fe58b996df3c2a9316c52
+[16:19:16Z] BOOT (c): start control-plane 'helix-cp' with HELIX_ARTIFACT_PUBKEY set
+7768d39808145464eaad385cb40a37e4f6d35108fa59db60212723beae9f0dd8
+------------------------------------------------------------
+[16:19:16Z] HEALTH (d): wait for control-plane /healthz + /api/v1/auth/login to answer
+[16:19:16Z]   /healthz -> 200, /api/v1/auth/login -> 401 (API base live, attempt 1)
+------------------------------------------------------------
+[16:19:16Z] STAGE (e): operator login + stage v1.1.0 + all-targets deployment D1
+[16:19:16Z]   POST /auth/login -> HTTP 200
+[16:19:16Z]   POST /releases (v1.1.0) -> HTTP 201
+[16:19:16Z]   release v1.1.0 -> release_id=c637e157bd4420c574dc371b2ed59cad
+[16:19:16Z]   POST /deployments (D1, all-targets) -> HTTP 201
+[16:19:16Z]   deployment D1=23d52c72ddab8f9a91f4d80ae48d06b0
+------------------------------------------------------------
+[16:19:16Z] RUN 1 (f): emulator register -> 200 offer v1.1.0 -> apply -> healthy
+[16:19:16Z]   run-1 Outcome:
+    {
+      "device_id": "48f195826a808e23dc3bd1c6114363dc",
+      "on_target": false,
+      "applied": true,
+      "from_version": "1.0.0",
+      "to_version": "1.1.0",
+      "offered_version": "1.1.0",
+      "delta_offered": false,
+      "deployment_id": "23d52c72ddab8f9a91f4d80ae48d06b0",
+      "telemetry_accepted": 1,
+      "telemetry_rejected": 0,
+      "healthy": true
+    }
+[16:19:16Z]   [1/7] APPLY ok: 1.0.0 -> 1.1.0, healthy, telemetry accepted, deployment_id=23d52c72ddab8f9a91f4d80ae48d06b0
+[16:19:16Z]   device_id=48f195826a808e23dc3bd1c6114363dc
+------------------------------------------------------------
+[16:19:16Z] FAILURE (g): device reports a post-apply failure (error_code=post_apply_health_check_failed)
+[16:19:16Z]   re-register idempotent -> same device_id=48f195826a808e23dc3bd1c6114363dc, fresh device token
+[16:19:16Z]   POST /client/telemetry (failure) -> HTTP 202
+[16:19:16Z]   failure telemetry accepted=1 rejected=0
+[16:19:16Z]   GET /devices/{id}/status (after failure) -> HTTP 200
+[16:19:16Z]   [2/7] FAILURE ok: server health.ok=false, current_version=1.1.0 (not advanced beyond 1.1.0)
+[16:19:16Z]   GET /devices/{id}/telemetry?event=failure -> HTTP 200
+[16:19:16Z]   [3/7] server failure telemetry present (count=1, deployment=23d52c72ddab8f9a91f4d80ae48d06b0, error_code=post_apply_health_check_failed)
+------------------------------------------------------------
+[16:19:16Z] RECALL (h): stage forward-fix v1.2.0 (release only) + recall D1 forward
+[16:19:17Z]   POST /releases (v1.2.0) -> HTTP 201
+[16:19:17Z]   forward-fix release v1.2.0 -> release_id=56242d4a78fd8907dec76c2abd950347
+[16:19:17Z]   POST /deployments/{D1}/recall -> HTTP 201
+[16:19:17Z]   [4/7] RECALL ok: kind=rollback from=c637e157bd4420c574dc371b2ed59cad to=56242d4a78fd8907dec76c2abd950347 mode=forward-fix recall_deployment=4458912dff8d783567d966ed89edf7b7
+[16:19:17Z]   GET /deployments/{D1}/rollbacks -> HTTP 200
+[16:19:17Z]   [5/7] rollback_history row confirmed (count=1)
+------------------------------------------------------------
+[16:19:17Z] RUN 2 (i): emulator re-check (current 1.1.0) -> 200 offer v1.2.0 -> apply -> recover
+[16:19:17Z]   run-2 Outcome:
+    {
+      "device_id": "48f195826a808e23dc3bd1c6114363dc",
+      "on_target": false,
+      "applied": true,
+      "from_version": "1.1.0",
+      "to_version": "1.2.0",
+      "offered_version": "1.2.0",
+      "delta_offered": false,
+      "deployment_id": "4458912dff8d783567d966ed89edf7b7",
+      "telemetry_accepted": 1,
+      "telemetry_rejected": 0,
+      "healthy": true
+    }
+[16:19:17Z]   [6/7] RECOVERY ok: 1.1.0 -> 1.2.0 via recall deployment 4458912dff8d783567d966ed89edf7b7, healthy, telemetry accepted
+[16:19:17Z]   GET /devices/{id}/telemetry?event=success -> HTTP 200
+[16:19:17Z]   server success telemetry present for recall deployment (count=1)
+[16:19:17Z]   GET /devices/{id}/status (after recovery) -> HTTP 200
+[16:19:17Z]   server status: health.ok=true current_version=1.2.0
+------------------------------------------------------------
+[16:19:17Z] RUN 3 (j): emulator re-check (current 1.2.0) -> on-target (204, no update)
+[16:19:17Z]   run-3 Outcome:
+    {
+      "device_id": "48f195826a808e23dc3bd1c6114363dc",
+      "on_target": true,
+      "applied": false,
+      "from_version": "1.2.0",
+      "delta_offered": false,
+      "telemetry_accepted": 0,
+      "telemetry_rejected": 0,
+      "healthy": true,
+      "note": "device on target — no update offered (204)"
+    }
+[16:19:17Z]   [7/7] ON-TARGET ok: on_target=true applied=false (clean 204 on 1.2.0)
+------------------------------------------------------------
+[16:19:17Z] RESULT: PASS — Tier-1 FAILURE -> RECALL(forward-fix) -> RECOVERY proven END-TO-END on podman.
+[16:19:17Z]   staged       : release v1.1.0 c637e157bd4420c574dc371b2ed59cad -> deployment D1 23d52c72ddab8f9a91f4d80ae48d06b0
+[16:19:17Z]   apply        : device 1.0.0 -> 1.1.0 (healthy)
+[16:19:17Z]   failure      : post_apply_health_check_failed -> server health.ok=false, version not advanced
+[16:19:17Z]   forward-fix  : release v1.2.0 56242d4a78fd8907dec76c2abd950347
+[16:19:17Z]   recall       : D1 -> recall deployment 4458912dff8d783567d966ed89edf7b7 (kind=rollback, mode=forward-fix)
+[16:19:17Z]   recovery     : device 1.1.0 -> 1.2.0 via recall deployment (healthy, telemetry accepted)
+[16:19:17Z]   on-target    : 204 on 1.2.0
+[16:19:17Z]   evidence     : /Volumes/T7/Projects/helix_ota/docs/qa/20260610T161914Z-recall-recovery-container/
+------------------------------------------------------------
+[16:19:17Z] Captured evidence directory: /Volumes/T7/Projects/helix_ota/docs/qa/20260610T161914Z-recall-recovery-container
+------------------------------------------------------------
+[16:19:17Z] TEARDOWN: removing pod 'helix-tier1-recall' (and its containers).
+[16:19:17Z] TEARDOWN done (exit rc=0).

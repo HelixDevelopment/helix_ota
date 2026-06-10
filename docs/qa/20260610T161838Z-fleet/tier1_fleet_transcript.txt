@@ -1,0 +1,129 @@
+[16:18:38Z] Tier-1 FLEET container E2E — run-id 20260610T161838Z, fleet size 5
+[16:18:38Z] repo root: /Volumes/T7/Projects/helix_ota
+[16:18:38Z] evidence : /Volumes/T7/Projects/helix_ota/docs/qa/20260610T161838Z-fleet
+------------------------------------------------------------
+[16:18:38Z] PREFLIGHT: podman reachable + arch + host signing tools
+arm64 linux
+[16:18:38Z] openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
+------------------------------------------------------------
+[16:18:38Z] KEYS (0): mint ephemeral ed25519 artifact-trust keypair (never committed)
+------------------------------------------------------------
+[16:18:38Z] BUILD (a): cross-compile static linux/arm64 binaries on host
+[16:18:38Z] built: 5767330 /Volumes/T7/Projects/helix_ota/bin/ota-device-emu
+19792034 /Volumes/T7/Projects/helix_ota/bin/ota-server
+------------------------------------------------------------
+[16:18:38Z] BUILD (b): podman build control-plane + emulator images
+STEP 1/9: FROM alpine:3.21
+STEP 2/9: RUN apk add --no-cache ca-certificates wget && update-ca-certificates
+--> Using cache 188a6cb2780c4f09d97be01a1b5a414f73b11c3fcb820d4e0eabaf115b8f6849
+--> 188a6cb2780c
+STEP 3/9: RUN addgroup -S helix && adduser -S -G helix helix
+--> Using cache d5253254c9c50f8f747b658f81654028499220007b3385d5002d963f3e99c8b9
+--> d5253254c9c5
+STEP 4/9: COPY .docker-bin/ota-server /usr/local/bin/ota-server
+--> Using cache 02aae1d8aab97f73b2d798db49d9cc01641fe31b21e2d6f413aeea6acd900857
+--> 02aae1d8aab9
+STEP 5/9: ENV HELIX_PORT=8080     HELIX_API_BASE_PATH=/api/v1
+--> Using cache f2b1568f8951c1a4f4935924345e5f835c0da56b9860309e1413f394453e9b93
+--> f2b1568f8951
+STEP 6/9: EXPOSE 8080
+--> Using cache 0503a8895f7f149eb1fbc28fdb2fbc1feccb3f847a2fde3ea0bfac3952bedc15
+--> 0503a8895f7f
+STEP 7/9: HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=12     CMD wget -qO- "http://127.0.0.1:${HELIX_PORT}/healthz" >/dev/null 2>&1 || exit 1
+--> Using cache b9673acba3af10025f2990b63cc3956f6e80faeb191fc245a895bc3360cbfbb7
+--> b9673acba3af
+STEP 8/9: USER helix:helix
+--> Using cache 393ef10269da19fffe63c599bf4e7e0168e246ec97c0987ed59514abbac6f7bb
+--> 393ef10269da
+STEP 9/9: ENTRYPOINT ["/usr/local/bin/ota-server"]
+--> Using cache 55584925545085e0ebb5133c4280c42c17c428e625165f5f6cb4485f7a9e0068
+COMMIT ota-control-plane:dev
+--> 555849255450
+Successfully tagged localhost/ota-control-plane:dev
+55584925545085e0ebb5133c4280c42c17c428e625165f5f6cb4485f7a9e0068
+STEP 1/8: FROM alpine:3.21
+STEP 2/8: RUN apk add --no-cache ca-certificates && update-ca-certificates
+--> Using cache 6ffbe2ef93fcab502144177db0aac98bf9ca17ed77cc91675fbcdb51155f4cfa
+--> 6ffbe2ef93fc
+STEP 3/8: RUN addgroup -S ota && adduser -S -G ota ota
+--> Using cache 3c9eefedaf39d01b2e2a851689131994ea342c76cc3641838c3e0f40a3e9e8e8
+--> 3c9eefedaf39
+STEP 4/8: COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+--> Using cache d5c04aa6e68c192554cec684c30022a270c01f972d2c1baf139b9f44ab114de8
+--> d5c04aa6e68c
+STEP 5/8: RUN chmod +x /usr/local/bin/entrypoint.sh
+--> Using cache c50b0326abdc667b7ead0a89e4a41560a74047d78f2082c0347c13cacf47dcfb
+--> c50b0326abdc
+STEP 6/8: ENV OTA_DEVICE_EMU_BIN=/usr/local/bin/ota-device-emu
+--> Using cache c7c9a1c60eb0be839d0566896f2ad15f9801e2c2645021c7b9c6949c32d0c5ca
+--> c7c9a1c60eb0
+STEP 7/8: USER ota
+--> Using cache 54c52356a87d3a760839baa0ff72239371c9f9565451b964bcc3d4696959c622
+--> 54c52356a87d
+STEP 8/8: ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+--> Using cache ab33711dce93f8dd93d6934dc1ad2f5aeced1e88e37c1f2c5242a5b8fc458e52
+COMMIT ota-device-emu:dev
+--> ab33711dce93
+Successfully tagged localhost/ota-device-emu:dev
+ab33711dce93f8dd93d6934dc1ad2f5aeced1e88e37c1f2c5242a5b8fc458e52
+STEP 1/2: FROM ota-device-emu:dev
+STEP 2/2: COPY ota-device-emu /usr/local/bin/ota-device-emu
+--> Using cache 2128d2f6faf6db49bab30686b878ac000ee9ee09c7dd2f516b252a531b82a297
+COMMIT ota-device-emu-tier1:dev
+--> 2128d2f6faf6
+Successfully tagged localhost/ota-device-emu-tier1:dev
+2128d2f6faf6db49bab30686b878ac000ee9ee09c7dd2f516b252a531b82a297
+------------------------------------------------------------
+[16:18:39Z] BOOT (c): create pod 'helix-tier1-fleet', start control plane with trust key
+504a61672f2c3d8c7071f8e095bedbf27457a23977288cf320af6de1851d5b30
+60fbe6c23dd7172b1d49c1e8536ee7762de4cb024215bc2ddee65b2d64179685
+[16:18:40Z] HEALTH (c): wait for /healthz + /api/v1/auth/login to answer
+[16:18:40Z]   /healthz -> 200, /api/v1/auth/login -> 401 (API base live, attempt 1)
+------------------------------------------------------------
+[16:18:40Z] STAGE (d): operator stages ONE all-targets deployment at v1.2.0
+[16:18:40Z]   POST /auth/login -> HTTP 200
+[16:18:40Z]   artifact upload -> 201 verified=true artifact_id=35ef7e421147dbca55807948629dc587
+[16:18:40Z]   POST /releases (v1.2.0) -> HTTP 201
+[16:18:40Z]   POST /deployments (all-targets) -> HTTP 201
+[16:18:40Z]   release_id=93ab2b3200acaaafb43dfe973797057a deployment_id=9094f35bcc772f57da8689a33bec4859
+------------------------------------------------------------
+[16:18:40Z] FLEET (e): launch 5 emulator containers CONCURRENTLY
+[16:18:40Z]   launched helix-emu-01 (hardware_id=rk3588-fleet-1781108318-01)
+[16:18:40Z]   launched helix-emu-02 (hardware_id=rk3588-fleet-1781108318-02)
+[16:18:40Z]   launched helix-emu-03 (hardware_id=rk3588-fleet-1781108318-03)
+[16:18:40Z]   launched helix-emu-04 (hardware_id=rk3588-fleet-1781108318-04)
+[16:18:40Z]   launched helix-emu-05 (hardware_id=rk3588-fleet-1781108318-05)
+------------------------------------------------------------
+[16:18:40Z] FLEET (f): wait for all 5 emulator containers to exit
+[16:18:41Z]   fleet containers reached terminal state; collecting per-device evidence
+------------------------------------------------------------
+[16:18:41Z] ASSERT (g): per-device OTA lifecycle across the fleet
+[16:18:41Z]   [OK]   helix-emu-01: device_id=b9b5192153ac5ce86f7dfd2fda2923bb 1.0.0->1.2.0 applied tel(acc=1,rej=0) dep=9094f35bcc772f57da8689a33bec4859
+[16:18:41Z]   [OK]   helix-emu-02: device_id=93ecc4dca5dd6a77be99f1f7ccc954a9 1.0.0->1.2.0 applied tel(acc=1,rej=0) dep=9094f35bcc772f57da8689a33bec4859
+[16:18:41Z]   [OK]   helix-emu-03: device_id=fe6ba4e0ef66b61f4833e62e0c99f6d1 1.0.0->1.2.0 applied tel(acc=1,rej=0) dep=9094f35bcc772f57da8689a33bec4859
+[16:18:41Z]   [OK]   helix-emu-04: device_id=73e686faba37d4a472c6f18b5dcd2deb 1.0.0->1.2.0 applied tel(acc=1,rej=0) dep=9094f35bcc772f57da8689a33bec4859
+[16:18:41Z]   [OK]   helix-emu-05: device_id=fe713cca6a4ecb90ca82bc3695ef16b0 1.0.0->1.2.0 applied tel(acc=1,rej=0) dep=9094f35bcc772f57da8689a33bec4859
+------------------------------------------------------------
+[16:18:41Z] FLEET SUMMARY (5/5 devices completed the full update):
+    container        hardware_id                rc        applied  from->to  tel_acc   tel_rej  
+    helix-emu-01     rk3588-fleet-1781108318-01 0         true     1.0.0->1.2.0 1         0        
+    helix-emu-02     rk3588-fleet-1781108318-02 0         true     1.0.0->1.2.0 1         0        
+    helix-emu-03     rk3588-fleet-1781108318-03 0         true     1.0.0->1.2.0 1         0        
+    helix-emu-04     rk3588-fleet-1781108318-04 0         true     1.0.0->1.2.0 1         0        
+    helix-emu-05     rk3588-fleet-1781108318-05 0         true     1.0.0->1.2.0 1         0        
+------------------------------------------------------------
+[16:18:41Z] ASSERT (h): server fleet telemetry overview cross-check
+[16:18:41Z]   GET /telemetry/overview -> HTTP 200
+[16:18:41Z]   server-side success-event count across fleet: 5 (want >= 5)
+------------------------------------------------------------
+[16:18:41Z] RESULT: PASS — multi-device FLEET OTA proven END-TO-END on podman.
+[16:18:41Z]   fleet size    : 5 distinct emulator containers (concurrent)
+[16:18:41Z]   staged        : one all-targets deployment 9094f35bcc772f57da8689a33bec4859 at v1.2.0
+[16:18:41Z]   per-device    : 5/5 registered + applied 1.0.0->1.2.0, telemetry accepted (rejected=0)
+[16:18:41Z]   server xcheck : 5 success events recorded fleet-wide
+[16:18:41Z]   evidence      : /Volumes/T7/Projects/helix_ota/docs/qa/20260610T161838Z-fleet/ (fleet_summary.txt, fleet/*.json, server_telemetry_overview.json)
+------------------------------------------------------------
+[16:18:41Z] Captured evidence directory: /Volumes/T7/Projects/helix_ota/docs/qa/20260610T161838Z-fleet
+------------------------------------------------------------
+[16:18:41Z] TEARDOWN: removing pod 'helix-tier1-fleet' (and its 5+1 containers).
+[16:18:42Z] TEARDOWN done (exit rc=0).
