@@ -1,0 +1,384 @@
+# SPDX-FileCopyrightText: 2026 Milos Vasic
+# SPDX-License-Identifier: Apache-2.0
+# =============================================================================
+# helix_ota.test_cases.yaml — HelixQA NATIVE-schema test bank (Helix OTA control plane)
+# -----------------------------------------------------------------------------
+# This is the NATIVE HelixQA `test_cases:` translation of the prose challenge bank
+# `tools/helixqa/banks/helix_ota.yaml`. It carries the SAME 10 challenges, the SAME
+# dispatch targets, and the SAME captured-evidence artifacts — re-expressed in the
+# schema the HelixQA engine actually loads (`submodules/helixqa/pkg/testbank`).
+#
+# Schema source of truth (field names cross-checked against the engine, 2026-06-10):
+#   submodules/helixqa/pkg/testbank/schema.go
+#     - BankFile      : version / name / description / test_cases / metadata
+#                       (schema.go:390-405)
+#     - TestCase      : id / name / description / category / priority / platforms /
+#                       steps / dependencies / documentation_refs / tags /
+#                       estimated_duration / expected_result / requires_env /
+#                       challenge_id / dispatches_to / domains / required_evidence
+#                       (schema.go:31-126)
+#     - TestStep      : name / action / expected / timeout (schema.go:248-321)
+#     - ActionType    : adb_shell / shell / sleep / screenshot / http / assert / ...
+#                       (schema.go:149-245); `dispatches_to` runs the named host/on-
+#                       device script via the consumer DeviceExec hook (schema.go:103-110)
+#   submodules/helixqa/pkg/testbank/loader.go
+#     - LoadFile yaml.Unmarshal into BankFile; top-level `test_cases:` (loader.go:51-55)
+#     - intra-bank + cross-bank duplicate-id refusal (loader.go:61-80, 124-135)
+#
+# DISPATCH MODEL. Each case sets `dispatches_to` to the SAME real, autonomous,
+# anti-bluff E2E script the prose bank names (verified present in tests/e2e/ +
+# tests/security/ on 2026-06-10). The engine's dispatch executor runs that script
+# via the consumer-injected DeviceExec hook; its real exit code drives PASS/FAIL.
+# `shell:` steps mirror the exact dispatch command so a runner without the dispatch
+# hook still executes the real script. A PASS requires the real run to PASS — there
+# is NO metadata / config-only / absence-of-error path to a PASS here
+# (§11.4 / §11.4.1 / §11.4.27 / §11.4.69).
+#
+# WORKING DIRECTORY for every `shell:`/`dispatches_to` command: the project root
+#   /Volumes/T7/Projects/helix_ota (the parent root; scripts resolve their own
+#   relative paths from there).
+#
+# ENV (REQUIRED for the shared-server challenges HOTA-AUTH-LOGIN .. HOTA-ROLLOUT-
+# ROUTE-GATES + HOTA-FILTERS-PAGINATION's seed): the dispatch needs a running
+# ota-server reachable at HELIX_BASE_URL plus HELIX_ADMIN_USERNAME +
+# HELIX_ADMIN_PASSWORD (admin login is disabled without the password — missing
+# password/curl/jq => the script exits 3 SKIP, never a false PASS, §11.4.3).
+# Self-hosting challenges (HOTA-PIPELINE-SIGNED / HOTA-RECALL-LIFECYCLE /
+# HOTA-FILTERS-PAGINATION) build + boot their OWN ephemeral server and need NO
+# shared server and NO admin password.
+#
+# COEXISTENCE: this file is the native-schema sibling of helix_ota.yaml; BOTH are
+# kept during the transition (§11.4.124 — the prose bank is not removed). The case
+# ids here are NAMESPACED (`hota.<area>`) so they do NOT collide with the prose
+# bank's `HOTA-*` ids under the engine's cross-bank duplicate-id guard
+# (loader.go:124-135) if both directories are ever scanned together.
+#
+# Captured evidence (real run, prose bank): tests/e2e/RUN_EVIDENCE.txt
+#   — 28 passed, 0 failed, 1 skipped; RESULT: PASS; with negative controls proving
+#     the challenge FAILs on wrong password / server absent.
+# =============================================================================
+---
+version: "1"
+name: "Helix OTA — operational + rollout E2E (native test_cases schema)"
+description: >-
+  Black-box, anti-bluff end-to-end test cases that drive the live ota-server REST
+  API over real HTTP (or a self-hosted ephemeral server) and assert real HTTP
+  status codes plus key JSON fields. No mocks of the system under test. Native
+  HelixQA `test_cases:` translation of tools/helixqa/banks/helix_ota.yaml.
+
+metadata:
+  source_bank: tools/helixqa/banks/helix_ota.yaml
+  bank_id: helix_ota_operational_rollout
+  authority: "Constitution §11.4.58 / §11.4.27 / §11.4.69 / §11.4 anti-bluff covenant"
+  system_under_test: "ota-server (Gin modular monolith, in-memory repo by default)"
+  schema_source: "submodules/helixqa/pkg/testbank/schema.go (BankFile/TestCase/TestStep)"
+  working_directory: /Volumes/T7/Projects/helix_ota
+
+test_cases:
+
+  - id: hota.auth.login
+    challenge_id: HOTA-AUTH-LOGIN
+    name: "Admin login issues a signed Bearer claims token; auth is enforced"
+    description: >-
+      POST /api/v1/auth/login -> HTTP 200 with a non-empty access_token; token_type
+      is "Bearer"; the access_token matches the documented 2-segment
+      <base64url-claims>.<HMAC-sig> shape and segment 1 decodes to JSON carrying "sub"
+      and a "roles" array containing "admin". Anti-bluff: an unauthenticated
+      GET /api/v1/telemetry/overview MUST return 401 (auth is enforced).
+    category: integration
+    priority: critical
+    dispatches_to: "tests/e2e/challenge_operational.sh"
+    domains: [auth, login]
+    required_evidence: [tests/e2e/RUN_EVIDENCE.txt]
+    requires_env: [HELIX_BASE_URL, HELIX_ADMIN_USERNAME, HELIX_ADMIN_PASSWORD]
+    steps:
+      - name: "Run operational E2E challenge (auth/login assertions)"
+        action: "shell: bash tests/e2e/challenge_operational.sh"
+        expected: >-
+          RESULT: PASS — POST /auth/login HTTP 200; token_type Bearer; access_token is a
+          signed claims blob carrying sub + admin role; unauthenticated
+          GET /telemetry/overview -> 401 (auth enforced).
+    expected_result: "Script exits 0 with all auth/login hard assertions passed."
+    tags: ["§11.4.58", "§11.4.27", "§11.4.69", auth, login]
+    documentation_refs:
+      - type: evidence
+        section: "operational E2E run evidence"
+        path: tests/e2e/RUN_EVIDENCE.txt
+
+  - id: hota.device.register
+    challenge_id: HOTA-DEVICE-REGISTER
+    name: "Device registration returns device_id + device_token; status echoes it"
+    description: >-
+      POST /api/v1/devices/register -> HTTP 201 with a non-null device_id and a
+      non-empty device_token; GET /api/v1/devices/{id}/status -> HTTP 200 and the
+      returned device_id echoes the registered id.
+    category: integration
+    priority: critical
+    dispatches_to: "tests/e2e/challenge_operational.sh"
+    domains: [device-register]
+    required_evidence: [tests/e2e/RUN_EVIDENCE.txt]
+    requires_env: [HELIX_BASE_URL, HELIX_ADMIN_USERNAME, HELIX_ADMIN_PASSWORD]
+    steps:
+      - name: "Run operational E2E challenge (device-register assertions)"
+        action: "shell: bash tests/e2e/challenge_operational.sh"
+        expected: >-
+          POST /devices/register HTTP 201 returning a device_token; GET
+          /devices/{id}/status HTTP 200 echoing device_id.
+    expected_result: "Script exits 0 with all device-register hard assertions passed."
+    tags: ["§11.4.58", "§11.4.27", device-register]
+    documentation_refs:
+      - type: evidence
+        section: "operational E2E run evidence"
+        path: tests/e2e/RUN_EVIDENCE.txt
+
+  - id: hota.group.lifecycle
+    challenge_id: HOTA-GROUP-LIFECYCLE
+    name: "Device-group create/get/batch-add-member/list/delete lifecycle is real"
+    description: >-
+      POST /api/v1/groups -> 201 returning the group id under the new "group_id" key
+      (deprecated "id" key absent) + echoed name; GET /api/v1/groups/{id} -> 200
+      echoing name; batch member-add POST /api/v1/groups/{id}/members
+      {"device_ids":[...]} -> 200 returning {added,already_member,not_found}:
+      registered device lands in .added (204 now FAILs), re-add lands in
+      .already_member, unregistered id lands in .not_found, empty batch -> 400,
+      unknown group -> 404; GET members -> 200 with the added device_id (item carries
+      device_id + added_at); DELETE member -> 204; DELETE group -> 204; follow-up GET
+      on the deleted group -> 404 (deletion is real, not a no-op).
+    category: integration
+    priority: critical
+    dispatches_to: "tests/e2e/challenge_operational.sh"
+    domains: [group-lifecycle]
+    required_evidence: [tests/e2e/RUN_EVIDENCE.txt]
+    requires_env: [HELIX_BASE_URL, HELIX_ADMIN_USERNAME, HELIX_ADMIN_PASSWORD]
+    steps:
+      - name: "Run operational E2E challenge (group-lifecycle assertions)"
+        action: "shell: bash tests/e2e/challenge_operational.sh"
+        expected: >-
+          Group create uses new 'group_id' key (old 'id' absent); batch add reports
+          .added/.already_member/.not_found correctly; empty batch -> 400; unknown
+          group -> 404; member list contains the device; deletes -> 204; deleted
+          group GET -> 404.
+    expected_result: "Script exits 0 with all group-lifecycle hard assertions passed."
+    tags: ["§11.4.58", "§11.4.27", group-lifecycle]
+    documentation_refs:
+      - type: evidence
+        section: "operational E2E run evidence"
+        path: tests/e2e/RUN_EVIDENCE.txt
+
+  - id: hota.audit.trail
+    challenge_id: HOTA-AUDIT-TRAIL
+    name: "Mutating actions are audited; reads are not (anti-bluff non-empty audit)"
+    description: >-
+      GET /api/v1/audit?limit=200 -> HTTP 200 with a NON-EMPTY items list (an empty
+      audit log after the auditable group mutations FAILs the challenge); the actions
+      list contains "GROUP_CREATE" and "GROUP_MEMBER_CREATE"; and anti-bluff, no
+      GET-read action (e.g. "AUDIT_ACTION") appears — only mutating actions recorded.
+    category: integration
+    priority: high
+    dispatches_to: "tests/e2e/challenge_operational.sh"
+    domains: [audit-trail]
+    required_evidence: [tests/e2e/RUN_EVIDENCE.txt]
+    requires_env: [HELIX_BASE_URL, HELIX_ADMIN_USERNAME, HELIX_ADMIN_PASSWORD]
+    steps:
+      - name: "Run operational E2E challenge (audit-trail assertions)"
+        action: "shell: bash tests/e2e/challenge_operational.sh"
+        expected: >-
+          GET /audit HTTP 200; audit log non-empty; contains GROUP_CREATE +
+          GROUP_MEMBER_CREATE; GET reads are NOT audited (only mutations).
+    expected_result: "Script exits 0 with all audit-trail hard assertions passed."
+    tags: ["§11.4.58", "§11.4.27", audit-trail]
+    documentation_refs:
+      - type: evidence
+        section: "operational E2E run evidence"
+        path: tests/e2e/RUN_EVIDENCE.txt
+
+  - id: hota.telemetry.overview
+    challenge_id: HOTA-TELEMETRY-OVERVIEW
+    name: "Telemetry overview returns total + event_counts under auth"
+    description: >-
+      Authenticated GET /api/v1/telemetry/overview -> HTTP 200 and the body has both
+      "total" and "event_counts" fields. (The unauthenticated 401 on this route is
+      the auth-enforcement anti-bluff scored under hota.auth.login.)
+    category: integration
+    priority: high
+    dispatches_to: "tests/e2e/challenge_operational.sh"
+    domains: [telemetry-overview]
+    required_evidence: [tests/e2e/RUN_EVIDENCE.txt]
+    requires_env: [HELIX_BASE_URL, HELIX_ADMIN_USERNAME, HELIX_ADMIN_PASSWORD]
+    steps:
+      - name: "Run operational E2E challenge (telemetry-overview assertions)"
+        action: "shell: bash tests/e2e/challenge_operational.sh"
+        expected: "GET /telemetry/overview HTTP 200 with total + event_counts."
+    expected_result: "Script exits 0 with the telemetry-overview hard assertions passed."
+    tags: ["§11.4.58", "§11.4.27", telemetry-overview]
+    documentation_refs:
+      - type: evidence
+        section: "operational E2E run evidence"
+        path: tests/e2e/RUN_EVIDENCE.txt
+
+  - id: hota.rollout.route-gates
+    challenge_id: HOTA-ROLLOUT-ROUTE-GATES
+    name: "Rollout routes gate on deployment existence (404 for absent deployment)"
+    description: >-
+      Deterministic black-box rollout-route semantics:
+      GET /api/v1/deployments/{absent}/rollout -> HTTP 404 and
+      POST /api/v1/deployments/{absent}/rollout (valid phases body) -> HTTP 404
+      (the deployment-existence gate is enforced before any rollout op). The OPTIONAL
+      full pipeline (signed artifact -> release -> deployment -> rollout
+      create/get/evaluate) SKIPs-with-reason by default (requires a server-config-
+      coupled signed artifact) — NOT scored as PASS unless driven via
+      HELIX_E2E_TRY_PIPELINE=1 + HELIX_E2E_VERIFIED_RELEASE_ID.
+    category: integration
+    priority: high
+    dispatches_to: "tests/e2e/challenge_operational.sh"
+    domains: [rollout-route-gates]
+    required_evidence: [tests/e2e/RUN_EVIDENCE.txt]
+    requires_env: [HELIX_BASE_URL, HELIX_ADMIN_USERNAME, HELIX_ADMIN_PASSWORD]
+    steps:
+      - name: "Run operational E2E challenge (rollout-route-gate assertions)"
+        action: "shell: bash tests/e2e/challenge_operational.sh"
+        expected: >-
+          GET /deployments/{absent}/rollout -> 404; POST
+          /deployments/{absent}/rollout -> 404 (deployment-existence gate). The full
+          pipeline SKIPs-with-reason unless explicitly driven.
+    expected_result: "Script exits 0 with the rollout-route-gate hard assertions passed."
+    tags: ["§11.4.58", "§11.4.27", "§11.4.3", rollout-route-gates]
+    documentation_refs:
+      - type: evidence
+        section: "operational E2E run evidence"
+        path: tests/e2e/RUN_EVIDENCE.txt
+
+  - id: hota.pipeline.signed
+    challenge_id: HOTA-PIPELINE-SIGNED
+    name: "Signed artifact full pipeline reaches a delta-bearing update check"
+    description: >-
+      With a real ephemeral ed25519 key configured on the server, the full happy path
+      PASSes end to end: upload signed BASE+TARGET -> 201 (verified=true); releases ->
+      201; deployment -> 201; rollout create -> 201, get -> 200, evaluate -> 200
+      (action advance); POST /deltas -> 201; GET /client/update (device on base) ->
+      200 carrying both the full payload AND a populated .delta (base_version +
+      matching delta sha256). Anti-bluff control: a bogus signature -> 422
+      SIGNATURE_INVALID (the server genuinely verifies). Keys are ephemeral (mktemp,
+      rm'd on exit; §11.4.10). 32 passed / 0 failed / 0 skipped.
+    category: integration
+    priority: critical
+    dispatches_to: "tests/e2e/pipeline_signed.sh"
+    domains: [artifact-pipeline-signed]
+    required_evidence: [tests/e2e/PIPELINE_EVIDENCE.txt]
+    steps:
+      - name: "Run signed-artifact full-pipeline E2E (self-hosted ephemeral server)"
+        action: "shell: bash tests/e2e/pipeline_signed.sh"
+        expected: >-
+          upload signed base v1.0.0 -> 201 verified=true; GET /client/update -> 200
+          with populated .delta (base_version 1.0.0); bogus signature -> 422
+          SIGNATURE_INVALID.
+    expected_result: "Script exits 0; 32 passed / 0 failed / 0 skipped."
+    tags: ["§11.4.58", "§11.4.27", "§11.4.10", artifact-pipeline-signed]
+    documentation_refs:
+      - type: evidence
+        section: "signed-pipeline E2E run evidence"
+        path: tests/e2e/PIPELINE_EVIDENCE.txt
+
+  - id: hota.recall.lifecycle
+    challenge_id: HOTA-RECALL-LIFECYCLE
+    name: "Server-driven recall (forward-fix) supersedes deployment + records rollback history"
+    description: >-
+      FULLY SELF-HOSTING (§11.4.98): builds + boots its OWN ota-server with an
+      ephemeral ed25519 key on a free-probed port, signs real v1.1.0 + v1.2.0
+      artifacts (-> 201 verified=true), stages release v1.1.0 + all-targets deployment
+      D1 (status active), drives the operator recall to forward-fix v1.2.0:
+      POST /api/v1/deployments/{D1}/recall {to_release_id:<v1.2.0>} -> HTTP 201
+      returning a rollback_history row (.kind==rollback, .from_release_id==v1.1.0,
+      .to_release_id==v1.2.0, .details.mode==forward-fix, non-empty
+      recall_deployment_id + triggered_by); GET rollbacks -> 200 with that row;
+      D1 .status==superseded; recall deployment .status==active pointing at v1.2.0.
+      Anti-bluff negative controls: bogus signature -> 422 SIGNATURE_INVALID; empty
+      to_release_id -> 400; absent target release -> 404; absent deployment -> 404.
+      Ephemeral keys rm'd on exit; trap cleanup (§11.4.14). Re-runnable (§11.4.50).
+    category: integration
+    priority: critical
+    dispatches_to: "tests/e2e/recall_lifecycle.sh"
+    domains: [recall-forward-fix-lifecycle]
+    required_evidence: [tests/e2e/RECALL_EVIDENCE.txt]
+    steps:
+      - name: "Run recall-lifecycle E2E (self-hosted ephemeral server)"
+        action: "shell: bash tests/e2e/recall_lifecycle.sh"
+        expected: >-
+          v1.1.0 + v1.2.0 signed uploads -> 201; D1 all-targets -> 201; forward-fix
+          recall -> 201 with a real rollback row; D1 superseded; recall deployment
+          active pointing at v1.2.0; all negative controls return their expected
+          4xx. openssl/go/tool missing -> exit 3 SKIP (§11.4.3 / §11.4.6).
+    expected_result: "Script exits 0 with every recall-lifecycle hard assertion passed."
+    tags: ["§11.4.58", "§11.4.27", "§11.4.98", "§11.4.14", "§11.4.50", recall-forward-fix-lifecycle]
+    documentation_refs:
+      - type: evidence
+        section: "recall-lifecycle E2E run evidence"
+        path: tests/e2e/RECALL_EVIDENCE.txt
+
+  - id: hota.security.probes
+    challenge_id: HOTA-SECURITY-PROBES
+    name: "Adversarial security probes (authn/authz/ownership/injection/trust-boundary)"
+    description: >-
+      Black-box adversarial suite against the live server: unauthenticated calls ->
+      401; device-role token on operator/admin routes -> 403; cross-device telemetry
+      read/write -> 403 (own -> 200); forged/mutated/empty JWT -> 401;
+      SQL/XSS/NoSQL/path-traversal inputs are inert (no 5xx; stored verbatim or
+      400/404); malformed + 1 MiB JSON -> 400 not 5xx; trust boundary — an
+      attacker-supplied public_key form field -> 422 (the verify key is config-only).
+      37 passed / 0 failed / 0 skipped.
+    category: security
+    priority: critical
+    dispatches_to: "tests/security/security_probes.sh"
+    domains: [security]
+    required_evidence: [tests/security/RUN_EVIDENCE.txt]
+    steps:
+      - name: "Run adversarial security probe suite against the live server"
+        action: "shell: bash tests/security/security_probes.sh"
+        expected: >-
+          unauthenticated -> 401 across telemetry/audit/groups/devices; device-role on
+          operator/admin routes -> 403; attacker-supplied public_key -> 422
+          (config-only trust boundary). 37 passed / 0 failed / 0 skipped.
+    expected_result: "Script exits 0; 37 passed / 0 failed / 0 skipped."
+    tags: ["§11.4.58", "§11.4.27", security]
+    documentation_refs:
+      - type: evidence
+        section: "security probe run evidence"
+        path: tests/security/RUN_EVIDENCE.txt
+
+  - id: hota.filters.pagination
+    challenge_id: HOTA-FILTERS-PAGINATION
+    name: "Telemetry filters (event/since/until) + group & member cursor pagination"
+    description: >-
+      FULLY SELF-HOSTING: builds + boots its OWN ota-server (in-memory, ephemeral,
+      port 8096), seeds real state via the real API, drives the two features over real
+      HTTP, tears the server down on every exit path (trap cleanup), needs NO admin
+      password (mints an ephemeral one), zero manual steps (§11.4.98), re-runnable
+      (verified 2x identical 50/0/0; §11.4.50). FEATURE 1 (telemetry filters): six
+      events seeded (ingest .accepted==6 asserted); ?event=installing returns ONLY the
+      2 installing events; ?event=success returns exactly the one success event; bogus
+      ?event= -> 400 VALIDATION_FAILED (no silent-empty, §11.4.6); ?since/?until is an
+      INCLUSIVE window; combined event+window narrows to one; inverted window -> 0
+      items + null next_cursor; ?limit=2 walks all 6 via cursor with no overlap/gap.
+      FEATURE 2 (cursor pagination): groups + members paginate with NON-null then null
+      next_cursor, union = all distinct, no overlap/gap; limit/cursor bounds enforced
+      (limit 0/201 + telemetry limit 999 -> 400, malformed/negative cursor -> 400).
+      50 passed / 0 failed / 0 skipped; RESULT: PASS.
+    category: integration
+    priority: high
+    dispatches_to: "tests/e2e/challenge_filters_pagination.sh"
+    domains: [query-filters-pagination]
+    required_evidence: [tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt]
+    steps:
+      - name: "Run filters+pagination E2E (self-hosted ephemeral server)"
+        action: "shell: bash tests/e2e/challenge_filters_pagination.sh"
+        expected: >-
+          telemetry seed accepted all 6 events; ?event=installing returns ONLY 2;
+          bogus ?event= -> 400; inclusive since/until window; cursor walk visits all 6
+          with no overlap/gap; groups + members paginate correctly; limit/cursor bounds
+          -> 400. 50 passed / 0 failed / 0 skipped; RESULT: PASS.
+    expected_result: "Script exits 0; 50 passed / 0 failed / 0 skipped."
+    tags: ["§11.4.58", "§11.4.27", "§11.4.98", "§11.4.50", "§11.4.6", query-filters-pagination]
+    documentation_refs:
+      - type: evidence
+        section: "filters+pagination E2E run evidence"
+        path: tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt
