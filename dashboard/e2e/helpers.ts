@@ -262,6 +262,117 @@ export async function seedRollout(
   expect(res.status(), `rollout create failed: ${res.status()} ${await res.text()}`).toBe(201);
 }
 
+// --- device + telemetry seeding (closes the Fleet device-detail e2e gap) -----
+// Register a real device (admin path) and ingest a few telemetry events for it
+// through the SAME device-token endpoints a real device uses, so the Fleet
+// device-detail screen (DeviceDetail) renders a POPULATED status card + a
+// newest-first telemetry history table against genuine server state — no mocks
+// (Constitution §11.4 / §11.4.27 / §11.4.69).
+//
+// Contract replicated from the server:
+//  - POST /devices/register (admin token) -> { device_id, device_token } (201).
+//  - POST /client/telemetry (the device_token) ingests a batch; the schema
+//    validator REQUIRES a non-empty deployment_id (ota-protocol
+//    ValidateTelemetryReport), but the telemetry path does NOT FK-check it, so a
+//    placeholder is accepted and the events are stored (202 Accepted).
+//  - GET /devices/{id}/telemetry is newest-first (insertion order reversed): the
+//    LAST event in `events` renders at the TOP of the rendered table.
+
+export interface SeededDevice {
+  deviceId: string;
+  deviceToken: string;
+  hardwareId: string;
+  model: string;
+  // Events as posted (chronological). The history table renders these reversed
+  // (newest-first), so events[events.length - 1] is the top row.
+  events: { event: string; version?: string; detail?: string }[];
+}
+
+// Register a device via the admin REST API; returns its id + device-scoped token.
+export async function seedDevice(
+  request: APIRequestContext,
+  token: string,
+  opts: { hardwareId: string; model?: string; os?: string; currentVersion?: string },
+): Promise<{ deviceId: string; deviceToken: string; hardwareId: string; model: string }> {
+  const model = opts.model ?? "OrangePi5Max";
+  const os = opts.os ?? "android";
+  const res = await request.post(`${API_BASE}/devices/register`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: {
+      hardware_id: opts.hardwareId,
+      model,
+      os,
+      ...(opts.currentVersion ? { current_version: opts.currentVersion } : {}),
+    },
+  });
+  expect(
+    res.status(),
+    `device register failed: ${res.status()} ${await res.text()}`,
+  ).toBe(201);
+  const body = (await res.json()) as { device_id: string; device_token: string };
+  expect(body.device_id, "no device_id in register response").toBeTruthy();
+  expect(body.device_token, "no device_token in register response").toBeTruthy();
+  return { deviceId: body.device_id, deviceToken: body.device_token, hardwareId: opts.hardwareId, model };
+}
+
+// Ingest a batch of telemetry events for a device through its device token (the
+// real /client/telemetry endpoint). Asserts the server accepted them all (202,
+// accepted == events.length). `events` are posted in array order (chronological);
+// the history endpoint renders them newest-first.
+export async function ingestTelemetry(
+  request: APIRequestContext,
+  deviceToken: string,
+  events: { event: string; version?: string; detail?: string; errorCode?: string; timestamp?: string }[],
+  opts?: { deploymentId?: string },
+): Promise<void> {
+  const deploymentId = opts?.deploymentId ?? "dep-e2e-seed";
+  const base = Date.now();
+  const wireEvents = events.map((e, i) => ({
+    event: e.event,
+    ...(e.version ? { version: e.version } : {}),
+    ...(e.detail ? { detail: e.detail } : {}),
+    ...(e.errorCode ? { error_code: e.errorCode } : {}),
+    // Distinct, monotonically-increasing device-reported timestamps so the
+    // newest-first ordering is unambiguous.
+    timestamp: e.timestamp ?? new Date(base + i * 1000).toISOString(),
+  }));
+  const res = await request.post(`${API_BASE}/client/telemetry`, {
+    headers: { Authorization: `Bearer ${deviceToken}` },
+    data: { deployment_id: deploymentId, events: wireEvents },
+  });
+  expect(
+    res.status(),
+    `telemetry ingest failed: ${res.status()} ${await res.text()}`,
+  ).toBe(202);
+  const ack = (await res.json()) as { accepted: number; rejected: number };
+  expect(ack.rejected, `server rejected ${ack.rejected} seeded telemetry events`).toBe(0);
+  expect(ack.accepted, "server accepted no telemetry events").toBe(events.length);
+}
+
+// One-shot: register a device and ingest a few telemetry events, returning enough
+// for the e2e to assert the populated Fleet device-detail render. The last event
+// is a `success` so the device's last-known update_state + current_version reflect
+// it (the server's applyDeviceRuntime promotes the latest event).
+export async function seedDeviceWithTelemetry(
+  request: APIRequestContext,
+  token: string,
+  opts: { hardwareId: string; model?: string; version?: string },
+): Promise<SeededDevice> {
+  const version = opts.version ?? "1.4.0";
+  const dev = await seedDevice(request, token, {
+    hardwareId: opts.hardwareId,
+    model: opts.model,
+    currentVersion: "1.3.0",
+  });
+  const events = [
+    { event: "download_started", version, detail: "e2e seeded download" },
+    { event: "installing", version, detail: "e2e seeded install" },
+    { event: "success", version, detail: "e2e seeded success" },
+  ];
+  await ingestTelemetry(request, dev.deviceToken, events);
+  return { ...dev, events };
+}
+
 // Add device ids to a group via the real batch endpoint; returns the disposition.
 export async function seedGroupMembers(
   request: APIRequestContext,
