@@ -41,8 +41,8 @@
 bank:
   id: helix_ota_operational_rollout
   name: Helix OTA — operational + rollout E2E challenge bank
-  revision: 3
-  last_modified: "2026-06-10T10:10:00Z"
+  revision: 4
+  last_modified: "2026-06-10T12:00:00Z"
   description: >-
     Black-box, anti-bluff end-to-end challenges that drive the live ota-server
     REST API over real HTTP and assert real HTTP status codes plus key JSON
@@ -241,6 +241,69 @@ bank:
         - "GET /client/update -> 200 with populated .delta (base_version 1.0.0)"
         - "bogus signature -> 422 SIGNATURE_INVALID"
       evidence_artifact: tests/e2e/PIPELINE_EVIDENCE.txt
+
+    - id: HOTA-RECALL-LIFECYCLE
+      title: Server-driven recall (forward-fix) supersedes the deployment and records rollback history
+      capability_area: recall-forward-fix-lifecycle
+      # FULLY SELF-HOSTING (§11.4.98): builds + boots its OWN ota-server with an
+      # ephemeral ed25519 key on a free-probed unique port, signs real artifacts,
+      # stages release v1.1.0 + all-targets deployment D1, drives the operator
+      # recall to forward-fix release v1.2.0, and tears the server down on every
+      # exit path (trap cleanup, §11.4.14). No shared server, no admin password
+      # input, zero manual steps. Re-runnable end-to-end (§11.4.50). Keys are
+      # ephemeral + rm'd on exit (§11.4.10).
+      dispatch_command: >-
+        bash tests/e2e/recall_lifecycle.sh
+      requires:
+        - bash
+        - go
+        - openssl
+        - xxd
+        - base64
+        - curl
+        - jq
+        - python3
+      pass_criterion: >-
+        With a real ephemeral ed25519 key configured on the server, signed
+        v1.1.0 + v1.2.0 artifacts upload -> 201 (verified=true), their releases
+        create -> 201, and the v1.1.0 release deploys all-targets -> 201 as
+        deployment D1 (status "active"). Then the operator recall is driven:
+        POST /api/v1/deployments/{D1}/recall {to_release_id:<v1.2.0>} -> HTTP 201
+        returning a rollback_history row with .kind=="rollback",
+        .from_release_id==<v1.1.0 release>, .to_release_id==<v1.2.0 release>,
+        .details.mode=="forward-fix", a non-empty .recall_deployment_id and
+        .triggered_by; GET /api/v1/deployments/{D1}/rollbacks -> 200 with that
+        SAME row present in .items[] (history is real, not a fire-and-forget);
+        GET /api/v1/deployments/{D1} -> .status=="superseded" (recall changed it
+        from "active"); and GET /api/v1/deployments/{recall_deployment_id} ->
+        .status=="active" with .release_id==<v1.2.0 release> (the forward-fix is
+        now the active deployment). Anti-bluff negative controls (no false PASS):
+        a bogus artifact signature -> 422 SIGNATURE_INVALID (server genuinely
+        verifies); recall with empty to_release_id -> 400; recall to an absent
+        target release -> 404; recall of an absent deployment -> 404. The script
+        exits 0 only if EVERY hard assertion passed.
+      asserted_lines:
+        - "POST /artifacts/upload (signed v1.1.0) (HTTP 201)"
+        - "POST /deployments (v1.1.0 -> all-targets) = D1 (HTTP 201)"
+        - "anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)"
+        - "POST /deployments/{D1}/recall (empty to_release_id) -> 400 (HTTP 400)"
+        - "POST /deployments/{D1}/recall (absent target release) -> 404 (HTTP 404)"
+        - "POST /deployments/{absent}/recall -> 404 (HTTP 404)"
+        - "POST /deployments/{D1}/recall (forward-fix to v1.2.0) -> 201 (HTTP 201)"
+        - "rollback row .kind == 'rollback'"
+        - "rollback row .from_release_id == the v1.1.0 release (D1's current)"
+        - "rollback row .to_release_id == the v1.2.0 forward-fix release"
+        - "rollback row .details.mode == 'forward-fix'"
+        - "rollback row carries a non-empty recall_deployment_id"
+        - "GET /deployments/{D1}/rollbacks -> 200 (HTTP 200)"
+        - "rollback history contains the recall row id we just created"
+        - "history row carries kind=rollback + mode=forward-fix + from(v1.1.0)/to(v1.2.0) release ids"
+        - "superseded deployment D1 .status == 'superseded' (recall changed it from 'active')"
+        - "recall deployment is ACTIVE"
+        - "recall deployment points at the v1.2.0 forward-fix release"
+      skip_codes:
+        "3": "openssl ed25519 / go / a required tool unavailable, or signing failed — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: tests/e2e/RECALL_EVIDENCE.txt
 
     - id: HOTA-SECURITY-PROBES
       title: Adversarial security probes (authn/authz/ownership/injection/trust-boundary)
