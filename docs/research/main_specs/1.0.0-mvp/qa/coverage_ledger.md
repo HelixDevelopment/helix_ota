@@ -1,9 +1,9 @@
 # Helix OTA — §11.4.25 Coverage Ledger (1.0.0-MVP)
 
-**Revision:** 1
-**Last modified:** 2026-06-08T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-10T14:50:00Z
 **Authority:** Constitution §11.4.25 (Full-Automation-Coverage) + §11.4.6 (No-guessing) + §11.4.27 (100% test-type coverage)
-**Scope:** Go control plane (`server/`) + owned device-side / protocol bricks (`submodules/ota-*`, `submodules/http3`)
+**Scope:** Go control plane (`server/`) + owned device-side / protocol bricks (`submodules/ota-*`, `submodules/http3`) + the Tier-0 device emulator (`server/internal/deviceemu`) + the emulation test-fabric (`docs/design/emulation_fabric/`)
 **Maintainer:** QA lead
 
 > **Post-authoring update (2026-06-08, commit 5363511).** This ledger was authored
@@ -13,6 +13,16 @@
 > `server/internal/api/resilience_test.go` (race-clean; evidence in
 > `docs/qa/20260608-stress-chaos/`). Performance/NFR + adversarial-security suites
 > were in flight the same session — see their qa dirs once committed.
+
+> **Rev 2 update (2026-06-10).** This session landed, with real captured evidence:
+> (a) per-event telemetry `duration_ms` + `bytes_transferred` ingested end-to-end
+> (`71be1cd`); (b) the failure→recall(forward-fix)→recovery OTA lifecycle, proven
+> both in-process over real HTTP (`12087bc`) and on podman containers 7/7
+> (`71c3f77`); (c) the HelixQA LIVE Challenge bank 10/0 via `tools/helixqa/run_bank.sh`
+> (`d5fcf4a`); (d) the emulation test-fabric — research + design (`8a03a63`,
+> `de87e21`) with the dev-host **P0 tier shipped** and **P1 AVD-on-HVF boot smoke**
+> landed (`5d6b3ae`). New rows §1a/§1b/§1c below carry these; the fabric tier status
+> is in §5 (DESIGNED/PENDING tiers are **never** counted as coverage per §11.4.6).
 
 > **Anti-bluff note (§11.4.6 / §11.4.25).** Every COVERED cell below cites the
 > test file (and, where useful, the function) that actually exists in the tree
@@ -53,6 +63,7 @@ Test-type columns: **U**=unit, **I**=integration (httptest / real-Postgres),
 | **Audit trail** | COVERED `api/handlers_audit_test.go:TestAuditRecordsSuccessfulMutation,TestAuditSkipsReadsAndFailures,TestDeriveAuditAction` + `handlers_widen_test.go:TestAuditSinceUntilFilter` | COVERED (httptest) same files | COVERED `challenge_operational.sh:HOTA-AUDIT-TRAIL` (non-empty after mutations) | PARTIAL — read-is-admin-only `TestAuditReadIsAdminOnly` | MISSING | MISSING | MISSING | COVERED `banks/helix_ota.yaml:HOTA-AUDIT-TRAIL` |
 | **Telemetry reads + overview** | COVERED `api/handlers_telemetry_test.go`, `handlers_widen_test.go:TestTelemetryOverviewFailureRateAndByState` | COVERED (httptest) same files | COVERED `challenge_operational.sh:HOTA-TELEMETRY-OVERVIEW` | PARTIAL — ownership `TestDeviceTelemetryOwnDeviceAllowedOtherForbidden` | MISSING | MISSING | MISSING | COVERED `banks/helix_ota.yaml:HOTA-TELEMETRY-OVERVIEW` |
 | **Telemetry ingest (client)** | COVERED `api/handlers_client_test.go:TestClientTelemetryIngest,TestClientTelemetryWrongDeviceForbidden,TestClientTelemetryEmptyEvents` | COVERED (httptest) same file | MISSING | PARTIAL — wrong-device-forbidden asserted | MISSING | MISSING | MISSING | MISSING |
+| **Telemetry per-event `duration_ms` + `bytes_transferred` (ingest→store→read, end-to-end)** | COVERED `deviceemu/telemetry_fields_test.go:TestEmulatorTelemetryFieldsEndToEnd` (exact-value flow emulator→server→read-API over real HTTP; `71be1cd`) | COVERED (real-PG parity) `store/postgres_integration_test.go:TestPostgresRepositoryContract_Integration` (build tag `integration`, podman PG, 0 skips) | COVERED — the end-to-end test IS a live-server (httptest) flow asserting the read API exposes the ingested values | N-A | MISSING | MISSING | MISSING | MISSING — §1.1 paired mutation `TestEmulatorTelemetryFieldsIngestMutation` exists (not a Challenge); evidence `docs/qa/20260610T140407Z-telemetry-fields/` |
 | **Device register + status** | COVERED `api/handlers_device_test.go` (register / validation / conflict / idempotent / ownership) | COVERED (httptest) same file | COVERED `challenge_operational.sh:HOTA-DEVICE-REGISTER` | PARTIAL — status-ownership `TestDeviceStatusOwnership` | MISSING | MISSING | MISSING | COVERED `banks/helix_ota.yaml:HOTA-DEVICE-REGISTER` |
 | **Device groups + members** | COVERED `api/handlers_group_test.go:TestGroupCRUDLifecycle,TestGroupRBAC` + `handlers_widen_test.go:TestGroupMemberCount` | COVERED (httptest) same files | COVERED `challenge_operational.sh:HOTA-GROUP-LIFECYCLE` (batch add / already-member / not-found / empty-400 / member list / delete) | PARTIAL — `TestGroupRBAC` | MISSING | MISSING | MISSING | COVERED `banks/helix_ota.yaml:HOTA-GROUP-LIFECYCLE` |
 | **Client update decision (offer / 200 / 204 / short-circuit)** | COVERED `api/handlers_client_test.go` (offers-delta / 200-behind / 204-on-target / 204-no-deployment / current-version short-circuit) | COVERED (httptest) same file | MISSING | N-A (read-path; ownership covered via telemetry) | MISSING | MISSING | MISSING | MISSING |
@@ -66,6 +77,28 @@ Test-type columns: **U**=unit, **I**=integration (httptest / real-Postgres),
 | **Transport — HTTP/3 (QUIC) + H2 fallback** | COVERED `transport/transport_test.go:TestDualTransportServesH3AndH2` | COVERED — dual-transport test serves both real protocols | MISSING (no live curl-over-h3 e2e) | PARTIAL — TLS1.3/ALPN forced in brick (see §2) | MISSING | MISSING | MISSING | MISSING |
 | **Response compression — Brotli / gzip / identity** | COVERED `api/middleware_compression_test.go` (brotli-negotiate / gzip-fallback / identity-fallback / 204-no-encode) | COVERED (httptest) same file | MISSING | N-A | MISSING | MISSING | MISSING | MISSING |
 | **NFR / load (latency / RPS / p99)** | N-A | N-A | N-A | N-A | PARTIAL — `server/tools/loadtest/main.go` MEASURES p50/p90/p99/RPS but asserts NO target; not wired into an automated gate | MISSING | PARTIAL — same harness (measure-only, manual) | MISSING |
+
+## 1a. OTA lifecycle + Tier-0 device emulator (`server/internal/deviceemu`) — landed this session
+
+| Feature | U | I (httptest/PG) | E2E | Sec | Str | Ch | Perf | Chal |
+|---|---|---|---|---|---|---|---|---|
+| **Failure → recall (forward-fix) → recovery OTA lifecycle (in-process, real HTTP)** | COVERED `deviceemu/recall_recovery_test.go:TestRecallRecoveryE2E` (`12087bc`) | COVERED — drives real `api.Server` + real `deviceemu.Device` over httptest, asserts every step against real response data | COVERED — `TestRecallRecoveryE2E` is the in-proc live-server e2e; race-clean (evidence `docs/qa/20260610T113622Z-recall-recovery/`) | PARTIAL — recall authz/validation/trust-boundary probes `tests/security/...` (`3c85b14`, 28/0) | MISSING | MISSING | MISSING | COVERED `HOTA-RECALL-LIFECYCLE` (LIVE bank PASS, evidence `tests/e2e/RECALL_EVIDENCE.txt`) |
+| **Same lifecycle on real containers (podman, full fidelity)** | N-A | N-A | COVERED — failure→recall→recovery proven 7/7 on podman (`71c3f77`); transcript + per-step JSON evidence `docs/qa/20260610T143534Z-recall-recovery-container/tier1_recall_recovery_transcript.txt` | N-A | MISSING | MISSING | MISSING | N-A |
+| **Recall (forward-fix) lifecycle e2e on a standalone live server** | COVERED — drives a real booted server | COVERED | COVERED `tests/e2e/...recall...` (`88bd2c2`, 35/0) | PARTIAL — covered by the security probe suite above | MISSING | MISSING | MISSING | COVERED `HOTA-RECALL-LIFECYCLE` |
+
+## 1b. HelixQA Challenge bank — LIVE mode (`tools/helixqa/run_bank.sh`)
+
+| Feature | Status | Evidence |
+|---|---|---|
+| **Full HelixQA bank, LIVE mode against an operator-booted server** | COVERED — 10 passed / 0 failed / 0 skipped (`d5fcf4a`); runner `tools/helixqa/run_bank.sh` | `docs/qa/20260610T143025Z-helixqa-livebank/run_bank_live.txt` (RESULT: PASS, mode=live) |
+
+> Anti-bluff note (§11.4.6 / §11.4.146): the LIVE bank had a RED run first — `docs/qa/20260610T142608Z-helixqa-livebank/run_bank_live.txt` shows 2/8 (two run_bank LIVE-mode bugs: `<pw>` placeholder shadowing + port collision) — then the fix (`d5fcf4a`) and the GREEN 10/0 confirmation. The 10/0 PASS is the authoritative result; it is cited as COVERED, the 2/8 is the documented RED baseline, not coverage.
+
+## 1c. HelixQA incorporated as a submodule (§11.4.27)
+
+| Feature | Status | Evidence |
+|---|---|---|
+| **HelixQA submodule wired at `submodules/helixqa`** | COVERED (incorporation) `d488e6e` — submodule `submodule.submodules/helixqa.url = git@github.com:HelixDevelopment/HelixQA.git` | `.gitmodules` entry; gitlink present |
 
 ## 2. Device-side / protocol bricks (`submodules/`) — feature × test-type matrix
 
@@ -130,3 +163,27 @@ DTOs) IS unit-covered in `submodules/ota-android-agent` and
 `submodules/ota-update-engine-bridge`; only the on-hardware execution is
 blocked. Per §11.4.3 this is the correct SKIP/BLOCKED posture — never a
 PASS-by-default.
+
+---
+
+## 5. Emulation test-fabric tiers (`docs/design/emulation_fabric/`) — status, NOT coverage
+
+The emulation test-fabric is a phased roadmap (`docs/design/emulation_fabric/ROADMAP.md`,
+research report `8a03a63`, design `de87e21`). Per §11.4.6, **only tiers with real captured
+evidence are counted as coverage**; DESIGNED / PLANNED tiers are tracked here for honesty but are
+**never** counted in the matrices above.
+
+| Tier / Phase | Status | Evidence (if shipped) |
+|---|---|---|
+| **P0 — T0 `ota-device-emulator` (dev-host)** | **SHIPPED** | full-lifecycle (`2391cb6`), fleet (`f5a3428`), recall→recovery in-proc + podman (§1a), telemetry-fields (§1.Telemetry-rich-fields) — all with `docs/qa/` transcripts |
+| **P1 — T1 Android AVD on Apple HVF** | **PARTIAL — boot smoke only.** AVD boots arm64-v8a on HVF, asserts `sys.boot_completed=1` + `abi==arm64-v8a` (accel proof) | COVERED (boot smoke) `tests/emulator/tier1_avd_hvf_smoke.sh` (`5d6b3ae`); evidence `docs/qa/20260610T144447Z-avd-hvf-smoke/boot_smoke_result.txt` (`booted=1 abi=arm64-v8a sdk=35` + Vulkan/HVF accel lines). **PENDING:** agent-harness APK on the AVD + GSI-A/B real-`update_engine` question (REPORT §2.2) — NOT done, NOT counted |
+| **P2 — Tfw firmware/U-Boot (QEMU)** | **DESIGNED** (planned PWU) | — |
+| **P3 — `pkg/fabric` target registry + scheduler** | **DESIGNED** (planned PWU) | — |
+| **P4 — T2 Cuttlefish (Linux-KVM CI)** | **DESIGNED** (planned PWU; honest macOS-M3 KVM gap per §11.4.112) | — |
+| **P5 — Tcp control-plane isolation (microVM)** | **DESIGNED** (planned PWU) | — |
+| **P6 — distributed control plane (LAVA)** | **DESIGNED** (planned PWU) | — |
+| **P7 — T3 real RK3588 HIL** | **DESIGNED** (planned PWU; real hardware, §11.4.133-gated) | — |
+
+> §11.4.6 posture: P0 is SHIPPED with evidence; P1 is **boot-smoke only** (the AVD boots with
+> acceleration proven — the agent-drive + real-`update_engine` layer is explicitly PENDING and is
+> NOT claimed). P2–P7 are DESIGNED roadmap PWUs with no captured evidence — they are **not** coverage.
