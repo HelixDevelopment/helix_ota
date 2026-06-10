@@ -1,0 +1,539 @@
+<h1
+id="helix-ota-tier-2-cuttlefish-virtual-android-ota-validation">Helix
+OTA — Tier-2 Cuttlefish Virtual-Android OTA Validation</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-10T00:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>designed — host-gated, not yet runnable (no Linux + nested-KVM host
+attached)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The concrete bring-up + integration plan for Tier-2 of the
+emulated-device testing strategy: a Cuttlefish (<code>cvd</code>)
+virtual Android device on a Linux + nested-KVM host, used to exercise
+the <strong>real Android A/B <code>update_engine</code> + AVB/dm-verity
++ auto-rollback</strong> flow the Tier-1 podman emulator cannot. Per
+§11.4.8 (deep-web-research-before-implementation) + §11.4.99
+(latest-source cross-reference) — every load-bearing claim is sourced
+from the latest official Android docs (verified 2026-06-10, see
+<code>## Sources verified</code>); uncertain claims are explicitly
+marked <code>UNCONFIRMED:</code> per §11.4.6 (no-guessing).</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Helix OTA control-plane / device-integration team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><code>docs/design/EMULATED_DEVICE_TESTING.md</code> (the Tier-1/2/3
+overview this doc details for Tier-2); <code>containers/</code>
+submodule (<code>vasic-digital/containers</code>, §11.4.76);
+<code>submodules/ota-protocol</code>,
+<code>submodules/ota-android-agent</code>,
+<code>submodules/ota-update-engine-bridge</code>;
+<code>docs/RESUMPTION.md</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="purpose-scope">1. Purpose + scope</h2>
+<p>Tier-1 (<code>docs/design/EMULATED_DEVICE_TESTING.md</code>)
+validates the <strong>control-plane protocol</strong> end-to-end: a
+podman <code>ota-device-emulator</code> speaks the real
+<code>ota-protocol</code> to a live server and walks
+<code>register → update-check → telemetry → delta → rollout → recall</code>.
+Tier-1 explicitly does <strong>not</strong> exercise the device’s
+<em>physical</em> apply path — there is no real
+<code>update_engine</code>, no real A/B partitions, no AVB/dm-verity, no
+auto-rollback.</p>
+<p><strong>Tier-2 closes exactly that gap.</strong> It stands up a
+<strong>Cuttlefish virtual Android device</strong> — a high-fidelity,
+full-Android virtual machine — on a Linux + nested-KVM host, boots a
+real Android system image built with A/B (and Virtual A/B), and applies
+a real OTA <code>payload.bin</code> through the real
+<code>update_engine</code> daemon so that:</p>
+<ul>
+<li>the inactive slot is genuinely written and marked,</li>
+<li>the slot switch genuinely happens on reboot,</li>
+<li>AVB/dm-verity genuinely verifies the new slot, and</li>
+<li>a deliberately-corrupt slot genuinely triggers auto-rollback to the
+previous slot.</li>
+</ul>
+<p>This document is the concrete bring-up + integration recipe. It is
+the Tier-2 detail behind the Tier-1 doc’s §2 “Tier-2 — Cuttlefish
+virtual Android device” summary.</p>
+<h2 id="honest-boundary-11.4.112-11.4.6">2. Honest boundary (§11.4.112 /
+§11.4.6)</h2>
+<p><strong>Tier-2 is host-gated, NOT structurally impossible.</strong>
+This is a §11.4.112 classification distinction, made as FACT:</p>
+<ul>
+<li><strong>It runs the moment a Linux + nested-KVM environment is
+available.</strong> Cuttlefish “can run both remotely (using third-party
+cloud offerings such as Google Cloud Engine) and locally (on Linux x86
+and ARM64 machines)” [SRC-CF-OVERVIEW]. It uses QEMU + KVM
+hardware-assisted virtualization [SRC-CF-USE]. The blocker is
+environment provisioning, not a platform/protocol impossibility.</li>
+<li><strong>The current Apple-Silicon development host cannot run
+it.</strong> Cuttlefish requires a Debian-based Linux host with KVM
+available; the documented pre-flight check is
+<code>grep -c -w "vmx\|svm" /proc/cpuinfo</code> (x86, must be nonzero)
+or <code>find /dev -name kvm</code> (ARM64) [SRC-CF-USE]. The Helix dev
+host is macOS on Apple Silicon using the <code>applehv</code> hypervisor
+— there is no <code>/dev/kvm</code>, so Cuttlefish does not run there.
+This is a host limitation, <strong>not</strong> a §11.4.112 structural
+impossibility.</li>
+<li><strong>Therefore:</strong> Tier-2 is run on a Linux box / Linux CI
+runner / a cloud nested-virtualization instance (GCE with nested virt
+enabled, per [SRC-CF-OVERVIEW] — “Cuttlefish natively supports Google
+Cloud”). Until such a host is attached, Tier-2 is
+<code>designed, not yet runnable</code> — the correct §11.4.21 posture
+is host-availability, not <code>Operator-blocked</code> (the agent can
+stand it up the moment a Linux+KVM host exists).</li>
+</ul>
+<p>Contrast with a true §11.4.112 case: relocating a secure surface to a
+second display is <em>structurally impossible</em>. Tier-2 is the
+opposite — fully possible, merely host-gated.</p>
+<h2 id="host-prerequisites-fact-sourced">3. Host prerequisites (FACT,
+sourced)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Detail</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS</td>
+<td>Debian-based Linux (the docs target Debian/Ubuntu host
+packages)</td>
+<td>[SRC-CF-USE]</td>
+</tr>
+<tr>
+<td>Virtualization</td>
+<td>KVM present and usable. Verify: x86
+<code>grep -c -w "vmx\|svm" /proc/cpuinfo</code> returns nonzero; ARM64
+<code>find /dev -name kvm</code> finds the node</td>
+<td>[SRC-CF-USE]</td>
+</tr>
+<tr>
+<td>Cloud variant</td>
+<td>Nested virtualization must be enabled on the cloud instance
+(e.g. GCE nested-virt)</td>
+<td>[SRC-CF-OVERVIEW]</td>
+</tr>
+<tr>
+<td>Host dev tools</td>
+<td><code>sudo apt install -y git devscripts equivs config-package-dev debhelper-compat golang curl</code>
+(build deps for the host packages)</td>
+<td>[SRC-CF-USE]</td>
+</tr>
+<tr>
+<td>Group membership</td>
+<td>User in <code>kvm</code>, <code>cvdnetwork</code>,
+<code>render</code> groups</td>
+<td>[SRC-CF-GH]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>UNCONFIRMED:</code> the exact apt dependency token is shown as
+<code>equivos</code> in one fetched rendering and <code>equivs</code> in
+the canonical package name; the correct Debian package is
+<strong><code>equivs</code></strong>. Verify the literal package list
+against https://source.android.com/docs/setup/create/cuttlefish-use at
+bring-up time before pasting the apt line.</p>
+</blockquote>
+<h2 id="step-by-step-bring-up">4. Step-by-step bring-up</h2>
+<p>All commands run on the Linux + nested-KVM host. Where a literal
+command is quoted from a source it carries its <code>[SRC-…]</code> tag;
+commands without a tag are Helix-side orchestration we author.</p>
+<h3 id="install-the-cuttlefish-host-packages">4.1 Install the Cuttlefish
+host packages</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Get the host-package source</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/google/android-cuttlefish        <span class="co"># [SRC-CF-GH]</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> android-cuttlefish</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Build the Debian host packages</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">tools/buildutils/build_packages.sh</span>                            <span class="co"># [SRC-CF-GH]</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Install base + user packages</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install ./cuttlefish-base_<span class="pp">*</span>.deb ./cuttlefish-user_<span class="pp">*</span>.deb   <span class="co"># [SRC-CF-GH]</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Join the required groups, then reboot to load kernel modules + udev rules</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> kvm,cvdnetwork,render <span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span>                <span class="co"># [SRC-CF-GH]</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> reboot                                                   <span class="co"># [SRC-CF-USE] (reboot loads modules + udev rules)</span></span></code></pre></div>
+<p>Notes (FACT): <code>cuttlefish-base</code> is
+<strong>required</strong>, <code>cuttlefish-user</code> is
+<strong>recommended</strong>; <code>cuttlefish-common</code> is
+<strong>deprecated</strong> (compatibility shim depending on base+user)
+[SRC-CF-GH]. The reboot is mandatory — it triggers installing additional
+kernel modules and applying <code>udev</code> rules [SRC-CF-USE]. An
+Artifact-Registry apt path also exists as an alternative to building
+from source [SRC-CF-GH].</p>
+<h3 id="obtain-a-device-image-host-package-with-ab">4.2 Obtain a device
+image + host package with A/B</h3>
+<p>Cuttlefish device builds are published on the Android CI site
+[SRC-CF-USE]:</p>
+<ol type="1">
+<li>Go to http://ci.android.com/ and select branch
+<strong><code>aosp-android-latest-release</code></strong> (per the 2026
+trunk-stable model, use <code>android-latest-release</code> rather than
+<code>aosp-main</code> [SRC-CF-USE]).</li>
+<li>Choose build target
+<strong><code>aosp_cf_x86_64_only_phone</code></strong> (x86_64 host) or
+<strong><code>aosp_cf_arm64_only_phone</code></strong> (ARM64 host)
+[SRC-CF-USE].</li>
+<li>Download the <strong>userdebug</strong> artifacts:
+<ul>
+<li>Device images: <code>aosp_cf_x86_64_phone-img-xxxxxx.zip</code> (or
+the ARM64 variant) [SRC-CF-USE]</li>
+<li>Host package: <code>cvd-host_package.tar.gz</code> from the
+<strong>same build</strong> [SRC-CF-USE]</li>
+</ul></li>
+</ol>
+<blockquote>
+<p><code>UNCONFIRMED:</code> whether the default <code>aosp_cf_*</code>
+targets ship <strong>Virtual A/B</strong> vs legacy A/B by default for
+the chosen release. Virtual A/B writes new data to a COW device and
+merges dynamic partitions post-reboot via <code>dm-user</code> +
+<code>snapuserd</code> [SRC-VAB]; legacy A/B writes the inactive
+physical slot directly [SRC-AB]. The OTA-apply mechanics in §5 are
+identical at the <code>update_engine</code> level; only the underlying
+partition mechanism differs. Verify which is active on the chosen image
+via <code>getprop ro.virtual_ab.enabled</code> on the booted device
+before authoring the rollback assertions.</p>
+</blockquote>
+<h3 id="launch-the-virtual-device">4.3 Launch the virtual device</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In a clean directory, extract both archives, then:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">HOME</span><span class="op">=</span><span class="va">$PWD</span> <span class="ex">./bin/launch_cvd</span> <span class="at">--daemon</span>          <span class="co"># [SRC-CF-USE]</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/adb</span> devices                            <span class="co"># [SRC-CF-USE] — device should appear</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Web UI (operator inspection): https://localhost:8443   [SRC-CF-USE]</span></span></code></pre></div>
+<blockquote>
+<p><code>UNCONFIRMED:</code> the current CLI is migrating from
+<code>launch_cvd</code>/<code>stop_cvd</code> to a unified
+<strong><code>cvd</code></strong> front-end (<code>cvd start</code> /
+<code>cvd stop</code>). The fetched <code>cuttlefish-use</code> page
+documents <code>launch_cvd --daemon</code> + <code>stop_cvd</code> as
+the canonical commands [SRC-CF-USE]; the AOSP <code>cvd</code> front-end
+was not confirmed in the pages fetched. Use
+<code>launch_cvd</code>/<code>stop_cvd</code> as documented; if the host
+packages expose <code>cvd</code>, prefer it and update this doc with the
+verified command. Do not guess the <code>cvd</code> subcommand
+surface.</p>
+</blockquote>
+<h3 id="stop-the-virtual-device">4.4 Stop the virtual device</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">HOME</span><span class="op">=</span><span class="va">$PWD</span> <span class="ex">./bin/stop_cvd</span>                      <span class="co"># [SRC-CF-USE]</span></span></code></pre></div>
+<h2 id="applying-observing-a-real-ota-on-cuttlefish">5. Applying +
+observing a real OTA on Cuttlefish</h2>
+<p>This is the core of Tier-2 — the path Tier-1 cannot exercise.</p>
+<h3 id="how-update_engine-applies-the-payload-fact">5.1 How
+update_engine applies the payload (FACT)</h3>
+<ul>
+<li><code>update_engine</code> writes to the <strong>inactive
+slot</strong> while the system runs from the active slot; it processes
+the OTA package as an ordered sequence of metadata operations,
+downloading each operation’s data to memory, applying it, and discarding
+the memory [SRC-AB]. <code>payload.bin</code> (the bulk of an OTA zip)
+is <strong>streamed</strong> directly to the inactive slot without
+temporary <code>/data</code> storage [SRC-AB].</li>
+<li>Slot state is managed by the <strong><code>boot_control</code>
+HAL</strong> via three attributes — <em>bootable</em>,
+<em>active/preferred</em>, <em>successful</em>. During apply, the
+inactive slot is marked unbootable (<code>setSlotAsUnbootable()</code>),
+then marked active (<code>setActiveBootSlot()</code>) after the payload
+applies successfully [SRC-AB].</li>
+<li>After writing, the partition is <strong>re-read, hashed, and
+compared</strong> to the expected hash from the metadata;
+<code>update_engine</code> checkpoints the last operation so it can
+resume after an interruption [SRC-AB] [SRC-UE-README].</li>
+</ul>
+<h3 id="driving-the-apply-fact">5.2 Driving the apply (FACT)</h3>
+<p>Two documented, Cuttlefish-supported paths [SRC-UE-README]
+[SRC-UE-SEARCH]:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Path A — serve a full OTA zip to the adb-connected Cuttlefish device over HTTP</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> system/update_engine/scripts/update_device.py <span class="op">&lt;</span>path-to-ota.zip<span class="op">&gt;</span>   <span class="co"># [SRC-UE-README]</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   (&quot;Use the scripts/update_device.py program and pass a path to your OTA zip file&quot;;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#    it serves payload.bin over HTTP to the device via ADB — no full server needed.)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Path B — trigger update_engine directly on the device (when a URL is already wired)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell update_engine_client <span class="at">--interactive</span><span class="op">=</span>false <span class="at">--check_for_update</span>   <span class="co"># [SRC-UE-README]</span></span></code></pre></div>
+<p>FACT [SRC-UE-SEARCH]: “Cuttlefish works as well for testing
+update_engine”; the <code>update_engine_unittests</code> require an
+adb-connected device and run on Cuttlefish.</p>
+<h3
+id="observing-the-slot-switch-avbdm-verity-rollback-fact-assertions">5.3
+Observing the slot switch + AVB/dm-verity + rollback (FACT +
+assertions)</h3>
+<ul>
+<li><strong>Slot switch on reboot.</strong> After apply, the device
+boots into the updated partition on next reboot; if
+<code>ab_config.force_switch_slot</code> is true a “switch slot” control
+is enabled, otherwise the next boot lands on the updated slot (or the
+user manually sets the active slot) [SRC-UE-SEARCH].
+<strong>Assert:</strong>
+<code>adb shell getprop ro.boot.slot_suffix</code> flips
+(e.g. <code>_a</code> → <code>_b</code>) across the reboot;
+<code>adb shell bootctl get-current-slot</code> reflects the new slot.
+&gt; <code>UNCONFIRMED:</code> exact availability of
+<code>bootctl</code> as a shell command on the chosen &gt; Cuttlefish
+image vs reading slot state only via
+<code>getprop ro.boot.slot_suffix</code> / &gt; <code>dumpsys</code>.
+Verify on the booted device; do not assert a command that may be
+absent.</li>
+<li><strong>AVB / dm-verity verification.</strong> dm-verity “guarantees
+a device will boot an uncorrupted image”; on a bad OTA or dm-verity
+failure the device “can reboot into an old image” [SRC-AB-SEARCH]. The
+<code>update_verifier</code> daemon performs post-reboot integrity
+checks using dm-verity <strong>before</strong> the slot is marked
+successful [SRC-AB]. <strong>Assert:</strong> a clean apply marks the
+new slot <em>successful</em> (boot completes, no rollback); observe
+<code>update_verifier</code> in <code>logcat</code>.</li>
+<li><strong>Auto-rollback on a corrupt slot.</strong> A/B keeps the
+unused slot as a fallback: “If an error occurs during or immediately
+after an update, the system can rollback to the old slot and continue to
+have a working system” [SRC-AB-SEARCH]. If a non-successful slot fails
+to boot repeatedly, the bootloader marks it unbootable and switches back
+[SRC-AB]. <strong>Assert (the headline Tier-2 proof):</strong>
+deliberately corrupt the just-written inactive slot (or apply a payload
+that fails verification), reboot, and capture that the device
+<strong>rolls back</strong> to the previous good slot
+(<code>ro.boot.slot_suffix</code> returns to the original), with
+<code>update_verifier</code> / dm-verity evidence in
+<code>logcat</code>. &gt; <code>UNCONFIRMED:</code> the exact, safe
+mechanism to corrupt the inactive slot on a Virtual &gt; A/B Cuttlefish
+image (COW device + <code>snapuserd</code>) without harming the host. On
+legacy &gt; A/B this is a direct write to the inactive partition image;
+on Virtual A/B it must &gt; target the COW/merge path. Establish the
+precise method from [SRC-VAB] + &gt; [SRC-VAB-PATCHES] at bring-up and
+record it as FACT before running — never guess a &gt; destructive write
+(composes §11.4.133 target-hardware-safety: the “target” here is &gt;
+the virtual device, but the discipline of
+verified-before-destructive-write holds).</li>
+</ul>
+<h2 id="helix-integration-control-plane-device-agent-no-new-protocol">6.
+Helix integration — control plane + device agent (no new protocol)</h2>
+<p>Tier-2’s value is that the <strong>device side speaks the same
+<code>ota-protocol</code> the Tier-1 emulator does</strong>, but now
+backed by a <strong>real <code>update_engine</code> target</strong>
+instead of a stub.</p>
+<ul>
+<li><strong>Control plane (<code>server/</code>).</strong> Unchanged.
+The Cuttlefish device registers and polls <code>/api/v1</code> exactly
+like the Tier-1 emulator and a real RK3588 board —
+<code>register → update-check → telemetry → delta → rollout → recall</code>.
+The server cannot tell a Cuttlefish client from a real board at the
+protocol layer; that is the point — same wire contract, higher
+device-side fidelity.</li>
+<li><strong>Device agent (<code>submodules/ota-android-agent</code> +
+<code>submodules/ota-update-engine-bridge</code>).</strong> On
+Cuttlefish these run against the <strong>real</strong>
+<code>update_engine</code> daemon:
+<ul>
+<li><code>ota-android-agent</code> makes the same
+<code>DeltaApplyDecision</code> it makes everywhere, then</li>
+<li><code>ota-update-engine-bridge</code> hands the resolved payload to
+the <strong>real</strong> <code>update_engine</code> (via
+<code>update_engine_client</code> / <code>update_device.py</code> per
+§5.2) instead of a no-op.</li>
+<li>The agent observes the <strong>real</strong> slot switch +
+<code>update_verifier</code> result and reports real apply/rollback
+telemetry back up the <code>ota-protocol</code> to the server.</li>
+</ul></li>
+<li><strong>What this proves that Tier-1 cannot:</strong> the
+<code>ota-update-engine-bridge</code> → real <code>update_engine</code>
+→ real slot/AVB/rollback path. The Tier-1 emulator stubs this entire
+segment; Tier-2 is the first tier to exercise it without physical
+hardware.</li>
+</ul>
+<h3 id="evidence-flow-anti-bluff-11.4.69-11.4.107">6.1 Evidence flow
+(anti-bluff, §11.4.69 / §11.4.107)</h3>
+<p>Every Tier-2 run captures under
+<code>docs/qa/&lt;run-id&gt;/</code>:</p>
+<ul>
+<li>the full <code>ota-protocol</code> request/response transcript (as
+Tier-1 does), <strong>plus</strong></li>
+<li>on-device apply evidence: <code>update_engine</code> logcat,
+pre/post <code>ro.boot.slot_suffix</code>, <code>update_verifier</code>
+outcome, and the rollback capture for the corrupt-slot case.</li>
+</ul>
+<p>A Tier-2 PASS without the <strong>on-device slot-switch +
+rollback</strong> evidence is a §11.4 PASS-bluff — it would be claiming
+the device-apply coverage that is Tier-2’s entire reason to exist. The
+slot-suffix delta + <code>update_verifier</code> logcat are the
+§11.4.108 runtime signatures for “the OTA really applied / really rolled
+back.”</p>
+<h2 id="wiring-into-the-containers-submodule-ci-11.4.76-11.4.74">7.
+Wiring into the <code>containers</code> submodule + CI (§11.4.76 /
+§11.4.74)</h2>
+<p>Per §11.4.76 (Containers-submodule mandate) and §11.4.74
+(extend-don’t-reimplement), the Cuttlefish lifecycle is orchestrated
+<strong>through the <code>vasic-digital/containers</code>
+submodule</strong>, not reimplemented in <code>helix_ota</code>.</p>
+<ul>
+<li><strong>Existing seams the submodule already provides</strong>
+(FACT, from <code>containers/pkg/</code>):
+<ul>
+<li><code>pkg/boot</code> + <code>pkg/compose</code> +
+<code>pkg/health</code> — on-demand boot, compose orchestration,
+readiness gating (the same path Tier-1 uses; satisfies the §11.4.76
+on-demand-infra invariant — the test entry point boots the infra,
+operators never hand-start anything).</li>
+<li><code>pkg/emulator</code> — Android emulator orchestration
+<strong>with KVM-acceleration gating</strong> (<code>accel.go</code>),
+containerized-KVM support (<code>containerized_kvm_test.go</code>),
+AVD-lock clearing, and orphan <code>qemu-system-*</code> reaping. This
+is the closest existing primitive to a Cuttlefish lifecycle and the
+natural place to extend.</li>
+<li><code>pkg/vm</code> — QEMU VM orchestration (aarch64
+<code>-machine virt</code> + AAVMF UEFI, <code>qemu.go</code>), the seam
+for VM-shaped targets on a KVM host.</li>
+</ul></li>
+<li><strong>Extension (PR upstream, never in-project) — proposed
+<code>pkg/cuttlefish</code>:</strong> a thin <code>cvd</code> lifecycle
+wrapper exposing the submodule’s standard lifecycle surface (boot /
+health / teardown) over <code>launch_cvd --daemon</code> +
+<code>stop_cvd</code> + <code>adb devices</code> readiness. It reuses
+<code>pkg/emulator</code>’s KVM-accel gating and orphan-reaping, and
+<code>pkg/health</code> for the “<code>adb devices</code> shows the
+device” readiness probe. The <strong>OTA-domain logic stays in
+<code>helix_ota</code></strong> (the <code>ota-device</code> agent
+speaks <code>ota-protocol</code>); only the Cuttlefish
+boot/health/teardown plumbing is the submodule’s job. Record the survey
+result on the tracker row as
+<code>Catalogue-Check: extend vasic-digital/containers@&lt;sha&gt;</code>
+per §11.4.74.</li>
+<li><strong>CI wiring (FACT-gated):</strong> the Tier-2 job runs
+<strong>only</strong> on a Linux + nested-KVM runner. The job: (1) §3
+pre-flight (<code>grep vmx/svm</code> or <code>/dev/kvm</code> present,
+else SKIP-with-reason per §11.4.3 — never PASS-by-default), (2) boot
+Cuttlefish via the submodule’s <code>pkg/cuttlefish</code> seam, (3)
+bring up the control plane (the same compose stack Tier-1 uses), (4) run
+the §5 apply + observe assertions on both a clean-apply and a
+corrupt-slot scenario, (5) capture evidence to
+<code>docs/qa/&lt;run-id&gt;/</code>,
+<ol start="6" type="1">
+<li>teardown via <code>stop_cvd</code>. On a non-KVM runner (the macOS
+dev host included), the job SKIPs with the host-gated reason — it is
+<strong>not</strong> a failure and <strong>not</strong> silently
+green.</li>
+</ol></li>
+</ul>
+<h2 id="open-items-to-verify-at-bring-up-no-guessing-register-11.4.6">8.
+Open items to verify at bring-up (no-guessing register, §11.4.6)</h2>
+<p>Each <code>UNCONFIRMED:</code> above is a verify-before-run item.
+Consolidated:</p>
+<ol type="1">
+<li>Exact apt build-dep list (<code>equivs</code> spelling) — verify
+against [SRC-CF-USE].</li>
+<li>Whether the chosen <code>aosp_cf_*</code> release defaults to
+Virtual A/B vs legacy A/B — <code>getprop ro.virtual_ab.enabled</code>
+on the booted device.</li>
+<li>Current CLI surface — <code>launch_cvd</code>/<code>stop_cvd</code>
+(documented) vs the unified <code>cvd</code> front-end (unconfirmed in
+fetched pages).</li>
+<li>Slot-state read command on the chosen image — <code>bootctl</code>
+availability vs <code>getprop ro.boot.slot_suffix</code> only.</li>
+<li>The safe, exact corrupt-the-inactive-slot mechanism for the chosen
+A/B variant (legacy direct-write vs Virtual A/B COW path) — from
+[SRC-VAB] / [SRC-VAB-PATCHES].</li>
+</ol>
+<p>None of these block the <em>design</em>; all five are
+FACT-establishment steps the runner must complete (and capture as
+evidence) before the first Tier-2 PASS is claimed.</p>
+<h2 id="sources-verified-2026-06-10">Sources verified 2026-06-10</h2>
+<ul>
+<li>[SRC-CF-USE] Get started — Cuttlefish, Android Open Source Project —
+https://source.android.com/docs/setup/create/cuttlefish-use (host OS/KVM
+checks, build-dep apt line, reboot, CI image targets,
+<code>aosp-android-latest-release</code>,
+<code>launch_cvd --daemon</code>, <code>adb devices</code>,
+<code>https://localhost:8443</code>, <code>stop_cvd</code>) — accessed
+2026-06-10.</li>
+<li>[SRC-CF-OVERVIEW] Cuttlefish virtual Android devices, AOSP —
+https://source.android.com/docs/devices/cuttlefish (runs locally on
+Linux x86/ARM64 and remotely on GCE; native Google Cloud support;
+full-fidelity with the Android framework) — accessed 2026-06-10.</li>
+<li>[SRC-CF-GH] google/android-cuttlefish host packages README —
+https://github.com/google/android-cuttlefish
+(<code>tools/buildutils/build_packages.sh</code>,
+<code>apt install ./cuttlefish-base_*.deb ./cuttlefish-user_*.deb</code>,
+<code>usermod -aG kvm,cvdnetwork,render</code>,
+<code>cuttlefish-common</code> deprecated, Artifact-Registry path) —
+accessed 2026-06-10.</li>
+<li>[SRC-AB] A/B (seamless) system updates, AOSP —
+https://source.android.com/docs/core/ota/ab (update_engine writes
+inactive slot, streams payload.bin, <code>boot_control</code> HAL
+bootable/active/successful,
+<code>setSlotAsUnbootable</code>/<code>setActiveBootSlot</code>,
+post-write re-read+hash, checkpointing, <code>update_verifier</code>
+dm-verity post-reboot check) — accessed 2026-06-10.</li>
+<li>[SRC-AB-SEARCH] A/B updates + rollback summary (AOSP A/B + dm-verity
+docs surfaced via search) — A/B keeps the unused slot as fallback;
+rollback to old slot on error; dm-verity guarantees uncorrupted boot /
+reboot into old image on bad OTA — accessed 2026-06-10.</li>
+<li>[SRC-UE-README] platform/system/update_engine README, Git at Google
+—
+https://android.googlesource.com/platform/system/update_engine/+/master/README.md
+(<code>update_engine_client --interactive=false --check_for_update</code>;
+<code>scripts/update_device.py &lt;ota.zip&gt;</code> serves payload
+over HTTP via adb; checkpointing) — accessed 2026-06-10.</li>
+<li>[SRC-UE-SEARCH] update_engine + Cuttlefish testing notes (Git at
+Google update_engine pages + updater_sample README surfaced via search)
+— “Cuttlefish works as well for testing update_engine”;
+<code>update_engine_unittests</code> need an adb device;
+<code>ab_config.force_switch_slot</code> slot-switch behaviour —
+accessed 2026-06-10.</li>
+<li>[SRC-VAB] Virtual A/B overview, AOSP —
+https://source.android.com/docs/core/ota/virtual_ab (OTA writes to a COW
+device; dynamic partitions merged post-reboot via <code>dm-user</code> +
+<code>snapuserd</code>) — accessed 2026-06-10.</li>
+<li>[SRC-VAB-PATCHES] Implement Virtual A/B — patches, AOSP —
+https://source.android.com/docs/core/ota/virtual_ab/implement-patches
+(Virtual A/B implementation detail referenced for the corrupt-slot
+mechanism verification) — accessed 2026-06-10.</li>
+</ul>
+<h3 id="negative-findings-gaps-11.4.99b">Negative findings / gaps
+(§11.4.99(B))</h3>
+<ul>
+<li>The fetched <code>cuttlefish</code> overview page did
+<strong>not</strong> explicitly restate the KVM/nested-virt requirement
+in its excerpt (it states Linux x86/ARM64 + GCE); the KVM requirement is
+confirmed by [SRC-CF-USE]’s pre-flight checks. Absence on one page is
+not contradiction.</li>
+<li>The unified <code>cvd</code> CLI
+(<code>cvd start</code>/<code>cvd stop</code>) was <strong>not</strong>
+confirmed in the fetched pages;
+<code>launch_cvd</code>/<code>stop_cvd</code> is the documented surface
+used here. Tracked as open item §8.3 — do not assume <code>cvd</code>
+subcommands.</li>
+</ul>
