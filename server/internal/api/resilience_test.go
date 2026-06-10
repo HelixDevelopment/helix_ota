@@ -104,7 +104,14 @@ func percentile(sorted []time.Duration, p float64) time.Duration {
 // §11.4.5: PASS carries captured evidence).
 func writeStressEvidence(t *testing.T, name string, lat []time.Duration, errCount, total int) {
 	t.Helper()
-	dir := filepath.Join("..", "..", "..", "docs", "qa", "20260608-stress-chaos")
+	// Runtime stress/chaos evidence goes to a GITIGNORED runs dir so re-runs never
+	// mutate the committed 2026-06-08 reference capture (§11.4.11 — runtime logs are
+	// not tracked; the historical run.log under 20260608-stress-chaos/ is the
+	// committed reference asset). Override with HELIX_STRESS_EVIDENCE_DIR.
+	dir := os.Getenv("HELIX_STRESS_EVIDENCE_DIR")
+	if dir == "" {
+		dir = filepath.Join("..", "..", "..", "docs", "qa", "stress-chaos-runs")
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Logf("evidence dir: %v", err)
 		return
@@ -302,7 +309,14 @@ func TestDDoSFloodStaysUpAndRecovers(t *testing.T) {
 		t.Fatalf("post-flood authed write want 201, got %d", code)
 	}
 
-	dir := filepath.Join("..", "..", "..", "docs", "qa", "20260608-stress-chaos")
+	// Runtime stress/chaos evidence goes to a GITIGNORED runs dir so re-runs never
+	// mutate the committed 2026-06-08 reference capture (§11.4.11 — runtime logs are
+	// not tracked; the historical run.log under 20260608-stress-chaos/ is the
+	// committed reference asset). Override with HELIX_STRESS_EVIDENCE_DIR.
+	dir := os.Getenv("HELIX_STRESS_EVIDENCE_DIR")
+	if dir == "" {
+		dir = filepath.Join("..", "..", "..", "docs", "qa", "stress-chaos-runs")
+	}
 	_ = os.MkdirAll(dir, 0o755)
 	if f, err := os.OpenFile(filepath.Join(dir, "run.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644); err == nil {
 		defer f.Close()
@@ -342,7 +356,14 @@ func TestChaosRepoFaultDegradesAndRecovers(t *testing.T) {
 		t.Fatalf("after fault cleared want 200 (recovery), got %d", code)
 	}
 
-	dir := filepath.Join("..", "..", "..", "docs", "qa", "20260608-stress-chaos")
+	// Runtime stress/chaos evidence goes to a GITIGNORED runs dir so re-runs never
+	// mutate the committed 2026-06-08 reference capture (§11.4.11 — runtime logs are
+	// not tracked; the historical run.log under 20260608-stress-chaos/ is the
+	// committed reference asset). Override with HELIX_STRESS_EVIDENCE_DIR.
+	dir := os.Getenv("HELIX_STRESS_EVIDENCE_DIR")
+	if dir == "" {
+		dir = filepath.Join("..", "..", "..", "docs", "qa", "stress-chaos-runs")
+	}
 	_ = os.MkdirAll(dir, 0o755)
 	f, err := os.OpenFile(filepath.Join(dir, "run.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err == nil {
