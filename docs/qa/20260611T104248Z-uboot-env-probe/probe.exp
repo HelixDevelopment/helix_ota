@@ -1,0 +1,23 @@
+set timeout 60
+set uboot [lindex $argv 0]
+set disk  [lindex $argv 1]
+set console [lindex $argv 2]
+log_file -noappend $console
+spawn qemu-system-aarch64 -M virt -accel hvf -cpu host -smp 2 -m 512 -nographic -bios $uboot -drive file=$disk,if=virtio,format=raw
+expect { timeout {puts "FAIL: no autoboot"; exit 2} -re {stop autoboot} }
+send "\r"
+expect { timeout {puts "FAIL: no prompt"; exit 2} -re {=> $} }
+# What backend does U-Boot use? saveenv prints "Saving Environment to <X>..." or errors.
+send "setenv HELIX_ENVTEST persisted_ok\r"
+expect -re {=> $}
+send "saveenv\r"
+expect { timeout {puts "FAIL: saveenv no response"; exit 2} -re {=> $} }
+# Now hard-reset and check if it survived (true persistence test).
+send "reset\r"
+expect { timeout {puts "FAIL: no autoboot after reset"; exit 2} -re {stop autoboot} }
+send "\r"
+expect { timeout {puts "FAIL: no prompt after reset"; exit 2} -re {=> $} }
+send "printenv HELIX_ENVTEST\r"
+expect -re {=> $}
+send "reset\r"
+expect { timeout {exit 0} eof }
