@@ -92,6 +92,12 @@ podman run --name "$BUILD_CTR" --arch arm64 \
       # with no apostrophes or parens. Rationale is in this file header + the
       # commit log. Disk fits now after reclaiming orphaned rootless podman
       # storage; Bootlin external toolchain is invalid for this defconfig.
+      # Base userspace + the A/B toolchain pieces (§11.4.74 reuse):
+      #  - U-Boot qemu_arm64 -> u-boot.bin so QEMU can boot via a REAL bootloader
+      #    whose bootcount/altbootcmd env is the A/B auto-rollback engine.
+      #  - RAUC -> the in-guest A/B update client with dm-verity slots.
+      #  - dosfstools/e2fsprogs/util-linux -> build + inspect the 2-slot GPT disk.
+      # All ASCII-safe: this heredoc is inside a single-quoted podman bash -c.
       cat >> /work/out/.config <<CFG
 BR2_TARGET_GENERIC_ROOT_PASSWD=\"${ROOT_PW}\"
 BR2_PACKAGE_DROPBEAR=y
@@ -99,6 +105,14 @@ BR2_PACKAGE_DROPBEAR_CLIENT=y
 BR2_PACKAGE_UTIL_LINUX=y
 BR2_PACKAGE_UTIL_LINUX_BINARIES=y
 BR2_PACKAGE_E2FSPROGS=y
+BR2_PACKAGE_E2FSPROGS_RESIZE2FS=y
+BR2_PACKAGE_DOSFSTOOLS=y
+BR2_PACKAGE_DOSFSTOOLS_MKFSDOTFAT=y
+BR2_PACKAGE_RAUC=y
+BR2_TARGET_UBOOT=y
+BR2_TARGET_UBOOT_BOARD_DEFCONFIG=\"qemu_arm64\"
+BR2_TARGET_UBOOT_NEEDS_DTC=y
+BR2_TARGET_UBOOT_FORMAT_BIN=y
 CFG
       make O=/work/out olddefconfig
       make O=/work/out -j\$(nproc)
@@ -117,6 +131,9 @@ fi
 log "extracting images via podman cp ..."
 podman cp "${BUILD_CTR}:/work/out/images/Image"       "${OUT}/images/Image"       >>"${OUT}/build.log" 2>&1
 podman cp "${BUILD_CTR}:/work/out/images/rootfs.ext2" "${OUT}/images/rootfs.ext2" >>"${OUT}/build.log" 2>&1
+# u-boot.bin is additive (the A/B bootloader) — extract if present; the .ok gate
+# below still keys on the kernel+rootfs so a missing U-Boot is visible, not faked.
+podman cp "${BUILD_CTR}:/work/out/images/u-boot.bin"  "${OUT}/images/u-boot.bin"  >>"${OUT}/build.log" 2>&1 || true
 podman rm -f "$BUILD_CTR" >/dev/null 2>&1 || true
 
 # §11.4.6: declare success ONLY if the real artifacts are present + non-empty.
