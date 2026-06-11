@@ -1,0 +1,32 @@
+=== determinism soak iter 1 ===
+-- Run A: BOOT_ORDER='A B' (head=A -> expect root=/dev/vda2, slot_id=A) --
+-- Run B: BOOT_ORDER='B A' (head=B -> expect root=/dev/vda3, slot_id=B) --
+[PASS] Run A: guest userspace reports /etc/slot_id=A
+[PASS] Run A: guest findmnt confirms root = /dev/vda2 (slot A)
+[PASS] Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)
+[PASS] Run A: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run A: did NOT boot slot B
+[PASS] Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)
+[PASS] Run B: guest findmnt confirms root = /dev/vda3 (slot B)
+[PASS] Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)
+[PASS] Run B: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run B: did NOT boot slot A (the switch is real, not a no-op)
+Run A: HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run B: HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
+=== determinism soak iter 2 ===
+-- Run A: BOOT_ORDER='A B' (head=A -> expect root=/dev/vda2, slot_id=A) --
+-- Run B: BOOT_ORDER='B A' (head=B -> expect root=/dev/vda3, slot_id=B) --
+[PASS] Run A: guest userspace reports /etc/slot_id=A
+[PASS] Run A: guest findmnt confirms root = /dev/vda2 (slot A)
+[PASS] Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)
+[PASS] Run A: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run A: did NOT boot slot B
+[PASS] Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)
+[PASS] Run B: guest findmnt confirms root = /dev/vda3 (slot B)
+[PASS] Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)
+[PASS] Run B: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run B: did NOT boot slot A (the switch is real, not a no-op)
+Run A: HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run B: HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
