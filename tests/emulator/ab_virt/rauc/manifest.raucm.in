@@ -1,0 +1,47 @@
+# =============================================================================
+# manifest.raucm.in — RK3588 A/B-virt emulator: RAUC bundle manifest TEMPLATE
+# -----------------------------------------------------------------------------
+# Template for the manifest packed into the dm-verity RAUC bundle (PWU-AB-2).
+# The bundle-build step (PWU_AB_2_RAUC_VERITY.md §4.2/§4.3 — run by the conductor
+# in the aarch64 container, NOT here) substitutes the @PLACEHOLDERS@ and feeds
+# the rendered manifest to `rauc bundle`:
+#
+#   sed -e "s/@VERSION@/$(date -u +%Y.%m.%d)-1/" \
+#       -e "s/@ROOTFS_IMAGE@/rootfs.ext4.img/" \
+#       manifest.raucm.in > out/bundle-src/manifest.raucm
+#   rauc --cert out/rauc-keys/dev.cert.pem --key out/rauc-keys/dev.key.pem \
+#        bundle out/bundle-src/ out/images/update.raucb
+#
+# Placeholders:
+#   @VERSION@       bundle version string (e.g. 2026.06.11-1).
+#   @ROOTFS_IMAGE@  filename of the new slot rootfs image staged into the bundle
+#                   source dir (the slot payload `rauc install` writes to the
+#                   inactive slot). sha256 + size are filled in AUTOMATICALLY by
+#                   `rauc bundle` (RAUC computes them — do NOT hand-set them).
+#
+# `compatible` MUST equal system.conf [system] compatible (helix-ota-ab-virt) or
+# `rauc install` refuses the bundle (the compatibility gate). format=verity makes
+# the bundle a signed + verity-hashed payload (verified before install). See the
+# §3/§8 runtime-verity Negative finding in PWU_AB_2_RAUC_VERITY.md — format=verity
+# protects the BUNDLE; a runtime dm-verity-mounted slot is a separate step.
+#
+# §11.4.6 STATUS: TEMPLATE only — no bundle has been built from it. .in suffix =
+#   not a runnable/consumable file as-is; the build renders it.
+#
+# Sources verified 2026-06-11:
+#   https://rauc.readthedocs.io/en/latest/examples.html  ([update] compatible/
+#     version, [bundle] format=verity, [image.rootfs] filename, auto sha256/size)
+# Cross-refs: PWU_AB_2_RAUC_VERITY.md §4.2/§4.3 ; system.conf (compatible match) ;
+#   gen_dev_keys.sh (the signing key+cert).
+# =============================================================================
+
+[update]
+compatible=helix-ota-ab-virt
+version=@VERSION@
+
+[bundle]
+format=verity
+
+[image.rootfs]
+filename=@ROOTFS_IMAGE@
+# sha256 + size: filled in automatically by `rauc bundle` (do NOT set by hand).
