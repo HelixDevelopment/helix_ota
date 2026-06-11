@@ -213,13 +213,14 @@ operator decision)</td>
 <td>Point any fresh session at THIS file. It carries a SHORT one-line
 resume + a FULL block, the read-first handoff docs, exact live-state
 anchors, current PHASE + NEXT + terminal goal, and the binding
-constraints. Moment-valid for HEAD <code>ae6c2b7</code> on
-<code>main</code> (all 5 remotes aligned). <strong>Overnight autonomous
-session 2026-06-10 (operator away-from-keyboard): EVERY achievable
-software tier RE-RUN fresh and GREEN, PLUS §11.4.50 determinism soaks
-(Go race ×5 + deep ×10, dashboard Vitest ×3) and a 30s/c=64 sustained
-loadtest (1.14M req, 38k rps, p99 7.2ms, 0 non-2xx) — all GREEN. Full
-§11.4.27 test-type matrix
+constraints. Moment-valid for HEAD <code>dead6ef</code> on
+<code>main</code> (all 5 remotes aligned). <strong>2026-06-10→11
+autonomous session: EVERY achievable software tier GREEN + §11.4.50
+determinism soaks + sustained loadtest, THEN an operator-directed
+6-stream parallel-hardening round (real coverage gains api 87.7%/fabric
+96.7%/transport 94.9%, dashboard 58→93, §11.4.65 PDF backfill 66
+siblings, extended security suite 26/0/0 ×3 — two real defects
+found+fixed honestly). Full §11.4.27 test-type matrix
 (unit/integration/e2e/full-automation/security/DDoS/scaling/chaos/stress/perf/UI/Challenges)
 re-confirmed. See <code>docs/qa/STABILITY_REPORT.md</code> Rev 2 +
 <code>docs/qa/20260610T16{20Z-overnight-revalidation,40Z-determinism-soak}/</code>.</strong>
@@ -243,7 +244,7 @@ current PHASE is “OVERNIGHT STABLE — every achievable tier RE-VERIFIED
 GREEN on this HEAD (see docs/qa/STABILITY_REPORT.md Rev 2); P4
 Cuttlefish + GSI-A/B + T3 RK3588 remain hardware-BLOCKED so no release
 tag yet (§11.4.40); achievable+zero-risk queue EXHAUSTED”; HEAD is
-<code>ae6c2b7</code> on <code>main</code> (all 5 remotes aligned).</p>
+<code>dead6ef</code> on <code>main</code> (all 5 remotes aligned).</p>
 </blockquote>
 <h2 id="full-detailed-resumption-block">FULL — detailed resumption
 block</h2>
@@ -263,17 +264,45 @@ fetch-before-edit).</li>
 <h3 id="exact-live-state-anchors-moment-valid-2026-06-10">1. Exact
 live-state anchors (moment-valid 2026-06-10)</h3>
 <ul>
-<li><strong>HEAD commit:</strong> <code>ae6c2b7</code> —
-<code>test(overnight): §11.4.50 determinism soak + sustained loadtest</code>
-(on <code>main</code>, all 5 remotes aligned). Parent
-<code>8c93ec6</code> = overnight re-validation + doc-sync; grandparent
-<code>eb9e1c4</code>. <strong>Build state: GREEN — comprehensively
-re-verified + determinism-soaked on this HEAD; see
-docs/qa/STABILITY_REPORT.md Rev 2.</strong> NOTE (§11.4.6
-fact-correction): <code>weasyprint</code> 66.0 + <code>pandoc</code> 3.9
-ARE present on this host — the prior “no weasyprint/LaTeX → PDF gap”
-note is stale. PDF siblings ARE generated via the documented §11.4.65
-pipeline
+<li><strong>HEAD commit:</strong> <code>dead6ef</code> —
+<code>test(security): extended black-box probe suite 26/0/0</code> (on
+<code>main</code>, all 5 remotes aligned). Recent chain:
+<code>dead6ef</code> (PWU-5 security) ← <code>a151bd2</code>
+(parallel-hardening: coverage + §11.4.65 PDF backfill) ←
+<code>d8ecd29</code>/<code>ae6c2b7</code>/<code>8c93ec6</code>
+(overnight re-validation + determinism soak) ← <code>eb9e1c4</code>.
+<strong>Build state: GREEN — comprehensively re-verified +
+determinism-soaked; see docs/qa/STABILITY_REPORT.md Rev 3.</strong></li>
+<li><strong>Parallel-hardening round (operator-directed 6 subagent
+streams, all landed + pushed):</strong> real anti-bluff coverage gains —
+<code>internal/api</code> 81.2→87.7%, <code>internal/fabric</code>
+83.6→96.7%, <code>internal/transport</code> 79.5→94.9%,
+<code>internal/rollout</code> +11.3pts, <code>internal/store</code>
++2.7pts (non-integration); <strong>dashboard Vitest 58→93</strong>
+(Audit/Deployments/Groups, ×3 deterministic); <strong>§11.4.65 PDF
+backfill</strong> (66 <code>.html</code>/<code>.pdf</code> siblings via
+new <code>scripts/sync_md_siblings.sh</code>); <strong>extended security
+suite</strong> <code>tests/security/security_probes_extended.sh</code>
+(6 probe families, <strong>26/0/0 ×3</strong>). Independent
+conductor-verification caught + fixed real defects in the agents’ output
+(a dashboard query bug; two security-suite defects — 1s-TTL provisioning
++ bare-wait hang).</li>
+<li><strong>REMAINING follow-ups (genuine, actionable, NOT
+hardware-blocked — next queue):</strong> (a) <strong>integration-port
+collision</strong> — running &gt;1 <code>-tags integration</code> Go
+package in parallel collides on the fixed Postgres host port
+<code>55432</code> (store/rollout
+<code>postgres_integration_test.go</code>); per-package port OR
+flock-serialize the boot (the project runs integration per-package,
+which is GREEN; the new tests are proven innocent). (b)
+<strong>deviceemu coverage still 76%</strong> (PWU-3 hardened
+fabric+transport but was rate-limited before deviceemu) + store
+non-integration ~45%. (c) optional: wire
+<code>security_probes_extended.sh</code> into the HelixQA bank
+(§11.4.27). NOTE (§11.4.6 fact-correction): <code>weasyprint</code> 66.0
++ <code>pandoc</code> 3.9 ARE present on this host — the prior “no
+weasyprint/LaTeX → PDF gap” note is stale. PDF siblings ARE generated
+via the documented §11.4.65 pipeline
 <code>pandoc &lt;f&gt;.md -s --metadata title=&lt;base&gt; -o &lt;f&gt;.html &amp;&amp; weasyprint &lt;f&gt;.html &lt;f&gt;.pdf</code>
 (NOTE: <code>scripts/export_docs.sh</code>’s OWN PDF path needs a LaTeX
 engine, which IS genuinely absent — use the weasyprint pipeline for
