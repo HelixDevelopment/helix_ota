@@ -213,7 +213,7 @@ operator decision)</td>
 <td>Point any fresh session at THIS file. It carries a SHORT one-line
 resume + a FULL block, the read-first handoff docs, exact live-state
 anchors, current PHASE + NEXT + terminal goal, and the binding
-constraints. Moment-valid for HEAD <code>dead6ef</code> on
+constraints. Moment-valid for HEAD <code>a58f7f8</code> on
 <code>main</code> (all 5 remotes aligned). <strong>2026-06-10→11
 autonomous session: EVERY achievable software tier GREEN + §11.4.50
 determinism soaks + sustained loadtest, THEN an operator-directed
@@ -244,7 +244,7 @@ current PHASE is “OVERNIGHT STABLE — every achievable tier RE-VERIFIED
 GREEN on this HEAD (see docs/qa/STABILITY_REPORT.md Rev 2); P4
 Cuttlefish + GSI-A/B + T3 RK3588 remain hardware-BLOCKED so no release
 tag yet (§11.4.40); achievable+zero-risk queue EXHAUSTED”; HEAD is
-<code>dead6ef</code> on <code>main</code> (all 5 remotes aligned).</p>
+<code>a58f7f8</code> on <code>main</code> (all 5 remotes aligned).</p>
 </blockquote>
 <h2 id="full-detailed-resumption-block">FULL — detailed resumption
 block</h2>
@@ -264,15 +264,17 @@ fetch-before-edit).</li>
 <h3 id="exact-live-state-anchors-moment-valid-2026-06-10">1. Exact
 live-state anchors (moment-valid 2026-06-10)</h3>
 <ul>
-<li><strong>HEAD commit:</strong> <code>dead6ef</code> —
-<code>test(security): extended black-box probe suite 26/0/0</code> (on
-<code>main</code>, all 5 remotes aligned). Recent chain:
-<code>dead6ef</code> (PWU-5 security) ← <code>a151bd2</code>
-(parallel-hardening: coverage + §11.4.65 PDF backfill) ←
-<code>d8ecd29</code>/<code>ae6c2b7</code>/<code>8c93ec6</code>
-(overnight re-validation + determinism soak) ← <code>eb9e1c4</code>.
-<strong>Build state: GREEN — comprehensively re-verified +
-determinism-soaked; see docs/qa/STABILITY_REPORT.md Rev 3.</strong></li>
+<li><strong>HEAD commit:</strong> <code>a58f7f8</code> —
+<code>test(parallel-round-2): integration-port fix + deviceemu/submodule coverage + e2e halt-safety + bank-wire</code>
+(on <code>main</code>, all 5 remotes aligned). Recent chain:
+<code>a58f7f8</code> (parallel round 2) ← <code>fc383f2</code> (doc
+sync) ← <code>dead6ef</code> (PWU-5 security) ← <code>a151bd2</code>
+(parallel round 1) ← overnight re-validation/soak ←
+<code>eb9e1c4</code>. <strong>Build state: GREEN — comprehensively
+re-verified; see docs/qa/STABILITY_REPORT.md Rev 3.</strong> Owned
+submodules advanced + pushed: <code>ota-protocol</code> →
+<code>eda12b7</code> (→100% cov), <code>ota-artifact-validator</code> →
+<code>087fa08</code> (→100% cov).</li>
 <li><strong>Parallel-hardening round (operator-directed 6 subagent
 streams, all landed + pushed):</strong> real anti-bluff coverage gains —
 <code>internal/api</code> 81.2→87.7%, <code>internal/fabric</code>
@@ -287,22 +289,37 @@ suite</strong> <code>tests/security/security_probes_extended.sh</code>
 conductor-verification caught + fixed real defects in the agents’ output
 (a dashboard query bug; two security-suite defects — 1s-TTL provisioning
 + bare-wait hang).</li>
+<li><strong>Parallel round 2 (operator-directed, 5 background streams +
+conductor main-stream, all landed + pushed
+<code>a58f7f8</code>):</strong> ✅ <strong>integration-port collision
+FIXED</strong> (the round-1 follow-up) — cross-process flock
+(<code>pg_itest_lock_test.go</code> in store+rollout) serializes the
+shared Postgres so <code>go test -tags integration ./...</code> runs
+parallel-clean (§11.4.115 RED→GREEN, verified ×2); ✅ <strong>deviceemu
+76→94%</strong> (21 real error/orchestration tests); ✅
+<strong>ota-protocol 99.3→100%</strong> (submodule
+<code>eda12b7</code>); ✅ <strong>ota-artifact-validator
+98.5→100%</strong> (submodule <code>087fa08</code>, §G2 security
+invariants); ✅ <strong>e2e
+<code>tests/e2e/rollout_halt_safety.sh</code></strong> (47/0/0 — the
+safety-critical rollout halt-on-breach path, previously
+happy-path-only); ✅ <strong>HelixQA bank → 11 challenges</strong>
+(extended security wired, dry-run 11/0/0 + self-test).</li>
 <li><strong>REMAINING follow-ups (genuine, actionable, NOT
-hardware-blocked — next queue):</strong> (a) <strong>integration-port
-collision</strong> — running &gt;1 <code>-tags integration</code> Go
-package in parallel collides on the fixed Postgres host port
-<code>55432</code> (store/rollout
-<code>postgres_integration_test.go</code>); per-package port OR
-flock-serialize the boot (the project runs integration per-package,
-which is GREEN; the new tests are proven innocent). (b)
-<strong>deviceemu coverage still 76%</strong> (PWU-3 hardened
-fabric+transport but was rate-limited before deviceemu) + store
-non-integration ~45%. (c) optional: wire
-<code>security_probes_extended.sh</code> into the HelixQA bank
-(§11.4.27). NOTE (§11.4.6 fact-correction): <code>weasyprint</code> 66.0
-+ <code>pandoc</code> 3.9 ARE present on this host — the prior “no
-weasyprint/LaTeX → PDF gap” note is stale. PDF siblings ARE generated
-via the documented §11.4.65 pipeline
+hardware-blocked — DIMINISHING-RETURNS, do only if directed):</strong>
+(a) coverage deepening on the other owned submodules
+(<code>ota-telemetry-schema</code>, <code>ota-rollout-engine</code>) per
+§11.4.28; (b) store non-integration coverage (~45% — the pgx paths are
+integration-tagged, so this is largely a tag artifact; with
+<code>-tags integration</code> store is 88.7%); (c) additional e2e
+scenarios (delta-apply, multi-device rollout). NOTE:
+core/api/fabric/transport/deviceemu + both top bricks are now at
+high/100% coverage — further coverage work risks low-value filler (§11.4
+anti-bluff), so prefer real feature/defect work or hardware-tier unblock
+over coverage-chasing. NOTE (§11.4.6 fact-correction):
+<code>weasyprint</code> 66.0 + <code>pandoc</code> 3.9 ARE present on
+this host — the prior “no weasyprint/LaTeX → PDF gap” note is stale. PDF
+siblings ARE generated via the documented §11.4.65 pipeline
 <code>pandoc &lt;f&gt;.md -s --metadata title=&lt;base&gt; -o &lt;f&gt;.html &amp;&amp; weasyprint &lt;f&gt;.html &lt;f&gt;.pdf</code>
 (NOTE: <code>scripts/export_docs.sh</code>’s OWN PDF path needs a LaTeX
 engine, which IS genuinely absent — use the weasyprint pipeline for
