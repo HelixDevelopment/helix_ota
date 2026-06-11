@@ -1,0 +1,56 @@
+== Helix OTA EXTENDED security probe suite ==
+run=secx-1781145212-6844 evidence=/Volumes/T7/Projects/helix_ota/tests/security/RUN_EVIDENCE_EXTENDED.txt
+started: 2026-06-11T02:33:32Z
+
+building ota-server ...
+booting S1 (default token TTL) on http://127.0.0.1:65456 ...
+[PASS] S1 self-hosted ota-server healthy on http://127.0.0.1:65456 (default token TTL)
+[PASS] S1 admin login established
+      device A=c2e130b38213b3fe1268117a5bbaa76f  device B=5e7f510050a1ca53a75a394280d70403
+
+--- H. refresh-token single-use rotation ---
+[PASS] H1 first refresh rotates the token pair -> 200 (HTTP 200)
+[PASS] H1b rotation returned a NEW, distinct refresh token
+[PASS] H2 reusing the consumed refresh token -> 401 (single-use enforced) (HTTP 401)
+[PASS] H2b reused refresh -> UNAUTHENTICATED (error.code=UNAUTHENTICATED)
+[PASS] H3 garbage refresh token -> 401 (HTTP 401)
+[PASS] H4 refresh missing refresh_token -> 400 (HTTP 400)
+[PASS] H4b missing field -> VALIDATION_FAILED (error.code=VALIDATION_FAILED)
+
+--- J. cross-device isolation on /devices/:id/status ---
+[PASS] J1 device A token GET device B /status -> 403 (HTTP 403)
+[PASS] J1b cross-device status -> FORBIDDEN (error.code=FORBIDDEN)
+[PASS] J2 device A token GET its OWN /status -> 200 (control: ownership allows self) (HTTP 200)
+
+--- K. protocol surface (404 / method / content-type / unknown fields) ---
+[PASS] K1 unknown route (authed) -> 404 (HTTP 404)
+[PASS] K2 wrong METHOD on existing route -> 404/405 (not 5xx) (HTTP 404)
+[PASS] K3 unknown JSON field -> 400 (DisallowUnknownFields) (HTTP 400)
+[PASS] K3b unknown field -> VALIDATION_FAILED (error.code=VALIDATION_FAILED)
+[PASS] K4 artifact upload non-multipart body -> 415 (HTTP 415)
+[PASS] K4b non-multipart upload -> UNSUPPORTED_MEDIA_TYPE (error.code=UNSUPPORTED_MEDIA_TYPE)
+[PASS] K5 login with wrong Content-Type but valid JSON body -> 200 (body-trusted decoder) (HTTP 200)
+
+--- L. re-registering the same hardware_id must not crash or 5xx ---
+[PASS] L1 duplicate hardware_id register handled cleanly (first=201 second=409, no 5xx)
+
+--- I. access-token expiry (dedicated TTL=1s server, real wall-clock) ---
+booting S_EXP (HELIX_ACCESS_TOKEN_TTL=1s) on http://127.0.0.1:65478 ...
+[PASS] I1 fresh access token works immediately -> 200 (HTTP 200)
+      waiting 2s for the 1s-TTL access token to expire ...
+[PASS] I2 same access token AFTER expiry -> 401 (exp enforced, not just signature) (HTTP 401)
+
+--- M. in-flight cap sheds excess concurrency with 429 RATE_LIMITED ---
+booting S2 (HELIX_MAX_INFLIGHT=1) on http://127.0.0.1:65485 ...
+[PASS] S2 self-hosted ota-server healthy on http://127.0.0.1:65485 (HELIX_MAX_INFLIGHT=1)
+      burst result: 80 requests, 3 shed with 429
+burst status histogram:
+  77 401
+   3 429
+[PASS] M1 in-flight cap shed 3/80 concurrent requests with 429
+[PASS] M1b shed response carries error.code=RATE_LIMITED
+[PASS] M1c shed response carries a Retry-After header
+
+finished: 2026-06-11T02:33:36Z
+== summary: 26 passed, 0 failed, 0 skipped ==
+RESULT: PASS
