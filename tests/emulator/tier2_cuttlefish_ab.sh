@@ -16,14 +16,24 @@
 #   only where the topology is present (the operator's incoming Linux+KVM host,
 #   an M4+/macOS-15 nested-virt Mac, or a GCE nested-virt instance).
 #
-# HONEST STATUS (§11.4.6): the Linux A/B-apply path below is implemented from the
-#   latest official AOSP cuttlefish + update_engine docs (CUTTLEFISH_TIER2.md
-#   "Sources verified"), but has NOT yet been executed on a real Linux+KVM host —
-#   it is UNVERIFIED-pending-host. The exact OTA-apply invocation the AOSP doc
-#   itself marks `UNCONFIRMED:` (Virtual-A/B vs legacy A/B; `update_device.py` vs
-#   `cvd`) is detected + attempted at runtime, not guessed-and-asserted. When the
-#   Linux host is available this script is run, any host-specific fixes land, and
-#   its PASS becomes real captured evidence (§11.4.107/§11.4.69/§11.4.108).
+# HONEST STATUS (§11.4.6): the Linux A/B-apply path below — AND the headline
+#   corrupt-slot AUTO-ROLLBACK section (PWU-CF-2, mirroring ab_virt PWU-AB-3) — are
+#   implemented from the latest official AOSP cuttlefish + update_engine + A/B +
+#   Virtual-A/B docs (CUTTLEFISH_TIER2.md "Sources verified"), but have NOT yet been
+#   executed on a real Linux+KVM host — they are UNVERIFIED-pending-Linux-host. The
+#   exact OTA-apply invocation AND the exact corrupt-the-inactive-slot mechanism the
+#   AOSP doc itself marks `UNCONFIRMED:` (Virtual-A/B vs legacy A/B; `update_device.py`
+#   vs `cvd`; COW/snapuserd path vs direct partition write; `bootctl` availability)
+#   are detected + ATTEMPTED at runtime and FAIL HONESTLY if they do not reproduce —
+#   never guessed-and-asserted, never fake-passed (§11.4.6/§11.4.123). When the Linux
+#   host is available these are run, any host-specific fixes land, and their PASS
+#   becomes real captured evidence (§11.4.107/§11.4.69/§11.4.108).
+#
+# AUTO-ROLLBACK SECTION STATUS: the corrupt-slot → reboot → auto-rollback assertion
+#   below is UNVERIFIED-pending-Linux-host by design — it does NOT claim Android
+#   auto-rollback works until executed on a real Linux+KVM host. On this macOS dev
+#   host the whole script (rollback section included) SKIPs cleanly at the topology
+#   gate (exit 3, topology_unsupported) — that SKIP is the only thing verifiable here.
 #
 # Usage:
 #   tests/emulator/tier2_cuttlefish_ab.sh [--prepare]   # --prepare installs cuttlefish debs
@@ -36,7 +46,9 @@
 # Dependencies (Linux host): git, apt/dpkg, kvm group membership, ~30 GB disk,
 #   network (AOSP build fetch). Self-cleaning: stop_cvd on every exit (§11.4.14).
 # Cross-references: §11.4.3, §11.4.81, §11.4.69, §11.4.107, §11.4.108, §11.4.112,
-#   §11.4.123 (the UNCONFIRMED apply path is a research-trigger, never a bluff).
+#   §11.4.123 (the UNCONFIRMED apply path is a research-trigger, never a bluff),
+#   §11.4.133 (verified-before-destructive-write for the corrupt-slot mechanism;
+#   the "target" is the virtual device, but the safety discipline holds).
 # =============================================================================
 set -u
 set -o pipefail
@@ -187,8 +199,122 @@ fi
 [ -s "${EVID}/verity.txt" ] && pass "dm-verity present on the booted slot" "${EVID}/verity.txt" \
   || log "  note: verity dmesg not captured (UNVERIFIED-pending-host — confirm AVB/dm-verity on the real host)"
 
-# (Headline corrupt-slot auto-rollback is PWU-CF-2 — added once the apply+flip is
-#  verified green on the real host, mirroring ab_virt PWU-AB-3.)
+# =============================================================================
+# PWU-CF-2 — HEADLINE corrupt-slot AUTO-ROLLBACK case (mirrors ab_virt PWU-AB-3)
+# -----------------------------------------------------------------------------
+# UNVERIFIED-pending-Linux-host (§11.4.6): the assertions below are implemented
+# from the latest AOSP A/B + Virtual-A/B docs (CUTTLEFISH_TIER2.md §5.3 + §8.5,
+# [SRC-AB]/[SRC-AB-SEARCH]/[SRC-VAB]) but have NOT been executed on a real
+# Linux+KVM host. The exact, safe corrupt-the-inactive-slot mechanism is the
+# AOSP-`UNCONFIRMED:` step: legacy A/B = direct write to the inactive partition;
+# Virtual A/B = COW/snapuserd path. We DETECT the variant, ATTEMPT the documented
+# mechanism, and FAIL HONESTLY (never fake-PASS) if rollback does not reproduce.
+#
+# Sequence (the headline Tier-2 proof): the previous slot ('${SLOT_BEFORE}') is now
+# INACTIVE after the flip above. Corrupt it (mark unbootable / fail dm-verity),
+# reboot, and ASSERT the device AUTO-ROLLS-BACK to the known-good ACTIVE slot
+# ('${SLOT_AFTER}') — boot succeeds on the good slot, the active slot does NOT revert
+# to the corrupted one, and the rollback trace is captured (§11.4.108 runtime sig).
+# =============================================================================
+log ""
+log "== PWU-CF-2: corrupt-slot AUTO-ROLLBACK (UNVERIFIED-pending-Linux-host) =="
+
+# The slot we corrupt is the now-INACTIVE previous slot. The known-good slot we
+# expect the device to keep/return to is the currently-ACTIVE post-flip slot.
+GOOD_SLOT="$SLOT_AFTER"     # known-good, currently active
+CORRUPT_SLOT="$SLOT_BEFORE" # now inactive — the one we deliberately break
+
+# Detect A/B variant so we corrupt the right thing (§11.4.6 — never guess).
+VAB="$("$ADB" shell getprop ro.virtual_ab.enabled 2>/dev/null | tr -d '\r')"
+"$ADB" shell getprop ro.virtual_ab.enabled > "${EVID}/virtual_ab.txt" 2>/dev/null || true
+log "  A/B variant: ro.virtual_ab.enabled='${VAB:-<unset>}' (true=Virtual A/B, else legacy A/B)"
+
+# --- mark the inactive slot unbootable via the documented boot_control path ----
+# bootctl set-active-boot-slot / mark slot unsuccessful is the documented HAL
+# surface (boot_control bootable/active/successful, [SRC-AB]). The `bootctl`
+# shell command availability is AOSP-`UNCONFIRMED:` (CUTTLEFISH_TIER2.md §8.4) —
+# attempt it, capture the result, do NOT assert a command that may be absent.
+CORRUPTED=0
+log "  attempting to mark inactive slot '${CORRUPT_SLOT}' unbootable / unsuccessful ..."
+if "$ADB" shell 'command -v bootctl' >/dev/null 2>&1; then
+  # Map the suffix (_a/_b) to its slot index for bootctl (0=_a, 1=_b).
+  case "$CORRUPT_SLOT" in
+    _a|a) CORRUPT_IDX=0 ;;
+    _b|b) CORRUPT_IDX=1 ;;
+    *)    CORRUPT_IDX="" ;;
+  esac
+  if [ -n "$CORRUPT_IDX" ]; then
+    "$ADB" shell "bootctl set-slot-as-unbootable ${CORRUPT_IDX}" \
+      > "${EVID}/corrupt_bootctl.txt" 2>&1 && CORRUPTED=1 || true
+    "$ADB" shell 'bootctl dump-slots-info' >> "${EVID}/corrupt_bootctl.txt" 2>&1 || true
+  fi
+fi
+
+# --- fallback: deliberately fail dm-verity on the inactive slot ---------------
+# UNVERIFIED-pending-Linux-host: on legacy A/B this is a bounded write to the
+# inactive partition image; on Virtual A/B it must target the COW/snapuserd path.
+# The exact safe device path is established at bring-up (CUTTLEFISH_TIER2.md §8.5)
+# — until then this fallback is attempted only when bootctl could not mark the
+# slot unbootable, and corrupts a bounded region so dm-verity fails on next boot.
+if [ "$CORRUPTED" != 1 ]; then
+  log "  bootctl unbootable not available — attempting bounded dm-verity-fail corruption"
+  CORRUPT_PART="/dev/block/by-name/system${CORRUPT_SLOT}"
+  # Bounded write (one 4K block) so the corruption is recoverable + side-effect-free
+  # on the host (§11.4.133 verified-before-destructive-write: bounded, inactive slot
+  # only, never the active/good slot). UNVERIFIED: confirm by-name path on the host.
+  if "$ADB" shell "test -e ${CORRUPT_PART}" >/dev/null 2>&1; then
+    "$ADB" shell "dd if=/dev/urandom of=${CORRUPT_PART} bs=4096 count=1 conv=notrunc" \
+      > "${EVID}/corrupt_dd.txt" 2>&1 && CORRUPTED=1 || true
+  fi
+fi
+
+if [ "$CORRUPTED" != 1 ]; then
+  fail "could not corrupt the inactive slot '${CORRUPT_SLOT}' (no bootctl unbootable, no by-name partition) — UNVERIFIED-pending-Linux-host: establish the exact safe corrupt mechanism per CUTTLEFISH_TIER2.md §8.5, NOT a fake PASS"
+  exit 1
+fi
+pass "inactive slot '${CORRUPT_SLOT}' corrupted (marked unbootable / dm-verity-fail)" "${EVID}/corrupt_bootctl.txt"
+
+# --- set the corrupted slot active to force the bad-boot → rollback path -------
+# Force the next boot to TRY the corrupted slot so the bootloader's bad-boot
+# fallback (A/B keeps the unused slot as fallback; reboot into old image on a bad
+# OTA / dm-verity failure, [SRC-AB-SEARCH]) is exercised. If bootctl is absent the
+# already-marked-unbootable state alone drives rollback. UNVERIFIED-pending-host.
+if "$ADB" shell 'command -v bootctl' >/dev/null 2>&1 && [ -n "${CORRUPT_IDX:-}" ]; then
+  "$ADB" shell "bootctl set-active-boot-slot ${CORRUPT_IDX}" \
+    > "${EVID}/corrupt_setactive.txt" 2>&1 || true
+fi
+
+# --- reboot and ASSERT auto-rollback to the known-good slot -------------------
+log "  rebooting — expecting AUTO-ROLLBACK to known-good slot '${GOOD_SLOT}' ..."
+"$ADB" reboot 2>/dev/null; sleep 5
+BOOTED=0
+for i in $(seq 1 60); do
+  "$ADB" wait-for-device 2>/dev/null
+  [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && { BOOTED=1; break; }
+  sleep 5
+done
+SLOT_ROLLBACK="$("$ADB" shell getprop ro.boot.slot_suffix 2>/dev/null | tr -d '\r')"
+"$ADB" shell getprop ro.boot.slot_suffix > "${EVID}/slot_after_rollback.txt" 2>/dev/null || true
+# capture the rollback trace (update_verifier / dm-verity / bootloader fallback)
+"$ADB" shell 'dmesg | grep -iE "verity|update_verifier|rollback|slot|boot_control"' \
+  > "${EVID}/rollback_trace.txt" 2>/dev/null || true
+"$ADB" shell logcat -d -s update_verifier:* > "${EVID}/rollback_logcat.txt" 2>/dev/null || true
+
+if [ "$BOOTED" != 1 ]; then
+  fail "device did NOT finish booting after corrupting slot '${CORRUPT_SLOT}' — UNVERIFIED-pending-Linux-host: a hang is NOT a rollback PASS (capture ${EVID}/rollback_trace.txt on the host)"
+  exit 1
+fi
+# Auto-rollback succeeded iff the device booted back on the known-good slot and
+# did NOT come up on the corrupted slot.
+if [ "$SLOT_ROLLBACK" = "$GOOD_SLOT" ] && [ "$SLOT_ROLLBACK" != "$CORRUPT_SLOT" ]; then
+  pass "AUTO-ROLLBACK confirmed: corrupted slot '${CORRUPT_SLOT}' rejected, device booted known-good slot '${SLOT_ROLLBACK}'" "${EVID}/slot_after_rollback.txt"
+  [ -s "${EVID}/rollback_trace.txt" ] \
+    && pass "rollback trace captured (dm-verity/update_verifier/bootloader fallback)" "${EVID}/rollback_trace.txt" \
+    || log "  note: rollback trace empty (UNVERIFIED-pending-Linux-host — confirm the dmesg/logcat trace on the real host)"
+else
+  fail "NO auto-rollback: expected known-good '${GOOD_SLOT}', got '${SLOT_ROLLBACK}' (corrupted='${CORRUPT_SLOT}') — UNVERIFIED-pending-Linux-host, NOT a fake PASS"
+  exit 1
+fi
 
 log ""
 log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
