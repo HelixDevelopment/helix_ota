@@ -11,7 +11,7 @@
 ## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 9) FIRST
 
 The freshest live-state anchors are in **`docs/RESUMPTION.md`** (the §11.4.131 canonical
-entry). As of HEAD **`dead6ef`** the build is **GREEN across every achievable tier**, and
+entry). As of HEAD **`a58f7f8`** the build is **GREEN across every achievable tier**, and
 during the 2026-06-10 overnight autonomous session (operator away-from-keyboard) **every
 achievable software tier was RE-RUN fresh on this exact HEAD and re-confirmed GREEN** (§11.4.132
 risk-ordered re-validation) — full proof in **`docs/qa/STABILITY_REPORT.md`** Rev 2: Go (all tiers
@@ -28,10 +28,13 @@ T3 RK3588. DEFERRED (zero-risk): fabric scheduler P3 (unwired §11.4.124), Helix
 round landed on top (HEAD `dead6ef`) — real coverage gains (api 87.7% / fabric 96.7% / transport
 94.9%, dashboard 58→93), §11.4.65 PDF backfill (66 siblings — weasyprint IS present, the prior
 "no weasyprint" deferral was stale), and an extended security suite (26/0/0 ×3); two real defects
-in the agents' output were caught + fixed during conductor-verification. Remaining actionable
-follow-ups: integration-port collision (fixed Postgres port 55432 under parallel integration
-runs), deviceemu coverage (still 76%). See `docs/RESUMPTION.md` §1.** Everything below this
-box is prior-wave history.
+in the agents' output were caught + fixed during conductor-verification. A SECOND parallel
+round then landed (HEAD `a58f7f8`): the integration-port collision is now FIXED (flock-serialized
+shared Postgres), deviceemu 76→94%, ota-protocol + ota-artifact-validator submodules → 100%
+(pushed `eda12b7`/`087fa08`), a rollout halt-on-breach e2e (47/0/0), and the extended security
+suite wired into the HelixQA bank (LIVE 11/0/0). Remaining follow-ups are now DIMINISHING-RETURNS
+(other-submodule coverage, more e2e scenarios) — see `docs/RESUMPTION.md` §1.** Everything below
+this box is prior-wave history.
 
 ## How to resume
 

@@ -5,10 +5,23 @@
 | Revision | 3 |
 | Last modified | 2026-06-11T00:00:00Z |
 | Status | GREEN — every achievable tier re-verified + parallel-hardening round landed |
-| HEAD | `dead6ef` (on `main`, all 5 remotes aligned) |
+| HEAD | `a58f7f8` (on `main`, all 5 remotes aligned) |
 | Authority | Operator mandate 2026-06-10/11 ("most stable build; zero risk, zero bluff" + "5–6 parallel subagents on all parallelizable workable items, rock-solid physical evidence, no bluff") |
 
-## Parallel-hardening round (2026-06-11, HEAD `dead6ef`)
+## Parallel round 2 (2026-06-11, HEAD `a58f7f8`)
+
+Second operator-directed parallel effort (5 background streams + conductor main-stream):
+✅ **integration-port collision FIXED** (the round-1 §11.4.118 discovery) — cross-process
+flock serializes the shared podman Postgres so `go test -tags integration ./...` runs
+parallel-clean (§11.4.115 RED→GREEN, verified ×2; per-package + non-integration unaffected);
+✅ **deviceemu 76→94%** (21 real error/orchestration tests); ✅ **ota-protocol 99.3→100%**
+(submodule `eda12b7`, pushed); ✅ **ota-artifact-validator 98.5→100%** (submodule `087fa08`,
+pushed — §G2 hash-before-signature + rejection-matrix invariants); ✅ **`tests/e2e/rollout_halt_safety.sh`**
+(47/0/0 — the safety-critical rollout halt-on-breach path); ✅ **HelixQA bank → 11 challenges**
+(extended security wired — **LIVE 11/0/0** + dry-run + self-test §1.1). Full parent
+re-validation GREEN (gofmt/vet/build, `go test ./...` + `-race` exit 0).
+
+## Parallel round 1 (2026-06-11, HEAD `a151bd2`)
 
 Operator-directed 6-stream parallel subagent effort (§11.4.20/§11.4.58/§11.4.103). All
 6 streams landed GREEN; every claim below is backed by a real run, and the conductor
