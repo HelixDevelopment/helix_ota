@@ -524,12 +524,27 @@ REPORT §6):</strong>
 aarch64 Buildroot guest in a podman container (macOS-portable: named
 container + named-volume DL cache + <code>podman cp</code> extract — NO
 <code>/Volumes/T7</code> bind-mount, NO <code>:Z</code>; output
-gitignored §11.4.77). <strong>STATE: base build (PWU-AB-0) kicked off +
-running; .ok stamp written ONLY on real images (§11.4.6).</strong> Then
-PWU-AB-1 (2-slot GPT + U-Boot A/B env → prove slot switch RED→GREEN),
-PWU-AB-2 (dm-verity), PWU-AB-3 (corrupt-slot auto-rollback — headline),
-PWU-AB-4 (agent ApplyPort→slot-writer over ota-protocol), PWU-AB-5
-(chaos/stress + HelixQA bank).</li>
+gitignored §11.4.77). <strong>STATE (HEAD <code>d5374d0</code>): ✅
+PWU-AB-0 base aarch64 Buildroot image BUILT (<code>out/.ok</code>,
+Image+rootfs.ext2); ✅ PWU-AB-1 FOUNDATION GREEN —
+<code>tests/emulator/ab_virt/boot_smoke.sh</code> boots it under
+<code>qemu-system-aarch64 -M virt -accel hvf</code> to a LIVE
+interactive userspace (kernel on real Apple CPU MIDR 0x610f via HVF +
+getty login + post-login uname + interactive sentinel; 196-line evidence
+<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>,
+anti-bluff §11.4.107).</strong> Root-caused+fixed en route:
+orphaned-rootless-podman-storage disk overflow (28GB), invalid Bootlin
+external toolchain, and a single-quote/paren shell-syntax bug. NEXT:
+PWU-AB-1 FULL (2-slot GPT + build U-Boot qemu_arm64 with
+bootcount/altbootcmd A/B env → boot via U-Boot → prove root==slot-B
+after apply+flip+reboot, RED→GREEN), PWU-AB-2 (RAUC format=verity
+dm-verity), PWU-AB-3 (corrupt-slot auto-rollback — headline), PWU-AB-4
+(agent ApplyPort→slot-writer over ota-protocol), PWU-AB-5 (chaos/stress
++ HelixQA bank). Build hygiene: named container +
+<code>podman rm -f helix_ab_build</code> after each build (orphaned
+rootless storage was the 28GB disk culprit); NO apostrophes/parens in
+comments inside the single-quoted podman <code>bash -c</code>
+string.</li>
 <li><strong>Linux/Cuttlefish T2 tier:</strong> implement the
 <code>/dev/kvm</code>-gated harness (§11.4.3/§11.4.81) from
 <code>docs/design/CUTTLEFISH_TIER2.md</code> — honest SKIP here, ready
