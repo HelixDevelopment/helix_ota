@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DATABASE_ER</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DATABASE_ER</h1>
+</header>
+<h1 id="helix-ota-database-entity-relationship-diagram">Helix OTA —
+Database Entity-Relationship Diagram</h1>
+<h2 id="overview">Overview</h2>
+<p>This ER diagram shows all persistent entities in the Helix OTA
+PostgreSQL database, their columns, data types, and relationships. The
+schema supports multi-tenant operations, full audit logging, and
+campaign/rollout management.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>erDiagram
+    ORGANIZATIONS {
+        uuid id PK
+        string name
+        string slug UK
+        jsonb settings
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USERS {
+        uuid id PK
+        uuid organization_id FK
+        string email UK
+        string password_hash
+        string role &quot;admin|operator|viewer&quot;
+        string display_name
+        boolean active
+        timestamp last_login
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    API_KEYS {
+        uuid id PK
+        uuid organization_id FK
+        uuid user_id FK
+        string key_hash UK
+        string name
+        string[] scopes &quot;read,write,deploy&quot;
+        timestamp expires_at
+        timestamp last_used
+        timestamp created_at
+    }
+
+    DEVICE_GROUPS {
+        uuid id PK
+        uuid organization_id FK
+        string name
+        string description
+        jsonb filter_rules &quot;hw_revision, region, etc.&quot;
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    DEVICES {
+        uuid id PK
+        uuid organization_id FK
+        uuid device_group_id FK
+        string device_id UK &quot;unique hardware ID&quot;
+        string hw_revision
+        string current_build
+        string oem_version
+        string android_version
+        string serial_number
+        string region
+        jsonb metadata
+        string status &quot;online|offline|unknown&quot;
+        timestamp last_seen
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ARTIFACTS {
+        uuid id PK
+        uuid organization_id FK
+        string name
+        string version
+        string target_hardware
+        string source_build_min
+        string source_build_max
+        string artifact_type &quot;full|delta&quot;
+        string hash_sha256
+        string signature_ed25519
+        bigint size_bytes
+        string minio_bucket
+        string minio_key
+        string status &quot;uploading|validating|ready|rejected|quarantined&quot;
+        string rejection_reason
+        jsonb metadata
+        uuid delta_source_artifact_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CAMPAIGNS {
+        uuid id PK
+        uuid organization_id FK
+        uuid artifact_id FK
+        string name
+        string description
+        string strategy &quot;canary|linear|forced&quot;
+        jsonb rollout_stages &quot;[5,10,30,50,100]&quot;
+        jsonb success_thresholds &quot;[95,95,97,98]&quot;
+        jsonb min_duration_minutes &quot;[30,30,60,120]&quot;
+        jsonb device_filter &quot;targeting rules&quot;
+        uuid device_group_id FK
+        string urgency &quot;low|normal|high|critical&quot;
+        boolean allow_deferral
+        integer max_deferrals
+        string status &quot;draft|active|paused|halted|completed|rolled_back&quot;
+        timestamp started_at
+        timestamp completed_at
+        uuid created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ROLLOUTS {
+        uuid id PK
+        uuid campaign_id FK
+        integer stage_index
+        integer percentage &quot;5|10|30|50|100&quot;
+        bigint total_devices
+        bigint succeeded_count
+        bigint failed_count
+        bigint in_progress_count
+        bigint pending_count
+        string status &quot;pending|active|completed|rolled_back&quot;
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at
+    }
+
+    DEVICE_ROLLOUTS {
+        uuid id PK
+        uuid rollout_id FK
+        uuid device_id FK
+        string status &quot;selected|notified|downloading|installing|succeeded|failed|rolled_back|deferred&quot;
+        integer deferral_count
+        string last_error
+        timestamp selected_at
+        timestamp notified_at
+        timestamp download_started_at
+        timestamp download_completed_at
+        timestamp install_started_at
+        timestamp install_completed_at
+        timestamp reported_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    DEVICE_REPORTS {
+        uuid id PK
+        uuid device_id FK
+        uuid device_rollout_id FK
+        uuid campaign_id FK
+        string state &quot;checking|downloading|verifying|installing|rebooting|committing|succeeded|failed&quot;
+        integer progress_percent
+        string error_code
+        string error_message
+        jsonb details &quot;diagnostics&quot;
+        string reported_build
+        timestamp reported_at
+    }
+
+    AUDIT_LOG {
+        uuid id PK
+        uuid organization_id FK
+        uuid actor_id FK &quot;nullable (system actions)&quot;
+        string actor_type &quot;user|api_key|system&quot;
+        string action &quot;campaign.create|artifact.upload|rollout.pause...&quot;
+        string resource_type &quot;campaign|artifact|device|rollout&quot;
+        uuid resource_id
+        jsonb old_value
+        jsonb new_value
+        string ip_address
+        string user_agent
+        timestamp created_at
+    }
+
+    NOTIFICATION_RULES {
+        uuid id PK
+        uuid organization_id FK
+        string name
+        string event_type &quot;rollout.paused|device.failed|artifact.rejected&quot;
+        jsonb conditions &quot;threshold, device_count...&quot;
+        string[] channels &quot;email|webhook|dashboard&quot;
+        jsonb channel_config &quot;emails, webhook_url...&quot;
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SIGNING_KEYS {
+        uuid id PK
+        uuid organization_id FK
+        string key_id UK
+        string public_key
+        string algorithm &quot;ed25519&quot;
+        boolean active
+        timestamp expires_at
+        timestamp revoked_at
+        timestamp created_at
+    }
+
+    ||--o{ ORGANIZATIONS : USERS
+    ||--o{ ORGANIZATIONS : DEVICE_GROUPS
+    ||--o{ ORGANIZATIONS : API_KEYS
+    ||--o{ ORGANIZATIONS : SIGNING_KEYS
+    ||--o{ ORGANIZATIONS : NOTIFICATION_RULES
+    ||--o{ ORGANIZATIONS : AUDIT_LOG
+    ||--o{ ORGANIZATIONS : DEVICES
+    ||--o{ ORGANIZATIONS : ARTIFACTS
+    ||--o{ ORGANIZATIONS : CAMPAIGNS
+    USERS ||--o{ API_KEYS : &quot;authenticates with&quot;
+    USERS ||--o{ CAMPAIGNS : &quot;creates&quot;
+    USERS ||--o{ AUDIT_LOG : &quot;performs actions&quot;
+    DEVICE_GROUPS ||--o{ DEVICES : &quot;contains&quot;
+    DEVICE_GROUPS ||--o{ CAMPAIGNS : &quot;targets&quot;
+    DEVICES ||--o{ DEVICE_ROLLOUTS : &quot;receives&quot;
+    DEVICES ||--o{ DEVICE_REPORTS : &quot;submits&quot;
+    ARTIFACTS ||--o{ CAMPAIGNS : &quot;deployed in&quot;
+    ARTIFACTS |o--o{ ARTIFACTS : &quot;delta_source&quot;
+    CAMPAIGNS ||--o{ ROLLOUTS : &quot;has stages&quot;
+    ROLLOUTS ||--o{ DEVICE_ROLLOUTS : &quot;assigns to devices&quot;
+    DEVICE_ROLLOUTS ||--o{ DEVICE_REPORTS : &quot;generates&quot;
+    CAMPAIGNS ||--o{ DEVICE_REPORTS : &quot;tracked by&quot;
+    SIGNING_KEYS ||--o{ ARTIFACTS : &quot;signs&quot;</code></pre>
+<h2 id="key-relationships">Key Relationships</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Relationship</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Organization → Users</td>
+<td>One-to-Many</td>
+<td>Multi-tenant isolation; all entities scoped to org</td>
+</tr>
+<tr>
+<td>Organization → Devices</td>
+<td>One-to-Many</td>
+<td>Devices belong to an organization</td>
+</tr>
+<tr>
+<td>Device Group → Devices</td>
+<td>One-to-Many</td>
+<td>Logical grouping for targeting</td>
+</tr>
+<tr>
+<td>Artifact → Campaigns</td>
+<td>One-to-Many</td>
+<td>An artifact can be deployed in multiple campaigns</td>
+</tr>
+<tr>
+<td>Artifact → Artifact (delta)</td>
+<td>Self-referencing</td>
+<td>Delta patches reference their source artifact</td>
+</tr>
+<tr>
+<td>Campaign → Rollouts</td>
+<td>One-to-Many</td>
+<td>A campaign has multiple rollout stages</td>
+</tr>
+<tr>
+<td>Rollout → Device Rollouts</td>
+<td>One-to-Many</td>
+<td>Each rollout stage assigns devices</td>
+</tr>
+<tr>
+<td>Device Rollout → Device Reports</td>
+<td>One-to-Many</td>
+<td>Device submits multiple progress reports</td>
+</tr>
+<tr>
+<td>Signing Key → Artifacts</td>
+<td>One-to-Many</td>
+<td>Keys used to verify artifact signatures</td>
+</tr>
+<tr>
+<td>User → Audit Log</td>
+<td>One-to-Many</td>
+<td>All user actions are audited</td>
+</tr>
+</tbody>
+</table>
+<h2 id="indexes-critical">Indexes (Critical)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Table</th>
+<th>Index</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>devices</td>
+<td><code>idx_devices_org_hw_build</code></td>
+<td>Fast campaign targeting queries</td>
+</tr>
+<tr>
+<td>devices</td>
+<td><code>idx_devices_device_id</code></td>
+<td>Lookup by hardware ID</td>
+</tr>
+<tr>
+<td>device_reports</td>
+<td><code>idx_reports_device_campaign</code></td>
+<td>Fetch reports for a device+campaign</td>
+</tr>
+<tr>
+<td>device_reports</td>
+<td><code>idx_reports_state</code></td>
+<td>Aggregate state counts for dashboards</td>
+</tr>
+<tr>
+<td>device_rollouts</td>
+<td><code>idx_rollouts_status</code></td>
+<td>Find devices in specific rollout states</td>
+</tr>
+<tr>
+<td>audit_log</td>
+<td><code>idx_audit_org_created</code></td>
+<td>Time-range audit queries per org</td>
+</tr>
+<tr>
+<td>campaigns</td>
+<td><code>idx_campaigns_status</code></td>
+<td>Find active campaigns for scheduler</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

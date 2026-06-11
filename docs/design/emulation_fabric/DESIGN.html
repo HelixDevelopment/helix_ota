@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DESIGN</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DESIGN</h1>
+</header>
+<h1
+id="helix-ota-emulationvirtualization-test-fabric-architecture-design">Helix
+OTA — Emulation/Virtualization Test-Fabric — Architecture &amp;
+Design</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-10T14:10:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active — design (no implementation yet)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The incorporation design for a LOCAL + DISTRIBUTED hardware-free
+test fabric, derived from the cited verdicts in <a
+href="../../research/emulation_infra/REPORT.md"><code>../../research/emulation_infra/REPORT.md</code></a>.
+Extends the <code>containers</code> submodule (§11.4.76) and the
+existing Tier-1/2/3 baseline in <a
+href="../EMULATED_DEVICE_TESTING.md"><code>../EMULATED_DEVICE_TESTING.md</code></a>.
+Reconciles the macOS-M3 dev host vs the Linux-KVM CI tier as FACT
+(§11.4.6/§11.4.112).</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Operator mandate 2026-06-10 (hardware-free comprehensive
+emulation/VM/container fabric)</td>
+</tr>
+<tr>
+<td>Related</td>
+<td>REPORT.md; TEST_COVERAGE_PLAN.md; SCHEMA.sql; ROADMAP.md;
+<code>containers/</code> submodule</td>
+</tr>
+</tbody>
+</table>
+<h2 id="goal-non-goals">1. Goal &amp; non-goals</h2>
+<p><strong>Goal.</strong> A single fabric that boots/runs emulated,
+virtual, and (where wired) real targets — locally on the dev host AND
+distributed across remote/CI nodes — so every Helix OTA work item is
+testable WITHOUT a physical RK3588/Orange Pi on the operator’s desk.
+Anti-bluff is the spine: a tier never claims fidelity it does not have
+(§11.4 / §11.4.107), and the tier boundaries below are stated as FACT
+precisely so no tier silently over-claims.</p>
+<p><strong>Non-goals.</strong> (a) Reinventing container/VM machinery —
+every primitive is an EXTENSION of <code>vasic-digital/containers</code>
+(§11.4.74/§11.4.76), never a re-implementation. (b) Pretending the
+macOS-M3 host can run KVM-gated Android — it cannot (§3); that is an
+honest host gap (§11.4.112), not a thing to fake.</p>
+<h2 id="tier-model-reconciled-with-emulated_device_testing.md">2. Tier
+model (reconciled with EMULATED_DEVICE_TESTING.md)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Fidelity</th>
+<th>Tech (from REPORT verdicts)</th>
+<th>Where it runs</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>T0 — protocol client</strong></td>
+<td>wire/server flow only (no real apply)</td>
+<td>existing <code>ota-device-emulator</code>
+(<code>server/internal/deviceemu</code>) on podman</td>
+<td><strong>dev host + anywhere</strong></td>
+<td>register→update-check→telemetry→delta→rollout→recall against a live
+control plane</td>
+</tr>
+<tr>
+<td><strong>T1 — Android userspace</strong></td>
+<td>real Android app/agent logic; NOT real A/B apply</td>
+<td>Android <strong>AVD arm64-v8a</strong> (HVF local / KVM CI);
+Genymotion optional</td>
+<td><strong>dev host (HVF, accelerated)</strong> + Linux/KVM CI</td>
+<td><code>ota-android-agent</code>/bridge decision logic, ADB-driven
+UI/automation</td>
+</tr>
+<tr>
+<td><strong>T2 — high-fidelity A/B</strong></td>
+<td><strong>real <code>update_engine</code> A/B + AVB/dm-verity +
+auto-rollback</strong> on virtual partitions</td>
+<td><strong>Cuttlefish (<code>cvd</code>)</strong></td>
+<td><strong>Linux+KVM CI only</strong> (host-gated on M3)</td>
+<td>the genuine OTA apply + rollback semantics short of real
+silicon</td>
+</tr>
+<tr>
+<td><strong>T3 — real hardware</strong></td>
+<td>vendor HAL + real U-Boot slot-switch + dm-verity on real partitions
++ Mali GPU</td>
+<td><strong>RK3588/Orange Pi 5 Max behind LAVA</strong>;
+<code>redroid-rk3588</code> adjacent (SoC app/GPU, no bootloader)</td>
+<td><strong>HIL lab</strong></td>
+<td>the only env exercising real silicon; flashes governed by
+§11.4.133</td>
+</tr>
+<tr>
+<td><strong>Tfw — firmware/Linux-target</strong></td>
+<td>aarch64 UEFI/U-Boot/Linux boot (generic virt board, not RK3588
+SoC)</td>
+<td><strong>QEMU <code>-machine virt</code> + edk2</strong> (existing
+<code>pkg/vm</code>); <strong>Renode</strong> future</td>
+<td><strong>dev host (TCG)</strong> + CI</td>
+<td>U-Boot slot logic, future Linux/RTOS OS targets</td>
+</tr>
+<tr>
+<td><strong>Tcp — control-plane isolation</strong></td>
+<td>N/A (not a device)</td>
+<td><strong>Firecracker / Kata / Cloud Hypervisor</strong> microVMs;
+gVisor sandbox</td>
+<td>Linux+KVM CI (gVisor needs no KVM)</td>
+<td>scaling/DDoS/chaos/security of the Go control plane under real
+isolation</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-cutting: <strong>distributed fan-out</strong> via
+<strong>LAVA</strong> (one job schema drives BOTH virtual T0/T1/T2 and
+physical T3) and/or <strong>Nomad</strong> (heterogeneous scheduler for
+a mixed container+QEMU+<code>cvd</code> fabric); <strong>CI front
+door</strong> via <strong>our own</strong> self-hosted mac+Linux runners
+(GitHub-hosted Apple-Silicon runners do NOT expose HVF/nested-virt —
+FACT, REPORT §5).</p>
+<pre class="mermaid"><code>flowchart TB
+  subgraph DEV[&quot;Dev host — Apple M3 / macOS (HVF, no /dev/kvm)&quot;]
+    T0d[&quot;T0 ota-device-emulator (podman)&quot;]
+    T1d[&quot;T1 Android AVD arm64-v8a (HVF)&quot;]
+    FWd[&quot;Tfw QEMU virt + edk2 / Renode&quot;]
+  end
+  subgraph CI[&quot;Distributed CI — Linux + KVM nodes&quot;]
+    T2[&quot;T2 Cuttlefish (cvd) — real A/B/AVB/dm-verity&quot;]
+    T0c[&quot;T0 emulator fan-out (podman)&quot;]
+    T1c[&quot;T1 AVD/KVM farm&quot;]
+    TCP[&quot;Tcp Firecracker/Kata microVMs — CP scaling/chaos&quot;]
+  end
+  subgraph HIL[&quot;HIL lab — real silicon&quot;]
+    T3[&quot;T3 RK3588 / Orange Pi 5 Max&quot;]
+    RD[&quot;redroid-rk3588 (SoC app/GPU)&quot;]
+  end
+  CP[&quot;Helix OTA control plane (server/)&quot;]
+  SCHED[&quot;Fabric scheduler — LAVA job schema + Nomad/K8s exec&quot;]
+  RUN[&quot;CI front door — self-hosted mac+Linux runners&quot;]
+  RUN --&gt; SCHED
+  SCHED --&gt; DEV &amp; CI &amp; HIL
+  T0d &amp; T1d &amp; T2 &amp; T0c &amp; T1c &amp; T3 &amp; RD --&gt;|ota-protocol| CP
+  SCHED --&gt;|exclusive lease per target §11.4.119| T2 &amp; T3</code></pre>
+<h2 id="the-host-fact-fact-11.4.6-drives-every-placement">3. The host
+fact (FACT, §11.4.6 — drives every placement)</h2>
+<p>Dev host = <strong>Apple M3 Pro / macOS 15.5 / arm64</strong>, accel
+= <strong>HVF</strong>, <strong>no <code>/dev/kvm</code></strong>, and
+<strong>M3 lacks hardware nested-virt</strong> (M4+/macOS-15 only) — so
+KVM-gated Android (Cuttlefish, redroid, K8s-STF emulator nodes,
+Firecracker/Kata/Cloud-Hypervisor) is <strong>host-gated here, NOT
+structurally impossible</strong> (runs on a Linux-KVM box / M4+ / GCE
+nested-virt). The fabric therefore places T2/Tcp on the
+<strong>Linux+KVM CI tier</strong>, and keeps T0 + T1(AVD-HVF) +
+Tfw(QEMU-TCG) as the <strong>locally-runnable</strong> set. This split
+is asserted, never wished away.</p>
+<h2
+id="extension-of-the-containers-submodule-11.4.74-extend-dont-reimplement">4.
+Extension of the <code>containers</code> submodule (§11.4.74
+extend-don’t-reimplement)</h2>
+<p><strong>Reuse (already present):</strong> <code>pkg/boot</code> +
+<code>pkg/compose</code> + <code>pkg/health</code> (on-demand boot +
+readiness — the §11.4.76 on-demand-infra invariant the pgx integration
+test already uses), <code>pkg/emulator</code> (AVD x86_64/arm64 +
+HVF/KVM accel gating + AVD-lock/orphan-qemu reaping),
+<code>pkg/vm</code> (QEMU aarch64 <code>virt</code>+UEFI),
+<code>pkg/genymotion</code>.</p>
+<p><strong>New primitives to ADD upstream (PR to
+<code>vasic-digital/containers</code>), never copied
+in-project:</strong> - <code>pkg/cuttlefish</code> — <code>cvd</code>
+lifecycle wrapper (fetch/launch/stop,
+<code>aosp_cf_arm64_only_phone</code>, KVM-presence gate that
+SKIPs-with-reason on a non-KVM host). - <code>pkg/lava</code> — LAVA
+REST/XML-RPC client: submit a job, poll, pull artifacts; one job schema
+for virtual + physical DUTs. - <code>pkg/fabric</code> — the distributed
+scheduler façade + <strong>target registry</strong> (lease/release a
+target exclusively, §11.4.119) over a Nomad/K8s/LAVA backend.</p>
+<p><strong>Stays in helix_ota (OTA-domain logic, not generic
+plumbing):</strong> <code>server/internal/deviceemu</code> (the T0
+emulator — it speaks <code>ota-protocol</code>), the per-tier on-device
+test drivers, and the bank/Challenge wiring.</p>
+<h2 id="on-demand-boot-single-resource-owner-contracts">5. On-demand
+boot + single-resource-owner contracts</h2>
+<ul>
+<li><strong>On-demand boot (§11.4.76):</strong> the test entry point
+boots its tier’s infra via the submodule
+(<code>pkg/boot</code>/<code>compose</code>/<code>health</code>/<code>fabric</code>);
+operators never hand-start podman, an emulator, <code>cvd</code>, or a
+LAVA job. A tier with unmet host prereqs
+<strong>SKIPs-with-reason</strong> (§11.4.3), never fakes a PASS.</li>
+<li><strong>Single-resource-owner (§11.4.119):</strong> every exclusive
+target (a <code>cvd</code> instance, a real board, an HDMI/serial line,
+a fixed port) is leased to <strong>exactly one</strong> driver stream at
+a time via <code>pkg/fabric</code>’s registry; other streams targeting
+it are read-only or queued. Concurrent drivers of one exclusive target
+produce cross-contaminated evidence = a §11.4 bluff, so the lease is
+mandatory.</li>
+</ul>
+<h2 id="persistence">6. Persistence</h2>
+<p>A test-fabric registry (targets, runs, results, evidence paths,
+distributed-node inventory) is defined in <a
+href="SCHEMA.sql"><code>SCHEMA.sql</code></a>. It is OPTIONAL for local
+single-node use (the T0 in-process/podman tiers need no DB) and REQUIRED
+once distributed fan-out is wired (so the scheduler can lease targets
+and the dashboard can show fleet-of-fabric state). It reuses the
+project’s pgx/Postgres seam, not a new datastore.</p>
+<h2 id="anti-bluff-posture-the-spine">7. Anti-bluff posture (the
+spine)</h2>
+<p>Each tier produces captured evidence under
+<code>docs/qa/&lt;run-id&gt;/</code> per <a
+href="TEST_COVERAGE_PLAN.md"><code>TEST_COVERAGE_PLAN.md</code></a>: T0
+captures real request/response transcripts; T1 captures ADB/UI +
+<code>update_engine_client</code> state; T2 captures real A/B-slot +
+AVB/dm-verity + auto-rollback evidence; T3 adds on-silicon
+apply/rollback. A tier claiming a PASS without exercising the real
+system at its fidelity is a §11.4 PASS-bluff. Honest gaps (§3, REPORT
+§8) are documented, never hidden behind a green line.</p>
+</body>
+</html>

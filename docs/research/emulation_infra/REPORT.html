@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REPORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">REPORT</h1>
+</header>
+<h1
+id="helix-ota-emulation-virtualization-test-fabric-research-report">Helix
+OTA — Emulation / Virtualization Test-Fabric Research Report</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-10T00:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active — research+design phase (no implementation)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Deep, cited (§11.4.8 / §11.4.99) survey of emulator / VM / microVM /
+device-farm technology classes for a LOCAL + DISTRIBUTED test fabric
+that exercises the Helix OTA stack (RK3588 / Orange Pi 5 Max Android A/B
++ <code>update_engine</code>/AVB/dm-verity; future Linux/Windows)
+WITHOUT real hardware. Verdicts are FACT or explicitly
+<code>UNCONFIRMED:</code> per §11.4.6. RESEARCH ONLY; architecture lives
+in <code>docs/design/emulation_fabric/DESIGN.md</code>.</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Helix OTA control-plane / device-integration team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><code>docs/design/EMULATED_DEVICE_TESTING.md</code> (Tier-1/2/3
+baseline this extends);
+<code>docs/design/emulation_fabric/DESIGN.md</code>;
+<code>containers/</code> submodule
+(<code>vasic-digital/containers</code>, §11.4.76);
+<code>submodules/ota-protocol</code>, <code>ota-android-agent</code>,
+<code>ota-update-engine-bridge</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Binding research discipline: every load-bearing claim cites an
+official / authoritative source URL with an access date (all accessed
+<strong>2026-06-10</strong>). Where public sources did not establish a
+fact, it is marked <code>UNCONFIRMED:</code> with the follow-up needed
+(§11.4.6 no-guessing). Vendor-ToS / ban risks flagged inline (§11.4.99).
+Genuinely-impossible-on-this-host items classified per §11.4.112.</p>
+</blockquote>
+<hr />
+<h2 id="the-host-fact-that-frames-everything-11.4.6">0. The host fact
+that frames everything (§11.4.6)</h2>
+<p>The Helix OTA development host is <strong>Apple M3 Pro, macOS 15.5
+(Darwin 24.5.0, arm64)</strong> — established from <code>uname -a</code>
++ <code>sysctl machdep.cpu.brand_string</code> + <code>sw_vers</code> on
+this host, 2026-06-10. macOS hardware acceleration is <strong>Apple
+Hypervisor.framework (HVF)</strong>; there is <strong>no
+<code>/dev/kvm</code></strong> on macOS (confirmed by the
+<code>containers</code> submodule’s own
+<code>pkg/emulator/accel.go</code>, which documents this as FACT). Two
+consequences drive every verdict:</p>
+<ol type="1">
+<li>The <strong>only hardware-accelerated Android path on this
+host</strong> is the Android Emulator launched as a <em>native macOS
+process</em> using an <strong>arm64-v8a</strong> system image on HVF
+(FACT — Android Studio uses HVF automatically on M-series; §2.2). A
+Linux container/VM on this host runs in a Linux guest that
+<strong>cannot reach host HVF</strong>, so any KVM-dependent Android
+virtualization (Cuttlefish, redroid, K8s/STF emulator nodes) is
+<strong>host-gated</strong> here.</li>
+<li><strong>Nested virtualization</strong> (KVM <em>inside</em> a guest
+on Apple Silicon) was <strong>added at the macOS-framework level in
+macOS 15.0</strong> but only on <strong>newer Apple Silicon (M4+; EL2
+support)</strong> — <strong>the M3 generation was reported to lack
+hardware nested-virt at release</strong> (<a
+href="https://developer.apple.com/documentation/hypervisor">Apple
+Hypervisor docs</a>; <a
+href="https://github.com/actions/runner-images/issues/13505">actions/runner-images
+#13505</a>, accessed 2026-06-10). Therefore on <strong>this M3 Pro
+host</strong>, running KVM inside a Linux guest is <strong>effectively
+impossible</strong> -&gt; Cuttlefish-on-this-host is a §11.4.112 honest
+gap (NOT structurally impossible on the M4+/Linux-KVM class — §6).</li>
+</ol>
+<hr />
+<h2 id="comparison-matrix-headline">1. Comparison matrix (headline)</h2>
+<p>Legend — Fidelity = how faithfully it exercises the <em>RK3588
+Android A/B + <code>update_engine</code>/AVB/dm-verity</em> path.
+<code>L</code>=runs on this macOS M3 host;
+<code>D</code>=distributable/CI; <code>HW</code>=needs real board.</p>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Technology</th>
+<th>Class</th>
+<th>Target fidelity</th>
+<th>This-host (L)</th>
+<th>Distributed (D)</th>
+<th>Host req</th>
+<th>License / cost</th>
+<th>ToS / ban risk</th>
+<th>Maturity</th>
+<th>CI-friendly</th>
+<th>Verdict (cited)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tier-1 <code>ota-device-emulator</code></strong>
+(existing)</td>
+<td>Protocol client</td>
+<td>Wire/server flow only (no real apply)</td>
+<td><strong>YES</strong></td>
+<td>YES (podman fan-out)</td>
+<td>podman</td>
+<td>in-repo / free</td>
+<td>none</td>
+<td>shipping</td>
+<td>excellent</td>
+<td><strong>KEEP as fabric floor</strong> — real
+<code>ota-protocol</code> client, runs everywhere</td>
+</tr>
+<tr>
+<td><strong>Android Emulator / AVD (arm64-v8a)</strong></td>
+<td>Android VM (HVF/KVM/WHPX)</td>
+<td>Medium — real Android userspace, agent/app logic; <strong>NOT real
+A/B apply</strong></td>
+<td><strong>YES (HVF, accel)</strong></td>
+<td>YES (Linux/KVM nodes)</td>
+<td>HVF(mac)/KVM(linux)</td>
+<td>free (Android SDK)</td>
+<td>none</td>
+<td>very mature</td>
+<td>excellent</td>
+<td><strong>PRIMARY local Android tier</strong> — only accelerated
+Android-on-this-host path (<a
+href="https://developer.android.com/studio/releases/emulator">emulator
+notes</a>)</td>
+</tr>
+<tr>
+<td><strong>Cuttlefish (<code>cvd</code>)</strong></td>
+<td>Reference virtual Android</td>
+<td><strong>High</strong> — real
+<code>update_engine</code>/A/B/AVB/dm-verity, virtual partitions</td>
+<td><strong>NO</strong> (<code>/dev/kvm</code>)</td>
+<td>YES on Linux+KVM (x86_64 <strong>and</strong>
+<code>aosp_cf_arm64_only_phone</code>)</td>
+<td><strong>Linux + KVM only</strong></td>
+<td>AOSP / free</td>
+<td>none</td>
+<td>mature (Google ref)</td>
+<td>good (heavy)</td>
+<td><strong>PRIMARY high-fidelity tier — Linux-KVM-gated</strong>;
+canonical Tier-2 (<a
+href="https://source.android.com/docs/devices/cuttlefish/get-started">AOSP
+get-started</a>)</td>
+</tr>
+<tr>
+<td><strong>redroid (RK3588)</strong></td>
+<td>Containerized Android (no VM)</td>
+<td>Med-high on real SoC; Mali GPU app stack, but no
+<code>update_engine</code>/bootloader</td>
+<td>NO (needs Rockchip/Armbian host kernel binder/ashmem)</td>
+<td>YES on RK3588 Linux hosts</td>
+<td>RK3588 Linux host kernel</td>
+<td>Apache-2.0 / free</td>
+<td>none</td>
+<td>active community</td>
+<td>good</td>
+<td><strong>SoC-on-board app/GPU tier</strong>, NOT an A/B-apply tier
+(<a
+href="https://github.com/CNflysky/redroid-rk3588">redroid-rk3588</a>)</td>
+</tr>
+<tr>
+<td><strong>Corellium (CHARM)</strong></td>
+<td>Real ARM virtualization (type-1)</td>
+<td><strong>Very high</strong> — real ARM OS, no translation</td>
+<td>via cloud/on-prem (not our Mac)</td>
+<td>YES (Graviton / on-prem / air-gap)</td>
+<td>their hypervisor / Graviton</td>
+<td><strong>commercial</strong> $3/dev-hr solo; ent. $9,995+/mo</td>
+<td><strong>commercial license; vendor-gated models</strong></td>
+<td>mature (Cellebrite)</td>
+<td>API-driven</td>
+<td><strong>Optional premium tier</strong> — high cost; revisit if
+real-ARM-without-board A/B fidelity needed (<a
+href="https://www.corellium.com/platform">platform</a>, <a
+href="https://www.prnewswire.com/news-releases/corellium-introduces-unparalleled-support-for-ios-26-and-newest-mobile-device-models-dynamic-risk-scoring-for-mobile-applications-and-expanded-global-coverage-302618175.html">pricing</a>)</td>
+</tr>
+<tr>
+<td><strong>QEMU system-aarch64 (<code>-machine virt</code> +
+edk2)</strong></td>
+<td>Full-system SoC emulation</td>
+<td>Medium — boots aarch64 UEFI/U-Boot/Linux; TCG-slow for foreign
+full-Android; no Rockchip SoC model</td>
+<td><strong>YES (TCG)</strong></td>
+<td>YES</td>
+<td>qemu-system-aarch64</td>
+<td>GPL / free</td>
+<td>none</td>
+<td>very mature</td>
+<td>good</td>
+<td><strong>KEEP for firmware/UEFI/U-Boot + Linux-target tier</strong>
+(existing <code>pkg/vm</code>); not Android A/B (<a
+href="https://docs.u-boot.org/en/stable/board/emulation/qemu-arm.html">U-Boot
+qemu</a>, <a
+href="https://trustedfirmware-a.readthedocs.io/en/latest/plat/qemu.html">TF-A
+virt</a>)</td>
+</tr>
+<tr>
+<td><strong>Renode</strong></td>
+<td>Deterministic SoC/peripheral sim</td>
+<td>Low for Android; <strong>high MCU/peripheral + deterministic
+CI</strong></td>
+<td><strong>YES</strong></td>
+<td>YES</td>
+<td>renode (.NET)</td>
+<td>MIT / free</td>
+<td>none</td>
+<td>mature (Antmicro)</td>
+<td>excellent</td>
+<td><strong>Future Linux/RTOS-target + peripheral tier</strong> (<a
+href="https://renode.io/news/armv8-a-support-in-renode/">ARMv8</a>)</td>
+</tr>
+<tr>
+<td><strong>Firecracker</strong></td>
+<td>microVM (KVM)</td>
+<td>N/A for Android (5 devices, Linux-guest-kernel)</td>
+<td>NO (KVM)</td>
+<td>YES Linux+KVM</td>
+<td><strong>Linux + KVM</strong></td>
+<td>Apache-2.0 / free</td>
+<td>none</td>
+<td>mature (AWS)</td>
+<td>excellent</td>
+<td><strong>Isolation substrate for control-plane
+scaling/chaos</strong>, not a device emulator (<a
+href="https://github.com/firecracker-microvm/firecracker">repo</a>)</td>
+</tr>
+<tr>
+<td><strong>Cloud Hypervisor</strong></td>
+<td>microVM/VMM (KVM)</td>
+<td>N/A for Android</td>
+<td>NO (KVM)</td>
+<td>YES Linux+KVM</td>
+<td><strong>Linux + KVM</strong></td>
+<td>Apache/BSD / free</td>
+<td>none</td>
+<td>mature</td>
+<td>excellent</td>
+<td>Kata default VMM; same role as Firecracker, more devices (<a
+href="https://northflank.com/blog/firecracker-vs-cloud-hypervisor">compare</a>)</td>
+</tr>
+<tr>
+<td><strong>Kata Containers</strong></td>
+<td>OCI runtime -&gt; microVM</td>
+<td>N/A for Android</td>
+<td>NO (KVM)</td>
+<td>YES Linux+KVM</td>
+<td><strong>Linux + KVM</strong></td>
+<td>Apache-2.0 / free</td>
+<td>none</td>
+<td>mature</td>
+<td>excellent</td>
+<td><strong>VM-isolated control-plane test pods</strong> (orchestration,
+not emulation)</td>
+</tr>
+<tr>
+<td><strong>gVisor</strong></td>
+<td>Userspace kernel</td>
+<td>N/A for Android</td>
+<td>YES (Linux)</td>
+<td>YES</td>
+<td>Linux</td>
+<td>Apache-2.0 / free</td>
+<td>none</td>
+<td>mature</td>
+<td>excellent</td>
+<td>Security-sandbox for the <em>server</em>, not hardware isolation (<a
+href="https://edera.dev/stories/kata-vs-firecracker-vs-gvisor-isolation-compared">compare</a>)</td>
+</tr>
+<tr>
+<td><strong>LAVA</strong></td>
+<td>Device-farm control plane (virtual+physical)</td>
+<td>Orchestrator (fidelity = DUT)</td>
+<td>partial (master/web on mac; workers need DUT host)</td>
+<td><strong>YES</strong> (its purpose)</td>
+<td>Linux master/workers</td>
+<td>AGPL / free</td>
+<td>none</td>
+<td>mature (Linaro 2026.01)</td>
+<td>excellent</td>
+<td><strong>STRONG candidate for real-HW + Cuttlefish distributed
+control plane</strong> (<a
+href="https://validation.linaro.org/static/docs/v2/index.html">2026.01</a>)</td>
+</tr>
+<tr>
+<td><strong>AWS Device Farm</strong></td>
+<td>Managed farm (SaaS)</td>
+<td>High for managed; <strong>no RK3588</strong>; private custom OS</td>
+<td>via API</td>
+<td>YES</td>
+<td>none (SaaS)</td>
+<td>$5/hr phys, $1/hr virt, $200/mo private</td>
+<td>account ToS</td>
+<td>mature</td>
+<td>good</td>
+<td><strong>No managed RK3588</strong> — only private-device upload;
+cost weakens it (<a
+href="https://aws.amazon.com/device-farm/pricing/">pricing</a>)</td>
+</tr>
+<tr>
+<td><strong>Firebase Test Lab</strong></td>
+<td>Managed farm (SaaS)</td>
+<td>Medium (Google devices, no custom OS / no RK3588)</td>
+<td>via API</td>
+<td>YES</td>
+<td>none (SaaS)</td>
+<td>$5/hr phys, $1/hr virt; free Spark</td>
+<td>account ToS</td>
+<td>mature</td>
+<td>good</td>
+<td><strong>Not target-faithful</strong> (no RK3588/custom OS) (<a
+href="https://firebase.google.com/docs/test-lab/usage-quotas-pricing">pricing</a>)</td>
+</tr>
+<tr>
+<td><strong>Genymotion (Desktop/SaaS/PaaS)</strong></td>
+<td>Android VM</td>
+<td>Medium — app logic; ARM64 on Graviton; <strong>no real A/B
+apply</strong></td>
+<td>Desktop on mac (HVF) — <strong>already wired in
+<code>pkg/genymotion</code></strong></td>
+<td>YES (Graviton PaaS)</td>
+<td>HVF(mac)/EC2</td>
+<td><strong>commercial</strong> $0.6/hr SaaS</td>
+<td>commercial license</td>
+<td>mature</td>
+<td>good</td>
+<td><strong>Optional alt to AVD</strong> — already has wrapper; cost vs
+free AVD (<a href="https://www.genymotion.com/pricing/">pricing</a>, <a
+href="https://aws.amazon.com/marketplace/pp/prodview-wwjcsmbxgbboy">arm64
+PaaS</a>)</td>
+</tr>
+<tr>
+<td><strong>K8s + STF / android-farm-operator</strong></td>
+<td>Distributed emulator/device farm</td>
+<td>Inherits emulator fidelity</td>
+<td>NO (KVM nodes)</td>
+<td>YES Linux+KVM</td>
+<td><strong>Linux + KVM privileged nodes</strong></td>
+<td>Apache-2.0 / free</td>
+<td>none</td>
+<td>community</td>
+<td>good</td>
+<td><strong>Distributed-CI fan-out</strong> for AVD/Cuttlefish nodes (<a
+href="https://github.com/tinyzimmer/android-farm-operator">operator</a>)</td>
+</tr>
+<tr>
+<td><strong>HashiCorp Nomad</strong></td>
+<td>Heterogeneous scheduler</td>
+<td>Scheduler (containers + VMs + raw binaries + QEMU driver)</td>
+<td>partial (agent on mac)</td>
+<td><strong>YES</strong></td>
+<td>any</td>
+<td>MPL-2.0 / free</td>
+<td>none</td>
+<td>mature</td>
+<td>excellent</td>
+<td><strong>Best-fit scheduler for a MIXED fabric</strong> vs K8s
+containers-only (<a
+href="https://developer.hashicorp.com/nomad/docs/k8s-nomad">Nomad
+k8s</a>)</td>
+</tr>
+<tr>
+<td><strong>GitHub Actions / BuildKite self-hosted runners</strong></td>
+<td>CI runner fabric</td>
+<td>Runner (fidelity = node)</td>
+<td>YES (mac runner)</td>
+<td><strong>YES</strong></td>
+<td>any</td>
+<td>free OSS / usage</td>
+<td>account ToS</td>
+<td>mature</td>
+<td>excellent</td>
+<td><strong>CI front-door</strong> dispatching into the fabric;
+BuildKite hybrid fits self-host (<a
+href="https://buildkite.com/resources/blog/managed-self-hosted-or-hybrid-ci-cd-understand-your-options/">hybrid</a>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="android-virtual-devices-detailed">2. Android virtual devices
+(detailed)</h2>
+<h3 id="cuttlefish-cvd-high-fidelity-reference">2.1 Cuttlefish
+(<code>cvd</code>) — high-fidelity reference</h3>
+<ul>
+<li><strong>What:</strong> Google’s reference virtual Android device;
+exercises <strong>real <code>update_engine</code> A/B, AVB/dm-verity,
+auto-rollback</strong> on virtual partitions.</li>
+<li><strong>Host req (FACT):</strong> “Cuttlefish is a virtual device
+and is dependent on virtualization being available on the host machine”
+and demands <strong>KVM</strong> (<code>/dev/kvm</code>); setup is
+<strong>Debian-package Linux only</strong>; page has <strong>no
+macOS/Apple-Silicon</strong> support (<a
+href="https://source.android.com/docs/devices/cuttlefish/get-started">AOSP
+get-started</a>, fetched 2026-06-10).</li>
+<li><strong>ARM64 host:</strong> runs on ARM64 Linux via
+<code>aosp_cf_arm64_only_phone</code>, still needing
+<code>/dev/kvm</code> (<a
+href="https://source.android.com/docs/devices/cuttlefish/get-started">get-started</a>;
+<a
+href="https://sites.google.com/junsun.net/how-to-run-cuttlefish/home">how-to
+ARM64</a>).</li>
+<li><strong>This-host verdict (§11.4.112):</strong> <strong>host-gated,
+NOT structurally impossible</strong> — runs on Linux+KVM / M4+ macOS-15
+nested-virt / GCE nested-virt; honest gap on this M3 Pro. Matches
+<code>EMULATED_DEVICE_TESTING.md</code> Tier-2.</li>
+</ul>
+<h3 id="android-emulator-avd-arm64-v8a-local-accelerated-tier">2.2
+Android Emulator / AVD (arm64-v8a) — local accelerated tier</h3>
+<ul>
+<li><strong>FACT:</strong> AVD ships Android-team-blessed images and
+<strong>natively supports arm64-v8a on Apple Silicon (M1–M4) via HVF
+automatically</strong> (<a
+href="https://developer.android.com/studio/releases/emulator">emulator
+release notes</a>). Only fast Android path on this host.</li>
+<li><strong>A/B/OTA fidelity (boundary):</strong> stock AVD targets
+app/userspace logic, <strong>not</strong> a faithful
+real-<code>update_engine</code>/A/B-slot/AVB environment.
+<code>UNCONFIRMED:</code> whether a custom <code>aosp_*_ab</code> GSI +
+<code>update_engine_client</code> sideload applies a real payload under
+stock AVD — follow-up: empirical GSI-A/B test (<a
+href="https://source.android.com/docs/core/tests/vts/gsi">AOSP GSI</a>,
+<a
+href="https://developer.android.com/topic/generic-system-image/releases">GSI
+releases</a>).</li>
+<li><strong>Verdict:</strong> PRIMARY local tier for
+<strong><code>ota-android-agent</code> + bridge decision logic +
+ADB-driven UI/automation</strong>, complementing Tier-1. Partially wired
+via <code>containers/pkg/emulator</code>.</li>
+</ul>
+<h3 id="genymotion">2.3 Genymotion</h3>
+<ul>
+<li><strong>FACT:</strong> Desktop = Android in a VM
+(VirtualBox/QEMU/HVF); SaaS/PaaS = EC2 incl. <strong>ARM64 on
+Graviton</strong> (<a href="https://www.genymotion.com/aws/">AWS</a>, <a
+href="https://aws.amazon.com/marketplace/pp/prodview-wwjcsmbxgbboy">arm64
+15.0</a>); ~<strong>$0.6/hr</strong> SaaS (<a
+href="https://www.genymotion.com/pricing/">pricing</a>).</li>
+<li><strong>Already integrated:</strong>
+<code>containers/pkg/genymotion</code> (parser pinned to real
+<code>gmtool</code> 3.10.0 output, operator host 2026-06-06).</li>
+<li><strong>Verdict:</strong> optional commercial alt to free AVD; same
+non-A/B-apply boundary.</li>
+</ul>
+<h3 id="corellium-real-arm-virtualization">2.4 Corellium — real ARM
+virtualization</h3>
+<ul>
+<li><strong>FACT:</strong> proprietary <strong>CHARM type-1 hypervisor
+on ARM</strong> — real iOS/Android/ARM, <strong>no
+emulation/translation</strong> (<a
+href="https://www.corellium.com/platform">platform</a>); deploys
+<strong>Graviton cloud / on-prem appliance (air-gappable) / dedicated
+server</strong> (<a
+href="https://www.carahsoft.com/corellium">Carahsoft</a>).</li>
+<li><strong>Cost/ToS (§11.4.99):</strong> commercial —
+<strong>$3/device-hr</strong> solo; enterprise
+<strong>$9,995/mo</strong> (Nov 2025) (<a
+href="https://www.prnewswire.com/news-releases/corellium-introduces-unparalleled-support-for-ios-26-and-newest-mobile-device-models-dynamic-risk-scoring-for-mobile-applications-and-expanded-global-coverage-302618175.html">pricing
+PR</a>). Vendor-curated device models.</li>
+<li><strong>RK3588:</strong> <code>UNCONFIRMED:</code> no public
+evidence of an exact RK3588 SoC model — sales inquiry only if
+justified.</li>
+<li><strong>Verdict:</strong> optional premium tier; operator-gated
+(§11.4.66), not baseline.</li>
+</ul>
+<hr />
+<h2 id="soc-full-system-emulation">3. SoC / full-system emulation</h2>
+<h3 id="qemu-system-aarch64--machine-virt-edk2-uefi-u-boot">3.1 QEMU
+<code>system-aarch64 -machine virt</code> + edk2 UEFI / U-Boot</h3>
+<ul>
+<li><strong>FACT:</strong> <code>-machine virt</code> +
+<code>edk2-aarch64-code.fd</code> (+ per-VM vars) is the standard
+aarch64 UEFI path; <strong>U-Boot and TF-A both ship a
+<code>qemu virt</code> target</strong> (<a
+href="https://docs.u-boot.org/en/stable/board/emulation/qemu-arm.html">U-Boot</a>,
+<a
+href="https://trustedfirmware-a.readthedocs.io/en/latest/plat/qemu.html">TF-A</a>,
+<a
+href="https://dev.to/krjakbrjak/running-qemu-vms-on-arm64-uefi-requirements-5c9e">UEFI
+req</a>).</li>
+<li><strong>Boundary:</strong> <code>-machine virt</code> is a
+<strong>generic</strong> ARMv8 board, <strong>not</strong> an RK3588 SoC
+model (no Rockchip clocks/PMIC/Mali). <code>UNCONFIRMED:</code> HVF
+accel for an aarch64 <em>Android</em> guest under QEMU on macOS —
+follow-up: boot test.</li>
+<li><strong>Verdict:</strong> KEEP for
+<strong>firmware/UEFI/U-Boot-slot-logic + future Linux-target</strong>
+tier — exactly what <code>containers/pkg/vm</code> orchestrates. Not the
+Android A/B tier.</li>
+</ul>
+<h3 id="renode">3.2 Renode</h3>
+<ul>
+<li><strong>FACT:</strong> open-source deterministic SoC+peripheral
+simulator; ARM Cortex-A/M + <strong>ARMv8-A + 64-bit peripherals since
+1.14</strong>; fully <strong>deterministic</strong> (<a
+href="https://renode.io/news/armv8-a-support-in-renode/">ARMv8</a>, <a
+href="https://renode.io/news/renode-1-14-release/">1.14</a>).</li>
+<li><strong>Verdict:</strong> future <strong>peripheral/MCU/RTOS-target
++ deterministic regression</strong> tier; not Android A/B.</li>
+</ul>
+<hr />
+<h2 id="microvms-isolation">4. microVMs / isolation</h2>
+<ul>
+<li><strong>Firecracker (FACT):</strong> x86_64 + <strong>aarch64
+Linux</strong>, only <strong>5 emulated devices</strong>, boots a Linux
+guest kernel &lt;125 ms / &lt;5 MiB — <strong>cannot run full
+Android</strong>; needs KVM (<a
+href="https://github.com/firecracker-microvm/firecracker">repo</a>).</li>
+<li><strong>Kata (FACT):</strong> OCI runtime wrapping containers in
+microVMs; backends Cloud Hypervisor(default)/Firecracker/QEMU;
+KVM-dependent (<a
+href="https://northflank.com/blog/kata-containers-vs-firecracker-vs-gvisor">compare</a>).</li>
+<li><strong>Cloud Hypervisor (FACT):</strong> more virtio devices, REST
+API, live-migration, VFIO GPU passthrough, boot &lt;100 ms (<a
+href="https://northflank.com/blog/firecracker-vs-cloud-hypervisor">compare</a>).</li>
+<li><strong>gVisor (FACT):</strong> userspace syscall interception,
+<strong>no hardware isolation</strong>, Linux-only (<a
+href="https://edera.dev/stories/kata-vs-firecracker-vs-gvisor-isolation-compared">compare</a>).</li>
+<li><strong>Verdict:</strong> substrates for <strong>CONTROL-PLANE
+workloads</strong> (scaling/DDoS/chaos/security sandboxing of the Go
+server) on the Linux-KVM CI tier — not device emulators; not runnable on
+this M3 host (KVM). gVisor (no KVM) is a server-security-sandbox
+candidate.</li>
+</ul>
+<hr />
+<h2 id="distributed-devicetest-farms-orchestration">5. Distributed
+device/test farms + orchestration</h2>
+<ul>
+<li><strong>LAVA (FACT):</strong> CI that deploys OSes onto
+<strong>physical AND virtual hardware</strong>; master/worker/dispatcher
+(only master holds DB; dispatcher talks to DUT; config pushed from
+server); <strong>MultiNode</strong> coordinates device groups; docs
+<strong>2026.01</strong> (<a
+href="https://validation.linaro.org/static/docs/v2/index.html">intro</a>,
+<a
+href="https://validation.linaro.org/static/docs/v2/dispatcher-design.html">dispatcher</a>,
+<a
+href="https://validation.linaro.org/static/docs/v2/first-devices.html">first-devices</a>).
+Strongest fit for the real-RK3588 + Cuttlefish distributed control
+plane.</li>
+<li><strong>AWS Device Farm (FACT):</strong> $5/hr phys, $1/hr virt,
+$200/mo private; private devices run <strong>custom OS images</strong>,
+<strong>no managed RK3588</strong> (<a
+href="https://aws.amazon.com/device-farm/pricing/">pricing</a>, <a
+href="https://aws.amazon.com/device-farm/faqs/">FAQs</a>).</li>
+<li><strong>Firebase Test Lab (FACT):</strong> $5/hr phys, $1/hr virt,
+free Spark; Google devices only, <strong>no custom OS/RK3588</strong>
+(<a
+href="https://firebase.google.com/docs/test-lab/usage-quotas-pricing">pricing</a>).</li>
+<li><strong>K8s + STF / android-farm-operator (FACT):</strong> K8s
+operator for OpenSTF + emulator/device farms; emulator nodes need
+<strong>privileged <code>/dev/kvm</code></strong>, USB/KVM nodes need
+labels/taints (<a
+href="https://github.com/tinyzimmer/android-farm-operator">operator</a>;
+<a
+href="https://sourceforge.net/projects/openstf.mirror/">STF</a>).</li>
+<li><strong>Nomad vs K8s (FACT):</strong> Nomad schedules
+<strong>heterogeneous</strong> workloads (Docker, VMs, raw binaries,
+batch, QEMU task driver), smaller footprint; K8s = containers-only (<a
+href="https://developer.hashicorp.com/nomad/docs/k8s-nomad">Nomad
+k8s</a>, <a
+href="https://www.netapp.com/learn/cvo-blg-kubernetes-vs-nomad-understanding-the-tradeoffs/">NetApp</a>).
+For a fabric mixing containers + QEMU + raw <code>cvd</code>,
+<strong>Nomad’s heterogeneity is a better structural fit</strong>;
+K8s+operator is the more battle-tested Android-farm path.</li>
+<li><strong>Self-hosted CI (FACT):</strong> GitHub Actions / BuildKite
+self-hosted runners; BuildKite hybrid (their control plane, our agents)
+suits a self-hosted KVM tier (<a
+href="https://buildkite.com/resources/blog/managed-self-hosted-or-hybrid-ci-cd-understand-your-options/">hybrid</a>).
+NOTE: GitHub-hosted Apple-Silicon runners do <strong>not</strong> expose
+HVF/nested-virt to jobs (<a
+href="https://github.com/actions/runner-images/issues/13505">#13505</a>)
+-&gt; accelerated emulation needs <strong>our own</strong> mac/Linux
+runners.</li>
+</ul>
+<hr />
+<h2 id="hardware-in-the-loop-hil-the-genuine-rk3588-tier-interop">6.
+Hardware-in-the-loop (HIL) — the genuine RK3588 tier + interop</h2>
+<ul>
+<li>Real RK3588 / Orange Pi 5 Max (Tier-3) is the only env exercising
+<strong>vendor HAL + real U-Boot slot-switch + dm-verity on real
+partitions + Mali GPU + auto-rollback on a genuinely corrupt
+slot</strong>; any flash governed by §11.4.133.</li>
+<li><strong>Interop (recommendation):</strong> <strong>LAVA is the
+natural HIL control plane</strong> — drives physical boards via
+per-board dispatchers AND virtual targets (Cuttlefish/QEMU) through the
+<em>same</em> job schema, so virtual + real tiers share one
+orchestration surface (<a
+href="https://validation.linaro.org/static/docs/v2/dispatcher-design.html">dispatcher</a>).
+<code>redroid-rk3588</code> adds a <em>containerized Android on the real
+SoC</em> path (Mali GPU + app stack, no bootloader/A/B) — an adjacent
+fidelity point between Cuttlefish and full-flash Tier-3 (<a
+href="https://github.com/CNflysky/redroid-rk3588">redroid-rk3588</a>).</li>
+</ul>
+<hr />
+<h2 id="headline-verdicts-cited-one-line-each">7. Headline verdicts
+(cited, one line each)</h2>
+<ul>
+<li><strong>Local dev-host (M3/macOS):</strong> <strong>(a) Tier-1
+<code>ota-device-emulator</code> (podman)</strong> for protocol/server
+flow + <strong>(b) Android AVD arm64-v8a on HVF</strong> for agent/UI
+logic — the only two accelerated, this-host-runnable tiers (§0, §2.2).
+QEMU <code>-machine virt</code> + Renode = firmware/embedded-target
+locals.</li>
+<li><strong>Distributed CI (Linux+KVM):</strong>
+<strong>Cuttlefish</strong> for real
+<code>update_engine</code>/A/B/AVB/dm-verity fidelity, fanned out by
+<strong>LAVA</strong> (control plane) and/or <strong>Nomad</strong>
+(heterogeneous scheduler), with microVMs (Firecracker/Kata/Cloud
+Hypervisor) isolating control-plane scaling/chaos/security workloads
+(§2.1, §4, §5).</li>
+<li><strong>Real-hardware tier:</strong> <strong>RK3588 boards behind
+LAVA</strong>, with <code>redroid-rk3588</code> as an adjacent
+SoC-on-board app/GPU fidelity point (§6).</li>
+</ul>
+<h2 id="honest-macos-m3-host-capability-gaps-11.4.112">8. Honest
+macOS-M3-host capability gaps (§11.4.112)</h2>
+<ol type="1">
+<li><strong>Cuttlefish / any KVM-Android (redroid, K8s-STF emulator
+nodes, Firecracker/Kata/Cloud Hypervisor):</strong> host-gated — needs
+<code>/dev/kvm</code>, absent on macOS; nested-KVM on Apple Silicon is
+M4+/macOS-15-only and <strong>M3 lacks it</strong> -&gt; effectively
+impossible on <em>this</em> host, runnable on Linux-KVM box / M4+ /
+GCE-nested-virt (NOT structurally impossible). (§0, §2.1, §4.)</li>
+<li><strong>Real A/B <code>update_engine</code> apply on stock
+AVD:</strong> <code>UNCONFIRMED:</code> — needs the GSI-A/B empirical
+test (§2.2); current honest assumption is real A/B apply =
+Cuttlefish/real-HW only.</li>
+<li><strong>Real RK3588 SoC device model (QEMU/Corellium):</strong> no
+public Rockchip RK3588 machine model in QEMU <code>-machine virt</code>;
+Corellium RK3588 support <code>UNCONFIRMED:</code>. Real SoC fidelity =
+Tier-3 hardware or redroid-on-RK3588. (§3.1, §2.4, §6.)</li>
+</ol>
+<h2 id="sources-verified-2026-06-10">Sources verified 2026-06-10</h2>
+<ul>
+<li>Cuttlefish:
+https://source.android.com/docs/devices/cuttlefish/get-started ;
+https://sites.google.com/junsun.net/how-to-run-cuttlefish/home ;
+https://github.com/google/android-cuttlefish</li>
+<li>Android Emulator/AVD/GSI:
+https://developer.android.com/studio/releases/emulator ;
+https://source.android.com/docs/core/tests/vts/gsi ;
+https://developer.android.com/topic/generic-system-image/releases</li>
+<li>Apple Silicon nested-virt/HVF:
+https://developer.apple.com/documentation/hypervisor ;
+https://github.com/actions/runner-images/issues/13505</li>
+<li>Corellium: https://www.corellium.com/platform ;
+https://www.carahsoft.com/corellium ;
+https://www.prnewswire.com/news-releases/corellium-introduces-unparalleled-support-for-ios-26-and-newest-mobile-device-models-dynamic-risk-scoring-for-mobile-applications-and-expanded-global-coverage-302618175.html</li>
+<li>QEMU/UEFI/U-Boot/TF-A:
+https://docs.u-boot.org/en/stable/board/emulation/qemu-arm.html ;
+https://trustedfirmware-a.readthedocs.io/en/latest/plat/qemu.html ;
+https://dev.to/krjakbrjak/running-qemu-vms-on-arm64-uefi-requirements-5c9e</li>
+<li>Renode: https://renode.io/news/armv8-a-support-in-renode/ ;
+https://renode.io/news/renode-1-14-release/</li>
+<li>Firecracker/Kata/gVisor/Cloud Hypervisor:
+https://github.com/firecracker-microvm/firecracker ;
+https://northflank.com/blog/kata-containers-vs-firecracker-vs-gvisor ;
+https://northflank.com/blog/firecracker-vs-cloud-hypervisor ;
+https://edera.dev/stories/kata-vs-firecracker-vs-gvisor-isolation-compared</li>
+<li>LAVA: https://validation.linaro.org/static/docs/v2/index.html ;
+https://validation.linaro.org/static/docs/v2/dispatcher-design.html ;
+https://validation.linaro.org/static/docs/v2/first-devices.html</li>
+<li>AWS Device Farm / Firebase Test Lab:
+https://aws.amazon.com/device-farm/pricing/ ;
+https://aws.amazon.com/device-farm/faqs/ ;
+https://firebase.google.com/docs/test-lab/usage-quotas-pricing</li>
+<li>Genymotion: https://www.genymotion.com/pricing/ ;
+https://www.genymotion.com/aws/ ;
+https://aws.amazon.com/marketplace/pp/prodview-wwjcsmbxgbboy</li>
+<li>redroid-rk3588: https://github.com/CNflysky/redroid-rk3588 ;
+https://www.lpi.org/blog/2026/04/24/redroid-the-lightweight-open-source-android-virtualizer/</li>
+<li>K8s/STF/Nomad/CI:
+https://github.com/tinyzimmer/android-farm-operator ;
+https://developer.hashicorp.com/nomad/docs/k8s-nomad ;
+https://www.netapp.com/learn/cvo-blg-kubernetes-vs-nomad-understanding-the-tradeoffs/
+;
+https://buildkite.com/resources/blog/managed-self-hosted-or-hybrid-ci-cd-understand-your-options/</li>
+</ul>
+</body>
+</html>
