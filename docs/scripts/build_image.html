@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>build_image</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">build_image</h1>
+</header>
+<h1 id="build_image.sh-user-guide">build_image.sh — user guide</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-11T00:00:00Z</p>
+<p>Companion documentation (§11.4.18) for
+<code>tests/emulator/ab_virt/build_image.sh</code>.</p>
+<h2 id="overview">Overview</h2>
+<p><code>build_image.sh</code> builds a bootable <strong>aarch64 Linux
+guest image</strong> for the dev-host RK3588 / Orange Pi 5 Max A/B
+emulator. The produced kernel + rootfs boot under QEMU
+<code>-machine virt</code> + HVF on an Apple-Silicon host and are the
+foundation the A/B layers (U-Boot bootcount + RAUC dm-verity) build
+on.</p>
+<p>The script’s current target is phase <strong>PWU-AB-0</strong>: a
+base <strong>Buildroot aarch64</strong> rootfs + kernel with dropbear
+SSH and a known root credential, plus the A/B toolchain pieces (U-Boot
+<code>qemu_arm64</code>, RAUC, dosfstools / e2fsprogs / util-linux)
+compiled in from the <code>qemu_aarch64_virt_defconfig</code> base
+configuration.</p>
+<p>Because the build host is macOS while Buildroot needs a Linux build
+host, the build runs <strong>inside a podman aarch64 Linux
+container</strong> (native arm64, no emulation) using Buildroot’s
+<strong>internal toolchain</strong> (not the Bootlin external toolchain,
+which is invalid for this defconfig).</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li><code>podman</code> on <code>PATH</code> (the only hard host
+dependency; the script aborts with exit 3 if absent).</li>
+<li>A podman machine with roughly <strong>10–20 GB</strong> of free disk
+for the toolchain + kernel + rootfs build.</li>
+<li>Network access (Buildroot downloads the toolchain + package
+sources).</li>
+</ul>
+<h2 id="usage-examples">Usage examples</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the base image (long: toolchain + kernel + rootfs).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/ab_virt/build_image.sh</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Wipe out/ + the download-cache volume + a stale build container, then build.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/ab_virt/build_image.sh</span> <span class="at">--clean</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Override the Buildroot version and the root password.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="va">BR2_VERSION</span><span class="op">=</span>2024.02.10 <span class="va">HELIX_AB_ROOT_PW</span><span class="op">=</span>helixota <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">tests/emulator/ab_virt/build_image.sh</span></span></code></pre></div>
+<h2 id="inputs">Inputs</h2>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Source</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--clean</code></td>
+<td>CLI arg 1</td>
+<td>(none) — incremental build</td>
+</tr>
+<tr>
+<td><code>BR2_VERSION</code></td>
+<td>env</td>
+<td><code>2024.02.10</code></td>
+</tr>
+<tr>
+<td><code>HELIX_AB_ROOT_PW</code></td>
+<td>env → <code>ROOT_PW</code></td>
+<td><code>helixota</code></td>
+</tr>
+</tbody>
+</table>
+<p>The script also uses two fixed podman object names: a named
+download-cache volume <code>helix_ab_dl</code> and a named build
+container <code>helix_ab_build</code>.</p>
+<h2 id="outputs">Outputs</h2>
+<p>All outputs land under <code>tests/emulator/ab_virt/out/</code> and
+are gitignored (§11.4.30; the script itself is the §11.4.77 regeneration
+mechanism):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>out/images/Image</code></td>
+<td>aarch64 kernel image</td>
+</tr>
+<tr>
+<td><code>out/images/rootfs.ext2</code></td>
+<td>Buildroot rootfs</td>
+</tr>
+<tr>
+<td><code>out/images/u-boot.bin</code></td>
+<td>U-Boot <code>qemu_arm64</code> bootloader (additive — extracted if
+present)</td>
+</tr>
+<tr>
+<td><code>out/build.log</code></td>
+<td>full build transcript (stdout+stderr of the container run +
+<code>podman cp</code>)</td>
+</tr>
+<tr>
+<td><code>out/.ok</code></td>
+<td>success stamp — written <strong>only</strong> when the real kernel +
+rootfs are present and non-empty</td>
+</tr>
+</tbody>
+</table>
+<h2 id="side-effects">Side-effects</h2>
+<ul>
+<li>Creates the named podman volume <code>helix_ab_dl</code> (download
+cache; persists across runs so re-builds do not re-download).</li>
+<li>Creates and (on success/failure paths) removes the named build
+container <code>helix_ab_build</code>.</li>
+<li><code>--clean</code> additionally <code>rm -rf out/</code> and
+force-removes the volume + container.</li>
+<li>Writes the two image artifacts host-side via <code>podman cp</code>
+(no bind-mount; works on the external <code>/Volumes/T7</code> volume
+that is not shared into the podman machine VM).</li>
+</ul>
+<h2 id="internal-behaviour">Internal behaviour</h2>
+<ol type="1">
+<li><code>set -u</code> + <code>set -o pipefail</code>; resolve
+<code>SCRIPT_DIR</code>, <code>OUT</code>, the Buildroot version, root
+password, and the volume/container names.</li>
+<li>Abort (exit 3) if <code>podman</code> is not found.</li>
+<li>On <code>--clean</code>, wipe <code>out/</code>, the download
+volume, and a stale container.</li>
+<li><code>mkdir -p out/images</code>; remove any prior
+<code>out/.ok</code> so a stale stamp can never survive a failed
+run.</li>
+<li><code>podman volume create helix_ab_dl</code> (idempotent) and
+force-remove any leftover build container.</li>
+<li><code>podman run --name helix_ab_build --arch arm64</code> against
+<code>debian:bookworm-slim</code> with the download volume mounted at
+<code>/dl</code>:
+<ul>
+<li><code>apt-get</code> installs the Buildroot host toolchain build
+deps plus <strong>libssl-dev</strong> (U-Boot host tools
+<code>mkimage</code>/<code>aisimage</code> need
+<code>openssl/evp.h</code>) and <strong>bison/flex</strong> (U-Boot
+Kconfig / dtc parser generators).</li>
+<li>Buildroot refuses to build as root, so a dedicated <code>br</code>
+user owns <code>/work</code> and <code>/dl</code>.</li>
+<li>As <code>br</code>: download + extract Buildroot,
+<code>make qemu_aarch64_virt_defconfig</code>, append the A/B config
+fragment to <code>.config</code> (root password, dropbear + client,
+util-linux, e2fsprogs + resize2fs, dosfstools + mkfs.fat, RAUC, U-Boot
+<code>qemu_arm64</code> with DTC + <code>.bin</code> format),
+<code>make olddefconfig</code>, then <code>make -j$(nproc)</code>.</li>
+<li>The whole transcript is redirected to
+<code>out/build.log</code>.</li>
+</ul></li>
+<li>If the container run returns non-zero, log the last 25 lines of
+<code>build.log</code>, remove the container, and exit 1.</li>
+<li>Extract <code>Image</code> and <code>rootfs.ext2</code> via
+<code>podman cp</code>; extract <code>u-boot.bin</code> if present (the
+<code>.ok</code> gate keys on kernel + rootfs only, so a missing U-Boot
+stays visible rather than faked). Remove the container.</li>
+<li><strong>Anti-bluff gate (§11.4.6):</strong> stamp
+<code>out/.ok</code> and exit 0 <strong>only</strong> when both
+<code>out/images/Image</code> and <code>out/images/rootfs.ext2</code>
+exist and are non-empty. Otherwise log “images missing — NOT stamping
+.ok” and exit
+<ol type="1">
+<li></li>
+</ol></li>
+</ol>
+<h2 id="edge-cases">Edge cases</h2>
+<ul>
+<li><strong>podman absent</strong> → exit 3 before any work.</li>
+<li><strong>Build fails inside the container</strong> → exit 1 with a
+<code>build.log</code> tail; <code>.ok</code> is never written.</li>
+<li><strong>Build finishes but the image artifacts are
+missing/empty</strong> → exit 1, <code>.ok</code> not stamped (the
+explicit anti-bluff guard — a phantom build is never claimed as
+success).</li>
+<li><strong>u-boot.bin not produced</strong> → the
+<code>podman cp</code> for it is tolerated (<code>|| true</code>); the
+build can still succeed at the kernel+rootfs level, and the missing
+bootloader is observable by its absence in
+<code>out/images/</code>.</li>
+</ul>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/emulator/ab_virt/boot_smoke.sh</code> — boots the
+produced <code>Image</code> + <code>rootfs.ext2</code> under QEMU+HVF
+and asserts a live interactive userspace. See
+<code>docs/scripts/boot_smoke.md</code>.</li>
+<li><code>tests/emulator/ab_virt/assemble_ab_disk.sh</code> — consumes
+<code>Image</code> + <code>rootfs.ext2</code> + <code>u-boot.bin</code>
+to assemble the 2-slot GPT disk. See
+<code>docs/scripts/assemble_ab_disk.md</code>.</li>
+<li><code>docs/research/rk3588_emulator/REPORT.md</code> — the emulator
+design report.</li>
+</ul>
+<h2 id="last-verified-date">Last verified date</h2>
+<p>2026-06-11 — documented against the script as committed (read, not
+inferred).</p>
+</body>
+</html>

@@ -177,8 +177,8 @@
 </header>
 <h1 id="rk3588-orange-pi-5-max-ab-virt-emulator-status-summary">RK3588 /
 Orange Pi 5 Max — A/B-virt Emulator — Status Summary</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-11T12:10:00Z <strong>Companion of:</strong> <a
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-11T12:30:00Z <strong>Companion of:</strong> <a
 href="Status.md"><code>Status.md</code></a> (§11.4.56 two-audience
 parity).</p>
 <hr />
@@ -195,14 +195,20 @@ this Mac (using Apple’s built-in virtualization). We have the full boot
 recording as proof.</li>
 <li>The container-based test (control plane talking to a fake device)
 also works end-to-end.</li>
+<li>Our automated quality bank for this project passes its checks (12 of
+12), including the check that the boot recording above is real and on
+file.</li>
 </ul>
 <p><strong>What is still pending (NOT done yet — honestly):</strong></p>
 <ul>
 <li><strong>The real “switch to the new system half and roll back if it
 fails” part is NOT proven yet.</strong> That is the heart of the A/B
 update (pick slot A or B, verify it, fall back if the new one is bad).
-The pieces for it are being built into the image right now, but there is
-no proof it works yet, so we are not claiming it does.</li>
+The scripts that do this — the two-slot disk builder and the bootloader
+slot-picker / auto-rollback logic — are now <strong>written and check
+out cleanly, but have not been run</strong>: they need a real bootloader
+binary that an image build (running right now) will produce. Until we
+actually run them and capture the result, we do NOT claim it works.</li>
 <li><strong>The full real-Android A/B update test</strong> needs a
 <strong>Linux machine</strong> (it cannot run on this Mac — the Mac
 lacks the required virtualization device). It is ready to run the moment
@@ -221,8 +227,10 @@ engineers</h2>
 <p><strong>Fidelity ladder.</strong> T0 podman control-plane+emulator
 (SHIPPED, protocol-only) → T1 A/B-virt base image on QEMU
 <code>virt</code> + HVF (FOUNDATION GREEN: live-userspace boot;
-A/B-apply layers in progress) → T2 Cuttlefish real Android
-<code>update_engine</code> A/B + AVB/dm-verity + auto-rollback (SKIP on
+A/B-apply layers AUTHORED — assembler + U-Boot boot.cmd — NOT yet run,
+gated on <code>u-boot.bin</code> from the in-flight build8) → T2
+Cuttlefish real Android <code>update_engine</code> A/B + AVB/dm-verity +
+auto-rollback incl. PWU-CF-2 corrupt-slot rollback (SKIP/UNVERIFIED on
 this host, Linux+KVM-gated) → T3 real RK3588 hardware (PENDING).</p>
 <p><strong>Proven (captured evidence):</strong></p>
 <ul>
@@ -247,30 +255,53 @@ post-login sentinel, not a single frame). Driver
 <code>tests/emulator/tier1_container_e2e.sh</code> (register →
 update-check → telemetry asserted from captured podman logs under
 <code>docs/qa/&lt;run-id&gt;/</code>).</li>
+<li><strong>HelixQA bank static gate (E9)</strong> —
+<code>bash tools/helixqa/run_bank.sh --dry-run --bank tools/helixqa/banks/helix_ota.yaml</code>
+→ 12 passed / 0 failed / 0 skipped. <code>HOTA-AB-VIRT-BOOT</code>
+declares evidence
+<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code> (verified
+present). The runner FAILs any challenge whose declared evidence is
+missing — this gates that the boot evidence exists + is wired into the
+bank (it does NOT itself exercise A/B apply).</li>
 </ul>
 <p><strong>Pending / not proven (§11.4.6):</strong></p>
 <ul>
 <li><strong>A/B slot switch + dm-verity + auto-rollback (E3–E5)</strong>
-= PENDING_FORENSICS. No captured slot-switch or rollback evidence.
-U-Boot qemu_arm64 bootcount + RAUC dm-verity slot layers (commit
-<code>4278aa9</code>) are being built into the image; not yet
-exercised.</li>
-<li><strong>T2 Cuttlefish (E7)</strong> = SKIP. Driver
-<code>tests/emulator/tier2_cuttlefish_ab.sh</code>; host gate
-<code>/dev/kvm</code> absent on this Apple-Silicon macOS host
+= PENDING_FORENSICS. The A/B disk assembler
+<code>tests/emulator/ab_virt/assemble_ab_disk.sh</code> + U-Boot
+bootcount slot-select
+<code>tests/emulator/ab_virt/uboot_ab/boot.cmd</code> (bootcount /
+bootlimit / altbootcmd / <code>BOOT_ORDER</code> semantics;
++<code>uboot.env</code>, <code>README.md</code>, commit
+<code>6581ab4</code>) are AUTHORED + parse-clean but <strong>NOT
+run</strong> — gated on a real <code>u-boot.bin</code> from the
+in-flight U-Boot+RAUC build8 (commit <code>0d27438</code> added the
+<code>libssl-dev</code>/bison/flex host-tools fix after build7 failed at
+<code>openssl/evp.h</code>). No captured slot-switch or rollback
+evidence yet.</li>
+<li><strong>T2 Cuttlefish (E7)</strong> = SKIP /
+UNVERIFIED-pending-Linux-host. Driver
+<code>tests/emulator/tier2_cuttlefish_ab.sh</code> (PWU-CF-2
+corrupt-slot auto-rollback section authored, mirrors ab_virt PWU-AB-3);
+host gate <code>/dev/kvm</code> absent on this Apple-Silicon macOS host
 (verified). Exit-3 honest topology SKIP per §11.4.3/§11.4.112. Script
-header marks the exact OTA-apply invocation <code>UNCONFIRMED:</code>
-(Virtual-A/B vs legacy A/B; <code>update_device.py</code> vs
-<code>cvd</code>) — runtime-detected, never guessed. Ready for the
-operator’s incoming Linux + nested-KVM host.</li>
+header marks the exact OTA-apply + rollback invocation
+<code>UNCONFIRMED:</code> (Virtual-A/B vs legacy A/B;
+<code>update_device.py</code> vs <code>cvd</code>) — runtime-detected,
+never guessed. Ready for the operator’s incoming Linux + nested-KVM
+host.</li>
 <li><strong>T3 hardware (E8)</strong> = PENDING_FORENSICS. No
 board.</li>
 </ul>
 <p><strong>Provenance:</strong> <code>dd43738</code> (research +
 dev-host A/B-virt build infra) → <code>d5374d0</code> (PWU-AB-1
 foundation GREEN, live-userspace boot) → <code>4278aa9</code> (U-Boot +
-RAUC + GPT tooling, PWU-AB-1 full in progress). HEAD
-<code>4278aa9</code>.</p>
+RAUC + GPT tooling) → <code>0f120a6</code> (parallel streams: HelixQA
+bank wiring + these Status docs + Cuttlefish PWU-CF-2 rollback) →
+<code>6581ab4</code> (A/B disk assembler + U-Boot bootcount slot-select,
+AUTHORED) → <code>0d27438</code> (build8 host-tools
+<code>libssl-dev</code> fix, build in flight). HEAD
+<code>0d27438</code>.</p>
 <p><strong>§-refs:</strong> §11.4.45 (Status doc), §11.4.56
 (two-audience summary), §11.4.5 (captured-evidence table), §11.4.6
 (no-guessing), §11.4.107 (liveness), §11.4.3 / §11.4.112 (topology-gated

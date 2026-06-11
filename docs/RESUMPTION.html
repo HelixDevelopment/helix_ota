@@ -213,7 +213,7 @@ operator decision)</td>
 <td>Point any fresh session at THIS file. It carries a SHORT one-line
 resume + a FULL block, the read-first handoff docs, exact live-state
 anchors, current PHASE + NEXT + terminal goal, and the binding
-constraints. Moment-valid for HEAD <code>a31b6c7</code> on
+constraints. Moment-valid for HEAD <code>0d27438</code> on
 <code>main</code> (all 5 remotes aligned). <strong>2026-06-10→11
 autonomous session: EVERY achievable software tier GREEN + §11.4.50
 determinism soaks + sustained loadtest, THEN an operator-directed
@@ -244,7 +244,7 @@ current PHASE is “OVERNIGHT STABLE — every achievable tier RE-VERIFIED
 GREEN on this HEAD (see docs/qa/STABILITY_REPORT.md Rev 2); P4
 Cuttlefish + GSI-A/B + T3 RK3588 remain hardware-BLOCKED so no release
 tag yet (§11.4.40); achievable+zero-risk queue EXHAUSTED”; HEAD is
-<code>a31b6c7</code> on <code>main</code> (all 5 remotes aligned).</p>
+<code>0d27438</code> on <code>main</code> (all 5 remotes aligned).</p>
 </blockquote>
 <h2 id="full-detailed-resumption-block">FULL — detailed resumption
 block</h2>
@@ -524,27 +524,38 @@ REPORT §6):</strong>
 aarch64 Buildroot guest in a podman container (macOS-portable: named
 container + named-volume DL cache + <code>podman cp</code> extract — NO
 <code>/Volumes/T7</code> bind-mount, NO <code>:Z</code>; output
-gitignored §11.4.77). <strong>STATE (HEAD <code>d5374d0</code>): ✅
-PWU-AB-0 base aarch64 Buildroot image BUILT (<code>out/.ok</code>,
-Image+rootfs.ext2); ✅ PWU-AB-1 FOUNDATION GREEN —
-<code>tests/emulator/ab_virt/boot_smoke.sh</code> boots it under
+gitignored §11.4.77). <strong>STATE (HEAD <code>0d27438</code>): ✅
+PWU-AB-0 base aarch64 Buildroot image BUILT; ✅ PWU-AB-1 FOUNDATION
+GREEN — <code>tests/emulator/ab_virt/boot_smoke.sh</code> boots it under
 <code>qemu-system-aarch64 -M virt -accel hvf</code> to a LIVE
-interactive userspace (kernel on real Apple CPU MIDR 0x610f via HVF +
-getty login + post-login uname + interactive sentinel; 196-line evidence
+interactive userspace (kernel on real Apple CPU MIDR 0x610f + getty
+login + post-login uname + interactive sentinel; 196-line evidence
 <code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>,
-anti-bluff §11.4.107).</strong> Root-caused+fixed en route:
-orphaned-rootless-podman-storage disk overflow (28GB), invalid Bootlin
-external toolchain, and a single-quote/paren shell-syntax bug. NEXT:
-PWU-AB-1 FULL (2-slot GPT + build U-Boot qemu_arm64 with
-bootcount/altbootcmd A/B env → boot via U-Boot → prove root==slot-B
-after apply+flip+reboot, RED→GREEN), PWU-AB-2 (RAUC format=verity
-dm-verity), PWU-AB-3 (corrupt-slot auto-rollback — headline), PWU-AB-4
-(agent ApplyPort→slot-writer over ota-protocol), PWU-AB-5 (chaos/stress
+anti-bluff §11.4.107); ✅ A/B slot mechanism AUTHORED (parse-clean +
+coherent, NOT yet run):
+<code>tests/emulator/ab_virt/assemble_ab_disk.sh</code> (2-slot GPT
+builder, stamps <code>out/.disk_ok</code>) +
+<code>tests/emulator/ab_virt/uboot_ab/boot.cmd</code>
+(BOOT_ORDER/bootcount/altbootcmd slot-select); ✅ 4 parallel streams
+committed — HelixQA bank <code>HOTA-AB-VIRT-BOOT</code> (dry-run
+12/0/0), §11.4.45 Status docs
+<code>docs/emulator/rk3588_ab_virt/</code>, Cuttlefish PWU-CF-2
+corrupt-slot rollback, the A/B-authoring. ⏳ build8
+(<code>build_image.sh</code> + U-Boot qemu_arm64 + RAUC +
+libssl-dev/bison/flex) building <code>u-boot.bin</code>.
+Root-caused+fixed en route: orphaned-rootless-podman-storage disk
+overflow (28GB), invalid Bootlin toolchain, single-quote/paren
+shell-syntax bug, U-Boot openssl/evp.h missing-libssl-dev.</strong>
+IMMINENT NEXT (HEADLINE, gated only on build8’s u-boot.bin): run
+<code>assemble_ab_disk.sh</code> → boot via U-Boot
+(<code>-bios u-boot.bin -drive ab_disk.img</code>) → prove root==slot-B
+after apply+flip+reboot (RED→GREEN §11.4.115, captured evidence). Then
+PWU-AB-2 (RAUC dm-verity), PWU-AB-3 (corrupt-slot auto-rollback —
+headline), PWU-AB-4 (agent ApplyPort over ota-protocol), PWU-AB-5 (chaos
 + HelixQA bank). Build hygiene: named container +
-<code>podman rm -f helix_ab_build</code> after each build (orphaned
-rootless storage was the 28GB disk culprit); NO apostrophes/parens in
-comments inside the single-quoted podman <code>bash -c</code>
-string.</li>
+<code>podman rm -f helix_ab_build</code> after each build; NO
+apostrophes/parens inside the single-quoted podman <code>bash -c</code>;
+U-Boot needs libssl-dev/bison/flex in the build container.</li>
 <li><strong>Linux/Cuttlefish T2 tier:</strong> implement the
 <code>/dev/kvm</code>-gated harness (§11.4.3/§11.4.81) from
 <code>docs/design/CUTTLEFISH_TIER2.md</code> — honest SKIP here, ready

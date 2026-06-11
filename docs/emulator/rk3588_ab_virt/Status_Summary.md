@@ -1,7 +1,7 @@
 # RK3588 / Orange Pi 5 Max — A/B-virt Emulator — Status Summary
 
-**Revision:** 1
-**Last modified:** 2026-06-11T12:10:00Z
+**Revision:** 2
+**Last modified:** 2026-06-11T12:30:00Z
 **Companion of:** [`Status.md`](Status.md) (§11.4.56 two-audience parity).
 
 ---
@@ -19,14 +19,18 @@ the device on this Mac.
   built-in virtualization). We have the full boot recording as proof.
 - The container-based test (control plane talking to a fake device) also works
   end-to-end.
+- Our automated quality bank for this project passes its checks (12 of 12),
+  including the check that the boot recording above is real and on file.
 
 **What is still pending (NOT done yet — honestly):**
 
 - **The real "switch to the new system half and roll back if it fails" part is
   NOT proven yet.** That is the heart of the A/B update (pick slot A or B,
-  verify it, fall back if the new one is bad). The pieces for it are being built
-  into the image right now, but there is no proof it works yet, so we are not
-  claiming it does.
+  verify it, fall back if the new one is bad). The scripts that do this — the
+  two-slot disk builder and the bootloader slot-picker / auto-rollback logic —
+  are now **written and check out cleanly, but have not been run**: they need a
+  real bootloader binary that an image build (running right now) will produce.
+  Until we actually run them and capture the result, we do NOT claim it works.
 - **The full real-Android A/B update test** needs a **Linux machine** (it
   cannot run on this Mac — the Mac lacks the required virtualization device).
   It is ready to run the moment your incoming Linux host is available; for now
@@ -44,9 +48,11 @@ not pretend anything works that has not been captured as evidence.
 
 **Fidelity ladder.** T0 podman control-plane+emulator (SHIPPED, protocol-only)
 → T1 A/B-virt base image on QEMU `virt` + HVF (FOUNDATION GREEN: live-userspace
-boot; A/B-apply layers in progress) → T2 Cuttlefish real Android `update_engine`
-A/B + AVB/dm-verity + auto-rollback (SKIP on this host, Linux+KVM-gated) → T3
-real RK3588 hardware (PENDING).
+boot; A/B-apply layers AUTHORED — assembler + U-Boot boot.cmd — NOT yet run,
+gated on `u-boot.bin` from the in-flight build8) → T2 Cuttlefish real Android
+`update_engine` A/B + AVB/dm-verity + auto-rollback incl. PWU-CF-2 corrupt-slot
+rollback (SKIP/UNVERIFIED on this host, Linux+KVM-gated) → T3 real RK3588
+hardware (PENDING).
 
 **Proven (captured evidence):**
 
@@ -65,24 +71,40 @@ real RK3588 hardware (PENDING).
 - **T0 round-trip** — `tests/emulator/tier1_container_e2e.sh` (register →
   update-check → telemetry asserted from captured podman logs under
   `docs/qa/<run-id>/`).
+- **HelixQA bank static gate (E9)** —
+  `bash tools/helixqa/run_bank.sh --dry-run --bank tools/helixqa/banks/helix_ota.yaml`
+  → 12 passed / 0 failed / 0 skipped. `HOTA-AB-VIRT-BOOT` declares evidence
+  `docs/qa/20260611T061626Z-ab-virt-boot/console.log` (verified present). The
+  runner FAILs any challenge whose declared evidence is missing — this gates
+  that the boot evidence exists + is wired into the bank (it does NOT itself
+  exercise A/B apply).
 
 **Pending / not proven (§11.4.6):**
 
 - **A/B slot switch + dm-verity + auto-rollback (E3–E5)** = PENDING_FORENSICS.
-  No captured slot-switch or rollback evidence. U-Boot qemu_arm64 bootcount +
-  RAUC dm-verity slot layers (commit `4278aa9`) are being built into the image;
-  not yet exercised.
-- **T2 Cuttlefish (E7)** = SKIP. Driver `tests/emulator/tier2_cuttlefish_ab.sh`;
-  host gate `/dev/kvm` absent on this Apple-Silicon macOS host (verified). Exit-3
-  honest topology SKIP per §11.4.3/§11.4.112. Script header marks the exact
-  OTA-apply invocation `UNCONFIRMED:` (Virtual-A/B vs legacy A/B; `update_device.py`
-  vs `cvd`) — runtime-detected, never guessed. Ready for the operator's incoming
+  The A/B disk assembler `tests/emulator/ab_virt/assemble_ab_disk.sh` + U-Boot
+  bootcount slot-select `tests/emulator/ab_virt/uboot_ab/boot.cmd` (bootcount /
+  bootlimit / altbootcmd / `BOOT_ORDER` semantics; +`uboot.env`, `README.md`,
+  commit `6581ab4`) are AUTHORED + parse-clean but **NOT run** — gated on a real
+  `u-boot.bin` from the in-flight U-Boot+RAUC build8 (commit `0d27438` added the
+  `libssl-dev`/bison/flex host-tools fix after build7 failed at `openssl/evp.h`).
+  No captured slot-switch or rollback evidence yet.
+- **T2 Cuttlefish (E7)** = SKIP / UNVERIFIED-pending-Linux-host. Driver
+  `tests/emulator/tier2_cuttlefish_ab.sh` (PWU-CF-2 corrupt-slot auto-rollback
+  section authored, mirrors ab_virt PWU-AB-3); host gate `/dev/kvm` absent on
+  this Apple-Silicon macOS host (verified). Exit-3 honest topology SKIP per
+  §11.4.3/§11.4.112. Script header marks the exact OTA-apply + rollback
+  invocation `UNCONFIRMED:` (Virtual-A/B vs legacy A/B; `update_device.py` vs
+  `cvd`) — runtime-detected, never guessed. Ready for the operator's incoming
   Linux + nested-KVM host.
 - **T3 hardware (E8)** = PENDING_FORENSICS. No board.
 
 **Provenance:** `dd43738` (research + dev-host A/B-virt build infra) → `d5374d0`
 (PWU-AB-1 foundation GREEN, live-userspace boot) → `4278aa9` (U-Boot + RAUC + GPT
-tooling, PWU-AB-1 full in progress). HEAD `4278aa9`.
+tooling) → `0f120a6` (parallel streams: HelixQA bank wiring + these Status docs +
+Cuttlefish PWU-CF-2 rollback) → `6581ab4` (A/B disk assembler + U-Boot bootcount
+slot-select, AUTHORED) → `0d27438` (build8 host-tools `libssl-dev` fix, build in
+flight). HEAD `0d27438`.
 
 **§-refs:** §11.4.45 (Status doc), §11.4.56 (two-audience summary), §11.4.5
 (captured-evidence table), §11.4.6 (no-guessing), §11.4.107 (liveness),

@@ -176,13 +176,9 @@
 <h1 class="title">ROADMAP</h1>
 </header>
 <h1
-id="helix-ota-emulation-test-fabric-phased-implementation-roadmap">Helix
+id="helix-ota--emulation-test-fabric--phased-implementation-roadmap">Helix
 OTA — Emulation Test-Fabric — Phased Implementation Roadmap</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -192,15 +188,16 @@ OTA — Emulation Test-Fabric — Phased Implementation Roadmap</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-10T14:10:00Z</td>
+<td>2026-06-11T10:30:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
-<td>active — plan (PWUs, not yet implemented)</td>
+<td>active — P0 + Pab foundation shipped; Pab A/B slot mechanism in
+progress</td>
 </tr>
 <tr>
 <td>Status summary</td>
@@ -209,12 +206,18 @@ href="DESIGN.md"><code>DESIGN.md</code></a>. Each phase lists scope, the
 <code>containers</code>-submodule extension, the test types +
 captured-evidence plan, the independent-review gate
 (§11.4.125/§11.4.142), and its host-gating (dev-host-now / Linux-KVM /
-real-hardware). NO phase is “done” without real captured evidence
-(§11.4).</td>
+real-hardware). NO phase is "done" without real captured evidence
+(§11.4). <strong>Now shipped:</strong> P0 fabric floor + the new
+<strong>Pab dev-host A/B-virt tier FOUNDATION</strong> (PWU-AB-0 base
+image + PWU-AB-1 live-userspace boot on QEMU+HVF, PROVEN); the A/B slot
+switch / dm-verity / auto-rollback on Pab is <strong>in
+progress</strong> (gated on the in-flight U-Boot+RAUC build producing
+<code>u-boot.bin</code>), NOT yet proven (§11.4.6).</td>
 </tr>
 <tr>
 <td>Related</td>
-<td>DESIGN.md; TEST_COVERAGE_PLAN.md; SCHEMA.sql; REPORT.md</td>
+<td>DESIGN.md; TEST_COVERAGE_PLAN.md; SCHEMA.sql; <a
+href="../../research/rk3588_emulator/REPORT.md"><code>../../research/rk3588_emulator/REPORT.md</code></a></td>
 </tr>
 </tbody>
 </table>
@@ -222,16 +225,14 @@ real-hardware). NO phase is “done” without real captured evidence
 <p>Land the <strong>dev-host-runnable</strong> tiers first (immediate
 value, no host gate), then the Linux-KVM CI tiers (highest fidelity),
 then real-hardware HIL. Each phase is a self-contained PWU with its own
-RED→GREEN evidence and a structurally-separate review before merge.</p>
-<table style="width:100%;">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
+RED→GREEN evidence and a structurally-separate review before merge. A
+new <strong>Pab dev-host A/B-virt tier</strong> now sits between the T0
+floor (P0) and the KVM-gated Cuttlefish tier (P4): it brings real U-Boot
+bootcount/altbootcmd slot-switch + RAUC dm-verity to the
+<strong>locally-runnable</strong> set on QEMU <code>-machine virt</code>
++ HVF, closing part of the fidelity gap T0 leaves open without waiting
+on a Linux+KVM host.</p>
+<table>
 <thead>
 <tr>
 <th>Phase</th>
@@ -254,6 +255,36 @@ recall→recovery e2e</td>
 telemetry-fields)</td>
 <td><strong>dev-host now</strong></td>
 <td>shipped + independently re-run</td>
+</tr>
+<tr>
+<td><strong>Pab — dev-host A/B-virt tier (FOUNDATION DONE; slot
+mechanism IN PROGRESS)</strong></td>
+<td>QEMU <code>-machine virt</code> + HVF aarch64 guest with real U-Boot
+bootcount/altbootcmd slot-select + RAUC dm-verity, exercising a REAL A/B
+slot switch + auto-rollback on this Apple-Silicon host (REPORT §3).
+<strong>DONE+committed:</strong> PWU-AB-0 base aarch64 Buildroot image
+(<code>tests/emulator/ab_virt/build_image.sh</code> →
+<code>out/images/{Image,rootfs.ext2}</code>); PWU-AB-1 FOUNDATION =
+boots to live interactive userspace on QEMU+HVF, <strong>PROVEN</strong>
+(<code>HELIX_USERSPACE_LIVE_OK</code>); the 2-slot GPT A/B disk
+assembler + U-Boot <code>boot.cmd</code>/env <strong>AUTHORED</strong>
+(<code>tests/emulator/ab_virt/assemble_ab_disk.sh</code> +
+<code>uboot_ab/</code>, parse-clean + coherent, <strong>NOT yet
+run</strong>). <strong>IN PROGRESS / PENDING (§11.4.6 — not
+proven):</strong> the real A/B slot switch / dm-verity / auto-rollback,
+gated on the in-flight U-Boot+RAUC build producing
+<code>u-boot.bin</code> (build running; <code>out/images/</code> has the
+kernel+rootfs but no <code>u-boot.bin</code> yet).</td>
+<td>reuse RAUC + U-Boot upstream (§11.4.74, never reimplemented); base
+on <code>pkg/vm</code> (QEMU aarch64 <code>virt</code>)</td>
+<td>unit+integration+e2e; evidence = boot console log
+(<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>) +
+(pending) slot-state assertion <code>findmnt /</code> +
+<code>cat /etc/slot_id</code> across a switch + rollback trace; HelixQA
+bank <code>HOTA-AB-VIRT-BOOT</code></td>
+<td><strong>dev-host now (HVF)</strong></td>
+<td>foundation independently re-run; slot-switch review + §1.1 mutation
+pending the runnable disk</td>
 </tr>
 <tr>
 <td><strong>P1 — T1 Android AVD (HVF) local</strong></td>
@@ -292,12 +323,18 @@ stress (N concurrent leases)</td>
 <tr>
 <td><strong>P4 — T2 Cuttlefish (Linux-KVM CI)</strong></td>
 <td>real <code>update_engine</code> A/B + AVB/dm-verity +
-auto-rollback-on-corrupt-slot via <code>cvd</code></td>
+auto-rollback-on-corrupt-slot via <code>cvd</code>. <strong>Harness
+AUTHORED</strong> (<code>tests/emulator/tier2_cuttlefish_ab.sh</code>,
+incl. the PWU-CF-2 corrupt-slot → reboot → auto-rollback section);
+<strong>SKIPs-with-reason on this macOS dev host</strong> — remains
+<strong>host-gated</strong> (no <code>/dev/kvm</code>), unproven until
+run on a Linux+KVM box (§11.4.112).</td>
 <td><strong>new <code>pkg/cuttlefish</code></strong> (PR upstream;
 KVM-presence gate → SKIP on non-KVM host)</td>
 <td>e2e+full-automation+chaos (corrupt-slot→auto-rollback); evidence =
 real A/B slot + dm-verity + rollback trace</td>
-<td><strong>Linux+KVM CI</strong> (honest gap on M3, §11.4.112)</td>
+<td><strong>Linux+KVM CI</strong> (honest gap on M3, §11.4.112 —
+host-gated, NOT proven on macOS)</td>
 <td>independent review + §1.1 mutation</td>
 </tr>
 <tr>
@@ -332,22 +369,45 @@ evidence per §11.4.107/§11.4.69</td>
 </tr>
 </tbody>
 </table>
-<h2 id="coverage-helixqa-wiring-every-phase">Coverage &amp; HelixQA
+<h2 id="coverage--helixqa-wiring-every-phase">Coverage &amp; HelixQA
 wiring (every phase)</h2>
 <p>Each phase: (a) maps its features onto every applicable test type per
 <a href="TEST_COVERAGE_PLAN.md"><code>TEST_COVERAGE_PLAN.md</code></a>;
-(b) adds a HelixQA bank challenge dispatching to the phase’s real test +
+(b) adds a HelixQA bank challenge dispatching to the phase's real test +
 scoring on captured evidence (the <code>tools/helixqa/run_bank.sh</code>
-runner + the canonical engine’s evidence ledger); (c) registers a
+runner + the canonical engine's evidence ledger); (c) registers a
 permanent §11.4.135 regression guard for any defect found; (d) produces
 docs/manual/guides/diagrams (Mermaid) kept in sync (§11.4.12/§11.4.65);
 (e) updates the §11.4.25 coverage ledger with MEASURED coverage (never
 claimed).</p>
 <h2 id="honest-status">Honest status</h2>
-<p>Only <strong>P0 is shipped</strong>. P1–P7 are planned PWUs. “100%
-coverage of all features/flows/edge-cases” is the <em>target</em> the
-per-phase coverage ledger ratchets toward (§11.4.50) and is
-<strong>measured, never asserted</strong> — no phase is marked complete
-without real captured evidence and an independent review.</p>
+<ul>
+<li><strong>P0 — fabric floor: SHIPPED</strong> (T0 emulator
+full-lifecycle / fleet / recall→recovery, captured transcripts under
+<code>docs/qa/</code>).</li>
+<li><strong>Pab — dev-host A/B-virt tier: FOUNDATION SHIPPED, A/B slot
+mechanism IN PROGRESS.</strong> PWU-AB-0 (base aarch64 image) and
+PWU-AB-1 FOUNDATION (boots to live userspace on QEMU+HVF) are
+<strong>DONE + PROVEN</strong> with captured evidence
+(<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>,
+<code>HELIX_USERSPACE_LIVE_OK</code>). The A/B disk assembler + U-Boot
+boot script are <strong>AUTHORED but NOT yet run</strong>, so the real
+<strong>slot switch / dm-verity / auto-rollback is NOT proven</strong> —
+it is gated on the in-flight U-Boot+RAUC build producing
+<code>u-boot.bin</code> (§11.4.6: in progress, not done, not
+faked).</li>
+<li><strong>P4 — T2 Cuttlefish: harness AUTHORED, host-gated</strong> —
+SKIPs cleanly on this macOS host (no KVM); proven only once run on a
+Linux+KVM box (§11.4.112).</li>
+<li><strong>P1–P3, P5–P7 + P4 execution + T3 real RK3588 hardware:
+planned PWUs</strong>, not run.</li>
+</ul>
+<p>"100% coverage of all features/flows/edge-cases" is the
+<em>target</em> the per-phase coverage ledger ratchets toward (§11.4.50)
+and is <strong>measured, never asserted</strong> — no phase is marked
+complete without real captured evidence and an independent review. In
+particular the Pab slot switch and the Cuttlefish A/B flow are recorded
+here as <strong>NOT proven</strong> until their captured slot-state +
+rollback evidence exists.</p>
 </body>
 </html>
