@@ -1,0 +1,58 @@
+== Helix OTA staged-rollout HALT-on-breach SAFETY E2E ==
+base_url=http://127.0.0.1:52786 run=rollouthalt-1781145849-32528 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/ROLLOUT_HALT_EVIDENCE.txt
+started: 2026-06-11T02:44:10Z
+openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
+
+[PASS] generated ephemeral ed25519 keypair (raw pubkey 32 bytes, base64 configured)
+building ota-server (go build ./cmd/ota-server) ...
+[PASS] go build ./cmd/ota-server succeeded
+server pid=32584 (port 52786), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:52786/healthz (HELIX_ARTIFACT_PUBKEY configured)
+[PASS] POST /auth/login (HTTP 200)
+[PASS] obtained admin access token
+[PASS] anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)
+[PASS] POST /artifacts/upload (signed v1.0.0) (HTTP 201)
+[PASS] artifact .verified == true
+[PASS] POST /releases (v1.0.0) (HTTP 201)
+[PASS] deployment D_BREACH created (d69f38505a9fdea59be9c5c28940dd45)
+[PASS] deployment D_CTRL created (dca6144caf3396e24e2cecaab70e5afc)
+[PASS] deployment D_INV created (cd4413ee73a3834dae833f9f91e63e56)
+[PASS] deployment D_PBF created (1b111555d1385e5f014b3852674538f9)
+[PASS] POST /deployments/{absent}/rollout -> 404 (HTTP 404)
+[PASS] POST /deployments/{D_BREACH}/rollout (empty phases) -> 400 (HTTP 400)
+[PASS] POST /deployments/{D_BREACH}/rollout (2-phase plan) -> 201 (HTTP 201)
+[PASS] rollout state echoes deployment_id (.deployment_id == 'd69f38505a9fdea59be9c5c28940dd45')
+[PASS] fresh rollout starts ACTIVE (pre-breach baseline) (.status == 'active')
+[PASS] fresh rollout starts at current_phase 0 (.current_phase == '0')
+[PASS] POST /deployments/{D_CTRL}/rollout -> 201 (control) (HTTP 201)
+[PASS] POST /deployments/{D_CTRL}/rollout/evaluate (healthy) -> 200 (HTTP 200)
+[PASS] control: a HEALTHY verdict ADVANCES (endpoint is not stuck-halting) (.action == 'advance')
+[PASS] control: advance reason == success_threshold_met (.reason == 'success_threshold_met')
+[PASS] control: phase advanced 0 -> 1 (.state.current_phase == '1')
+[PASS] POST /deployments/{D_BREACH}/rollout/evaluate (error breach) -> 200 (HTTP 200)
+[PASS] BREACH HALTS: action == 'halt' (.action == 'halt')
+[PASS] BREACH reason == 'error_threshold_breached' (.reason == 'error_threshold_breached')
+[PASS] BREACH leaves rollout state .status == 'halted' (.state.status == 'halted')
+[PASS] BREACH did NOT advance the phase (still 0 — no silent progress) (.state.current_phase == '0')
+[PASS] POST /deployments/{D_BREACH}/rollout/evaluate (post-halt healthy) -> 200 (HTTP 200)
+[PASS] STICKY-HALT: a halted rollout STAYS halted even on a perfect verdict (action 'halt') (.action == 'halt')
+[PASS] STICKY-HALT: state remains .status == 'halted' (no silent resume) (.state.status == 'halted')
+[PASS] STICKY-HALT: phase still 0 (never advanced out of halt) (.state.current_phase == '0')
+[PASS] GET /deployments/{D_BREACH}/rollout -> 200 (HTTP 200)
+[PASS] persisted rollout .status == 'halted' (halt is durable, not fire-and-forget) (.status == 'halted')
+[PASS] persisted rollout .current_phase == 0 (.current_phase == '0')
+[PASS] POST /deployments/{D_INV}/rollout -> 201 (invariant fixture) (HTTP 201)
+[PASS] POST /deployments/{D_INV}/rollout/evaluate (success-met AND error-breached) -> 200 (HTTP 200)
+[PASS] SAFETY INVARIANT: halt WINS over advance when both bars trip (action 'halt') (.action == 'halt')
+[PASS] SAFETY INVARIANT: reason == 'error_threshold_breached' (not success_threshold_met) (.reason == 'error_threshold_breached')
+[PASS] SAFETY INVARIANT: state .status == 'halted' (.state.status == 'halted')
+[PASS] POST /deployments/{D_PBF}/rollout -> 201 (post-boot fixture) (HTTP 201)
+[PASS] POST /deployments/{D_PBF}/rollout/evaluate (post_boot_health_failed) -> 200 (HTTP 200)
+[PASS] POST-BOOT FAILURE HALTS: action == 'halt' (perfect rates but failed health window) (.action == 'halt')
+[PASS] POST-BOOT FAILURE reason == 'post_boot_health_failed' (.reason == 'post_boot_health_failed')
+[PASS] POST-BOOT FAILURE leaves state .status == 'halted' (.state.status == 'halted')
+[PASS] POST /deployments/{D_PBF}/rollout/evaluate (success_rate 1.5 out of [0,1]) -> 400 (HTTP 400)
+
+finished: 2026-06-11T02:44:11Z
+== summary: 47 passed, 0 failed, 0 skipped ==
+RESULT: PASS

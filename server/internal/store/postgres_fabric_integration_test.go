@@ -22,6 +22,7 @@ import (
 )
 
 func TestPostgresFabricRegistry_Integration(t *testing.T) {
+	lockPgIntegration(t) // §11.4.119 serialize shared Postgres across integration packages
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
