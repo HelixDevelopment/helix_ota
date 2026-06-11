@@ -11,7 +11,7 @@
 ## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 9) FIRST
 
 The freshest live-state anchors are in **`docs/RESUMPTION.md`** (the §11.4.131 canonical
-entry). As of HEAD **`ae6c2b7`** the build is **GREEN across every achievable tier**, and
+entry). As of HEAD **`dead6ef`** the build is **GREEN across every achievable tier**, and
 during the 2026-06-10 overnight autonomous session (operator away-from-keyboard) **every
 achievable software tier was RE-RUN fresh on this exact HEAD and re-confirmed GREEN** (§11.4.132
 risk-ordered re-validation) — full proof in **`docs/qa/STABILITY_REPORT.md`** Rev 2: Go (all tiers
@@ -24,7 +24,13 @@ re-run, to respect the §12.6 60%-memory ceiling alongside podman (honest §11.4
 not a re-run claim). **No release tag** — §11.4.40 needs the on-device RK3588 tier (hardware-BLOCKED,
 §11.4.112), so a tag would be a bluff. BLOCKED (hardware): T2 Cuttlefish / GSI-A-B real-apply /
 T3 RK3588. DEFERRED (zero-risk): fabric scheduler P3 (unwired §11.4.124), HelixQA in-tree compile
-(`../containers` layout), PDF doc siblings (no weasyprint/LaTeX on host). Everything below this
+(`../containers` layout). **UPDATE 2026-06-11: an operator-directed 6-stream parallel-hardening
+round landed on top (HEAD `dead6ef`) — real coverage gains (api 87.7% / fabric 96.7% / transport
+94.9%, dashboard 58→93), §11.4.65 PDF backfill (66 siblings — weasyprint IS present, the prior
+"no weasyprint" deferral was stale), and an extended security suite (26/0/0 ×3); two real defects
+in the agents' output were caught + fixed during conductor-verification. Remaining actionable
+follow-ups: integration-port collision (fixed Postgres port 55432 under parallel integration
+runs), deviceemu coverage (still 76%). See `docs/RESUMPTION.md` §1.** Everything below this
 box is prior-wave history.
 
 ## How to resume

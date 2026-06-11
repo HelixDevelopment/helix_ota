@@ -2,11 +2,38 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
-| Last modified | 2026-06-10T16:25:00Z |
-| Status | GREEN — every achievable test tier RE-VERIFIED on current HEAD |
-| HEAD | `eb9e1c4` (on `main`, all 5 remotes aligned) |
-| Authority | Operator mandate 2026-06-10 ("most stable build by morning is ABSOLUTE PRIORITY; zero risk, zero bluff") — overnight autonomous re-validation |
+| Revision | 3 |
+| Last modified | 2026-06-11T00:00:00Z |
+| Status | GREEN — every achievable tier re-verified + parallel-hardening round landed |
+| HEAD | `dead6ef` (on `main`, all 5 remotes aligned) |
+| Authority | Operator mandate 2026-06-10/11 ("most stable build; zero risk, zero bluff" + "5–6 parallel subagents on all parallelizable workable items, rock-solid physical evidence, no bluff") |
+
+## Parallel-hardening round (2026-06-11, HEAD `dead6ef`)
+
+Operator-directed 6-stream parallel subagent effort (§11.4.20/§11.4.58/§11.4.103). All
+6 streams landed GREEN; every claim below is backed by a real run, and the conductor
+INDEPENDENTLY verified each agent's output against reality (§11.4.125) — which caught
++ fixed real defects the agents left (a dashboard query bug; two security-suite
+defects), proving the verification is not a rubber-stamp.
+
+| Stream | Real evidence | Result |
+|---|---|---|
+| `internal/api` coverage | error/validation paths (unknown-field→400, malformed body, authz) | 81.2% → **87.7%** |
+| `internal/fabric` coverage | register/clock/lease branches | 83.6% → **96.7%** |
+| `internal/transport` coverage | `New()` config-validation error paths | 79.5% → **94.9%** |
+| `internal/rollout` + `store` coverage | service lifecycle + memory CRUD/boundary | +11.3 / +2.7 pts (non-integration) |
+| dashboard Vitest | Audit/Deployments/Groups screens (loading/empty/error/interaction) | 58 → **93**, typecheck clean, ×3 deterministic |
+| §11.4.65 PDF backfill | `scripts/sync_md_siblings.sh` (documented) + 66 valid v1.7 PDFs | full-corpus siblings generated |
+| Extended security suite | `tests/security/security_probes_extended.sh` — 6 probe families (refresh single-use, token expiry, cross-device 403, protocol-surface, idempotency, DoS-shed 429) | **26/0/0 ×3**, 4.4s, no leaks |
+
+Post-integration full re-validation: gofmt + vet clean, `go test ./...` + `-race`
+exit 0, dashboard 93/93 ×3, security 26/0/0 ×3.
+
+**DISCOVERED (§11.4.118, honest — actionable follow-up, NOT a product defect):**
+running >1 `-tags integration` Go package in parallel collides on the fixed Postgres
+host port `55432` (`store`/`rollout` `postgres_integration_test.go`). The project runs
+integration PER-PACKAGE (always green) and the new tests are proven innocent (rollout
+integration alone ×3 = green). Fix direction: per-package port or flock-serialize the boot.
 
 ## Verdict
 
