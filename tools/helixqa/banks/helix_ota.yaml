@@ -426,3 +426,46 @@ bank:
         - "GET /groups?limit=201 -> 400 (limit above max 200) (HTTP 400)"
         - "GET telemetry?cursor=-1 -> 400 (negative cursor) (HTTP 400)"
       evidence_artifact: tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt
+
+    - id: HOTA-AB-VIRT-BOOT
+      title: RK3588 A/B-virt base image boots to a LIVE interactive aarch64 userspace on QEMU+HVF
+      capability_area: ab-virt-boot-smoke
+      # FULLY SELF-HOSTING (§11.4.98): boots the base aarch64 Buildroot guest image
+      # under QEMU `-machine virt` + HVF on this Apple-Silicon host via a deterministic
+      # `expect` driver, waits for the REAL getty login prompt, logs in, runs uname /
+      # os-release, and prints a post-login sentinel that can ONLY appear from an
+      # interactive shell AFTER a successful login — proving a LIVE userspace, not a
+      # frozen frame (§11.4.107). QEMU exits on guest poweroff or the expect timeout
+      # (self-cleaning, §11.4.14). Re-runnable end-to-end (§11.4.50); each run writes a
+      # FRESH transcript under docs/qa/<run-id>-ab-virt-boot/console.log. The
+      # evidence_artifact below points at the committed reference transcript that
+      # resolves for the --dry-run static audit (§11.4.83 / §11.4.107 — live boot
+      # captured in a full transcript, not a single screenshot).
+      dispatch_command: >-
+        bash tests/emulator/ab_virt/boot_smoke.sh
+      requires:
+        - bash
+        - qemu-system-aarch64
+        - expect
+        - "out/.ok + out/images/{Image,rootfs.ext2} (run build_image.sh first)"
+      pass_criterion: >-
+        The base A/B-virt image boots to a live interactive aarch64 userspace on
+        QEMU+HVF. A PASS requires ALL anti-bluff assertions to hold against the boot
+        transcript: the kernel boots on the REAL Apple CPU via HVF
+        ("Booting Linux on physical CPU ... 0x610f", MIDR 0x610f*); the Buildroot
+        userspace init is reached ("Welcome to Buildroot"); the getty login prompt is
+        presented ("buildroot login:"); the post-login "uname -a" returns a live
+        aarch64 kernel string ("Linux buildroot ... aarch64 GNU/Linux"); and the
+        INTERACTIVE sentinel "HELIX_USERSPACE_LIVE_OK" is printed AFTER login (a live
+        shell, not a frozen frame). The script exits 0 only if EVERY check passed; a
+        missing out/.ok / image artifacts / qemu / expect => exit 3 SKIP, never a
+        false PASS (§11.4.3 / §11.4.6).
+      asserted_lines:
+        - "kernel booted on the real Apple CPU via HVF (MIDR 0x610f*)"
+        - "Buildroot userspace init reached"
+        - "getty login prompt presented (userspace up)"
+        - "post-login 'uname -a' returned a live aarch64 kernel string"
+        - "INTERACTIVE sentinel printed AFTER login (live shell, not a frozen frame)"
+      skip_codes:
+        "3": "out/.ok / image artifacts / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260611T061626Z-ab-virt-boot/console.log
