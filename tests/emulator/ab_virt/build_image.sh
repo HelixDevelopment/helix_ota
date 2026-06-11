@@ -87,14 +87,11 @@ podman run --name "$BUILD_CTR" --arch arm64 \
       cd buildroot-${BR2_VERSION}
       export BR2_DL_DIR=/dl
       make O=/work/out qemu_aarch64_virt_defconfig
-      # Use the defconfig's INTERNAL Buildroot toolchain (builds gcc from source).
-      # NOTE (§11.4.6/§11.4.102 root-cause 2026-06-11): the original "No space"
-      # failure was NOT a real disk shortage — it was 28 GB of ORPHANED rootless
-      # podman storage from failed build containers (podman prune could not reach
-      # it; removed directly, 43 GB now free). The Bootlin EXTERNAL toolchain was
-      # tried but is INVALID for qemu_aarch64_virt_defconfig (kconfig drops it to
-      # EXTERNAL_CUSTOM — confirmed via a config-only resolution check), so we
-      # keep the working internal toolchain now that the disk genuinely fits it.
+      # Internal Buildroot toolchain from the defconfig. NOTE: this comment lives
+      # inside a single-quoted podman bash -c string, so it MUST stay ASCII-safe
+      # with no apostrophes or parens. Rationale is in this file header + the
+      # commit log. Disk fits now after reclaiming orphaned rootless podman
+      # storage; Bootlin external toolchain is invalid for this defconfig.
       cat >> /work/out/.config <<CFG
 BR2_TARGET_GENERIC_ROOT_PASSWD=\"${ROOT_PW}\"
 BR2_PACKAGE_DROPBEAR=y
