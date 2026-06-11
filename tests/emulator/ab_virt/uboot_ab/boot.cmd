@@ -81,7 +81,11 @@ if test "${active_slot}" = "A"; then
 else
   setenv root_part 3
 fi
-echo "A/B: BOOT_ORDER='${BOOT_ORDER}' active_slot=${active_slot} root=/dev/vda${root_part} bootcount=${bootcount} upgrade_available=${upgrade_available}"
+# NOTE (§11.4.1): NO single quotes around ${BOOT_ORDER} — U-Boot hush, like POSIX
+# sh, suppresses variable expansion inside single quotes, so 'BOOT_ORDER=...'
+# would print the LITERAL ${BOOT_ORDER}. Bare ${BOOT_ORDER} in this double-quoted
+# echo expands to the (post-rollback-swap) value so the active order is observable.
+echo "A/B: BOOT_ORDER=${BOOT_ORDER} active_slot=${active_slot} root=/dev/vda${root_part} bootcount=${bootcount} upgrade_available=${upgrade_available}"
 
 # ---- load the kernel from the FAT boot partition (p1) -----------------------
 # load <iface> <devnum>:<part> <addr> <file>

@@ -1,0 +1,253 @@
+spawn qemu-system-aarch64 -M virt -accel hvf -cpu host -smp 2 -m 512 -nographic -bios /Volumes/T7/Projects/helix_ota/tests/emulator/ab_virt/out/images/u-boot.bin -drive file=/Volumes/T7/Projects/helix_ota/tests/emulator/ab_virt/out/images/ab_disk.img,if=virtio,format=raw
+
+
+U-Boot 2024.01 (Jun 11 2026 - 08:21:42 +0000)
+
+DRAM:  512 MiB
+Core:  51 devices, 14 uclasses, devicetree: board
+Flash: 64 MiB
+Loading Environment from Flash... *** Warning - bad CRC, using default environment
+
+In:    serial,usbkbd
+Out:   serial,vidconsole
+Err:   serial,vidconsole
+No working controllers found
+Net:   eth0: virtio-net#32
+starting USB...
+No working controllers found
+Hit any key to stop autoboot:  2  0 
+=> setenv BOOT_ORDER B A
+=> setenv upgrade_available 1
+=> setenv bootlimit 1
+=> setenv bootcount 2
+=> printenv BOOT_ORDER bootcount bootlimit upgrade_available
+BOOT_ORDER=B A
+bootcount=2
+bootlimit=1
+upgrade_available=1
+=> load virtio 0:1 0x40400000 boot.scr
+5846 bytes read in 0 ms
+=> source 0x40400000
+## Executing script at 40400000
+A/B: bootcount=2 > bootlimit=1 -> rolling back (altbootcmd swap)
+Saving Environment to Flash... Un-Protected 2 sectors
+Erasing Flash...
+.. done
+Erased 2 sectors
+Writing to Flash... done
+Protected 2 sectors
+OK
+A/B: BOOT_ORDER=A B active_slot=A root=/dev/vda2 bootcount=1 upgrade_available=1
+11973120 bytes read in 3 ms (3.7 GiB/s)
+A/B: loaded kernel Image from boot partition (virtio 0:1)
+A/B: booting slot A with bootargs: console=ttyAMA0 root=/dev/vda2 rootwait rw helix_slot=A
+## Flattened Device Tree blob at 5e590d90
+   Booting using the fdt blob at 0x5e590d90
+Working FDT set to 5e590d90
+   Loading Device Tree to 000000005d47d000, end 000000005d57ffff ... OK
+Working FDT set to 5d47d000
+
+Starting kernel ...
+
+Booting Linux on physical CPU 0x0000000000 [0x610f0000]
+Linux version 6.1.44 (br@b492f63fa8d8) (aarch64-buildroot-linux-gnu-gcc.br_real (Buildroot 2024.02.10) 12.4.0, GNU ld (GNU Binutils) 2.40) #1 SMP Thu Jun 11 08:27:03 UTC 2026
+random: crng init done
+Machine model: linux,dummy-virt
+efi: UEFI not found.
+Zone ranges:
+  DMA      [mem 0x0000000040000000-0x000000005fffffff]
+  DMA32    empty
+  Normal   empty
+Movable zone start for each node
+Early memory node ranges
+  node   0: [mem 0x0000000040000000-0x000000005fffffff]
+Initmem setup node 0 [mem 0x0000000040000000-0x000000005fffffff]
+psci: probing for conduit method from DT.
+psci: PSCIv1.1 detected in firmware.
+psci: Using standard PSCI v0.2 function IDs
+psci: Trusted OS migration not required
+psci: SMC Calling Convention v1.0
+percpu: Embedded 18 pages/cpu s33896 r8192 d31640 u73728
+Detected PIPT I-cache on CPU0
+CPU features: detected: Address authentication (IMP DEF algorithm)
+CPU features: detected: Spectre-v4
+alternatives: applying boot alternatives
+Built 1 zonelists, mobility grouping on.  Total pages: 129024
+Kernel command line: console=ttyAMA0 root=/dev/vda2 rootwait rw helix_slot=A
+Unknown kernel command line parameters "helix_slot=A", will be passed to user space.
+Dentry cache hash table entries: 65536 (order: 7, 524288 bytes, linear)
+Inode-cache hash table entries: 32768 (order: 6, 262144 bytes, linear)
+mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+Memory: 501924K/524288K available (7616K kernel code, 876K rwdata, 1816K rodata, 1280K init, 436K bss, 22364K reserved, 0K cma-reserved)
+SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=2, Nodes=1
+rcu: Hierarchical RCU implementation.
+rcu: 	RCU restricting CPUs from NR_CPUS=256 to nr_cpu_ids=2.
+rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=2
+NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+Root IRQ handler: gic_handle_irq
+GICv2m: range[mem 0x08020000-0x08020fff], SPI[80:143]
+rcu: srcu_init: Setting srcu_struct sizes based on contention.
+arch_timer: cp15 timer(s) running at 24.00MHz (virt).
+clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x588fe9dc0, max_idle_ns: 440795202592 ns
+sched_clock: 56 bits at 24MHz, resolution 41ns, wraps every 4398046511097ns
+Console: colour dummy device 80x25
+Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=96000)
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 1024 (order: 1, 8192 bytes, linear)
+Mountpoint-cache hash table entries: 1024 (order: 1, 8192 bytes, linear)
+cacheinfo: Unable to detect cache hierarchy for CPU 0
+rcu: Hierarchical SRCU implementation.
+rcu: 	Max phase no-delay instances is 1000.
+EFI services will not be available.
+smp: Bringing up secondary CPUs ...
+Detected PIPT I-cache on CPU1
+cacheinfo: Unable to detect cache hierarchy for CPU 1
+CPU1: Booted secondary processor 0x0000000001 [0x610f0000]
+smp: Brought up 1 node, 2 CPUs
+SMP: Total of 2 processors activated.
+CPU features: detected: ARMv8.4 Translation Table Level
+CPU features: detected: Data cache clean to the PoU not required for I/D coherence
+CPU features: detected: Common not Private translations
+CPU features: detected: CRC32 instructions
+CPU features: detected: E0PD
+CPU features: detected: Enhanced Privileged Access Never
+CPU features: detected: Generic authentication (IMP DEF algorithm)
+CPU features: detected: RCpc load-acquire (LDAPR)
+CPU features: detected: Privileged Access Never
+CPU features: detected: RAS Extension Support
+CPU features: detected: Speculation barrier (SB)
+CPU features: detected: TLB range maintenance instructions
+CPU: All CPU(s) started at EL1
+alternatives: applying system-wide alternatives
+devtmpfs: initialized
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+futex hash table entries: 512 (order: 3, 32768 bytes, linear)
+DMI not present or invalid.
+NET: Registered PF_NETLINK/PF_ROUTE protocol family
+DMA: preallocated 128 KiB GFP_KERNEL pool for atomic allocations
+DMA: preallocated 128 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations
+DMA: preallocated 128 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations
+thermal_sys: Registered thermal governor 'step_wise'
+cpuidle: using governor menu
+hw-breakpoint: found 6 breakpoint and 4 watchpoint registers.
+ASID allocator initialised with 256 entries
+Serial: AMBA PL011 UART driver
+9000000.pl011: ttyAMA0 at MMIO 0x9000000 (irq = 13, base_baud = 0) is a PL011 rev1
+printk: console [ttyAMA0] enabled
+ACPI: Interpreter disabled.
+iommu: Default domain type: Translated 
+iommu: DMA domain TLB invalidation policy: strict mode 
+SCSI subsystem initialized
+pps_core: LinuxPPS API ver. 1 registered
+pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+PTP clock support registered
+vgaarb: loaded
+clocksource: Switched to clocksource arch_sys_counter
+pnp: PnP ACPI: disabled
+NET: Registered PF_INET protocol family
+IP idents hash table entries: 8192 (order: 4, 65536 bytes, linear)
+tcp_listen_portaddr_hash hash table entries: 256 (order: 0, 4096 bytes, linear)
+Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+TCP established hash table entries: 4096 (order: 3, 32768 bytes, linear)
+TCP bind hash table entries: 4096 (order: 5, 131072 bytes, linear)
+TCP: Hash tables configured (established 4096 bind 4096)
+UDP hash table entries: 256 (order: 1, 8192 bytes, linear)
+UDP-Lite hash table entries: 256 (order: 1, 8192 bytes, linear)
+NET: Registered PF_UNIX/PF_LOCAL protocol family
+PCI: CLS 0 bytes, default 64
+armv8-pmu pmu: hw perfevents: failed to probe PMU!
+workingset: timestamp_bits=46 max_order=17 bucket_order=0
+fuse: init (API version 7.37)
+Block layer SCSI generic (bsg) driver version 0.4 loaded (major 249)
+io scheduler mq-deadline registered
+io scheduler kyber registered
+pci-host-generic 4010000000.pcie: host bridge /pcie@10000000 ranges:
+pci-host-generic 4010000000.pcie:       IO 0x003eff0000..0x003effffff -> 0x0000000000
+pci-host-generic 4010000000.pcie:      MEM 0x0010000000..0x003efeffff -> 0x0010000000
+pci-host-generic 4010000000.pcie:      MEM 0x8000000000..0xffffffffff -> 0x8000000000
+pci-host-generic 4010000000.pcie: Memory resource size exceeds max for 32 bits
+pci-host-generic 4010000000.pcie: ECAM at [mem 0x4010000000-0x401fffffff] for [bus 00-ff]
+pci-host-generic 4010000000.pcie: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff]
+pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff]
+pci 0000:00:00.0: [1b36:0008] type 00 class 0x060000
+pci 0000:00:01.0: [1af4:1000] type 00 class 0x020000
+pci 0000:00:01.0: reg 0x10: [io  0x1000-0x101f]
+pci 0000:00:01.0: reg 0x14: [mem 0x10000000-0x10000fff]
+pci 0000:00:01.0: reg 0x20: [mem 0x10004000-0x10007fff 64bit pref]
+pci 0000:00:01.0: reg 0x30: [mem 0x10040000-0x1007ffff pref]
+pci 0000:00:02.0: [1af4:1001] type 00 class 0x010000
+pci 0000:00:02.0: reg 0x10: [io  0x1080-0x10ff]
+pci 0000:00:02.0: reg 0x14: [mem 0x10080000-0x10080fff]
+pci 0000:00:02.0: reg 0x20: [mem 0x10084000-0x10087fff 64bit pref]
+pci 0000:00:01.0: BAR 6: assigned [mem 0x10000000-0x1003ffff pref]
+pci 0000:00:01.0: BAR 4: assigned [mem 0x8000000000-0x8000003fff 64bit pref]
+pci 0000:00:02.0: BAR 4: assigned [mem 0x8000004000-0x8000007fff 64bit pref]
+pci 0000:00:01.0: BAR 1: assigned [mem 0x10040000-0x10040fff]
+pci 0000:00:02.0: BAR 1: assigned [mem 0x10041000-0x10041fff]
+pci 0000:00:02.0: BAR 0: assigned [io  0x1000-0x107f]
+pci 0000:00:01.0: BAR 0: assigned [io  0x1080-0x109f]
+cacheinfo: Unable to detect cache hierarchy for CPU 0
+virtio_blk virtio1: 2/0/0 default/read/poll queues
+virtio_blk virtio1: [vda] 2097152 512-byte logical blocks (1.07 GB/1.00 GiB)
+ vda: vda1 vda2 vda3
+rtc-pl031 9010000.pl031: registered as rtc0
+rtc-pl031 9010000.pl031: setting system clock to 2026-06-11T09:59:19 UTC (1781171959)
+NET: Registered PF_INET6 protocol family
+Segment Routing with IPv6
+In-situ OAM (IOAM) with IPv6
+sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+NET: Registered PF_PACKET protocol family
+NET: Registered PF_KEY protocol family
+NET: Registered PF_VSOCK protocol family
+registered taskstats version 1
+EXT4-fs (vda2): mounted filesystem with ordered data mode. Quota mode: disabled.
+VFS: Mounted root (ext4 filesystem) on device 254:2.
+devtmpfs: mounted
+Freeing unused kernel memory: 1280K
+Run /sbin/init as init process
+EXT4-fs (vda2): re-mounted. Quota mode: disabled.
+Seeding 256 bits and crediting
+Saving 256 bits of creditable seed for next boot
+Starting syslogd: OK
+Starting klogd: OK
+Running sysctl: OK
+Starting network: udhcpc: started, v1.36.1
+udhcpc: broadcasting discover
+udhcpc: broadcasting select for 10.0.2.15, server 10.0.2.2
+udhcpc: lease of 10.0.2.15 obtained from 10.0.2.2, lease time 86400
+deleting routers
+adding dns 10.0.2.3
+OK
+Starting dropbear sshd: OK
+
+Welcome to Buildroot
+buildroot login: root
+Password: IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+
+# 
+# echo HELIX_SLOTID=$(cat /etc/slot_id 2>/dev/null)
+HELIX_SLOTID=A
+# echo HELIX_ROOTDEV=$(findmnt -no SOURCE / 2>/dev/null)
+HELIX_ROOTDEV=/dev/vda2
+# echo HELIX_CMDLINE=$(cat /proc/cmdline)
+HELIX_CMDLINE=console=ttyAMA0 root=/dev/vda2 rootwait rw helix_slot=A
+# echo HELIX_DONE_ROLLBACK_MARK
+HELIX_DONE_ROLLBACK_MARK
+# poweroff
+# Stopping dropbear sshd: OK
+Stopping network: OK
+Stopping klogd: OK
+Stopping syslogd: OK
+Seeding 256 bits and crediting
+Saving 256 bits of creditable seed for next boot
+umount: devtmpfs busy - remounted read-only
+EXT4-fs (vda2): re-mounted. Quota mode: disabled.
+The system is going down NOW!
+Sent SIGTERM to all processes
+Sent SIGKILL to all processes
+Requesting system poweroff
+reboot: Power down
