@@ -176,14 +176,10 @@
 <h1 class="title">DESIGN</h1>
 </header>
 <h1
-id="helix-ota-emulationvirtualization-test-fabric-architecture-design">Helix
+id="helix-ota--emulationvirtualization-test-fabric--architecture--design">Helix
 OTA — Emulation/Virtualization Test-Fabric — Architecture &amp;
 Design</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -193,26 +189,34 @@ Design</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-10T14:10:00Z</td>
+<td>2026-06-11T10:30:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
-<td>active — design (no implementation yet)</td>
+<td>active — T0 floor + Tab dev-host A/B-virt FOUNDATION built; Tab slot
+mechanism in progress</td>
 </tr>
 <tr>
 <td>Status summary</td>
 <td>The incorporation design for a LOCAL + DISTRIBUTED hardware-free
 test fabric, derived from the cited verdicts in <a
-href="../../research/emulation_infra/REPORT.md"><code>../../research/emulation_infra/REPORT.md</code></a>.
+href="../../research/emulation_infra/REPORT.md"><code>../../research/emulation_infra/REPORT.md</code></a>
+and the dev-host A/B-virt work in <a
+href="../../research/rk3588_emulator/REPORT.md"><code>../../research/rk3588_emulator/REPORT.md</code></a>.
 Extends the <code>containers</code> submodule (§11.4.76) and the
 existing Tier-1/2/3 baseline in <a
 href="../EMULATED_DEVICE_TESTING.md"><code>../EMULATED_DEVICE_TESTING.md</code></a>.
 Reconciles the macOS-M3 dev host vs the Linux-KVM CI tier as FACT
-(§11.4.6/§11.4.112).</td>
+(§11.4.6/§11.4.112). <strong>Now partially built:</strong> the T0 floor
+(shipped) plus a new <strong>Tab dev-host A/B-virt tier</strong> (QEMU
+virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose
+FOUNDATION boots to live userspace (PROVEN); its real A/B slot switch /
+dm-verity / auto-rollback is <strong>in progress</strong>, gated on the
+in-flight <code>u-boot.bin</code> build — NOT proven (§11.4.6).</td>
 </tr>
 <tr>
 <td>Authority</td>
@@ -221,16 +225,20 @@ emulation/VM/container fabric)</td>
 </tr>
 <tr>
 <td>Related</td>
-<td>REPORT.md; TEST_COVERAGE_PLAN.md; SCHEMA.sql; ROADMAP.md;
-<code>containers/</code> submodule</td>
+<td><a
+href="../../research/emulation_infra/REPORT.md"><code>../../research/emulation_infra/REPORT.md</code></a>;
+<a
+href="../../research/rk3588_emulator/REPORT.md"><code>../../research/rk3588_emulator/REPORT.md</code></a>;
+TEST_COVERAGE_PLAN.md; SCHEMA.sql; ROADMAP.md; <code>containers/</code>
+submodule</td>
 </tr>
 </tbody>
 </table>
-<h2 id="goal-non-goals">1. Goal &amp; non-goals</h2>
+<h2 id="1-goal--non-goals">1. Goal &amp; non-goals</h2>
 <p><strong>Goal.</strong> A single fabric that boots/runs emulated,
 virtual, and (where wired) real targets — locally on the dev host AND
 distributed across remote/CI nodes — so every Helix OTA work item is
-testable WITHOUT a physical RK3588/Orange Pi on the operator’s desk.
+testable WITHOUT a physical RK3588/Orange Pi on the operator's desk.
 Anti-bluff is the spine: a tier never claims fidelity it does not have
 (§11.4 / §11.4.107), and the tier boundaries below are stated as FACT
 precisely so no tier silently over-claims.</p>
@@ -239,16 +247,9 @@ every primitive is an EXTENSION of <code>vasic-digital/containers</code>
 (§11.4.74/§11.4.76), never a re-implementation. (b) Pretending the
 macOS-M3 host can run KVM-gated Android — it cannot (§3); that is an
 honest host gap (§11.4.112), not a thing to fake.</p>
-<h2 id="tier-model-reconciled-with-emulated_device_testing.md">2. Tier
+<h2 id="2-tier-model-reconciled-with-emulated_device_testingmd">2. Tier
 model (reconciled with EMULATED_DEVICE_TESTING.md)</h2>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>Tier</th>
@@ -278,12 +279,27 @@ Genymotion optional</td>
 UI/automation</td>
 </tr>
 <tr>
+<td><strong>Tab — dev-host A/B-virt</strong> (built; slot mechanism in
+progress)</td>
+<td><strong>real U-Boot bootcount/altbootcmd A/B slot-switch + RAUC
+dm-verity + auto-rollback</strong> on a generic aarch64 virt board (NOT
+the RK3588 SoC, NOT Android <code>update_engine</code>)</td>
+<td><strong>QEMU <code>-machine virt</code> + HVF</strong> aarch64 guest
+(Buildroot) + U-Boot + RAUC (<code>tests/emulator/ab_virt/</code>)</td>
+<td><strong>dev host (HVF, accelerated)</strong></td>
+<td>the real A/B slot-switch + rollback semantics on this Apple-Silicon
+host WITHOUT a KVM gate — closes part of the T0→T2 gap locally.
+<strong>FOUNDATION boots to live userspace (PROVEN); the slot switch
+itself is authored-not-yet-run (§11.4.6, gated on the
+<code>u-boot.bin</code> build).</strong></td>
+</tr>
+<tr>
 <td><strong>T2 — high-fidelity A/B</strong></td>
 <td><strong>real <code>update_engine</code> A/B + AVB/dm-verity +
 auto-rollback</strong> on virtual partitions</td>
 <td><strong>Cuttlefish (<code>cvd</code>)</strong></td>
 <td><strong>Linux+KVM CI only</strong> (host-gated on M3)</td>
-<td>the genuine OTA apply + rollback semantics short of real
+<td>the genuine Android OTA apply + rollback semantics short of real
 silicon</td>
 </tr>
 <tr>
@@ -327,6 +343,7 @@ FACT, REPORT §5).</p>
   subgraph DEV[&quot;Dev host — Apple M3 / macOS (HVF, no /dev/kvm)&quot;]
     T0d[&quot;T0 ota-device-emulator (podman)&quot;]
     T1d[&quot;T1 Android AVD arm64-v8a (HVF)&quot;]
+    TABd[&quot;Tab A/B-virt: QEMU virt+HVF + U-Boot + RAUC (foundation booted; slot switch in progress)&quot;]
     FWd[&quot;Tfw QEMU virt + edk2 / Renode&quot;]
   end
   subgraph CI[&quot;Distributed CI — Linux + KVM nodes&quot;]
@@ -344,9 +361,9 @@ FACT, REPORT §5).</p>
   RUN[&quot;CI front door — self-hosted mac+Linux runners&quot;]
   RUN --&gt; SCHED
   SCHED --&gt; DEV &amp; CI &amp; HIL
-  T0d &amp; T1d &amp; T2 &amp; T0c &amp; T1c &amp; T3 &amp; RD --&gt;|ota-protocol| CP
+  T0d &amp; T1d &amp; TABd &amp; T2 &amp; T0c &amp; T1c &amp; T3 &amp; RD --&gt;|ota-protocol| CP
   SCHED --&gt;|exclusive lease per target §11.4.119| T2 &amp; T3</code></pre>
-<h2 id="the-host-fact-fact-11.4.6-drives-every-placement">3. The host
+<h2 id="3-the-host-fact-fact-1146--drives-every-placement">3. The host
 fact (FACT, §11.4.6 — drives every placement)</h2>
 <p>Dev host = <strong>Apple M3 Pro / macOS 15.5 / arm64</strong>, accel
 = <strong>HVF</strong>, <strong>no <code>/dev/kvm</code></strong>, and
@@ -359,9 +376,9 @@ nested-virt). The fabric therefore places T2/Tcp on the
 Tfw(QEMU-TCG) as the <strong>locally-runnable</strong> set. This split
 is asserted, never wished away.</p>
 <h2
-id="extension-of-the-containers-submodule-11.4.74-extend-dont-reimplement">4.
+id="4-extension-of-the-containers-submodule-11474-extend-dont-reimplement">4.
 Extension of the <code>containers</code> submodule (§11.4.74
-extend-don’t-reimplement)</h2>
+extend-don't-reimplement)</h2>
 <p><strong>Reuse (already present):</strong> <code>pkg/boot</code> +
 <code>pkg/compose</code> + <code>pkg/health</code> (on-demand boot +
 readiness — the §11.4.76 on-demand-infra invariant the pgx integration
@@ -369,25 +386,41 @@ test already uses), <code>pkg/emulator</code> (AVD x86_64/arm64 +
 HVF/KVM accel gating + AVD-lock/orphan-qemu reaping),
 <code>pkg/vm</code> (QEMU aarch64 <code>virt</code>+UEFI),
 <code>pkg/genymotion</code>.</p>
+<p><strong>Tab dev-host A/B-virt (built —
+<code>tests/emulator/ab_virt/</code>):</strong> the Tab tier reuses
+<strong>U-Boot</strong> (bootcount/altbootcmd slot-select) and
+<strong>RAUC</strong> (dm-verity A/B update client) upstream per
+§11.4.74 — neither reimplemented in-project — on top of
+<code>pkg/vm</code>'s QEMU aarch64 <code>virt</code>+HVF boot. The guest
+image (Buildroot base + kernel) is built inside a named podman aarch64
+Linux container (this host is macOS); the 2-slot GPT disk assembler
+(<code>assemble_ab_disk.sh</code>) + U-Boot <code>boot.cmd</code>/env
+(<code>uboot_ab/</code>) are authored. The base image build (PWU-AB-0)
+and the live-userspace boot (PWU-AB-1 FOUNDATION) are DONE+PROVEN; the
+slot-switch disk is gated on the in-flight <code>u-boot.bin</code> build
+(§11.4.6 — in progress).</p>
 <p><strong>New primitives to ADD upstream (PR to
 <code>vasic-digital/containers</code>), never copied
-in-project:</strong> - <code>pkg/cuttlefish</code> — <code>cvd</code>
-lifecycle wrapper (fetch/launch/stop,
-<code>aosp_cf_arm64_only_phone</code>, KVM-presence gate that
-SKIPs-with-reason on a non-KVM host). - <code>pkg/lava</code> — LAVA
-REST/XML-RPC client: submit a job, poll, pull artifacts; one job schema
-for virtual + physical DUTs. - <code>pkg/fabric</code> — the distributed
-scheduler façade + <strong>target registry</strong> (lease/release a
-target exclusively, §11.4.119) over a Nomad/K8s/LAVA backend.</p>
+in-project:</strong></p>
+<ul>
+<li><code>pkg/cuttlefish</code> — <code>cvd</code> lifecycle wrapper
+(fetch/launch/stop, <code>aosp_cf_arm64_only_phone</code>, KVM-presence
+gate that SKIPs-with-reason on a non-KVM host).</li>
+<li><code>pkg/lava</code> — LAVA REST/XML-RPC client: submit a job,
+poll, pull artifacts; one job schema for virtual + physical DUTs.</li>
+<li><code>pkg/fabric</code> — the distributed scheduler façade +
+<strong>target registry</strong> (lease/release a target exclusively,
+§11.4.119) over a Nomad/K8s/LAVA backend.</li>
+</ul>
 <p><strong>Stays in helix_ota (OTA-domain logic, not generic
 plumbing):</strong> <code>server/internal/deviceemu</code> (the T0
 emulator — it speaks <code>ota-protocol</code>), the per-tier on-device
 test drivers, and the bank/Challenge wiring.</p>
-<h2 id="on-demand-boot-single-resource-owner-contracts">5. On-demand
+<h2 id="5-on-demand-boot--single-resource-owner-contracts">5. On-demand
 boot + single-resource-owner contracts</h2>
 <ul>
 <li><strong>On-demand boot (§11.4.76):</strong> the test entry point
-boots its tier’s infra via the submodule
+boots its tier's infra via the submodule
 (<code>pkg/boot</code>/<code>compose</code>/<code>health</code>/<code>fabric</code>);
 operators never hand-start podman, an emulator, <code>cvd</code>, or a
 LAVA job. A tier with unmet host prereqs
@@ -395,29 +428,38 @@ LAVA job. A tier with unmet host prereqs
 <li><strong>Single-resource-owner (§11.4.119):</strong> every exclusive
 target (a <code>cvd</code> instance, a real board, an HDMI/serial line,
 a fixed port) is leased to <strong>exactly one</strong> driver stream at
-a time via <code>pkg/fabric</code>’s registry; other streams targeting
+a time via <code>pkg/fabric</code>'s registry; other streams targeting
 it are read-only or queued. Concurrent drivers of one exclusive target
 produce cross-contaminated evidence = a §11.4 bluff, so the lease is
 mandatory.</li>
 </ul>
-<h2 id="persistence">6. Persistence</h2>
+<h2 id="6-persistence">6. Persistence</h2>
 <p>A test-fabric registry (targets, runs, results, evidence paths,
 distributed-node inventory) is defined in <a
 href="SCHEMA.sql"><code>SCHEMA.sql</code></a>. It is OPTIONAL for local
 single-node use (the T0 in-process/podman tiers need no DB) and REQUIRED
 once distributed fan-out is wired (so the scheduler can lease targets
 and the dashboard can show fleet-of-fabric state). It reuses the
-project’s pgx/Postgres seam, not a new datastore.</p>
-<h2 id="anti-bluff-posture-the-spine">7. Anti-bluff posture (the
+project's pgx/Postgres seam, not a new datastore.</p>
+<h2 id="7-anti-bluff-posture-the-spine">7. Anti-bluff posture (the
 spine)</h2>
 <p>Each tier produces captured evidence under
 <code>docs/qa/&lt;run-id&gt;/</code> per <a
 href="TEST_COVERAGE_PLAN.md"><code>TEST_COVERAGE_PLAN.md</code></a>: T0
 captures real request/response transcripts; T1 captures ADB/UI +
-<code>update_engine_client</code> state; T2 captures real A/B-slot +
+<code>update_engine_client</code> state; <strong>Tab</strong> captures
+the QEMU+HVF boot console
+(<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>,
+<code>HELIX_USERSPACE_LIVE_OK</code> — the FOUNDATION proof) and, once
+its disk is runnable, the slot-state assertion (<code>findmnt /</code> +
+<code>cat /etc/slot_id</code> across a switch) + the auto-rollback
+trace; T2 captures real <code>update_engine</code> A/B-slot +
 AVB/dm-verity + auto-rollback evidence; T3 adds on-silicon
 apply/rollback. A tier claiming a PASS without exercising the real
 system at its fidelity is a §11.4 PASS-bluff. Honest gaps (§3, REPORT
-§8) are documented, never hidden behind a green line.</p>
+§8) are documented, never hidden behind a green line — the Tab slot
+switch is recorded as <strong>NOT proven</strong> (gated on
+<code>u-boot.bin</code>) and T2 stays <strong>host-gated</strong> (no
+KVM on this macOS host), never as faked greens.</p>
 </body>
 </html>

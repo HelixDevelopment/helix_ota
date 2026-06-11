@@ -1,10 +1,183 @@
-<h1 id="helix-ota-emulated-virtual-device-testing-strategy">Helix OTA —
-Emulated / Virtual Device Testing Strategy</h1>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EMULATED_DEVICE_TESTING</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EMULATED_DEVICE_TESTING</h1>
+</header>
+<h1 id="helix-ota--emulated--virtual-device-testing-strategy">Helix OTA
+— Emulated / Virtual Device Testing Strategy</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -14,23 +187,31 @@ Emulated / Virtual Device Testing Strategy</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-10T00:00:00Z</td>
+<td>2026-06-11T10:30:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
-<td>active — Tier-1 in progress</td>
+<td>active — Tier-1 shipped; Tier-1.5 dev-host A/B-virt foundation
+built, slot mechanism in progress</td>
 </tr>
 <tr>
 <td>Status summary</td>
 <td>The tiered plan for exercising the OTA stack against device-shaped
-targets without (Tier-1) and with (Tier-2/3) real Android A/B +
-hardware. Tier boundaries are FACT, established from the host’s
-available runtimes and the <code>containers</code> submodule’s
-capabilities — not guesses.</td>
+targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B
+slot-switch + dm-verity + hardware. Tier boundaries are FACT,
+established from the host's available runtimes and the
+<code>containers</code> submodule's capabilities — not guesses.
+<strong>Now built:</strong> Tier-1 (T0 protocol emulator, shipped) plus
+a new <strong>Tier-1.5 dev-host A/B-virt tier</strong> (QEMU virt+HVF +
+U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to
+live userspace on this Apple-Silicon host (PROVEN); its real A/B slot
+switch / dm-verity / auto-rollback is <strong>in progress</strong>,
+gated on the in-flight <code>u-boot.bin</code> build — NOT proven
+(§11.4.6). Tier-2 Cuttlefish stays host-gated (no KVM on macOS).</td>
 </tr>
 <tr>
 <td>Authority</td>
@@ -47,7 +228,7 @@ capabilities — not guesses.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="purpose">1. Purpose</h2>
+<h2 id="1-purpose">1. Purpose</h2>
 <p>The control plane (<code>server/</code>), the
 <code>ota-protocol</code> wire contract, and the device-side decision
 logic (<code>ota-android-agent</code> <code>DeltaApplyDecision</code>,
@@ -59,9 +240,9 @@ on the current Apple-Silicon development host. This doc records the
 tiered plan that lets each layer be exercised at the highest fidelity
 the available environment allows, with an honest boundary on what each
 environment can and cannot prove.</p>
-<h2 id="tiers-fact">2. Tiers (FACT)</h2>
+<h2 id="2-tiers-fact">2. Tiers (FACT)</h2>
 <h3
-id="tier-1-protocol-level-device-emulator-runnable-on-this-macos-host-now">Tier-1
+id="tier-1--protocol-level-device-emulator-runnable-on-this-macos-host-now">Tier-1
 — protocol-level device emulator (runnable on THIS macOS host NOW)</h3>
 <ul>
 <li><strong>What:</strong> a podman container running a Go
@@ -74,7 +255,7 @@ actual <code>ota-protocol</code> types and the actual HTTP
 <code>/api/v1</code> surface — it is a real client of the real server,
 not an in-process fake. Per §11.4.27, integration/e2e tiers exercise the
 real, fully implemented system; the emulator stands in only for the
-device’s <em>physical</em> layer (no real <code>update_engine</code>, no
+device's <em>physical</em> layer (no real <code>update_engine</code>, no
 real partitions), which Tier-1 explicitly does not claim to cover.</li>
 <li><strong>What it proves:</strong> wire-contract conformance,
 server-side flow correctness (anti-downgrade invariant, delta selection
@@ -82,17 +263,74 @@ server-side flow correctness (anti-downgrade invariant, delta selection
 telemetry ingest/read round-trips, multi-device fleet behaviour under
 concurrent emulated devices.</li>
 <li><strong>What it does NOT prove (honest boundary):</strong> real A/B
-slot switch, AVB/dm-verity verification on real partitions,
-auto-rollback on a corrupt slot, vendor HAL, U-Boot bootloader slot
-selection. Those are Tier-2/3.</li>
+slot switch, dm-verity verification on real partitions, auto-rollback on
+a corrupt slot, vendor HAL, U-Boot bootloader slot selection. The U-Boot
+slot-switch + dm-verity portion is now addressed on the dev host by
+<strong>Tier-1.5</strong> below; the Android <code>update_engine</code>
++ AVB portion remains Tier-2/3.</li>
 <li><strong>Runtime:</strong> podman on this host (the same runtime the
 pgx integration + dev stack already use via the <code>containers</code>
 submodule). No KVM, no QEMU, no AVD required.</li>
-<li><strong>Status:</strong> <strong>in progress</strong> (this is the
-active PHASE).</li>
+<li><strong>Status:</strong> <strong>shipped</strong> — full-lifecycle +
+multi-device fleet + recall→recovery e2e proven, captured transcripts
+under <code>docs/qa/</code>.</li>
 </ul>
 <h3
-id="tier-2-cuttlefish-virtual-android-device-hosthardware-gated">Tier-2
+id="tier-15--dev-host-ab-virt-u-boot--rauc-on-qemu-virt--hvf--built-slot-mechanism-in-progress">Tier-1.5
+— dev-host A/B-virt (U-Boot + RAUC on QEMU virt + HVF) — built; slot
+mechanism in progress</h3>
+<ul>
+<li><strong>What:</strong> a generic aarch64 Linux guest (Buildroot base
++ kernel) booted under <strong>QEMU <code>-machine virt</code> +
+HVF</strong> on this Apple-Silicon host, carrying a real <strong>U-Boot
+bootcount/altbootcmd A/B slot-switch</strong> + <strong>RAUC
+dm-verity</strong> A/B update client over a 2-slot GPT disk — a real
+slot switch + auto-rollback WITHOUT a KVM gate. This sits between Tier-1
+(protocol only) and Tier-2 (Android <code>update_engine</code>): it is
+NOT the RK3588 SoC and NOT Android's <code>update_engine</code>, but it
+IS a genuine bootloader-driven A/B/dm-verity/rollback exercise runnable
+locally. See <a
+href="../research/rk3588_emulator/REPORT.md"><code>../research/rk3588_emulator/REPORT.md</code></a>
+§3 and <code>tests/emulator/ab_virt/</code>.</li>
+<li><strong>What it proves (target):</strong> real U-Boot slot
+selection, bootcount-driven auto-rollback, RAUC dm-verity verification
+of the inactive slot — the bootloader/verity half of the apply path that
+Tier-1 stubs.</li>
+<li><strong>What is DONE (PROVEN, captured evidence):</strong>
+<ul>
+<li><strong>PWU-AB-0</strong> — base aarch64 Buildroot image built
+(<code>tests/emulator/ab_virt/build_image.sh</code> →
+<code>out/images/{Image,rootfs.ext2}</code>), committed.</li>
+<li><strong>PWU-AB-1 FOUNDATION</strong> — the base image <strong>boots
+to a live interactive userspace on QEMU + HVF</strong>, PROVEN by the
+captured boot console
+<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>
+(<code>HELIX_USERSPACE_LIVE_OK</code>).</li>
+<li>HelixQA bank challenge <code>HOTA-AB-VIRT-BOOT</code> wired to the
+boot test.</li>
+</ul></li>
+<li><strong>What is IN PROGRESS / PENDING (NOT proven,
+§11.4.6):</strong> the real A/B <strong>slot switch / dm-verity /
+auto-rollback</strong> itself. The 2-slot GPT disk assembler
+(<code>assemble_ab_disk.sh</code>) + U-Boot <code>boot.cmd</code>/env
+(<code>uboot_ab/</code>) are <strong>authored</strong> (parse-clean +
+coherent) but <strong>NOT yet run</strong> — they are gated on the
+in-flight U-Boot + RAUC build producing <code>u-boot.bin</code> (the
+build is running; <code>out/images/</code> currently holds the kernel +
+rootfs but no <code>u-boot.bin</code> yet). Until that disk boots and a
+switch is observed (<code>findmnt /</code> +
+<code>cat /etc/slot_id</code> across a switch + rollback trace), the
+slot mechanism is recorded as <strong>NOT proven</strong>, never as a
+green.</li>
+<li><strong>Runtime:</strong> QEMU aarch64 <code>virt</code> + HVF on
+this macOS host; guest image + GPT disk assembled inside a named podman
+aarch64 Linux container (this host is macOS).</li>
+<li><strong>Status:</strong> <strong>foundation shipped + proven; A/B
+slot mechanism in progress</strong> (gated on
+<code>u-boot.bin</code>).</li>
+</ul>
+<h3
+id="tier-2--cuttlefish-virtual-android-device-hosthardware-gated">Tier-2
 — Cuttlefish virtual Android device (host/hardware-gated)</h3>
 <ul>
 <li><strong>What:</strong> a Cuttlefish (<code>cvd</code>) virtual
@@ -114,10 +352,18 @@ nested KVM.</li>
 runs the moment a Linux + nested-KVM environment is available; the
 blocker is environment provisioning, not a platform/protocol
 impossibility.</li>
-<li><strong>Status:</strong> designed, not yet runnable (no Linux/KVM
-host attached).</li>
+<li><strong>Harness state:</strong> the Cuttlefish A/B harness is
+<strong>authored</strong>
+(<code>tests/emulator/tier2_cuttlefish_ab.sh</code>), including the
+<strong>corrupt-slot → reboot → auto-rollback</strong> section
+(PWU-CF-2). On this macOS dev host the whole script
+<strong>SKIPs-with-reason at the topology gate</strong> (no
+<code>/dev/kvm</code>) — it is NOT run and NOT proven here.</li>
+<li><strong>Status:</strong> harness authored; <strong>host-gated SKIP
+on macOS</strong> — unproven until run on a Linux + nested-KVM
+host.</li>
 </ul>
-<h3 id="tier-3-real-rk3588-orange-pi-5-max-hardware">Tier-3 — real
+<h3 id="tier-3--real-rk3588--orange-pi-5-max-hardware">Tier-3 — real
 RK3588 / Orange Pi 5 Max hardware</h3>
 <ul>
 <li><strong>What:</strong> the real target board(s) — full vendor HAL,
@@ -135,18 +381,16 @@ structurally impossible.</li>
 <li><strong>Status:</strong> pending hardware availability (the
 CONTINUATION NEXT-wave items 1–2 land here).</li>
 </ul>
-<h2 id="tier-coverage-matrix">3. Tier coverage matrix</h2>
+<h2 id="3-tier-coverage-matrix">3. Tier coverage matrix</h2>
+<p>Legend: <strong>YES</strong> = proven with captured evidence ·
+<em>target</em> = the tier's intended scope, NOT yet proven · no = out
+of scope for that tier.</p>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Capability</th>
 <th>Tier-1 (podman emulator)</th>
+<th>Tier-1.5 (A/B-virt, U-Boot+RAUC)</th>
 <th>Tier-2 (Cuttlefish)</th>
 <th>Tier-3 (RK3588)</th>
 </tr>
@@ -155,6 +399,7 @@ CONTINUATION NEXT-wave items 1–2 land here).</li>
 <tr>
 <td><code>ota-protocol</code> wire conformance</td>
 <td>YES</td>
+<td>(host plumbing)</td>
 <td>YES</td>
 <td>YES</td>
 </tr>
@@ -162,35 +407,63 @@ CONTINUATION NEXT-wave items 1–2 land here).</li>
 <td>Server flow:
 register/update-check/telemetry/delta/rollout/recall</td>
 <td>YES</td>
+<td>(host plumbing)</td>
 <td>YES</td>
 <td>YES</td>
 </tr>
 <tr>
 <td>Anti-downgrade invariant</td>
 <td>YES</td>
+<td>(host plumbing)</td>
 <td>YES</td>
 <td>YES</td>
 </tr>
 <tr>
-<td>Real <code>update_engine</code> A/B apply</td>
+<td>Boots to live userspace on QEMU+HVF</td>
+<td>n/a</td>
+<td><strong>YES</strong> (PWU-AB-1 foundation)</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Real U-Boot bootcount A/B slot-switch</td>
 <td>no</td>
-<td>YES</td>
+<td><em>target — in progress (authored, gated on
+<code>u-boot.bin</code>)</em></td>
+<td>no</td>
 <td>YES</td>
 </tr>
 <tr>
-<td>AVB / dm-verity verification</td>
+<td>RAUC dm-verity verification</td>
 <td>no</td>
-<td>YES (virtual)</td>
-<td>YES (real partitions)</td>
+<td><em>target — in progress</em></td>
+<td>no (AVB instead)</td>
+<td>YES</td>
 </tr>
 <tr>
 <td>Auto-rollback on corrupt slot</td>
 <td>no</td>
-<td>YES</td>
+<td><em>target — in progress</em></td>
+<td><em>target (host-gated SKIP on macOS)</em></td>
 <td>YES</td>
 </tr>
 <tr>
-<td>U-Boot slot-switch / vendor HAL</td>
+<td>Real Android <code>update_engine</code> A/B apply</td>
+<td>no</td>
+<td>no (U-Boot/RAUC, not <code>update_engine</code>)</td>
+<td><em>target (host-gated)</em></td>
+<td>YES</td>
+</tr>
+<tr>
+<td>AVB verification</td>
+<td>no</td>
+<td>no (RAUC dm-verity instead)</td>
+<td><em>target (virtual, host-gated)</em></td>
+<td>YES (real partitions)</td>
+</tr>
+<tr>
+<td>Vendor HAL / RK3588 SoC bootloader</td>
+<td>no</td>
 <td>no</td>
 <td>no</td>
 <td>YES</td>
@@ -198,15 +471,17 @@ register/update-check/telemetry/delta/rollout/recall</td>
 <tr>
 <td>Runnable on this macOS host now</td>
 <td><strong>YES</strong></td>
+<td><strong>YES (foundation booted; slot disk pending
+<code>u-boot.bin</code>)</strong></td>
 <td>no (Linux+KVM)</td>
 <td>no (hardware)</td>
 </tr>
 </tbody>
 </table>
 <h2
-id="reuse-of-the-containers-submodule-11.4.76-extend-dont-reimplement-11.4.74">4.
+id="4-reuse-of-the-containers-submodule-11476-extend-dont-reimplement-11474">4.
 Reuse of the <code>containers</code> submodule (§11.4.76,
-extend-don’t-reimplement §11.4.74)</h2>
+extend-don't-reimplement §11.4.74)</h2>
 <p>The <code>vasic-digital/containers</code> submodule
 (<code>digital.vasic.containers</code>) is the canonical
 containerization machinery and already provides the primitives each tier
@@ -214,7 +489,7 @@ needs:</p>
 <ul>
 <li><strong><code>pkg/boot</code> + <code>pkg/compose</code> +
 <code>pkg/health</code></strong> — on-demand boot, compose
-orchestration, and readiness gating. Tier-1’s podman emulator + control
+orchestration, and readiness gating. Tier-1's podman emulator + control
 plane stack boot via these (the same path the pgx integration test
 already uses), satisfying the §11.4.76 on-demand-infra invariant (the
 test entry point boots the infra; operators never start podman by
@@ -226,22 +501,32 @@ acceleration gating, AVD-lock clearing, orphan
 of Tier-2 on a Linux/KVM host.</li>
 <li><strong><code>pkg/vm</code></strong> — QEMU VM orchestration
 (<strong>aarch64</strong> via <code>-machine virt</code> + AAVMF UEFI),
-the seam for an aarch64 virtual target on a KVM-capable host.</li>
+the seam Tier-1.5 builds on for its U-Boot + RAUC A/B-virt guest (QEMU
+<code>virt</code> + HVF on this macOS host).</li>
 </ul>
+<p><strong>Tier-1.5 reuse (§11.4.74):</strong> the dev-host A/B-virt
+tier reuses <strong>U-Boot</strong> (bootcount/altbootcmd slot-select)
+and <strong>RAUC</strong> (dm-verity A/B update client) upstream —
+neither reimplemented in-project — on top of <code>pkg/vm</code>'s QEMU
+aarch64 <code>virt</code> + HVF boot. The guest image + 2-slot GPT disk
+are assembled inside a named podman aarch64 Linux container
+(<code>tests/emulator/ab_virt/</code>).</p>
 <p><strong>Extension policy:</strong> where a tier needs a primitive the
-submodule lacks (e.g. a Cuttlefish <code>cvd</code> lifecycle wrapper,
+submodule lacks (e.g. a Cuttlefish <code>cvd</code> lifecycle wrapper,
 or an OTA-specific device-emulator harness), we <strong>extend the
 submodule upstream via PR</strong> per §11.4.74 — never duplicate the
 machinery in-project. The Tier-1 <code>ota-device-emulator</code> itself
 is OTA-domain logic (it speaks <code>ota-protocol</code>), so it lives
 in the project; the boot/health/compose plumbing around it is the
-submodule’s job.</p>
-<h2 id="anti-bluff-posture-11.4-11.4.27-11.4.69">5. Anti-bluff posture
+submodule's job.</p>
+<h2 id="5-anti-bluff-posture-114--11427--11469">5. Anti-bluff posture
 (§11.4 / §11.4.27 / §11.4.69)</h2>
 <p>Each tier produces captured evidence under
 <code>docs/qa/&lt;run-id&gt;/</code>: Tier-1 captures the real
 request/response transcripts for the full lifecycle against a live
 server; Tier-2/3 add the on-device apply/rollback evidence. A tier
-claiming a PASS without exercising the real system at that tier’s
+claiming a PASS without exercising the real system at that tier's
 fidelity is a §11.4 PASS-bluff. The tier boundaries above are stated as
 FACT precisely so no tier silently claims coverage it does not have.</p>
+</body>
+</html>

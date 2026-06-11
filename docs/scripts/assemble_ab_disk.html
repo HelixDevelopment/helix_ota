@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>assemble_ab_disk</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">assemble_ab_disk</h1>
+</header>
+<h1 id="assemble_ab_disk.sh-user-guide">assemble_ab_disk.sh — user
+guide</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-11T00:00:00Z</p>
+<p>Companion documentation (§11.4.18) for
+<code>tests/emulator/ab_virt/assemble_ab_disk.sh</code>.</p>
+<h2 id="overview">Overview</h2>
+<p><code>assemble_ab_disk.sh</code> takes the built guest artifacts
+(kernel <code>Image</code> + <code>rootfs.ext2</code> +
+<code>u-boot.bin</code>) and assembles a deterministic <strong>2-slot
+(A/B) GPT disk image</strong> <code>ab_disk.img</code> plus a compiled
+U-Boot script <code>boot.scr</code>. The intent is that the U-Boot A/B
+boot script (<code>uboot_ab/boot.cmd</code> → <code>boot.scr</code>)
+selects between and rolls back across the two root slots, so PWU-AB-1
+can boot the disk under QEMU <code>-machine virt</code> + HVF and
+demonstrate a slot switch.</p>
+<p>GPT layout the script produces:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Part</th>
+<th>Type</th>
+<th>Label</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>p1</td>
+<td>FAT32</td>
+<td><code>boot</code></td>
+<td>kernel <code>Image</code> + <code>boot.scr</code> (U-Boot virtio
+0:1)</td>
+</tr>
+<tr>
+<td>p2</td>
+<td>ext2/4</td>
+<td><code>rootfs_a</code></td>
+<td>slot A root, seeded from <code>rootfs.ext2</code>, tagged
+<code>/etc/slot_id=A</code> → <code>/dev/vda2</code></td>
+</tr>
+<tr>
+<td>p3</td>
+<td>ext2/4</td>
+<td><code>rootfs_b</code></td>
+<td>slot B root, distinct copy, tagged <code>/etc/slot_id=B</code> →
+<code>/dev/vda3</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <code>/etc/slot_id</code> marker per slot is what makes a slot
+switch <em>observable</em> from inside the guest (<code>findmnt /</code>
++ <code>cat /etc/slot_id</code>).</p>
+<blockquote>
+<p><strong>Status — AUTHORED, NOT YET RUN (UNVERIFIED, pending
+<code>u-boot.bin</code>).</strong> This script has been authored but has
+<strong>not</strong> been executed end-to-end. It hard-requires a real
+<code>out/images/u-boot.bin</code> (it aborts with exit 3 if absent),
+and that bootloader was still building at authoring time. The actual
+<strong>A/B slot switch is therefore UNPROVEN</strong>: there is no
+captured evidence yet that U-Boot selects the correct slot, that the
+<code>/etc/slot_id</code> markers are read as intended, or that rollback
+works. No claim is made here that the slot switch functions — that is
+pending a real run against a produced <code>u-boot.bin</code>. (§11.4.6
+— documented as unconfirmed, not asserted.)</p>
+</blockquote>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li><code>podman</code> on <code>PATH</code> (the only hard host
+dependency; aborts with exit 3 if absent).</li>
+<li>The inputs below, produced by a prior <code>build_image.sh</code>
+run — including <code>u-boot.bin</code>, which is the gating input that
+is not yet available.</li>
+<li><code>uboot_ab/boot.cmd</code> present (the U-Boot script source
+compiled to <code>boot.scr</code>).</li>
+</ul>
+<h2 id="usage-examples">Usage examples</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assemble the 2-slot GPT disk (requires u-boot.bin to exist).</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/ab_virt/assemble_ab_disk.sh</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Also wipe a prior disk image + stale assemble container first.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/ab_virt/assemble_ab_disk.sh</span> <span class="at">--clean</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Override disk + boot-partition sizing.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AB_DISK_MB</span><span class="op">=</span>1024 <span class="va">HELIX_AB_BOOT_MB</span><span class="op">=</span>64 <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">tests/emulator/ab_virt/assemble_ab_disk.sh</span></span></code></pre></div>
+<h2 id="inputs">Inputs</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Input</th>
+<th>Source</th>
+<th>Default / requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--clean</code></td>
+<td>CLI arg 1</td>
+<td>(none)</td>
+</tr>
+<tr>
+<td><code>HELIX_AB_DISK_MB</code></td>
+<td>env</td>
+<td><code>1024</code> (auto-bumped if below the needed size)</td>
+</tr>
+<tr>
+<td><code>HELIX_AB_BOOT_MB</code></td>
+<td>env</td>
+<td><code>64</code></td>
+</tr>
+<tr>
+<td><code>out/images/Image</code></td>
+<td>filesystem (from <code>build_image.sh</code>)</td>
+<td>required, non-empty</td>
+</tr>
+<tr>
+<td><code>out/images/rootfs.ext2</code></td>
+<td>filesystem</td>
+<td>required, non-empty</td>
+</tr>
+<tr>
+<td><code>out/images/u-boot.bin</code></td>
+<td>filesystem</td>
+<td><strong>required, non-empty — the gating input</strong></td>
+</tr>
+<tr>
+<td><code>uboot_ab/boot.cmd</code></td>
+<td>filesystem</td>
+<td>required</td>
+</tr>
+</tbody>
+</table>
+<p>Fixed object name: the named assemble container
+<code>helix_ab_assemble</code>.</p>
+<h2 id="outputs">Outputs</h2>
+<p>All under <code>tests/emulator/ab_virt/out/</code>, gitignored
+(§11.4.30; this script is the §11.4.77 regeneration mechanism):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>out/images/ab_disk.img</code></td>
+<td>the 2-slot GPT disk</td>
+</tr>
+<tr>
+<td><code>out/images/boot.scr</code></td>
+<td>compiled U-Boot boot script</td>
+</tr>
+<tr>
+<td><code>out/assemble.log</code></td>
+<td>full assembly transcript</td>
+</tr>
+<tr>
+<td><code>out/.disk_ok</code></td>
+<td>success stamp — written <strong>only</strong> when
+<code>ab_disk.img</code> exists non-empty</td>
+</tr>
+</tbody>
+</table>
+<h2 id="side-effects">Side-effects</h2>
+<ul>
+<li>Starts a detached named podman container
+<code>helix_ab_assemble</code> (<code>sleep 600</code>), copies inputs
+in, runs the assembly, copies outputs out.</li>
+<li>A <code>trap cleanup EXIT</code> force-removes the container on
+every exit path.</li>
+<li><code>--clean</code> additionally removes the prior
+<code>ab_disk.img</code>, <code>boot.scr</code>, and
+<code>.disk_ok</code>.</li>
+<li>No <code>/Volumes</code> bind-mount and no <code>:Z</code> SELinux
+relabel (both rejected by macOS podman); all I/O is via
+<code>podman cp</code>.</li>
+</ul>
+<h2 id="internal-behaviour">Internal behaviour</h2>
+<ol type="1">
+<li><code>set -u</code> + <code>set -o pipefail</code>; resolve paths,
+sizing, and the container name.</li>
+<li>Abort (exit 3) if <code>podman</code> absent; abort (exit 3) if any
+required input (<code>Image</code>, <code>rootfs.ext2</code>,
+<code>u-boot.bin</code>, <code>boot.cmd</code>) is missing/empty.</li>
+<li>On <code>--clean</code>, remove the prior disk/script/stamp + a
+stale container.</li>
+<li>Remove any leftover <code>out/.disk_ok</code>;
+<code>mkdir -p out/images</code>.</li>
+<li><code>podman run -d</code> the named assemble container; install
+<code>trap cleanup EXIT</code>.</li>
+<li>Copy <code>Image</code>, <code>rootfs.ext2</code>,
+<code>u-boot.bin</code>, <code>boot.cmd</code> into
+<code>/asm/in</code>.</li>
+<li><code>podman exec</code> the in-container assembly (an ASCII-safe
+single-quoted <code>bash -c</code> string — no apostrophes/parens, a
+lexical rule that broke earlier builds):
+<ul>
+<li><code>apt-get</code> install
+<code>gdisk dosfstools e2fsprogs mtools u-boot-tools fdisk util-linux</code>;</li>
+<li><code>mkimage</code> compile <code>boot.cmd</code> →
+<code>boot.scr</code> (fail with <code>ASM_FAIL</code> / exit 11 if not
+produced);</li>
+<li>compute slot sizing from the rootfs size + 32 MiB headroom; bump the
+requested disk size if too small;</li>
+<li><code>truncate</code> a raw disk and lay down a deterministic GPT
+(<code>sgdisk</code>): p1 boot FAT (<code>0700</code>), p2
+<code>rootfs_a</code> (<code>8300</code>), p3 <code>rootfs_b</code>
+(<code>8300</code>);</li>
+<li>read each partition’s start/size in 512-byte sectors via
+<code>sfdisk -d</code> (fail with <code>ASM_FAIL</code> / exit 12 if
+offsets unreadable);</li>
+<li>build the FAT boot partition (<code>mkfs.fat -F 32</code>,
+<code>mcopy</code> the kernel + <code>boot.scr</code>);</li>
+<li>prepare slot A (copy rootfs, grow to partition size,
+<code>e2fsck</code> + <code>resize2fs</code>, write
+<code>/etc/slot_id=A</code> via <code>debugfs</code>);</li>
+<li>prepare slot B (distinct copy, same treatment,
+<code>/etc/slot_id=B</code>);</li>
+<li><code>dd</code> the three partition images into the GPT disk at
+their sector offsets; <code>sync</code>; print the final GPT and
+<code>ASM_OK</code>.</li>
+</ul></li>
+<li>Treat the run as failed if the exec rc is non-zero
+<strong>or</strong> <code>ASM_OK</code> is not present in
+<code>assemble.log</code>; on failure log the tail and exit 1.</li>
+<li>Copy <code>ab_disk.img</code> + <code>boot.scr</code> out via
+<code>podman cp</code>.</li>
+<li><strong>Anti-bluff gate (§11.4.6):</strong> stamp
+<code>out/.disk_ok</code> and exit 0 <strong>only</strong> when
+<code>ab_disk.img</code> exists non-empty; otherwise exit 1 without
+stamping.</li>
+</ol>
+<h2 id="edge-cases">Edge cases</h2>
+<ul>
+<li><strong>podman absent / any required input missing</strong> → exit 3
+before assembly. In particular, a not-yet-built <code>u-boot.bin</code>
+aborts the script — this is the current blocking condition.</li>
+<li><strong><code>boot.scr</code> not produced by mkimage</strong> →
+<code>ASM_FAIL</code> exit 11.</li>
+<li><strong>GPT offsets unreadable</strong> → <code>ASM_FAIL</code> exit
+12.</li>
+<li><strong>Requested disk size too small</strong> → auto-bumped to the
+computed needed size (logged <code>ASM_NOTE</code>).</li>
+<li><strong><code>debugfs</code> cannot overwrite
+<code>/etc/slot_id</code></strong> → falls back to a plain write
+(handles the case where the file does not pre-exist).</li>
+<li><strong>Assembly finishes but <code>ab_disk.img</code> is
+missing/empty</strong> → exit 1, <code>.disk_ok</code> not stamped.</li>
+<li><strong>Slot switch itself</strong> → UNVERIFIED (see the status
+note above); no positive evidence exists yet, and none is claimed.</li>
+</ul>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/emulator/ab_virt/build_image.sh</code> — produces the
+<code>Image</code> + <code>rootfs.ext2</code> + <code>u-boot.bin</code>
+this script consumes. See <code>docs/scripts/build_image.md</code>.</li>
+<li><code>tests/emulator/ab_virt/boot_smoke.sh</code> — base-image boot
+smoke (the proven foundation). See
+<code>docs/scripts/boot_smoke.md</code>.</li>
+<li><code>uboot_ab/boot.cmd</code> + <code>uboot_ab/README.md</code> —
+the U-Boot A/B coherence contract this disk layout must match.</li>
+<li><code>docs/research/rk3588_emulator/REPORT.md</code> — the emulator
+design report (§3/§4, PWU-AB-1).</li>
+</ul>
+<h2 id="last-verified-date">Last verified date</h2>
+<p>2026-06-11 — documented against the script as committed (read, not
+inferred). The script is AUTHORED but NOT YET RUN; the A/B slot switch
+is UNVERIFIED pending a real <code>u-boot.bin</code>.</p>
+</body>
+</html>
