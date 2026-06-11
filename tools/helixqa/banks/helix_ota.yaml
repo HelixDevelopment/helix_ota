@@ -469,3 +469,54 @@ bank:
       skip_codes:
         "3": "out/.ok / image artifacts / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
       evidence_artifact: docs/qa/20260611T061626Z-ab-virt-boot/console.log
+
+    - id: HOTA-AB-SLOT-SWITCH
+      title: RK3588 A/B-virt real bootloader-driven slot switch (BOOT_ORDER A->vda2, B->vda3) under U-Boot+QEMU+HVF
+      capability_area: ab-virt-slot-switch
+      # FULLY SELF-HOSTING (§11.4.98): boots the SAME 2-slot GPT disk (ab_disk.img)
+      # twice with the SAME real u-boot.bin under QEMU `-machine virt` + HVF on this
+      # Apple-Silicon host, differing ONLY in the U-Boot BOOT_ORDER env var, via a
+      # deterministic `expect` driver. The proof is the CONTRAST (§11.4.115 RED->GREEN):
+      # a fake/no-op switch reports the SAME slot in both runs (RED); a real switch
+      # reports A then B (GREEN). Each run drives U-Boot to source boot.scr, logs into
+      # the REAL getty, and reads /etc/slot_id + the mounted root device + /proc/cmdline
+      # from INSIDE the guest userspace — a LIVE shell, not a frozen frame (§11.4.107).
+      # Each QEMU exits on guest poweroff or the expect timeout (self-cleaning, §11.4.14).
+      # Re-runnable end-to-end (§11.4.50); each run writes FRESH transcripts under
+      # docs/qa/<run-id>-ab-slot-switch/{consoleA.log,consoleB.log,verdict.txt}. This
+      # proves bootloader-driven slot routing + in-guest observability ONLY; persistent
+      # saveenv power-cycle, RAUC dm-verity, and auto-rollback are later PWUs (§11.4.6).
+      dispatch_command: >-
+        bash tests/emulator/ab_virt/ab_slot_switch.sh
+      requires:
+        - bash
+        - qemu-system-aarch64
+        - expect
+        - "out/.ok + out/.disk_ok + out/images/{u-boot.bin,ab_disk.img} (run build_image.sh then assemble_ab_disk.sh first)"
+      pass_criterion: >-
+        The SAME disk + SAME real u-boot.bin, booted twice differing ONLY in the
+        U-Boot BOOT_ORDER env var, MUST route the kernel root= to a DIFFERENT physical
+        rootfs partition AND the guest MUST observably report (from inside userspace)
+        the slot it was actually booted into. A PASS requires ALL anti-bluff contrast
+        assertions to hold: Run A (BOOT_ORDER="A B") — guest /etc/slot_id=A, findmnt
+        root = /dev/vda2, kernel cmdline helix_slot=A (boot.scr selected A), the
+        post-login HELIX_DONE_A_MARK sentinel (live shell), and NOT slot B; Run B
+        (BOOT_ORDER="B A") — guest /etc/slot_id=B, findmnt root = /dev/vda3, cmdline
+        helix_slot=B, HELIX_DONE_B_MARK, and NOT slot A (the switch is real, not a
+        no-op). The script exits 0 only if EVERY check passed; a missing out/.ok /
+        out/.disk_ok / u-boot.bin / ab_disk.img / qemu / expect => exit 3 SKIP, never a
+        false PASS (§11.4.3 / §11.4.6).
+      asserted_lines:
+        - "Run A: guest userspace reports /etc/slot_id=A"
+        - "Run A: guest findmnt confirms root = /dev/vda2 (slot A)"
+        - "Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)"
+        - "Run A: interactive shell live (post-login sentinel, not a frozen frame)"
+        - "Run A: did NOT boot slot B"
+        - "Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)"
+        - "Run B: guest findmnt confirms root = /dev/vda3 (slot B)"
+        - "Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)"
+        - "Run B: interactive shell live (post-login sentinel, not a frozen frame)"
+        - "Run B: did NOT boot slot A (the switch is real, not a no-op)"
+      skip_codes:
+        "3": "out/.ok / out/.disk_ok / u-boot.bin / ab_disk.img / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260611T094958Z-ab-slot-switch/verdict.txt
