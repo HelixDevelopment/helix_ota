@@ -11,7 +11,7 @@
 ## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 9) FIRST
 
 The freshest live-state anchors are in **`docs/RESUMPTION.md`** (the §11.4.131 canonical
-entry). As of HEAD **`a58f7f8`** the build is **GREEN across every achievable tier**, and
+entry). As of HEAD **`a31b6c7`** the build is **GREEN across every achievable tier**, and
 during the 2026-06-10 overnight autonomous session (operator away-from-keyboard) **every
 achievable software tier was RE-RUN fresh on this exact HEAD and re-confirmed GREEN** (§11.4.132
 risk-ordered re-validation) — full proof in **`docs/qa/STABILITY_REPORT.md`** Rev 2: Go (all tiers
