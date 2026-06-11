@@ -87,7 +87,15 @@ podman run --name "$BUILD_CTR" --arch arm64 \
       cd buildroot-${BR2_VERSION}
       export BR2_DL_DIR=/dl
       make O=/work/out qemu_aarch64_virt_defconfig
+      # Use a PRE-BUILT external toolchain (Bootlin) instead of compiling GCC from
+      # source — the host-gcc build is multi-GB and overflowed the 50 GB podman
+      # VM (FACT 2026-06-11). External toolchain = ~hundreds MB + far faster,
+      # fits the dev-host disk. (§11.4.74 reuse; §11.4.6 root-caused, not guessed.)
       cat >> /work/out/.config <<CFG
+# BR2_TOOLCHAIN_BUILDROOT is not set
+BR2_TOOLCHAIN_EXTERNAL=y
+BR2_TOOLCHAIN_EXTERNAL_BOOTLIN=y
+BR2_TOOLCHAIN_EXTERNAL_BOOTLIN_AARCH64_GLIBC_STABLE=y
 BR2_TARGET_GENERIC_ROOT_PASSWD=\"${ROOT_PW}\"
 BR2_PACKAGE_DROPBEAR=y
 BR2_PACKAGE_DROPBEAR_CLIENT=y
