@@ -231,7 +231,11 @@ nchk(){ if grep -aqE "$2" "$1"; then log "[FAIL] $3"; fail=1; else log "[PASS] $
 # the guest BOOTED the previous-good slot A (slot_id=A, root vda2, cmdline A),
 # the interactive shell is live, and it did NOT keep booting the bad slot B.
 chk  "${EVID}/consoleROLLBACK.log" 'rolling back \(altbootcmd swap\)' "Run ROLLBACK: U-Boot guard emitted the altbootcmd-swap rollback line"
-chk  "${EVID}/consoleROLLBACK.log" "BOOT_ORDER='A B'"                 "Run ROLLBACK: guard swapped BOOT_ORDER 'B A' -> 'A B' (head now A)"
+# Authoritative post-swap signal: boot.cmd recomputed active_slot=A + root=vda2
+# AFTER the rollback guard ran — this only happens if BOOT_ORDER head swapped to A
+# (the bare-${BOOT_ORDER} echo now also shows "BOOT_ORDER=A B"; assert the
+# authoritative selection, not the cosmetic display — §11.4.1/§11.4.108).
+chk  "${EVID}/consoleROLLBACK.log" 'active_slot=A root=/dev/vda2'      "Run ROLLBACK: post-swap selection active_slot=A root=/dev/vda2 (BOOT_ORDER head swapped to good slot)"
 chk  "${EVID}/consoleROLLBACK.log" 'HELIX_SLOTID=A'                   "Run ROLLBACK: guest userspace reports /etc/slot_id=A (ROLLED BACK to good slot)"
 chk  "${EVID}/consoleROLLBACK.log" 'HELIX_ROOTDEV=/dev/vda2'          "Run ROLLBACK: guest findmnt confirms root = /dev/vda2 (slot A)"
 chk  "${EVID}/consoleROLLBACK.log" 'helix_slot=A'                     "Run ROLLBACK: kernel cmdline carries helix_slot=A (boot.scr selected A after swap)"
