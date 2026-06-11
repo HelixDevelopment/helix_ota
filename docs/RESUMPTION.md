@@ -57,10 +57,12 @@
 
 ### 2. Current PHASE + immediate NEXT + terminal goal
 
-- **PHASE:** Emulator-driven device testing — **Tier-1 in progress** (a podman container running a Go `ota-device-emulator` that speaks the real `ota-protocol` to the control plane). See `docs/design/EMULATED_DEVICE_TESTING.md`.
-- **Immediate NEXT (priority order):**
-  1. Tier-1 emulator: stand up the podman `ota-device-emulator` exercising register → update-check → telemetry → delta → rollout → recall against a live control plane, capturing real evidence under `docs/qa/<run-id>/`.
-  2. Remaining NEXT-wave items (hardware/ingest-gated): device-side TUF (gomobile-go-tuf/v2 — gated on real RK3588 `.so`/JNI measurement); device payload-apply integration (`DeltaApplyDecision` → update_engine, needs a real device); row-4 richer telemetry fields (`duration_ms`/`bytes_transferred` — blocked on UNVERIFIED ingest).
+- **PHASE (ACTIVE 2026-06-11): RK3588 / Orange Pi 5 Max A/B device emulator** — operator mandate "implement everything you can for Linux and if possible for macOS; we will provide a Linux host." Research DONE (`docs/research/rk3588_emulator/REPORT.md`, cited §11.4.123): the dev-host-feasible path on THIS Mac is a QEMU `virt`+HVF Linux guest + **U-Boot bootcount/altbootcmd auto-rollback + RAUC `format=verity` dm-verity A/B slots** (reuse RAUC+U-Boot §11.4.74; extend `containers/pkg/vm`). Real Android `update_engine` A/B stays Linux+KVM-gated (Cuttlefish T2 — for the incoming Linux host).
+- **Immediate NEXT (priority order — RK3588 emulator PWUs per REPORT §6):**
+  1. **macOS dev-host A/B-virt tier:** `tests/emulator/ab_virt/build_image.sh` builds the base aarch64 Buildroot guest in a podman container (macOS-portable: named container + named-volume DL cache + `podman cp` extract — NO `/Volumes/T7` bind-mount, NO `:Z`; output gitignored §11.4.77). **STATE: base build (PWU-AB-0) kicked off + running; .ok stamp written ONLY on real images (§11.4.6).** Then PWU-AB-1 (2-slot GPT + U-Boot A/B env → prove slot switch RED→GREEN), PWU-AB-2 (dm-verity), PWU-AB-3 (corrupt-slot auto-rollback — headline), PWU-AB-4 (agent ApplyPort→slot-writer over ota-protocol), PWU-AB-5 (chaos/stress + HelixQA bank).
+  2. **Linux/Cuttlefish T2 tier:** implement the `/dev/kvm`-gated harness (§11.4.3/§11.4.81) from `docs/design/CUTTLEFISH_TIER2.md` — honest SKIP here, ready to verify on the incoming Linux host (real `update_engine` A/B + AVB/dm-verity + auto-rollback).
+  3. Older NEXT-wave (hardware/ingest-gated): device-side TUF; row-4 richer telemetry fields.
+  NOTE: this is a multi-DAY effort (research est. ~5-9 eng-days, mostly the iterative Buildroot guest image) — proceeds across loop cycles; report "all done" only when genuinely proven (§11.4.6).
 - **Terminal goal (loop stop condition A, §11.4.126):** a new fully-validated-and-verified version (tag) created AND published across all owned submodules + main repo to all 4 upstreams.
 
 ### 3. Binding constraints (do not violate)

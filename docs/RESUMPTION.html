@@ -505,24 +505,41 @@ this Apple-Silicon host</strong> — see binding constraints.</li>
 <h3 id="current-phase-immediate-next-terminal-goal">2. Current PHASE +
 immediate NEXT + terminal goal</h3>
 <ul>
-<li><strong>PHASE:</strong> Emulator-driven device testing —
-<strong>Tier-1 in progress</strong> (a podman container running a Go
-<code>ota-device-emulator</code> that speaks the real
-<code>ota-protocol</code> to the control plane). See
-<code>docs/design/EMULATED_DEVICE_TESTING.md</code>.</li>
-<li><strong>Immediate NEXT (priority order):</strong>
+<li><strong>PHASE (ACTIVE 2026-06-11): RK3588 / Orange Pi 5 Max A/B
+device emulator</strong> — operator mandate “implement everything you
+can for Linux and if possible for macOS; we will provide a Linux host.”
+Research DONE (<code>docs/research/rk3588_emulator/REPORT.md</code>,
+cited §11.4.123): the dev-host-feasible path on THIS Mac is a QEMU
+<code>virt</code>+HVF Linux guest + <strong>U-Boot bootcount/altbootcmd
+auto-rollback + RAUC <code>format=verity</code> dm-verity A/B
+slots</strong> (reuse RAUC+U-Boot §11.4.74; extend
+<code>containers/pkg/vm</code>). Real Android <code>update_engine</code>
+A/B stays Linux+KVM-gated (Cuttlefish T2 — for the incoming Linux
+host).</li>
+<li><strong>Immediate NEXT (priority order — RK3588 emulator PWUs per
+REPORT §6):</strong>
 <ol type="1">
-<li>Tier-1 emulator: stand up the podman
-<code>ota-device-emulator</code> exercising register → update-check →
-telemetry → delta → rollout → recall against a live control plane,
-capturing real evidence under <code>docs/qa/&lt;run-id&gt;/</code>.</li>
-<li>Remaining NEXT-wave items (hardware/ingest-gated): device-side TUF
-(gomobile-go-tuf/v2 — gated on real RK3588 <code>.so</code>/JNI
-measurement); device payload-apply integration
-(<code>DeltaApplyDecision</code> → update_engine, needs a real device);
-row-4 richer telemetry fields
-(<code>duration_ms</code>/<code>bytes_transferred</code> — blocked on
-UNVERIFIED ingest).</li>
+<li><strong>macOS dev-host A/B-virt tier:</strong>
+<code>tests/emulator/ab_virt/build_image.sh</code> builds the base
+aarch64 Buildroot guest in a podman container (macOS-portable: named
+container + named-volume DL cache + <code>podman cp</code> extract — NO
+<code>/Volumes/T7</code> bind-mount, NO <code>:Z</code>; output
+gitignored §11.4.77). <strong>STATE: base build (PWU-AB-0) kicked off +
+running; .ok stamp written ONLY on real images (§11.4.6).</strong> Then
+PWU-AB-1 (2-slot GPT + U-Boot A/B env → prove slot switch RED→GREEN),
+PWU-AB-2 (dm-verity), PWU-AB-3 (corrupt-slot auto-rollback — headline),
+PWU-AB-4 (agent ApplyPort→slot-writer over ota-protocol), PWU-AB-5
+(chaos/stress + HelixQA bank).</li>
+<li><strong>Linux/Cuttlefish T2 tier:</strong> implement the
+<code>/dev/kvm</code>-gated harness (§11.4.3/§11.4.81) from
+<code>docs/design/CUTTLEFISH_TIER2.md</code> — honest SKIP here, ready
+to verify on the incoming Linux host (real <code>update_engine</code>
+A/B + AVB/dm-verity + auto-rollback).</li>
+<li>Older NEXT-wave (hardware/ingest-gated): device-side TUF; row-4
+richer telemetry fields. NOTE: this is a multi-DAY effort (research est.
+~5-9 eng-days, mostly the iterative Buildroot guest image) — proceeds
+across loop cycles; report “all done” only when genuinely proven
+(§11.4.6).</li>
 </ol></li>
 <li><strong>Terminal goal (loop stop condition A, §11.4.126):</strong> a
 new fully-validated-and-verified version (tag) created AND published
