@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>UPDATE_FLOW</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">UPDATE_FLOW</h1>
+</header>
+<h1 id="helix-ota-update-flow">Helix OTA — Update Flow</h1>
+<h2 id="overview">Overview</h2>
+<p>This sequence diagram traces the <strong>complete end-to-end update
+flow</strong> from the moment a device checks for updates through
+download, verification, installation, reboot, commit, and final success
+reporting. It covers both the happy path and key error/retry
+scenarios.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant D as 📱 Device&lt;br/&gt;(Helix OTA Client)
+    participant API as ☁️ OTA Server&lt;br/&gt;(API)
+    participant Redis as ⚡ Redis
+    participant PG as 🐘 PostgreSQL
+    participant MinIO as 📦 MinIO
+    participant UE as ⚙️ update_engine&lt;br/&gt;(Android A/B)
+    participant Dash as 🖥️ Dashboard
+
+    Note over D,UE: ═══ PHASE 1: CHECK FOR UPDATE ═══
+
+    D-&gt;&gt;API: POST /api/v1/check&lt;br/&gt;{device_id, hw_revision, current_build, oem_version}
+    API-&gt;&gt;Redis: SET device:{id}:heartbeat (TTL 5m)
+    API-&gt;&gt;PG: Query active campaigns matching device profile
+    PG--&gt;&gt;API: Campaign + artifact metadata
+    alt Update Available
+        API--&gt;&gt;D: 200 OK&lt;br/&gt;{update_available: true, artifact_url, target_build, hash_sha256, signature, size}
+    else No Update
+        API--&gt;&gt;D: 200 OK&lt;br/&gt;{update_available: false, next_check: 3600}
+        Note over D: Return to IDLE state
+    end
+
+    Note over D,UE: ═══ PHASE 2: DOWNLOAD ARTIFACT ═══
+
+    D-&gt;&gt;API: GET /api/v1/artifacts/{id}/url (request presigned URL)
+    API-&gt;&gt;MinIO: Generate presigned GET URL (TTL 1h)
+    MinIO--&gt;&gt;API: Presigned URL
+    API--&gt;&gt;D: 302 Redirect to presigned MinIO URL
+
+    D-&gt;&gt;MinIO: GET {presigned-url} (stream artifact)
+    MinIO--&gt;&gt;D: Artifact binary stream
+
+    Note over D: Download progress reported&lt;br/&gt;via POST /api/v1/report&lt;br/&gt;{state: DOWNLOADING, progress: %}
+
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: DOWNLOADING, progress: 50%}
+    API-&gt;&gt;PG: INSERT device_report (downloading)
+    API-&gt;&gt;Redis: UPDATE device:{id}:state = DOWNLOADING
+
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: DOWNLOADING, progress: 100%}
+    API-&gt;&gt;PG: INSERT device_report (download_complete)
+    API-&gt;&gt;Redis: UPDATE device:{id}:state = DOWNLOADED
+
+    Note over D,UE: ═══ PHASE 3: VERIFY ARTIFACT ═══
+
+    Note over D: Compute SHA-256 of downloaded file
+    alt Hash Matches
+        Note over D: SHA-256 ✓
+    else Hash Mismatch
+        D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: FAILED, error: HASH_MISMATCH}
+        API-&gt;&gt;PG: INSERT device_report (failed)
+        Note over D: Retry download (up to 3 attempts)
+    end
+
+    Note over D: Verify Ed25519 signature&lt;br/&gt;against trusted public key
+    alt Signature Valid
+        Note over D: Signature ✓
+    else Signature Invalid
+        D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: FAILED, error: INVALID_SIGNATURE}
+        API-&gt;&gt;PG: INSERT device_report (failed)
+        Note over D: Halt update, alert operator
+    end
+
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: VERIFYING → VERIFIED}
+    API-&gt;&gt;PG: INSERT device_report (verified)
+    API-&gt;&gt;Redis: UPDATE device:{id}:state = VERIFIED
+
+    Note over D,UE: ═══ PHASE 4: INSTALL UPDATE ═══
+
+    D-&gt;&gt;UE: ApplyUpdate(payload_path)
+    Note over UE: A/B partition: write to&lt;br/&gt;inactive slot
+
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: INSTALLING, progress: %}
+
+    loop Installation Progress
+        D-&gt;&gt;UE: GetProgress()
+        UE--&gt;&gt;D: {progress: N%}
+        D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: INSTALLING, progress: N%}
+    end
+
+    UE--&gt;&gt;D: InstallComplete()
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: INSTALLED}
+    API-&gt;&gt;PG: INSERT device_report (installed)
+    API-&gt;&gt;Redis: UPDATE device:{id}:state = INSTALLED
+
+    Note over D,UE: ═══ PHASE 5: REBOOT &amp; COMMIT ═══
+
+    D-&gt;&gt;UE: SetActiveSlot(new_slot)
+    UE--&gt;&gt;D: Slot activated
+
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: REBOOTING}
+    API-&gt;&gt;PG: INSERT device_report (rebooting)
+    API-&gt;&gt;Redis: UPDATE device:{id}:state = REBOOTING
+
+    Note over D: Device reboots into new slot...
+
+    Note over D: Device boots successfully on new build
+    D-&gt;&gt;UE: VerifyBootedSlot() == new_slot
+
+    D-&gt;&gt;UE: MarkSlotSuccessful(new_slot)
+    UE--&gt;&gt;D: Slot marked as successful
+
+    Note over D,UE: ═══ PHASE 6: REPORT SUCCESS ═══
+
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: SUCCEEDED, new_build: &quot;xxx&quot;}
+    API-&gt;&gt;PG: INSERT device_report (succeeded)&lt;br/&gt;UPDATE device SET current_build = new_build
+    API-&gt;&gt;Redis: DELETE device:{id}:state
+    API-&gt;&gt;PG: UPDATE rollout_stats SET succeeded = succeeded + 1
+    API-&gt;&gt;Notifier: Push event
+    API--&gt;&gt;Dash: Real-time update (device succeeded)
+
+    Note over D,UE: ═══ ALTERNATE: INSTALL FAILURE ═══
+
+    Note over D,UE: If update_engine fails during install:
+    D-&gt;&gt;API: POST /api/v1/report&lt;br/&gt;{state: FAILED, error: INSTALL_ERROR, details}
+    API-&gt;&gt;PG: INSERT device_report (failed)&lt;br/&gt;UPDATE rollout_stats SET failed = failed + 1
+    Note over D: Device stays on current slot&lt;br/&gt;(A/B fallback automatic)</code></pre>
+<h2 id="flow-summary">Flow Summary</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Device Action</th>
+<th>Server Action</th>
+<th>Duration (typical)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Check</strong></td>
+<td>POST /check</td>
+<td>Query campaigns, generate presigned URL</td>
+<td>&lt; 2s</td>
+</tr>
+<tr>
+<td><strong>2. Download</strong></td>
+<td>GET artifact (streamed)</td>
+<td>Log progress, update device state</td>
+<td>1–30 min (artifact size)</td>
+</tr>
+<tr>
+<td><strong>3. Verify</strong></td>
+<td>SHA-256 + Ed25519 check</td>
+<td>Log verification result</td>
+<td>10–60s</td>
+</tr>
+<tr>
+<td><strong>4. Install</strong></td>
+<td>Call update_engine (A/B)</td>
+<td>Log progress, update state</td>
+<td>2–15 min</td>
+</tr>
+<tr>
+<td><strong>5. Reboot</strong></td>
+<td>Set active slot, reboot</td>
+<td>Mark rebooting state</td>
+<td>30–90s</td>
+</tr>
+<tr>
+<td><strong>6. Commit</strong></td>
+<td>Mark slot successful</td>
+<td>Final success report, update stats</td>
+<td>&lt; 5s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="error-handling">Error Handling</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Error</th>
+<th>Detection</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hash mismatch</strong></td>
+<td>Post-download SHA-256 comparison</td>
+<td>Retry download (max 3 attempts)</td>
+</tr>
+<tr>
+<td><strong>Invalid signature</strong></td>
+<td>Ed25519 signature verification</td>
+<td>Halt, report failure, alert operator</td>
+</tr>
+<tr>
+<td><strong>Install error</strong></td>
+<td>update_engine error code</td>
+<td>Automatic A/B slot fallback, report failure</td>
+</tr>
+<tr>
+<td><strong>Boot failure</strong></td>
+<td>Boot verification after reboot</td>
+<td>A/B auto-rolls back to previous slot</td>
+</tr>
+<tr>
+<td><strong>Network loss</strong></td>
+<td>HTTP timeout / connection error</td>
+<td>Exponential backoff retry, resume partial download</td>
+</tr>
+<tr>
+<td><strong>Server unreachable</strong></td>
+<td>All API calls fail</td>
+<td>Queue reports locally, retry on connectivity restore</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

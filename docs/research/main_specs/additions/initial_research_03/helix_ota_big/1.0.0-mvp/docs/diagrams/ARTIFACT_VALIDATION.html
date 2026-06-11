@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ARTIFACT_VALIDATION</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ARTIFACT_VALIDATION</h1>
+</header>
+<h1 id="helix-ota-artifact-validation-pipeline">Helix OTA — Artifact
+Validation Pipeline</h1>
+<h2 id="overview">Overview</h2>
+<p>This flowchart details the <strong>multi-stage artifact validation
+pipeline</strong> that every OTA update artifact must pass through
+before it can be deployed to devices. The pipeline enforces structural
+integrity, cryptographic authenticity, and device compatibility —
+ensuring that only verified, correctly-targeted artifacts reach the
+device fleet.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>flowchart TB
+    START([&quot;📤 Artifact Uploaded&lt;br/&gt;(via Dashboard or API)&quot;]) --&gt; META[&quot;📋 Step 1: Metadata Extraction&lt;br/&gt;───────────────────&lt;br/&gt;• Parse manifest.json&lt;br/&gt;• Extract target_hardware&lt;br/&gt;• Extract target_build_range&lt;br/&gt;• Extract version / build number&lt;br/&gt;• Extract changelog&quot;]
+
+    META --&gt; STRUCT[&quot;🔍 Step 2: Structure Validation&lt;br/&gt;───────────────────&lt;br/&gt;• ZIP structure intact?&lt;br/&gt;• Required files present?&lt;br/&gt;  - payload.bin&lt;br/&gt;  - payload_properties.txt&lt;br/&gt;  - manifest.json&lt;br/&gt;  - care_map.pb&lt;br/&gt;• File sizes within limits?&lt;br/&gt;• No unexpected symlinks?&quot;]
+
+    STRUCT --&gt; STRUCT_OK{Structure&lt;br/&gt;Valid?}
+    STRUCT_OK -- &quot;✓ Pass&quot; --&gt; HASH[&quot;🔐 Step 3: Hash Verification&lt;br/&gt;───────────────────&lt;br/&gt;• Compute SHA-256 over&lt;br/&gt;  entire artifact&lt;br/&gt;• Compare with expected hash&lt;br/&gt;  (provided at upload)&lt;br/&gt;• Compare chunk hashes&lt;br/&gt;  (payload_properties.txt)&quot;]
+    STRUCT_OK -- &quot;✗ Fail&quot; --&gt; STRUCT_FAIL[&quot;❌ Structure Check Failed&lt;br/&gt;───────────────────&lt;br/&gt;Error: INVALID_STRUCTURE&lt;br/&gt;Details: missing files,&lt;br/&gt;corrupt ZIP, size mismatch&quot;]
+
+    HASH --&gt; HASH_OK{Hash&lt;br/&gt;Matches?}
+    HASH_OK -- &quot;✓ Pass&quot; --&gt; SIG[&quot;🔏 Step 4: Signature Verification&lt;br/&gt;───────────────────&lt;br/&gt;• Verify Ed25519 signature&lt;br/&gt;  using trusted public key&lt;br/&gt;• Signature covers:&lt;br/&gt;  - SHA-256 hash of payload&lt;br/&gt;  - manifest.json&lt;br/&gt;• Check signature not expired&lt;br/&gt;• Verify signing key not revoked&quot;]
+    HASH_OK -- &quot;✗ Fail&quot; --&gt; HASH_FAIL[&quot;❌ Hash Check Failed&lt;br/&gt;───────────────────&lt;br/&gt;Error: HASH_MISMATCH&lt;br/&gt;Details: expected vs actual&lt;br/&gt;SHA-256 values&quot;]
+
+    SIG --&gt; SIG_OK{Signature&lt;br/&gt;Valid?}
+    SIG_OK -- &quot;✓ Pass&quot; --&gt; COMPAT[&quot;🎯 Step 5: Compatibility Check&lt;br/&gt;───────────────────&lt;br/&gt;• target_hardware matches&lt;br/&gt;  a known device profile?&lt;br/&gt;• Source build range valid?&lt;br/&gt;  (can update from X → Y)&lt;br/&gt;• No circular dependency?&lt;br/&gt;• Delta patch source exists?&lt;br/&gt;  (for delta artifacts)&lt;br/&gt;• Android API level compatible?&lt;br/&gt;• OEM version constraints met?&quot;]
+    SIG_OK -- &quot;✗ Fail&quot; --&gt; SIG_FAIL[&quot;❌ Signature Check Failed&lt;br/&gt;───────────────────&lt;br/&gt;Error: INVALID_SIGNATURE&lt;br/&gt;Details: key mismatch,&lt;br/&gt;signature expired,&lt;br/&gt;key revoked&quot;]
+
+    COMPAT --&gt; COMPAT_OK{Compatibility&lt;br/&gt;Valid?}
+    COMPAT_OK -- &quot;✓ Pass&quot; --&gt; QUARANTINE[&quot;🗄️ Step 6: Quarantine Scan&lt;br/&gt;───────────────────&lt;br/&gt;• Virus/malware scan&lt;br/&gt;  (ClamAV integration)&lt;br/&gt;• Check for known&lt;br/&gt;  suspicious patterns&lt;br/&gt;• Verify no priv-esc&lt;br/&gt;  in post-install scripts&quot;]
+    COMPAT_OK -- &quot;✗ Fail&quot; --&gt; COMPAT_FAIL[&quot;❌ Compatibility Check Failed&lt;br/&gt;───────────────────&lt;br/&gt;Error: INCOMPATIBLE&lt;br/&gt;Details: unknown hardware,&lt;br/&gt;invalid source range,&lt;br/&gt;missing delta source&quot;]
+
+    QUARANTINE --&gt; QUAR_OK{Scan&lt;br/&gt;Clean?}
+    QUAR_OK -- &quot;✓ Clean&quot; --&gt; READY([&quot;✅ Artifact READY&lt;br/&gt;───────────────────&lt;br/&gt;Status: READY_FOR_DEPLOY&lt;br/&gt;Stored in MinIO&lt;br/&gt;Metadata in PostgreSQL&lt;br/&gt;Available for campaigns&quot;])
+    QUAR_OK -- &quot;✗ Threat&quot; --&gt; QUAR_FAIL[&quot;❌ Quarantine Scan Failed&lt;br/&gt;───────────────────&lt;br/&gt;Error: SECURITY_THREAT&lt;br/&gt;Details: malware detected,&lt;br/&gt;suspicious pattern,&lt;br/&gt;dangerous script&quot;]
+
+    STRUCT_FAIL --&gt; REJECT[&quot;🚫 Artifact REJECTED&lt;br/&gt;───────────────────&lt;br/&gt;Status: REJECTED&lt;br/&gt;Stored in quarantine zone&lt;br/&gt;Operator notified&lt;br/&gt;Audit log entry created&quot;]
+    HASH_FAIL --&gt; REJECT
+    SIG_FAIL --&gt; REJECT
+    COMPAT_FAIL --&gt; REJECT
+    QUAR_FAIL --&gt; REJECT
+
+    REJECT --&gt; NOTIFY[&quot;🔔 Notification&lt;br/&gt;───────────────────&lt;br/&gt;• Dashboard alert&lt;br/&gt;• Email to uploaders&lt;br/&gt;• Webhook (if configured)&lt;br/&gt;• Audit log entry&quot;]
+
+    style START fill:#4FC3F7,stroke:#0277BD,color:#000
+    style READY fill:#66BB6A,stroke:#2E7D32,color:#000
+    style REJECT fill:#EF5350,stroke:#C62828,color:#fff
+    style NOTIFY fill:#FFA726,stroke:#E65100,color:#000
+    style META fill:#E3F2FD,stroke:#1565C0,color:#000
+    style STRUCT fill:#E3F2FD,stroke:#1565C0,color:#000
+    style HASH fill:#FFF3E0,stroke:#E65100,color:#000
+    style SIG fill:#FFF3E0,stroke:#E65100,color:#000
+    style COMPAT fill:#E8F5E9,stroke:#2E7D32,color:#000
+    style QUARANTINE fill:#FCE4EC,stroke:#C62828,color:#000
+    style STRUCT_OK fill:#BBDEFB,stroke:#1565C0,color:#000
+    style HASH_OK fill:#FFE0B2,stroke:#E65100,color:#000
+    style SIG_OK fill:#FFE0B2,stroke:#E65100,color:#000
+    style COMPAT_OK fill:#C8E6C9,stroke:#2E7D32,color:#000
+    style QUAR_OK fill:#F8BBD0,stroke:#C62828,color:#000</code></pre>
+<h2 id="validation-pipeline-stages">Validation Pipeline Stages</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Check</th>
+<th>Pass Criteria</th>
+<th>Failure Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Metadata Extraction</strong></td>
+<td>Parse manifest.json</td>
+<td>All required fields present</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>2. Structure Validation</strong></td>
+<td>ZIP integrity, required files</td>
+<td>Valid ZIP, all files present, sizes within limits</td>
+<td>REJECT — INVALID_STRUCTURE</td>
+</tr>
+<tr>
+<td><strong>3. Hash Verification</strong></td>
+<td>SHA-256 of entire artifact</td>
+<td>Computed hash matches declared hash</td>
+<td>REJECT — HASH_MISMATCH</td>
+</tr>
+<tr>
+<td><strong>4. Signature Verification</strong></td>
+<td>Ed25519 signature over hash + manifest</td>
+<td>Valid signature from trusted key, not expired, key not revoked</td>
+<td>REJECT — INVALID_SIGNATURE</td>
+</tr>
+<tr>
+<td><strong>5. Compatibility Check</strong></td>
+<td>Hardware, build range, dependencies</td>
+<td>Target HW known, source range valid, no circular deps</td>
+<td>REJECT — INCOMPATIBLE</td>
+</tr>
+<tr>
+<td><strong>6. Quarantine Scan</strong></td>
+<td>Malware scan, pattern check</td>
+<td>Clean scan result</td>
+<td>REJECT — SECURITY_THREAT</td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-design-decisions">Key Design Decisions</h2>
+<ol type="1">
+<li><strong>Order matters</strong>: Checks run cheapest → most
+expensive. Structure validation is fast; signature verification and
+quarantine scans are slower.</li>
+<li><strong>Fail-fast</strong>: The pipeline stops at the first failure
+— no point checking signatures on a structurally corrupt file.</li>
+<li><strong>Quarantine zone</strong>: Rejected artifacts are moved to a
+separate MinIO bucket (quarantine zone) for forensic analysis, not
+deleted.</li>
+<li><strong>Re-validation</strong>: If the trusted key set changes (key
+rotation), all READY artifacts are re-validated against the new
+keys.</li>
+<li><strong>Delta artifacts</strong>: Delta (incremental) patches
+require an additional check that the source artifact exists and is
+itself in READY state.</li>
+</ol>
+</body>
+</html>

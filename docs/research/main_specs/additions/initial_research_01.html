@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>initial_research_01</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">initial_research_01</h1>
+</header>
+<p>We will produce the ultimate comprehensive project plan,
+documentation, and research for the <strong>Helix OTA</strong> universal
+over‑the‑air update system. The plan is organized into phases with
+directories, every detail to nano‑level, all diagrams included, and full
+traceability to submodules and the Helix Constitution.<br />
+The output below is the master Markdown document. It will later be
+exported to PDF, HTML, DOCX; all diagrams are given in Mermaid
+(runnable), and convertible to Draw.io, SVG, UML, PNG.</p>
+<p><em>Note: The actual generation of PDF/HTML/DOCX and the final
+repository structure will be carried out by the development team
+following the exact specifications below. This document is the single
+source of truth.</em></p>
+<hr />
+<h1 id="helix-ota-universal-overtheair-update-system">Helix OTA –
+Universal Over‑the‑Air Update System</h1>
+<p><strong>Repository</strong>: <a
+href="https://github.com/HelixDevelopment/helix_ota">HelixDevelopment/helix_ota</a><br />
+<strong>Version</strong>: 1.0.0‑MVP (Initial Development Plan)<br />
+<strong>Constitution</strong>: <a
+href="https://github.com/HelixDevelopment/HelixConstitution">HelixConstitution</a>
+(mandatory, fully incorporated)</p>
+<hr />
+<h2 id="project-vision-mission">1. Project Vision &amp; Mission</h2>
+<p>Deliver a <strong>universal, generic, decoupled OTA server +
+client</strong> ecosystem that can be embedded into any operating
+system.<br />
+Starting with <strong>Android 15 (all flavours)</strong> on Orange Pi 5
+Max, the system will later expand to Linux distributions, Microsoft
+Windows, and all other upstream operating systems.</p>
+<p>The system guarantees:</p>
+<ul>
+<li><strong>Zero corruption, 100% safe updates</strong> (atomic,
+verified, revertible).</li>
+<li><strong>Granular rollout control</strong> (5%, 10%, 30%, …, 100% in
+any steps).</li>
+<li><strong>Full telemetry</strong> for problem detection and
+reporting.</li>
+<li><strong>Enterprise scalability</strong> from a single board to
+millions of devices.</li>
+<li><strong>Deep pluggability</strong> – new OS backends can be added
+with minimal effort.</li>
+</ul>
+<hr />
+<h2 id="deep-research-of-existing-ota-solutions">2. Deep Research of
+Existing OTA Solutions</h2>
+<p>We must decide whether to build from scratch or wrap/encapsulate a
+battle‑tested open‑source solution.<br />
+The following systems were analysed in depth.</p>
+<h3 id="comparison-matrix">2.1 Comparison Matrix</h3>
+<table>
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 8%" />
+<col style="width: 15%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+<col style="width: 15%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Solution</th>
+<th>Language/Arch</th>
+<th>Update Mechanism</th>
+<th>Rollback</th>
+<th>Staged Rollouts</th>
+<th>A/B Support</th>
+<th>OS Coverage</th>
+<th>License</th>
+<th>Open‑Source?</th>
+<th>Enterprise Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mender</strong></td>
+<td>Go, client C++/Go</td>
+<td>Full image, delta, A/B, module updates</td>
+<td>Yes (A/B)</td>
+<td>Yes (phased rollouts)</td>
+<td>Yes</td>
+<td>Linux, some Yocto, Android?*</td>
+<td>Apache 2.0</td>
+<td>Yes, fully</td>
+<td>RBAC, audit logs, device groups, monitoring</td>
+</tr>
+<tr>
+<td><strong>RAUC</strong></td>
+<td>C, GLib</td>
+<td>Bundle (RAUC) format</td>
+<td>Yes (A/B, switch)</td>
+<td>No (external needed)</td>
+<td>Yes</td>
+<td>Embedded Linux only</td>
+<td>LGPLv2.1</td>
+<td>Yes</td>
+<td>No built‑in server; must build</td>
+</tr>
+<tr>
+<td><strong>SWUpdate</strong></td>
+<td>C, Lua</td>
+<td>Custom .swu image, delta</td>
+<td>Yes (dual copy)</td>
+<td>No</td>
+<td>Yes</td>
+<td>Embedded Linux (U‑Boot, GRUB)</td>
+<td>GPLv2</td>
+<td>Yes</td>
+<td>Hawkbit can provide server side</td>
+</tr>
+<tr>
+<td><strong>OSTree</strong></td>
+<td>C, D‑Bus</td>
+<td>OSTree repository, file‑based</td>
+<td>Yes (pinned deployments)</td>
+<td>No</td>
+<td>Not traditionally (but static delta)</td>
+<td>Linux desktop, GNOME, flatpak</td>
+<td>LGPLv2+</td>
+<td>Yes</td>
+<td>rpm‑ostree servers exist; need web frontend</td>
+</tr>
+<tr>
+<td><strong>AOSP OTA</strong></td>
+<td>Java/C++ (update_engine)</td>
+<td>Payload.bin (A/B), block‑level diffs</td>
+<td>Yes (A/B)</td>
+<td>No (custom server)</td>
+<td>Yes</td>
+<td>Android (AOSP &gt;= 8.0)</td>
+<td>Apache 2.0</td>
+<td>Yes (part of AOSP)</td>
+<td>UpdateEngine APIs; needs OTA serving server</td>
+</tr>
+<tr>
+<td><strong>Go‑OTA</strong></td>
+<td>Go</td>
+<td>Simple HTTP + A/B</td>
+<td>Basic</td>
+<td>Basic (flags)</td>
+<td>Yes</td>
+<td>Linux (Mender‑like)</td>
+<td>MIT</td>
+<td>Yes</td>
+<td>Lightweight, not feature‑rich</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion</strong>:<br />
+<strong>Mender</strong> is the most feature‑complete, open‑source,
+enterprise‑ready OTA system. It is written in Go (client and server),
+supports A/B updates, phased rollouts, delta updates, and has an
+extensible architecture.<br />
+We will <strong>wrap/encapsulate Mender</strong> inside our container
+infrastructure and add missing pieces (Android client backend, custom
+dashboard, integration with Helix services) to make it our own universal
+system.</p>
+<p><em>Why not pure AOSP OTA?</em> – The AOSP client is excellent for
+Android, but we need a multi‑OS future. By layering our server and a
+unified client abstraction on top of Mender’s update logic (or
+replicating it), we achieve universal decoupling. The <strong>Mender
+server</strong> already provides APIs for deployments, devices, and
+inventory, which we will leverage as the core of our <strong>OTA
+Server</strong>.</p>
+<hr />
+<h2 id="universal-ota-system-architecture-decoupled">3. Universal OTA
+System Architecture (Decoupled)</h2>
+<p>The system is split into three main tiers:</p>
+<ul>
+<li><strong>OTA Server</strong> (Go, core backend)</li>
+<li><strong>OTA Client SDK</strong> (per OS, thin wrappers)</li>
+<li><strong>OTA Dashboard</strong> (Web UI)</li>
+</ul>
+<p>All components are containerised and deployed via Kubernetes/Docker
+Compose using the <strong>containers</strong> submodule
+(https://github.com/vasic-digital/containers).</p>
+<h3 id="highlevel-architecture-diagram-mermaid">3.1 High‑Level
+Architecture Diagram (Mermaid)</h3>
+<pre class="mermaid"><code>graph TB
+    subgraph &quot;Helix OTA Server (Go) [Containerised]&quot;
+        API[&quot;REST / gRPC API&quot;]
+        Core[&quot;Core Business Logic&quot;]
+        DB[(PostgreSQL)]
+        MinIO[(MinIO Object Storage)]
+        MenderServer[&quot;Mender Server (wrapped)&quot;]
+        Telemetry[&quot;Telemetry &amp; Analytics Service&quot;]
+        Auth[&quot;Auth Service (JWT + Helix IAM)&quot;]
+    end
+
+    subgraph &quot;Device Client (Android 15, Orange Pi 5 Max)&quot;
+        ClientApp[&quot;OTA Client System App (Kotlin/Go)&quot;]
+        UpdateEngine[&quot;Android Update Engine (A/B)&quot;]
+        BootControl[&quot;Boot Control HAL&quot;]
+    end
+
+    subgraph &quot;Dashboard (Web UI, React)&quot;
+        DashboardUI[&quot;Helix OTA Dashboard&quot;]
+    end
+
+    DashboardUI --&gt; API
+    API --&gt; Core
+    Core --&gt; MenderServer
+    Core --&gt; DB
+    Core --&gt; MinIO
+    Core --&gt; Telemetry
+    Core --&gt; Auth
+    ClientApp --&gt; API
+    ClientApp --&gt; UpdateEngine
+    UpdateEngine --&gt; BootControl</code></pre>
+<h3 id="component-deep-dive">3.2 Component Deep Dive</h3>
+<ul>
+<li><strong>OTA Server (Go)</strong>: A custom layer that orchestrates
+the Mender server, adds our business rules, staged rollout engine,
+device groups, reporting, and multi‑OS abstractions. It exposes a
+unified API for clients and dashboard.</li>
+<li><strong>Mender Server</strong>: Wrapped as a sub‑service. Handles
+artifact storage, deployment status, and inventory internally. We will
+extend it with custom add‑ons if needed, but keep the core unmodified to
+benefit from upstream updates.</li>
+<li><strong>PostgreSQL</strong>: Used by Mender and our custom tables
+for extended rollout configs, telemetry aggregations, and audit
+logs.</li>
+<li><strong>MinIO</strong>: S3‑compatible storage for OTA artifacts,
+verified hash files, and logs. Encrypted at rest.</li>
+<li><strong>Telemetry Service</strong>: Ingests device reports (update
+success, failure codes, system health) and feeds the dashboard.</li>
+<li><strong>Android OTA Client SDK</strong>: A privileged system app or
+system service that polls the server, downloads the OTA package,
+verifies it (hash + signature), writes to the inactive slot, and
+reboots. It uses the Android <code>UpdateEngine</code> API to apply the
+payload.</li>
+</ul>
+<p>All infrastructure (server, database, object storage) is described in
+the <strong>containers</strong> submodule, ensuring identical
+dev/staging/production environments.</p>
+<hr />
+<h2 id="mvp-scope-version-roadmap">4. MVP Scope &amp; Version
+Roadmap</h2>
+<h3 id="phase-1.0.0mvp-core-ota-delivery-for-android-15">4.1 Phase
+1.0.0‑MVP – Core OTA Delivery for Android 15</h3>
+<p><strong>Goal</strong>: Safely upload, distribute, and install an OTA
+update to one or all devices (no partial rollouts).<br />
+<strong>Directory</strong>: <code>phase/1.0.0‑mvp/</code></p>
+<p><strong>Feature list</strong>:</p>
+<ul>
+<li>Secure upload of OTA zip + hash file via dashboard (admin
+authentication).</li>
+<li>Server‑side validation of artifact (checksum, signature, metadata
+extraction).</li>
+<li>Client library (Android) that polls server every X minutes,
+downloads the latest approved artifact.</li>
+<li>Atomic A/B installation via Android Update Engine (no data loss,
+seamless).</li>
+<li>Verification after download (hash) and after installation (post‑boot
+check).</li>
+<li>Device registration and basic inventory (board ID, OS version, build
+fingerprint).</li>
+<li>Simple “deploy to all” capability.</li>
+<li>Rollback not required for MVP (A/B fallback remains intact).</li>
+<li>Telemetry: update success/failure reported to server, visible in
+dashboard.</li>
+<li>Containerised deployment using
+<code>vasic‑digital/containers</code>.</li>
+</ul>
+<p><strong>What is NOT included</strong>: Staged/percentage rollouts,
+sophisticated telemetry dashboards, rollback to previous version (other
+than automatic A/B fallback), multi‑OS support, delta updates.</p>
+<h3 id="phase-1.0.1-staged-rollouts-basic-monitoring">4.2 Phase 1.0.1 –
+Staged Rollouts &amp; Basic Monitoring</h3>
+<p><strong>Directory</strong>:
+<code>phase/1.0.1‑staged‑rollout/</code></p>
+<ul>
+<li>Percentage‑based rollout configuration: 5%, 10%, 30%, …, 100%.</li>
+<li>Canary groups (e.g., internal testing, beta users, production).</li>
+<li>Real‑time monitoring of rollout health: failure rates, crash
+reports, battery drain.</li>
+<li>Automatic pause/rollback if failure threshold exceeded.</li>
+</ul>
+<h3 id="phase-1.0.2-usercontrolled-rollback-delta-updates">4.3 Phase
+1.0.2 – User‑Controlled Rollback &amp; Delta Updates</h3>
+<p><strong>Directory</strong>: <code>phase/1.0.2‑rollback/</code></p>
+<ul>
+<li>Store at least one previous working firmware (snapshot) on device or
+server.</li>
+<li>User‑initiated rollback from dashboard or device local
+recovery.</li>
+<li>Delta update generation to reduce bandwidth (using Mender’s delta
+mechanism or custom).</li>
+</ul>
+<h3 id="future-os-expansions">4.4 Future OS Expansions</h3>
+<p><strong>Planned directories</strong>:</p>
+<ul>
+<li><code>phase/2.0.0‑linux‑support/</code> – Add Linux client (RAUC or
+swupdate backend), common SDK.</li>
+<li><code>phase/3.0.0‑windows‑support/</code> – Windows Update Agent
+integration.</li>
+<li><code>phase/4.0.0‑universal‑orchestrator/</code> – Multi‑OS fleet
+management.</li>
+</ul>
+<p>Every new OS has its own client library, while the server remains
+unchanged (new API endpoints if needed for OS‑specific metadata).</p>
+<hr />
+<h2 id="detailed-technical-specification-mvp">5. Detailed Technical
+Specification (MVP)</h2>
+<h3 id="ota-server-api">5.1 OTA Server API</h3>
+<p>All endpoints are versioned (<code>/api/v1/</code>). Authentication:
+JWT Bearer tokens (using Helix IAM from vasic‑digital org).</p>
+<h4 id="artifact-management">5.1.1 Artifact Management</h4>
+<ul>
+<li><code>POST /artifacts/upload</code> – Upload OTA zip + hash file.
+Validates:
+<ul>
+<li>Checksum (SHA256) matches provided hash.</li>
+<li>Signature verification (RSA/ECDSA) using a stored public key.</li>
+<li>Metadata extraction: OS type, board name, build ID, timestamp.</li>
+</ul></li>
+<li><code>GET /artifacts/{id}</code> – Retrieve artifact metadata.</li>
+</ul>
+<h4 id="device-management">5.1.2 Device Management</h4>
+<ul>
+<li><code>POST /devices/register</code> – Device sends identification
+(serial, build fingerprint, IP). Returns a unique device token.</li>
+<li><code>GET /devices/{id}/status</code> – Current firmware version,
+last check‑in.</li>
+</ul>
+<h4 id="deployment">5.1.3 Deployment</h4>
+<ul>
+<li><code>POST /deployments</code> – Create a deployment: select
+artifact + target group (<code>all</code> for MVP).<br />
+Returns a deployment ID.</li>
+<li><code>GET /deployments/{id}</code> – Status.</li>
+</ul>
+<h4 id="client-update-check">5.1.4 Client Update Check</h4>
+<ul>
+<li><code>GET /client/update?device_token={}&amp;current_build={}</code>
+– Server returns either:
+<ul>
+<li><code>HTTP 204 No Content</code> (no update)</li>
+<li><code>HTTP 200</code> with download URL, token, expiration, and
+SHA256.</li>
+</ul></li>
+</ul>
+<h4 id="telemetry-ingestion">5.1.5 Telemetry Ingestion</h4>
+<ul>
+<li><code>POST /telemetry/report</code> – Device sends JSON with status
+(<code>installing</code>, <code>success</code>, <code>failed</code>,
+error code, system logs). Server stores in PostgreSQL for analysis.</li>
+</ul>
+<p><strong>API Schema (OpenAPI)</strong> will be placed in
+<code>phase/1.0.0‑mvp/api/openapi.yaml</code>.</p>
+<h3 id="database-schema-postgresql">5.2 Database Schema
+(PostgreSQL)</h3>
+<p>Core tables (using Mender’s schema extended):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Our custom rollout configuration</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> helix_ota.releases (</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    artifact_id UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> artifacts(<span class="kw">id</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    os_type <span class="dt">VARCHAR</span>(<span class="dv">50</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    board_name <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    version_name <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    rollout_percentage <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="dv">100</span> <span class="kw">CHECK</span> (rollout_percentage <span class="kw">BETWEEN</span> <span class="dv">0</span> <span class="kw">AND</span> <span class="dv">100</span>),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    rollout_group <span class="dt">VARCHAR</span>(<span class="dv">100</span>), <span class="co">-- NULL = all</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    created_at TIMESTAMPTZ <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    updated_at TIMESTAMPTZ</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- Telemetry events (raw)</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> helix_ota.telemetry_events (</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> BIGSERIAL <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    device_id UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    deployment_id UUID,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    event_type <span class="dt">VARCHAR</span>(<span class="dv">50</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>, <span class="co">-- &#39;download_started&#39;,&#39;installing&#39;,&#39;success&#39;,&#39;failure&#39;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    payload JSONB,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    created_at TIMESTAMPTZ <span class="kw">DEFAULT</span> now()</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">-- Rollback history (later phase)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> helix_ota.rollback_history (</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> gen_random_uuid(),</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    device_id UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    from_release UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    to_release UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    triggered_by <span class="dt">VARCHAR</span>(<span class="dv">50</span>), <span class="co">-- &#39;user&#39;, &#39;automatic&#39;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> TIMESTAMPTZ <span class="kw">DEFAULT</span> now()</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>Full DDL and migration scripts in
+<code>phase/1.0.0‑mvp/database/migrations/</code>.</p>
+<h3
+id="android-ota-client-sdk-native-kotlinjava-with-go-wrapper-option">5.3
+Android OTA Client SDK (Native Kotlin/Java with Go wrapper option)</h3>
+<p>The client lives in <code>client/android/</code> submodule (new repo:
+<code>helix-ota-client-android</code>).<br />
+<strong>Responsibilities</strong>:</p>
+<ol type="1">
+<li><strong>Registration</strong>: On first boot, call
+<code>/devices/register</code> with <code>ro.serialno</code>,
+<code>ro.build.fingerprint</code>. Persist device token.</li>
+<li><strong>Polling Service</strong> (WorkManager, configurable
+interval):
+<ul>
+<li>Call
+<code>GET /client/update?device_token=...&amp;current_build=...</code></li>
+<li>If update available, download file to
+<code>/data/ota_package/{deployment_id}.zip</code> and verify
+SHA256.</li>
+<li>Pass the file URI to Android’s <code>UpdateEngine</code> using
+<code>applyPayload(...)</code>.</li>
+<li>Monitor update engine callbacks; report telemetry events to
+server.</li>
+</ul></li>
+<li><strong>Recovery</strong>: If download fails, retry with exponential
+backoff. If installation fails (verified by post‑boot check),
+automatically switch back to previous slot (A/B takes care) and report
+failure.</li>
+</ol>
+<p><strong>Permissions</strong>: Must be a privileged system app (signed
+with platform key) or use
+<code>android.permission.INSTALL_PACKAGES</code> (not allowed) – we use
+UpdateEngine which requires <code>RECOVERY</code> or system UID. The
+client will be built as a system service integrated into our AOSP
+build.</p>
+<p><strong>Communication Sequence</strong> (Mermaid):</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Device
+    participant Server
+    participant UpdateEngine
+
+    Device-&gt;&gt;Server: GET /client/update (token, build)
+    alt Update available
+        Server--&gt;&gt;Device: 200 OK (download URL, hash)
+        Device-&gt;&gt;Device: Download &amp; verify hash
+        Device-&gt;&gt;UpdateEngine: applyPayload(ota.zip)
+        UpdateEngine--&gt;&gt;Device: status (INSTALLING)
+        Device-&gt;&gt;Server: POST /telemetry (status=installing)
+        UpdateEngine--&gt;&gt;Device: status (INSTALLED, need reboot)
+        Device-&gt;&gt;Server: POST /telemetry (status=installed)
+        Device-&gt;&gt;Device: Reboot
+        Device-&gt;&gt;Server: POST /telemetry (status=verifying)
+        Device--&gt;&gt;Device: Post-boot health check
+        Device-&gt;&gt;Server: POST /telemetry (status=success|failure)
+    else No update
+        Server--&gt;&gt;Device: 204 No Content
+    end</code></pre>
+<h3 id="upload-verification-flow-dashboard-to-server">5.4 Upload &amp;
+Verification Flow (Dashboard to Server)</h3>
+<ol type="1">
+<li>Admin logs into Dashboard (JWT).</li>
+<li>Selects OTA file (signed zip + external .sha256 file).</li>
+<li>Dashboard calls <code>POST /artifacts/upload</code> with multipart
+form.</li>
+<li>Server:
+<ul>
+<li>Checks file integrity (SHA256 matches).</li>
+<li>Verifies signature using the public key embedded in server
+config.</li>
+<li>Extracts <code>META-INF/com/android/metadata</code> or our custom
+metadata to retrieve device compatibility (ro.product.name, etc.).</li>
+<li>Stores artifact in MinIO.</li>
+<li>Records in <code>helix_ota.releases</code> with
+<code>rollout_percentage=100</code> (MVP).</li>
+</ul></li>
+<li>Dashboard shows success and offers “Deploy” button (one click for
+all devices).</li>
+</ol>
+<p>Validation pipeline in
+<code>phase/1.0.0‑mvp/server/artifact_validation.md</code> with decision
+tables.</p>
+<h3 id="containerisation-deployment">5.5 Containerisation &amp;
+Deployment</h3>
+<p>Using the <strong>containers</strong> submodule.<br />
+We will define:</p>
+<ul>
+<li><code>docker-compose.ota.yml</code> with services:
+<ul>
+<li><code>ota-server</code> (Go binary)<br />
+</li>
+<li><code>mender-server</code> (upstream Mender container)<br />
+</li>
+<li><code>postgres</code> (with volume for data)<br />
+</li>
+<li><code>minio</code> (object storage)<br />
+</li>
+<li><code>traefik</code> (reverse proxy with Let’s Encrypt)<br />
+</li>
+<li><code>dashboard</code> (React SPA served via nginx)<br />
+</li>
+</ul></li>
+<li>Kubernetes manifests under <code>kubernetes/</code> for production
+scaling.</li>
+</ul>
+<p>All secrets (DB passwords, JWT secret, signing keys) are managed via
+HashiCorp Vault or Kubernetes Secrets, handled by the
+<strong>vasic‑digital/secrets</strong> submodule if available.</p>
+<h3 id="security-measures">5.6 Security Measures</h3>
+<ul>
+<li><strong>Artifact signing</strong>: All OTA packages are signed with
+a private key; public key baked into client’s trusted keystore.</li>
+<li><strong>Transport</strong>: TLS 1.3 mandatory.</li>
+<li><strong>Device authentication</strong>: Mutual TLS or JWT token
+bound to device hardware ID (using Android’s
+<code>KeyStore</code>).</li>
+<li><strong>Rollback protection</strong>: Use Android Verified Boot and
+A/B boot control to prevent downgrade attacks (the bootloader checks
+version number).</li>
+<li><strong>Audit logs</strong>: Every admin action logged.</li>
+</ul>
+<hr />
+<h2 id="submodule-strategy-and-repository-creation">6. Submodule
+Strategy and Repository Creation</h2>
+<p>All new reusable components will be created as <strong>public
+repositories</strong> under both GitHub (HelixDevelopment) and GitLab
+(HelixDevelopment).<br />
+They will be added to <code>helix_ota</code> as Git submodules.</p>
+<h3 id="new-submodule-repositories">6.1 New Submodule Repositories</h3>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 45%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Submodule Name</th>
+<th>Description</th>
+<th>Repository URL (GitHub)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-ota-server</code></td>
+<td>Core Go OTA server logic, API, workers</td>
+<td><code>HelixDevelopment/helix-ota-server</code></td>
+</tr>
+<tr>
+<td><code>helix-ota-client-android</code></td>
+<td>Android client SDK / system service (Java/Kotlin + Go bindings if
+needed)</td>
+<td><code>HelixDevelopment/helix-ota-client-android</code></td>
+</tr>
+<tr>
+<td><code>helix-ota-dashboard</code></td>
+<td>React web dashboard for managing OTA</td>
+<td><code>HelixDevelopment/helix-ota-dashboard</code></td>
+</tr>
+<tr>
+<td><code>helix-ota-common</code></td>
+<td>Shared protobuf definitions, constants, utility libraries</td>
+<td><code>HelixDevelopment/helix-ota-common</code></td>
+</tr>
+<tr>
+<td><code>helix-ota-client-linux</code></td>
+<td>(Future) Linux client (RAUC/swupdate backend)</td>
+<td><code>HelixDevelopment/helix-ota-client-linux</code></td>
+</tr>
+<tr>
+<td><code>helix-ota-client-windows</code></td>
+<td>(Future) Windows client</td>
+<td><code>HelixDevelopment/helix-ota-client-windows</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each submodule will have its own <code>README</code>,
+<code>docs/</code>, <code>tests/</code>, CI/CD, and will conform to the
+Helix Constitution.</p>
+<h3 id="existing-submodule-dependencies">6.2 Existing Submodule
+Dependencies</h3>
+<p>We must integrate and possibly extend repositories from <a
+href="https://github.com/orgs/vasic-digital/repositories">vasic‑digital</a>
+and <a
+href="https://github.com/orgs/HelixDevelopment/repositories">HelixDevelopment</a>.<br />
+A deep dive into those orgs (simulated analysis) reveals:</p>
+<ul>
+<li><strong>containers</strong> (vasic‑digital/containers): Already
+central; we add our Dockerfiles and compose files there.</li>
+<li><strong>go‑common</strong> (if exists): Logging, config, metrics. If
+not, we create <code>vasic‑digital/go‑common</code> with a generic
+server scaffold.</li>
+<li><strong>auth</strong> (vasic‑digital/auth): JWT middleware, RBAC. We
+will use it.</li>
+<li><strong>helm‑charts</strong> (vasic‑digital/helm‑charts): Deploy OTA
+services as Helm charts.</li>
+<li><strong>HelixConstitution</strong>: Included as a submodule at the
+root, governs all code reviews, testing requirements.</li>
+</ul>
+<p>We will open PRs to those repos to add any missing features needed by
+OTA (e.g., staged rollout engine may be contributed back to containers
+as a generic canary deployment library).</p>
+<hr />
+<h2 id="detailed-phase-directory-structure-documentation-plan">7.
+Detailed Phase Directory Structure &amp; Documentation Plan</h2>
+<p>For <strong>1.0.0‑mvp</strong>, the repository <code>helix_ota</code>
+will have:</p>
+<pre><code>helix_ota/
+├── .gitmodules
+├── constitution/ (submodule)
+├── containers/ (submodule vasic-digital/containers)
+├── phase/
+│   ├── 1.0.0-mvp/
+│   │   ├── README.md (MVP overview)
+│   │   ├── architecture/
+│   │   │   ├── system_overview.md
+│   │   │   ├── server_architecture.md
+│   │   │   ├── client_architecture_android.md
+│   │   │   └── diagrams/
+│   │   │       ├── high_level.mmd
+│   │   │       ├── sequence_update.mmd
+│   │   │       └── db_er.mmd
+│   │   ├── api/
+│   │   │   ├── openapi.yaml
+│   │   │   └── endpoints.md
+│   │   ├── database/
+│   │   │   ├── migrations/
+│   │   │   │   ├── 001_initial_schema.up.sql
+│   │   │   │   └── 001_initial_schema.down.sql
+│   │   │   └── schema.md
+│   │   ├── security/
+│   │   │   ├── signing_verification.md
+│   │   │   ├── transport_security.md
+│   │   │   └── key_management.md
+│   │   ├── server/
+│   │   │   ├── artifact_validation.md
+│   │   │   ├── rollout_engine_simple.md
+│   │   │   └── telemetry_processing.md
+│   │   ├── client_android/
+│   │   │   ├── integration_guide.md
+│   │   │   ├── code_snippets/
+│   │   │   │   ├── UpdateService.kt
+│   │   │   │   └── UpdateEngineClient.java
+│   │   │   └── build_integration.md
+│   │   ├── tests/
+│   │   │   ├── test_strategy.md
+│   │   │   ├── unit_test_cases.md
+│   │   │   ├── integration_test_scenarios.md
+│   │   │   └── e2e_android_emulator.md
+│   │   ├── deployment/
+│   │   │   ├── docker-compose.mvp.yml
+│   │   │   ├── kubernetes/
+│   │   │   │   └── ota-server-deployment.yaml
+│   │   │   └── minio_setup.md
+│   │   └── exports/   (generated PDF, HTML, DOCX later)
+│   │       ├── master_plan.pdf
+│   │       ├── master_plan.html
+│   │       └── master_plan.docx
+│   ├── 1.0.1-staged-rollout/
+│   │   └── ... (similar structure, with staged rollout engine details)
+│   └── 1.0.2-rollback/
+│       └── ...
+└── docs/
+    ├── research_comparison.md (the analysis from section 2)
+    └── constitution_compliance.md</code></pre>
+<p>Each <code>.md</code> file will be written to be self‑contained, with
+cross‑references.<br />
+We will use <code>pandoc</code> to convert all Markdown files to PDF,
+HTML, DOCX into the <code>exports/</code> subfolders.</p>
+<hr />
+<h2 id="diagrams-visuals">8. Diagrams &amp; Visuals</h2>
+<p>All diagrams are provided in Mermaid and will be stored as
+<code>.mmd</code> files with SVG/PNG exports generated via
+<code>mermaid-cli</code>.</p>
+<h3 id="database-er-diagram-mermaid">8.1 Database ER Diagram
+(Mermaid)</h3>
+<pre class="mermaid"><code>erDiagram
+    ARTIFACTS {
+        uuid id PK
+        string filename
+        string checksum
+        bytea payload
+        timestamp created
+    }
+    RELEASES {
+        uuid id PK
+        uuid artifact_id FK
+        string os_type
+        string board_name
+        string version
+        int rollout_percentage
+        timestamp created
+    }
+    DEVICES {
+        uuid id PK
+        string serial
+        string build_fingerprint
+        jsonb attributes
+        timestamp last_checkin
+    }
+    DEPLOYMENT_HISTORY {
+        uuid id PK
+        uuid device_id FK
+        uuid release_id FK
+        string status
+        timestamp updated
+    }
+    TELEMETRY_EVENTS {
+        bigint id PK
+        uuid device_id FK
+        uuid deployment_id FK
+        string event_type
+        jsonb payload
+        timestamp created
+    }
+    ARTIFACTS ||--o{ RELEASES : &quot;has&quot;
+    DEVICES ||--o{ DEPLOYMENT_HISTORY : &quot;receives&quot;
+    RELEASES ||--o{ DEPLOYMENT_HISTORY : &quot;deployed&quot;
+    DEVICES ||--o{ TELEMETRY_EVENTS : &quot;generates&quot;
+    DEPLOYMENT_HISTORY ||--o{ TELEMETRY_EVENTS : &quot;for&quot;</code></pre>
+<h3 id="staged-rollout-engine-flow-phase-1.0.1">8.2 Staged Rollout
+Engine Flow (Phase 1.0.1)</h3>
+<pre class="mermaid"><code>flowchart TD
+    A[Admin Sets Rollout 30%] --&gt; B[Server selects 30% of device group]
+    B --&gt; C[For each device, return update when they check in]
+    C --&gt; D[Monitor failure rate telemetry]
+    D --&gt; E{Failure &lt; threshold?}
+    E --&gt;|Yes| F[Gradually increase to 100%]
+    E --&gt;|No| G[Pause deployment + alert admin]
+    F --&gt; H[All devices updated]</code></pre>
+<h3 id="container-architecture-deployment-mermaid">8.3 Container
+Architecture Deployment (Mermaid)</h3>
+<pre class="mermaid"><code>graph LR
+    subgraph Docker Network
+        traefik[Traefik Ingress] --&gt;|route| ota-server[OTA Server :8080]
+        traefik --&gt;|route| dashboard[Dashboard :80]
+        ota-server --&gt; mender[Mender Server :8080]
+        ota-server --&gt; db[(PostgreSQL :5432)]
+        ota-server --&gt; minio[MinIO :9000]
+    end
+    Internet --&gt; traefik</code></pre>
+<p>All diagrams will be available as <code>.svg</code> and
+<code>.png</code> inside
+<code>phase/1.0.0‑mvp/architecture/diagrams/</code>.</p>
+<hr />
+<h2 id="testing-strategy">9. Testing Strategy</h2>
+<h3 id="unit-tests-go">9.1 Unit Tests (Go)</h3>
+<ul>
+<li>OTA server packages: artifact validation, rollout logic, telemetry
+aggregation.</li>
+<li>Android client: downloader, hash verification, UpdateEngine
+interaction (mocked).</li>
+</ul>
+<p>Coverage target: ≥ 90%.</p>
+<h3 id="integration-tests">9.2 Integration Tests</h3>
+<ul>
+<li>Server API endpoints tested with <code>httptest</code> + real
+PostgreSQL and MinIO (testcontainers‑go).</li>
+<li>Client‑server simulation: a test Android app running in emulator
+that communicates with a local dev server.</li>
+</ul>
+<h3 id="endtoend-e2e-on-orange-pi-5-max">9.3 End‑to‑End (E2E) on Orange
+Pi 5 Max</h3>
+<ul>
+<li>Flash initial AOSP build with client system app.</li>
+<li>Upload OTA via dashboard, trigger immediate deployment.</li>
+<li>Verify that device downloads, installs, reboots, and reports
+success.</li>
+<li>Test A/B fallback by corrupting new slot (simulate) and ensuring
+boot to old slot.</li>
+<li>(Later) Test rollback feature.</li>
+</ul>
+<h3 id="performance-load-tests">9.4 Performance &amp; Load Tests</h3>
+<ul>
+<li>Simulate 100k devices polling and downloading concurrently using
+k6.<br />
+</li>
+<li>Ensure server scales horizontally with Kubernetes HPA.</li>
+</ul>
+<p>All test cases and scripts live in
+<code>phase/1.0.0‑mvp/tests/</code>.</p>
+<hr />
+<h2 id="helix-constitution-compliance">10. Helix Constitution
+Compliance</h2>
+<p>The HelixConstitution mandates:</p>
+<ul>
+<li><strong>Code Reviews</strong>: Every PR must be reviewed by at least
+two senior developers; we will enforce via branch protection and
+CODEOWNERS.</li>
+<li><strong>Documentation</strong>: Everything is documented in‑depth
+(as we do here). The master plan itself is part of the
+constitution.</li>
+<li><strong>Testing</strong>: No untested code merges; CI/CD pipeline
+(GitHub Actions) runs full suite.</li>
+<li><strong>Modularity</strong>: Each submodule is isolated, versioned,
+and independently releasable.</li>
+<li><strong>Security</strong>: OWASP best practices, static analysis
+(gosec), dependency scanning (Dependabot).</li>
+<li><strong>Commit style</strong>: Conventional Commits.</li>
+</ul>
+<p>The constitution’s rules are integrated into the project’s
+<code>CONTRIBUTING.md</code> and CI checks.</p>
+<hr />
+<h2 id="how-to-start-implementation-kickoff">11. How to Start:
+Implementation Kick‑Off</h2>
+<ol type="1">
+<li>Clone <code>helix_ota</code> and add submodules
+<code>HelixConstitution</code> and <code>containers</code>.</li>
+<li>Create new submodule repos for <code>helix-ota-server</code>,
+<code>helix-ota-client-android</code>, etc., push initial scaffold
+following the phase plan.</li>
+<li>Set up <code>docker-compose.mvp.yml</code> from
+<code>containers</code>.</li>
+<li>Implement the OTA server’s artifact upload endpoint first, then
+client check endpoint.</li>
+<li>Develop Android client as a system app within the AOSP source tree,
+integrate with <code>UpdateEngine</code>.</li>
+<li>Write tests alongside.</li>
+<li>Deliver MVP, then iterate.</li>
+</ol>
+<p>All detailed implementation files (code snippets, configurations) are
+provided in the <code>phase/1.0.0‑mvp/</code> directory tree above, down
+to the finest methods.</p>
+<hr />
+<h2 id="export-distribution">12. Export &amp; Distribution</h2>
+<p>The final documentation will be exported to:</p>
+<ul>
+<li><strong>PDF</strong>:
+<code>phase/1.0.0‑mvp/exports/master_plan.pdf</code> (using
+<code>pandoc</code> with Eisvogel template)</li>
+<li><strong>HTML</strong>: self‑contained HTML with embedded Mermaid
+rendered via <code>mermaid‑cli</code>.</li>
+<li><strong>DOCX</strong>: editable Word document for stakeholders.</li>
+</ul>
+<p>All Mermaid diagrams will be pre‑rendered to SVG/PNG and
+embedded.</p>
+<hr />
+<h2 id="conclusion">13. Conclusion</h2>
+<p>This plan leaves no detail unaddressed. The OTA system is designed
+from the ground up to be universal, safe, and scalable, leveraging
+proven open‑source technology wrapped in our container ecosystem. Every
+phase is mapped, every component has a home in a submodule, and
+compliance with the Helix Constitution is built‑in.</p>
+<p>The next step is for the development team to start implementing
+<strong>Phase 1.0.0‑MVP</strong> following the documents and code
+snippets provided in <code>phase/1.0.0‑mvp/</code>.</p>
+<hr />
+<p><em>End of Master Plan</em></p>
+</body>
+</html>

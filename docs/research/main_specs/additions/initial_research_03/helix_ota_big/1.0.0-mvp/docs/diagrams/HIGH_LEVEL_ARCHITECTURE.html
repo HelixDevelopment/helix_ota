@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HIGH_LEVEL_ARCHITECTURE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HIGH_LEVEL_ARCHITECTURE</h1>
+</header>
+<h1 id="helix-ota-high-level-architecture">Helix OTA — High-Level
+Architecture</h1>
+<h2 id="overview">Overview</h2>
+<p>This diagram illustrates the top-level system architecture of the
+Helix OTA platform. The <strong>Helix OTA Server</strong> is the central
+component that orchestrates update campaigns, serves artifacts, and
+manages device state. It is supported by three data stores —
+<strong>PostgreSQL</strong> for persistent relational data,
+<strong>Redis</strong> for caching and real-time state, and
+<strong>MinIO</strong> (S3-compatible) for binary artifact storage.
+Operators interact with the system through the
+<strong>Dashboard</strong> (web UI), while <strong>Android
+Devices</strong> communicate with the server over HTTPS to check for,
+download, and report on updates.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>graph TB
+    subgraph Operator[&quot;👤 Operator&quot;]
+        Dashboard[&quot;🖥️ Helix OTA Dashboard&lt;br/&gt;(Next.js / React)&quot;]
+    end
+
+    subgraph ServerCluster[&quot;☁️ Helix OTA Server Cluster&quot;]
+        API[&quot;🔧 API Server&lt;br/&gt;(Go / Gin)&quot;]
+        Scheduler[&quot;⏱️ Rollout Scheduler&lt;br/&gt;(Go goroutine)&quot;]
+        Notifier[&quot;📬 Notification Service&lt;br/&gt;(WebSocket / MQTT)&quot;]
+    end
+
+    subgraph DataLayer[&quot;💾 Data Layer&quot;]
+        PG[&quot;🐘 PostgreSQL 16&lt;br/&gt;— Devices, Campaigns,&lt;br/&gt;Rollouts, Artifacts,&lt;br/&gt;Reports, Users&quot;]
+        Redis[&quot;⚡ Redis 7&lt;br/&gt;— Device heartbeat cache,&lt;br/&gt;Rollout state,&lt;br/&gt;Rate limiting,&lt;br/&gt;Session store&quot;]
+        MinIO[&quot;📦 MinIO (S3-Compatible)&lt;br/&gt;— OTA update artifacts,&lt;br/&gt;Delta packages,&lt;br/&gt;Full images&quot;]
+    end
+
+    subgraph DeviceFleet[&quot;📱 Device Fleet (Android)&quot;]
+        D1[&quot;Device A&lt;br/&gt;Android 14&quot;]
+        D2[&quot;Device B&lt;br/&gt;Android 14&quot;]
+        D3[&quot;Device N&lt;br/&gt;Android 13&quot;]
+    end
+
+    Dashboard -- &quot;REST / GraphQL&lt;br/&gt;:8080&quot; --&gt; API
+    API -- &quot;SQL&lt;br/&gt;:5432&quot; --&gt; PG
+    API -- &quot;GET/SET&lt;br/&gt;:6379&quot; --&gt; Redis
+    API -- &quot;PUT/GET&lt;br/&gt;:9000&quot; --&gt; MinIO
+    Scheduler -- &quot;polls &amp; updates&lt;br/&gt;rollout state&quot; --&gt; PG
+    Scheduler -- &quot;device targeting&lt;br/&gt;cache&quot; --&gt; Redis
+    Notifier -- &quot;push events&quot; --&gt; Dashboard
+
+    D1 -- &quot;HTTPS&lt;br/&gt;:443/api/v1/check&quot; --&gt; API
+    D2 -- &quot;HTTPS&lt;br/&gt;:443/api/v1/check&quot; --&gt; API
+    D3 -- &quot;HTTPS&lt;br/&gt;:443/api/v1/check&quot; --&gt; API
+    D1 -- &quot;HTTPS&lt;br/&gt;:443/api/v1/report&quot; --&gt; API
+    D2 -- &quot;HTTPS&lt;br/&gt;:443/api/v1/report&quot; --&gt; API
+    D3 -- &quot;HTTPS&lt;br/&gt;:443/api/v1/report&quot; --&gt; API
+
+    API -- &quot;presigned URL&lt;br/&gt;artifact download&quot; --&gt; MinIO
+    D1 -. &quot;HTTPS GET&lt;br/&gt;(presigned URL)&quot; .-&gt; MinIO
+    D2 -. &quot;HTTPS GET&lt;br/&gt;(presigned URL)&quot; .-&gt; MinIO
+    D3 -. &quot;HTTPS GET&lt;br/&gt;(presigned URL)&quot; .-&gt; MinIO
+
+    API -- &quot;device online status&lt;br/&gt;heartbeat TTL&quot; --&gt; Redis
+    API -- &quot;campaign &amp; rollout&lt;br/&gt;CRUD + queries&quot; --&gt; PG
+    API -- &quot;artifact metadata&lt;br/&gt;&amp; versions&quot; --&gt; PG
+    API -- &quot;artifact binary&lt;br/&gt;upload / retrieve&quot; --&gt; MinIO
+
+    style Dashboard fill:#4FC3F7,stroke:#0277BD,color:#000
+    style API fill:#66BB6A,stroke:#2E7D32,color:#000
+    style Scheduler fill:#81C784,stroke:#388E3C,color:#000
+    style Notifier fill:#81C784,stroke:#388E3C,color:#000
+    style PG fill:#42A5F5,stroke:#1565C0,color:#fff
+    style Redis fill:#EF5350,stroke:#C62828,color:#fff
+    style MinIO fill:#FFA726,stroke:#E65100,color:#000
+    style D1 fill:#CE93D8,stroke:#6A1B9A,color:#000
+    style D2 fill:#CE93D8,stroke:#6A1B9A,color:#000
+    style D3 fill:#CE93D8,stroke:#6A1B9A,color:#000</code></pre>
+<h2 id="component-summary">Component Summary</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API Server</strong></td>
+<td>Go + Gin</td>
+<td>REST API for devices and dashboard; authentication, artifact
+management, campaign control</td>
+</tr>
+<tr>
+<td><strong>Rollout Scheduler</strong></td>
+<td>Go (goroutine)</td>
+<td>Periodically evaluates active campaigns and selects devices for the
+next rollout stage</td>
+</tr>
+<tr>
+<td><strong>Notification Service</strong></td>
+<td>WebSocket / MQTT</td>
+<td>Pushes real-time rollout progress and device status events to the
+dashboard</td>
+</tr>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>Next.js / React</td>
+<td>Web UI for operators to create campaigns, monitor rollouts, and
+manage devices</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>PostgreSQL 16</td>
+<td>Primary data store — all persistent entities (devices, campaigns,
+artifacts, reports, users, audit log)</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>Redis 7</td>
+<td>In-memory store — device heartbeat/online cache, rollout state
+machine, rate limiting, session tokens</td>
+</tr>
+<tr>
+<td><strong>MinIO</strong></td>
+<td>MinIO (S3-compatible)</td>
+<td>Object store — OTA update artifacts (.zip, .img, A/B payload), delta
+packages, full images</td>
+</tr>
+<tr>
+<td><strong>Android Devices</strong></td>
+<td>Helix OTA Client (C++)</td>
+<td>On-device daemon that checks, downloads, verifies, installs (via
+<code>update_engine</code>), and reports results</td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-data-flows">Key Data Flows</h2>
+<ol type="1">
+<li><strong>Operator creates campaign</strong> → Dashboard → API Server
+→ PostgreSQL (persist) → Scheduler picks up</li>
+<li><strong>Device checks for updates</strong> → API Server → Redis
+(online heartbeat) → PostgreSQL (eligible campaigns) → responds with
+update info or no-update</li>
+<li><strong>Device downloads artifact</strong> → API Server generates
+presigned MinIO URL → Device downloads directly from MinIO</li>
+<li><strong>Device reports result</strong> → API Server → PostgreSQL
+(report record) → Redis (update device cache) → Dashboard (via
+notifier)</li>
+<li><strong>Scheduler advances rollout</strong> → Scheduler → PostgreSQL
+(update rollout stage) → Notifier → Dashboard</li>
+</ol>
+</body>
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONTAINER_ARCHITECTURE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONTAINER_ARCHITECTURE</h1>
+</header>
+<h1 id="helix-ota-container-architecture">Helix OTA — Container
+Architecture</h1>
+<h2 id="overview">Overview</h2>
+<p>This diagram shows the <strong>Docker container architecture</strong>
+for the Helix OTA platform, including all services, their
+inter-container networking, volume mounts, exposed ports, and health
+checks. The system is deployed via Docker Compose (dev/staging) or
+Kubernetes (production).</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Internet[&quot;🌐 Internet&quot;]
+        OPERATOR[&quot;👤 Operator&lt;br/&gt;(Browser)&quot;]
+        DEVICES[&quot;📱 Device Fleet&lt;br/&gt;(Android Clients)&quot;]
+    end
+
+    subgraph DockerNetwork[&quot;🐳 Docker Network: helix-ota-net (bridge)&quot;]
+
+        subgraph ReverseProxy[&quot;🔀 Reverse Proxy Layer&quot;]
+            NGINX[&quot;🟢 nginx&lt;br/&gt;─────────────────&lt;br/&gt;Image: nginx:1.25-alpine&lt;br/&gt;Ports: 80→443 redirect,&lt;br/&gt;443→upstream&lt;br/&gt;Volumes: ./nginx/ssl,&lt;br/&gt;./nginx/conf.d&lt;br/&gt;Health: GET /healthz&lt;br/&gt;─────────────────&lt;br/&gt;• TLS 1.3 termination&lt;br/&gt;• HSTS headers&lt;br/&gt;• Rate limiting&lt;br/&gt;• Static file serving&lt;br/&gt;• WebSocket proxy&quot;]
+        end
+
+        subgraph AppServices[&quot;⚡ Application Services&quot;]
+            API[&quot;🔵 helix-ota-api&lt;br/&gt;─────────────────&lt;br/&gt;Image: helix-ota-api:latest&lt;br/&gt;Port: 8080 (internal)&lt;br/&gt;Env: .env.api&lt;br/&gt;Volumes: /tmp/uploads&lt;br/&gt;Health: GET /api/v1/health&lt;br/&gt;Replicas: 2&lt;br/&gt;─────────────────&lt;br/&gt;• Go + Gin REST API&lt;br/&gt;• Device management&lt;br/&gt;• Campaign orchestration&lt;br/&gt;• Artifact serving&quot;]
+            SCHEDULER[&quot;🟡 helix-ota-scheduler&lt;br/&gt;─────────────────&lt;br/&gt;Image: helix-ota-scheduler:latest&lt;br/&gt;Port: 8081 (metrics)&lt;br/&gt;Env: .env.scheduler&lt;br/&gt;Health: GET /healthz&lt;br/&gt;Replicas: 1 (leader election)&lt;br/&gt;─────────────────&lt;br/&gt;• Rollout stage evaluation&lt;br/&gt;• Device selection&lt;br/&gt;• Auto-pause/halt logic&lt;br/&gt;• Campaign lifecycle&quot;]
+            WORKER[&quot;🟠 helix-ota-worker&lt;br/&gt;─────────────────&lt;br/&gt;Image: helix-ota-worker:latest&lt;br/&gt;Port: 8082 (metrics)&lt;br/&gt;Env: .env.worker&lt;br/&gt;Health: GET /healthz&lt;br/&gt;Replicas: 2&lt;br/&gt;─────────────────&lt;br/&gt;• Artifact validation&lt;br/&gt;• Hash computation&lt;br/&gt;• Signature verification&lt;br/&gt;• Malware scanning&lt;br/&gt;• Report aggregation&quot;]
+            DASHBOARD[&quot;🟣 helix-ota-dashboard&lt;br/&gt;─────────────────&lt;br/&gt;Image: helix-ota-dashboard:latest&lt;br/&gt;Port: 3000 (internal)&lt;br/&gt;Env: .env.dashboard&lt;br/&gt;Health: GET /api/health&lt;br/&gt;Replicas: 1&lt;br/&gt;─────────────────&lt;br/&gt;• Next.js SSR&lt;br/&gt;• React SPA&lt;br/&gt;• WebSocket client&lt;br/&gt;• Real-time updates&quot;]
+        end
+
+        subgraph DataStores[&quot;💾 Data Stores&quot;]
+            PG[&quot;🐘 postgres&lt;br/&gt;─────────────────&lt;br/&gt;Image: postgres:16-alpine&lt;br/&gt;Port: 5432 (internal)&lt;br/&gt;Volumes: pg_data:/var/lib/&lt;br/&gt;postgresql/data&lt;br/&gt;Env: POSTGRES_DB, USER, PASS&lt;br/&gt;Health: pg_isready&lt;br/&gt;─────────────────&lt;br/&gt;• Primary data store&lt;br/&gt;• Devices, campaigns&lt;br/&gt;• Reports, audit log&lt;br/&gt;• Connection pool: 100&quot;]
+            REDIS[&quot;⚡ redis&lt;br/&gt;─────────────────&lt;br/&gt;Image: redis:7-alpine&lt;br/&gt;Port: 6379 (internal)&lt;br/&gt;Volumes: redis_data:/data&lt;br/&gt;Command: redis-server&lt;br/&gt;  --maxmemory 512mb&lt;br/&gt;  --maxmemory-policy allkeys-lru&lt;br/&gt;Health: redis-cli ping&lt;br/&gt;─────────────────&lt;br/&gt;• Device heartbeat cache&lt;br/&gt;• Session store&lt;br/&gt;• Rate limit counters&lt;br/&gt;• Rollout state cache&quot;]
+            MINIO[&quot;📦 minio&lt;br/&gt;─────────────────&lt;br/&gt;Image: minio/minio:latest&lt;br/&gt;Ports: 9000 (API),&lt;br/&gt;9001 (Console)&lt;br/&gt;Volumes: minio_data:/data&lt;br/&gt;Env: MINIO_ROOT_USER,&lt;br/&gt;MINIO_ROOT_PASSWORD&lt;br/&gt;Command: server /data&lt;br/&gt;  --console-address :9001&lt;br/&gt;Health: GET /minio/&lt;br/&gt;health/live&lt;br/&gt;─────────────────&lt;br/&gt;• Artifact storage&lt;br/&gt;• Presigned URLs&lt;br/&gt;• Quarantine bucket&lt;br/&gt;• SSE encryption&quot;]
+        end
+
+        subgraph Observability[&quot;📊 Observability Stack&quot;]
+            PROM[&quot;📈 prometheus&lt;br/&gt;─────────────────&lt;br/&gt;Image: prom/prometheus:latest&lt;br/&gt;Port: 9090 (internal)&lt;br/&gt;Volumes: ./prometheus.yml,&lt;br/&gt;prom_data:/prometheus&lt;br/&gt;─────────────────&lt;br/&gt;• Metrics scraping&lt;br/&gt;• Alert rules&lt;br/&gt;• 30-day retention&quot;]
+            GRAFANA[&quot;📊 grafana&lt;br/&gt;─────────────────&lt;br/&gt;Image: grafana/grafana:latest&lt;br/&gt;Port: 3001 (internal)&lt;br/&gt;Volumes: grafana_data:&lt;br/&gt;/var/lib/grafana&lt;br/&gt;─────────────────&lt;br/&gt;• Dashboards&lt;br/&gt;• Alerts visualization&lt;br/&gt;• API metrics&lt;br/&gt;• Rollout progress&quot;]
+            LOKI[&quot;📝 loki&lt;br/&gt;─────────────────&lt;br/&gt;Image: grafana/loki:latest&lt;br/&gt;Port: 3100 (internal)&lt;br/&gt;Volumes: loki_data:/loki&lt;br/&gt;─────────────────&lt;br/&gt;• Log aggregation&lt;br/&gt;• Structured log search&lt;br/&gt;• 14-day retention&quot;]
+        end
+    end
+
+    OPERATOR --&gt;|&quot;HTTPS :443&quot;| NGINX
+    DEVICES --&gt;|&quot;HTTPS :443&quot;| NGINX
+
+    NGINX --&gt;|&quot;proxy_pass /api&quot;| API
+    NGINX --&gt;|&quot;proxy_pass /dashboard&quot;| DASHBOARD
+    NGINX --&gt;|&quot;proxy_pass /ws&quot;| API
+    NGINX --&gt;|&quot;proxy_pass /artifacts&quot;| MINIO
+
+    API --&gt;|&quot;SQL :5432&quot;| PG
+    API --&gt;|&quot;GET/SET :6379&quot;| REDIS
+    API --&gt;|&quot;PUT/GET :9000&quot;| MINIO
+    SCHEDULER --&gt;|&quot;SQL :5432&quot;| PG
+    SCHEDULER --&gt;|&quot;GET/SET :6379&quot;| REDIS
+    WORKER --&gt;|&quot;SQL :5432&quot;| PG
+    WORKER --&gt;|&quot;PUT/GET :9000&quot;| MINIO
+
+    API --&gt;|&quot;metrics :9090&quot;| PROM
+    SCHEDULER --&gt;|&quot;metrics :9090&quot;| PROM
+    WORKER --&gt;|&quot;metrics :9090&quot;| PROM
+    PROM --&gt;|&quot;datasource&quot;| GRAFANA
+    LOKI --&gt;|&quot;datasource&quot;| GRAFANA
+
+    style NGINX fill:#43A047,stroke:#1B5E20,color:#fff
+    style API fill:#1E88E5,stroke:#0D47A1,color:#fff
+    style SCHEDULER fill:#FDD835,stroke:#F57F17,color:#000
+    style WORKER fill:#FF8F00,stroke:#E65100,color:#fff
+    style DASHBOARD fill:#8E24AA,stroke:#4A148C,color:#fff
+    style PG fill:#42A5F5,stroke:#1565C0,color:#fff
+    style REDIS fill:#EF5350,stroke:#C62828,color:#fff
+    style MINIO fill:#FFA726,stroke:#E65100,color:#000
+    style PROM fill:#E53935,stroke:#B71C1C,color:#fff
+    style GRAFANA fill:#FF8F00,stroke:#E65100,color:#fff
+    style LOKI fill:#546E7A,stroke:#263238,color:#fff</code></pre>
+<h2 id="container-specifications">Container Specifications</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image</th>
+<th>Replicas</th>
+<th>Memory Limit</th>
+<th>CPU Limit</th>
+<th>Health Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>nginx</strong></td>
+<td>nginx:1.25-alpine</td>
+<td>1</td>
+<td>256MB</td>
+<td>0.5</td>
+<td><code>GET /healthz</code> every 10s</td>
+</tr>
+<tr>
+<td><strong>helix-ota-api</strong></td>
+<td>helix-ota-api:latest</td>
+<td>2</td>
+<td>1GB</td>
+<td>1.0</td>
+<td><code>GET /api/v1/health</code> every 15s</td>
+</tr>
+<tr>
+<td><strong>helix-ota-scheduler</strong></td>
+<td>helix-ota-scheduler:latest</td>
+<td>1</td>
+<td>512MB</td>
+<td>0.5</td>
+<td><code>GET /healthz</code> every 15s</td>
+</tr>
+<tr>
+<td><strong>helix-ota-worker</strong></td>
+<td>helix-ota-worker:latest</td>
+<td>2</td>
+<td>1GB</td>
+<td>1.0</td>
+<td><code>GET /healthz</code> every 15s</td>
+</tr>
+<tr>
+<td><strong>helix-ota-dashboard</strong></td>
+<td>helix-ota-dashboard:latest</td>
+<td>1</td>
+<td>512MB</td>
+<td>0.5</td>
+<td><code>GET /api/health</code> every 30s</td>
+</tr>
+<tr>
+<td><strong>postgres</strong></td>
+<td>postgres:16-alpine</td>
+<td>1</td>
+<td>2GB</td>
+<td>2.0</td>
+<td><code>pg_isready</code> every 10s</td>
+</tr>
+<tr>
+<td><strong>redis</strong></td>
+<td>redis:7-alpine</td>
+<td>1</td>
+<td>512MB</td>
+<td>0.5</td>
+<td><code>redis-cli ping</code> every 10s</td>
+</tr>
+<tr>
+<td><strong>minio</strong></td>
+<td>minio/minio:latest</td>
+<td>1</td>
+<td>1GB</td>
+<td>1.0</td>
+<td><code>GET /minio/health/live</code> every 10s</td>
+</tr>
+<tr>
+<td><strong>prometheus</strong></td>
+<td>prom/prometheus:latest</td>
+<td>1</td>
+<td>1GB</td>
+<td>0.5</td>
+<td><code>GET /-/healthy</code> every 30s</td>
+</tr>
+<tr>
+<td><strong>grafana</strong></td>
+<td>grafana/grafana:latest</td>
+<td>1</td>
+<td>512MB</td>
+<td>0.5</td>
+<td><code>GET /api/health</code> every 30s</td>
+</tr>
+<tr>
+<td><strong>loki</strong></td>
+<td>grafana/loki:latest</td>
+<td>1</td>
+<td>512MB</td>
+<td>0.5</td>
+<td><code>GET /ready</code> every 30s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="network-configuration">Network Configuration</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Network</th>
+<th>Driver</th>
+<th>Purpose</th>
+<th>Services</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>helix-ota-net</strong></td>
+<td>bridge</td>
+<td>Internal service communication</td>
+<td>All services</td>
+</tr>
+<tr>
+<td><strong>helix-ota-frontend</strong></td>
+<td>bridge</td>
+<td>Public-facing services only</td>
+<td>nginx, API, dashboard</td>
+</tr>
+<tr>
+<td><strong>helix-ota-data</strong></td>
+<td>bridge</td>
+<td>Data store isolation</td>
+<td>postgres, redis, minio, API, worker, scheduler</td>
+</tr>
+</tbody>
+</table>
+<h2 id="volume-mounts">Volume Mounts</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Volume</th>
+<th>Type</th>
+<th>Mount Point</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>pg_data</strong></td>
+<td>named volume</td>
+<td>/var/lib/postgresql/data</td>
+<td>PostgreSQL persistent data</td>
+</tr>
+<tr>
+<td><strong>redis_data</strong></td>
+<td>named volume</td>
+<td>/data</td>
+<td>Redis persistence (AOF)</td>
+</tr>
+<tr>
+<td><strong>minio_data</strong></td>
+<td>named volume</td>
+<td>/data</td>
+<td>MinIO object storage</td>
+</tr>
+<tr>
+<td><strong>prom_data</strong></td>
+<td>named volume</td>
+<td>/prometheus</td>
+<td>Prometheus metrics storage</td>
+</tr>
+<tr>
+<td><strong>grafana_data</strong></td>
+<td>named volume</td>
+<td>/var/lib/grafana</td>
+<td>Grafana dashboards &amp; config</td>
+</tr>
+<tr>
+<td><strong>loki_data</strong></td>
+<td>named volume</td>
+<td>/loki</td>
+<td>Loki log storage</td>
+</tr>
+<tr>
+<td><strong>./nginx/ssl</strong></td>
+<td>bind mount</td>
+<td>/etc/nginx/ssl</td>
+<td>TLS certificates</td>
+</tr>
+<tr>
+<td><strong>./nginx/conf.d</strong></td>
+<td>bind mount</td>
+<td>/etc/nginx/conf.d</td>
+<td>Nginx configuration</td>
+</tr>
+<tr>
+<td><strong>./prometheus.yml</strong></td>
+<td>bind mount</td>
+<td>/etc/prometheus/prometheus.yml</td>
+<td>Prometheus scrape config</td>
+</tr>
+</tbody>
+</table>
+<h2 id="docker-compose-quick-start">Docker Compose Quick Start</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.yml (simplified)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;3.8&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> nginx:1.25-alpine</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;443:443&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span><span class="kw">]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">dashboard</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">api</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> helix-ota-api:latest</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DATABASE_URL=postgres://helix:secret@postgres:5432/helix_ota</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> REDIS_URL=redis://redis:6379</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> MINIO_ENDPOINT=minio:9000</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">redis</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">minio</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">scheduler</span><span class="kw">:</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> helix-ota-scheduler:latest</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">redis</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">worker</span><span class="kw">:</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> helix-ota-worker:latest</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">minio</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">dashboard</span><span class="kw">:</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> helix-ota-dashboard:latest</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16-alpine</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;pg_data:/var/lib/postgresql/data&quot;</span><span class="kw">]</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">redis</span><span class="kw">:</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> redis:7-alpine</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;redis_data:/data&quot;</span><span class="kw">]</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">minio</span><span class="kw">:</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> minio/minio:latest</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> server /data --console-address :9001</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;minio_data:/data&quot;</span><span class="kw">]</span></span></code></pre></div>
+</body>
+</html>

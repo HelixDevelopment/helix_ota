@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>recall_telemetry_probes</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">recall_telemetry_probes</h1>
+</header>
+<h1
+id="recall_telemetry_probes.sh-companion-guide"><code>recall_telemetry_probes.sh</code>
+— companion guide</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-10T11:40:36Z</p>
+<h2 id="overview">Overview</h2>
+<p><code>tests/security/recall_telemetry_probes.sh</code> is a
+black-box, anti-bluff security probe suite for two Helix OTA
+control-plane surfaces that the sibling suites
+(<code>security_probes.sh</code>,
+<code>security_probes_filters.sh</code>) do <strong>not</strong>
+cover:</p>
+<ul>
+<li><code>POST /api/v1/deployments/{id}/recall</code> — server-driven
+rollback control.</li>
+<li><code>GET  /api/v1/devices/{id}/telemetry</code> — ownership +
+filter input validation.</li>
+</ul>
+<p>It boots a <strong>real</strong> <code>ota-server</code> over real
+HTTP and HARD-asserts the <strong>actual</strong> status code returned
+by a real response for every probe (Constitution §11.4 / §11.4.27 /
+§11.4.123). A genuine defect FAILs; nothing is papered over. The suite
+is self-driving and self-cleaning (server stopped + workdir removed on
+every exit path via <code>trap … EXIT INT TERM</code>, §11.4.14).</p>
+<blockquote>
+<p><strong>Status codes are read from source, not assumed
+(§11.4.6).</strong> Both handlers use <code>respondValidation()</code>,
+which returns <strong>HTTP 400</strong>
+(<code>CodeValidationFailed</code>) — <strong>not 422</strong>. The
+probe expectations below reflect the real handler behaviour, confirmed
+against <code>server/internal/api/errors.go</code>,
+<code>handlers_recall.go</code>, and
+<code>handlers_telemetry.go</code>.</p>
+</blockquote>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Required: <code>bash</code>, <code>curl</code>, <code>jq</code>,
+<code>go</code> (self-host build of <code>cmd/ota-server</code>).</li>
+<li>Optional (only the recall-VALIDATION fixture V1/V2 needs them):
+<code>openssl</code> (≥3, ed25519), <code>xxd</code>,
+<code>base64</code>, <code>python3</code>. When absent, V1/V2
+SKIP-with-reason (§11.4.3) — never a false PASS — and every other probe
+still runs.</li>
+</ul>
+<h2 id="usage-examples">Usage examples</h2>
+<p>Self-hosted (recommended; default — ephemeral per-PID port in
+20000–39999):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/security/recall_telemetry_probes.sh</span></code></pre></div>
+<p>Pin a port / point the evidence file:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_PORT</span><span class="op">=</span>28765 <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_SECURITY_EVIDENCE</span><span class="op">=</span>docs/qa/<span class="op">&lt;</span>run-id<span class="op">&gt;</span>/RUN_EVIDENCE_RECALL_TELEMETRY.txt <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> tests/security/recall_telemetry_probes.sh <span class="at">--port</span> 28765</span></code></pre></div>
+<p>Against an already-running server (V1/V2 will SKIP unless a
+key-configured server with a seeded deployment exists):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/security/recall_telemetry_probes.sh <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--external</span> <span class="at">--base-url</span> http://127.0.0.1:8080 <span class="at">--password</span> <span class="st">&quot;</span><span class="va">$HELIX_ADMIN_PASSWORD</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Exit codes: <code>0</code> PASS, <code>1</code> FAIL (≥1 hard
+assertion failed), <code>3</code> ABORT (missing tool / build /
+unhealthy server).</p>
+<h2 id="probes-and-exact-expected-status">Probes and EXACT expected
+status</h2>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 34%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Request</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td>unauth <code>POST /deployments/{id}/recall</code></td>
+<td><strong>401</strong></td>
+</tr>
+<tr>
+<td>R2</td>
+<td>device-role token <code>POST …/recall</code></td>
+<td><strong>403</strong></td>
+</tr>
+<tr>
+<td>R2b</td>
+<td>device token <code>GET /client/update</code> (token-valid
+control)</td>
+<td><strong>200/204</strong></td>
+</tr>
+<tr>
+<td>R3</td>
+<td>operator/admin token <code>POST …/recall</code> (valid target, real
+fixture)</td>
+<td><strong>201</strong> (SKIP if no signed fixture)</td>
+</tr>
+<tr>
+<td>V1</td>
+<td><code>POST …/recall</code> missing <code>to_release_id</code>
+(deployment has a release)</td>
+<td><strong>400</strong> (SKIP if no fixture)</td>
+</tr>
+<tr>
+<td>V2</td>
+<td><code>POST …/recall</code> unknown <code>to_release_id</code>
+(deployment exists)</td>
+<td><strong>404</strong> (SKIP if no fixture)</td>
+</tr>
+<tr>
+<td>V3</td>
+<td><code>POST …/recall</code> unknown deployment id (operator
+token)</td>
+<td><strong>404</strong></td>
+</tr>
+<tr>
+<td>O1</td>
+<td>device A token <code>GET /devices/{B}/telemetry</code></td>
+<td><strong>403</strong></td>
+</tr>
+<tr>
+<td>O2</td>
+<td>device A token <code>GET /devices/{A}/telemetry</code> (own)</td>
+<td><strong>200</strong></td>
+</tr>
+<tr>
+<td>O3</td>
+<td>privileged (admin/viewer) token
+<code>GET /devices/{B}/telemetry</code></td>
+<td><strong>200</strong></td>
+</tr>
+<tr>
+<td>F1</td>
+<td><code>?event=&lt;unknown&gt;</code></td>
+<td><strong>400</strong></td>
+</tr>
+<tr>
+<td>F2</td>
+<td><code>?since=&lt;not-RFC3339&gt;</code></td>
+<td><strong>400</strong></td>
+</tr>
+<tr>
+<td>F3a/b/c</td>
+<td><code>?limit=0</code> / <code>=999</code> / <code>=-1</code> (out of
+<code>[1,200]</code>)</td>
+<td><strong>400</strong> each</td>
+</tr>
+<tr>
+<td>F4</td>
+<td><code>?cursor=&lt;malformed&gt;</code></td>
+<td><strong>400</strong></td>
+</tr>
+<tr>
+<td>F5</td>
+<td><code>?event=success&amp;limit=10&amp;cursor=0</code> (valid
+control)</td>
+<td><strong>200</strong></td>
+</tr>
+<tr>
+<td>T1</td>
+<td><code>POST …/recall</code> with injected
+<code>public_key</code>/<code>signature</code> fields</td>
+<td><strong>201</strong> (valid target + fixture) / <strong>404</strong>
+(no fixture) — fields IGNORED, no request key path</td>
+</tr>
+<tr>
+<td>T1b</td>
+<td>T1 did not 5xx</td>
+<td>no 5xx</td>
+</tr>
+<tr>
+<td><code>*b</code></td>
+<td>injection/edge inputs did not 5xx</td>
+<td>no 5xx</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-the-codes-are-what-they-are">Why the codes are what they
+are</h3>
+<ul>
+<li><strong>Authz</strong> is enforced by <code>requireRole</code>
+(<code>middleware.go</code>) BEFORE the handler: unauth → 401, wrong
+role → 403, regardless of whether the deployment exists.
+<code>recall</code> is wired
+<code>requireRole(RoleOperator, RoleAdmin)</code>;
+<code>telemetry</code> is
+<code>requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice)</code>.</li>
+<li><strong>Recall validation</strong> (<code>handleRecall</code>):
+unknown deployment → 404; malformed body / missing
+<code>to_release_id</code> → 400 (<code>respondValidation</code>);
+unknown <code>to_release_id</code> → 404; success → 201.</li>
+<li><strong>Telemetry ownership</strong>
+(<code>handleDeviceTelemetry</code>): a <code>device</code>-role token
+may read only its own <code>deviceId</code>
+(<code>claims.Subject != deviceID</code> → 403); a privileged token
+reads any.</li>
+<li><strong>Telemetry filter validation</strong>: <code>event</code>
+(closed set), <code>since</code>/<code>until</code> (RFC3339),
+<code>limit</code> (<code>[1,200]</code>), <code>cursor</code> (int ≥ 0)
+all reject via <code>respondValidation</code> → 400.</li>
+<li><strong>Trust boundary</strong>: <code>RecallRequest</code> binds
+ONLY <code>{to_release_id, reason}</code>.
+<code>handlers_recall.go</code> has <strong>no</strong>
+<code>resolvePublicKey</code>/signature path, so extra request fields
+(<code>public_key</code>, <code>signature</code>, …) are silently
+ignored by the JSON binder and can never inject a trusted key.</li>
+</ul>
+<h3 id="token-class-limitation-documented-not-bluffed">Token-class
+limitation (documented, not bluffed)</h3>
+<p>The self-hosted <code>cmd/ota-server</code> static user directory
+mints exactly one login user carrying
+<code>{admin, operator, viewer}</code> combined — there is no env knob
+for a <strong>viewer-only</strong> user. The genuinely non-privileged
+subject available to drive the recall 403 is therefore the
+<strong>device-role</strong> token (R2), which is the correct and
+provable rejection. R3 proves the operator/admin path is allowed. A
+dedicated <em>viewer-only-rejected-on-recall</em> probe is not
+assertable in self-host mode without a runtime user-creation surface;
+this is a known coverage edge, not a faked PASS.</p>
+<h2 id="internal-behaviour">Internal behaviour</h2>
+<ol type="1">
+<li>Optionally generate an ephemeral ed25519 keypair (never committed;
+lives in a <code>mktemp</code> dir removed on exit, §11.4.10).</li>
+<li><code>go build ./cmd/ota-server</code>, boot it with ephemeral
+admin/token secrets (and <code>HELIX_ARTIFACT_PUBKEY</code> when signing
+is available), wait for <code>/healthz</code>.</li>
+<li>Admin login; register two devices for the ownership probes.</li>
+<li>If signing is available, mint a signed base+target artifact → two
+releases → one deployment (the recall-validation fixture; reuses the
+<code>tests/e2e/pipeline_signed.sh</code> recipe).</li>
+<li>Run R/V/O/F/T probes, each tee’d (status + body excerpt) to the
+evidence file.</li>
+<li><code>trap cleanup EXIT INT TERM</code> kills the server and removes
+the workdir.</li>
+</ol>
+<p><code>curl</code> runs with <code>-g</code> (globbing off) so
+<code>[ ] $</code> in query params are sent literally instead of
+erroring into a <code>000</code> script-bug FAIL-bluff (§11.4.1).</p>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/security/security_probes.sh</code> — base black-box
+security suite (same harness).</li>
+<li><code>tests/security/security_probes_filters.sh</code> —
+filter/pagination security suite.</li>
+<li><code>tests/e2e/pipeline_signed.sh</code> — signed-artifact pipeline
+(fixture recipe source).</li>
+</ul>
+<h2 id="cross-references-server-source">Cross-references (server
+source)</h2>
+<ul>
+<li><code>server/internal/api/handlers_recall.go</code> —
+<code>handleRecall</code> (404/400/201, no key path).</li>
+<li><code>server/internal/api/handlers_telemetry.go</code> —
+<code>handleDeviceTelemetry</code> (ownership 403 + filter 400s).</li>
+<li><code>server/internal/api/server.go</code> — route role wiring.</li>
+<li><code>server/internal/api/errors.go</code> —
+<code>respondValidation</code> == HTTP 400.</li>
+<li><code>server/internal/api/middleware.go</code> —
+<code>requireRole</code> (401/403).</li>
+</ul>
+<p><strong>Last verified date:</strong> 2026-06-10 (parse-only:
+<code>bash -n</code> + <code>sh -n</code> clean; live run deferred to
+the conductor against the clean merged tree).</p>
+</body>
+</html>

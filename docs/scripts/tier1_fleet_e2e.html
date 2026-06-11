@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>tier1_fleet_e2e</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">tier1_fleet_e2e</h1>
+</header>
+<h1
+id="tier1_fleet_e2e.sh-tier-1-multi-device-fleet-ota-e2e-on-podman">tier1_fleet_e2e.sh
+— Tier-1 MULTI-DEVICE FLEET OTA E2E on podman</h1>
+<p><strong>Last verified:</strong> 2026-06-10 (run-id
+<code>20260610T111928Z-fleet</code>, fleet size 5, podman 5.8.2, arm64
+Linux guest)</p>
+<h2 id="overview">Overview</h2>
+<p><code>tests/emulator/tier1_fleet_e2e.sh</code> proves
+<strong>multi-device emulation</strong> (“create emulators”, plural): it
+boots <strong>N distinct <code>ota-device-emu</code> containers
+concurrently</strong> as a <strong>fleet</strong> against
+<strong>one</strong> containerized Helix OTA control plane, with no live
+hardware. The operator stages <strong>one</strong> real all-targets
+deployment at a version above the fleet’s current; then every emulator
+(a distinct <code>hardware_id</code> → a distinct device) independently
+registers, gets a <strong>200 update offer carrying the
+<code>deployment_id</code></strong>, applies the update, reports the
+<strong>full telemetry lifecycle ACCEPTED</strong>
+(<code>rejected=0</code>), and advances its version. The harness asserts
+<strong>all N devices completed</strong>, captures per-device evidence +
+a fleet summary, and cross-checks the <strong>server fleet telemetry
+overview</strong>.</p>
+<p>Anti-bluff (§11.4 / §11.4.119): each emulator is its <strong>own
+distinct device</strong> — no two co-drive a shared exclusive resource;
+the fleet is genuinely concurrent (containers run in parallel). Every
+PASS is backed by real captured per-device Outcome JSON + the server
+<code>GET /telemetry/overview</code> body under
+<code>docs/qa/&lt;run-id&gt;-fleet/</code>. A device that does not
+complete is reported <code>[FAIL]</code> with its Outcome and the
+harness exits non-zero — it never fakes green.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Identical to <code>tier1_full_lifecycle_e2e.sh</code>: a running
+podman machine (arm64 guest), a host Go toolchain, and
+<code>openssl</code>(≥3
+ed25519)/<code>xxd</code>/<code>base64</code>/<code>curl</code>/<code>jq</code>/<code>python3</code>.
+The ed25519 trust keypair is ephemeral and never committed
+(§11.4.10).</p>
+<h2 id="usage">Usage</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/emulator/tier1_fleet_e2e.sh                 <span class="co"># default 5 devices</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">FLEET_SIZE</span><span class="op">=</span>8 <span class="fu">bash</span> tests/emulator/tier1_fleet_e2e.sh    <span class="co"># N devices</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">KEEP_UP</span><span class="op">=</span>1   <span class="fu">bash</span> tests/emulator/tier1_fleet_e2e.sh     <span class="co"># leave the stack up to inspect</span></span></code></pre></div>
+<p>Optional environment overrides: <code>PODMAN</code>,
+<code>CP_IMAGE</code>, <code>EMU_IMAGE</code>, <code>ADMIN_USER</code>,
+<code>ADMIN_PASS</code>, <code>HELIX_PORT</code>,
+<code>FLEET_SIZE</code> (must be ≥ 2 to prove a fleet).</p>
+<h2 id="what-it-does-phases">What it does (phases)</h2>
+<ul>
+<li><strong>KEYS (0) / BUILD (a,b)</strong> — same as the full-lifecycle
+harness: ephemeral ed25519 key, cross-compile static
+<code>linux/arm64</code> binaries, build the control-plane
+<ul>
+<li><code>containers/</code>-submodule emulator base + derived emulator
+images.</li>
+</ul></li>
+<li><strong>BOOT + HEALTH (c)</strong> — create a pod publishing
+<code>HELIX_PORT</code>, start the control plane with the trust key;
+<strong>stale-listener guard</strong> + gate on <code>/healthz</code>
+200 AND <code>/api/v1/auth/login</code> answering.</li>
+<li><strong>STAGE (d)</strong> — operator login → sign + upload artifact
+(201 <code>verified=true</code>) → create release → create
+<strong>one</strong> all-targets deployment (capture
+<code>deployment_id</code>).</li>
+<li><strong>FLEET (e)</strong> — launch <code>FLEET_SIZE</code> detached
+emulator containers, each with a distinct <code>hardware_id</code>, all
+on <code>current-version</code> below the release. They run
+<strong>concurrently</strong>.</li>
+<li><strong>WAIT (f)</strong> — poll each container to
+<code>exited</code> (bounded deadline).</li>
+<li><strong>ASSERT (g)</strong> — per device: collect the container’s
+stdout (its Outcome JSON) + exit code; assert <code>rc=0</code>,
+non-empty <code>device_id</code>, <code>applied=true</code>,
+<code>from</code>==current, <code>to</code>==release,
+<code>telemetry_rejected=0</code>, <code>telemetry_accepted≥1</code>,
+and <code>deployment_id</code>==staged. Count completed devices; emit a
+<code>fleet_summary.txt</code> table.</li>
+<li><strong>SERVER CROSS-CHECK (h)</strong> —
+<code>GET /telemetry/overview</code>: assert the fleet-wide
+<code>event_counts.success</code> ≥ <code>FLEET_SIZE</code>.</li>
+<li><strong>VERDICT</strong> — PASS only when <strong>all N</strong>
+devices completed <strong>and</strong> the server recorded ≥ N success
+events.</li>
+</ul>
+<h2 id="outputs-evidence">Outputs / evidence</h2>
+<p>Written under <code>docs/qa/&lt;run-id&gt;-fleet/</code>:</p>
+<ul>
+<li><code>tier1_fleet_transcript.txt</code> — full timestamped run
+transcript.</li>
+<li><code>fleet_summary.txt</code> — per-device table (container,
+hardware_id, rc, applied, from→to, telemetry accepted/rejected).</li>
+<li><code>fleet/&lt;container&gt;_outcome.json</code> (+
+<code>.log</code>) — each device’s structured Outcome.</li>
+<li><code>server_telemetry_overview.json</code> — the server fleet-wide
+event counts / by-state.</li>
+<li><code>control_plane_boot.log</code> /
+<code>control_plane_after_fleet.log</code> — control-plane logs.</li>
+</ul>
+<p>A representative passing overview: <code>total: 25</code> events for
+5 devices
+(<code>download_started/installing/installed/verifying/success</code> ×
+5), <code>by_state: {success: 5}</code>,
+<code>failure_rate: 0</code>.</p>
+<h2 id="edge-cases-honest-notes">Edge cases &amp; honest notes</h2>
+<ul>
+<li><strong>One deployment, many devices.</strong> A single all-targets
+deployment is resolved release-based for each device’s model/os, so
+every fleet member is offered the same update and stamps the same
+<code>deployment_id</code> on its telemetry. As with the full-lifecycle
+harness, <code>target_count</code> at deploy time reflects the
+currently-registered set (0 here, since devices register afterward) —
+benign.</li>
+<li><strong>Concurrency is real.</strong> The containers are launched
+detached and run in parallel; the harness only blocks in the WAIT phase
+to collect terminal state. Each device is independent (§11.4.119) — no
+shared exclusive resource is co-driven.</li>
+<li><strong>Stale listener / cleanup</strong> — same guards as the
+full-lifecycle harness; <code>trap … EXIT INT TERM</code> removes the
+pod (all N+1 containers) and the ephemeral key + staging files unless
+<code>KEEP_UP</code>.</li>
+</ul>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/emulator/tier1_full_lifecycle_e2e.sh</code> — the
+single-device full-lifecycle harness this one fans out into a
+fleet.</li>
+<li><code>tests/emulator/tier1_container_e2e.sh</code> — the
+on-target-204 Tier-1 round-trip.</li>
+<li><code>tests/e2e/pipeline_signed.sh</code> — the signed
+artifact-pipeline contract.</li>
+</ul>
+</body>
+</html>

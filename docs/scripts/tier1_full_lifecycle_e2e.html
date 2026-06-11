@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>tier1_full_lifecycle_e2e</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">tier1_full_lifecycle_e2e</h1>
+</header>
+<h1
+id="tier1_full_lifecycle_e2e.sh-tier-1-emulated-device-full-ota-lifecycle-e2e-on-podman">tier1_full_lifecycle_e2e.sh
+— Tier-1 emulated-device FULL OTA-LIFECYCLE E2E on podman</h1>
+<p><strong>Last verified:</strong> 2026-06-10 (run-id
+<code>20260610T111918Z-full-lifecycle</code>, podman 5.8.2, arm64 Linux
+guest)</p>
+<h2 id="overview">Overview</h2>
+<p><code>tests/emulator/tier1_full_lifecycle_e2e.sh</code> closes the
+<strong>honest gap</strong> the prior Tier-1 e2e
+(<code>tier1_container_e2e.sh</code>) noted: that harness only exercised
+the clean on-target <strong>204</strong> path because <strong>no
+deployment was staged</strong>. This harness drives the <strong>COMPLETE
+OTA round-trip</strong> against a containerized Helix OTA control plane,
+with no live hardware:</p>
+<ol type="1">
+<li>boots the control plane (<code>ota-server</code>) in a podman pod
+configured with a real <strong>EPHEMERAL ed25519 trust key</strong>
+(<code>HELIX_ARTIFACT_PUBKEY</code>) so signed artifact uploads
+verify;</li>
+<li>via the admin REST API <strong>stages a real deployment</strong> at
+a version <strong>higher than the device’s current</strong>: mint key →
+sign + upload artifact (201, <code>verified=true</code>) → create
+release → create an all-targets deployment for the device’s
+model/os;</li>
+<li>runs the <code>ota-device-emu</code> container (the
+<code>containers/</code> submodule runtime image, §11.4.76) on
+<code>current-version</code> <strong>below</strong> the release;</li>
+<li><strong>asserts</strong> the device gets a <strong>200 update offer
+carrying the <code>deployment_id</code></strong>, reports the
+<strong>full telemetry lifecycle ACCEPTED</strong>
+(<code>rejected=0</code>), advances its version, and that a
+<strong>second run returns 204 on-target</strong>;</li>
+<li><strong>cross-checks the server-side telemetry history</strong>
+(<code>GET /devices/{id}/telemetry</code>) shows the
+<code>download_started → installing → installed → verifying → success</code>
+lifecycle, every event stamped with the staged
+<code>deployment_id</code>.</li>
+</ol>
+<p>Anti-bluff (§11.4 / §11.4.107): the proof is the <strong>full
+lifecycle</strong>, not a single 204. Every PASS is backed by real
+captured podman logs + the emulator Outcome JSON + the server telemetry
+history under <code>docs/qa/&lt;run-id&gt;-full-lifecycle/</code>. A
+failed step reports the real error and exits non-zero — it never fakes
+green.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li><strong>podman</strong> with a running machine
+(<code>podman machine start</code>). The Linux guest is
+<strong>arm64</strong>, so binaries cross-compile
+<code>GOOS=linux GOARCH=arm64</code>.</li>
+<li><strong>Go</strong> toolchain on the host. The server module
+(<code>server/go.mod</code>) has <code>replace</code> directives at
+sibling paths outside <code>server/</code> (the §11.4.28 co-developed
+bricks), so the binaries build <strong>on the host</strong> where those
+resolve — not in a container.</li>
+<li>Host signing tools (the artifact-staging contract mirrors
+<code>tests/e2e/pipeline_signed.sh</code>): <code>openssl</code> (≥3,
+ed25519), <code>xxd</code>, <code>base64</code>, <code>curl</code>,
+<code>jq</code>, <code>python3</code>. The ed25519 keypair is
+<strong>ephemeral</strong>: generated into a <code>mktemp</code> dir
+that is <code>rm -rf</code>’d on exit, never committed (§11.4.10).</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/emulator/tier1_full_lifecycle_e2e.sh</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">KEEP_UP</span><span class="op">=</span>1 <span class="fu">bash</span> tests/emulator/tier1_full_lifecycle_e2e.sh   <span class="co"># leave the stack up to inspect</span></span></code></pre></div>
+<p>Optional environment overrides: <code>PODMAN</code>,
+<code>CP_IMAGE</code>, <code>EMU_IMAGE</code>, <code>ADMIN_USER</code>,
+<code>ADMIN_PASS</code>, <code>HELIX_PORT</code>.</p>
+<h2 id="what-it-does-phases">What it does (phases)</h2>
+<ul>
+<li><strong>KEYS (0)</strong> — mint the ephemeral ed25519
+artifact-trust keypair; the raw 32-byte public key is base64-configured
+into the control plane as <code>HELIX_ARTIFACT_PUBKEY</code>.</li>
+<li><strong>BUILD (a/b)</strong> — cross-compile static
+<code>linux/arm64</code> <code>ota-server</code> +
+<code>ota-device-emu</code> on the host; <code>podman build</code> the
+control-plane image, the <code>containers/</code>-submodule base
+emulator image, and a derived image that <code>COPY</code>s the binary
+in (the macOS podman machine does not mount the repo path, so binaries
+are baked in, not volume-mounted).</li>
+<li><strong>BOOT (c) + HEALTH (d)</strong> — create a pod publishing
+<code>HELIX_PORT</code>, start the control plane with the trust key,
+then gate on <strong>both</strong> <code>/healthz</code> (200)
+<strong>and</strong> <code>/api/v1/auth/login</code> answering (not a
+404 from a stale/wrong server). A <strong>stale-listener guard</strong>
+fails fast if <code>HELIX_PORT</code> is already serving.</li>
+<li><strong>STAGE (e)</strong> — operator login → sign + upload artifact
+(assert 201 + <code>verified=true</code>) → create release → create
+all-targets deployment (capture <code>deployment_id</code>).</li>
+<li><strong>RUN 1 (f) + ASSERT (g)</strong> — run the emulator on
+<code>current-version</code> below the release; assert from the Outcome
+JSON: register (<code>device_id</code>), <code>on_target=false</code>,
+<code>offered_version</code> == release, <code>deployment_id</code> ==
+staged, <code>applied=true</code>, <code>from→to</code> version advance,
+<code>telemetry_accepted≥1 telemetry_rejected=0</code>,
+<code>healthy=true</code>.</li>
+<li><strong>SERVER CROSS-CHECK (h)</strong> —
+<code>GET /devices/{id}/telemetry</code>: assert each of
+<code>download_started / installing / installed / verifying / success</code>
+is present and the <code>success</code> event carries the staged
+<code>deployment_id</code>.</li>
+<li><strong>RUN 2 (i)</strong> — same device on the new version
+re-checks: assert <code>on_target=true</code>,
+<code>applied=false</code> (clean 204 on-target).</li>
+</ul>
+<h2 id="outputs-evidence">Outputs / evidence</h2>
+<p>Written under
+<code>docs/qa/&lt;run-id&gt;-full-lifecycle/</code>:</p>
+<ul>
+<li><code>tier1_full_lifecycle_transcript.txt</code> — full timestamped
+run transcript.</li>
+<li><code>emulator_run1_outcome.json</code> /
+<code>emulator_run2_outcome.json</code> — the emulator’s structured
+Outcome (device_id, applied, from/to version, deployment_id, telemetry
+counts, healthy).</li>
+<li><code>server_telemetry_history.json</code> — the server-side
+lifecycle history.</li>
+<li><code>control_plane_boot.log</code> /
+<code>control_plane_after_run1.log</code> — control-plane logs.</li>
+</ul>
+<h2 id="edge-cases-honest-notes">Edge cases &amp; honest notes</h2>
+<ul>
+<li><strong><code>target_count=0</code> at deploy time is expected and
+benign.</strong> The all-targets deployment is created
+<strong>before</strong> the device registers, so it matches 0
+currently-registered targets; the <code>client/update</code> resolution
+is <strong>release-based</strong> for the device’s model/os, and the
+active deployment’s id is attached to the offer regardless. The emulator
+self-serves that id
+(<code>otaprotocol.UpdateAvailable.DeploymentID</code>) and the success
+lifecycle is ACCEPTED end-to-end (proven by the server history
+cross-check).</li>
+<li><strong>Stale listener.</strong> A prior run’s pod (or any process)
+still serving on <code>HELIX_PORT</code> would make the published port
+silently bind elsewhere and a later request hit the wrong server
+(<code>/healthz</code> 200 but <code>/api/v1/...</code> 404). The
+stale-listener guard + the login-answers health gate catch this and fail
+with a clear message; free the port or set <code>HELIX_PORT</code> to a
+free one.</li>
+<li><strong>Cleanup</strong> runs on every exit path
+(<code>trap … EXIT INT TERM</code>, §11.4.14): the pod is removed and
+the ephemeral key dir + build-staging files are deleted (unless
+<code>KEEP_UP</code>).</li>
+<li><strong>Flashing is the only emulated act</strong> — login,
+register, update-check, apply, and telemetry are all real HTTP calls
+against the real control plane.</li>
+</ul>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/emulator/tier1_container_e2e.sh</code> — the
+on-target-204 Tier-1 round-trip (the harness this one extends to the
+full lifecycle).</li>
+<li><code>tests/emulator/tier1_fleet_e2e.sh</code> — the multi-device
+fleet variant.</li>
+<li><code>tests/e2e/pipeline_signed.sh</code> — the signed
+artifact-pipeline contract this harness’s staging mirrors.</li>
+</ul>
+</body>
+</html>

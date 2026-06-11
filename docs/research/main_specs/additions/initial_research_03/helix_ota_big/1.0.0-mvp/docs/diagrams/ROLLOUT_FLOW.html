@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ROLLOUT_FLOW</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ROLLOUT_FLOW</h1>
+</header>
+<h1 id="helix-ota-rollout-flow">Helix OTA — Rollout Flow</h1>
+<h2 id="overview">Overview</h2>
+<p>This state diagram illustrates the <strong>complete lifecycle of a
+rollout campaign</strong> in Helix OTA. A rollout progresses through
+graduated stages (5% → 10% → 30% → 50% → 100%) with built-in controls
+for pausing, resuming, halting, and rolling back. Each stage gates
+advancement on success-rate thresholds before exposing more devices to
+the update.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>stateDiagram-v2
+    direction TB
+
+    [*] --&gt; Draft : Campaign created&lt;br/&gt;by operator
+
+    state Draft {
+        [*] --&gt; Configuring
+        Configuring --&gt; ArtifactSelected : Select artifact
+        Configuring --&gt; DeviceTargeting : Define device filter
+        ArtifactSelected --&gt; Ready : All fields valid
+        DeviceTargeting : filter by hw_revision,&lt;br/&gt;oem_version range,&lt;br/&gt;device group, region
+        DeviceTargeting --&gt; Ready : All fields valid
+    }
+
+    Draft --&gt; Active : Operator clicks&lt;br/&gt;&quot;Start Rollout&quot;
+
+    state Active {
+        state &quot;Stage: 5%&quot; as S5
+        state &quot;Stage: 10%&quot; as S10
+        state &quot;Stage: 30%&quot; as S30
+        state &quot;Stage: 50%&quot; as S50
+        state &quot;Stage: 100%&quot; as S100
+
+        [*] --&gt; S5 : Rollout activated
+        S5 --&gt; S10 : Success rate ≥ 95%&lt;br/&gt;+ min 50 devices&lt;br/&gt;+ 30min elapsed
+        S10 --&gt; S30 : Success rate ≥ 95%&lt;br/&gt;+ min 100 devices&lt;br/&gt;+ 30min elapsed
+        S30 --&gt; S50 : Success rate ≥ 97%&lt;br/&gt;+ min 500 devices&lt;br/&gt;+ 1h elapsed
+        S50 --&gt; S100 : Success rate ≥ 98%&lt;br/&gt;+ min 1000 devices&lt;br/&gt;+ 2h elapsed
+        S100 --&gt; FullyDeployed : All targeted&lt;br/&gt;devices updated
+
+        state &quot;Threshold Check&quot; as TC {
+            [*] --&gt; Evaluate
+            Evaluate --&gt; Pass : success_rate ≥ threshold&lt;br/&gt;AND min_devices met&lt;br/&gt;AND time_gate passed
+            Evaluate --&gt; Fail : success_rate &lt; threshold&lt;br/&gt;OR critical errors
+            Pass --&gt; [*]
+            Fail --&gt; [*]
+        }
+
+        S5 --&gt; TC : Evaluate&lt;br/&gt;stage gate
+        S10 --&gt; TC : Evaluate&lt;br/&gt;stage gate
+        S30 --&gt; TC : Evaluate&lt;br/&gt;stage gate
+        S50 --&gt; TC : Evaluate&lt;br/&gt;stage gate
+    }
+
+    Active --&gt; Paused : Operator clicks&lt;br/&gt;&quot;Pause&quot;&lt;br/&gt;OR auto-pause on&lt;br/&gt;critical failure rate
+
+    Paused --&gt; Active : Operator clicks&lt;br/&gt;&quot;Resume&quot;
+
+    Active --&gt; Halted : Operator clicks&lt;br/&gt;&quot;Halt&quot;&lt;br/&gt;OR auto-halt on&lt;br/&gt;catastrophic failure
+
+    Paused --&gt; Halted : Operator clicks&lt;br/&gt;&quot;Halt&quot;
+
+    Active --&gt; Rollback : Operator triggers&lt;br/&gt;&quot;Rollback&quot;&lt;br/&gt;(force previous build)
+
+    Paused --&gt; Rollback : Operator triggers&lt;br/&gt;&quot;Rollback&quot;
+
+    FullyDeployed --&gt; Completed : All devices&lt;br/&gt;reported success&lt;br/&gt;(or timeout)
+
+    Rollback --&gt; Completed : Rollback&lt;br/&gt;confirmed
+
+    Halted --&gt; [*] : Terminal state&lt;br/&gt;(no further action)
+
+    Completed --&gt; [*] : Terminal state&lt;br/&gt;(archived)
+
+    note right of S5
+        5% of targeted devices
+        receive the update.
+        Canary stage — closest
+        monitoring required.
+    end note
+
+    note right of S100
+        100% rollout — all
+        remaining targeted
+        devices receive update.
+    end note
+
+    note right of Paused
+        No new devices are
+        selected. In-flight
+        updates continue to
+        completion.
+    end note
+
+    note right of Halted
+        All updates stopped.
+        In-flight installs
+        are allowed to finish.
+        Operator must create
+        new campaign to retry.
+    end note
+
+    note right of Rollback
+        Sends rollback command
+        to devices that received
+        the new build. Devices
+        with A/B partitions
+        automatically revert
+        to previous slot.
+    end note</code></pre>
+<h2 id="stage-gate-criteria">Stage Gate Criteria</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Success Rate Threshold</th>
+<th>Min Devices</th>
+<th>Min Time Elapsed</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>5%</strong> → 10%</td>
+<td>≥ 95%</td>
+<td>50</td>
+<td>30 min</td>
+<td>Canary — early detection of systemic issues</td>
+</tr>
+<tr>
+<td><strong>10% → 30%</strong></td>
+<td>≥ 95%</td>
+<td>100</td>
+<td>30 min</td>
+<td>Expanded canary — broader device diversity</td>
+</tr>
+<tr>
+<td><strong>30% → 50%</strong></td>
+<td>≥ 97%</td>
+<td>500</td>
+<td>1 hour</td>
+<td>Growing confidence — significant fleet coverage</td>
+</tr>
+<tr>
+<td><strong>50% → 100%</strong></td>
+<td>≥ 98%</td>
+<td>1000</td>
+<td>2 hours</td>
+<td>Final push — remaining devices</td>
+</tr>
+</tbody>
+</table>
+<h2 id="auto-pause-auto-halt-conditions">Auto-Pause / Auto-Halt
+Conditions</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Action</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Success rate &lt; 90%</strong> at any stage</td>
+<td>Auto-pause</td>
+<td>Immediate threshold breach</td>
+</tr>
+<tr>
+<td><strong>Any CRITICAL severity report</strong></td>
+<td>Auto-pause</td>
+<td>Single critical error (boot loop, bricked device)</td>
+</tr>
+<tr>
+<td><strong>Success rate &lt; 70%</strong></td>
+<td>Auto-halt</td>
+<td>Severe failure — stop all new deployments</td>
+</tr>
+<tr>
+<td><strong>&gt; 5 devices boot-looping</strong></td>
+<td>Auto-halt</td>
+<td>Catastrophic — immediate full stop</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rollback-mechanism">Rollback Mechanism</h2>
+<ol type="1">
+<li><strong>A/B Partition Fallback</strong>: Devices with uncommitted
+new slots automatically boot back to the old slot</li>
+<li><strong>Explicit Rollback Command</strong>: Server sends
+<code>POST /api/v1/devices/{id}/rollback</code> → device marks old slot
+as active</li>
+<li><strong>Forced Rollback</strong>: For already-committed updates, a
+separate rollback campaign can be created targeting affected devices
+with the previous artifact version</li>
+</ol>
+<h2 id="state-transition-table">State Transition Table</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Trigger</th>
+<th>Side Effects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Draft</td>
+<td>Active</td>
+<td>Operator starts rollout</td>
+<td>Scheduler begins selecting devices</td>
+</tr>
+<tr>
+<td>Active (5%)</td>
+<td>Active (10%)</td>
+<td>Gate criteria met</td>
+<td>Next 5% of devices selected</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Paused</td>
+<td>Operator / auto-pause</td>
+<td>No new device selections</td>
+</tr>
+<tr>
+<td>Paused</td>
+<td>Active</td>
+<td>Operator resumes</td>
+<td>Scheduler resumes selections</td>
+</tr>
+<tr>
+<td>Active/Paused</td>
+<td>Halted</td>
+<td>Operator / auto-halt</td>
+<td>Campaign frozen, in-flight continues</td>
+</tr>
+<tr>
+<td>Active/Paused</td>
+<td>Rollback</td>
+<td>Operator triggers</td>
+<td>Rollback command sent to updated devices</td>
+</tr>
+<tr>
+<td>Active (100%)</td>
+<td>Completed</td>
+<td>All devices reported</td>
+<td>Campaign archived</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Completed</td>
+<td>Rollback confirmed</td>
+<td>Campaign archived</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
