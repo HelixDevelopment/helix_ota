@@ -324,6 +324,55 @@ bank:
         - "attacker-supplied public_key -> 422 (config-only trust boundary)"
       evidence_artifact: tests/security/RUN_EVIDENCE.txt
 
+    - id: HOTA-SECURITY-PROBES-EXTENDED
+      title: Extended adversarial security probes (refresh single-use, token expiry, cross-device, protocol surface, dup-register, in-flight cap)
+      capability_area: security-extended
+      # FULLY SELF-HOSTING (§11.4.98): builds + boots its OWN ota-server(s) on
+      # free-probed unique ports — a default-TTL server, a dedicated
+      # HELIX_ACCESS_TOKEN_TTL=1s server (real wall-clock exp enforcement), and a
+      # HELIX_MAX_INFLIGHT=1 server (concurrency-shed) — needs NO shared server and
+      # NO admin password (it mints ephemeral creds), and tears every server down on
+      # each exit path (trap cleanup, §11.4.14). Re-runnable end-to-end (§11.4.50).
+      dispatch_command: >-
+        bash tests/security/security_probes_extended.sh
+      requires:
+        - bash
+        - go
+        - curl
+        - jq
+      pass_criterion: >-
+        Black-box adversarial suite against self-hosted live server(s):
+        H — refresh-token single-use rotation: first refresh -> 200 rotating to a
+        NEW distinct token pair; reusing the consumed refresh token -> 401
+        UNAUTHENTICATED (single-use enforced); garbage refresh -> 401; missing
+        refresh_token -> 400 VALIDATION_FAILED.
+        J — cross-device isolation: device A's token on device B's /status -> 403
+        FORBIDDEN (own /status -> 200 control proves ownership allows self).
+        K — protocol surface: unknown route -> 404; wrong method on an existing
+        route -> 404/405 (not 5xx); unknown JSON field -> 400 VALIDATION_FAILED
+        (DisallowUnknownFields); non-multipart artifact upload -> 415
+        UNSUPPORTED_MEDIA_TYPE; wrong Content-Type with a valid JSON body -> 200.
+        L — re-registering the same hardware_id is handled cleanly (first 201,
+        second 409, no 5xx).
+        I — access-token expiry on a dedicated TTL=1s server: a fresh token works
+        (200), the SAME token after real wall-clock expiry -> 401 (exp enforced,
+        not just signature).
+        M — in-flight cap on a HELIX_MAX_INFLIGHT=1 server: a concurrency burst is
+        shed with 429 RATE_LIMITED carrying a Retry-After header.
+        26 passed / 0 failed / 0 skipped; RESULT: PASS.
+      asserted_lines:
+        - "H2 reusing the consumed refresh token -> 401 (single-use enforced) (HTTP 401)"
+        - "H1b rotation returned a NEW, distinct refresh token"
+        - "J1 device A token GET device B /status -> 403 (HTTP 403)"
+        - "K1 unknown route (authed) -> 404 (HTTP 404)"
+        - "K4 artifact upload non-multipart body -> 415 (HTTP 415)"
+        - "I2 same access token AFTER expiry -> 401 (exp enforced, not just signature) (HTTP 401)"
+        - "M1 in-flight cap shed 3/80 concurrent requests with 429"
+        - "M1c shed response carries a Retry-After header"
+      skip_codes:
+        "3": "go / curl / jq unavailable, or a self-hosted server failed to boot — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: tests/security/RUN_EVIDENCE_EXTENDED.txt
+
     - id: HOTA-FILTERS-PAGINATION
       title: Telemetry filters (event/since/until) + group & member cursor pagination
       capability_area: query-filters-pagination
