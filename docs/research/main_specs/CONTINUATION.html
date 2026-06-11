@@ -191,7 +191,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -199,7 +199,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-10T16:10:00Z</td>
+<td>2026-06-11T13:15:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -215,9 +215,39 @@ upstreams (GitHub, GitLab, GitFlic, GitVerse).</td>
 </tbody>
 </table>
 <h2
-id="current-state-2026-06-10-overnight-read-docsresumption.md-rev-9-first">⤴
-CURRENT STATE (2026-06-10 overnight) — read
-<code>docs/RESUMPTION.md</code> (Rev 9) FIRST</h2>
+id="current-state-2026-06-11-head-42be557-read-docsresumption.md-first">⤴
+CURRENT STATE (2026-06-11) — HEAD <code>42be557</code> — read
+<code>docs/RESUMPTION.md</code> FIRST</h2>
+<p><strong>PWU-AB milestones landed GREEN + pushed (HEAD
+<code>42be557</code>, all 4 upstreams).</strong> On the emulator A/B
+ladder (T1 = QEMU <code>virt</code> + HVF on this macOS host, real
+U-Boot 2024.01): <strong>PWU-AB-1 FULL A/B slot switch is
+PROVEN</strong> (commit <code>18ed84a</code>; evidence
+<code>docs/qa/20260611T094958Z-ab-slot-switch/</code> — Run A→slot A
+<code>/dev/vda2</code>, Run B→slot B <code>/dev/vda3</code>, the slot
+genuinely switched, <code>§11.4.50</code> determinism <strong>2/2
+identical</strong> per the captured <code>determinism_soak.txt</code>)
+<strong>AND PWU-AB-3 corrupt-slot AUTO-ROLLBACK is PROVEN</strong>
+(commit <code>42be557</code>; evidence
+<code>docs/qa/20260611T095918Z-ab-rollback/</code> — U-Boot
+<code>bootcount=2 &gt; bootlimit=1</code> → altbootcmd swap → fell back
+from bad slot B to good slot A, with a CONTROL run proving the rollback
+fires only on a bad slot). <strong>PWU-AB-2 RAUC dm-verity</strong>
+(<code>tests/emulator/ab_virt/ab_rauc_verity.sh</code>) is AUTHORED but
+<strong>UNVERIFIED-pending</strong> — needs a signed <code>.raucb</code>
+bundle + reconciling the RAUC slot-class scheme with the proven
+<code>boot.cmd</code> <code>BOOT_ORDER</code> env scheme. <strong>T2
+Cuttlefish</strong> real-Android-A/B remains
+<strong>SKIP-pending</strong> the operator’s incoming Linux + nested-KVM
+host (<code>/dev/kvm</code> absent on this Apple-Silicon host);
+<strong>T3 RK3588</strong> hardware PENDING (no board). Status docs:
+<code>docs/emulator/rk3588_ab_virt/Status.md</code> (Rev 3) +
+<code>Status_Summary.md</code> (Rev 3). <strong>No release tag</strong>
+— §11.4.40 needs the full ladder GREEN (T2 + T3 still SKIP/PENDING), so
+a tag would be a bluff (§11.4.6). Everything below this box is
+prior-wave history.</p>
+<h2 id="prior-state-2026-06-10-overnight-superseded-by-the-box-above">⤴
+PRIOR STATE (2026-06-10 overnight) — superseded by the box above</h2>
 <p>The freshest live-state anchors are in
 <strong><code>docs/RESUMPTION.md</code></strong> (the §11.4.131
 canonical entry). As of HEAD <strong><code>0d27438</code></strong> the
@@ -599,9 +629,26 @@ point for any fresh session (SHORT + FULL variants, read-first handoff
 pointers, live-state anchors, PHASE/NEXT/terminal-goal, binding
 constraints). Point a new session at that one file.</li>
 </ul>
-<h3 id="next-wave-still-open-all-hardwareingest-gated">NEXT wave (still
-open — all hardware/ingest-gated)</h3>
+<h3
+id="next-wave-phase-emulator-ab-ladder-slot-switch-rollback-done-dm-verity-next-then-hardware-gated-tiers">NEXT
+wave (PHASE: emulator A/B ladder — slot-switch + rollback DONE;
+dm-verity next, then hardware-gated tiers)</h3>
 <ol type="1">
+<li><strong>PWU-AB-2 RAUC dm-verity (the immediate NEXT, software-doable
+on this host)</strong> — run
+<code>tests/emulator/ab_virt/ab_rauc_verity.sh</code>: produce/sign a
+<code>.raucb</code> bundle and reconcile the RAUC slot-class scheme with
+the PROVEN <code>uboot_ab/boot.cmd</code> <code>BOOT_ORDER</code> env
+scheme, then capture dm-verity slot-integrity evidence (E4). Currently
+AUTHORED + UNVERIFIED-pending.</li>
+<li><strong>Tier-2 Cuttlefish real-Android A/B</strong>
+(<code>tests/emulator/tier2_cuttlefish_ab.sh</code>, incl. PWU-CF-2
+corrupt-slot rollback) — SKIP-pending the operator’s incoming
+<strong>Linux + nested-KVM host</strong> (<code>/dev/kvm</code> absent
+on this Apple-Silicon macOS host). Ready to run there.</li>
+<li><strong>Tier-3 real RK3588 / Orange Pi 5 Max</strong> on-device e2e
+(download→verify→A/B apply→reboot→post-boot; corrupt-slot→auto-rollback)
+— PENDING, no board on the bench.</li>
 <li><strong>Device-side TUF</strong> (gomobile-go-tuf/v2 per the
 decision memo) — gated on an arm64 <code>.so</code>-size/JNI measurement
 on real RK3588 hardware.</li>
@@ -609,21 +656,20 @@ on real RK3588 hardware.</li>
 <code>DeltaApplyDecision</code> into the on-device apply path
 (<code>:android</code>/update_engine) — needs a real device to validate
 end-to-end.</li>
-<li><strong>Emulator-driven device testing</strong> — tiered plan now in
-flight (<code>docs/design/EMULATED_DEVICE_TESTING.md</code>):
-<strong>Tier-1 IN PROGRESS</strong> (podman
-<code>ota-device-emulator</code> speaking real <code>ota-protocol</code>
-to the control plane —
-register→update-check→telemetry→delta→rollout→recall, runnable on this
-macOS host now); Tier-2 Cuttlefish A/B (Linux+nested-KVM-gated); Tier-3
-real RK3588 (hardware-gated).</li>
 <li><strong>Parked WIDEN bits</strong>: row-4 richer telemetry fields
 (<code>duration_ms</code>/<code>bytes_transferred</code>) — still
 blocked on UNVERIFIED ingest (event source must carry them first).
-<strong>Telemetry per-device filters + group/members list pagination are
-now DONE</strong> (shipped this session, see below) — no longer
-parked.</li>
+Telemetry per-device filters + group/members list pagination are DONE
+(shipped <code>50ef5c6</code>).</li>
 </ol>
+<p><strong>DONE this session (2026-06-11, on <code>main</code>, pushed
+all 4 upstreams):</strong> PWU-AB-1 FULL A/B slot switch
+(<code>18ed84a</code>, evidence
+<code>docs/qa/20260611T094958Z-ab-slot-switch/</code>, determinism 2/2
+identical) + PWU-AB-3 corrupt-slot AUTO-ROLLBACK (<code>42be557</code>,
+evidence <code>docs/qa/20260611T095918Z-ab-rollback/</code>), both
+against real U-Boot 2024.01 + QEMU <code>virt</code> + HVF. <strong>HEAD
+is now <code>42be557</code>.</strong></p>
 <h3 id="carried-forward-gaps-register">Carried-forward gaps
 register</h3>
 <p>See <code>additions_synthesis.md</code> §8/§9 (14 gaps; most now

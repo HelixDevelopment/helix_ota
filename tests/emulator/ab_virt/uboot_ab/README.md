@@ -1,7 +1,7 @@
 # U-Boot A/B boot script — RK3588 A/B-virt emulator
 
-**Revision:** 1
-**Last modified:** 2026-06-11T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-11T10:30:00Z
 
 Authoritative design: `../../../../docs/research/rk3588_emulator/REPORT.md` (§3, §4,
 PWU-AB-1). This directory holds the U-Boot side of the dev-host RK3588 / Orange
@@ -107,10 +107,41 @@ inside the guest (the PWU-AB-1 RED→GREEN evidence) — `findmnt /` plus
 
 - `boot.cmd` + `uboot.env` are **authored**; the GPT layout above is internally
   coherent with `../assemble_ab_disk.sh`.
-- **UNVERIFIED-pending-u-boot.bin:** the script has NOT been run under real
-  U-Boot (the `out/images/u-boot.bin` artifact is still building). A real
-  slot switch / auto-rollback is therefore **unproven** until the conductor
-  assembles the disk and boots it. No working slot-switch is claimed here.
+- **PROVEN — deliberate slot switch (PWU-AB-1):** `boot.cmd`'s head-slot
+  selection has run GREEN under real **U-Boot 2024.01 + QEMU `-machine virt` +
+  HVF**. Booting the SAME disk + SAME `u-boot.bin` twice, differing ONLY in
+  `BOOT_ORDER`, routes the kernel `root=` to a DIFFERENT physical rootfs
+  partition and the guest userspace observably reports the slot it booted:
+  `BOOT_ORDER="A B"` → head A → `/dev/vda2` → guest `/etc/slot_id=A`;
+  `BOOT_ORDER="B A"` → head B → `/dev/vda3` → guest `/etc/slot_id=B`. Evidence:
+  `../../../../docs/qa/20260611T094958Z-ab-slot-switch/verdict.txt` (both rc=0,
+  U-Boot 2024.01, `Verdict: PASS`). Driven by `../ab_slot_switch.sh`.
+- **PROVEN — bootcount auto-rollback (PWU-AB-3):** the step-2 rollback guard has
+  run GREEN under the same real U-Boot + QEMU + HVF stack. With
+  `BOOT_ORDER="B A"`, `bootcount=2`, `bootlimit=1` (so `bootcount > bootlimit`)
+  the guard emits `A/B: bootcount=2 > bootlimit=1 -> rolling back (altbootcmd
+  swap)`, swaps the head back to the previous-good slot A, and boots
+  `active_slot=A root=/dev/vda2` → guest `/etc/slot_id=A`. The metamorphic
+  CONTROL run (`bootcount=1`, NOT past `bootlimit`) does NOT fire the guard and
+  boots head B → guest `/etc/slot_id=B` (the rollback is real, not a no-op that
+  always swaps). Evidence:
+  `../../../../docs/qa/20260611T095918Z-ab-rollback/verdict.txt`
+  (Run ROLLBACK rc=0, Run CONTROL rc=0, U-Boot 2024.01, `Verdict: PASS`).
+  Driven by `../ab_rollback.sh`.
+- **Observability fix (§11.4.1):** `boot.cmd`'s guard/selection diagnostics were
+  changed from single-quoted `echo` arguments to unquoted form so the U-Boot
+  shell expands + emits them to the console verbatim — making the
+  `rolling back (altbootcmd swap)` and `active_slot=... root=...` lines
+  capturable as captured evidence (a script-side observability defect, fixed at
+  the source per §11.4.1, never patched at the assertion call sites).
+- **NOT yet proven (§11.4.6 — honest boundary):** the slot-switch and
+  auto-rollback proofs above set `BOOT_ORDER` / `bootcount` / `bootlimit`
+  interactively within a single in-RAM U-Boot session. **Persistent `saveenv`
+  power-cycle rollback** — where U-Boot itself increments + persists `bootcount`
+  across real reboots BEFORE `boot.scr` runs and the in-guest healthy-boot marker
+  clears it — is a **later PWU** and remains UNPROVEN. **RAUC bundle apply /
+  dm-verity / AVB-style slot integrity (PWU-AB-2)** is also UNPROVEN. No claim is
+  made here that those work.
 
 ## Sources verified 2026-06-11
 

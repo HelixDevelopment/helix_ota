@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PWU_AB_4_APPLY_PORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PWU_AB_4_APPLY_PORT</h1>
+</header>
+<h1
+id="pwu-ab-4-in-guest-ota-agent-applyport-closing-the-loop-to-the-helix-control-plane">PWU-AB-4
+— In-guest OTA agent ApplyPort: closing the loop to the Helix control
+plane</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-11T00:00:00Z <strong>Status (§11.4.6):</strong> DESIGN ONLY —
+nothing in this document is built or proven. Every “MUST build” / “to be
+added” / “does not exist yet” marker below is honest. No working
+ApplyPort, no in-guest agent, no healthy-marker, and no fw_setenv wiring
+exists in the A/B-virt emulator at the time of writing. The two proven
+pieces this builds on are PWU-AB-1 (slot switch) and PWU-AB-3
+(auto-rollback), both verified live on macOS under real U-Boot 2024.01 +
+QEMU virt + HVF.</p>
+<p>Authoritative parent design: <a
+href="../../research/rk3588_emulator/REPORT.md"><code>../../research/rk3588_emulator/REPORT.md</code></a>
+(PWU-AB-4 row, line 78; reuse decision lines 45/55/91). State machine
+the loop drives: <a
+href="../../../tests/emulator/ab_virt/uboot_ab/README.md"><code>../../../tests/emulator/ab_virt/uboot_ab/README.md</code></a>
+(“A normal OTA apply → slot-switch”, lines 83–89; the explicit
+“healthy-boot reset is in-guest, NOT in <code>boot.cmd</code>” note,
+lines 76–80).</p>
+<hr />
+<h2 id="scope-and-goal">1. Scope and goal</h2>
+<p>PWU-AB-4 wires a real in-guest OTA agent that closes the OTA loop
+against the live Go control plane (<code>server/</code>), driving the
+<strong>already-proven</strong> U-Boot A/B mechanism end-to-end. The six
+steps of the apply sequence (the prompt’s a–f):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(a)</td>
+<td>Receive an apply instruction over ota-protocol from the Go control
+plane</td>
+<td><code>GET /api/v1/client/update</code> →
+<code>200 UpdateAvailable</code>
+(<code>server/internal/api/handlers_client.go:20</code>)</td>
+</tr>
+<tr>
+<td>(b)</td>
+<td>Write the new rootfs to the <strong>inactive</strong> slot</td>
+<td>in-guest slot-writer (RAUC <code>rauc install</code>, or a
+<code>dd</code>-class writer for the no-verity path) →
+<code>/dev/vda3</code> (B) when A active</td>
+</tr>
+<tr>
+<td>(c)</td>
+<td>Flip <code>BOOT_ORDER</code> + arm
+<code>upgrade_available=1</code>/<code>bootcount=1</code> in the U-Boot
+env</td>
+<td><code>fw_setenv</code> against the FAT boot partition env (does NOT
+exist yet — §3)</td>
+</tr>
+<tr>
+<td>(d)</td>
+<td>Reboot</td>
+<td><code>reboot</code> (guest) → U-Boot re-sources
+<code>boot.scr</code> (<code>boot.cmd</code>) → head slot = B</td>
+</tr>
+<tr>
+<td>(e)</td>
+<td>On a healthy boot, clear
+<code>upgrade_available</code>+<code>bootcount</code></td>
+<td>healthy-marker systemd unit / init script (does NOT exist yet —
+§4)</td>
+</tr>
+<tr>
+<td>(f)</td>
+<td>Report telemetry back</td>
+<td><code>POST /api/v1/client/telemetry</code> lifecycle
+(<code>server/internal/api/handlers_client.go:105</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The headline: PWU-AB-1/AB-3 drive the U-Boot env <strong>manually at
+the <code>=&gt;</code> prompt</strong> in a single in-RAM session (<a
+href="../../../tests/emulator/ab_virt/ab_rollback.sh"><code>ab_rollback.sh:142-161</code></a>
+and its sibling <code>ab_slot_switch.sh</code>). PWU-AB-4 replaces that
+manual prompt-driving with a <strong>guest agent that does steps
+(b)+(c)+(d) itself, persists the env across the power-cycle, and the
+healthy-marker (e) does the confirm</strong> — exactly what the README
+§“A normal OTA apply” describes and exactly what a real RK3588/embedded
+U-Boot A/B target does.</p>
+<hr />
+<h2
+id="the-apply-sequence-mapped-to-real-existing-protocol-endpoints">2.
+The apply sequence mapped to REAL existing protocol + endpoints</h2>
+<p>Every wire type and endpoint named below <strong>exists
+today</strong> (cited file:line via codegraph). The agent reuses the
+canonical <code>github.com/HelixDevelopment/ota-protocol</code> types —
+it does NOT invent a parallel wire format (§11.4.27 no-fakes, §11.4.74
+reuse-don’t-reimplement).</p>
+<h3 id="a-receive-apply-instruction-get-clientupdate">(a) Receive apply
+instruction — <code>GET /client/update</code></h3>
+<ul>
+<li>Handler: <code>Server.handleClientUpdate</code> —
+<code>server/internal/api/handlers_client.go:20</code>.</li>
+<li>Returns <code>204 No Content</code> when on-target, else
+<code>200</code> with <code>otaprotocol.UpdateAvailable</code>
+(<code>handlers_client.go:69-100</code>).</li>
+<li>Wire type: <code>otaprotocol.UpdateAvailable</code> —
+<code>submodules/ota-protocol/types.go:87</code>. Carries
+<code>ReleaseID</code>, <code>DeploymentID</code> (self-served so
+telemetry needs no out-of-band id — <code>types.go:95</code>,
+<code>handlers_client.go:74</code>), <code>Version</code>,
+<code>URL</code> (Range-served <code>.zip</code>,
+<code>handlers_client.go:76</code> / <code>artifactURL</code>
+<code>:229</code>), <code>Offset</code>, <code>Size</code>,
+<code>SHA256</code>, <code>Signature</code>,
+<code>PayloadProperties</code>, optional <code>Delta</code>.</li>
+<li>On-target compare uses <code>otavalidator.CompareDotted</code>
+(<code>handlers_client.go:56</code>) — the agent’s
+<code>current_version</code> query param
+(<code>?current_version=…</code>, the Tier-1 emulator already sends it:
+<code>server/internal/deviceemu/emulator.go:247-249</code>) decides 200
+vs 204.</li>
+</ul>
+<p>The agent must first <strong>register</strong> to obtain a
+device-scoped bearer token: <code>POST /devices/register</code> →
+<code>DeviceRegistrationResponse</code>
+(<code>ota-protocol/types.go:68</code>), exactly as the Tier-1 emulator
+does (<code>deviceemu/emulator.go:182-232</code>). Operator login
+(<code>POST /auth/login</code>) precedes registration
+(<code>emulator.go:155-176</code>).</p>
+<h3 id="b-write-new-rootfs-to-inactive-slot">(b) Write new rootfs to
+inactive slot</h3>
+<p>This is the step the Tier-1 Go emulator <strong>fakes</strong> (its
+package doc is explicit: “The only thing it fakes is the act of flashing
+— instead of writing a slot it advances its in-memory
+<code>CurrentVersion</code>”, <code>deviceemu/emulator.go:9-12</code>,
+<code>ApplyAndReport</code> <code>:281-311</code>). PWU-AB-4 makes it
+REAL inside the guest:</p>
+<ul>
+<li>Download the payload from <code>UpdateAvailable.URL</code>
+(Range-served identity-encoded ZIP_STORED) to a local path.</li>
+<li>Verify SHA256 + signature BEFORE writing (the agent’s
+safety-critical gate — mirrors the Android agent’s verify-before-apply:
+<code>OtaPollWorker.runCycle</code> step 3,
+<code>submodules/ota-android-agent/.../poll/OtaPollWorker.kt:76-94</code>).
+A poisoned artifact NEVER reaches the slot-writer.</li>
+<li>Write the verified payload to the <strong>inactive</strong> slot
+partition. The active slot is known from
+<code>helix_slot=&lt;A|B&gt;</code> on <code>/proc/cmdline</code> (set
+by <code>boot.cmd:100</code>) and <code>/etc/slot_id</code>
+(<code>assemble_ab_disk.sh:177-200</code>); inactive = the other.
+Slot→partition map is the load-bearing GPT contract:
+A=<code>/dev/vda2</code>, B=<code>/dev/vda3</code>
+(<code>uboot_ab/README.md:96-100</code>,
+<code>boot.cmd:34-40</code>).</li>
+<li><strong>Reuse decision for the writer (§11.4.74):</strong> RAUC is
+already in the Buildroot config (<code>build_image.sh:115</code>
+<code>BR2_PACKAGE_RAUC=y</code>) and is the REPORT’s chosen in-guest A/B
+client (REPORT lines 43/87). The slot-writer SHOULD be
+<code>rauc install &lt;bundle&gt;</code> for the dm-verity path
+(PWU-AB-2), which writes the inactive slot AND owns the slot-state. For
+the pre-verity no-RAUC-bundle path a
+<code>dd</code>/<code>debugfs</code> writer mirroring
+<code>assemble_ab_disk.sh:204-205</code> is the fallback.
+<strong>Neither writer is wired yet.</strong></li>
+</ul>
+<h3
+id="c-flip-boot_order-arm-the-env-fw_setenv-3-does-not-exist-yet">(c)
+Flip BOOT_ORDER + arm the env — <code>fw_setenv</code> (§3 — does NOT
+exist yet)</h3>
+<p>After a successful inactive-slot write, the agent arms the new slot
+exactly as <code>uboot_ab/README.md:84-86</code> specifies:</p>
+<pre><code>BOOT_ORDER=&quot;B A&quot;   upgrade_available=1   bootcount=1   (then persist)</code></pre>
+<p>Today this is done by hand at the <code>=&gt;</code> prompt
+(<code>ab_rollback.sh:145-152</code>). PWU-AB-4 must do it from inside
+the guest via <code>fw_setenv</code> writing the SAME env the bootloader
+reads — see §3.</p>
+<h3 id="d-reboot">(d) Reboot</h3>
+<p><code>reboot</code> in the guest. On the next power-on U-Boot
+re-sources <code>boot.scr</code> (<code>boot.cmd</code>), which: applies
+lazy defaults only if env empty (<code>boot.cmd:45-48</code> — so a
+persisted env survives), runs the bootcount guard
+(<code>boot.cmd:59-69</code>), selects head <code>B</code>, boots
+<code>root=/dev/vda3 helix_slot=B</code> (<code>boot.cmd:75-102</code>).
+Because <code>upgrade_available=1</code>, U-Boot increments
+<code>bootcount</code> each reboot (README:44) — the probation window
+the healthy-marker must close.</p>
+<h3
+id="e-healthy-boot-confirm-clear-upgrade_availablebootcount-4-does-not-exist-yet">(e)
+Healthy-boot confirm — clear
+<code>upgrade_available</code>+<code>bootcount</code> (§4 — does NOT
+exist yet)</h3>
+<p>The U-Boot doc and <code>uboot_ab/README.md:76-80</code> are
+explicit: the healthy reset is “the responsibility of some application
+code (typically a Linux application)” and is intentionally NOT in
+<code>boot.cmd</code>. PWU-AB-4 supplies that application code — see §4.
+On a confirmed-healthy boot it runs
+<code>fw_setenv upgrade_available 0; fw_setenv bootcount 0</code>,
+freezing the counter ⇒ slot CONFIRMED good ⇒ no rollback. If the marker
+is never reached (unhealthy slot), <code>bootcount</code> climbs past
+<code>bootlimit</code> and the proven PWU-AB-3 guard swaps
+<code>BOOT_ORDER</code> back ⇒ auto-rollback to the previous-good
+slot.</p>
+<h3 id="f-report-telemetry-post-clienttelemetry">(f) Report telemetry —
+<code>POST /client/telemetry</code></h3>
+<ul>
+<li>Handler: <code>Server.handleClientTelemetry</code> —
+<code>server/internal/api/handlers_client.go:105</code>. Returns
+<code>202</code> <code>TelemetryAck</code>.</li>
+<li>Wire type: <code>otaprotocol.TelemetryReport</code>
+(<code>ota-protocol/types.go:150</code>) batched on the server-side
+<code>api.TelemetryReport</code>
+(<code>server/internal/api/wire.go:207</code>), which carries an
+optional <code>Health</code> block:
+<code>api.TelemetryHealth{ BatteryPct, StorageFreeMB, ActiveSlot }</code>
+(<code>wire.go:200-205</code>).</li>
+<li>Events: the exactly-six <code>otaprotocol.TelemetryEvent</code>
+(<code>ota-protocol/enums.go:200-207</code>):
+<code>download_started → installing → installed → verifying → success</code>,
+or <code>failure</code>. The Tier-1 emulator already drives this exact
+lifecycle (<code>deviceemu/emulator.go:285-291</code>).</li>
+<li><strong><code>deployment_id</code> is REQUIRED by the schema
+validator</strong> (<code>handlers_client.go:140-159</code> via
+<code>otatelemetry.NewEvent(...).Validate()</code>); the agent
+self-serves it from <code>UpdateAvailable.DeploymentID</code> (no
+out-of-band step — <code>types.go:95</code>, emulator
+<code>resolveDeploymentID</code> <code>:337-344</code>).</li>
+<li><strong><code>active_slot</code> in the health block is the PWU-AB-4
+value-add:</strong> the server already persists it
+(<code>applyDeviceRuntime</code> <code>handlers_client.go:220-222</code>
+→ <code>store.Device.ActiveSlot</code> <code>store/store.go:50</code> →
+<code>postgres.go:122</code>). A REAL guest can report the slot it
+actually booted (<code>helix_slot</code> from
+<code>/proc/cmdline</code>, <code>/etc/slot_id</code>), where the Tier-1
+emulator has no real slot to report. This is the honest end-to-end
+signal that proves the loop closed on a real slot switch.</li>
+</ul>
+<hr />
+<h2
+id="the-fw_setenvfw_printenv-etcfw_env.config-requirement-new-shared-with-pwu-ab-2">3.
+The <code>fw_setenv</code>/<code>fw_printenv</code> +
+<code>/etc/fw_env.config</code> requirement (NEW — shared with
+PWU-AB-2)</h2>
+<p><strong>This is the single biggest not-yet-built piece</strong> and
+the load-bearing dependency for steps (c) and (e).</p>
+<h3 id="why-it-is-needed">Why it is needed</h3>
+<p><code>boot.cmd</code>/<code>ab_rollback.sh</code> today set the env
+at the interactive U-Boot prompt in a single in-RAM session; the
+<code>saveenv</code> in the rollback guard (<code>boot.cmd:68</code>) is
+the ONLY persistence and PWU-AB-1/AB-3 explicitly note the “persistent
+saveenv-across-power-cycle path is a later PWU”
+(<code>ab_rollback.sh:48-49</code>). For the agent to arm a slot (c) and
+the marker to confirm it (e), the guest userspace must read AND write
+the <strong>same persistent U-Boot environment</strong> the bootloader
+consults. The canonical Linux tool for this is
+<code>fw_setenv</code>/<code>fw_printenv</code> from
+<code>u-boot-tools</code> (libubootenv), driven by a config file
+<code>/etc/fw_env.config</code> that tells the tool WHERE the env blob
+lives.</p>
+<h3 id="what-must-be-built-honest-none-of-this-exists">What must be
+built (honest: none of this exists)</h3>
+<ol type="1">
+<li><strong>A persistent U-Boot env blob the bootloader reads.</strong>
+<code>boot.cmd</code> currently relies on lazy defaults + an in-session
+env; there is no <code>mkenvimage</code> blob placed on the disk yet
+(the README:17 notes the binary env blob is “later PWU”). PWU-AB-4 (or a
+precursor) MUST: (i) generate a binary default env from
+<code>uboot_ab/uboot.env</code> via <code>mkenvimage</code>, (ii) place
+it at a fixed offset/partition the QEMU U-Boot is configured to use
+(<code>CONFIG_ENV_IS_IN_*</code>), and (iii) confirm the same
+<code>boot.cmd</code> reads it (the lazy-default guards already tolerate
+a populated env, <code>boot.cmd:45-48</code>).</li>
+<li><strong><code>/etc/fw_env.config</code> in BOTH slot rootfs
+images</strong> pointing at that exact env location (device path +
+offset + size + sector size). It MUST match the U-Boot env storage
+config byte-for-byte — a mismatch means the guest writes an env the
+bootloader never reads (a silent §11.4.108 SOURCE→RUNTIME gap, exactly
+the class the constitution warns about). This is added in
+<code>build_image.sh</code> (Buildroot rootfs overlay) + verified by
+<code>assemble_ab_disk.sh</code>.</li>
+<li><strong><code>u-boot-tools</code>
+(<code>fw_setenv</code>/<code>fw_printenv</code>) in the guest</strong>
+— a Buildroot package add (<code>BR2_PACKAGE_UBOOT_TOOLS</code> or
+equivalent) in <code>build_image.sh</code>.</li>
+</ol>
+<h3 id="shared-with-pwu-ab-2-rauc-dm-verity">Shared with PWU-AB-2 (RAUC
+dm-verity)</h3>
+<p>RAUC’s U-Boot integration uses the <strong>same</strong>
+<code>fw_setenv</code>/<code>fw_printenv</code> +
+<code>BOOT_ORDER</code>/<code>upgrade_available</code> env to drive slot
+state (RAUC U-Boot bootchooser; REPORT line 43). So building
+<code>/etc/fw_env.config</code> + the persistent env blob is a SHARED
+prerequisite of PWU-AB-2 and PWU-AB-4 — build it once, both consume it.
+RAUC’s <code>rauc-mark-good</code>/bootchooser is in fact a candidate to
+BE the healthy-marker of §4 (reuse over hand-rolled).</p>
+<hr />
+<h2 id="the-healthy-marker-mechanism-new-does-not-exist-yet">4. The
+healthy-marker mechanism (NEW — does NOT exist yet)</h2>
+<p>The marker is the in-guest application code the U-Boot
+doc/README:76-80 require: on a confirmed-healthy boot it clears
+<code>upgrade_available</code>+<code>bootcount</code>, freezing the
+counter so the just-applied slot is CONFIRMED and no rollback fires.</p>
+<h3
+id="design-systemd-unit-or-init-script-the-guest-is-buildroot">Design
+(systemd unit OR init script — the guest is Buildroot)</h3>
+<p>The Buildroot guest’s init system determines the form (Buildroot
+defaults to BusyBox init unless systemd is selected;
+<code>build_image.sh</code> config decides). Two equivalent shapes:</p>
+<ul>
+<li><strong>systemd unit</strong> <code>helix-ab-confirm.service</code>
+— <code>Type=oneshot</code>, <code>After=multi-user.target</code> /
+ordered after the services whose liveness defines “healthy”,
+<code>ExecStart=/usr/bin/helix-ab-confirm</code>.</li>
+<li><strong>BusyBox init script</strong>
+<code>/etc/init.d/S99helix-ab-confirm</code> run last in the boot
+sequence.</li>
+</ul>
+<p>Either invokes a small <code>helix-ab-confirm</code> program
+that:</p>
+<ol type="1">
+<li>Confirms the system is genuinely healthy (NOT merely “init reached
+the marker”). The honest health predicate (§11.4.6 — never assume) MUST
+be a real check, e.g. the OTA agent registered + polled the control
+plane successfully (closing the loop is itself the health signal), key
+services up, <code>/etc/slot_id</code> matches the
+<code>helix_slot</code> the bootloader selected.</li>
+<li>ONLY on a true healthy verdict:
+<code>fw_setenv upgrade_available 0</code> and
+<code>fw_setenv bootcount 0</code> (via §3’s tooling).</li>
+<li>Is idempotent + crash-safe — re-running it on an already-confirmed
+slot is a no-op (read <code>upgrade_available</code> first; if already
+0, do nothing).</li>
+</ol>
+<h3 id="reuse-note-11.4.74">Reuse note (§11.4.74)</h3>
+<p>RAUC ships <code>rauc status mark-good</code> (and its U-Boot
+bootchooser integration writes exactly the
+<code>upgrade_available</code>/<code>BOOT_ORDER</code> env). Since RAUC
+is already in the guest (<code>build_image.sh:115</code>), the
+healthy-marker SHOULD reuse <code>rauc ... mark-good</code> rather than
+a bespoke <code>fw_setenv</code> script wherever the RAUC bundle path
+(PWU-AB-2) is used. The bespoke <code>helix-ab-confirm</code> is the
+fallback for the pre-RAUC-bundle no-verity path and the place to anchor
+the loop-closed health predicate.</p>
+<hr />
+<h2
+id="reuse-vs-new-decision-11.4.74-does-cmdota-device-emu-drive-the-real-guest-or-is-a-thin-in-guest-agent-needed">5.
+Reuse-vs-new decision (§11.4.74) — does cmd/ota-device-emu drive the
+real guest, or is a thin in-guest agent needed?</h2>
+<p><strong>Decision: a NEW thin in-guest agent is needed.
+<code>cmd/ota-device-emu</code>’s apply logic does NOT extend to drive
+the real guest — but its protocol client is the reuse seam.</strong></p>
+<p>Rationale, grounded in the code:</p>
+<ul>
+<li><code>deviceemu.Device</code>
+(<code>server/internal/deviceemu/emulator.go</code>) is a faithful, REAL
+<strong>protocol</strong> client: login, register, check-update,
+telemetry are all real HTTP against the canonical
+<code>ota-protocol</code> types (package doc <code>:1-26</code>). That
+half is exactly what the guest agent needs and SHOULD be reused
+conceptually (and the Go binary can even run INSIDE the guest if a Go
+runtime is present, or be cross-compiled aarch64-static).</li>
+<li>BUT <code>deviceemu</code> deliberately <strong>fakes the
+flash</strong>: <code>ApplyAndReport</code> advances an in-memory
+<code>current</code> string instead of writing a slot
+(<code>:9-12</code>, <code>:305-309</code>). It has NO concept of the
+inactive slot, NO <code>fw_setenv</code>, NO reboot, NO healthy-marker.
+Steps (b), (c), (d), (e) are precisely the faked/absent part. Extending
+<code>deviceemu</code> to do real slot writes + env flips + reboot would
+entangle the host-side Tier-1 emulator with guest-only OS operations it
+must NOT have — a decoupling violation in the wrong direction.</li>
+<li>The Android agent (<code>submodules/ota-android-agent</code>)
+already establishes the RIGHT shape: a thin worker
+(<code>OtaPollWorker.runCycle</code>,
+<code>.../poll/OtaPollWorker.kt:59-107</code>) that orchestrates
+poll→download→verify→apply over decoupled ports, with the OS-apply
+hidden behind <code>ApplyPort</code>
+(<code>.../apply/ApplyPort.kt:35-38</code>). For Android the impl is
+<code>ReflectiveUpdateEngineApplyPort</code> (drives
+<code>android.os.UpdateEngine</code>,
+<code>.../apply/ReflectiveUpdateEngineApplyPort.kt</code>). <strong>The
+A/B-virt guest is a Linux/U-Boot target with NO
+<code>update_engine</code></strong> — so it needs a DIFFERENT
+<code>ApplyPort</code> implementation: a <code>UBootSlotApplyPort</code>
+that does (b) inactive-slot write + (c) <code>fw_setenv</code> arm,
+leaving the reboot to the worker (mirroring how the Android bridge’s
+<code>rebootToNewSlot</code> is a separate call,
+<code>UpdateEngineBridge.kt:60</code>).</li>
+</ul>
+<p><strong>Concrete recommendation:</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Piece</th>
+<th>Reuse / New</th>
+<th>Where it lives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol client (login/register/check-update/telemetry over
+<code>ota-protocol</code>)</td>
+<td>REUSE the <code>deviceemu</code>/ota-android-agent contract (same
+wire types)</td>
+<td>guest agent reuses <code>ota-protocol</code>; MAY embed a
+cross-compiled <code>deviceemu</code>-style Go client</td>
+</tr>
+<tr>
+<td><code>ApplyPort</code> interface (decoupling seam)</td>
+<td>REUSE the established <code>ApplyPort</code> concept (§11.4.28)</td>
+<td>conceptually the same seam as <code>ota-android-agent</code>
+<code>ApplyPort.kt:35</code></td>
+</tr>
+<tr>
+<td><code>UBootSlotApplyPort</code> impl (write inactive slot +
+<code>fw_setenv</code> arm)</td>
+<td><strong>NEW</strong> (the Linux/U-Boot analogue of
+<code>ReflectiveUpdateEngineApplyPort</code>)</td>
+<td>helix_ota glue, in-guest (REPORT line 55 “agent ApplyPort→in-guest
+slot-writer glue stays in helix_ota”)</td>
+</tr>
+<tr>
+<td>Inactive-slot writer</td>
+<td>REUSE <code>rauc install</code> (verity path) /
+<code>dd</code>-class (no-verity fallback)</td>
+<td>guest (RAUC already in image)</td>
+</tr>
+<tr>
+<td>Persistent U-Boot env + <code>/etc/fw_env.config</code> +
+<code>u-boot-tools</code></td>
+<td><strong>NEW (§3)</strong> — SHARED with PWU-AB-2</td>
+<td><code>build_image.sh</code> + <code>assemble_ab_disk.sh</code></td>
+</tr>
+<tr>
+<td>Healthy-marker</td>
+<td><strong>NEW (§4)</strong>, REUSE <code>rauc mark-good</code> where
+applicable</td>
+<td>guest systemd unit / init script</td>
+</tr>
+</tbody>
+</table>
+<p>This matches REPORT lines 45/55/91: reuse RAUC+U-Boot (in-guest) +
+the OTA glue (ApplyPort/protocol/server) stays in helix_ota; the server
+is UNCHANGED (the emulator registers/polls <code>/api/v1</code> like a
+real board). No new ota-protocol message is required (see §6).</p>
+<hr />
+<h2 id="ota-protocol-message-gap-analysis-11.4.6-do-not-invent-apis">6.
+ota-protocol message gap analysis (§11.4.6 — do NOT invent APIs)</h2>
+<p>The existing <code>ota-protocol</code> surface is
+<strong>sufficient</strong> for the full PWU-AB-4 loop. No new message
+type is required:</p>
+<ul>
+<li><ol type="a">
+<li>covered by <code>UpdateAvailable</code> (<code>types.go:87</code>) +
+<code>DeviceRegistrationRequest/Response</code>
+(<code>types.go:56/68</code>) + <code>UpdateCheckRequest</code>
+(<code>types.go:80</code>).</li>
+</ol></li>
+<li><ol start="6" type="a">
+<li>covered by <code>TelemetryReport</code>/<code>TelemetryEvent</code>
+(<code>types.go:150</code>, <code>enums.go:200</code>) + the server-side
+<code>TelemetryHealth.ActiveSlot</code> block
+(<code>wire.go:200-205</code>).</li>
+</ol></li>
+<li>The slot/env/reboot/marker steps (b)–(e) are GUEST-LOCAL operations
+with NO wire representation by design — the control plane is
+intentionally unaware of slots (the device owns the A/B mechanism; only
+the resulting <code>active_slot</code> + lifecycle is reported back).
+This is correct and matches the existing <code>applyDeviceRuntime</code>
+slot handling (<code>handlers_client.go:220-222</code>).</li>
+</ul>
+<p><strong>One honest optional refinement (NOT required, flagged not
+assumed):</strong> the existing <code>TelemetryEvent</code> set has no
+distinct “booted-pending-confirm” vs “confirmed-good” event — the
+Android agent models this richer state internally
+(<code>AgentState.BOOTED_NOT_YET_SUCCESSFUL</code> /
+<code>SUCCESSFUL</code>, <code>TelemetryReporter.kt:18-19</code>) but
+the wire <code>success</code> event is the single terminal. For PWU-AB-4
+the <code>success</code> event reported AFTER the healthy-marker fires
+(e) is the honest “confirmed-good” signal; reporting
+<code>installed</code>/<code>verifying</code> BEFORE reboot and
+<code>success</code> only AFTER the post-reboot marker correctly maps
+the U-Boot probation window onto the existing six events. If a future
+PWU wants the control plane to SEE the probation window explicitly, that
+would be a proposed additive <code>TelemetryEvent</code>
+(e.g. <code>booted_pending_confirm</code>) — <strong>proposed, not
+built, and out of PWU-AB-4 scope.</strong></p>
+<hr />
+<h2 id="test-plan-11.4.115-redgreen-11.4.511.4.69-captured-evidence">7.
+Test plan (§11.4.115 RED→GREEN + §11.4.5/§11.4.69 captured
+evidence)</h2>
+<p>Feature class (§11.4.69): <code>boot_service</code>. Evidence root:
+<code>docs/qa/&lt;run-id&gt;-ab-apply-loop/</code>. The harness reuses
+the proven <code>expect</code>-driver + QEMU-virt+HVF pattern of
+<code>ab_rollback.sh</code>/<code>ab_slot_switch.sh</code> (single Tcl
+quoting level, login-with-retry, <code>\$(...)</code> guest-shell
+substitution), driven against a LIVE control-plane instance (the Go
+server + the Tier-1 contract the emulator already exercises).</p>
+<h3
+id="redgreen-polarity-11.4.115-reproduce-on-the-broken-artifact-one-polarity-switch">RED→GREEN
+polarity (§11.4.115 — reproduce on the broken artifact, one polarity
+switch)</h3>
+<p>A single test source with <code>RED_MODE</code> (default 1):</p>
+<ul>
+<li><strong>RED (<code>RED_MODE=1</code>, pre-agent artifact):</strong>
+boot the guest on slot A; trigger an apply via the control plane
+(publish a release/deployment so <code>GET /client/update</code> returns
+200). With NO agent wired, assert the loop does NOT close: post-reboot
+<code>helix_slot</code>/<code>/etc/slot_id</code> is STILL A, AND the
+server’s <code>active_slot</code> for the device is unchanged. This
+captures the defect-present baseline (the loop is open).</li>
+<li><strong>GREEN (<code>RED_MODE=0</code>, agent-wired
+artifact):</strong> same stimulus; assert post-reboot the guest booted
+slot B (<code>/proc/cmdline helix_slot=B</code>,
+<code>findmnt / = /dev/vda3</code>, <code>/etc/slot_id=B</code>), the
+persistent U-Boot env shows <code>BOOT_ORDER="B A"</code> then (after
+marker) <code>upgrade_available=0</code>/<code>bootcount=0</code> (via
+<code>fw_printenv</code>), AND the control plane received the
+<code>success</code> telemetry with <code>active_slot=B</code> (assert
+via the server’s device record / telemetry store).</li>
+</ul>
+<h3
+id="captured-evidence-battery-11.4.511.4.6911.4.107-never-a-single-frame-never-metadata-only">Captured-evidence
+battery (§11.4.5/§11.4.69/§11.4.107 — never a single frame, never
+metadata-only)</h3>
+<p>Per run, under
+<code>docs/qa/&lt;run-id&gt;-ab-apply-loop/</code>:</p>
+<ol type="1">
+<li><code>console.log</code> — full U-Boot + kernel + guest console (the
+<code>expect</code> <code>log_file</code>), showing the boot.cmd
+selection line (<code>boot.cmd:88</code>) for the NEW slot.</li>
+<li><code>fw_env_before.txt</code> / <code>fw_env_after.txt</code> —
+<code>fw_printenv</code> of
+<code>BOOT_ORDER</code>/<code>upgrade_available</code>/<code>bootcount</code>
+before arm, after arm, after healthy-marker (the env transition is the
+§11.4.108 runtime signature for steps c+e).</li>
+<li><code>slot_block_hash.txt</code> — pre/post block hash of the
+inactive-slot partition proving REAL bytes were written (step b is not
+faked — contrast with <code>deviceemu</code> which has no slot).</li>
+<li><code>server_device_record.json</code> — the control-plane device
+record showing <code>active_slot=B</code> +
+<code>current_version</code>=new (proves f closed the loop, captured
+from the live server, §11.4.13 downstream/sink-side evidence).</li>
+<li><code>telemetry.jsonl</code> — the accepted lifecycle events
+(<code>download_started…success</code>) with the resolved
+<code>deployment_id</code> (proves the <code>202 accepted</code>,
+<code>rejected=0</code>).</li>
+<li><code>verdict.txt</code> — PASS/FAIL with the contrast summary.</li>
+</ol>
+<p>Liveness (§11.4.107): a post-login sentinel
+(<code>HELIX_DONE_..._MARK</code>) proves the guest shell is live, never
+a frozen frame — same technique as <code>ab_rollback.sh:203</code>.</p>
+<h3 id="composed-proofs-full-test-type-coverage-11.4.27">Composed proofs
+(full test-type coverage, §11.4.27)</h3>
+<ul>
+<li><strong>Healthy path:</strong> apply→write B→arm→reboot→marker
+confirms→<code>success</code> w/ <code>active_slot=B</code>;
+<code>upgrade_available</code> ends 0.</li>
+<li><strong>Unhealthy path (composes proven PWU-AB-3):</strong>
+apply→write B→arm→reboot→marker NEVER fires (inject an unhealthy slot B)
+→ <code>bootcount</code> climbs past <code>bootlimit</code> → boot.cmd
+guard swaps <code>BOOT_ORDER</code> → auto-rollback to A → agent reports
+<code>failure</code>/rollback. This is the PWU-AB-3 rollback now
+TRIGGERED by a real agent-armed probation window rather than a hand-set
+<code>bootcount</code>.</li>
+<li><strong>Chaos/stress (§11.4.85):</strong> kill the agent
+mid-slot-write (resumable, no brick); power-cut during the
+<code>fw_setenv</code> arm via QMP (the env is either old-and-consistent
+or new-and-consistent — never half-written-and-bricked); N-iteration
+determinism (§11.4.50) — identical PASS + identical evidence hashes
+across N runs on the same disk image MD5.</li>
+<li><strong>§1.1 paired mutation:</strong> strip the healthy-marker’s
+<code>fw_setenv upgrade_available 0</code> → the GREEN test MUST FAIL
+(the slot never confirms, so a later reboot rolls back when it should
+not) — proving the marker assertion is real, not a bluff. Second
+mutation: make <code>UBootSlotApplyPort</code> skip the inactive-slot
+write but still arm the env → <code>slot_block_hash</code> unchanged →
+test MUST FAIL.</li>
+</ul>
+<h3 id="sync-channel-11.4.83-transcript">§11.4.116 sync channel +
+§11.4.83 transcript</h3>
+<p>The harness emits a JSONL verdict stream + atomically-rewritten
+status snapshot (each verdict carries its evidence path), and the full
+bidirectional console transcript is the
+<code>docs/qa/&lt;run-id&gt;/</code> proof artifact.</p>
+<hr />
+<h2 id="build-order-honest-dependency-chain">8. Build order (honest
+dependency chain)</h2>
+<ol type="1">
+<li><strong>PREREQUISITE (shared with PWU-AB-2):</strong> persistent
+U-Boot env blob + <code>/etc/fw_env.config</code> +
+<code>u-boot-tools</code> in the guest (§3). Until this lands, the agent
+CANNOT persist a slot arm and the marker CANNOT confirm. This is the
+gating piece.</li>
+<li><code>UBootSlotApplyPort</code> (new in-guest ApplyPort impl, §5) +
+inactive-slot writer (RAUC or dd fallback).</li>
+<li>Healthy-marker unit/script (§4).</li>
+<li>Guest agent driver tying poll→download→verify→apply→arm→reboot,
+reusing the <code>ota-protocol</code> client contract.</li>
+<li>The RED→GREEN apply-loop test (§7) against a live server.</li>
+</ol>
+<p>Every step lands with four-layer coverage (§11.4.4(b)) + independent
+review (§11.4.125/§11.4.142) + §1.1 mutation, evidence under
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83), per the REPORT’s
+per-PWU contract (line 81).</p>
+<hr />
+<h2 id="sources-verified-2026-06-11">Sources verified 2026-06-11</h2>
+<ul>
+<li>In-repo code (cited file:line throughout):
+<code>submodules/ota-protocol/types.go</code>, <code>enums.go</code>;
+<code>server/internal/api/handlers_client.go</code>,
+<code>wire.go</code>;
+<code>server/internal/deviceemu/emulator.go</code>;
+<code>server/cmd/ota-device-emu/main.go</code>;
+<code>submodules/ota-android-agent/.../poll/OtaPollWorker.kt</code>,
+<code>.../apply/ApplyPort.kt</code>,
+<code>.../apply/ReflectiveUpdateEngineApplyPort.kt</code>;
+<code>tests/emulator/ab_virt/uboot_ab/{README.md,boot.cmd}</code>,
+<code>ab_rollback.sh</code>, <code>assemble_ab_disk.sh</code>,
+<code>build_image.sh</code>;
+<code>docs/research/rk3588_emulator/REPORT.md</code>.</li>
+<li>U-Boot Boot Count Limit
+(bootcount/bootlimit/altbootcmd/upgrade_available; healthy-reset is
+application responsibility):
+https://docs.u-boot.org/en/latest/api/bootcount.html</li>
+<li>U-Boot environment tools
+<code>fw_setenv</code>/<code>fw_printenv</code> +
+<code>fw_env.config</code>:
+https://docs.u-boot.org/en/latest/develop/environment.html (libubootenv
+<code>u-boot-tools</code>).</li>
+<li>Mender/RAUC U-Boot integration (<code>BOOT_ORDER</code>,
+swap-the-rootfs altbootcmd, <code>fw_setenv</code>-driven slot state):
+https://docs.mender.io/operating-system-updates-yocto-project/board-integration/bootloader-support/u-boot/manual-u-boot-integration</li>
+<li>RAUC A/B + QEMU + <code>format=verity</code> + U-Boot bootchooser /
+mark-good: https://rauc.readthedocs.io/en/latest/examples.html</li>
+</ul>
+<p><strong>Negative finding (§11.4.99):</strong> RAUC’s official
+full-system QEMU example is x86+GRUB, not arm64+U-Boot; the arm64+U-Boot
+<code>fw_env.config</code>/env-storage offset is target-specific and
+MUST be verified against THIS emulator’s QEMU U-Boot
+<code>CONFIG_ENV_IS_IN_*</code> once built (it does not exist yet) — do
+not assume the upstream example’s offsets transfer.</p>
+</body>
+</html>
