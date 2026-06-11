@@ -520,3 +520,66 @@ bank:
       skip_codes:
         "3": "out/.ok / out/.disk_ok / u-boot.bin / ab_disk.img / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
       evidence_artifact: docs/qa/20260611T094958Z-ab-slot-switch/verdict.txt
+
+    - id: HOTA-AB-ROLLBACK
+      title: RK3588 A/B-virt real bootloader-driven auto-rollback (bootcount>bootlimit -> altbootcmd swap to previous-good slot) under U-Boot+QEMU+HVF
+      capability_area: ab-virt-auto-rollback
+      # FULLY SELF-HOSTING (§11.4.98): boots the SAME 2-slot GPT disk (ab_disk.img)
+      # with the SAME real u-boot.bin under QEMU `-machine virt` + HVF on this
+      # Apple-Silicon host via a deterministic `expect` driver, driving the U-Boot
+      # bootcount/bootlimit guard in boot.cmd. The proof is the METAMORPHIC CONTRAST
+      # (§11.4.107): the ONLY difference between the two runs is the bootcount value
+      # relative to bootlimit. Run ROLLBACK (BOOT_ORDER="B A", bootcount=2,
+      # bootlimit=1 -> bootcount>bootlimit) trips the step-2 guard, which emits
+      # "rolling back (altbootcmd swap)" and swaps the head back to the previous-good
+      # slot A; Run CONTROL (bootcount=1, NOT past bootlimit) keeps head B and does
+      # NOT roll back. Each run logs into the REAL getty and reads /etc/slot_id + the
+      # mounted root device + /proc/cmdline from INSIDE the guest userspace — a LIVE
+      # shell, not a frozen frame (§11.4.107). Each QEMU exits on guest poweroff or
+      # the expect timeout (self-cleaning, §11.4.14). Re-runnable end-to-end
+      # (§11.4.50); each run writes FRESH transcripts under
+      # docs/qa/<run-id>-ab-rollback/{consoleROLLBACK.log,consoleCONTROL.log,verdict.txt}.
+      # This proves the IN-RAM-SESSION bootcount>bootlimit guard swap to the
+      # previous-good slot ONLY; persistent saveenv power-cycle rollback and RAUC
+      # dm-verity are later PWUs (§11.4.6).
+      dispatch_command: >-
+        bash tests/emulator/ab_virt/ab_rollback.sh
+      requires:
+        - bash
+        - qemu-system-aarch64
+        - expect
+        - "out/.ok + out/.disk_ok + out/images/{u-boot.bin,ab_disk.img} (run build_image.sh then assemble_ab_disk.sh first)"
+      pass_criterion: >-
+        The SAME disk + SAME real u-boot.bin, booted twice differing ONLY in the
+        bootcount value relative to bootlimit, MUST roll the head slot back to the
+        previous-good slot WHEN AND ONLY WHEN bootcount > bootlimit, and the guest
+        MUST observably report (from inside userspace) the slot it was actually
+        booted into. A PASS requires ALL anti-bluff contrast assertions to hold:
+        Run ROLLBACK (BOOT_ORDER="B A", bootcount=2, bootlimit=1) — the U-Boot
+        console carries the guard line "rolling back (altbootcmd swap)", boot.cmd
+        recomputes active_slot=A root=/dev/vda2 (head swapped to the good slot),
+        guest /etc/slot_id=A, findmnt root = /dev/vda2, kernel cmdline helix_slot=A,
+        the post-login HELIX_DONE_ROLLBACK_MARK sentinel (live shell), and the guest
+        did NOT keep booting the bad slot B; Run CONTROL (bootcount=1, NOT past
+        bootlimit) — NO "rolling back (altbootcmd swap)" line, guest /etc/slot_id=B,
+        findmnt root = /dev/vda3, HELIX_DONE_CONTROL_MARK, and did NOT roll back to A
+        (metamorphic: only the past-limit run rolls back; the rollback is real, not a
+        no-op that always swaps). The script exits 0 only if EVERY check passed; a
+        missing out/.ok / out/.disk_ok / u-boot.bin / ab_disk.img / qemu / expect =>
+        exit 3 SKIP, never a false PASS (§11.4.3 / §11.4.6).
+      asserted_lines:
+        - "Run ROLLBACK: U-Boot guard emitted the altbootcmd-swap rollback line"
+        - "Run ROLLBACK: post-swap selection active_slot=A root=/dev/vda2 (BOOT_ORDER head swapped to good slot)"
+        - "Run ROLLBACK: guest userspace reports /etc/slot_id=A (ROLLED BACK to good slot)"
+        - "Run ROLLBACK: guest findmnt confirms root = /dev/vda2 (slot A)"
+        - "Run ROLLBACK: kernel cmdline carries helix_slot=A (boot.scr selected A after swap)"
+        - "Run ROLLBACK: interactive shell live (post-login sentinel, not a frozen frame)"
+        - "Run ROLLBACK: did NOT keep booting the bad slot B (rollback is real, not a no-op)"
+        - "Run CONTROL: guard did NOT fire (bootcount not past bootlimit)"
+        - "Run CONTROL: guest booted head slot B (slot_id=B) — no rollback when counter not exhausted"
+        - "Run CONTROL: guest findmnt confirms root = /dev/vda3 (slot B)"
+        - "Run CONTROL: interactive shell live (post-login sentinel, not a frozen frame)"
+        - "Run CONTROL: did NOT roll back to A (metamorphic: only the past-limit run rolls back)"
+      skip_codes:
+        "3": "out/.ok / out/.disk_ok / u-boot.bin / ab_disk.img / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260611T095918Z-ab-rollback/verdict.txt

@@ -1,0 +1,66 @@
+§11.4.50 determinism soak — explicit N=3 per test, same u-boot.bin + ab_disk.img
+host: Darwin 24.5.0 arm64  u-boot: U-Boot 2024.01 (Jun 11 2026 - 08:21:42 +0000)
+
+### PWU-AB-1 slot switch — 3 iterations ###
+--- slot-switch iter 1 ---
+-- Run A: BOOT_ORDER='A B' (head=A -> expect root=/dev/vda2, slot_id=A) --
+-- Run B: BOOT_ORDER='B A' (head=B -> expect root=/dev/vda3, slot_id=B) --
+[PASS] Run A: guest userspace reports /etc/slot_id=A
+[PASS] Run A: guest findmnt confirms root = /dev/vda2 (slot A)
+[PASS] Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)
+[PASS] Run A: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run A: did NOT boot slot B
+[PASS] Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)
+[PASS] Run B: guest findmnt confirms root = /dev/vda3 (slot B)
+[PASS] Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)
+[PASS] Run B: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run B: did NOT boot slot A (the switch is real, not a no-op)
+Run A: HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run B: HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
+--- slot-switch iter 2 ---
+-- Run A: BOOT_ORDER='A B' (head=A -> expect root=/dev/vda2, slot_id=A) --
+-- Run B: BOOT_ORDER='B A' (head=B -> expect root=/dev/vda3, slot_id=B) --
+[PASS] Run A: guest userspace reports /etc/slot_id=A
+[PASS] Run A: guest findmnt confirms root = /dev/vda2 (slot A)
+[PASS] Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)
+[PASS] Run A: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run A: did NOT boot slot B
+[PASS] Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)
+[PASS] Run B: guest findmnt confirms root = /dev/vda3 (slot B)
+[PASS] Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)
+[PASS] Run B: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run B: did NOT boot slot A (the switch is real, not a no-op)
+Run A: HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run B: HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
+--- slot-switch iter 3 ---
+-- Run A: BOOT_ORDER='A B' (head=A -> expect root=/dev/vda2, slot_id=A) --
+-- Run B: BOOT_ORDER='B A' (head=B -> expect root=/dev/vda3, slot_id=B) --
+[PASS] Run A: guest userspace reports /etc/slot_id=A
+[PASS] Run A: guest findmnt confirms root = /dev/vda2 (slot A)
+[PASS] Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)
+[PASS] Run A: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run A: did NOT boot slot B
+[PASS] Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)
+[PASS] Run B: guest findmnt confirms root = /dev/vda3 (slot B)
+[PASS] Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)
+[PASS] Run B: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run B: did NOT boot slot A (the switch is real, not a no-op)
+Run A: HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run B: HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
+
+### PWU-AB-3 auto-rollback — 3 iterations ###
+--- rollback iter 1 ---
+Run ROLLBACK (head was bad slot B, expect rolled-back to A): HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run CONTROL  (head slot B, expect no rollback -> B):         HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
+--- rollback iter 2 ---
+Run ROLLBACK (head was bad slot B, expect rolled-back to A): HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run CONTROL  (head slot B, expect no rollback -> B):         HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS
+--- rollback iter 3 ---
+Run ROLLBACK (head was bad slot B, expect rolled-back to A): HELIX_SLOTID=A  HELIX_ROOTDEV=/dev/vda2
+Run CONTROL  (head slot B, expect no rollback -> B):         HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3
+Verdict: PASS

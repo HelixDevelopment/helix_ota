@@ -2,13 +2,33 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-10T16:10:00Z |
+| Last modified | 2026-06-11T13:15:00Z |
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
 
-## ⤴ CURRENT STATE (2026-06-10 overnight) — read `docs/RESUMPTION.md` (Rev 9) FIRST
+## ⤴ CURRENT STATE (2026-06-11) — HEAD `42be557` — read `docs/RESUMPTION.md` FIRST
+
+**PWU-AB milestones landed GREEN + pushed (HEAD `42be557`, all 4 upstreams).** On the
+emulator A/B ladder (T1 = QEMU `virt` + HVF on this macOS host, real U-Boot 2024.01):
+**PWU-AB-1 FULL A/B slot switch is PROVEN** (commit `18ed84a`; evidence
+`docs/qa/20260611T094958Z-ab-slot-switch/` — Run A→slot A `/dev/vda2`, Run B→slot B
+`/dev/vda3`, the slot genuinely switched, `§11.4.50` determinism **2/2 identical** per the
+captured `determinism_soak.txt`) **AND PWU-AB-3 corrupt-slot AUTO-ROLLBACK is PROVEN**
+(commit `42be557`; evidence `docs/qa/20260611T095918Z-ab-rollback/` — U-Boot
+`bootcount=2 > bootlimit=1` → altbootcmd swap → fell back from bad slot B to good slot A,
+with a CONTROL run proving the rollback fires only on a bad slot). **PWU-AB-2 RAUC
+dm-verity** (`tests/emulator/ab_virt/ab_rauc_verity.sh`) is AUTHORED but **UNVERIFIED-pending**
+— needs a signed `.raucb` bundle + reconciling the RAUC slot-class scheme with the proven
+`boot.cmd` `BOOT_ORDER` env scheme. **T2 Cuttlefish** real-Android-A/B remains **SKIP-pending**
+the operator's incoming Linux + nested-KVM host (`/dev/kvm` absent on this Apple-Silicon
+host); **T3 RK3588** hardware PENDING (no board). Status docs:
+`docs/emulator/rk3588_ab_virt/Status.md` (Rev 3) + `Status_Summary.md` (Rev 3).
+**No release tag** — §11.4.40 needs the full ladder GREEN (T2 + T3 still SKIP/PENDING), so a
+tag would be a bluff (§11.4.6). Everything below this box is prior-wave history.
+
+## ⤴ PRIOR STATE (2026-06-10 overnight) — superseded by the box above
 
 The freshest live-state anchors are in **`docs/RESUMPTION.md`** (the §11.4.131 canonical
 entry). As of HEAD **`0d27438`** the build is **GREEN across every achievable tier**, and
@@ -134,11 +154,15 @@ All three added `store.Repository` methods on memory + pgx, extended the shared 
 - **Emulator-driven device testing initiative started** — tiered plan captured as FACT in `docs/design/EMULATED_DEVICE_TESTING.md`. **Tier-1 (podman `ota-device-emulator` over real `ota-protocol`) is IN PROGRESS**; Tier-2 (Cuttlefish A/B, Linux+nested-KVM-gated) and Tier-3 (real RK3588, hardware-gated) are designed, host/hardware-gated (NOT structurally impossible per §11.4.112). Extends the `containers` submodule (`pkg/boot`/`compose`/`health` + `pkg/emulator` AVD-x86_64 + `pkg/vm` qemu-aarch64) per §11.4.76.
 - **Canonical §11.4.131 session-resumption file created** at `docs/RESUMPTION.md` — the fixed out-of-the-box entry point for any fresh session (SHORT + FULL variants, read-first handoff pointers, live-state anchors, PHASE/NEXT/terminal-goal, binding constraints). Point a new session at that one file.
 
-### NEXT wave (still open — all hardware/ingest-gated)
-1. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware.
-2. **Device payload-apply integration** — wire `DeltaApplyDecision` into the on-device apply path (`:android`/update_engine) — needs a real device to validate end-to-end.
-3. **Emulator-driven device testing** — tiered plan now in flight (`docs/design/EMULATED_DEVICE_TESTING.md`): **Tier-1 IN PROGRESS** (podman `ota-device-emulator` speaking real `ota-protocol` to the control plane — register→update-check→telemetry→delta→rollout→recall, runnable on this macOS host now); Tier-2 Cuttlefish A/B (Linux+nested-KVM-gated); Tier-3 real RK3588 (hardware-gated).
-4. **Parked WIDEN bits**: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) — still blocked on UNVERIFIED ingest (event source must carry them first). **Telemetry per-device filters + group/members list pagination are now DONE** (shipped this session, see below) — no longer parked.
+### NEXT wave (PHASE: emulator A/B ladder — slot-switch + rollback DONE; dm-verity next, then hardware-gated tiers)
+1. **PWU-AB-2 RAUC dm-verity (the immediate NEXT, software-doable on this host)** — run `tests/emulator/ab_virt/ab_rauc_verity.sh`: produce/sign a `.raucb` bundle and reconcile the RAUC slot-class scheme with the PROVEN `uboot_ab/boot.cmd` `BOOT_ORDER` env scheme, then capture dm-verity slot-integrity evidence (E4). Currently AUTHORED + UNVERIFIED-pending.
+2. **Tier-2 Cuttlefish real-Android A/B** (`tests/emulator/tier2_cuttlefish_ab.sh`, incl. PWU-CF-2 corrupt-slot rollback) — SKIP-pending the operator's incoming **Linux + nested-KVM host** (`/dev/kvm` absent on this Apple-Silicon macOS host). Ready to run there.
+3. **Tier-3 real RK3588 / Orange Pi 5 Max** on-device e2e (download→verify→A/B apply→reboot→post-boot; corrupt-slot→auto-rollback) — PENDING, no board on the bench.
+4. **Device-side TUF** (gomobile-go-tuf/v2 per the decision memo) — gated on an arm64 `.so`-size/JNI measurement on real RK3588 hardware.
+5. **Device payload-apply integration** — wire `DeltaApplyDecision` into the on-device apply path (`:android`/update_engine) — needs a real device to validate end-to-end.
+6. **Parked WIDEN bits**: row-4 richer telemetry fields (`duration_ms`/`bytes_transferred`) — still blocked on UNVERIFIED ingest (event source must carry them first). Telemetry per-device filters + group/members list pagination are DONE (shipped `50ef5c6`).
+
+**DONE this session (2026-06-11, on `main`, pushed all 4 upstreams):** PWU-AB-1 FULL A/B slot switch (`18ed84a`, evidence `docs/qa/20260611T094958Z-ab-slot-switch/`, determinism 2/2 identical) + PWU-AB-3 corrupt-slot AUTO-ROLLBACK (`42be557`, evidence `docs/qa/20260611T095918Z-ab-rollback/`), both against real U-Boot 2024.01 + QEMU `virt` + HVF. **HEAD is now `42be557`.**
 
 ### Carried-forward gaps register
 See `additions_synthesis.md` §8/§9 (14 gaps; most now specced — implementation pending). Numbering decision: 1.0.1 = staged-rollout; rollback→1.0.2, delta→1.0.3.
