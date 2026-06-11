@@ -1,0 +1,82 @@
+set timeout 150
+set pw      [lindex $argv 0]
+set order   [lindex $argv 1]
+set console [lindex $argv 2]
+set uboot   [lindex $argv 3]
+set disk    [lindex $argv 4]
+set mark    [lindex $argv 5]
+log_file -noappend $console
+
+spawn qemu-system-aarch64 -M virt -accel hvf -cpu host -smp 2 -m 512 -nographic \
+  -bios $uboot -drive file=$disk,if=virtio,format=raw
+
+# Interrupt U-Boot autoboot.
+expect {
+  timeout { puts "HELIX_DRIVER_FAIL: no autoboot prompt"; exit 2 }
+  -re {stop autoboot}
+}
+send "\r"
+expect {
+  timeout { puts "HELIX_DRIVER_FAIL: no U-Boot prompt"; exit 2 }
+  -re {=> $}
+}
+# Drive the A/B env exactly as the OTA agent will (BOOT_ORDER head = active slot).
+send "setenv BOOT_ORDER $order\r"
+expect -re {=> $}
+send "printenv BOOT_ORDER\r"
+expect -re {=> $}
+# Load + source our A/B boot script from the FAT boot partition (virtio 0:1).
+send "load virtio 0:1 0x40400000 boot.scr\r"
+expect {
+  timeout { puts "HELIX_DRIVER_FAIL: boot.scr load timed out"; exit 2 }
+  -re {=> $}
+}
+send "source 0x40400000\r"
+
+# Wait for the getty login prompt (tolerate interleaved kernel-console noise),
+# then run the login cycle with one retry if the prompt re-displays.
+expect {
+  timeout { puts "HELIX_DRIVER_FAIL: no login prompt after source"; exit 2 }
+  -re {buildroot login: $}
+}
+set tries 0
+proc do_login {} {
+  global pw
+  send "root\r"
+  expect {
+    timeout { puts "HELIX_DRIVER_FAIL: no password prompt"; exit 2 }
+    -re {Password: $}
+  }
+  # settle past any trailing kernel-log line before sending the secret
+  sleep 1
+  send "$pw\r"
+}
+do_login
+# Either we land on a shell prompt, or the login re-prompts (retry once).
+expect {
+  timeout { puts "HELIX_DRIVER_FAIL: no shell after login"; exit 2 }
+  -re {buildroot login: $} {
+    incr tries
+    if {$tries > 2} { puts "HELIX_DRIVER_FAIL: login kept re-prompting"; exit 2 }
+    do_login
+    exp_continue
+  }
+  -re {# $}
+}
+# Drain to a clean prompt.
+send "\r"
+expect -re {# $}
+# Observable slot identity FROM INSIDE THE GUEST. `\$(...)` => guest shell runs it.
+send "echo HELIX_SLOTID=\$(cat /etc/slot_id 2>/dev/null)\r"
+expect -re {# $}
+send "echo HELIX_ROOTDEV=\$(findmnt -no SOURCE / 2>/dev/null)\r"
+expect -re {# $}
+send "echo HELIX_CMDLINE=\$(cat /proc/cmdline)\r"
+expect -re {# $}
+send "echo HELIX_DONE_${mark}_MARK\r"
+expect -re {# $}
+send "poweroff\r"
+expect {
+  timeout { puts "HELIX_DRIVER_NOTE: poweroff timed out"; exit 0 }
+  eof
+}
