@@ -77,7 +77,11 @@ podman run --name "$BUILD_CTR" --arch arm64 \
     apt-get -qq install -y --no-install-recommends \
       build-essential git wget cpio unzip rsync bc python3 file \
       libncurses-dev sed make binutils gcc g++ patch perl tar which \
-      ca-certificates xz-utils >/dev/null
+      ca-certificates xz-utils \
+      libssl-dev bison flex >/dev/null
+    # libssl-dev: U-Boot host tools mkimage/aisimage need openssl/evp.h (FACT:
+    #   build7 failed at tools/aisimage.o on a missing openssl/evp.h, §11.4.102).
+    # bison/flex: U-Boot Kconfig/dtc parser generators.
     useradd -m -s /bin/bash br || true
     mkdir -p /work && chown -R br /work /dl
     su br -c "set -euo pipefail
