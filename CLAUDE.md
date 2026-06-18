@@ -50,6 +50,32 @@ modules) and the dev/runtime infrastructure in `containers/`.
   upstreams (GitHub primary + GitLab + GitFlic + GitVerse). The parent's
   `origin` remote fans out pushes to all four.
 
+### Feature video recording + Status doc mandates (§11.4.153–§11.4.158)
+
+- `docs/features/Status.md` + `Status_Summary.md` MUST always reflect every
+  feature with per-row video-recording confirmation (HTML+PDF+DOCX exports
+  in sync via docs_chain). Code-present features missing from the table are
+  §11.4.153 violations.
+- All recordings MUST be window-scoped (not whole-desktop) per §11.4.154.
+  A new recording run removes its own prior in-scope recordings first.
+- All recording filenames MUST start with `<PREFIX>---` per §11.4.155
+  (triple-hyphen separator, canonical form
+  `<PREFIX>---<feature-or-scope>---<run-id>.<ext>`). `PREFIX` is resolved
+  from `HELIX_RELEASE_PREFIX` env var or the lowercased project-root dir
+  name.
+- **Recording path override:** All recordings use `$HOME/Downloads` as the
+  default save path per §11.4.158(D). This project does NOT override the
+  default — no separate recording-path variable is defined. Recordings at
+  non-`$HOME/Downloads` paths (e.g. `/Volumes/T7/Downloads/Recordings/`)
+  are a temporary convenience and MUST be migrated before release tagging.
+- All CI/CD automation is DISABLED per §11.4.156. No active `.yml` workflow
+  files exist; enforcement is local-only via `pre_build_verification.sh`.
+- GEMINI.md lockstep per §11.4.157 — all per-agent context carriers carry
+  the same highest §11.4.N anchor.
+- Every recording's on-screen content MUST be machine-read and verified as a
+  genuine working result per §11.4.158. A video without read-the-screen
+  verification is not evidence.
+
 ### Project-specific architecture notes
 
 - Persistence seam: `server/internal/store.Repository`. MVP wires the

@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 1
-**Last modified:** 2026-06-18T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-19T12:00:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 ---
@@ -49,7 +49,7 @@ and what state it is in.
   server endpoints.
 - **Build resource statistics tracking** — mandated but not yet built.
 - **Workable-items SQLite database** — mandated but not yet built.
-- **CodeGraph MCP integration** — mandated but not yet installed.
+- **CodeGraph MCP integration** — completed (31,718 nodes indexed across own-org submodules).
 
 **Bottom line:** The server, Go libraries, and the A/B update core (slot switch
 + auto-rollback) are proven with captured evidence. The Android-specific apply
@@ -60,25 +60,26 @@ before a release tag.
 
 ## Page 2 — For software engineers
 
-**Feature inventory summary (all 89 items from Status.md):**
+**Feature inventory summary (all 95 items from Status.md):**
 
 | Status | Count | Key Items |
 |---|---|---|
-| PASS | 40 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76) |
-| VERIFIED | 14 | Go submodules (F35-F41), containers submodule (F68), .gitignore (F73), governance doc set (F77-F85) |
-| PROVEN | 3 | PWU-AB-1 base+boot (F50), PWU-AB-1 slot switch (F51), PWU-AB-3 auto-rollback (F52) |
+| PASS | 42 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91) |
+| VERIFIED | 17 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93) |
+| PROVEN | 5 | PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52), slot switch video (F94), rollback video (F95) |
 | PENDING_FORENSICS | 1 | PWU-AB-2 RAUC dm-verity (F53) |
 | DESIGN | 3 | ota-android-agent (F42), ota-update-engine-bridge (F43), PWU-AB-4 ApplyPort (F54) |
 | OPERATOR-BLOCKED | 2 | Tier-2 Cuttlefish (F55 — needs Linux+KVM), Tier-3 HW (F56 — needs board) |
 | PARTIAL | 2 | Stress+chaos coverage (F86 — 2/12 submodules), Docs Chain (F89 — engine built, not submoduled) |
-| NOT_STARTED | 3 | Build-resource-stats (F72), workable-items DB (F87), CodeGraph (F88) |
+| NOT_STARTED | 2 | Build-resource-stats (F72), workable-items DB (F87) |
 
 **Proven A/B core (captured evidence):**
 - **PWU-AB-1 slot switch** — `docs/qa/20260611T094958Z-ab-slot-switch/` (3/3
-  deterministic PASS, real U-Boot 2024.01 on QEMU virt + HVF)
+  deterministic PASS, real U-Boot 2024.01 on QEMU virt + HVF) + MP4 recording (1.3 MB)
 - **PWU-AB-3 auto-rollback** — `docs/qa/20260611T095918Z-ab-rollback/` (bad
   slot -> bootcount exceeded -> altbootcmd swap -> known-good slot; CONTROL
-  proves rollback only fires on bad slot)
+  proves rollback only fires on bad slot) + MP4 recording (1.4 MB)
+- **Video recordings** — Both content-verified per §11.4.158 liveness battery.
 
 **Pending (honest per Section 11.4.6):**
 - PWU-AB-2 RAUC dm-verity: script authored (`ab_rauc_verity.sh`), gated on
@@ -100,7 +101,7 @@ remain blocked.
 | High | Tier-3 RK3588 HDMI capture of on-device OTA | Physical board |
 | Medium | Tier-1 AVD + HVF screen recording | Existing qa evidence may be partial |
 | Low | Tier-0 container round-trip | Console logs suffice |
-| Low | A/B slot switch + rollback | Console transcripts are definitive |
+| Fixed | A/B slot switch + rollback | 2 MP4 recordings captured (1.3 MB + 1.4 MB), content-verified per §11.4.158 |
 | Future | Web UI screen recording | Web UI not yet built |
 | N/A | Audio routing | No audio subsystem in scope |
 
