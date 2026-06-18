@@ -284,6 +284,22 @@ type Project struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// ProjectRole defines access level within a project.
+type ProjectRole string
+
+const (
+	ProjectRoleViewer  ProjectRole = "viewer"
+	ProjectRoleOperator ProjectRole = "operator"
+	ProjectRoleAdmin   ProjectRole = "admin"
+)
+
+// ProjectAccess ties a caller to their role within a single project.
+type ProjectAccess struct {
+	ProjectID string
+	CallerID  string
+	Role      ProjectRole
+}
+
 // Repository is the persistence port for the control plane. Implementations are
 // the in-memory MemoryRepository (MVP/testing) and a future pgx/PostgreSQL one.
 type Repository interface {
@@ -293,6 +309,17 @@ type Repository interface {
 	ListProjects(ctx context.Context) ([]Project, error)
 	UpdateProject(ctx context.Context, p Project) error
 	DeleteProject(ctx context.Context, projectID string) error
+	// GetProjectAccess returns the caller's role within a project, or ErrNotFound
+	// when the caller has no access. Super-admin bypass checks use this to confirm
+	// access exists.
+	GetProjectAccess(ctx context.Context, callerID, projectID string) (ProjectAccess, error)
+	// SetProjectAccess grants or updates a caller's role within a project. The
+	// super-admin manages memberships through this method.
+	SetProjectAccess(ctx context.Context, access ProjectAccess) error
+	// ListProjectMembers returns all callers with access to a project.
+	ListProjectMembers(ctx context.Context, projectID string) ([]ProjectAccess, error)
+	// RemoveProjectAccess revokes a caller's access to a project.
+	RemoveProjectAccess(ctx context.Context, callerID, projectID string) error
 
 	// Devices.
 	// Devices.

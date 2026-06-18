@@ -828,3 +828,19 @@ func (r *PostgresRepository) UpdateProject(_ context.Context, p Project) error {
 func (r *PostgresRepository) DeleteProject(_ context.Context, projectID string) error {
 	return errors.New("store: postgres project implementation not yet available")
 }
+
+func (r *PostgresRepository) GetProjectAccess(_ context.Context, callerID, projectID string) (ProjectAccess, error) {
+	return ProjectAccess{}, errors.New("store: postgres project access not yet available")
+}
+
+func (r *PostgresRepository) SetProjectAccess(_ context.Context, access ProjectAccess) error {
+	return errors.New("store: postgres project access not yet available")
+}
+
+func (r *PostgresRepository) ListProjectMembers(_ context.Context, projectID string) ([]ProjectAccess, error) {
+	return nil, errors.New("store: postgres project members not yet available")
+}
+
+func (r *PostgresRepository) RemoveProjectAccess(_ context.Context, callerID, projectID string) error {
+	return errors.New("store: postgres project access not yet available")
+}
