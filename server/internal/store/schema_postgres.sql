@@ -234,3 +234,25 @@ CREATE TABLE IF NOT EXISTS helix_ota.fabric_evidence (
     created_at  TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_fabric_evidence_run ON helix_ota.fabric_evidence (run_id);
+
+-- Projects (multi-project access control, §11.4).
+CREATE TABLE IF NOT EXISTS helix_ota.projects (
+    project_id   TEXT PRIMARY KEY,
+    name         TEXT        NOT NULL UNIQUE,
+    description  TEXT        NOT NULL DEFAULT '',
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS helix_ota.project_access (
+    caller_id    TEXT        NOT NULL,
+    project_id   TEXT        NOT NULL REFERENCES helix_ota.projects(project_id) ON DELETE CASCADE,
+    role         TEXT        NOT NULL DEFAULT 'viewer'
+        CHECK (role IN ('viewer', 'operator', 'admin')),
+    granted_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    granted_by   TEXT        NOT NULL DEFAULT '',
+    PRIMARY KEY (caller_id, project_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_access_caller  ON helix_ota.project_access (caller_id);
+CREATE INDEX IF NOT EXISTS idx_project_access_project ON helix_ota.project_access (project_id);

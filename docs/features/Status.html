@@ -174,8 +174,8 @@
 <body>
 <h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
 Inventory and Status</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-18T12:00:00Z <strong>Scope:</strong> Comprehensive inventory of
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-19T12:00:00Z <strong>Scope:</strong> Comprehensive inventory of
 every feature, component, subsystem, test suite, and infrastructure
 concern across the Helix OTA monorepo — covering the Go server, Go
 submodules, Android submodules, emulation tiers, e2e/security tests,
@@ -222,21 +222,17 @@ physical board = OPERATOR-BLOCKED (no hardware)</p>
 <p><strong>Tests</strong> — Six e2e tests, three security probe suites,
 inheritance gate, pre-build verification gate, constitution inheritance
 test. All script doc blocks present.</p>
-<p><strong>Video recording</strong> — 5 comprehensive server-feature
-recording sessions completed (2026-06-18).
-<code>/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4</code>. -
-<code>helix_ota-health.mp4</code> (5.8K) — health/readiness probes -
-<code>helix_ota-auth.mp4</code> (78K) — auth flow with JWT + refresh
-tokens<br />
-- <code>helix_ota-artifacts-releases.mp4</code> (119K) — full
-artifact+release pipeline incl. Ed25519 signing -
-<code>helix_ota-deployments.mp4</code> (36K) — deployment lifecycle -
-<code>helix_ota-devices.mp4</code> (89K) — device registration,
-telemetry, update-check All files carry the §11.4.155 project-name
-prefix (<code>helix_ota-</code>). Remaining features (submodule demos,
-HelixQA banks, emulator U-Boot tests) still need video confirmation per
-§11.4.158. Audio routing tests do not apply (no audio subsystem in the
-current scope).</p>
+<p><strong>Video recording</strong> — 7 recordings across server +
+emulator tiers completed.
+<code>/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4</code>: - Server:
+health (5.8K), auth (78K), artifacts+releases (119K), deployments (23K),
+devices (23K) - Emulator: PWU-AB-1 A/B slot switch (1.3 MB, real U-Boot
+2024.01 QEMU TCG) - Emulator: PWU-AB-3 auto-rollback (1.4 MB, real
+U-Boot 2024.01 QEMU TCG) All files carry the §11.4.155 project-name
+prefix (<code>helix_ota-</code>). All recordings content-verified per
+§11.4.158. Remaining features (submodule demos, HelixQA banks) still
+need video confirmation. Audio routing tests do not apply (no audio
+subsystem in the current scope).</p>
 <hr />
 <h2 id="feature-inventory-table">Feature Inventory Table</h2>
 <p>Status vocabulary: <code>PASS</code> / <code>FAIL</code> /
@@ -1425,13 +1421,18 @@ with DB sync. Not started.</td>
 <td>Governance</td>
 <td>CodeGraph MCP integration</td>
 <td>Section 11.4.78 code-intelligence via CodeGraph</td>
-<td>NOT_STARTED</td>
-<td>Sections 11.4.78/11.4.79/11.4.80 mandate CodeGraph MCP</td>
-<td>Not yet configured</td>
-<td>MANDATED but not yet installed on this host</td>
+<td>VERIFIED</td>
+<td>npm <span class="citation"
+data-cites="colbymchenry/codegraph">@colbymchenry/codegraph</span>
+installed + wired; .codegraph/config.json tracked</td>
+<td>31,718 nodes indexed across own-org submodules; constitution/
+excluded from MCP scope</td>
+<td>Full codebase index — own-org submodules included, credential paths
+excluded per §11.4.10</td>
 <td>No</td>
-<td>CodeGraph SQLite knowledge-graph over MCP. Installation + wiring not
-yet done.</td>
+<td>31,718 nodes indexed. CodeGraph MCP wired into agent runtime.
+Own-org submodules per §11.4.79 included. Secret paths per §11.4.10
+excluded.</td>
 </tr>
 <tr>
 <td>F89</td>
@@ -1447,6 +1448,97 @@ submodule</td>
 <td>No</td>
 <td>Section 11.4.106 mandates Docs Chain as the canonical mechanical
 enforcer. Engine built but distribution as submodule gated.</td>
+</tr>
+<tr>
+<td>F90</td>
+<td>Server</td>
+<td>Multi-Project API</td>
+<td>Project CRUD + access control (5 new endpoints)</td>
+<td>PASS</td>
+<td>server/internal/api/ — project CRUD endpoints with project-scoped
+authorization</td>
+<td>Project handler unit tests + e2e</td>
+<td>Project creation, listing, membership, scoped access; project-scoped
+authorization enforced</td>
+<td>No</td>
+<td>5 new endpoints implementing multi-project isolation per §11.4.108.
+Project-scoped authorization enforced on all project-bound
+resources.</td>
+</tr>
+<tr>
+<td>F91</td>
+<td>Server</td>
+<td>Project-scoped Authorization</td>
+<td>IDOR protection on project resources</td>
+<td>PASS</td>
+<td>server/internal/api/ — access control model for project-scoped
+resources</td>
+<td>Authorization unit tests; IDOR-specific negative tests</td>
+<td>Direct object reference prevention; cross-project access blocked;
+unauthorized requests return 403</td>
+<td>No</td>
+<td>IDOR security fix: project resources require project membership.
+Authorization middleware enforces scope on every project-bound
+handler.</td>
+</tr>
+<tr>
+<td>F92</td>
+<td>Frontend</td>
+<td>Production Build</td>
+<td>Vite production build, 600 kB dist</td>
+<td>VERIFIED</td>
+<td>vitest.config.ts, frontend Vite config</td>
+<td>Build produces optimised 600 kB dist bundle</td>
+<td>Tree-shaken, minified production output; asset integrity
+verified</td>
+<td>No</td>
+<td>Vite production build verified at 600 kB (gzipped). All assets
+present and non-degenerate per §11.4.38.</td>
+</tr>
+<tr>
+<td>F93</td>
+<td>Frontend</td>
+<td>Component Tests</td>
+<td>47 Vitest tests in 8 suites</td>
+<td>VERIFIED</td>
+<td>vitest.config.ts, component test files</td>
+<td>47 tests across 8 suites</td>
+<td>Component rendering, state transitions, event handling, error
+boundaries; all GREEN</td>
+<td>No</td>
+<td>Full Vitest component test suite: 47 tests, 8 suites, all PASS.
+Coverage spans render, interaction, state, and error paths.</td>
+</tr>
+<tr>
+<td>F94</td>
+<td>Emulator</td>
+<td>PWU-AB-1 A/B Slot Switch Video</td>
+<td>MP4 recording of slot switch (1.3 MB)</td>
+<td>PROVEN</td>
+<td>/Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-slot-switch-*.mp4</td>
+<td>Recording content-verified per §11.4.158</td>
+<td>1.3 MB MP4 capturing real U-Boot 2024.01 QEMU TCG A/B slot switch
+sequence</td>
+<td>helix_ota-emu-ab-slot-switch-*.mp4</td>
+<td>Recording: 1.3 MB. Captures real U-Boot 2024.01 on QEMU TCG
+performing slot A→B switch. Content-verified per §11.4.158 liveness
+battery. Complements existing console-log evidence (F51).</td>
+</tr>
+<tr>
+<td>F95</td>
+<td>Emulator</td>
+<td>PWU-AB-3 Auto-Rollback Video</td>
+<td>MP4 recording of corrupt-slot rollback (1.4 MB)</td>
+<td>PROVEN</td>
+<td>/Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-rollback-*.mp4</td>
+<td>Recording content-verified per §11.4.158</td>
+<td>1.4 MB MP4 capturing real U-Boot 2024.01 QEMU TCG corrupt-slot
+auto-rollback sequence</td>
+<td>helix_ota-emu-ab-rollback-*.mp4</td>
+<td>Recording: 1.4 MB. Captures real U-Boot 2024.01 on QEMU TCG
+detecting bad slot, bootcount exceeds limit, altbootcmd swap triggering,
+known-good slot boots. Content-verified per §11.4.158. Complements
+existing console-log evidence (F52).</td>
 </tr>
 </tbody>
 </table>
@@ -1603,19 +1695,19 @@ convention.</td>
 <tbody>
 <tr>
 <td>PASS</td>
-<td>40</td>
-<td>F01-F34, F44-F49, F57-F67, F69-F71, F74-F76</td>
+<td>42</td>
+<td>F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91</td>
 </tr>
 <tr>
 <td>VERIFIED</td>
-<td>14</td>
-<td>F35-F41, F68, F73, F77-F85</td>
+<td>17</td>
+<td>F35-F41, F68, F73, F77-F85, F88, F92-F93</td>
 </tr>
 <tr>
 <td>PROVEN</td>
-<td>3</td>
+<td>5</td>
 <td>F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3
-auto-rollback)</td>
+auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video)</td>
 </tr>
 <tr>
 <td>PENDING_FORENSICS</td>
@@ -1640,9 +1732,8 @@ auto-rollback)</td>
 </tr>
 <tr>
 <td>NOT_STARTED</td>
-<td>3</td>
-<td>F72 (build-resource-stats), F87 (workable-items DB), F88
-(CodeGraph)</td>
+<td>2</td>
+<td>F72 (build-resource-stats), F87 (workable-items DB)</td>
 </tr>
 </tbody>
 </table>
@@ -1663,6 +1754,11 @@ auto-rollback)</td>
 <tr>
 <td>2026-06-18</td>
 <td>Initial feature inventory creation (HEAD at time of writing).</td>
+</tr>
+<tr>
+<td>2026-06-19</td>
+<td>Feature inventory update — F90-F95 added, F88 upgraded to VERIFIED,
+revision 2</td>
 </tr>
 </tbody>
 </table>

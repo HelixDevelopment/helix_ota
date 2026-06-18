@@ -807,40 +807,128 @@ func nullTime(t time.Time) any {
 	return t
 }
 
-// --- projects (stub — pgx implementation not yet wired) ---
+// --- projects ---
 
-func (r *PostgresRepository) CreateProject(_ context.Context, p Project) error {
-	return errors.New("store: postgres project implementation not yet available")
+func (r *PostgresRepository) CreateProject(ctx context.Context, p Project) error {
+	const q = `
+INSERT INTO helix_ota.projects (project_id, name, description, created_at, updated_at)
+VALUES ($1,$2,$3,$4,$5)`
+	_, err := r.pool.Exec(ctx, q, p.ProjectID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	return err
 }
 
-func (r *PostgresRepository) GetProject(_ context.Context, projectID string) (Project, error) {
-	return Project{}, errors.New("store: postgres project implementation not yet available")
+func (r *PostgresRepository) GetProject(ctx context.Context, projectID string) (Project, error) {
+	const q = `
+SELECT project_id, name, description, created_at, updated_at
+FROM helix_ota.projects WHERE project_id=$1`
+	var p Project
+	err := r.pool.QueryRow(ctx, q, projectID).
+		Scan(&p.ProjectID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Project{}, ErrNotFound
+	}
+	return p, err
 }
 
-func (r *PostgresRepository) ListProjects(_ context.Context) ([]Project, error) {
-	return nil, errors.New("store: postgres project implementation not yet available")
+func (r *PostgresRepository) ListProjects(ctx context.Context) ([]Project, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT project_id, name, description, created_at, updated_at FROM helix_ota.projects ORDER BY created_at`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Project
+	for rows.Next() {
+		var p Project
+		if serr := rows.Scan(&p.ProjectID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt); serr != nil {
+			return nil, serr
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
 }
 
-func (r *PostgresRepository) UpdateProject(_ context.Context, p Project) error {
-	return errors.New("store: postgres project implementation not yet available")
+func (r *PostgresRepository) UpdateProject(ctx context.Context, p Project) error {
+	const q = `
+UPDATE helix_ota.projects SET name=$2, description=$3, updated_at=$4
+WHERE project_id=$1`
+	ct, err := r.pool.Exec(ctx, q, p.ProjectID, p.Name, p.Description, p.UpdatedAt)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
-func (r *PostgresRepository) DeleteProject(_ context.Context, projectID string) error {
-	return errors.New("store: postgres project implementation not yet available")
+func (r *PostgresRepository) DeleteProject(ctx context.Context, projectID string) error {
+	ct, err := r.pool.Exec(ctx, `DELETE FROM helix_ota.projects WHERE project_id=$1`, projectID)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
-func (r *PostgresRepository) GetProjectAccess(_ context.Context, callerID, projectID string) (ProjectAccess, error) {
-	return ProjectAccess{}, errors.New("store: postgres project access not yet available")
+func (r *PostgresRepository) GetProjectAccess(ctx context.Context, callerID, projectID string) (ProjectAccess, error) {
+	const q = `
+SELECT caller_id, project_id, role
+FROM helix_ota.project_access WHERE caller_id=$1 AND project_id=$2`
+	var a ProjectAccess
+	err := r.pool.QueryRow(ctx, q, callerID, projectID).
+		Scan(&a.CallerID, &a.ProjectID, &a.Role)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ProjectAccess{}, ErrNotFound
+	}
+	return a, err
 }
 
-func (r *PostgresRepository) SetProjectAccess(_ context.Context, access ProjectAccess) error {
-	return errors.New("store: postgres project access not yet available")
+func (r *PostgresRepository) SetProjectAccess(ctx context.Context, access ProjectAccess) error {
+	const q = `
+INSERT INTO helix_ota.project_access (caller_id, project_id, role)
+VALUES ($1,$2,$3)
+ON CONFLICT (caller_id, project_id)
+DO UPDATE SET role=EXCLUDED.role`
+	_, err := r.pool.Exec(ctx, q, access.CallerID, access.ProjectID, string(access.Role))
+	return err
 }
 
-func (r *PostgresRepository) ListProjectMembers(_ context.Context, projectID string) ([]ProjectAccess, error) {
-	return nil, errors.New("store: postgres project members not yet available")
+func (r *PostgresRepository) ListProjectMembers(ctx context.Context, projectID string) ([]ProjectAccess, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT caller_id, project_id, role FROM helix_ota.project_access WHERE project_id=$1 ORDER BY caller_id`,
+		projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []ProjectAccess
+	for rows.Next() {
+		var a ProjectAccess
+		if serr := rows.Scan(&a.CallerID, &a.ProjectID, &a.Role); serr != nil {
+			return nil, serr
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
 }
 
-func (r *PostgresRepository) RemoveProjectAccess(_ context.Context, callerID, projectID string) error {
-	return errors.New("store: postgres project access not yet available")
+func (r *PostgresRepository) RemoveProjectAccess(ctx context.Context, callerID, projectID string) error {
+	const q = `DELETE FROM helix_ota.project_access WHERE caller_id=$1 AND project_id=$2`
+	ct, err := r.pool.Exec(ctx, q, callerID, projectID)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }

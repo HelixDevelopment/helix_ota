@@ -1,7 +1,8 @@
 # docs_chain context: features-status
-# Syncs docs/features/Status.md + Status_Summary.md → HTML → PDF exports
+# Syncs docs/features/Status.md + Status_Summary.md → HTML → PDF → DOCX exports
+# §11.4.153 mandates four-format export (HTML+PDF+DOCX) for this doc class.
 context: features-status
-description: Feature inventory status doc chain
+description: Feature inventory status doc chain (HTML+PDF+DOCX, fingerprint-guarded)
 nodes:
   status_md:       { kind: markdown, path: docs/features/Status.md }
   status_sum_md:   { kind: markdown, path: docs/features/Status_Summary.md }
@@ -9,11 +10,20 @@ nodes:
   status_sum_html: { kind: html,     path: docs/features/Status_Summary.html }
   status_pdf:      { kind: pdf,      path: docs/features/Status.pdf }
   status_sum_pdf:  { kind: pdf,      path: docs/features/Status_Summary.pdf }
+  status_docx:     { kind: docx,     path: docs/features/Status.docx }
+  status_sum_docx: { kind: docx,     path: docs/features/Status_Summary.docx }
 edges:
   - { type: derive-from, from: status_md,     to: status_html,     transform: md2html }
   - { type: derive-from, from: status_html,   to: status_pdf,      transform: html2pdf }
+  - { type: derive-from, from: status_html,   to: status_docx,     transform: html2docx }
   - { type: derive-from, from: status_sum_md, to: status_sum_html, transform: md2html }
   - { type: derive-from, from: status_sum_html, to: status_sum_pdf, transform: html2pdf }
+  - { type: derive-from, from: status_sum_html, to: status_sum_docx, transform: html2docx }
 transforms:
   md2html:  { builtin: pandoc-html }
   html2pdf: { builtin: weasyprint-pdf }
+  html2docx: { builtin: pandoc-docx }
+fingerprint:
+  kind: sha256-roster
+  roster_source: docs/features/Status.md
+  artifact_globs: ["docs/features/Status.*", "docs/features/Status_Summary.*"]

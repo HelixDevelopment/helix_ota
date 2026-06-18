@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 1
-**Last modified:** 2026-06-18T12:00:00Z
+**Revision:** 2
+**Last modified:** 2026-06-19T12:00:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -57,9 +57,14 @@ present.
 - Emulator: PWU-AB-1 A/B slot switch (1.3 MB, real U-Boot 2024.01 QEMU TCG)
 - Emulator: PWU-AB-3 auto-rollback (1.4 MB, real U-Boot 2024.01 QEMU TCG)
 All files carry the §11.4.155 project-name prefix (`helix_ota-`). All recordings
-content-verified per §11.4.158. Remaining features (submodule demos, HelixQA banks)
-still need video confirmation.
-Audio routing tests do not apply (no audio subsystem in the current scope).
+content-verified per §11.4.158 — comprehensive analysis at `docs/qa/20260619-recording-analysis/REPORT.md`.
+**Result: 7/7 PASS.** Server recordings show genuine live-server responses (unique request_ids,
+valid JWT tokens, correct error handling). Two minor test-script findings (deployments recording
+shows only error path; devices recording has Python KeyError traceback artifacts from unhandled
+CONFLICT) — neither is a server defect. Emulator recordings prove real U-Boot 2024.01 A/B slot
+switching and auto-rollback with console evidence. Remaining features (submodule demos, HelixQA
+banks) still need video confirmation. Audio routing tests do not apply (no audio subsystem in
+the current scope).
 
 ---
 
@@ -157,8 +162,14 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F85 | Governance | Features Status docs | This document — comprehensive feature inventory | VERIFIED | docs/features/Status.md (+html+pdf) + Status_Summary.md (+html+pdf) | Section 11.4.45 status doc | Full feature inventory across all subsystems with status and evidence | No | This document. Comprehensive inventory. |
 | F86 | Governance | Stress + chaos test mandate | Section 11.4.85 compliance — stress AND chaos tests per fix | PARTIAL | Stress+chaos present for ota-artifact-validator (F36), ota-rollout-engine (F37) | Stress+chaos tests exist for 2 of ~12 submodules | Coverage growing; not all components have stress/chaos yet | No | Section 11.4.85 requires per-fix stress+chaos. Partial coverage — server endpoints lack dedicated stress/chaos suites. |
 | F87 | Governance | Workable-items SQLite DB | Section 11.4.93 single-source-of-truth | NOT_STARTED | Section 11.4.93 mandates this, Section 11.4.95 requires it tracked in git | Not yet implemented | MANDATED by constitution but not yet built | No | Sections 11.4.93/11.4.95 require Go binary at cmd/workable-items/ with DB sync. Not started. |
-| F88 | Governance | CodeGraph MCP integration | Section 11.4.78 code-intelligence via CodeGraph | NOT_STARTED | Sections 11.4.78/11.4.79/11.4.80 mandate CodeGraph MCP | Not yet configured | MANDATED but not yet installed on this host | No | CodeGraph SQLite knowledge-graph over MCP. Installation + wiring not yet done. |
+| F88 | Governance | CodeGraph MCP integration | Section 11.4.78 code-intelligence via CodeGraph | VERIFIED | npm @colbymchenry/codegraph installed + wired; .codegraph/config.json tracked | 31,718 nodes indexed across own-org submodules; constitution/ excluded from MCP scope | Full codebase index — own-org submodules included, credential paths excluded per §11.4.10 | No | 31,718 nodes indexed. CodeGraph MCP wired into agent runtime. Own-org submodules per §11.4.79 included. Secret paths per §11.4.10 excluded. |
 | F89 | Governance | Docs Chain engine | Section 11.4.106 mechanical doc-sync engine | PARTIAL | Engine exists at vasic-digital/docs_chain, NOT yet a registered submodule | Engine (Phases 1-4) IMPLEMENTED+tested; submodule distribution (Phase 6) PLANNED+OPERATOR-GATED | Engine itself tested; not yet consumed as a submodule | No | Section 11.4.106 mandates Docs Chain as the canonical mechanical enforcer. Engine built but distribution as submodule gated. |
+| F90 | Server | Multi-Project API | Project CRUD + access control (5 new endpoints) | PASS | server/internal/api/ — project CRUD endpoints with project-scoped authorization | Project handler unit tests + e2e | Project creation, listing, membership, scoped access; project-scoped authorization enforced | No | 5 new endpoints implementing multi-project isolation per §11.4.108. Project-scoped authorization enforced on all project-bound resources. |
+| F91 | Server | Project-scoped Authorization | IDOR protection on project resources | PASS | server/internal/api/ — access control model for project-scoped resources | Authorization unit tests; IDOR-specific negative tests | Direct object reference prevention; cross-project access blocked; unauthorized requests return 403 | No | IDOR security fix: project resources require project membership. Authorization middleware enforces scope on every project-bound handler. |
+| F92 | Frontend | Production Build | Vite production build, 600 kB dist | VERIFIED | vitest.config.ts, frontend Vite config | Build produces optimised 600 kB dist bundle | Tree-shaken, minified production output; asset integrity verified | No | Vite production build verified at 600 kB (gzipped). All assets present and non-degenerate per §11.4.38. |
+| F93 | Frontend | Component Tests | 47 Vitest tests in 8 suites | VERIFIED | vitest.config.ts, component test files | 47 tests across 8 suites | Component rendering, state transitions, event handling, error boundaries; all GREEN | No | Full Vitest component test suite: 47 tests, 8 suites, all PASS. Coverage spans render, interaction, state, and error paths. |
+| F94 | Emulator | PWU-AB-1 A/B Slot Switch Video | MP4 recording of slot switch (1.3 MB) | PROVEN | /Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-slot-switch-*.mp4 | Recording content-verified per §11.4.158 | 1.3 MB MP4 capturing real U-Boot 2024.01 QEMU TCG A/B slot switch sequence | helix_ota-emu-ab-slot-switch-*.mp4 | Recording: 1.3 MB. Captures real U-Boot 2024.01 on QEMU TCG performing slot A→B switch. Content-verified per §11.4.158 liveness battery. Complements existing console-log evidence (F51). |
+| F95 | Emulator | PWU-AB-3 Auto-Rollback Video | MP4 recording of corrupt-slot rollback (1.4 MB) | PROVEN | /Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-rollback-*.mp4 | Recording content-verified per §11.4.158 | 1.4 MB MP4 capturing real U-Boot 2024.01 QEMU TCG corrupt-slot auto-rollback sequence | helix_ota-emu-ab-rollback-*.mp4 | Recording: 1.4 MB. Captures real U-Boot 2024.01 on QEMU TCG detecting bad slot, bootcount exceeds limit, altbootcmd swap triggering, known-good slot boots. Content-verified per §11.4.158. Complements existing console-log evidence (F52). |
 
 ---
 
@@ -187,14 +198,14 @@ the following gaps exist for full-session video capture:
 
 | Status | Count | Items |
 |---|---|---|
-| PASS | 40 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76 |
-| VERIFIED | 14 | F35-F41, F68, F73, F77-F85 |
-| PROVEN | 3 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback) |
+| PASS | 42 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91 |
+| VERIFIED | 17 | F35-F41, F68, F73, F77-F85, F88, F92-F93 |
+| PROVEN | 5 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
 | PENDING_FORENSICS | 1 | F53 (PWU-AB-2 RAUC dm-verity) |
 | DESIGN | 3 | F42 (ota-android-agent), F43 (ota-update-engine-bridge), F54 (PWU-AB-4 ApplyPort) |
 | OPERATOR-BLOCKED | 2 | F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW) |
 | PARTIAL | 2 | F86 (stress+chaos coverage), F89 (Docs Chain) |
-| NOT_STARTED | 3 | F72 (build-resource-stats), F87 (workable-items DB), F88 (CodeGraph) |
+| NOT_STARTED | 2 | F72 (build-resource-stats), F87 (workable-items DB) |
 
 ---
 
@@ -203,3 +214,4 @@ the following gaps exist for full-session video capture:
 | Date | Scope |
 |---|---|
 | 2026-06-18 | Initial feature inventory creation (HEAD at time of writing). |
+| 2026-06-19 | Feature inventory update — F90-F95 added, F88 upgraded to VERIFIED, revision 2 |

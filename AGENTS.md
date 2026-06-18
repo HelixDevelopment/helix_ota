@@ -22,6 +22,25 @@
   (and `.remember/remember.md` when present).
 - **60% RAM cap.** Heavy work wrapped in bounded execution scope.
   Constitution §12.6.
+- **Per-feature Status + video confirmation.** Constitution §11.4.153.
+  `docs/features/Status.md` + `Status_Summary.md` enumerate every feature
+  with per-row video-recording confirmation; HTML+PDF+DOCX exports in sync.
+- **Window-scoped capture + fresh-corpus rotation.** Constitution §11.4.154.
+  Recordings capture only the app window/surface, not whole desktop; a new
+  run removes its own prior in-scope recordings first.
+- **Project-prefixed recording filenames.** Constitution §11.4.155. Every
+  recording filename starts with `<PREFIX>---` (resolved from
+  `HELIX_RELEASE_PREFIX` env var or project-root dir name), not a single
+  hyphen.
+- **All CI/CD disabled.** Constitution §11.4.156. No GitHub Actions or
+  GitLab pipelines active; enforcement is local-only via pre-build gates
+  and git hooks.
+- **GEMINI.md lockstep.** Constitution §11.4.157. GEMINI.md kept in sync
+  with CLAUDE.md/AGENTS.md/QWEN.md at all times.
+- **Intensive recording + read-the-screen content verification.**
+  Constitution §11.4.158. Every feature/flow/edge-case recorded; every
+  recording's on-screen content machine-read and verified as a genuine
+  working result.
 
 ## Project-specific agent rules
 

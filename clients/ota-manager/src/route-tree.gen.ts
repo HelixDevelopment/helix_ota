@@ -2,7 +2,7 @@ import { createRoute } from "@tanstack/react-router";
 import { Route as rootRoute } from "@/routes/__root";
 import { DashboardPage } from "@/routes/dashboard";
 import { MainLayout } from "@/features/layout/main-layout";
-import { LoginPage } from "@/features/auth/login-page";
+import LoginPage from "@/features/auth/login-page";
 
 // Login page — no sidebar layout
 const loginRoute = createRoute({

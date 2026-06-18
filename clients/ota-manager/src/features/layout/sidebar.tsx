@@ -1,4 +1,4 @@
-import { NavLink } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Smartphone,
@@ -61,7 +61,7 @@ export function Sidebar() {
       {/* Nav items */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
-          <NavLink
+          <Link
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
@@ -76,7 +76,7 @@ export function Sidebar() {
           >
             <item.icon className="h-4 w-4 shrink-0" />
             {!collapsed && <span>{item.label}</span>}
-          </NavLink>
+          </Link>
         ))}
       </nav>
 
