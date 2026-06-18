@@ -274,9 +274,27 @@ type ReleaseFilter struct {
 	Cursor      string
 }
 
+// Project is a named container for devices, releases, and deployments, providing
+// multi-tenant isolation (project-scoped roles, OS targets, hardware targets).
+type Project struct {
+	ProjectID   string    `json:"project_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 // Repository is the persistence port for the control plane. Implementations are
 // the in-memory MemoryRepository (MVP/testing) and a future pgx/PostgreSQL one.
 type Repository interface {
+	// Projects.
+	CreateProject(ctx context.Context, p Project) error
+	GetProject(ctx context.Context, projectID string) (Project, error)
+	ListProjects(ctx context.Context) ([]Project, error)
+	UpdateProject(ctx context.Context, p Project) error
+	DeleteProject(ctx context.Context, projectID string) error
+
+	// Devices.
 	// Devices.
 	CreateDevice(ctx context.Context, d Device) error
 	GetDevice(ctx context.Context, deviceID string) (Device, error)
