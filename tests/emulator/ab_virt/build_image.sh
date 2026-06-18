@@ -69,6 +69,9 @@ log "  (long — toolchain + kernel + rootfs; transcript -> out/build.log)"
 # Build in the container's own FS (/work); persist the Buildroot DL cache in the
 # named volume so re-runs don't re-download. Buildroot refuses to build as root,
 # so a dedicated 'br' user owns the tree.
+# NOTE: the entire build script is a single-quoted heredoc inside `podman run ... bash -c '...'`.
+# NO single quotes inside, NO bash constructs that break. Root commands above the
+# `su br -c` line, user (br) commands inside it with OWN double quotes.
 podman run --name "$BUILD_CTR" --arch arm64 \
   -v "${DL_VOL}:/dl" \
   -e BR2_VERSION="$BR2_VERSION" -e ROOT_PW="$ROOT_PW" \
@@ -83,35 +86,17 @@ podman run --name "$BUILD_CTR" --arch arm64 \
     # libssl-dev: U-Boot host tools mkimage/aisimage need openssl/evp.h (FACT:
     #   build7 failed at tools/aisimage.o on a missing openssl/evp.h, §11.4.102).
     # bison/flex: U-Boot Kconfig/dtc parser generators.
-    useradd -m -s /bin/bash br || true
-    mkdir -p /work && chown -R br /work /dl
-    su br -c "set -euo pipefail
-      cd /work
-      wget -q https://buildroot.org/downloads/buildroot-${BR2_VERSION}.tar.gz
-      tar xf buildroot-${BR2_VERSION}.tar.gz
-      cd buildroot-${BR2_VERSION}
-      export BR2_DL_DIR=/dl
-      make O=/work/out qemu_aarch64_virt_defconfig
-      # Internal Buildroot toolchain from the defconfig. NOTE: this comment lives
-      # inside a single-quoted podman bash -c string, so it MUST stay ASCII-safe
-      # with no apostrophes or parens. Rationale is in this file header + the
-      # commit log. Disk fits now after reclaiming orphaned rootless podman
-      # storage; Bootlin external toolchain is invalid for this defconfig.
-      # Base userspace + the A/B toolchain pieces (§11.4.74 reuse):
-      #  - U-Boot qemu_arm64 -> u-boot.bin so QEMU can boot via a REAL bootloader
-      #    whose bootcount/altbootcmd env is the A/B auto-rollback engine.
-      #  - RAUC -> the in-guest A/B update client with dm-verity slots.
-      #  - dosfstools/e2fsprogs/util-linux -> build + inspect the 2-slot GPT disk.
-      #  - uboot-tools (fw_setenv/fw_printenv) -> RAUC U-Boot backend env access.
-      #  - lvm2 (dmsetup) -> dm-verity userspace for RAUC verity slot activation.
-      # PWU-AB-2: RAUC rootfs overlay. RAUC config files at /etc/rauc/system.conf,
-      #   /etc/fw_env.config (commented-out offset), dev.cert.pem in /etc/rauc/.
-      #   ALL embedded here because the project tree is NOT mounted into the
-      #   container (the design choice for macOS/podman portability).
-      mkdir -p /work/rootfs-overlay/etc/rauc
+    # openssl: generate the RAUC dev key+cert inside the container.
+    adduser --disabled-password --gecos "" br 2>/dev/null || useradd -m -s /bin/bash br || true
 
-      # system.conf — RAUC slot A/B config with uboot backend + dev keyring.
-      cat > /work/rootfs-overlay/etc/rauc/system.conf << SYSEOF
+    # ---- PWU-AB-2: build the rootfs overlay (as root) BEFORE su to br ----
+    # The project tree is NOT mounted into the container, so the overlay files
+    # are created here. All overlay files are created as root with mode 644,
+    # then chowned to br for the Buildroot step.
+    mkdir -p /work/rootfs-overlay/etc/rauc
+
+    # system.conf — RAUC slot A/B config with uboot backend + dev keyring.
+    cat > /work/rootfs-overlay/etc/rauc/system.conf <<SYSEOF
 [system]
 compatible=helix-ota-ab-virt
 bootloader=uboot
@@ -132,48 +117,41 @@ type=ext4
 bootname=B
 SYSEOF
 
-      # fw_env.config — U-Boot env access map. COMMENTED OUT because the guest
-      # has NO /dev/mtd* devices (proven by NOR-flash probe on 2026-06-19).
-      # See docs/qa/20260619-nor-flash-probe/console.log for the evidence.
-      # The offset/size here are placeholder; the real values depend on the
-      # chosen env mechanism (pflash via /dev/mem or U-Boot ENV_IS_IN_FAT
-      # rebuild). See PWU-AB-2 STATUS.md for the discussion.
-      cat > /work/rootfs-overlay/etc/fw_env.config << FWEOF
-# /etc/fw_env.config for the A/B-virt emulator guest.
+    # fw_env.config — COMMENTED OUT (guest has no /dev/mtd*, proven 2026-06-19).
+    cat > /work/rootfs-overlay/etc/fw_env.config <<FWEOF
 # UNVERIFIED — the Linux kernel in this guest has NO MTD subsystem
-# compiled in (proven 2026-06-19: /dev/mtd* absent, NO_MTD_CLASS in
-# dmesg). The raw line below is COMMENTED OUT until the env mechanism
-# is resolved.
-#
-# Once a path is chosen (pflash via /dev/mem or FAT-file env rebuild),
-# update the device/offset/size below and uncomment.
+# compiled in (proven 2026-06-19). See docs/qa/20260619-nor-flash-probe/.
+# The raw line below is COMMENTED OUT until the env mechanism is resolved.
 #
 #   <device>   <offset>   <env-size>  <sector-size>
 # /dev/vda1    0x000000   0x4000      0x200
 FWEOF
 
-      # Dev key+cert — generate a THROWAWAY self-signed RSA-4096 keypair INSIDE
-      # the container using openssl (the same recipe gen_dev_keys.sh uses on the
-      # host). The cert goes into the rootfs overlay (RAUC keyring); the key is
-      # extracted via podman cp after the build so the host can sign bundles with
-      # the matching keypair (§11.4.10: private key NEVER embedded in the rootfs).
-      openssl req -x509 -newkey rsa:4096 -nodes \
-        -keyout /work/rootfs-overlay/etc/rauc/dev.key.pem \
-        -out    /work/rootfs-overlay/etc/rauc/dev.cert.pem \
-        -subj   \"/O=Helix OTA dev/CN=helix-ota-ab-virt-dev\" \
-        -days   365 >/dev/null 2>&1
-      # The key is only in the overlay dir (used below for bundle signing key
-      # extraction). It MUST NOT end up in the rootfs — BR2_ROOTFS_OVERLAY only
-      # copies files matching certain patterns; .key.pem is excluded by Buildroot's
-      # default overlay filtering (chmod 600, .pem suffix is not in the included
-      # file types). But to be extra safe per §11.4.10:
-      mkdir -p /work/out/rauc-keys
-      cp /work/rootfs-overlay/etc/rauc/dev.key.pem /work/out/rauc-keys/dev.key.pem
-      rm -f /work/rootfs-overlay/etc/rauc/dev.key.pem
-      chmod 644 /work/rootfs-overlay/etc/rauc/dev.cert.pem 2>/dev/null || true
-      chmod 644 /work/rootfs-overlay/etc/fw_env.config 2>/dev/null || true
-      chmod 644 /work/rootfs-overlay/etc/rauc/system.conf 2>/dev/null || true
+    # Dev key+cert — generated inside the container so the matching keypair
+    # stays in sync. The cert goes into the rootfs overlay; the key is
+    # extracted after the build for host-side bundle signing. PRIVATE KEY
+    # NEVER lands in the rootfs (the inline cp+rm below, plus Buildroot
+    # only copies .pem certs from the overlay, not .key)
+    mkdir -p /work/out/rauc-keys
+    openssl req -x509 -newkey rsa:4096 -nodes \
+      -keyout /work/rootfs-overlay/etc/rauc/dev.key.pem \
+      -out /work/rootfs-overlay/etc/rauc/dev.cert.pem \
+      -subj "/O=Helix OTA dev/CN=helix-ota-ab-virt-dev" \
+      -days 365 >/dev/null 2>&1
+    # Copy the private key to a known extraction dir, then delete from overlay
+    cp /work/rootfs-overlay/etc/rauc/dev.key.pem /work/out/rauc-keys/dev.key.pem
+    rm -f /work/rootfs-overlay/etc/rauc/dev.key.pem
+    chmod 644 /work/rootfs-overlay/etc/rauc/* /work/rootfs-overlay/etc/fw_env.config 2>/dev/null || true
+    chown -R br /work 2>/dev/null || true
 
+    # ---- su to br for the Buildroot build ----
+    su br -c "set -euo pipefail
+      cd /work
+      wget -q https://buildroot.org/downloads/buildroot-${BR2_VERSION}.tar.gz
+      tar xf buildroot-${BR2_VERSION}.tar.gz
+      cd buildroot-${BR2_VERSION}
+      export BR2_DL_DIR=/dl
+      make O=/work/out qemu_aarch64_virt_defconfig
       cat >> /work/out/.config <<CFG
 BR2_TARGET_GENERIC_ROOT_PASSWD=\"${ROOT_PW}\"
 BR2_PACKAGE_DROPBEAR=y
@@ -215,8 +193,7 @@ podman cp "${BUILD_CTR}:/work/out/images/rootfs.ext2" "${OUT}/images/rootfs.ext2
 # below still keys on the kernel+rootfs so a missing U-Boot is visible, not faked.
 podman cp "${BUILD_CTR}:/work/out/images/u-boot.bin"  "${OUT}/images/u-boot.bin"  >>"${OUT}/build.log" 2>&1 || true
 # Dev signing key (generated inside the container, extracted for host-side bundle
-# signing). The matching cert is baked into the rootfs overlay (RAUC keyring).
-# §11.4.10: chmod 600 on host after extraction; never logged, never committed.
+# signing). §11.4.10: chmod 600 on host after extraction; never logged or committed.
 mkdir -p "${OUT}/rauc-keys"
 podman cp "${BUILD_CTR}:/work/out/rauc-keys/dev.key.pem" "${OUT}/rauc-keys/dev.key.pem" >>"${OUT}/build.log" 2>&1 || true
 chmod 600 "${OUT}/rauc-keys/dev.key.pem" 2>/dev/null || true
