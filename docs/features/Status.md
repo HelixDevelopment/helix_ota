@@ -51,16 +51,14 @@ a running Android target — PWU-AB-4 (ApplyPort) is in DESIGN phase.
 pre-build verification gate, constitution inheritance test. All script doc blocks
 present.
 
-**Video recording** — 5 comprehensive server-feature recording sessions completed
-(2026-06-18). `/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4`.
-- `helix_ota-health.mp4` (5.8K) — health/readiness probes
-- `helix_ota-auth.mp4` (78K) — auth flow with JWT + refresh tokens  
-- `helix_ota-artifacts-releases.mp4` (119K) — full artifact+release pipeline incl. Ed25519 signing
-- `helix_ota-deployments.mp4` (36K) — deployment lifecycle
-- `helix_ota-devices.mp4` (89K) — device registration, telemetry, update-check
-All files carry the §11.4.155 project-name prefix (`helix_ota-`).
-Remaining features (submodule demos, HelixQA banks, emulator U-Boot tests) still
-need video confirmation per §11.4.158.
+**Video recording** — 7 recordings across server + emulator tiers completed.
+`/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4`:
+- Server: health (5.8K), auth (78K), artifacts+releases (119K), deployments (23K), devices (23K)
+- Emulator: PWU-AB-1 A/B slot switch (1.3 MB, real U-Boot 2024.01 QEMU TCG)
+- Emulator: PWU-AB-3 auto-rollback (1.4 MB, real U-Boot 2024.01 QEMU TCG)
+All files carry the §11.4.155 project-name prefix (`helix_ota-`). All recordings
+content-verified per §11.4.158. Remaining features (submodule demos, HelixQA banks)
+still need video confirmation.
 Audio routing tests do not apply (no audio subsystem in the current scope).
 
 ---
