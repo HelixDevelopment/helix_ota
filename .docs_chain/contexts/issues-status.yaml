@@ -1,0 +1,29 @@
+# docs_chain context: issues-status
+# Syncs the Issues/Fixed tracker doc set (markdown → html → pdf)
+context: issues-status
+description: Issues/Fixed tracker chain
+nodes:
+  issues_md:         { kind: markdown, path: docs/Issues.md }
+  issues_sum_md:     { kind: markdown, path: docs/Issues_Summary.md }
+  fixed_md:          { kind: markdown, path: docs/Fixed.md }
+  fixed_sum_md:      { kind: markdown, path: docs/Fixed_Summary.md }
+  issues_html:       { kind: html,     path: docs/Issues.html }
+  issues_sum_html:   { kind: html,     path: docs/Issues_Summary.html }
+  fixed_html:        { kind: html,     path: docs/Fixed.html }
+  fixed_sum_html:    { kind: html,     path: docs/Fixed_Summary.html }
+  issues_pdf:        { kind: pdf,      path: docs/Issues.pdf }
+  issues_sum_pdf:    { kind: pdf,      path: docs/Issues_Summary.pdf }
+  fixed_pdf:         { kind: pdf,      path: docs/Fixed.pdf }
+  fixed_sum_pdf:     { kind: pdf,      path: docs/Fixed_Summary.pdf }
+edges:
+  - { type: derive-from, from: issues_md,     to: issues_html,     transform: md2html }
+  - { type: derive-from, from: issues_html,   to: issues_pdf,      transform: html2pdf }
+  - { type: derive-from, from: issues_sum_md, to: issues_sum_html, transform: md2html }
+  - { type: derive-from, from: issues_sum_html, to: issues_sum_pdf, transform: html2pdf }
+  - { type: derive-from, from: fixed_md,      to: fixed_html,      transform: md2html }
+  - { type: derive-from, from: fixed_html,    to: fixed_pdf,       transform: html2pdf }
+  - { type: derive-from, from: fixed_sum_md,  to: fixed_sum_html,  transform: md2html }
+  - { type: derive-from, from: fixed_sum_html, to: fixed_sum_pdf,  transform: html2pdf }
+transforms:
+  md2html:  { builtin: pandoc-html }
+  html2pdf: { builtin: weasyprint-pdf }

@@ -51,11 +51,16 @@ a running Android target — PWU-AB-4 (ApplyPort) is in DESIGN phase.
 pre-build verification gate, constitution inheritance test. All script doc blocks
 present.
 
-**Video recording** — 6 server-feature recording sessions completed (2026-06-18).
-`/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4`. Server health, auth+release,
-device+telemetry, deploy+rollout, groups CRUD, and full lifecycle. All evidence
-files carry the §11.4.155 project-name prefix (`helix_ota-`). Remaining features
-(submodule demos, emulator tests) still need video confirmation.
+**Video recording** — 5 comprehensive server-feature recording sessions completed
+(2026-06-18). `/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4`.
+- `helix_ota-health.mp4` (5.8K) — health/readiness probes
+- `helix_ota-auth.mp4` (78K) — auth flow with JWT + refresh tokens  
+- `helix_ota-artifacts-releases.mp4` (119K) — full artifact+release pipeline incl. Ed25519 signing
+- `helix_ota-deployments.mp4` (36K) — deployment lifecycle
+- `helix_ota-devices.mp4` (89K) — device registration, telemetry, update-check
+All files carry the §11.4.155 project-name prefix (`helix_ota-`).
+Remaining features (submodule demos, HelixQA banks, emulator U-Boot tests) still
+need video confirmation per §11.4.158.
 Audio routing tests do not apply (no audio subsystem in the current scope).
 
 ---
@@ -175,7 +180,7 @@ the following gaps exist for full-session video capture:
 | V07 | Tier-3 RK3588 physical board | SKIP (no hardware) | Full HDMI capture of the on-device OTA flow | High (when board available) | Physical board needs HDMI capture hardware for end-to-end video evidence of the update flow. |
 | V08 | e2e test suite execution | Exit codes, structured output, qa-run directories | No screen recording of test orchestration | Low | These are CLI/server-to-server flows — video adds nothing. |
 | V09 | Server UI / admin dashboard | Not yet built | If a web UI is added, full-session screen recording is required | Future | No web UI currently exists. Console API is the interface. |
-| V11 | Server health + endpoints | 6 MP4 recordings captured 2026-06-18 | No content analysis yet | Medium | Recordings exist at `/Volumes/T7/Downloads/Recordings/helix_ota-server-*.mp4`. Need §11.4.158 read-the-screen content-verification analysis. |
+| V11 | Server health + endpoints | 5 MP4 recordings captured 2026-06-18 covering health, auth, artifacts+releases, deployments, devices | No content analysis yet | Medium | Recordings at `/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4`. Need §11.4.158 read-the-screen content-verification analysis. Signed artifact pipeline requires Ed25519 key (notably the SIG_KEY). |
 | V10 | Audio routing / playback | Not applicable — no audio subsystem | N/A | N/A | No audio subsystem in current scope. Audio-video capture mandate (Section 11.4.68/11.4.69) dormant until audio is added. |
 
 ---
