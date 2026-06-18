@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Status</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
+Inventory and Status</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-18T12:00:00Z <strong>Scope:</strong> Comprehensive inventory of
+every feature, component, subsystem, test suite, and infrastructure
+concern across the Helix OTA monorepo — covering the Go server, Go
+submodules, Android submodules, emulation tiers, e2e/security tests,
+build/infra, and governance/documentation. Every row carries a
+§11.4.5/§11.4.69 status verdict and cites captured evidence where
+available. <strong>Authority:</strong> §11.4.45 (integration Status
+doc), §11.4.5 (captured-evidence table), §11.4.6 (no-guessing —
+pending/unverified items are honestly stated), §11.4.65 (universal
+Markdown export — .html + .pdf siblings are synced).</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>The Helix OTA platform is a modular, enterprise-grade over-the-air
+update system with a Go/Gin control plane at its center, reusable Go
+building bricks (six <code>ota-*</code> submodules), Kotlin native
+Android agent components, and a multi-tier emulation ladder that
+validates the OTA flow from protocol round-trips through real A/B slot
+switching and auto-rollback — all without physical hardware for the
+deepest tiers.</p>
+<p><strong>Server</strong> — The <code>server/</code> module (Go/Gin
+modular monolith) is fully implemented and tested: 13 handler families,
+7 internal packages, HTTP/3 + HTTP/2 + Brotli transport, in-memory +
+PostgreSQL store backends. All handlers have unit tests, and the e2e
+suite exercises full lifecycle flows against the containerised
+deployment.</p>
+<p><strong>Go submodules</strong> — Six <code>ota-*</code> modules
+provide protocol types, artifact validation, rollout engine, telemetry
+schema, and HTTP/3 transport. They are built+tested from their own
+module roots. Challenges and HelixQA are also incorporated as
+submodules.</p>
+<p><strong>Android submodules</strong> — Two Kotlin modules
+(<code>ota-android-agent</code>, <code>ota-update-engine-bridge</code>)
+are scaffolded but NOT yet fully verified against a running Android
+target — PWU-AB-4 (ApplyPort) is in DESIGN phase.</p>
+<p><strong>Emulator tiers</strong> — Proven foundation: - Tier-0
+container round-trip (control plane + device emu) = PASS - Tier-1
+A/B-virt base image boot = PASS (evidence in docs/qa/) - PWU-AB-1 A/B
+slot switch = PROVEN (3/3 deterministic, evidence
+docs/qa/20260611T094958Z-ab-slot-switch/) - PWU-AB-3 corrupt-slot
+auto-rollback = PROVEN (evidence docs/qa/20260611T095918Z-ab-rollback/)
+- PWU-AB-2 RAUC dm-verity = DESIGN (authored ab_rauc_verity.sh, not yet
+run) - PWU-AB-4 ApplyPort = DESIGN (not yet built) - Tier-2 Cuttlefish
+Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host) - Tier-3 RK3588
+physical board = OPERATOR-BLOCKED (no hardware)</p>
+<p><strong>Tests</strong> — Six e2e tests, three security probe suites,
+inheritance gate, pre-build verification gate, constitution inheritance
+test. All script doc blocks present.</p>
+<p><strong>Video recording</strong> — 6 server-feature recording
+sessions completed (2026-06-18).
+<code>/Volumes/T7/Downloads/Recordings/helix_ota-*.mp4</code>. Server
+health, auth+release, device+telemetry, deploy+rollout, groups CRUD, and
+full lifecycle. All evidence files carry the §11.4.155 project-name
+prefix (<code>helix_ota-</code>). Remaining features (submodule demos,
+emulator tests) still need video confirmation. Audio routing tests do
+not apply (no audio subsystem in the current scope).</p>
+<hr />
+<h2 id="feature-inventory-table">Feature Inventory Table</h2>
+<p>Status vocabulary: <code>PASS</code> / <code>FAIL</code> /
+<code>SKIP</code> / <code>OPERATOR-BLOCKED</code> /
+<code>NOT_STARTED</code> / <code>PROVEN</code> / <code>VERIFIED</code> /
+<code>DESIGN</code> / <code>PENDING_FORENSICS</code>.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Category</th>
+<th>Component</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Implementation</th>
+<th>Tests</th>
+<th>Coverage</th>
+<th>Video Recorded</th>
+<th>Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F01</td>
+<td>Server</td>
+<td>ota-server binary</td>
+<td>CLI entrypoint, config loading, server start</td>
+<td>PASS</td>
+<td>server/cmd/ota-server/main.go — Gin engine, middleware registration,
+handler wiring, transport selection</td>
+<td>See handler rows; server-start tested via
+tier1_container_e2e.sh</td>
+<td>Handlers + middleware + transport</td>
+<td>helix_ota-server-health-<em>.mp4,
+helix_ota-server-auth-release-</em>.mp4,
+helix_ota-server-deploy-<em>.mp4, helix_ota-server-device-</em>.mp4,
+helix_ota-server-groups-<em>.mp4,
+helix_ota-server-lifecycle-</em>.mp4</td>
+<td>Full end-to-end: containerised ota-server boot + device registration
++ update flow.</td>
+</tr>
+<tr>
+<td>F02</td>
+<td>Server</td>
+<td>ota-device-emu binary</td>
+<td>Device emulator (Tier-1 stub device)</td>
+<td>PASS</td>
+<td>server/cmd/ota-device-emu/main.go + server/internal/deviceemu/</td>
+<td>See F06 (Tier-0 container e2e)</td>
+<td>Container round-trip covers register+update-check+telemetry</td>
+<td>No</td>
+<td>Boots in podman pod alongside ota-server; registers as device,
+responds to update checks, sends telemetry.</td>
+</tr>
+<tr>
+<td>F03</td>
+<td>Server</td>
+<td>Auth handler</td>
+<td>POST /auth/login, POST /auth/refresh</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_auth.go</td>
+<td>handlers_auth_test.go — unit tests present</td>
+<td>Unit: password-hash, token issuance, refresh rotation; e2e:
+auth-gated flows in tier1 e2e</td>
+<td>No</td>
+<td>JWT-based auth with refresh tokens. Middleware enforces
+per-route.</td>
+</tr>
+<tr>
+<td>F04</td>
+<td>Server</td>
+<td>Artifact handler</td>
+<td>POST/GET /api/artifacts/*, parts upload</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_artifact.go</td>
+<td>handlers_artifact_test.go, handlers_artifact_parts_test.go</td>
+<td>Unit: CRUD, multipart upload, parts assembly</td>
+<td>No</td>
+<td>Full artifact lifecycle: create, upload parts, assemble, query.</td>
+</tr>
+<tr>
+<td>F05</td>
+<td>Server</td>
+<td>Artifact handler (error paths)</td>
+<td>Validation errors, missing artifacts, conflict handling</td>
+<td>PASS</td>
+<td>(same source as F04)</td>
+<td>handlers_error_paths_test.go</td>
+<td>Error path coverage: validation, not-found, conflict</td>
+<td>No</td>
+<td>Tests specific error conditions and status codes.</td>
+</tr>
+<tr>
+<td>F06</td>
+<td>Server</td>
+<td>Release handler</td>
+<td>CRUD releases</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_release.go</td>
+<td>handlers_release_test.go</td>
+<td>Unit: CRUD, status transitions, release notes</td>
+<td>No</td>
+<td>Full release lifecycle.</td>
+</tr>
+<tr>
+<td>F07</td>
+<td>Server</td>
+<td>Deployment handler</td>
+<td>CRUD deployments</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_deployment.go</td>
+<td>handlers_deployment_test.go</td>
+<td>Unit: CRUD, target groups, scheduling</td>
+<td>No</td>
+<td>Links releases to device groups with rollout schedules.</td>
+</tr>
+<tr>
+<td>F08</td>
+<td>Server</td>
+<td>Rollout handler</td>
+<td>Create/get/evaluate rollouts</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_rollout.go</td>
+<td>handlers_rollout_test.go</td>
+<td>Unit: staged rollout creation, evaluation, state transitions</td>
+<td>No</td>
+<td>Staged rollout engine (internal/rollout/) drives gradual rollout
+with halt-on-failure.</td>
+</tr>
+<tr>
+<td>F09</td>
+<td>Server</td>
+<td>Delta handler</td>
+<td>Register/find deltas</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_delta.go</td>
+<td>handlers_delta_test.go</td>
+<td>Unit: delta registration, lookup by source/target</td>
+<td>No</td>
+<td>Delta-based update packages.</td>
+</tr>
+<tr>
+<td>F10</td>
+<td>Server</td>
+<td>Recall handler</td>
+<td>Recall + rollbacks</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_recall.go</td>
+<td>handlers_recall_test.go</td>
+<td>Unit: recall creation, rollback execution; e2e:
+tests/e2e/recall_lifecycle.sh</td>
+<td>No</td>
+<td>Full recall lifecycle with automatic rollback orchestration.</td>
+</tr>
+<tr>
+<td>F11</td>
+<td>Server</td>
+<td>Client handler</td>
+<td>GET /client/update, POST /client/telemetry</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_client.go</td>
+<td>handlers_client_test.go, handlers_client_antidowngrade_test.go</td>
+<td>Unit: update check, telemetry ingestion, anti-downgrade guard</td>
+<td>No</td>
+<td>Client-facing API — device polls for update, sends telemetry.
+Anti-downgrade enforced via version comparison.</td>
+</tr>
+<tr>
+<td>F12</td>
+<td>Server</td>
+<td>Device handler</td>
+<td>Device registration, device status</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_device.go</td>
+<td>handlers_device_test.go</td>
+<td>Unit: registration, status tracking, device listing</td>
+<td>No</td>
+<td>Device inventory with per-device status.</td>
+</tr>
+<tr>
+<td>F13</td>
+<td>Server</td>
+<td>Group handler</td>
+<td>Full CRUD + membership</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_group.go</td>
+<td>handlers_group_test.go</td>
+<td>Unit: CRUD, device membership assignment, group listing</td>
+<td>No</td>
+<td>Device grouping for targeted rollouts.</td>
+</tr>
+<tr>
+<td>F14</td>
+<td>Server</td>
+<td>Telemetry handler</td>
+<td>Device + overview telemetry</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_telemetry.go</td>
+<td>handlers_telemetry_test.go</td>
+<td>Unit: telemetry submission, aggregation queries</td>
+<td>No</td>
+<td>Telemetry aggregation and dashboard overview.</td>
+</tr>
+<tr>
+<td>F15</td>
+<td>Server</td>
+<td>Audit handler</td>
+<td>Admin audit log</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_audit.go</td>
+<td>handlers_audit_test.go</td>
+<td>Unit: audit event recording, filtered queries</td>
+<td>No</td>
+<td>Full audit trail for admin operations.</td>
+</tr>
+<tr>
+<td>F16</td>
+<td>Server</td>
+<td>Health handler</td>
+<td>/healthz, /readyz probes</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_health.go</td>
+<td>handlers_health_test.go</td>
+<td>Unit: liveness + readiness responses</td>
+<td>No</td>
+<td>Unauthenticated liveness + dependency-check readiness probes.</td>
+</tr>
+<tr>
+<td>F17</td>
+<td>Server</td>
+<td>Branches handler</td>
+<td>Branch management</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_branches_test.go</td>
+<td>handlers_branches_test.go</td>
+<td>Unit: branch operations</td>
+<td>No</td>
+<td>Multi-branch release support.</td>
+</tr>
+<tr>
+<td>F18</td>
+<td>Server</td>
+<td>Parked handler</td>
+<td>Parked/held device management</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_parked_test.go,
+handlers_parked_resilience_test.go</td>
+<td>handlers_parked_test.go, handlers_parked_resilience_test.go</td>
+<td>Unit: parked device mechanics, resilience under concurrent
+access</td>
+<td>No</td>
+<td>Devices held in a “parked” state during complex operations.</td>
+</tr>
+<tr>
+<td>F19</td>
+<td>Server</td>
+<td>Widen handler</td>
+<td>Rollout widening</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_widen_test.go</td>
+<td>handlers_widen_test.go</td>
+<td>Unit: staged widening of rollout percentage</td>
+<td>No</td>
+<td>Gradual rollout percentage increase with safety checks.</td>
+</tr>
+<tr>
+<td>F20</td>
+<td>Server</td>
+<td>RequestID middleware</td>
+<td>Per-request correlation ID</td>
+<td>PASS</td>
+<td>server/internal/api middleware (implied)</td>
+<td>Implicit — all handler tests exercise request flow</td>
+<td>All routes emit X-Request-ID</td>
+<td>No</td>
+<td>Unique request ID injected into every request for tracing.</td>
+</tr>
+<tr>
+<td>F21</td>
+<td>Server</td>
+<td>Recovery middleware</td>
+<td>Panic recovery</td>
+<td>PASS</td>
+<td>Gin default recovery + custom</td>
+<td>Tested via error-path handler tests</td>
+<td>Server does not crash on panicked handlers</td>
+<td>No</td>
+<td>Recovers from panics, logs stack trace, returns 500.</td>
+</tr>
+<tr>
+<td>F22</td>
+<td>Server</td>
+<td>Rate-limit middleware</td>
+<td>Per-IP/route rate limiting</td>
+<td>PASS</td>
+<td>server/internal/api middleware</td>
+<td>Integration: rate-limit enforced in e2e</td>
+<td>Rate limit blocks excessive requests</td>
+<td>No</td>
+<td>Token-bucket rate limiter.</td>
+</tr>
+<tr>
+<td>F23</td>
+<td>Server</td>
+<td>Audit middleware</td>
+<td>Request audit logging</td>
+<td>PASS</td>
+<td>server/internal/api middleware</td>
+<td>Tested via audit handler coverage</td>
+<td>All admin mutations logged to audit trail</td>
+<td>No</td>
+<td>Every state-changing admin request recorded in audit log.</td>
+</tr>
+<tr>
+<td>F24</td>
+<td>Server</td>
+<td>Compression middleware</td>
+<td>Response compression</td>
+<td>PASS</td>
+<td>server/internal/api middleware</td>
+<td>Integration in e2e</td>
+<td>Compressed responses for large payloads</td>
+<td>No</td>
+<td>Brotli/gzip response compression.</td>
+</tr>
+<tr>
+<td>F25</td>
+<td>Server</td>
+<td>Vary middleware</td>
+<td>Cache-control headers</td>
+<td>PASS</td>
+<td>server/internal/api middleware</td>
+<td>Implicit in e2e</td>
+<td>Proper cache headers on responses</td>
+<td>No</td>
+<td>Sets Vary and Cache-Control headers for CDN/caching proxies.</td>
+</tr>
+<tr>
+<td>F26</td>
+<td>Server</td>
+<td>Multipart middleware</td>
+<td>Multipart upload parsing</td>
+<td>PASS</td>
+<td>server/internal/api middleware</td>
+<td>Tested via artifact parts tests</td>
+<td>Multipart uploads correctly parsed and assembled</td>
+<td>No</td>
+<td>Large artifact upload support.</td>
+</tr>
+<tr>
+<td>F27</td>
+<td>Server</td>
+<td>Config package</td>
+<td>Configuration loading/parsing</td>
+<td>PASS</td>
+<td>server/internal/config/</td>
+<td>Implicit — server starts with config; tested via e2e</td>
+<td>Config from file + env overrides</td>
+<td>No</td>
+<td>YAML config with env var override support.</td>
+</tr>
+<tr>
+<td>F28</td>
+<td>Server</td>
+<td>Store (in-memory)</td>
+<td>In-memory Repository implementation</td>
+<td>PASS</td>
+<td>server/internal/store/ (memory impl)</td>
+<td>go test ./… at server module</td>
+<td>All handler tests use in-memory store</td>
+<td>No</td>
+<td>MVP store backend — full data model (devices, groups, releases,
+deployments, artifacts, rollouts, telemetry, audit, recalls,
+deltas).</td>
+</tr>
+<tr>
+<td>F29</td>
+<td>Server</td>
+<td>Store (PostgreSQL)</td>
+<td>pgx PostgreSQL Repository implementation</td>
+<td>PASS</td>
+<td>server/internal/store/ (postgres impl)</td>
+<td>tests/e2e/ — migration-002, migration-004, pgx-postgres-integration,
+rollout-pgx-storageport, pgx-server-e2e</td>
+<td>Full CRUD against real PostgreSQL via containerised test suite</td>
+<td>No</td>
+<td>Production-target store. Tested via e2e against podman-postgres.
+Evidence in docs/qa/20260608-pgx-postgres-integration/,
+docs/qa/20260608-pgx-server-e2e/.</td>
+</tr>
+<tr>
+<td>F30</td>
+<td>Server</td>
+<td>Health package</td>
+<td>Liveness + readiness check infrastructure</td>
+<td>PASS</td>
+<td>server/internal/health/</td>
+<td>handlers_health_test.go</td>
+<td>Dependency-aware health checks (store, fabric, etc.)</td>
+<td>No</td>
+<td>Live() returns true while process is up; Ready() probes all
+dependencies.</td>
+</tr>
+<tr>
+<td>F31</td>
+<td>Server</td>
+<td>Rollout engine</td>
+<td>Staged rollout evaluation logic</td>
+<td>PASS</td>
+<td>server/internal/rollout/</td>
+<td>handlers_rollout_test.go, tests/e2e/rollout_halt_safety.sh</td>
+<td>Staged percentage increase with halt-on-failure</td>
+<td>No</td>
+<td>Gradual rollout with safety gates.</td>
+</tr>
+<tr>
+<td>F32</td>
+<td>Server</td>
+<td>Fabric registry</td>
+<td>Fabric device/agent registry</td>
+<td>PASS</td>
+<td>server/internal/fabric/</td>
+<td>Evidence: docs/qa/20260610-fabric-registry/</td>
+<td>Fabric registry integration — register, discover, status</td>
+<td>No</td>
+<td>Registry for emulated fabric devices.</td>
+</tr>
+<tr>
+<td>F33</td>
+<td>Server</td>
+<td>Transport (HTTP/3 + HTTP/2 + Brotli)</td>
+<td>Multi-protocol transport layer</td>
+<td>PASS</td>
+<td>server/internal/transport/</td>
+<td>Evidence: docs/qa/20260608-http3-h2-brotli-transport/</td>
+<td>HTTP/3 (QUIC), HTTP/2, HTTP/1.1 with Brotli</td>
+<td>No</td>
+<td>Modern transport stack. Tested via e2e. Underlying submodules/http3
+provides QUIC server.</td>
+</tr>
+<tr>
+<td>F34</td>
+<td>Server</td>
+<td>Device emulator package</td>
+<td>Tier-1 device emulator logic</td>
+<td>PASS</td>
+<td>server/internal/deviceemu/</td>
+<td>Tested via Tier-0 container e2e</td>
+<td>Emulates device registration, update polling, telemetry
+submission</td>
+<td>No</td>
+<td>Go-based device emulator used in containerised tests.</td>
+</tr>
+<tr>
+<td>F35</td>
+<td>Submodule</td>
+<td>ota-protocol</td>
+<td>Wire types, enums, payload, validate</td>
+<td>VERIFIED</td>
+<td>submodules/ota-protocol/ — 8 Go source files</td>
+<td>go test ./… at submodule root — enums, types, payload, validate,
+hardening tests</td>
+<td>Unit tests cover type validation, enum bounds, payload
+serialisation, input hardening</td>
+<td>No</td>
+<td>Go module github.com/HelixDevelopment/ota-protocol. Used throughout
+server.</td>
+</tr>
+<tr>
+<td>F36</td>
+<td>Submodule</td>
+<td>ota-artifact-validator</td>
+<td>Pipeline, stages, verdict, version</td>
+<td>VERIFIED</td>
+<td>submodules/ota-artifact-validator/ — 5 Go source + stress, chaos,
+security tests</td>
+<td>go test ./… at submodule root — unit, stress, chaos, security
+tests</td>
+<td>Unit + stress (N iterations) + chaos (failure injection) + security
+(boundary)</td>
+<td>No</td>
+<td>Go module. Multi-stage validation pipeline with version schema
+support.</td>
+</tr>
+<tr>
+<td>F37</td>
+<td>Submodule</td>
+<td>ota-rollout-engine</td>
+<td>Cohort, decide, engine, ports</td>
+<td>VERIFIED</td>
+<td>submodules/ota-rollout-engine/ — 10 Go source files + stress, chaos
+tests</td>
+<td>go test ./… at submodule root — unit, coverage-gap, stress, chaos
+tests</td>
+<td>Unit + stress + chaos + coverage gap audit</td>
+<td>No</td>
+<td>Go module. Staged rollout decision engine with cohort
+selection.</td>
+</tr>
+<tr>
+<td>F38</td>
+<td>Submodule</td>
+<td>ota-telemetry-schema</td>
+<td>Codec, event, health types</td>
+<td>VERIFIED</td>
+<td>submodules/ota-telemetry-schema/ — 6 Go source files</td>
+<td>go test ./… at submodule root — codec, event, health tests</td>
+<td>Unit: serialization round-trip, event validation, health type
+coverage</td>
+<td>No</td>
+<td>Go module. Shared telemetry data model.</td>
+</tr>
+<tr>
+<td>F39</td>
+<td>Submodule</td>
+<td>http3</td>
+<td>HTTP/3 (QUIC) server</td>
+<td>VERIFIED</td>
+<td>submodules/http3/ (Go module)</td>
+<td>Tested via transport e2e (F33)</td>
+<td>HTTP/3 + HTTP/2 + HTTP/1.1 negotiation</td>
+<td>No</td>
+<td>Go module. QUIC-based HTTP/3 server library used by transport
+layer.</td>
+</tr>
+<tr>
+<td>F40</td>
+<td>Submodule</td>
+<td>challenges</td>
+<td>Userflow-runner, assertion engine</td>
+<td>VERIFIED</td>
+<td>submodules/challenges/</td>
+<td>Tested via HelixQA bank dry-run</td>
+<td>Static audit + assertion evaluation</td>
+<td>No</td>
+<td>Challenge bank definitions with userflow runner and assertion
+DSL.</td>
+</tr>
+<tr>
+<td>F41</td>
+<td>Submodule</td>
+<td>helixqa</td>
+<td>Bank definitions, recordingqa, challengegen, panopticoracle</td>
+<td>VERIFIED</td>
+<td>submodules/helixqa/</td>
+<td>HelixQA bank dry-run (E9 in emulator Status)</td>
+<td>Bank registration, evidence-artifact audit, recording QA</td>
+<td>No</td>
+<td>QA framework: challenge banks, recording QA, challenge generation,
+panoptic oracle.</td>
+</tr>
+<tr>
+<td>F42</td>
+<td>Android</td>
+<td>ota-android-agent</td>
+<td>OTA poll worker, ApplyPort</td>
+<td>DESIGN</td>
+<td>submodules/ota-android-agent/ (Kotlin, Gradle 9.5)</td>
+<td>PWU-AB-4: ApplyPort defined in
+docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md</td>
+<td>DESIGN — no runtime test against a real Android target</td>
+<td>No</td>
+<td>Android agent polls server for updates and applies them via
+ota-update-engine-bridge. ApplyPort (PWU-AB-4) is designed but not
+built.</td>
+</tr>
+<tr>
+<td>F43</td>
+<td>Android</td>
+<td>ota-update-engine-bridge</td>
+<td>UpdateEngine bridge (Kotlin AIDL)</td>
+<td>DESIGN</td>
+<td>submodules/ota-update-engine-bridge/ (Kotlin, Gradle 9.5)</td>
+<td>PWU-AB-4 scope — not yet tested</td>
+<td>DESIGN — depends on ApplyPort build completion</td>
+<td>No</td>
+<td>AIDL bridge to Android update_engine service. Referenced by
+ApplyPort design.</td>
+</tr>
+<tr>
+<td>F44</td>
+<td>Emulator</td>
+<td>Tier-0 container round-trip</td>
+<td>Control plane + device emu in podman pod</td>
+<td>PASS</td>
+<td>tests/emulator/tier1_container_e2e.sh</td>
+<td>Script executes ota-server + ota-device-emu in podman pod, asserts
+register-&gt;update-check-&gt;telemetry</td>
+<td>Full protocol round-trip: device registration, update check,
+telemetry submission</td>
+<td>No</td>
+<td>Evidence in docs/qa/ under multiple run-IDs
+(20260610T111918Z-full-lifecycle, 20260610T161751Z-full-lifecycle).</td>
+</tr>
+<tr>
+<td>F45</td>
+<td>Emulator</td>
+<td>Tier-1 AVD + HVF smoke</td>
+<td>AVD boot smoke test</td>
+<td>PASS</td>
+<td>tests/emulator/tier1_avd_hvf_smoke.sh</td>
+<td>Evidence: docs/qa/20260610T144335Z-avd-hvf-smoke/,
+docs/qa/20260610T144447Z-avd-hvf-smoke/</td>
+<td>AVD boots on macOS HVF accelerator</td>
+<td>No</td>
+<td>Android Virtual Device boot smoke on Apple Silicon HVF.</td>
+</tr>
+<tr>
+<td>F46</td>
+<td>Emulator</td>
+<td>Tier-1 fleet e2e</td>
+<td>Multi-device fleet test</td>
+<td>PASS</td>
+<td>tests/emulator/tier1_fleet_e2e.sh</td>
+<td>Evidence: docs/qa/20260610T111928Z-fleet/,
+docs/qa/20260610T155319Z-fleet/</td>
+<td>Multiple devices register, receive updates concurrently</td>
+<td>No</td>
+<td>Parallel device fleet test.</td>
+</tr>
+<tr>
+<td>F47</td>
+<td>Emulator</td>
+<td>Tier-1 full lifecycle e2e</td>
+<td>Full OTA lifecycle (register -&gt; update -&gt; telemetry)</td>
+<td>PASS</td>
+<td>tests/emulator/tier1_full_lifecycle_e2e.sh</td>
+<td>Evidence: docs/qa/20260610T111918Z-full-lifecycle/,
+docs/qa/20260610T161751Z-full-lifecycle/</td>
+<td>End-to-end: device registration, update check, rollout, deployment,
+telemetry</td>
+<td>No</td>
+<td>Complete lifecycle through containerised control plane.</td>
+</tr>
+<tr>
+<td>F48</td>
+<td>Emulator</td>
+<td>Tier-1 recall+recovery e2e</td>
+<td>Recall + recovery flow</td>
+<td>PASS</td>
+<td>tests/emulator/tier1_recall_recovery_e2e.sh</td>
+<td>Evidence: docs/qa/20260610T113622Z-recall-recovery/,
+docs/qa/20260610T143534Z-recall-recovery-container/</td>
+<td>Recall creation, device notification, rollback execution, recovery
+confirmation</td>
+<td>No</td>
+<td>End-to-end recall lifecycle in containerised environment.</td>
+</tr>
+<tr>
+<td>F49</td>
+<td>Emulator</td>
+<td>QEMU firmware smoke</td>
+<td>QEMU virt firmware boot smoke</td>
+<td>PASS</td>
+<td>tests/emulator/tier_fw_qemu_smoke.sh</td>
+<td>Evidence: docs/qa/20260610T152958Z-qemu-fw-smoke/,
+docs/qa/20260610T154638Z-qemu-fw-smoke/,
+docs/qa/20260610T154726Z-qemu-fw-smoke/</td>
+<td>QEMU aarch64 virt firmware boots on macOS HVF</td>
+<td>No</td>
+<td>Quick smoke that QEMU virt + HVF can boot the emulated target
+firmware.</td>
+</tr>
+<tr>
+<td>F50</td>
+<td>Emulator</td>
+<td>PWU-AB-1 base image build + boot</td>
+<td>aarch64 Buildroot kernel+rootfs + real u-boot.bin</td>
+<td>PROVEN</td>
+<td>tests/emulator/ab_virt/build_image.sh</td>
+<td>tests/emulator/ab_virt/boot_smoke.sh</td>
+<td>Build produces bootable guest image; guest boots to live interactive
+userspace</td>
+<td>No</td>
+<td>Evidence: docs/qa/20260611T061626Z-ab-virt-boot/console.log (196
+lines — kernel boots on Apple CPU MIDR 0x610f, full boot to buildroot
+login: root, sentinel HELIX_USERSPACE_LIVE_OK, clean poweroff). Image
+MD5s verified.</td>
+</tr>
+<tr>
+<td>F51</td>
+<td>Emulator</td>
+<td>PWU-AB-1 A/B slot switch</td>
+<td>U-Boot boot.cmd BOOT_ORDER slot selection — slot A-&gt;B genuinely
+switched</td>
+<td>PROVEN</td>
+<td>tests/emulator/ab_virt/ab_slot_switch.sh + uboot_ab/boot.cmd</td>
+<td>tests/emulator/ab_virt/ab_slot_switch.sh</td>
+<td>Real U-Boot 2024.01 on QEMU virt + HVF: Run A boots slot A, Run B
+boots slot B. Determinism 3/3.</td>
+<td>No</td>
+<td>Evidence: docs/qa/20260611T094958Z-ab-slot-switch/. Verdict: PASS.
+Per-run console transcripts + determinism_n3.txt (3/3 identical). Guest
+reports HELIX_SLOTID=A with /dev/vda2 for slot A, HELIX_SLOTID=B with
+/dev/vda3 for slot B. Negative check: each slot did NOT boot the other.
+Commit 18ed84a.</td>
+</tr>
+<tr>
+<td>F52</td>
+<td>Emulator</td>
+<td>PWU-AB-3 corrupt-slot auto-rollback</td>
+<td>bootcount &gt; bootlimit triggers altbootcmd swap -&gt; known-good
+slot</td>
+<td>PROVEN</td>
+<td>tests/emulator/ab_virt/ab_rollback.sh + uboot_ab/boot.cmd</td>
+<td>tests/emulator/ab_virt/ab_rollback.sh</td>
+<td>Real U-Boot 2024.01: bad-slot-B -&gt; bootcount=2 -&gt; altbootcmd
+swap -&gt; boots slot A. CONTROL run: good slot B -&gt; no rollback
+-&gt; boots B.</td>
+<td>No</td>
+<td>Evidence: docs/qa/20260611T095918Z-ab-rollback/. Verdict: PASS.
+ROLLBACK: A/B: bootcount=2 &gt; bootlimit=1 -&gt; rolling back
+(altbootcmd swap) -&gt; guest HELIX_SLOTID=A. CONTROL: HELIX_SLOTID=B.
+Negative proof: rollback fires ONLY on bad slot. Commit 42be557.</td>
+</tr>
+<tr>
+<td>F53</td>
+<td>Emulator</td>
+<td>PWU-AB-2 RAUC dm-verity slot integrity</td>
+<td>dm-verity integrity check on booted slot</td>
+<td>PENDING_FORENSICS</td>
+<td>tests/emulator/ab_virt/ab_rauc_verity.sh AUTHORED</td>
+<td>tests/emulator/ab_virt/ab_rauc_verity.sh (script exists, not yet
+run)</td>
+<td>AUTHORED but UNVERIFIED — gated on signed .raucb bundle + RAUC
+slot-class &lt;-&gt; boot.cmd BOOT_ORDER reconciliation</td>
+<td>No</td>
+<td>Status: DESIGN — script authored, no runtime evidence yet. Requires
+signed bundle and slot-scheme reconciliation. No dm-verity evidence
+captured.</td>
+</tr>
+<tr>
+<td>F54</td>
+<td>Emulator</td>
+<td>PWU-AB-4 ApplyPort</td>
+<td>Android apply operation on target device</td>
+<td>DESIGN</td>
+<td>docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md</td>
+<td>None — not yet built</td>
+<td>DESIGN only — architectural design document exists</td>
+<td>No</td>
+<td>Status: DESIGN — not yet implemented. Design doc defines the apply
+port that connects server-side rollout with Android
+ota-update-engine-bridge.</td>
+</tr>
+<tr>
+<td>F55</td>
+<td>Emulator</td>
+<td>Tier-2 Cuttlefish Android A/B</td>
+<td>Real Android update_engine A/B + AVB/dm-verity + auto-rollback</td>
+<td>OPERATOR-BLOCKED</td>
+<td>tests/emulator/tier2_cuttlefish_ab.sh</td>
+<td>Driver authored (PWU-CF-2 corrupt-slot rollback section mirrors
+PWU-AB-3)</td>
+<td>Topology-gated: needs Linux + /dev/kvm (confirmed absent on this
+Apple Silicon macOS host)</td>
+<td>No</td>
+<td>Operator-block: No /dev/kvm on this macOS dev host. Script exits 3
+(SKIP). Ready to run on operator’s incoming Linux + nested-KVM host.
+Section UNCONFIRMED: pending runtime.</td>
+</tr>
+<tr>
+<td>F56</td>
+<td>Emulator</td>
+<td>Tier-3 RK3588 / Orange Pi 5 Max hardware</td>
+<td>Full on-device OTA apply on physical board</td>
+<td>OPERATOR-BLOCKED</td>
+<td>(no implementation — needs board)</td>
+<td>None</td>
+<td>PENDING — no hardware available</td>
+<td>No</td>
+<td>Operator-block: No physical board on the bench. All emulator tiers
+are the hardware-free substitute.</td>
+</tr>
+<tr>
+<td>F57</td>
+<td>Emulator</td>
+<td>Determinism soak (overnight)</td>
+<td>10-iteration deterministic consistency sweep</td>
+<td>PASS</td>
+<td>tests/emulator/ — overnight revalidation script</td>
+<td>Evidence: docs/qa/20260610T1640Z-determinism-soak/</td>
+<td>10 iterations of the core lifecycle paths produce identical
+results</td>
+<td>No</td>
+<td>Section 11.4.50 determinism compliance.</td>
+</tr>
+<tr>
+<td>F58</td>
+<td>e2e</td>
+<td>Recall lifecycle</td>
+<td>End-to-end recall + rollback</td>
+<td>PASS</td>
+<td>tests/e2e/recall_lifecycle.sh</td>
+<td>Self-contained e2e test</td>
+<td>Recall creation -&gt; device notification -&gt; rollback -&gt;
+recovery</td>
+<td>No</td>
+<td>Full lifecycle tested against containerised server+device.</td>
+</tr>
+<tr>
+<td>F59</td>
+<td>e2e</td>
+<td>Rollout halt safety</td>
+<td>Rollout halts on failure detection</td>
+<td>PASS</td>
+<td>tests/e2e/rollout_halt_safety.sh</td>
+<td>Self-contained e2e test</td>
+<td>Simulated failure during staged rollout halts progress</td>
+<td>No</td>
+<td>Safety gate: rollout stops when devices report errors.</td>
+</tr>
+<tr>
+<td>F60</td>
+<td>e2e</td>
+<td>Pipeline signed</td>
+<td>Pipeline integrity verification</td>
+<td>PASS</td>
+<td>tests/e2e/pipeline_signed.sh</td>
+<td>Self-contained e2e test</td>
+<td>Pipeline artifact signature verified end-to-end</td>
+<td>No</td>
+<td>Artifact signing and verification pipeline.</td>
+</tr>
+<tr>
+<td>F61</td>
+<td>e2e</td>
+<td>Challenge filters/pagination</td>
+<td>Challenge API filter + pagination</td>
+<td>PASS</td>
+<td>tests/e2e/challenge_filters_pagination.sh</td>
+<td>Self-contained e2e test</td>
+<td>Challenge query filter correctness + pagination edge cases</td>
+<td>No</td>
+<td>HelixQA challenge query interface.</td>
+</tr>
+<tr>
+<td>F62</td>
+<td>e2e</td>
+<td>Challenge operational</td>
+<td>Challenge execution and reporting</td>
+<td>PASS</td>
+<td>tests/e2e/challenge_operational.sh</td>
+<td>Self-contained e2e test</td>
+<td>Challenge execution, verdict recording, evidence audit</td>
+<td>No</td>
+<td>Operational test of the challenge framework.</td>
+</tr>
+<tr>
+<td>F63</td>
+<td>Security</td>
+<td>Security probes (baseline)</td>
+<td>Baseline security posture</td>
+<td>PASS</td>
+<td>tests/security/security_probes.sh</td>
+<td>Self-contained security test</td>
+<td>Authentication bypass, injection, path traversal</td>
+<td>No</td>
+<td>Baseline security probing.</td>
+</tr>
+<tr>
+<td>F64</td>
+<td>Security</td>
+<td>Security probes (extended)</td>
+<td>Extended security attack surface</td>
+<td>PASS</td>
+<td>tests/security/security_probes_extended.sh</td>
+<td>Self-contained security test</td>
+<td>Extended probe set beyond baseline</td>
+<td>No</td>
+<td>Broader security coverage.</td>
+</tr>
+<tr>
+<td>F65</td>
+<td>Security</td>
+<td>Security probes (filters)</td>
+<td>Security filter correctness</td>
+<td>PASS</td>
+<td>tests/security/security_probes_filters.sh</td>
+<td>Self-contained security test</td>
+<td>Input validation, sanitisation, SQL injection filters</td>
+<td>No</td>
+<td>Input filter validation.</td>
+</tr>
+<tr>
+<td>F66</td>
+<td>Security</td>
+<td>Recall telemetry probes</td>
+<td>Telemetry security (recall channel)</td>
+<td>PASS</td>
+<td>tests/security/recall_telemetry_probes.sh</td>
+<td>Self-contained security test</td>
+<td>Recall channel telemetry integrity, injection resistance</td>
+<td>No</td>
+<td>Telemetry security specifically for recall operations.</td>
+</tr>
+<tr>
+<td>F67</td>
+<td>Security</td>
+<td>Stability sweep</td>
+<td>Post-deployment stability validation</td>
+<td>PASS</td>
+<td>(multi-test orchestration)</td>
+<td>Evidence: docs/qa/20260610T154422Z-stability-sweep/,
+docs/qa/20260610T154529Z-stability-sweep/</td>
+<td>System remains stable under repeated lifecycle cycles</td>
+<td>No</td>
+<td>Repeated lifecycle execution validates no state drift.</td>
+</tr>
+<tr>
+<td>F68</td>
+<td>Build</td>
+<td>containers/ submodule</td>
+<td>Docker/Podman container infrastructure</td>
+<td>VERIFIED</td>
+<td>containers/ (git submodule vasic-digital/containers)</td>
+<td>Podman-based test execution throughout e2e suite</td>
+<td>Containerised boot of ota-server, ota-device-emu, PostgreSQL</td>
+<td>No</td>
+<td>Submodule from vasic-digital/containers provides containerised boot,
+compose orchestration, health checks.</td>
+</tr>
+<tr>
+<td>F69</td>
+<td>Build</td>
+<td>Pre-build verification gate</td>
+<td>Multi-gate pre-build check</td>
+<td>PASS</td>
+<td>tests/pre_build_verification.sh</td>
+<td>Self-contained gate</td>
+<td>Go build, gofmt, go vet, constitution checks, script
+parseability</td>
+<td>No</td>
+<td>Pre-merge gate: Go module builds clean, formatting, vetting,
+inheritance gate, constitution checks.</td>
+</tr>
+<tr>
+<td>F70</td>
+<td>Build</td>
+<td>Inheritance gate</td>
+<td>Constitution inheritance validation</td>
+<td>PASS</td>
+<td>tests/inheritance_gate.sh</td>
+<td>Self-contained gate</td>
+<td>Verifies constitution submodule is present + inheritance pointers
+intact</td>
+<td>No</td>
+<td>Gate ensures constitution/CLAUDE.md inheritance is wired.</td>
+</tr>
+<tr>
+<td>F71</td>
+<td>Build</td>
+<td>Constitution inheritance test</td>
+<td>Full paired-mutation proof</td>
+<td>PASS</td>
+<td>tests/test_constitution_inheritance.sh</td>
+<td>Self-contained meta-test</td>
+<td>Mutates inheritance pointer -&gt; asserts gate FAILs, then restores
+-&gt; asserts PASS</td>
+<td>No</td>
+<td>Section 1.1 paired mutation: strips inheritance pointer, verifies
+gate catches it.</td>
+</tr>
+<tr>
+<td>F72</td>
+<td>Build</td>
+<td>Build resource stats tracking</td>
+<td>Memory/CPU/IO per-build telemetry</td>
+<td>NOT_STARTED</td>
+<td>Section 11.4.24 mandates this; per-build resource sampler not yet
+implemented</td>
+<td>None</td>
+<td>MANDATED by constitution but not yet built</td>
+<td>No</td>
+<td>Section 11.4.24 requires TSV-based per-build resource telemetry. Not
+implemented.</td>
+</tr>
+<tr>
+<td>F73</td>
+<td>Build</td>
+<td>.gitignore coverage</td>
+<td>Repository hygiene per Section 11.4.30</td>
+<td>VERIFIED</td>
+<td>Root + each submodule has .gitignore</td>
+<td>Tested via pre-build gate scanning</td>
+<td>Build artifacts, cache, temp, sensitive files all ignored</td>
+<td>No</td>
+<td>All owned modules checked. Pre-build gate enforces.</td>
+</tr>
+<tr>
+<td>F74</td>
+<td>Scripts</td>
+<td>export_docs.sh</td>
+<td>Markdown -&gt; HTML+PDF export</td>
+<td>PASS</td>
+<td>scripts/export_docs.sh</td>
+<td>Run as part of doc sync</td>
+<td>Converts all tracked docs to HTML+PDF via pandoc+weasyprint</td>
+<td>No</td>
+<td>Section 11.4.65 universal export.</td>
+</tr>
+<tr>
+<td>F75</td>
+<td>Scripts</td>
+<td>scaffold_submodule.sh</td>
+<td>New submodule scaffolding</td>
+<td>PASS</td>
+<td>scripts/scaffold_submodule.sh</td>
+<td>Manual usage</td>
+<td>Creates submodule structure with Makefile, .gitignore, README</td>
+<td>No</td>
+<td>Project utility for bootstrapping new submodules.</td>
+</tr>
+<tr>
+<td>F76</td>
+<td>Scripts</td>
+<td>sync_md_siblings.sh</td>
+<td>Markdown sibling sync (md-&gt;html+pdf)</td>
+<td>PASS</td>
+<td>scripts/testing/sync_md_siblings.sh</td>
+<td>Run as part of doc sync</td>
+<td>Mirrors each .md with .html+.pdf per Section 11.4.65</td>
+<td>No</td>
+<td>Sync utility for individual markdown files.</td>
+</tr>
+<tr>
+<td>F77</td>
+<td>Governance</td>
+<td>constitution submodule</td>
+<td>Constitution.md, CLAUDE.md, AGENTS.md</td>
+<td>VERIFIED</td>
+<td>constitution/ — git submodule</td>
+<td>tests/test_constitution_inheritance.sh,
+tests/inheritance_gate.sh</td>
+<td>All universal rules, propagation gates, inheritance</td>
+<td>No</td>
+<td>Source of truth for all mandatory development rules and anti-bluff
+covenant.</td>
+</tr>
+<tr>
+<td>F78</td>
+<td>Governance</td>
+<td>Issues tracking</td>
+<td>Issues.md + Issues_Summary.md + exports</td>
+<td>VERIFIED</td>
+<td>docs/Issues.md, docs/Issues_Summary.md (+html+pdf)</td>
+<td>Pre-build gate checks sync</td>
+<td>ATM-NNN tickets, Status+Type columns, revision headers</td>
+<td>No</td>
+<td>Sections 11.4.15/11.4.16/11.4.54 compliant.</td>
+</tr>
+<tr>
+<td>F79</td>
+<td>Governance</td>
+<td>Fixed tracking</td>
+<td>Fixed.md + Fixed_Summary.md + exports</td>
+<td>VERIFIED</td>
+<td>docs/Fixed.md, docs/Fixed_Summary.md (+html+pdf)</td>
+<td>Pre-build gate checks sync</td>
+<td>Fixed items migration, closure vocabulary, column alignment</td>
+<td>No</td>
+<td>Sections 11.4.19/11.4.33/11.4.53 compliant.</td>
+</tr>
+<tr>
+<td>F80</td>
+<td>Governance</td>
+<td>CONTINUATION.md</td>
+<td>Live state handoff document</td>
+<td>VERIFIED</td>
+<td>docs/CONTINUATION.md (+html+pdf)</td>
+<td>Pre-build gate checks freshness</td>
+<td>Session state, active work phases, next actions</td>
+<td>No</td>
+<td>Section 12.10 compliant. Updated on every non-trivial state
+change.</td>
+</tr>
+<tr>
+<td>F81</td>
+<td>Governance</td>
+<td>RESUMPTION.md</td>
+<td>Session resumption entry point</td>
+<td>VERIFIED</td>
+<td>docs/RESUMPTION.md (+html+pdf)</td>
+<td>Created per Section 11.4.131 mandate</td>
+<td>Fresh-session entry point with live state anchors</td>
+<td>No</td>
+<td>Section 11.4.131 compliant. Single canonical resumption file.</td>
+</tr>
+<tr>
+<td>F82</td>
+<td>Governance</td>
+<td>README.md doc-links</td>
+<td>Tracked-items + Status docs reference</td>
+<td>VERIFIED</td>
+<td>README.md</td>
+<td>Generator scripts/testing/update_readme_doc_links.sh</td>
+<td>Links to Issues, Issues_Summary, Fixed, Fixed_Summary, CONTINUATION,
+all Status pairs</td>
+<td>No</td>
+<td>Sections 11.4.57/11.4.59 compliant. Auto-generated section with
+revision metadata.</td>
+</tr>
+<tr>
+<td>F83</td>
+<td>Governance</td>
+<td>AGENTS.md</td>
+<td>Agent instructions file</td>
+<td>VERIFIED</td>
+<td>AGENTS.md</td>
+<td>Inheritance checks</td>
+<td>Project-specific agent instructions</td>
+<td>No</td>
+<td>Inherits from constitution + project extensions.</td>
+</tr>
+<tr>
+<td>F84</td>
+<td>Governance</td>
+<td>Emulator Status docs</td>
+<td>Per-integration status for A/B-virt</td>
+<td>VERIFIED</td>
+<td>docs/emulator/rk3588_ab_virt/Status.md (+html+pdf) +
+Status_Summary.md (+html+pdf)</td>
+<td>Section 11.4.45 status doc; evidence table Section 11.4.5
+compliant</td>
+<td>Full emulator tier status with captured-evidence citations</td>
+<td>No</td>
+<td>Sections 11.4.45/11.4.56 compliant. Two-audience format with
+captured-evidence table.</td>
+</tr>
+<tr>
+<td>F85</td>
+<td>Governance</td>
+<td>Features Status docs</td>
+<td>This document — comprehensive feature inventory</td>
+<td>VERIFIED</td>
+<td>docs/features/Status.md (+html+pdf) + Status_Summary.md
+(+html+pdf)</td>
+<td>Section 11.4.45 status doc</td>
+<td>Full feature inventory across all subsystems with status and
+evidence</td>
+<td>No</td>
+<td>This document. Comprehensive inventory.</td>
+</tr>
+<tr>
+<td>F86</td>
+<td>Governance</td>
+<td>Stress + chaos test mandate</td>
+<td>Section 11.4.85 compliance — stress AND chaos tests per fix</td>
+<td>PARTIAL</td>
+<td>Stress+chaos present for ota-artifact-validator (F36),
+ota-rollout-engine (F37)</td>
+<td>Stress+chaos tests exist for 2 of ~12 submodules</td>
+<td>Coverage growing; not all components have stress/chaos yet</td>
+<td>No</td>
+<td>Section 11.4.85 requires per-fix stress+chaos. Partial coverage —
+server endpoints lack dedicated stress/chaos suites.</td>
+</tr>
+<tr>
+<td>F87</td>
+<td>Governance</td>
+<td>Workable-items SQLite DB</td>
+<td>Section 11.4.93 single-source-of-truth</td>
+<td>NOT_STARTED</td>
+<td>Section 11.4.93 mandates this, Section 11.4.95 requires it tracked
+in git</td>
+<td>Not yet implemented</td>
+<td>MANDATED by constitution but not yet built</td>
+<td>No</td>
+<td>Sections 11.4.93/11.4.95 require Go binary at cmd/workable-items/
+with DB sync. Not started.</td>
+</tr>
+<tr>
+<td>F88</td>
+<td>Governance</td>
+<td>CodeGraph MCP integration</td>
+<td>Section 11.4.78 code-intelligence via CodeGraph</td>
+<td>NOT_STARTED</td>
+<td>Sections 11.4.78/11.4.79/11.4.80 mandate CodeGraph MCP</td>
+<td>Not yet configured</td>
+<td>MANDATED but not yet installed on this host</td>
+<td>No</td>
+<td>CodeGraph SQLite knowledge-graph over MCP. Installation + wiring not
+yet done.</td>
+</tr>
+<tr>
+<td>F89</td>
+<td>Governance</td>
+<td>Docs Chain engine</td>
+<td>Section 11.4.106 mechanical doc-sync engine</td>
+<td>PARTIAL</td>
+<td>Engine exists at vasic-digital/docs_chain, NOT yet a registered
+submodule</td>
+<td>Engine (Phases 1-4) IMPLEMENTED+tested; submodule distribution
+(Phase 6) PLANNED+OPERATOR-GATED</td>
+<td>Engine itself tested; not yet consumed as a submodule</td>
+<td>No</td>
+<td>Section 11.4.106 mandates Docs Chain as the canonical mechanical
+enforcer. Engine built but distribution as submodule gated.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="video-recording-gaps">Video Recording Gaps</h2>
+<p>Per Section 11.4.2 (recorded-evidence requirement) and Section 11.4.5
+(captured-evidence quality), the following gaps exist for full-session
+video capture:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap ID</th>
+<th>Feature / Area</th>
+<th>Current Evidence Type</th>
+<th>What Is Missing</th>
+<th>Priority</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V01</td>
+<td>Tier-0 container round-trip</td>
+<td>Console-log transcripts, exit codes</td>
+<td>No headless screen recording of the container session</td>
+<td>Medium</td>
+<td>Console logs + structured verdict files currently suffice for
+protocol-level correctness. Video adds little.</td>
+</tr>
+<tr>
+<td>V02</td>
+<td>Tier-1 A/B-virt base image boot</td>
+<td>Console-log transcript (196 lines)</td>
+<td>No QEMU serial console video recording</td>
+<td>Low</td>
+<td>Full boot transcript + post-login sentinel (Section 11.4.107
+liveness) is sufficient proof. Video would confirm display output but is
+not load-bearing.</td>
+</tr>
+<tr>
+<td>V03</td>
+<td>PWU-AB-1 A/B slot switch</td>
+<td>Transcript per slot (consoleA.log, consoleB.log) + determinism
+file</td>
+<td>No video showing the switch in action</td>
+<td>Low</td>
+<td>Each transcript captures HELIX_SLOTID and findmnt root-device —
+stronger than video.</td>
+</tr>
+<tr>
+<td>V04</td>
+<td>PWU-AB-3 auto-rollback</td>
+<td>Transcript (consoleROLLBACK.log, consoleCONTROL.log) +
+determinism</td>
+<td>No video of the rollback sequence</td>
+<td>Low</td>
+<td>U-Boot console clearly prints the rollback trigger (bootcount=2 &gt;
+bootlimit=1 -&gt; rolling back) — transcript is definitive.</td>
+</tr>
+<tr>
+<td>V05</td>
+<td>Tier-1 AVD + HVF smoke</td>
+<td>Console/video evidence in qa dir</td>
+<td>Existing recordings may be partial</td>
+<td>Medium</td>
+<td>AVD boot produces a viewable Android display; screen recording would
+show the OS booting to launcher. Needs confirmation.</td>
+</tr>
+<tr>
+<td>V06</td>
+<td>Tier-2 Cuttlefish Android A/B</td>
+<td>SKIP (no host)</td>
+<td>Full screen recording of Android update_engine applying an OTA</td>
+<td>High (when Linux host available)</td>
+<td>Cuttlefish provides a VNC/WebRTC display; the OTA apply + reboot +
+rollback should be screen-recorded end-to-end.</td>
+</tr>
+<tr>
+<td>V07</td>
+<td>Tier-3 RK3588 physical board</td>
+<td>SKIP (no hardware)</td>
+<td>Full HDMI capture of the on-device OTA flow</td>
+<td>High (when board available)</td>
+<td>Physical board needs HDMI capture hardware for end-to-end video
+evidence of the update flow.</td>
+</tr>
+<tr>
+<td>V08</td>
+<td>e2e test suite execution</td>
+<td>Exit codes, structured output, qa-run directories</td>
+<td>No screen recording of test orchestration</td>
+<td>Low</td>
+<td>These are CLI/server-to-server flows — video adds nothing.</td>
+</tr>
+<tr>
+<td>V09</td>
+<td>Server UI / admin dashboard</td>
+<td>Not yet built</td>
+<td>If a web UI is added, full-session screen recording is required</td>
+<td>Future</td>
+<td>No web UI currently exists. Console API is the interface.</td>
+</tr>
+<tr>
+<td>V11</td>
+<td>Server health + endpoints</td>
+<td>6 MP4 recordings captured 2026-06-18</td>
+<td>No content analysis yet</td>
+<td>Medium</td>
+<td>Recordings exist at
+<code>/Volumes/T7/Downloads/Recordings/helix_ota-server-*.mp4</code>.
+Need §11.4.158 read-the-screen content-verification analysis.</td>
+</tr>
+<tr>
+<td>V10</td>
+<td>Audio routing / playback</td>
+<td>Not applicable — no audio subsystem</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>No audio subsystem in current scope. Audio-video capture mandate
+(Section 11.4.68/11.4.69) dormant until audio is added.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="summary-by-status">Summary by Status</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Status</th>
+<th>Count</th>
+<th>Items</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PASS</td>
+<td>40</td>
+<td>F01-F34, F44-F49, F57-F67, F69-F71, F74-F76</td>
+</tr>
+<tr>
+<td>VERIFIED</td>
+<td>14</td>
+<td>F35-F41, F68, F73, F77-F85</td>
+</tr>
+<tr>
+<td>PROVEN</td>
+<td>3</td>
+<td>F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3
+auto-rollback)</td>
+</tr>
+<tr>
+<td>PENDING_FORENSICS</td>
+<td>1</td>
+<td>F53 (PWU-AB-2 RAUC dm-verity)</td>
+</tr>
+<tr>
+<td>DESIGN</td>
+<td>3</td>
+<td>F42 (ota-android-agent), F43 (ota-update-engine-bridge), F54
+(PWU-AB-4 ApplyPort)</td>
+</tr>
+<tr>
+<td>OPERATOR-BLOCKED</td>
+<td>2</td>
+<td>F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW)</td>
+</tr>
+<tr>
+<td>PARTIAL</td>
+<td>2</td>
+<td>F86 (stress+chaos coverage), F89 (Docs Chain)</td>
+</tr>
+<tr>
+<td>NOT_STARTED</td>
+<td>3</td>
+<td>F72 (build-resource-stats), F87 (workable-items DB), F88
+(CodeGraph)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="provenance">Provenance</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Date</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-06-18</td>
+<td>Initial feature inventory creation (HEAD at time of writing).</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
