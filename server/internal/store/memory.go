@@ -36,6 +36,8 @@ type MemoryRepository struct {
 	projects  map[string]Project // by projectID
 	prjOrder  []string           // insertion order for stable listing
 	prjByName map[string]string  // name -> projectID (uniqueness)
+	// Project access control (callerID -> projectID -> role).
+	prjAccess map[string]map[string]ProjectRole // callerID -> projectID -> role
 
 	// Emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql).
 	fabNodes    map[string]FabricNode       // by nodeID
@@ -56,6 +58,7 @@ func NewMemoryRepository() *MemoryRepository {
 		deployments: make(map[string]Deployment),
 		projects:    make(map[string]Project),
 		prjByName:   make(map[string]string),
+		prjAccess:   make(map[string]map[string]ProjectRole),
 		groups:      make(map[string]Group),
 		grpByName:   make(map[string]string),
 		members:     make(map[string][]GroupMember),
@@ -690,5 +693,71 @@ func (m *MemoryRepository) DeleteProject(_ context.Context, projectID string) er
 			break
 		}
 	}
+	return nil
+}
+
+// GetProjectAccess returns the caller's role within a project, or ErrNotFound.
+func (m *MemoryRepository) GetProjectAccess(_ context.Context, callerID, projectID string) (ProjectAccess, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if _, ok := m.projects[projectID]; !ok {
+		return ProjectAccess{}, ErrNotFound
+	}
+	byCaller, ok := m.prjAccess[callerID]
+	if !ok {
+		return ProjectAccess{}, ErrNotFound
+	}
+	role, ok := byCaller[projectID]
+	if !ok {
+		return ProjectAccess{}, ErrNotFound
+	}
+	return ProjectAccess{ProjectID: projectID, CallerID: callerID, Role: role}, nil
+}
+
+// SetProjectAccess grants or updates a caller's role within a project.
+func (m *MemoryRepository) SetProjectAccess(_ context.Context, access ProjectAccess) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.projects[access.ProjectID]; !ok {
+		return ErrNotFound
+	}
+	if m.prjAccess[access.CallerID] == nil {
+		m.prjAccess[access.CallerID] = make(map[string]ProjectRole)
+	}
+	m.prjAccess[access.CallerID][access.ProjectID] = access.Role
+	return nil
+}
+
+// ListProjectMembers returns all callers with access to a project.
+func (m *MemoryRepository) ListProjectMembers(_ context.Context, projectID string) ([]ProjectAccess, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if _, ok := m.projects[projectID]; !ok {
+		return nil, ErrNotFound
+	}
+	var result []ProjectAccess
+	for callerID, byCaller := range m.prjAccess {
+		if role, ok := byCaller[projectID]; ok {
+			result = append(result, ProjectAccess{ProjectID: projectID, CallerID: callerID, Role: role})
+		}
+	}
+	return result, nil
+}
+
+// RemoveProjectAccess revokes a caller's access to a project.
+func (m *MemoryRepository) RemoveProjectAccess(_ context.Context, callerID, projectID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.projects[projectID]; !ok {
+		return ErrNotFound
+	}
+	byCaller, ok := m.prjAccess[callerID]
+	if !ok {
+		return ErrNotFound
+	}
+	if _, ok := byCaller[projectID]; !ok {
+		return ErrNotFound
+	}
+	delete(byCaller, projectID)
 	return nil
 }

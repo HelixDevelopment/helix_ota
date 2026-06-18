@@ -171,16 +171,19 @@ func TestProjectPermissions(t *testing.T) {
 	var p ProjectResponse
 	env.decode(cw, &p)
 
-	// Viewer can list and get.
-	if lw := env.do(http.MethodGet, "/api/v1/projects", viewer, nil, ""); lw.Code != http.StatusOK {
-		t.Fatalf("viewer list want 200, got %d", lw.Code)
-	}
-	if gw := env.do(http.MethodGet, "/api/v1/projects/"+p.ProjectID, viewer, nil, ""); gw.Code != http.StatusOK {
-		t.Fatalf("viewer get want 200, got %d", gw.Code)
+	// Viewer has NO project access → 403 (IDOR protection).
+	if gw := env.do(http.MethodGet, "/api/v1/projects/"+p.ProjectID, viewer, nil, ""); gw.Code != http.StatusForbidden {
+		t.Fatalf("viewer without access get want 403, got %d", gw.Code)
 	}
 
-	// Operator can view but NOT delete (admin-only).
+	// Admin can access any project (super-admin bypass).
+	adminTok := env.adminToken()
+	if gw := env.do(http.MethodGet, "/api/v1/projects/"+p.ProjectID, adminTok, nil, ""); gw.Code != http.StatusOK {
+		t.Fatalf("admin get want 200, got %d", gw.Code)
+	}
+
+	// Operator can view but NOT delete (admin-only at route level).
 	if dw := env.do(http.MethodDelete, "/api/v1/projects/"+p.ProjectID, operator, nil, ""); dw.Code != http.StatusForbidden {
-		t.Fatalf("operator delete want 403 (admin-only), got %d", dw.Code)
+		t.Fatalf("operator delete want 403, got %d", dw.Code)
 	}
 }
