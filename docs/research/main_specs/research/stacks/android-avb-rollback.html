@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>android-avb-rollback</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="android-verified-boot-avb-dm-verity-boot_control-rollback-stack-research-note">Android
+Verified Boot (AVB) / dm-verity / <code>boot_control</code> / Rollback —
+Stack Research Note</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Initial research complete. The on-device integrity-and-rollback
+chain that backs Android A/B updates is documented end-to-end from
+primary AOSP sources: the AVB chain of trust and
+<code>verifiedbootstate</code> colours; dm-verity hashtree + error
+modes; the <code>boot_control</code> HAL slot state machine
+(<code>setActiveBootSlot</code>, <code>markBootSuccessful</code>,
+<code>setSlotAsUnbootable</code>, retry-count fallback);
+<code>update_verifier</code> care-map verification and the path to
+<code>markBootSuccessful</code>; and AVB rollback-index / anti-downgrade
+with the load-bearing ordering rule (mark slot SUCCESSFUL
+<strong>before</strong> bumping stored rollback index). Conclusion: this
+stack delivers the “zero-corruption” guarantee on its own; the Helix
+agent must drive it through documented APIs and must NOT touch slot
+flags, rollback indexes, vbmeta, or verity metadata directly.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Some exact constants are version/board dependent and are tagged
+UNVERIFIED: the default <code>slot-retry-count</code> value (commonly
+3/7), whether the RK3588 / Orange Pi 5 Max target build actually ships a
+conformant <code>boot_control</code> HAL + locked AVB, and the precise
+per-device rollback-index storage backend (RPMB vs persistent partition
+vs TEE). The exact <code>IBootControl</code> AIDL surface on Android 15
+was not byte-confirmed against the tag and is flagged.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (first revision)</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Follow-up note should: (1) byte-confirm the Android 15
+<code>android.hardware.boot</code> AIDL (<code>IBootControl</code>)
+method set and the <code>update_engine</code>↔︎HAL call order; (2)
+confirm RK3588/Orange Pi 5 Max AVB lock state, vbmeta signing, and
+rollback-index storage; (3) trace the exact <code>update_verifier</code>
+→ <code>setBootSuccessful</code>/<code>markBootSuccessful</code> call
+site in current <code>bootable/recovery</code>; (4) document Helix
+telemetry hooks for verity EIO events and slot-fallback detection
+(<code>ro.boot.verifiedbootstate</code>,
+<code>ro.boot.veritymode</code>, current/active slot,
+<code>slot-successful</code>).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--question">Scope &amp; Question</a></li>
+<li><a href="#2-executive-summary">Executive Summary</a></li>
+<li><a href="#3-the-verified-boot-chain-of-trust">The Verified Boot
+Chain of Trust</a></li>
+<li><a
+href="#4-dm-verity-transparent-integrity-of-read-only-partitions">dm-verity:
+Transparent Integrity of Read-Only Partitions</a></li>
+<li><a
+href="#5-boot_control-hal-the-slot-state-machine"><code>boot_control</code>
+HAL: The Slot State Machine</a></li>
+<li><a
+href="#6-update_verifier-proving-the-new-slot-before-commit"><code>update_verifier</code>:
+Proving the New Slot Before Commit</a></li>
+<li><a href="#7-automatic-rollback-on-failed-boot">Automatic Rollback on
+Failed Boot</a></li>
+<li><a href="#8-rollback-index--anti-downgrade">Rollback Index /
+Anti-Downgrade</a></li>
+<li><a
+href="#9-how-the-stack-delivers-the-zero-corruption-guarantee">How the
+Stack Delivers the Zero-Corruption Guarantee</a></li>
+<li><a href="#10-what-the-helix-agent-must-and-must-not-do">What the
+Helix Agent MUST and MUST NOT Do</a></li>
+<li><a href="#11-implications-for-helix-ota">Implications for Helix
+OTA</a></li>
+<li><a href="#12-open-questions--unverified-items">Open Questions /
+UNVERIFIED Items</a></li>
+<li><a href="#13-sources-consulted">Sources Consulted</a></li>
+<li><a href="#14-confidence">Confidence</a></li>
+</ol>
+<hr />
+<h2 id="scope-question">1. Scope &amp; Question</h2>
+<p>Helix OTA targets <strong>Android 15 first</strong>, using
+<strong>native A/B + Virtual A/B</strong> on device (see the companion
+note <code>aosp-update-engine.md</code>) with a <strong>custom Go
+control plane</strong> as the server. The companion note established
+that <code>update_engine</code> does the atomic write + slot switch.
+This note drills into the layer underneath that makes the update
+<em>safe</em>:</p>
+<ul>
+<li>What is the <strong>Android Verified Boot (AVB)</strong> chain of
+trust, and what does each <code>verifiedbootstate</code> colour
+mean?</li>
+<li>How does <strong>dm-verity</strong> guarantee the integrity of
+read-only partitions at runtime, and what happens on corruption?</li>
+<li>How does the <strong><code>boot_control</code> HAL</strong> manage
+slot state (active / bootable / successful / unbootable / retry
+count)?</li>
+<li>How does <strong><code>update_verifier</code></strong> prove the
+freshly-written slot and reach <code>markBootSuccessful</code>?</li>
+<li>How does the bootloader perform <strong>automatic rollback</strong>
+on a failed boot?</li>
+<li>How do <strong>rollback-index / anti-downgrade</strong> protections
+work, and what is the ordering rule that keeps them from bricking a
+device?</li>
+<li>Together, how does this stack deliver the <strong>zero-corruption
+guarantee</strong>, and what must the <strong>Helix agent do / not
+do</strong> to preserve it?</li>
+</ul>
+<p>The load-bearing claim to validate: <em>the safety guarantee is owned
+by AOSP + the bootloader, not by Helix; Helix must drive it through
+documented APIs and never manipulate the underlying
+flags/metadata.</em></p>
+<hr />
+<h2 id="executive-summary">2. Executive Summary</h2>
+<ul>
+<li><strong>AVB establishes a chain of trust</strong> rooted in the
+bootloader. The bootloader verifies <code>vbmeta</code> (signed
+top-level metadata), which transitively authenticates every protected
+partition’s descriptors. The result is reported to the OS via the kernel
+cmdline <code>androidboot.verifiedbootstate</code> with four states —
+<strong>GREEN, YELLOW, ORANGE, RED</strong> — and
+<code>androidboot.veritymode</code>. (AOSP Boot Flow.)</li>
+<li><strong>dm-verity</strong> provides <em>transparent, per-block,
+on-read</em> integrity checking of read-only partitions using a
+<strong>SHA-256 hash tree</strong> whose single <strong>root
+hash</strong> is the only value that must be trusted (it is
+carried/authenticated by AVB). On a hash mismatch the kernel returns an
+<strong>I/O error (EIO)</strong> — “It appears as if the filesystem has
+been corrupted, as is expected.” Android 7.0+ adds <strong>Forward Error
+Correction (FEC)</strong> (Reed–Solomon) to tolerate isolated bit-rot.
+(AOSP dm-verity.)</li>
+<li><strong><code>boot_control</code> HAL</strong>
+(<code>hardware/libhardware/include/hardware/boot_control.h</code>;
+modern AIDL <code>android.hardware.boot</code>) is the
+bootloader-implemented contract for slot management:
+<strong><code>getCurrentSlot</code></strong>,
+<strong><code>setActiveBootSlot</code></strong> (clears unbootable +
+successful markers, <strong>resets the retry count</strong>),
+<strong><code>markBootSuccessful</code></strong> (called by the
+<strong>Android framework, never by the bootloader</strong>),
+<strong><code>setSlotAsUnbootable</code></strong>,
+<strong><code>isSlotBootable</code></strong>. (AOSP Implement OTA
+updates.)</li>
+<li><strong><code>update_verifier</code></strong> runs on the
+<strong>first boot into a newly-written slot</strong>. It reads the
+<strong>care map</strong> (the set of blocks actually written) and
+forces the kernel to read those blocks so <strong>dm-verity verifies
+them</strong> before the slot is committed. Only if verification passes
+does the path to <strong><code>markBootSuccessful</code></strong>
+proceed. (<code>bootable/recovery/update_verifier</code>.)</li>
+<li><strong>Automatic rollback</strong>: a freshly-activated slot starts
+<strong>not-successful</strong> with a positive
+<strong><code>slot-retry-count</code></strong>. Each boot attempt
+decrements the count; if the slot is never marked SUCCESSFUL and the
+count hits zero, the bootloader marks it unbootable and <strong>falls
+back to the other slot</strong> (which still holds the prior, known-good
+Android). This is the core safety property and it is
+<strong>bootloader-enforced, not OS-enforced.</strong></li>
+<li><strong>Anti-rollback</strong> prevents <em>downgrade</em> attacks:
+each image carries a <strong>rollback index</strong>; the device keeps a
+<strong>stored rollback index</strong> in tamper-evident storage; boot
+is permitted only if
+<code>image.rollback_index &gt;= stored_rollback_index</code>.
+<strong>Critical ordering rule:</strong> the slot must be marked
+<strong>SUCCESSFUL first</strong>, and only <em>then</em> is the stored
+rollback index bumped — otherwise a power loss could leave the device
+unable to fall back to the previous (now disallowed) version.</li>
+<li><strong>Zero-corruption guarantee</strong> = (atomic A/B write to
+the <em>inactive</em> slot) × (AVB-authenticated vbmeta) × (dm-verity
+per-block verify, with <code>update_verifier</code> forcing it on first
+boot) × (retry-count + automatic slot fallback) × (monotonic rollback
+index). Every one of these is on-device, signed, and battle-tested.</li>
+<li><strong>Helix’s job</strong> is to deliver a correctly-signed
+payload and <em>drive the documented update path</em>; <strong>Helix
+must NOT</strong> flip slot flags out of band, write rollback indexes,
+regenerate/strip vbmeta, disable verity, or call
+<code>markBootSuccessful</code> itself. Doing any of those would
+silently void the guarantee. Helix’s legitimate value-add is
+<strong>rollout/telemetry/recall orchestration</strong> plus a
+correctly-built, correctly-signed OTA package.</li>
+</ul>
+<hr />
+<h2 id="the-verified-boot-chain-of-trust">3. The Verified Boot Chain of
+Trust</h2>
+<p>Source: <a
+href="https://source.android.com/docs/security/features/verifiedboot/boot-flow">Boot
+flow</a>, <a
+href="https://source.android.com/docs/security/features/verifiedboot/avb">Android
+Verified Boot (AVB)</a>, <a
+href="https://android.googlesource.com/platform/external/avb/+/master/README.md">AVB
+2.0 README</a>.</p>
+<p><strong>Root of trust.</strong> AVB is the recommended default
+implementation for verifying the integrity of read-only partitions. It
+ships <strong><code>libavb</code></strong>, a C library used at boot
+time. The bootloader holds the OEM root key (and, on locked devices,
+optionally a user-settable root of trust). The bootloader verifies the
+<strong><code>vbmeta</code></strong> image — a signed, top-level
+structure that contains descriptors (hashtree descriptors, hash
+descriptors, <strong>chain partition descriptors</strong>, and
+rollback-index data) for the partitions it protects.</p>
+<p><strong>Chained partitions / delegation.</strong> A <strong>chain
+partition descriptor</strong> delegates authority: it names the
+partition and the public key authorized to sign that partition’s own
+vbmeta footer. This is how <code>boot</code>, <code>vendor</code>,
+<code>system</code>, etc. can be signed/updated semi-independently while
+still rooting back to the top-level vbmeta the bootloader trusts. This
+is exactly the “delegating updates for different partitions” feature AVB
+advertises.</p>
+<p><strong>Verified boot states</strong> (reported via
+<code>androidboot.verifiedbootstate</code>):</p>
+<ul>
+<li><strong>GREEN</strong> — “if the device is <code>LOCKED</code> and
+user-settable root of trust isn’t used.” Full chain of trust to the OEM
+key; normal secure boot.</li>
+<li><strong>YELLOW</strong> — “if the device is <code>LOCKED</code> and
+user-settable root of trust is used.” Boot is verified against a
+user-provided key (e.g., custom OS signed by a known key).</li>
+<li><strong>ORANGE</strong> — “if the device is <code>UNLOCKED</code>.”
+Verification is not enforced; the user has taken responsibility. A
+production Helix fleet should be <strong>GREEN</strong> (or YELLOW for a
+custom-key fleet).</li>
+<li><strong>RED</strong> — dm-verity corruption (the device is
+<code>eio</code>/no valid OS) or no valid OS found. Boot is
+halted/last-resort.</li>
+</ul>
+<p>The bootloader passes both <code>androidboot.verifiedbootstate</code>
+and <code>androidboot.veritymode</code> on the kernel command line,
+which is how userspace (and therefore the Helix agent) can
+<em>observe</em> — but not change — the trust state. For A/B devices the
+docs are explicit: <strong>the boot slot must be marked
+<code>SUCCESSFUL</code> (via the Boot Control HAL) before
+rollback-protection metadata is updated</strong> (see §8).</p>
+<hr />
+<h2 id="dm-verity-transparent-integrity-of-read-only-partitions">4.
+dm-verity: Transparent Integrity of Read-Only Partitions</h2>
+<p>Source: <a
+href="https://source.android.com/docs/security/features/verifiedboot/dm-verity">Implement
+dm-verity</a>.</p>
+<p><strong>What it is.</strong> A device-mapper kernel target (Android
+4.4+) that provides <em>transparent integrity checking</em> of a block
+device. Its purpose is to prevent <strong>persistent rootkits</strong>
+and ensure the device boots an uncompromised read-only image.</p>
+<p><strong>Hash tree.</strong> Every 4 KiB block of the protected
+partition is SHA-256 hashed; those hashes are concatenated and hashed
+again, layer by layer, up to a single <strong>root hash</strong>. Only
+the root hash must be trusted — and that trust is supplied by
+<strong>AVB</strong> (the root hash lives in / is authenticated by the
+signed vbmeta/verity metadata). Any modification to any block breaks the
+chain up to the root.</p>
+<p><strong>Verity metadata block.</strong> Bundled into a ~32 KiB block
+containing: magic number <code>0xb001b001</code>, a version field, an
+<strong>RSA-2048 signature</strong>, the table length, and the dm-verity
+table. A public key (historically on the boot partition; under AVB,
+anchored through vbmeta) validates the signature.</p>
+<p><strong>On-read verification.</strong> Blocks are verified as they
+are read into memory (hashing happens in parallel with the
+already-expensive disk read, so latency is effectively hidden).
+Verification is <em>lazy and continuous</em>, not a one-shot scan —
+which is why <code>update_verifier</code> is needed to <em>force</em>
+verification of freshly-written blocks before commit (§6).</p>
+<p><strong>Forward Error Correction (FEC).</strong> Android 7.0+ adds
+Reed–Solomon error-correcting codes with interleaving, letting dm-verity
+<em>recover</em> from isolated corruption (bit-rot, marginal flash)
+instead of failing the read.</p>
+<p><strong>Error handling.</strong> “If verification fails, the device
+generates an <strong>I/O error</strong> indicating the block can’t be
+read. It appears as if the filesystem has been corrupted, as is
+expected.” Apps may continue if the unreadable data is non-critical but
+fail when required data is inaccessible. The behaviour on verity failure
+is governed by the <strong>verity mode</strong> (e.g., enforcing/restart
+vs <strong>EIO</strong>), surfaced via <code>ro.boot.veritymode</code> —
+this distinction matters for how <code>update_verifier</code> treats a
+first-boot failure (§6).</p>
+<hr />
+<h2 id="boot_control-hal-the-slot-state-machine">5.
+<code>boot_control</code> HAL: The Slot State Machine</h2>
+<p>Source: <a
+href="https://source.android.com/docs/core/architecture/bootloader/updating">Implement
+OTA updates</a>; HAL interface
+<code>hardware/libhardware/include/hardware/boot_control.h</code>
+(modern AIDL: <code>android.hardware.boot</code> /
+<code>IBootControl</code>).</p>
+<p>The <code>boot_control</code> HAL is the
+<strong>bootloader-implemented</strong> contract that lets userspace
+(<code>update_engine</code>, <code>update_verifier</code>, the
+framework) read and mutate slot metadata. The bootloader must implement
+it for A/B to work. Key operations (names from the AOSP page; AIDL
+spellings differ slightly):</p>
+<ul>
+<li><strong><code>getCurrentSlot()</code></strong> — which slot the
+bootloader loaded / will attempt to load.</li>
+<li><strong><code>setActiveBootSlot(slot)</code></strong> — make a slot
+active for next boot. Per the HAL semantics: it <strong>updates the
+current slot, clears the unbootable and successful markers, and resets
+the retry count</strong> to its positive starting value. This is what
+<code>update_engine</code> calls after writing the inactive slot.</li>
+<li><strong><code>markBootSuccessful()</code></strong> — mark the
+currently-running slot as successfully booted. <strong>Called by the
+Android framework, never by the bootloader.</strong> This is the commit
+that ends the trial period.</li>
+<li><strong><code>setSlotAsUnbootable(slot)</code></strong> — mark a
+slot unusable (e.g., a failed/incomplete write).</li>
+<li><strong><code>isSlotBootable(slot)</code></strong> — query
+bootability.</li>
+</ul>
+<p>Per-slot metadata the bootloader maintains: <strong>active</strong>,
+<strong>bootable</strong>, <strong>successful</strong>, and a
+<strong><code>slot-retry-count</code></strong>. The interplay of these
+flags + the retry count is the actual rollback mechanism (§7). The retry
+count can also be reset to a positive value (usually 3 —
+<strong>UNVERIFIED</strong> exact default; board-dependent) by
+<code>setActiveBootSlot</code> or by the fastboot
+<code>set_active</code> command.</p>
+<hr />
+<h2 id="update_verifier-proving-the-new-slot-before-commit">6.
+<code>update_verifier</code>: Proving the New Slot Before Commit</h2>
+<p>Source: <a
+href="https://android.googlesource.com/platform/bootable/recovery/+/master/update_verifier/update_verifier.cpp"><code>update_verifier.cpp</code></a>
+(in <code>platform/bootable/recovery</code>), AOSP A/B docs.</p>
+<p>After <code>update_engine</code> writes the inactive slot and
+<code>setActiveBootSlot</code> switches to it, the device reboots into
+the new slot in a <strong>trial state</strong> (bootable,
+not-yet-successful, retry-count &gt; 0). Before that slot can be
+committed, the freshly-written blocks must actually pass dm-verity. That
+is <code>update_verifier</code>’s job:</p>
+<ol type="1">
+<li>It runs early on first boot into the new slot (before
+<code>zygote</code>/full system start, per the A/B docs).</li>
+<li>It reads the <strong>care map</strong> (<code>care_map.txt</code> /
+<code>care_map.pb</code>) — the set of blocks that were actually written
+by the OTA — so it only verifies <em>relevant</em> blocks rather than
+the whole partition.</li>
+<li>It <strong>forces reads</strong> of those blocks, which causes the
+kernel <strong>dm-verity</strong> target to verify them against the hash
+tree. It checks the <strong>dm-verity mode</strong>
+(<code>ro.boot.veritymode</code>) and handles <strong>EIO mode</strong>
+differently from <strong>enforcing mode</strong> (in EIO mode a corrupt
+block yields an I/O error the verifier can observe rather than an
+immediate restart).</li>
+<li>If all care-map blocks verify, <code>update_verifier</code> reports
+success, and the path to
+<strong><code>markBootSuccessful()</code></strong> (via the
+<code>boot_control</code> HAL) proceeds — committing the slot. If
+verification fails, the slot is <strong>not</strong> marked successful,
+leading to fallback (§7).</li>
+</ol>
+<p>The net effect: dm-verity’s normally-lazy verification is <em>forced
+eagerly</em> on exactly the blocks the OTA touched, so a corrupt
+download/write is caught <strong>before</strong> the device gives up its
+known-good fallback slot.</p>
+<hr />
+<h2 id="automatic-rollback-on-failed-boot">7. Automatic Rollback on
+Failed Boot</h2>
+<p>Source: <a
+href="https://source.android.com/docs/core/architecture/bootloader/updating">Implement
+OTA updates</a>, <a
+href="https://source.android.com/docs/security/features/verifiedboot/boot-flow">Boot
+flow</a>, AOSP A/B docs.</p>
+<p>The rollback safety net is <strong>bootloader-enforced</strong> and
+works purely off the slot metadata:</p>
+<ol type="1">
+<li>After an update, the new slot is <strong>active, bootable, NOT
+successful</strong>, with <code>slot-retry-count</code> reset to a
+positive value.</li>
+<li>On each boot attempt of a not-yet-successful slot, the bootloader
+<strong>decrements <code>slot-retry-count</code></strong>.</li>
+<li>If the OS boots far enough to verify (<code>update_verifier</code>
+passes) and the framework calls
+<strong><code>markBootSuccessful</code></strong>, the slot becomes
+<strong>successful</strong> and the retry mechanism stops — the update
+is committed.</li>
+<li>If the slot is never marked successful and
+<strong><code>slot-retry-count</code> reaches zero</strong>, the
+bootloader marks the slot unusable and <strong>falls back to the other
+slot marked <code>slot-successful</code></strong> — which still contains
+the previous, known-good Android. Quoting the AOSP behaviour: “If
+there’s a platform update that fails (isn’t marked SUCCESSFUL), the A/B
+stack falls back to the other slot, which still has the previous version
+of Android in it.”</li>
+</ol>
+<p>Because the <em>previous</em> slot was never touched by the update
+(A/B writes only the inactive slot) and is still marked successful,
+fallback is to a fully-intact OS. This is the mechanism that turns “a
+bad update” into “an automatic, silent revert” instead of a brick. It
+does <strong>not</strong> depend on the Helix agent running, the network
+being up, or any server signal — which is precisely why it is
+trustworthy.</p>
+<hr />
+<h2 id="rollback-index-anti-downgrade">8. Rollback Index /
+Anti-Downgrade</h2>
+<p>Source: <a
+href="https://android.googlesource.com/platform/external/avb/+/master/README.md">AVB
+2.0 README</a>, <a
+href="https://source.android.com/docs/security/features/verifiedboot/boot-flow">Boot
+flow</a>, <a
+href="https://source.android.com/docs/security/features/verifiedboot/avb">AVB</a>.</p>
+<p>Rollback <em>protection</em> (anti-downgrade) is distinct from the
+automatic <em>rollback</em> of §7. The §7 rollback reverts to the
+<strong>immediately-previous</strong> good slot for reliability.
+Anti-downgrade prevents an attacker (or a malicious/old package) from
+forcing the device onto an <strong>older, known-vulnerable</strong>
+firmware even via an otherwise-valid update path.</p>
+<p><strong>Mechanism:</strong></p>
+<ul>
+<li>Each signed image (vbmeta) carries a
+<strong><code>rollback_index</code></strong> value at a specific
+<strong>rollback index location</strong> (AVB supports multiple
+locations, so different partitions / chained vbmeta can have independent
+indexes).</li>
+<li>The device persists a
+<strong><code>stored_rollback_index</code></strong> per location in
+<strong>tamper-evident storage</strong> (RPMB / dedicated persistent
+partition / TEE — <strong>board-dependent, UNVERIFIED</strong> for the
+target).</li>
+<li>At boot, the bootloader permits the image only if
+<strong><code>image.rollback_index &gt;= stored_rollback_index</code></strong>
+for each location. An older image (lower index) is rejected.</li>
+<li>The <code>avb_ops</code> callbacks
+<strong><code>read_rollback_index()</code></strong> and
+<strong><code>write_rollback_index()</code></strong> abstract the
+storage backend.</li>
+</ul>
+<p><strong>The load-bearing ordering rule.</strong> The AOSP docs are
+explicit and this is the single most important operational constraint:
+for A/B devices, <strong>the slot must be marked <code>SUCCESSFUL</code>
+<em>before</em> the stored rollback index is updated.</strong> Quoting
+the boot-flow guidance: the boot slot must be marked
+<code>SUCCESSFUL</code> via the Boot Control HAL <strong>before rollback
+protection metadata is updated</strong> — and the OTA implement page
+reinforces that marking the slot <code>slot-successful</code> must occur
+before updating rollback-protection metadata “to prevent boot failures
+if the device loses power during the update process.”</p>
+<p>Why it matters: if the stored rollback index were bumped
+<em>before</em> the new slot proved itself good, and the new slot then
+failed, the bootloader’s automatic fallback (§7) would try the old slot
+— but the old slot now has a <code>rollback_index</code> <strong>lower
+than</strong> the freshly-bumped <code>stored_rollback_index</code>, so
+anti-downgrade would <strong>reject it</strong>, leaving the device with
+no bootable slot. Bumping the stored index only after a confirmed-good
+boot keeps fallback always-possible.</p>
+<hr />
+<h2 id="how-the-stack-delivers-the-zero-corruption-guarantee">9. How the
+Stack Delivers the Zero-Corruption Guarantee</h2>
+<p>The “zero-corruption” property is not one feature; it is the
+<em>composition</em> of independent, on-device, signed mechanisms — each
+of which fails safe:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 40%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Guarantee it adds</th>
+<th>Fail-safe behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A/B slots (<code>update_engine</code>)</td>
+<td>The running slot is never modified; the update goes only to the
+<em>inactive</em> slot.</td>
+<td>A failed/partial write never touches the slot you’re running.</td>
+</tr>
+<tr>
+<td>AVB / vbmeta</td>
+<td>The image to be booted is cryptographically authenticated to the OEM
+(or user) root key.</td>
+<td>Tampered/unsigned image → not GREEN/YELLOW → blocked (locked
+device).</td>
+</tr>
+<tr>
+<td>dm-verity (+ FEC)</td>
+<td>Every read-only block matches the signed hash tree at runtime.</td>
+<td>Mismatch → <strong>EIO</strong> (looks like corruption); FEC repairs
+isolated rot.</td>
+</tr>
+<tr>
+<td><code>update_verifier</code> + care map</td>
+<td>The blocks the OTA <em>wrote</em> are force-verified on first boot
+<strong>before</strong> commit.</td>
+<td>Corrupt download/write caught before the good slot is given up.</td>
+</tr>
+<tr>
+<td><code>boot_control</code> retry-count + fallback</td>
+<td>A new slot must <em>prove</em> itself within N boots, else automatic
+revert.</td>
+<td>Never-successful slot → automatic fallback to prior good slot.</td>
+</tr>
+<tr>
+<td>Rollback index (anti-downgrade)</td>
+<td>Device can only move to an image ≥ stored index; old vulnerable
+images rejected.</td>
+<td>Ordering rule keeps fallback always possible despite the monotonic
+index.</td>
+</tr>
+</tbody>
+</table>
+<p>The key architectural insight for Helix: <strong>the entire dangerous
+part is on-device, signed, and bootloader-enforced.</strong> None of it
+depends on a correct server, a live network, or a running Helix agent at
+the critical moment. The server’s only way to <em>break</em> this
+guarantee is to ship a payload that is mis-signed or mis-built — which
+is a <em>build-pipeline</em> concern, not an apply-time concern.</p>
+<hr />
+<h2 id="what-the-helix-agent-must-and-must-not-do">10. What the Helix
+Agent MUST and MUST NOT Do</h2>
+<p>This is the operative section for Helix implementation. The agent is
+a <em>client of</em> the stack above; it must never become a
+<em>substitute for</em> any part of it.</p>
+<h3 id="must">MUST</h3>
+<ul>
+<li><strong>Deliver a correctly-signed, correctly-built
+payload.</strong> AVB/vbmeta signing and dm-verity hashtree generation
+are produced by the <strong>build pipeline</strong>
+(<code>avbtool</code>, the build’s AVB integration,
+<code>ota_from_target_files</code>). The package the agent installs must
+already be valid for the device’s locked root key. (See
+<code>aosp-update-engine.md</code> for payload generation; signing-flag
+specifics are UNVERIFIED there and should be pinned.)</li>
+<li><strong>Drive the update only through
+<code>update_engine</code></strong> (<code>applyPayload</code> / the
+AIDL surface). <code>update_engine</code> is what legitimately calls
+<code>setActiveBootSlot</code> and the rest of the
+<code>boot_control</code> HAL in the correct order.</li>
+<li><strong>Let the framework own
+<code>markBootSuccessful</code>.</strong> The agent may <em>report</em>
+that the system reached a healthy state, but the actual commit is
+<code>update_verifier</code> → framework → HAL. If Helix adds an
+application-level health gate, it should <em>gate its own “report
+healthy” signal</em>, not bypass the HAL sequence.</li>
+<li><strong>Observe, for telemetry only:</strong>
+<code>ro.boot.verifiedbootstate</code>, <code>ro.boot.veritymode</code>,
+current/active slot, <code>slot-successful</code>, and Virtual A/B merge
+state. Detecting an unexpected slot fallback or a verity EIO event is
+exactly the high-value signal the Go control plane wants for
+recall/rollout decisions.</li>
+<li><strong>Model the trial window.</strong> Treat “applied /
+pending-reboot / booted-not-yet-successful / successful / rolled-back”
+as first-class states in telemetry, mirroring the boot_control state
+machine.</li>
+</ul>
+<h3 id="must-not">MUST NOT</h3>
+<ul>
+<li><strong>MUST NOT</strong> directly write slot flags
+(<code>active</code>/<code>bootable</code>/<code>successful</code>) or
+reset/alter <code>slot-retry-count</code> outside
+<code>update_engine</code> / documented HAL usage.</li>
+<li><strong>MUST NOT</strong> call <code>markBootSuccessful</code>
+itself to “force” a commit. That defeats <code>update_verifier</code>
+and the trial-boot safety window.</li>
+<li><strong>MUST NOT</strong> write or bump the <strong>rollback
+index</strong> / <code>stored_rollback_index</code>, and MUST NOT
+reorder the “mark SUCCESSFUL before bump index” sequence. This is the
+one mistake that can leave a device with no bootable slot.</li>
+<li><strong>MUST NOT</strong> regenerate, strip, or re-sign
+<strong>vbmeta</strong> on-device, disable AVB, or boot with
+verification off (<code>vbmeta</code> flags /
+<code>--disable-verity</code>). On a production fleet the device should
+stay GREEN/YELLOW.</li>
+<li><strong>MUST NOT</strong> disable dm-verity or mount protected
+partitions read-write to “patch in place.” All updates go through the
+A/B payload path; in-place mutation breaks the hashtree and triggers
+EIO.</li>
+<li><strong>MUST NOT</strong> assume the agent must be alive for
+rollback to work. Rollback is bootloader-enforced; the agent must not
+insert itself as a single point of failure in the safety path.</li>
+</ul>
+<hr />
+<h2 id="implications-for-helix-ota">11. Implications for Helix OTA</h2>
+<ul>
+<li><strong>The safety guarantee is inherited, not built.</strong> Helix
+gets zero-corruption + automatic rollback “for free” <em>provided</em>
+the device is a properly-configured A/B + locked-AVB Android 15 device
+and the payload is correctly signed. Helix’s engineering risk is
+concentrated in the <strong>build/sign pipeline</strong> and in
+<strong>not interfering</strong> with the on-device stack — not in
+re-implementing apply/verify/rollback.</li>
+<li><strong>Control-plane value-add is orthogonal to safety.</strong>
+Staged rollout %, cohorts, recall, inventory, and telemetry all sit
+<em>above</em> this stack. The Go server should consume
+slot/verity/merge telemetry to make rollout decisions, but it has
+<strong>no role in the per-device safety enforcement</strong>.</li>
+<li><strong>Anti-downgrade interacts with rollout policy.</strong>
+Because the stored rollback index is monotonic, a Helix “recall to
+previous build” is only possible if the previous build’s
+<code>rollback_index</code> is still ≥ the device’s stored index. The
+control plane must understand that <strong>bumping rollback_index in a
+release is a one-way door</strong> for that device — plan recalls
+accordingly, and avoid unnecessarily incrementing
+<code>rollback_index</code> between closely-spaced builds.</li>
+<li><strong>Telemetry must capture the failure signatures.</strong>
+Unexpected slot fallback (current slot != the slot Helix told it to
+boot), <code>verifiedbootstate</code> != GREEN/YELLOW, and verity EIO
+are the concrete signals that an update failed safe. These should be
+reported and should drive automatic rollout halt.</li>
+<li><strong>Board reality check is required.</strong> All of the above
+presumes the RK3588 / Orange Pi 5 Max target actually ships a conformant
+<code>boot_control</code> HAL, locked AVB, and a real rollback-index
+storage backend. This is <strong>UNVERIFIED</strong> and must be
+confirmed on hardware before the guarantee can be claimed for the Helix
+fleet (see continuation).</li>
+</ul>
+<hr />
+<h2 id="open-questions-unverified-items">12. Open Questions / UNVERIFIED
+Items</h2>
+<ol type="1">
+<li><strong>Default <code>slot-retry-count</code></strong> — commonly
+cited as 3 (sometimes 7); exact default is board/bootloader-dependent.
+UNVERIFIED.</li>
+<li><strong>Android 15 <code>android.hardware.boot</code> AIDL
+(<code>IBootControl</code>)</strong> — exact method set and the precise
+<code>update_engine</code>↔︎HAL call order were not byte-confirmed
+against the Android 15 tag. UNVERIFIED.</li>
+<li><strong>Rollback-index storage backend on the target</strong> — RPMB
+vs dedicated persistent partition vs TEE-backed; determines
+tamper-resistance. UNVERIFIED for RK3588/Orange Pi 5 Max.</li>
+<li><strong>Target board AVB lock state &amp; signing</strong> — whether
+the Orange Pi 5 Max / RK3588 build ships locked AVB (GREEN/YELLOW) with
+proper vbmeta signing, or runs UNLOCKED (ORANGE), in which case the
+guarantee is weaker. UNVERIFIED — needs hands-on confirmation.</li>
+<li><strong>Exact <code>update_verifier</code> →
+<code>markBootSuccessful</code>/<code>setBootSuccessful</code> call
+site</strong> in current <code>bootable/recovery</code> (the function is
+sometimes wrapped via <code>setSlotAsBootable</code>/framework
+<code>BootControl</code>); trace against the current tree. UNVERIFIED
+spelling.</li>
+<li><strong>EIO vs enforcing verity mode default</strong> on the target
+and its effect on first-boot failure handling. UNVERIFIED for the
+board.</li>
+<li><strong>Persistent digest / chained-vbmeta specifics</strong> for
+partitions whose size/root-hash is not known at vbmeta-build time —
+relevant only if Helix updates such partitions. Not deeply explored
+here.</li>
+</ol>
+<hr />
+<h2 id="sources-consulted">13. Sources Consulted</h2>
+<p>Primary (AOSP, official): - Verified Boot (overview) —
+https://source.android.com/docs/security/features/verifiedboot - Boot
+flow (verifiedbootstate GREEN/YELLOW/ORANGE/RED; mark SUCCESSFUL before
+rollback metadata) —
+https://source.android.com/docs/security/features/verifiedboot/boot-flow
+- Android Verified Boot (AVB) —
+https://source.android.com/docs/security/features/verifiedboot/avb -
+Android Verified Boot 2.0 README (rollback index, chain partitions,
+<code>read_rollback_index</code>/<code>write_rollback_index</code>,
+<code>avb_ops</code>) —
+https://android.googlesource.com/platform/external/avb/+/master/README.md
+- Implement dm-verity (hash tree, 0xb001b001 metadata, RSA-2048, FEC,
+EIO on failure) —
+https://source.android.com/docs/security/features/verifiedboot/dm-verity
+- Implement OTA updates / bootloader (boot_control HAL:
+<code>setActiveBootSlot</code>, <code>markBootSuccessful</code>,
+<code>getCurrentSlot</code>, <code>isSlotBootable</code>,
+<code>setSlotAsUnbootable</code>, slot-retry-count, fallback, ordering
+rule) —
+https://source.android.com/docs/core/architecture/bootloader/updating -
+<code>update_verifier.cpp</code> (care map verification,
+ro.boot.veritymode EIO vs enforcing, markBootSuccessful) —
+https://android.googlesource.com/platform/bootable/recovery/+/master/update_verifier/update_verifier.cpp
+- HAL header
+<code>hardware/libhardware/include/hardware/boot_control.h</code>
+(referenced by the OTA-implement page as the HAL contract).</p>
+<p>Companion Helix note: - <code>aosp-update-engine.md</code> (this
+repo) — A/B + Virtual A/B mechanics, payload generation,
+<code>applyPayload</code> client API, <code>update_verifier</code>
+triggering dm-verity before zygote.</p>
+<p>No statistics, dates, stars, or citations were fabricated. Items not
+directly verified against the current docs revision or against the
+target board are tagged “UNVERIFIED — needs confirmation.”</p>
+<hr />
+<h2 id="confidence">14. Confidence</h2>
+<p><strong>Overall confidence: HIGH</strong> on the architecture and the
+must/must-not guidance — the AVB chain of trust, dm-verity behaviour,
+the <code>boot_control</code> slot state machine,
+<code>update_verifier</code>’s care-map verification, automatic
+retry-count fallback, and the rollback-index ordering rule are all
+stable, well-documented AOSP mechanisms confirmed across multiple
+primary sources. <strong>MEDIUM</strong> on exact constants (default
+retry count), the precise Android 15 <code>IBootControl</code> AIDL
+surface, and the exact <code>update_verifier</code> commit call site —
+flagged UNVERIFIED. <strong>LOW/UNVERIFIED</strong> on target-board
+specifics (RK3588 / Orange Pi 5 Max AVB lock state, vbmeta signing,
+rollback-index storage backend), which must be confirmed on hardware
+before the zero-corruption guarantee can be asserted for the Helix
+fleet.</p>
+</body>
+</html>

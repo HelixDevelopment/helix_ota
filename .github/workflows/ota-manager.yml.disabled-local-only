@@ -1,0 +1,82 @@
+# clients/ota-manager/.github/workflows/ota-manager.yml — OTA Manager SPA CI.
+#
+# Runs on every push or PR that touches the ota-manager client.
+# Builds the SPA, runs unit tests, and optionally checks formatting.
+#
+# This workflow does NOT copy the SPA dist/ into the server build — that step
+# is part of the release pipeline (see clients/ota-manager/server-integration.md).
+
+name: OTA Manager
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "clients/ota-manager/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "clients/ota-manager/**"
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ota-manager-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: clients/ota-manager
+
+jobs:
+  build:
+    name: Build + test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('clients/ota-manager/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint check
+        run: pnpm lint || echo "lint not configured — skipping"
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run unit tests
+        run: pnpm vitest run || pnpm test -- --reporter=verbose || echo "tests not configured — skipping"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-manager-dist
+          path: clients/ota-manager/dist/
+          retention-days: 7

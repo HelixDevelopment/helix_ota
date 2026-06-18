@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ota_landscape_report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-landscape-report-engine-selection-synthesis">Helix OTA
+— Landscape Report &amp; Engine-Selection Synthesis</h1>
+<blockquote>
+<p><strong>Purpose:</strong> Synthesize 8 research notes into a single
+decision-grade landscape report for Helix OTA. <strong>Locked
+strategy:</strong> <em>native Android A/B (AOSP
+<code>update_engine</code>) + custom Go control plane; wrap OSS only
+where it adds value.</em> <strong>Mandated stack:</strong> Go + Gin +
+Brotli + HTTP/3→HTTP/2, REST-primary; PostgreSQL + MinIO/S3.
+<strong>Phase 1 target:</strong> Android 15 first (Orange Pi 5 Max /
+RK3588 class). Linux/universal is a later phase.</p>
+</blockquote>
+<p><strong>Author:</strong> Lead architect (synthesis) ·
+<strong>Date:</strong> 2026-06-07 · <strong>Revision:</strong> 2
+<strong>Fixed (rev 2):</strong> Softened header anti-bluff claim;
+flagged that role totals are NOT cross-comparable; scored SWUpdate into
+the Linux-phase matrix (removed its exclusion note); qualified Uptane
+confidence as high (spec) / low (impl); added
+DMF/AMQP-deviation-needs-ADR note; cross-referenced the new Android
+deep-dive notes. <strong>Anti-bluff rule:</strong> every score traces to
+a source note (cited by slug). Items the notes flagged as unverified are
+carried forward as <strong>UNVERIFIED</strong>. This report makes no new
+external/empirical claims; design recommendations are derived from the
+notes.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-metadata-table">Metadata Table</a></li>
+<li><a href="#2-scored-comparison-matrix">Scored Comparison Matrix</a>
+<ul>
+<li><a href="#21-scoring-rubric">2.1 Scoring rubric</a></li>
+<li><a href="#22-matrix">2.2 Matrix</a></li>
+<li><a href="#23-per-criterion-justifications-traceable">2.3
+Per-criterion justifications (traceable)</a></li>
+</ul></li>
+<li><a href="#3-recommendations">Recommendations</a>
+<ul>
+<li><a href="#31-device-side-android">3.1 Device-side Android</a></li>
+<li><a href="#32-server-control-plane-wrap-or-build">3.2 Server
+control-plane: wrap or build</a></li>
+<li><a href="#33-trust-framework">3.3 Trust framework</a></li>
+</ul></li>
+<li><a href="#4-what-we-will-not-use-and-why">What We Will NOT Use (and
+Why)</a></li>
+<li><a href="#5-open--unverified-items-to-close-before-adr-0001">Open /
+UNVERIFIED Items to Close Before ADR-0001</a></li>
+<li><a href="#6-source-notes">Source Notes</a></li>
+</ol>
+<hr />
+<h2 id="metadata-table">1. Metadata Table</h2>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stack</th>
+<th>Slug</th>
+<th>Category</th>
+<th>License</th>
+<th>Maturity (per note)</th>
+<th>Android-15 fit</th>
+<th>Confidence</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AOSP <code>update_engine</code> (native A/B + Virtual A/B)</td>
+<td><code>aosp-update-engine</code></td>
+<td>On-device updater</td>
+<td>Apache-2.0</td>
+<td>Very mature; A/B since Android 7/8, Virtual A/B GMS req 11+</td>
+<td>Excellent (this <em>is</em> the path)</td>
+<td>high</td>
+<td><a href="stacks/aosp-update-engine.md">note</a></td>
+</tr>
+<tr>
+<td>Eclipse hawkBit</td>
+<td><code>eclipse-hawkbit</code></td>
+<td>Rollout/campaign back end</td>
+<td>EPL-2.0</td>
+<td>Mature/active; 1.0.3 (2025-04-09), API-stable</td>
+<td>Good at orchestration seam (OS-agnostic)</td>
+<td>medium</td>
+<td><a href="stacks/eclipse-hawkbit.md">note</a></td>
+</tr>
+<tr>
+<td>TUF + go-tuf/v2</td>
+<td><code>tuf-go-tuf</code></td>
+<td>Trust/metadata framework</td>
+<td>Apache-2.0</td>
+<td>Mature/active; v2.4.2 (2026-05-19); CNCF spec</td>
+<td>Server strong / device WEAK (no verified Android client)</td>
+<td>medium</td>
+<td><a href="stacks/tuf-go-tuf.md">note</a></td>
+</tr>
+<tr>
+<td>Uptane</td>
+<td><code>uptane</code></td>
+<td>Trust/metadata framework (TUF-extended)</td>
+<td>Open (IEEE-ISTO 6100.1.0.0); aktualizr MPL-2.0</td>
+<td>Spec high; impl uneven (aktualizr last tag Feb 2020)</td>
+<td>Weak as product, useful as model</td>
+<td>high (spec) / low (impl)</td>
+<td><a href="stacks/uptane.md">note</a></td>
+</tr>
+<tr>
+<td>Mender</td>
+<td><code>mender</code></td>
+<td>Client+server OTA (embedded Linux)</td>
+<td>Open-core (client Apache-2.0; server Enterprise proprietary)</td>
+<td>High; widely deployed</td>
+<td>Effectively zero (no Android)</td>
+<td>high</td>
+<td><a href="stacks/mender.md">note</a></td>
+</tr>
+<tr>
+<td>RAUC</td>
+<td><code>rauc</code></td>
+<td>On-device A/B updater (embedded Linux)</td>
+<td>LGPL-2.1-or-later</td>
+<td>Mature; Steam Deck; v1.15.2 (2026-03-27)</td>
+<td>None (Linux only)</td>
+<td>medium</td>
+<td><a href="stacks/rauc.md">note</a></td>
+</tr>
+<tr>
+<td>SWUpdate</td>
+<td><code>swupdate</code></td>
+<td>On-device update engine (embedded Linux)</td>
+<td>GPL-2.0-only</td>
+<td>Mature; broad Yocto/OE adoption; 2026.05 (2026-05-29)</td>
+<td>None (Linux only)</td>
+<td>medium</td>
+<td><a href="stacks/swupdate.md">note</a></td>
+</tr>
+<tr>
+<td>OSTree / libostree</td>
+<td><code>ostree</code></td>
+<td>File-based atomic deploy (Linux)</td>
+<td>LGPL-2.1-or-later</td>
+<td>Mature; Silverblue/CoreOS/RHEL Edge</td>
+<td>Poor for AOSP path</td>
+<td>medium</td>
+<td><a href="stacks/ostree.md">note</a></td>
+</tr>
+<tr>
+<td>Commercial/OSS fleet (balena, Torizon, Memfault, Foundries.io)</td>
+<td><code>commercial-oss-fleet</code></td>
+<td>Fleet platforms</td>
+<td>Mixed (mostly open-client / closed-backend)</td>
+<td>All production; backends proprietary SaaS</td>
+<td>Only Memfault hits AOSP A/B</td>
+<td>high</td>
+<td><a href="stacks/commercial-oss-fleet.md">note</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="scored-comparison-matrix">2. Scored Comparison Matrix</h2>
+<h3 id="scoring-rubric">2.1 Scoring rubric</h3>
+<p>Scores are <strong>1–5</strong>, judged <strong>relative to Helix’s
+locked strategy and mandated stack</strong> (not in the abstract).
+Higher = better fit for Helix.</p>
+<ul>
+<li><strong>5</strong> = directly satisfies / near 1:1 match to Helix’s
+locked design.</li>
+<li><strong>4</strong> = strong fit, minor adaptation.</li>
+<li><strong>3</strong> = usable with meaningful integration work, or a
+partial fit.</li>
+<li><strong>2</strong> = weak fit; significant mismatch or only
+pattern-level value.</li>
+<li><strong>1</strong> = does not apply / disqualifying for the relevant
+phase.</li>
+</ul>
+<p>Criteria: <strong>mechanism, rollback, staged-rollout, A/B,
+Android-15 fit, Go fit, wrap-ability, license, maturity.</strong></p>
+<h3 id="matrix">2.2 Matrix</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stack (slug)</th>
+<th style="text-align: center;">Mechanism</th>
+<th style="text-align: center;">Rollback</th>
+<th style="text-align: center;">Staged-rollout</th>
+<th style="text-align: center;">A/B</th>
+<th style="text-align: center;">Android-15 fit</th>
+<th style="text-align: center;">Go fit</th>
+<th style="text-align: center;">Wrap-ability</th>
+<th style="text-align: center;">License</th>
+<th style="text-align: center;">Maturity</th>
+<th style="text-align: center;"><strong>Total /45</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aosp-update-engine</code></td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;"><strong>39</strong></td>
+</tr>
+<tr>
+<td><code>eclipse-hawkbit</code></td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>36</strong></td>
+</tr>
+<tr>
+<td><code>tuf-go-tuf</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>30</strong></td>
+</tr>
+<tr>
+<td><code>uptane</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;"><strong>27</strong></td>
+</tr>
+<tr>
+<td><code>commercial-oss-fleet</code></td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>28</strong></td>
+</tr>
+<tr>
+<td><code>rauc</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>30</strong></td>
+</tr>
+<tr>
+<td><code>swupdate</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>29</strong></td>
+</tr>
+<tr>
+<td><code>ostree</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>25</strong></td>
+</tr>
+<tr>
+<td><code>mender</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;"><strong>24</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Totals are NOT comparable across roles and must not be quoted
+standalone.</strong> Each stack is scored against Helix’s locked
+strategy <em>for its own role</em> (device-apply vs. control-plane
+vs. trust), so a <code>/45</code> total only ranks candidates <em>within
+the same role</em> — comparing an on-device updater’s total to a
+control-plane’s total is apples-to-oranges. The total is a coarse
+within-role ranking aid only. The decision is
+<strong>role-specific</strong> (device vs. control-plane vs. trust), so
+read §2.3 and §3 — not just the totals. A low A/B or Android score is
+<em>expected and not disqualifying</em> for a control-plane or
+trust-layer candidate (e.g., hawkBit, TUF), because those roles don’t
+perform the on-device A/B apply.</p>
+</blockquote>
+<h3 id="per-criterion-justifications-traceable">2.3 Per-criterion
+justifications (traceable)</h3>
+<p>Each cell below = one-line justification + citing note. “—” criteria
+that are N/A for a role still get a literal score per the rubric.</p>
+<h4 id="aosp-update-engine"><code>aosp-update-engine</code></h4>
+<ul>
+<li><strong>Mechanism (5):</strong> On-device daemon writes inactive
+slot via boot_control HAL; Virtual A/B COW snapshots; payload.bin from
+<code>ota_from_target_files</code>. [aosp-update-engine]</li>
+<li><strong>Rollback (5):</strong> Automatic bootloader revert on failed
+boot/dm-verity (update_verifier before zygote).
+[aosp-update-engine]</li>
+<li><strong>Staged-rollout (1):</strong> None — AOSP applies whatever
+payload it’s handed; all rollout logic is the integrator’s.
+[aosp-update-engine]</li>
+<li><strong>A/B (5):</strong> Native A/B and Virtual A/B both driven by
+<code>applyPayload</code>. [aosp-update-engine]</li>
+<li><strong>Android-15 fit (5):</strong> This <em>is</em> the native
+Android update path; thin wrapper over <code>applyPayload</code>.
+[aosp-update-engine]</li>
+<li><strong>Go fit (3):</strong> N/A on device (Java/AIDL + C++); Go
+fits the server side that builds/serves payload.bin + owns
+rollout/telemetry. [aosp-update-engine]</li>
+<li><strong>Wrap-ability (5):</strong> Stable supported client API +
+AOSP SystemUpdaterSample reference. [aosp-update-engine]</li>
+<li><strong>License (5):</strong> Apache-2.0. [aosp-update-engine]</li>
+<li><strong>Maturity (5):</strong> Standard since Android 7/8;
+production-wide. [aosp-update-engine]</li>
+</ul>
+<h4 id="eclipse-hawkbit"><code>eclipse-hawkbit</code></h4>
+<ul>
+<li><strong>Mechanism (5):</strong> Three clean APIs
+(Management/DDI/DMF); threshold-gated cascading deployment groups
+deploying Distribution Sets. [eclipse-hawkbit]</li>
+<li><strong>Rollback (2):</strong> No firmware/app rollback of its own
+beyond halting a rollout (emergency shutdown); per-device boot rollback
+is AOSP’s job. [eclipse-hawkbit]</li>
+<li><strong>Staged-rollout (5):</strong> Cascading groups with
+success/trigger + error thresholds, approval gate, start/pause/resume —
+near 1:1 to locked Helix design. [eclipse-hawkbit]</li>
+<li><strong>A/B (1):</strong> No native A/B; artifacts opaque.
+[eclipse-hawkbit]</li>
+<li><strong>Android-15 fit (4):</strong> OS-agnostic; DDI is plain HTTPS
+poll + token + feedback, trivially implementable on Android; client
+bridges DDI→<code>applyPayload</code>. [eclipse-hawkbit]</li>
+<li><strong>Go fit (5):</strong> Explicitly designed to be driven by a
+3rd-party app over the Management API — the Go control plane becomes
+that app. [eclipse-hawkbit]</li>
+<li><strong>Wrap-ability (5):</strong> Clean seam; hard orchestration
+reused, custom code stays in Go; sits behind the Go control plane, never
+public. [eclipse-hawkbit]</li>
+<li><strong>License (5):</strong> EPL-2.0, business-friendly.
+[eclipse-hawkbit]</li>
+<li><strong>Maturity (4):</strong> Eclipse Mature; 1.0.x API-stable;
+1.0.3 (2025-04-09). [eclipse-hawkbit]</li>
+</ul>
+<h4 id="tuf-go-tuf"><code>tuf-go-tuf</code></h4>
+<ul>
+<li><strong>Mechanism (4):</strong> Signed metadata
+(root/timestamp/snapshot/targets) verified in fixed order; threshold +
+offline keys. [tuf-go-tuf]</li>
+<li><strong>Rollback (3):</strong> Prevents rollback <em>attacks</em>
+(version monotonicity); does not execute device rollback.
+[tuf-go-tuf]</li>
+<li><strong>Staged-rollout (2):</strong> No native primitive;
+delegations can partition target namespace, but phasing stays in control
+plane. [tuf-go-tuf]</li>
+<li><strong>A/B (1):</strong> N/A — does not perform slot switching.
+[tuf-go-tuf]</li>
+<li><strong>Android-15 fit (2):</strong> No verified production
+Android/Kotlin TUF client; on-device path (gomobile/JNI vs hand-rolled
+Kotlin) unresolved — dominant adoption risk. <strong>UNVERIFIED</strong>
+client. [tuf-go-tuf]</li>
+<li><strong>Go fit (5):</strong> Idiomatic go-tuf/v2, Apache-2.0, clean
+generics, single dep tree; server publish path is a clean wrap.
+[tuf-go-tuf]</li>
+<li><strong>Wrap-ability (4):</strong> High on server,
+additive/non-invasive (artifacts stay byte-identical); device-side
+blocked by missing client. [tuf-go-tuf]</li>
+<li><strong>License (5):</strong> Apache-2.0 (verified 2026-06-07).
+[tuf-go-tuf]</li>
+<li><strong>Maturity (4):</strong> Active; v2.4.2 (2026-05-19);
+CNCF-graduated spec; adopter list <strong>UNVERIFIED</strong>.
+[tuf-go-tuf]</li>
+</ul>
+<h4 id="uptane"><code>uptane</code></h4>
+<ul>
+<li><strong>Mechanism (4):</strong> Dual-repo (offline Image + online
+Director) + four TUF roles; per-device metadata. [uptane]</li>
+<li><strong>Rollback (4):</strong> Anti-rollback/anti-freeze core
+guarantees (metadata layer; distinct from device A/B). [uptane]</li>
+<li><strong>Staged-rollout (4):</strong> Director mints per-device
+metadata from inventory DB — strong conceptual fit for percentage
+staging (orchestration still Helix’s). [uptane]</li>
+<li><strong>A/B (1):</strong> Orthogonal; provides no A/B itself.
+[uptane]</li>
+<li><strong>Android-15 fit (2):</strong> No first-class AOSP client;
+bespoke integration; <strong>UNVERIFIED</strong> any production
+Android+Uptane ships. [uptane]</li>
+<li><strong>Go fit (3):</strong> No Go reference impl (aktualizr is
+C++), but the metadata layer is straightforward to implement in Go.
+[uptane]</li>
+<li><strong>Wrap-ability (2):</strong> Low as whole-system wrap
+(aktualizr C++/Yocto/OSTree-coupled); high only as a borrowable design.
+[uptane]</li>
+<li><strong>License (4):</strong> Open standard; aktualizr MPL-2.0.
+[uptane]</li>
+<li><strong>Maturity (3):</strong> Spec maturity high; implementation
+cadence low (aktualizr last tag Feb 2020). [uptane]</li>
+</ul>
+<h4
+id="commercial-oss-fleet-balena-torizon-memfault-foundries.io"><code>commercial-oss-fleet</code>
+(balena / Torizon / Memfault / Foundries.io)</h4>
+<ul>
+<li><strong>Mechanism (3):</strong> Four distinct models; only Memfault
+drives AOSP UpdateEngine; others are Linux-filesystem/container.
+[commercial-oss-fleet]</li>
+<li><strong>Rollback (4):</strong> Foundries.io/Torizon auto bootloader
+rollback after 3 failed boots; Memfault uses AOSP A/B slot rollback.
+[commercial-oss-fleet]</li>
+<li><strong>Staged-rollout (5):</strong> Foundries.io
+waves+canary+cancel (group/UUID/percentage); Memfault cohorts +
+one-click abort — strong patterns to copy. [commercial-oss-fleet]</li>
+<li><strong>A/B (3):</strong> Memfault = native Android UpdateEngine
+A/B; others not AOSP. [commercial-oss-fleet]</li>
+<li><strong>Android-15 fit (3):</strong> Only Memfault targets AOSP A/B
+(Bort SDK + poll-releases-HTTP-API); others’ delivery layer not
+reusable. [commercial-oss-fleet]</li>
+<li><strong>Go fit (2):</strong> None ship a reusable Go control plane;
+only orchestration patterns transfer. [commercial-oss-fleet]</li>
+<li><strong>Wrap-ability (2):</strong> Low as whole platforms
+(proprietary SaaS / feature-gated OSS backends); portable assets are
+clients + patterns. [commercial-oss-fleet]</li>
+<li><strong>License (2):</strong> Control planes are the lock-in:
+Memfault/Foundries backends proprietary SaaS; openBalena AGPLv3
+single-user beta; Torizon CE non-prod. [commercial-oss-fleet]</li>
+<li><strong>Maturity (4):</strong> All four production-grade in
+commercial use. [commercial-oss-fleet]</li>
+</ul>
+<h4 id="rauc"><code>rauc</code></h4>
+<ul>
+<li><strong>Mechanism (4):</strong> C daemon installs signed SquashFS
+bundles into redundant slots; HTTP(S) streaming via NBD+dm-verity; D-Bus
+control. [rauc]</li>
+<li><strong>Rollback (4):</strong> Bootloader-driven fallback on
+repeated boot failure; mark-good/mark-bad confirmation. [rauc]</li>
+<li><strong>Staged-rollout (1):</strong> None — RAUC ships no
+server/orchestration (a fit for custom control plane, not a feature).
+[rauc]</li>
+<li><strong>A/B (5):</strong> Native A/B (and multi-slot) is core
+design. [rauc]</li>
+<li><strong>Android-15 fit (1):</strong> Embedded Linux only; no
+Android/update_engine/Virtual A/B. [rauc]</li>
+<li><strong>Go fit (3):</strong> No server to displace; delivery is
+plain HTTP+Range (Gin-able), but device control is D-Bus, not Go (only
+unmaintained constants-only Go helper). [rauc]</li>
+<li><strong>Wrap-ability (4):</strong> Clean
+device-install/orchestration separation; async D-Bus maps to an
+OS-adapter; cost = self-maintained D-Bus binding + bootloader config.
+[rauc]</li>
+<li><strong>License (4):</strong> LGPL-2.1-or-later (dynamic-linking
+caveat; D-Bus/CLI usage sidesteps it). [rauc]</li>
+<li><strong>Maturity (4):</strong> Mature; Steam Deck/SteamOS; v1.15.2
+(2026-03-27). [rauc]</li>
+</ul>
+<h4 id="swupdate"><code>swupdate</code></h4>
+<ul>
+<li><strong>Mechanism (4):</strong> Handler-driven streaming install
+pipeline; cpio <code>.swu</code> + <code>sw-description</code>
+(libconfig or Lua parser); flexible but not Helix’s native Android
+mechanism. [swupdate]</li>
+<li><strong>Rollback (3):</strong> Delegated to the bootloader env
+(U-Boot/GRUB/EFI Boot Guard) and assembled by the integrator; no
+built-in slot-confirm state machine like RAUC/update_engine.
+[swupdate]</li>
+<li><strong>Staged-rollout (3):</strong> No native rollout orchestration
+in the engine, but suricatta + hawkBit DDI/wfx gives a real path when
+paired with a server (above RAUC’s 1, below hawkBit’s 5 since the engine
+itself does none). [swupdate]</li>
+<li><strong>A/B (3):</strong> Double-copy via Software collections +
+bootloader env, but convention/config rather than a first-class slot
+manager (below RAUC’s 5). [swupdate]</li>
+<li><strong>Android-15 fit (1):</strong> No Android target at all;
+embedded-Linux only; irrelevant to the MVP. [swupdate]</li>
+<li><strong>Go fit (3):</strong> No Go reuse of the engine, but the
+server contract is a trivial Go target (general-purpose HTTP) or a
+documented one (hawkBit DDI). [swupdate]</li>
+<li><strong>Wrap-ability (4):</strong> Excellent as a wrapped Linux
+apply engine (one-shot or suricatta; Lua-extensible; integrator owns the
+server); one point below RAUC because A/B/rollback orchestration is less
+turnkey. Zero for Android. [swupdate]</li>
+<li><strong>License (4):</strong> GPL-2.0-only copyleft; fine for a
+separate on-device daemon driven over a protocol, but distribution of
+modified binaries carries obligations (RAUC’s LGPL is slightly more
+permissive). [swupdate]</li>
+<li><strong>Maturity (4):</strong> Long-lived, actively maintained
+(2026.05, 2026-05-29); broad Yocto/OE adoption; hawkBit/wfx/delta
+features maintained. [swupdate]</li>
+</ul>
+<h4 id="ostree"><code>ostree</code></h4>
+<ul>
+<li><strong>Mechanism (4):</strong> Content-addressed object store;
+parallel hardlinked deployments + atomic bootloader pointer swap; static
+deltas. [ostree]</li>
+<li><strong>Rollback (4):</strong> Previous deployment always retained;
+pinning exempts known-good from GC (exact
+<code>ostree admin rollback</code> command <strong>UNVERIFIED</strong>).
+[ostree]</li>
+<li><strong>Staged-rollout (1):</strong> No built-in engine; pull-based;
+rollout is entirely Helix control plane’s. [ostree]</li>
+<li><strong>A/B (1):</strong> Not A/B — parallel deployments on one
+partition; does not replace Android native A/B. [ostree]</li>
+<li><strong>Android-15 fit (1):</strong> Linux-userspace; aboot backend
+is Linux-on-aboot, not AOSP. [ostree]</li>
+<li><strong>Go fit (2):</strong> No first-class Go binding; CLI
+orchestration or cgo/GI. [ostree]</li>
+<li><strong>Wrap-ability (4):</strong> Server is <code>ostree</code> CLI
+→ archive repo over plain HTTP, drops into Go + S3/MinIO; client is the
+<code>ostree</code> binary behind a Linux adapter. [ostree]</li>
+<li><strong>License (4):</strong> LGPL-2.1-or-later. [ostree]</li>
+<li><strong>Maturity (4):</strong> Mature, production-proven
+(Silverblue/CoreOS/RHEL Edge); ecosystem shifting to bootc.
+[ostree]</li>
+</ul>
+<h4 id="mender"><code>mender</code></h4>
+<ul>
+<li><strong>Mechanism (4):</strong> Go client polls HTTPS; dual A/B
+rootfs (bootloader-driven) + Update Modules; Go microservices server
+(Mongo/NATS/Traefik). [mender]</li>
+<li><strong>Rollback (4):</strong> Automatic device-level bootloader
+fallback; power-loss safe. [mender]</li>
+<li><strong>Staged-rollout (2):</strong> “Phased rollouts” + dynamic
+grouping exist but are Enterprise-tier; nothing in the free OSS plan.
+[mender]</li>
+<li><strong>A/B (3):</strong> Yes for embedded Linux via
+bootloader-driven dual A/B; not Android update_engine. [mender]</li>
+<li><strong>Android-15 fit (1):</strong> Android absent from supported
+platforms — disqualifying. [mender]</li>
+<li><strong>Go fit (2):</strong> Client Go, but server is
+Mongo/NATS/Traefik microservices — conflicts with
+Gin+Postgres+MinIO+REST mandate. [mender]</li>
+<li><strong>Wrap-ability (1):</strong> Cannot wrap an engine that
+doesn’t run on Android; server conflicts with stack + open-core gating.
+[mender]</li>
+<li><strong>License (2):</strong> Open-core; key orchestration features
+Professional/Enterprise-only (proprietary). [mender]</li>
+<li><strong>Maturity (5):</strong> High; mature, widely deployed in
+embedded Linux/IoT. [mender]</li>
+</ul>
+<hr />
+<h2 id="recommendations">3. Recommendations</h2>
+<p>Decision summary aligned to the locked strategy: <strong>build the Go
+control plane, wrap AOSP on-device, wrap hawkBit for orchestration if
+its seam confirms, and adopt TUF (go-tuf/v2) server-side now with a
+device-client spike gating mandatory enforcement.</strong></p>
+<h3 id="device-side-android">3.1 Device-side Android</h3>
+<p><strong>ADOPT AOSP <code>update_engine</code> (native A/B + Virtual
+A/B); wrap, do not replace.</strong> [aosp-update-engine]</p>
+<blockquote>
+<p><strong>Device-side deep-dive references:</strong> the implementation
+details behind this recommendation are expanded in the Android notes: <a
+href="stacks/android15-virtual-ab.md"><code>android15-virtual-ab.md</code></a>
+(Virtual A/B / COW snapshots on Android 15), <a
+href="stacks/android-update-engine-api.md"><code>android-update-engine-api.md</code></a>
+(<code>UpdateEngine.applyPayload</code> surface and callbacks), and <a
+href="stacks/android-avb-rollback.md"><code>android-avb-rollback.md</code></a>
+(AVB and rollback protection). Consult these when building the thin
+client and confirming RK3588 / Orange Pi 5 Max board specifics.</p>
+</blockquote>
+<ul>
+<li>Build a <strong>thin Android client</strong> around
+<code>UpdateEngine.applyPayload</code> that receives
+<code>{url, offset, size, FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE}</code>
+from the Go control plane and relays <code>onStatusUpdate</code> /
+<code>onPayloadApplicationComplete</code> as telemetry. Do
+<strong>not</strong> re-implement the apply/verify/rollback path — AOSP
+already provides atomic inactive-slot writes and automatic bootloader
+rollback on failed boot/dm-verity. [aosp-update-engine]</li>
+<li>Helix’s device-side investment goes into: the <strong>build
+pipeline</strong> (<code>ota_from_target_files</code> + AVB/release
+signing key custody), <strong>streaming-correct serving</strong>
+(ZIP_STORED packaging + HTTP Range), and <strong>reconciling daemon
+state across process death</strong>. [aosp-update-engine]</li>
+<li><strong>Pattern to borrow:</strong> Memfault’s AOSP path
+(poll-a-releases-HTTP-API → drive UpdateEngine A/B → report install/boot
+result) is the closest existing blueprint for the device-client shape.
+Add a <strong>post-boot health-confirmation window</strong> (beyond
+AOSP’s boot-success mark) before marking a release “good,” with
+automatic canary abort on crash/health regression.
+[commercial-oss-fleet]</li>
+<li><strong>Board caveat:</strong> some exact Android-15 constants/AIDL
+headers for RK3588 / Orange Pi 5 Max remain <strong>UNVERIFIED</strong>
+and need board-level confirmation. [aosp-update-engine]</li>
+</ul>
+<h3 id="server-control-plane-wrap-or-build">3.2 Server control-plane:
+wrap or build</h3>
+<p><strong>BUILD the Helix control plane in Go (Gin, REST-primary,
+Brotli, HTTP/3→HTTP/2, PostgreSQL, MinIO/S3) — and WRAP Eclipse hawkBit
+for the staged-rollout/campaign engine</strong> (front-runner, gated).
+[eclipse-hawkbit]</p>
+<p>Rationale: - The locked strategy is <em>build the control plane, wrap
+OSS only where it adds value.</em> The single piece of hard,
+battle-tested orchestration worth wrapping is <strong>threshold-gated
+cascading rollouts with emergency shutdown</strong>, which hawkBit
+provides near 1:1 to the Helix staged-rollout design. The Go control
+plane becomes the “3rd-party app” hawkBit is explicitly designed to be
+driven by (Management API), DDI faces the Android client, DMF stays
+optional. [eclipse-hawkbit] - <strong>Leanest MVP topology:</strong>
+<code>hawkbit-monolith</code> + PostgreSQL + DDI only (no RabbitMQ
+unless DMF push is needed) + MinIO/S3 for artifacts. hawkBit sits
+<strong>behind</strong> the Go control plane, never exposed publicly.
+[eclipse-hawkbit] - <strong>Cost / trade-off:</strong> operating a
+JVM/Spring-Boot runtime alongside Go is the main downside. The decision
+must be gated on confirming whether the Go consumer can
+<strong>subscribe to management events or must poll</strong>, and the
+exact rollout create/start/pause/resume API surface (both
+<strong>UNVERIFIED</strong>). [eclipse-hawkbit] - <strong>If hawkBit is
+rejected at ADR-0001</strong> (e.g., team declines the JVM operational
+cost), <strong>build the rollout engine natively in Go</strong> and copy
+Foundries.io’s wave state machine
+(<code>init→canary→expanding→complete/cancelled</code>) + device-tag
+cohorts (group/UUID/percentage targeting) and Memfault’s server-side
+one-click abort. These patterns are reusable even though no platform
+ships a reusable Go control plane. [commercial-oss-fleet] - <strong>Do
+not wrap a fleet platform backend or Mender’s server</strong> — see
+§4.</p>
+<h3 id="trust-framework">3.3 Trust framework</h3>
+<p><strong>ADOPT TUF via go-tuf/v2 as the server-side metadata/trust
+layer now; gate mandatory device-side enforcement behind an
+Android-client spike. Borrow Uptane’s dual-repo model as a stretch
+hardening goal.</strong> [tuf-go-tuf] [uptane]</p>
+<ul>
+<li>go-tuf/v2 is idiomatic Go, Apache-2.0, actively maintained (v2.4.2,
+2026-05-19), and <strong>additive/non-invasive</strong>: artifacts
+(payload.bin / .zip) stay byte-identical and keep their AOSP/payload
+signature; TUF treats them as opaque target files. It closes attack
+classes plain per-artifact signing leaves open (rollback, indefinite
+freeze, mix-and-match, malicious-mirror denial, key-compromise
+resilience via thresholds + offline keys) and serves over the existing
+HTTP/3→HTTP/2 + Brotli path. [tuf-go-tuf]</li>
+<li><strong>The blocker is device-side, not the library:</strong> no
+verified production-grade Android/Kotlin TUF client exists
+(<strong>UNVERIFIED</strong>); the on-device path (gomobile/JNI vs
+hand-rolled Kotlin) is the dominant adoption cost. [tuf-go-tuf]</li>
+<li><strong>Sequencing:</strong> (1) prototype server publish + a Go
+reference refresh client end-to-end; (2) ADR + spike for the on-device
+client; (3) define offline key-custody ceremony (HSM/KMS, threshold,
+rotation); (4) only then make device-side TUF verification mandatory.
+Keep SHA-256 + per-artifact signature + the A/B engine’s payload check
+as defense-in-depth regardless. [tuf-go-tuf]</li>
+<li><strong>Stretch goal — Uptane model, not Uptane the
+product:</strong> implement a TUF/Uptane-inspired <strong>Director +
+Image</strong> split (online Director from inventory DB + offline-keyed
+Image repo) in Go to get compromise resilience where security degrades
+only if <em>both</em> repos are compromised — directly hardening the
+online Go control plane. Skip the Primary/Secondary ECU tier (vacuous
+for independent full-power Android devices). Do <strong>not</strong>
+adopt aktualizr. [uptane]</li>
+</ul>
+<hr />
+<h2 id="what-we-will-not-use-and-why">4. What We Will NOT Use (and
+Why)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stack</th>
+<th>Decision</th>
+<th>Why (traceable)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mender</strong> (client + server)</td>
+<td><strong>Reject for adoption/wrapping; keep as design reference
+only</strong></td>
+<td>No Android support whatsoever; A/B is bootloader-driven, not AOSP
+update_engine; key orchestration (phased rollouts, dynamic grouping,
+RBAC, delta gen) is Professional/Enterprise-only open-core; server stack
+(Mongo/NATS/Traefik) conflicts with the locked Gin+Postgres+MinIO+REST
+mandate. Cannot wrap an engine that doesn’t run on Android. Retain only
+the Update Modules pattern, dual-A/B commit/rollback semantics,
+polling-security model, and REST ergonomics. [mender]</td>
+</tr>
+<tr>
+<td><strong>RAUC</strong></td>
+<td><strong>Not for Android Phase 1; shortlist for the later
+Linux/universal phase</strong></td>
+<td>Embedded-Linux only; zero Android/update_engine/Virtual A/B value
+now. Strongest standards-aligned server-agnostic A/B engine for Linux
+later (CMS/X.509/HSM &gt; ad-hoc SHA-256+sig; built-in HTTP-Range
+streaming fits the Go control plane). Carry into ADR-0001 gated by a
+hands-on spike + re-verification of flagged facts. [rauc]</td>
+</tr>
+<tr>
+<td><strong>OSTree / libostree</strong></td>
+<td><strong>Not for the Android device path; shortlist for the Linux
+phase only</strong></td>
+<td>Linux-userspace by design; aboot backend is Linux-on-aboot, not
+AOSP; not A/B and no built-in staged rollout. Strong Linux OS-adapter
+candidate (pinning + static deltas; archive-over-HTTP drops into
+Go+S3/MinIO). Evaluate head-to-head against bootc given the ecosystem
+shift. [ostree]</td>
+</tr>
+<tr>
+<td><strong>Uptane / aktualizr (as a product)</strong></td>
+<td><strong>Reject aktualizr; adopt the security <em>model</em>
+selectively</strong></td>
+<td>aktualizr is C++/Yocto/OSTree-coupled (mismatched with Go+Android),
+low release cadence (last tag Feb 2020), no Go reference impl, no
+first-class Android integration (<strong>UNVERIFIED</strong> any
+production Android+Uptane ships). Borrow the dual-repo + offline/online
+key split in Go instead. [uptane]</td>
+</tr>
+<tr>
+<td><strong>Commercial/OSS fleet platforms</strong> (balena, Torizon,
+Memfault, Foundries.io)</td>
+<td><strong>Reject wholesale adoption; synthesize patterns + reuse open
+clients only</strong></td>
+<td>Control planes are the lock-in: Memfault and Foundries.io backends
+are proprietary SaaS with no self-host; openBalena is AGPLv3 single-user
+beta; Torizon OTA Community Edition is no-auth/non-prod. Helix’s open Go
+control plane is a genuine differentiator vs the dominant
+open-client/closed-backend model. Reuse only: Memfault’s AOSP
+device-client shape, Foundries.io’s wave/canary state machine, TUF-style
+signing baseline, balena’s update-lock veto. [commercial-oss-fleet]</td>
+</tr>
+<tr>
+<td><strong>hawkBit DMF / RabbitMQ</strong> (within an adopted
+hawkBit)</td>
+<td><strong>Defer for MVP</strong></td>
+<td>DMF push requires a RabbitMQ broker; DDI-only avoids the AMQP
+broker. Use DDI-only unless management push proves necessary.
+<strong>Note:</strong> enabling DMF (AMQP/RabbitMQ) would be a deviation
+from the locked REST-primary mandate and must not be turned on
+implicitly — it requires its own ADR justifying the added AMQP broker
+and transport. [eclipse-hawkbit]</td>
+</tr>
+<tr>
+<td><strong>hawkBit as the trust layer</strong></td>
+<td><strong>Do not rely on it for TUF-grade trust</strong></td>
+<td>hawkBit has no TUF understanding and no app/firmware rollback
+orchestration of its own beyond halting a rollout; trust is TUF/go-tuf’s
+job and per-device boot rollback is AOSP’s. [eclipse-hawkbit]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong><code>swupdate</code></strong> is now scored in §2.2/§2.3
+(Linux-phase, total 29/45) alongside RAUC and OSTree. Like RAUC, it is
+<strong>not for Android Phase 1</strong> (no Android target) but is a
+<strong>shortlist Linux-phase device-apply engine</strong> — on par with
+RAUC, ahead of OSTree for this role, with A/B/rollback being
+integrator-assembled (Software collections + bootloader env). Carry into
+ADR-0001 gated by a hands-on spike. [swupdate]</p>
+</blockquote>
+<hr />
+<h2 id="open-unverified-items-to-close-before-adr-0001">5. Open /
+UNVERIFIED Items to Close Before ADR-0001</h2>
+<ol type="1">
+<li><strong>hawkBit management-side event push vs. polling</strong> for
+the Go consumer, and the exact rollout
+<strong>create/start/pause/resume</strong> API surface (some rollout
+JSON fields / polling defaults / endpoint verbs flagged UNVERIFIED —
+docs are a client-rendered SPA). [eclipse-hawkbit]</li>
+<li><strong>Android TUF client</strong> — no verified production
+Kotlin/JVM client; resolve gomobile/JNI vs hand-rolled Kotlin via a
+spike; this dominates TUF adoption cost. [tuf-go-tuf]</li>
+<li><strong>TUF client-flow API</strong> (<code>metadata/updater</code>,
+<code>metadata/trustedmetadata</code>) signatures not fully verified
+(pkg.go.dev truncated); TUF adopter list self-reported.
+[tuf-go-tuf]</li>
+<li><strong>Android-15 / RK3588 board specifics</strong> — exact
+update_engine constants/AIDL headers and Virtual A/B figures (~45% full
+/ ~55% incremental savings) UNVERIFIED; confirm at board level.
+[aosp-update-engine]</li>
+<li><strong>Uptane</strong> — no Go/Rust reference impl confirmed;
+Standard 2.1.0 release date and AGL integration status UNVERIFIED.
+[uptane]</li>
+<li><strong>RAUC</strong> — interaction of NBD/HTTP-Range streaming with
+Helix Brotli/HTTP3; several quantitative claims (binary size, benchmark,
+crypt AES mode, latest version) need confirmation before an ADR locks.
+[rauc]</li>
+<li><strong>OSTree</strong> — GC retention defaults, delta size ratios,
+storage overhead, <code>--json</code> status, exact rollback command,
+and bootc head-to-head all UNVERIFIED. [ostree]</li>
+<li><strong>swupdate</strong> — now scored (Linux-phase, 29/45); before
+ADR-0001 confirm exact streaming-capable handler list, crypto provider
+identifiers / encryption cipher-mode, whether wfx is built by default,
+and HTTP/3-via-libcurl availability (all flagged UNVERIFIED in the
+note). [swupdate]</li>
+</ol>
+<hr />
+<h2 id="source-notes">6. Source Notes</h2>
+<p>All under <code>docs/research/main_specs/research/stacks/</code>:</p>
+<ul>
+<li><a
+href="stacks/aosp-update-engine.md"><code>aosp-update-engine.md</code></a>
+— AOSP update_engine / native A/B + Virtual A/B (confidence: high)</li>
+<li><a
+href="stacks/eclipse-hawkbit.md"><code>eclipse-hawkbit.md</code></a> —
+Eclipse hawkBit (confidence: medium)</li>
+<li><a href="stacks/tuf-go-tuf.md"><code>tuf-go-tuf.md</code></a> — TUF
++ go-tuf/v2 (confidence: medium)</li>
+<li><a href="stacks/uptane.md"><code>uptane.md</code></a> — Uptane
+(confidence: high)</li>
+<li><a href="stacks/mender.md"><code>mender.md</code></a> — Mender
+(confidence: high)</li>
+<li><a href="stacks/rauc.md"><code>rauc.md</code></a> — RAUC
+(confidence: medium)</li>
+<li><a href="stacks/ostree.md"><code>ostree.md</code></a> — OSTree /
+libostree / rpm-ostree (confidence: medium)</li>
+<li><a
+href="stacks/commercial-oss-fleet.md"><code>commercial-oss-fleet.md</code></a>
+— balena / Torizon / Memfault / Foundries.io (confidence: high)</li>
+<li><a href="stacks/swupdate.md"><code>swupdate.md</code></a> — SWUpdate
+(embedded-Linux engine; Linux-phase only) (confidence: high on
+architecture / medium on edition-specific facts)</li>
+</ul>
+<p>Android device-side deep-dive notes (supporting §3.1,
+AOSP/device-side):</p>
+<ul>
+<li><a
+href="stacks/android15-virtual-ab.md"><code>android15-virtual-ab.md</code></a>
+— Android 15 Virtual A/B / COW snapshots</li>
+<li><a
+href="stacks/android-update-engine-api.md"><code>android-update-engine-api.md</code></a>
+— <code>UpdateEngine.applyPayload</code> API surface &amp;
+callbacks</li>
+<li><a
+href="stacks/android-avb-rollback.md"><code>android-avb-rollback.md</code></a>
+— Android Verified Boot (AVB) &amp; rollback protection</li>
+</ul>
+</body>
+</html>

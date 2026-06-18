@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ab_rollback</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ab_rollback</h1>
+</header>
+<h1 id="ab_rollback.sh-user-guide">ab_rollback.sh — user guide</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-11T10:30:00Z</p>
+<p>Companion documentation (§11.4.18) for
+<code>tests/emulator/ab_virt/ab_rollback.sh</code>.</p>
+<h2 id="overview">Overview</h2>
+<p><code>ab_rollback.sh</code> proves the <strong>real,
+bootloader-driven A/B auto-rollback</strong> of the RK3588 A/B-virt
+emulator on an Apple-Silicon host: it boots the SAME 2-slot GPT disk
+(<code>ab_disk.img</code>) with the SAME real <code>u-boot.bin</code>
+and drives the U-Boot bootcount/bootlimit guard so that a slot whose
+boot attempts exceed <code>bootlimit</code> is rolled back to the
+<strong>previous-good</strong> slot by the in-script
+<code>boot.cmd</code> rollback guard (<code>BOOT_ORDER</code> swap), and
+asserts that the guest userspace observably reports the rolled-back
+slot.</p>
+<ul>
+<li><strong>Run ROLLBACK</strong> — <code>BOOT_ORDER="B A"</code>,
+<code>bootcount=2</code>, <code>bootlimit=1</code> (so
+<code>bootcount &gt; bootlimit</code>) → <code>boot.cmd</code> step-2
+guard fires: <code>'rolling back (altbootcmd swap)'</code> →
+<code>BOOT_ORDER</code> swaps to head A → <code>active_slot=A</code> →
+<code>root=/dev/vda2</code> → guest <code>/etc/slot_id=A</code>.</li>
+<li><strong>Run CONTROL</strong> — <code>BOOT_ORDER="B A"</code>,
+<code>bootcount=1</code>, <code>bootlimit=1</code> (so
+<code>bootcount</code> is NOT over <code>bootlimit</code>) → NO rollback
+→ head stays B → <code>active_slot=B</code> → guest
+<code>/etc/slot_id=B</code>.</li>
+</ul>
+<p>The proof is the <strong>metamorphic contrast</strong> (§11.4.107):
+the ONLY difference between the two runs is the bootcount value relative
+to <code>bootlimit</code>. A fake / no-op rollback guard would boot the
+SAME slot in both runs (RED); the real guard rolls back to A only when
+the counter guard trips, and leaves B alone when it does not (GREEN).
+Both consoles are captured in full — real getty login + post-login
+command output, a live shell, not a frozen frame (§11.4.107).</p>
+<p>This is the U-Boot bootcount auto-rollback primitive (the Mender/RAUC
+<code>bootcount</code> / <code>bootlimit</code> /
+<code>altbootcmd</code> convention) running under a real <strong>U-Boot
+2024.01 + QEMU <code>-machine virt</code> + HVF</strong> — not a mock.
+It is the auto-rollback phase that <code>ab_slot_switch.sh</code> (the
+deliberate slot switch, PWU-AB-1) is the counterpart of.</p>
+<p><strong>Proven status (FACT, §11.4.6):</strong> this auto-rollback
+has run GREEN. Evidence:
+<code>docs/qa/20260611T095918Z-ab-rollback/</code> —
+<code>verdict.txt</code> records the Run ROLLBACK guard firing
+(<code>U-Boot 'rolling back (altbootcmd swap)'</code>,
+<code>active_slot=A</code>, <code>root=/dev/vda2</code>, guest
+<code>slot_id=A</code>) under <code>BOOT_ORDER='B A'</code>
+<code>bootcount=2</code> <code>bootlimit=1</code>, and the Run CONTROL
+(<code>bootcount=1</code>, <code>bootlimit=1</code>) booting
+<code>slot_id=B</code> with NO rollback; real
+<code>u-boot.bin: U-Boot 2024.01</code>, <code>Verdict: PASS</code>;
+full transcripts in the captured consoles.</p>
+<p><strong>What is NOT yet proven (§11.4.6 — honest boundary):</strong>
+this test proves the <strong>in-RAM-session</strong> bootcount guard
+ONLY — <code>bootcount</code> and <code>bootlimit</code> are set
+interactively at the U-Boot prompt within a single boot session, and the
+guard correctly rolls the head slot back to the previous-good slot when
+<code>bootcount &gt; bootlimit</code>. It does NOT prove persistent
+<code>saveenv</code> power-cycle rollback (where U-Boot itself
+increments + persists <code>bootcount</code> across real reboots before
+<code>boot.scr</code> runs); that is a later PWU. It does NOT prove RAUC
+bundle apply / dm-verity / AVB-style slot integrity (PWU-AB-2). No claim
+is made here that those work.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>A completed <code>build_image.sh</code> run: <code>out/.ok</code>
+present and <code>out/images/u-boot.bin</code> non-empty (the script
+aborts with exit 3 otherwise).</li>
+<li>A completed <code>assemble_ab_disk.sh</code> run:
+<code>out/.disk_ok</code> present and
+<code>out/images/ab_disk.img</code> non-empty (exit 3 otherwise).</li>
+<li><code>qemu-system-aarch64</code> on <code>PATH</code> with HVF
+support.</li>
+<li><code>expect</code> on <code>PATH</code>.</li>
+<li><code>HELIX_AB_ROOT_PW</code> must match the password baked into the
+image by <code>build_image.sh</code> (default
+<code>helixota</code>).</li>
+</ul>
+<h2 id="usage-examples">Usage examples</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the full A/B auto-rollback proof (after build_image.sh + assemble_ab_disk.sh</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># have produced GREEN out/.ok + out/.disk_ok).</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/ab_virt/ab_rollback.sh</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># With a non-default root password (must match the built image).</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AB_ROOT_PW</span><span class="op">=</span>helixota <span class="ex">tests/emulator/ab_virt/ab_rollback.sh</span></span></code></pre></div>
+<h2 id="inputs">Inputs</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Input</th>
+<th>Source</th>
+<th>Default / requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HELIX_AB_ROOT_PW</code></td>
+<td>env → <code>ROOT_PW</code></td>
+<td><code>helixota</code></td>
+</tr>
+<tr>
+<td><code>out/.ok</code>, <code>out/images/u-boot.bin</code></td>
+<td>filesystem (from <code>build_image.sh</code>)</td>
+<td>required, non-empty</td>
+</tr>
+<tr>
+<td><code>out/.disk_ok</code>, <code>out/images/ab_disk.img</code></td>
+<td>filesystem (from <code>assemble_ab_disk.sh</code>)</td>
+<td>required, non-empty</td>
+</tr>
+</tbody>
+</table>
+<p>The run id is derived from a UTC timestamp:
+<code>&lt;YYYYmmddTHHMMSSZ&gt;-ab-rollback</code>.</p>
+<h2 id="outputs">Outputs</h2>
+<p>All under <code>docs/qa/&lt;run-id&gt;/</code> (the captured
+evidence, §11.4.83):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Output</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/qa/&lt;run-id&gt;/</code> console transcript(s)</td>
+<td>full QEMU transcripts of the ROLLBACK run and the CONTROL run</td>
+</tr>
+<tr>
+<td><code>docs/qa/&lt;run-id&gt;/</code> driver log(s)</td>
+<td>the <code>expect</code> driver’s own stdout/stderr per run</td>
+</tr>
+<tr>
+<td><code>docs/qa/&lt;run-id&gt;/verdict.txt</code></td>
+<td>distilled verdict: u-boot version, per-run
+bootcount/bootlimit/BOOT_ORDER, the rollback-guard line, the per-run
+active_slot + rootdev + guest slot_id,
+<code>Verdict: PASS</code>/<code>FAIL</code></td>
+</tr>
+<tr>
+<td>stdout PASS/FAIL lines</td>
+<td>one <code>[PASS]</code>/<code>[FAIL]</code> per anti-bluff assertion
++ a final RESULT line</td>
+</tr>
+<tr>
+<td>exit code</td>
+<td><code>0</code> = PASS, <code>1</code> = FAIL, <code>3</code> =
+precondition abort</td>
+</tr>
+</tbody>
+</table>
+<h2 id="side-effects">Side-effects</h2>
+<ul>
+<li>Spawns two transient <code>qemu-system-aarch64</code> guests (the
+ROLLBACK run and the CONTROL run); each exits on guest
+<code>poweroff</code> or the <code>expect</code> timeout (self-cleaning,
+§11.4.14).</li>
+<li>Creates the <code>docs/qa/&lt;run-id&gt;/</code> evidence
+directory.</li>
+<li>The rollback guard’s <code>BOOT_ORDER</code> swap +
+<code>saveenv</code> happen inside the transient guest’s in-RAM U-Boot
+env session; the runs set
+<code>bootcount</code>/<code>bootlimit</code>/<code>BOOT_ORDER</code>
+interactively per run, so the on-disk default env is exercised within a
+single session rather than persisted across a host-driven
+power-cycle.</li>
+</ul>
+<h2 id="internal-behaviour">Internal behaviour</h2>
+<ol type="1">
+<li><code>set -u</code> + <code>set -o pipefail</code>; resolve
+<code>SCRIPT_DIR</code>, repo root, root password,
+<code>u-boot.bin</code>/<code>ab_disk.img</code> paths, run id, and the
+evidence dir; <code>mkdir -p</code> the evidence dir.</li>
+<li><strong>Preconditions</strong> (each → exit 3 on failure):
+<code>out/.ok</code> present; <code>out/.disk_ok</code> present;
+<code>u-boot.bin</code> non-empty; <code>ab_disk.img</code> non-empty;
+<code>qemu-system-aarch64</code> found; <code>expect</code> found.</li>
+<li>Emit a deterministic <code>expect</code> driver via a single-quoted
+heredoc — so there is exactly ONE quoting level (Tcl) and guest-shell
+command substitution <code>\$(...)</code> reaches the file verbatim,
+ensuring the GUEST shell (not Tcl) runs it (§11.4.1 — the FAIL must be a
+product defect, never a script bug).</li>
+<li>For each run (ROLLBACK then CONTROL) the driver:
+<ul>
+<li>spawns QEMU
+<code>-M virt -accel hvf -cpu host -nographic -bios &lt;u-boot.bin&gt; -drive file=&lt;ab_disk.img&gt;,if=virtio,format=raw</code>;</li>
+<li>interrupts U-Boot autoboot, reaches the <code>=&gt;</code> U-Boot
+prompt;</li>
+<li>sets the run’s env: <code>setenv BOOT_ORDER "B A"</code>,
+<code>setenv bootcount &lt;2|1&gt;</code>,
+<code>setenv bootlimit 1</code>;</li>
+<li><code>load virtio 0:1 ... boot.scr</code> then
+<code>source ...</code> (runs <code>uboot_ab/boot.cmd</code>, whose
+step-2 guard rolls <code>BOOT_ORDER</code> back to head A and prints
+<code>rolling back (altbootcmd swap)</code> WHEN
+<code>bootcount &gt; bootlimit</code>, then selects the head slot and
+<code>booti</code>s the kernel with
+<code>root=/dev/vda&lt;part&gt;</code> +
+<code>helix_slot=&lt;slot&gt;</code>);</li>
+<li>waits for <code>buildroot login:</code>, logs in as
+<code>root</code>;</li>
+<li>from inside the guest shell prints <code>/etc/slot_id</code>, the
+mounted root device, <code>/proc/cmdline</code>, and a post-login
+sentinel; then <code>poweroff</code>.</li>
+<li>the transcript is captured per run via <code>log_file</code>.</li>
+</ul></li>
+<li><strong>Anti-bluff assertions</strong> — grep the captured consoles;
+the proof is the metamorphic contrast:
+<ul>
+<li>Run ROLLBACK (<code>bootcount=2 &gt; bootlimit=1</code>) must show
+the <code>rolling back (altbootcmd swap)</code> U-Boot line,
+<code>active_slot=A</code>, <code>root=/dev/vda2</code>, guest
+<code>/etc/slot_id=A</code>, <code>helix_slot=A</code>, and a live
+post-login sentinel — the head slot was rolled back from B to A.</li>
+<li>Run CONTROL (<code>bootcount=1 == bootlimit=1</code>, NOT over) must
+show NO rollback line, <code>active_slot=B</code>,
+<code>root=/dev/vda3</code>, guest <code>/etc/slot_id=B</code> — head
+slot B was kept (the rollback is real, not a no-op that always
+swaps).</li>
+</ul></li>
+<li>Write <code>verdict.txt</code> (u-boot version, per-run env + guard
+line + slot, <code>Verdict: PASS</code>/<code>FAIL</code>). If every
+assertion holds, print <code>RESULT: PASS</code> + the evidence path and
+exit 0; otherwise print <code>RESULT: FAIL</code> (with the qemu/expect
+rc’s) and exit 1.</li>
+</ol>
+<h2 id="edge-cases">Edge cases</h2>
+<ul>
+<li><strong><code>out/.ok</code> / <code>out/.disk_ok</code> absent, or
+<code>u-boot.bin</code> / <code>ab_disk.img</code> missing</strong> →
+exit 3 (run <code>build_image.sh</code> then
+<code>assemble_ab_disk.sh</code> first).</li>
+<li><strong>QEMU or expect not installed</strong> → exit 3.</li>
+<li><strong>No autoboot / U-Boot prompt / <code>boot.scr</code> load /
+login / password / shell prompt within timeout</strong> → the driver
+emits a driver-fail line and exits non-zero; the corresponding contrast
+assertions then FAIL and the script exits 1.</li>
+<li><strong>A fake rollback guard that ALWAYS swaps (ignores
+bootcount)</strong> → the CONTROL run would also boot slot A → the
+CONTROL negative assertion (<code>/etc/slot_id=B</code>, NO rollback
+line) FAILs → <code>Verdict: FAIL</code>, exit 1.</li>
+<li><strong>A fake guard that NEVER swaps</strong> → the ROLLBACK run
+would still boot slot B → its positive assertions FAIL →
+<code>Verdict: FAIL</code>, exit 1.</li>
+<li><strong>Poweroff times out</strong> → treated as a non-fatal note;
+the verdict still depends solely on the captured-evidence contrast
+assertions.</li>
+</ul>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/emulator/ab_virt/ab_slot_switch.sh</code> — the
+deliberate bootloader-driven slot switch (PWU-AB-1); the rollback here
+is the bootcount-driven counterpart. See
+<code>docs/scripts/ab_slot_switch.md</code>.</li>
+<li><code>tests/emulator/ab_virt/assemble_ab_disk.sh</code> — produces
+the 2-slot GPT <code>ab_disk.img</code> + compiled <code>boot.scr</code>
+this script boots. See
+<code>docs/scripts/assemble_ab_disk.md</code>.</li>
+<li><code>tests/emulator/ab_virt/build_image.sh</code> — produces the
+kernel <code>Image</code>
+<ul>
+<li><code>rootfs.ext2</code> + <code>u-boot.bin</code>. See
+<code>docs/scripts/build_image.md</code>.</li>
+</ul></li>
+<li><code>tests/emulator/ab_virt/boot_smoke.sh</code> — base-image boot
+smoke (the proven foundation, single-slot). See
+<code>docs/scripts/boot_smoke.md</code>.</li>
+<li><code>uboot_ab/boot.cmd</code> + <code>uboot_ab/README.md</code> —
+the U-Boot A/B boot script source (compiled to <code>boot.scr</code>)
+this test sources; its step-2 guard is the rollback engine under test,
+and its
+<code>bootcount</code>/<code>bootlimit</code>/<code>altbootcmd</code>
+contract is what this test drives.</li>
+<li><code>docs/research/rk3588_emulator/REPORT.md</code> — the emulator
+design report.</li>
+</ul>
+<h2 id="last-verified-date">Last verified date</h2>
+<p>2026-06-11 — documented against the script as committed (read, not
+inferred). The bootloader-driven A/B auto-rollback is PROVEN GREEN;
+evidence at
+<code>docs/qa/20260611T095918Z-ab-rollback/verdict.txt</code> (Run
+ROLLBACK <code>BOOT_ORDER='B A'</code> <code>bootcount=2</code>
+<code>bootlimit=1</code> → <code>rolling back (altbootcmd swap)</code> →
+active slot A / vda2 / guest slot_id=A; Run CONTROL
+<code>bootcount=1</code> → guest slot_id=B, no rollback; U-Boot
+2024.01). Persistent <code>saveenv</code> power-cycle rollback and RAUC
+dm-verity remain UNPROVEN (later PWUs).</p>
+</body>
+</html>

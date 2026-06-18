@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CLIENT_STATE_MACHINE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CLIENT_STATE_MACHINE</h1>
+</header>
+<h1 id="helix-ota-client-state-machine">Helix OTA — Client State
+Machine</h1>
+<h2 id="overview">Overview</h2>
+<p>This state diagram models the <strong>complete lifecycle of an update
+on the device side</strong>. The Helix OTA Client (C++ daemon on
+Android) transitions through well-defined states as it checks for,
+downloads, verifies, installs, and commits an update. Every transition
+is reported to the server, and error paths lead to well-defined recovery
+behavior.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>stateDiagram-v2
+    direction TB
+
+    [*] --&gt; IDLE : Client daemon started
+
+    IDLE --&gt; CHECKING : Timer fires&lt;br/&gt;(default: every 4h)&lt;br/&gt;OR Operator forces check
+
+    CHECKING --&gt; IDLE : No update available&lt;br/&gt;(server responds 204)
+    CHECKING --&gt; UPDATE_AVAILABLE : Update found&lt;br/&gt;(server responds 200 + metadata)
+    CHECKING --&gt; IDLE : Network error&lt;br/&gt;(retry on next timer)
+
+    UPDATE_AVAILABLE --&gt; DOWNLOADING : Auto-download policy&lt;br/&gt;OR User approves&lt;br/&gt;(for metered connections)
+    UPDATE_AVAILABLE --&gt; IDLE : User defers&lt;br/&gt;(max 3 deferrals,&lt;br/&gt;then forced)
+
+    DOWNLOADING --&gt; DOWNLOADING : Progress update&lt;br/&gt;(stream chunks)
+    DOWNLOADING --&gt; VERIFYING : Download 100% complete&lt;br/&gt;+ file size matches
+    DOWNLOADING --&gt; IDLE : Network timeout&lt;br/&gt;(retry with resume&lt;br/&gt;at next check-in)
+    DOWNLOADING --&gt; FAILED : Disk full&lt;br/&gt;OR Storage write error
+
+    VERIFYING --&gt; INSTALLING : SHA-256 hash ✓&lt;br/&gt;AND Ed25519 signature ✓
+    VERIFYING --&gt; DOWNLOADING : Hash mismatch&lt;br/&gt;(retry download,&lt;br/&gt;max 3 attempts)
+    VERIFYING --&gt; FAILED : Signature invalid&lt;br/&gt;(non-recoverable,&lt;br/&gt;possible tampering)
+
+    INSTALLING --&gt; INSTALLING : update_engine&lt;br/&gt;progress updates
+    INSTALLING --&gt; REBOOTING : update_engine reports&lt;br/&gt;ApplyComplete(success)
+    INSTALLING --&gt; FAILED : update_engine reports&lt;br/&gt;ApplyComplete(error)&lt;br/&gt;OR Process killed
+
+    REBOOTING --&gt; COMMITTING : Device rebooted&lt;br/&gt;successfully into&lt;br/&gt;new slot
+    REBOOTING --&gt; FAILED : Boot verification failed&lt;br/&gt;(A/B auto-rollback&lt;br/&gt;to old slot)
+
+    COMMITTING --&gt; SUCCEEDED : update_engine&lt;br/&gt;MarkSlotSuccessful() ✓
+    COMMITTING --&gt; FAILED : MarkSlotSuccessful&lt;br/&gt;failed&lt;br/&gt;(device on old slot)
+
+    FAILED --&gt; IDLE : Report sent to server&lt;br/&gt;+ Error logged locally&lt;br/&gt;+ Backoff before retry
+
+    SUCCEEDED --&gt; IDLE : Report sent to server&lt;br/&gt;+ Update complete&lt;br/&gt;+ Resume normal check cycle
+
+    state IDLE {
+        direction LR
+        [*] --&gt; ScheduledCheck
+        ScheduledCheck : Waiting for next&lt;br/&gt;check timer
+        ScheduledCheck --&gt; ForcedCheck : Operator triggers&lt;br/&gt;immediate check
+    }
+
+    state DOWNLOADING {
+        direction LR
+        [*] --&gt; ResolvingURL
+        ResolvingURL --&gt; Streaming : Presigned URL&lt;br/&gt;obtained
+        Streaming --&gt; Streaming : Chunk received,&lt;br/&gt;written to disk
+        Streaming --&gt; Resuming : Connection lost&lt;br/&gt;(partial download)
+        Resuming --&gt; Streaming : Connection restored&lt;br/&gt;(Range header)
+    }
+
+    state VERIFYING {
+        direction LR
+        [*] --&gt; HashCheck
+        HashCheck : SHA-256 comparison&lt;br/&gt;of entire file
+        HashCheck --&gt; SignatureCheck : Hash ✓
+        HashCheck : Signature uses Ed25519&lt;br/&gt;with embedded&lt;br/&gt;public key
+        SignatureCheck --&gt; Verified : Signature ✓
+    }
+
+    state INSTALLING {
+        direction LR
+        [*] --&gt; ApplyingPayload
+        ApplyingPayload : update_engine writes&lt;br/&gt;to inactive A/B slot
+        ApplyingPayload --&gt; PostInstall : Payload applied
+        PostInstall : Running post-install&lt;br/&gt;scripts (if any)
+    }
+
+    note right of IDLE
+        Default check interval: 4 hours
+        Jitter: ±30 min to spread
+        server load. Operator can
+        force immediate check.
+    end note
+
+    note right of UPDATE_AVAILABLE
+        Server provides:
+        - artifact_url
+        - target_build
+        - hash_sha256
+        - ed25519_signature
+        - size_bytes
+        - metadata (changelog, urgency)
+    end note
+
+    note right of FAILED
+        Error codes:
+        - NETWORK_ERROR
+        - HASH_MISMATCH
+        - INVALID_SIGNATURE
+        - DISK_FULL
+        - INSTALL_ERROR
+        - BOOT_FAILURE
+        - COMMIT_FAILURE
+        All reported to server
+        with diagnostic details.
+    end note
+
+    note right of SUCCEEDED
+        Final state reports:
+        - new_build fingerprint
+        - install_duration
+        - total_download_size
+        Device returns to IDLE
+        and resumes normal
+        check cycle.
+    end note</code></pre>
+<h2 id="state-descriptions">State Descriptions</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>State</th>
+<th>Description</th>
+<th>Duration (typical)</th>
+<th>Server Report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>IDLE</strong></td>
+<td>Waiting for next scheduled check or forced check</td>
+<td>0–4 hours</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>CHECKING</strong></td>
+<td>Sending device profile to server, awaiting response</td>
+<td>1–5 seconds</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>UPDATE_AVAILABLE</strong></td>
+<td>Server returned update metadata; awaiting download approval</td>
+<td>0–24 hours (defer)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>DOWNLOADING</strong></td>
+<td>Streaming artifact from MinIO via presigned URL</td>
+<td>1–30 minutes</td>
+<td>Progress % every 10%</td>
+</tr>
+<tr>
+<td><strong>VERIFYING</strong></td>
+<td>Computing SHA-256 hash and verifying Ed25519 signature</td>
+<td>10–60 seconds</td>
+<td>State transition only</td>
+</tr>
+<tr>
+<td><strong>INSTALLING</strong></td>
+<td>update_engine writing payload to inactive A/B slot</td>
+<td>2–15 minutes</td>
+<td>Progress % every 10%</td>
+</tr>
+<tr>
+<td><strong>REBOOTING</strong></td>
+<td>Device rebooting into new slot</td>
+<td>30–90 seconds</td>
+<td>State transition only</td>
+</tr>
+<tr>
+<td><strong>COMMITTING</strong></td>
+<td>Marking new slot as successful (prevents rollback)</td>
+<td>&lt; 5 seconds</td>
+<td>State transition only</td>
+</tr>
+<tr>
+<td><strong>SUCCEEDED</strong></td>
+<td>Update fully committed and reported to server</td>
+<td>—</td>
+<td>Final success report</td>
+</tr>
+<tr>
+<td><strong>FAILED</strong></td>
+<td>Update failed at any stage; error reported</td>
+<td>—</td>
+<td>Error code + details</td>
+</tr>
+</tbody>
+</table>
+<h2 id="retry-policy">Retry Policy</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Error Type</th>
+<th>Max Retries</th>
+<th>Backoff Strategy</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Network timeout</strong></td>
+<td>5</td>
+<td>Exponential: 1m, 2m, 4m, 8m, 16m</td>
+<td>Resumes partial download</td>
+</tr>
+<tr>
+<td><strong>Hash mismatch</strong></td>
+<td>3</td>
+<td>Linear: immediate retry</td>
+<td>Full re-download required</td>
+</tr>
+<tr>
+<td><strong>Invalid signature</strong></td>
+<td>0</td>
+<td>No retry</td>
+<td>Security halt — alert operator</td>
+</tr>
+<tr>
+<td><strong>Disk full</strong></td>
+<td>0</td>
+<td>No retry</td>
+<td>User intervention needed</td>
+</tr>
+<tr>
+<td><strong>Install error</strong></td>
+<td>1</td>
+<td>30 min delay</td>
+<td>A/B slot automatically recovered</td>
+</tr>
+<tr>
+<td><strong>Boot failure</strong></td>
+<td>0</td>
+<td>No retry</td>
+<td>A/B auto-rollback; report to server</td>
+</tr>
+<tr>
+<td><strong>Commit failure</strong></td>
+<td>1</td>
+<td>Immediate retry</td>
+<td>Rare; usually transient</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deferral-policy">Deferral Policy</h2>
+<ul>
+<li><strong>Metered connections</strong>: User may defer update up to
+<strong>3 times</strong></li>
+<li><strong>Critical/Security updates</strong>: Deferral limited to
+<strong>7 days</strong> maximum</li>
+<li><strong>After 3 deferrals</strong>: Update is force-downloaded on
+next check (regardless of network type)</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>signing_verification</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="artifact-signing-verification-1.0.0-mvp">Artifact Signing &amp;
+Verification (1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Normative MVP specification for OTA artifact signing and
+verification: build-pipeline key signs each release; the Go control
+plane verifies on upload; the Android device re-verifies before apply;
+integrity is SHA-256 + detached signature; this composes with (does not
+replace) AVB/dm-verity and the <code>update_engine</code> payload check.
+Interfaces are designed MVP-forward so TUF/Uptane drops in per ADR-0002
+without artifact rework.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HelixConstitution clause numbers (§11.4.61, §7.1, §11.4.6, §11.4.74,
+§11.4.28, §11.4.123, §11.4.125, §1) are UNVERIFIED against the
+authoritative constitution text. The MVP DEFAULT signature scheme is now
+pinned to ED25519 with <code>key_id</code>-based algorithm agility for
+ECDSA-P256 / RSA-PSS fallback (§3); the residual is only the tracked
+confirm-against-the-<code>security</code>-brick item that these
+primitives are exposed. The <code>security</code> /
+<code>Security-KMP</code> catalogue submodules’ precise public crypto
+surface has not been inspected and is UNVERIFIED (carried from ADR-0002
+§8 item 9 and the reuse map). The Android-15 / RK3588
+<code>update_engine</code>
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> constants the device
+verify-gate integrates against are UNVERIFIED (carried from ADR-0004
+§6).</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: pinned ED25519 as the MVP DEFAULT signature scheme with
+<code>key_id</code>-based algorithm agility for ECDSA-P256 / RSA-PSS
+fallback (§3, §11), keeping the final
+confirm-against-the-<code>security</code>-brick as a tracked item.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Confirm the pinned ED25519 DEFAULT (and the ECDSA-P256 / RSA-PSS
+fallbacks) against <code>security</code>’s exposed primitives (the only
+remaining signature-scheme item now the default is pinned in §3);
+confirm <code>ota-artifact-validator</code> reuses <code>security</code>
+SHA-256/512 + signature-verify primitives rather than hand-rolling
+crypto; confirm the <code>ota-update-engine-bridge</code> device
+re-verify hook against the real Android-15 <code>IUpdateEngine</code>
+constants; close the ADR-0002 §4.3 sequencing items before any TUF
+device-side enforcement is made mandatory.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-trust-model-overview-mvp">Trust model overview
+(MVP)</a></li>
+<li><a
+href="#3-integrity-primitives-sha-256--detached-signature">Integrity
+primitives: SHA-256 + detached signature</a></li>
+<li><a href="#4-build-pipeline-signing">Build-pipeline signing</a></li>
+<li><a href="#5-server-side-verification-on-upload">Server-side
+verification on upload</a></li>
+<li><a href="#6-device-side-re-verification-before-apply">Device-side
+re-verification before apply</a></li>
+<li><a href="#7-composition-with-avb--dm-verity--ab">Composition with
+AVB / dm-verity / A/B</a></li>
+<li><a
+href="#8-mvp-forward-interfaces-tufuptane-drop-in-per-adr-0002">MVP-forward
+interfaces (TUF/Uptane drop-in per ADR-0002)</a></li>
+<li><a href="#9-catalogue-reuse-and-module-boundaries">Catalogue reuse
+and module boundaries</a></li>
+<li><a href="#10-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#11-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#12-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#13-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies, normatively, how Helix OTA establishes that
+a release artifact is <strong>authentic</strong> (signed by the build
+pipeline) and <strong>intact</strong> (matches its declared hash) for
+the 1.0.0-MVP. It covers three enforcement points — build-pipeline
+signing, server verify on upload, and device re-verify before apply —
+and how those compose with the native Android A/B trust chain (AVB /
+dm-verity / <code>update_engine</code>). It deliberately constrains the
+design so the deferred TUF / Uptane trust framework (ADR-0002) can be
+layered in for 1.0.1+ <strong>without re-signing or re-packaging
+existing artifacts</strong>.</p>
+<p>It does <strong>not</strong> decide TUF/Uptane adoption (that is
+ADR-0002, deferred to 1.0.1+), transport (ADR-0004 / <a
+href="transport_security.md">transport_security.md</a>), or key
+custody/rotation mechanics (<a
+href="key_management.md">key_management.md</a>). It honors the LOCKED
+stack and strategy without re-deciding them: native Android A/B
+(<code>update_engine</code> + AVB/dm-verity + auto-rollback) on device +
+a custom Go (Gin) control plane; signing + SHA-256 + AVB for MVP; TUF
+device-side deferred to 1.0.1 per ADR-0002.</p>
+<h2 id="trust-model-overview-mvp">2. Trust model overview (MVP)</h2>
+<p>The MVP trust model is <strong>plain per-artifact trust</strong>: a
+per-release SHA-256 (and SHA-512 where available) plus a detached
+signature over the artifact, verified server-side on upload and
+device-side before apply, layered on top of the native AVB + A/B
+<code>update_engine</code> payload check (master §6; ADR-0002 §4.1).
+There are <strong>three independent verification gates plus the engine’s
+own check</strong>:</p>
+<pre class="mermaid"><code>flowchart LR
+    BP[&quot;Build pipeline&lt;br/&gt;(private signing key)&quot;] --&gt;|sign artifact + emit hash| ART[&quot;Signed OTA .zip&lt;br/&gt;+ SHA-256 + detached sig&quot;]
+    ART --&gt;|upload| SRV[&quot;Go control plane&lt;br/&gt;(Gin /api/v1)&quot;]
+    SRV --&gt;|GATE 1: verify hash + signature on upload| STORE[&quot;Storage brick&lt;br/&gt;(MinIO/S3)&quot;]
+    STORE --&gt;|byte-identical download over HTTPS/Range| DEV[&quot;Android agent&lt;br/&gt;(ota-android-agent)&quot;]
+    DEV --&gt;|GATE 2: re-verify hash + signature before apply| BRIDGE[&quot;ota-update-engine-bridge&quot;]
+    BRIDGE --&gt;|applyPayload| UE[&quot;update_engine&lt;br/&gt;(GATE 3: FILE_HASH/METADATA_HASH&lt;br/&gt;+ payload signature)&quot;]
+    UE --&gt; AVB[&quot;AVB / dm-verity + boot_control&lt;br/&gt;(GATE 4: verified boot + auto-rollback)&quot;]</code></pre>
+<p>The MVP explicitly accepts a single-signing-key exposure: plain
+signing does <strong>not</strong> mitigate rollback, indefinite-freeze,
+fast-forward, mix-and-match, malicious-mirror denial, or key-compromise
+recovery; those attack classes are closed by the TUF layer in 1.0.1+
+(ADR-0002 §1, §3.1, §5.2). The interim depth is AVB + the A/B payload
+check + server-side upload verification (ADR-0002 §5.2; threat_model
+§4.x).</p>
+<h2 id="integrity-primitives-sha-256-detached-signature">3. Integrity
+primitives: SHA-256 + detached signature</h2>
+<ul>
+<li><strong>Hash:</strong> SHA-256 over the full artifact bytes is
+mandatory; SHA-512 is computed <strong>additionally where
+available</strong> (master §6). The hash is carried in the mandatory
+hash file accompanying the artifact and is also recorded in the release
+manifest (<code>ota-protocol</code>).</li>
+<li><strong>Signature:</strong> a <strong>detached</strong> signature
+over the artifact (not an embedded re-wrap), so the artifact
+<code>.zip</code> / <code>payload.bin</code> stays
+<strong>byte-identical</strong> — a hard requirement for both the
+<code>ZIP_STORED</code> + HTTP-Range streaming contract (ADR-0004 §3.2)
+and for a future TUF <code>targets</code> entry to layer over the same
+bytes (ADR-0002 §4.2). The signed digest is SHA-256 of the artifact;
+signing the digest (not the raw blob) keeps the operation
+streaming-friendly for large payloads.</li>
+<li><strong>Signature scheme (DEFAULT pinned for MVP = ED25519, with
+<code>key_id</code>-based algorithm agility):</strong> the MVP
+<strong>DEFAULT</strong> signature scheme is <strong>ED25519</strong> —
+it is the central authenticity primitive and is no longer left fully
+open. ED25519 is chosen as the default because it is compact, fast to
+verify on-device, has no parameter-choice footguns, and is one of the
+schemes go-tuf/v2 supports (ADR-0002 §3.2), keeping the 1.0.1+ TUF path
+open. <strong>Algorithm agility</strong> is provided through
+<code>key_id</code>: each trust-store entry binds a <code>key_id</code>
+to <em>both</em> a public key <em>and</em> its algorithm, so a fallback
+to <strong>ECDSA-P256</strong> or <strong>RSA-PSS</strong> is available
+per-<code>key_id</code> without re-packaging artifacts (the verifier
+dispatches on the <code>key_id</code>’s recorded algorithm). This pins
+the default while preserving forward agility for the 1.0.1+ TUF path,
+which supports all three (ADR-0002 §3.2). The final confirmation that
+ED25519 (and the ECDSA-P256 / RSA-PSS fallbacks) are exposed by the
+<code>security</code> catalogue submodule remains a tracked
+confirm-against-the-<code>security</code>-brick item (UNVERIFIED which
+primitives it exposes; Continuation), but the default is decided, not
+deferred.</li>
+<li><strong>What the signature covers:</strong> the artifact bytes (via
+their SHA-256 digest). It does <strong>not</strong> cover freshness,
+version monotonicity, or per-device targeting — those are enforced
+separately by the server validation pipeline (version monotonicity,
+target compatibility; master §5) in the MVP, and by TUF metadata
+(timestamp/snapshot/targets, expiry, version monotonicity, threshold
+sigs) in 1.0.1+ (ADR-0002 §4.2).</li>
+</ul>
+<h2 id="build-pipeline-signing">4. Build-pipeline signing</h2>
+<ul>
+<li>The <strong>build-pipeline private key signs</strong> each release;
+the corresponding <strong>public key lives in the device trust
+store</strong> (master §6; threat_model §line 90). The signing identity
+is the build pipeline, <strong>not</strong> a per-device or per-operator
+key, which bounds the blast radius of an online-control-plane compromise
+(the control plane never holds the signing private key in the MVP;
+threat_model §171–175).</li>
+<li>Signing is performed behind a <strong>signer abstraction</strong>
+(§8) so the MVP detached-signature signer and a future TUF role signer
+share one seam (ADR-0002 §4.2). The signer abstraction is specified to
+be compatible with the <code>go-securesystemslib</code>
+<code>signature.Signer</code> integration point that go-tuf/v2 uses
+(ADR-0002 §4.2, §3.2).</li>
+<li>The signing operation emits, per release:
+<code>{artifact bytes (unchanged), sha256, sha512?, detached_signature, key_id}</code>.
+<code>key_id</code> identifies which trust-store entry verifies it,
+enabling rotation overlap (<a
+href="key_management.md">key_management.md</a>).</li>
+<li>Key custody, rotation, and the offline-signing-ceremony forward path
+are specified in <a href="key_management.md">key_management.md</a>; this
+document treats the signing key as an input.</li>
+</ul>
+<h2 id="server-side-verification-on-upload">5. Server-side verification
+on upload</h2>
+<p>The Go control plane (Gin, <code>/api/v1</code>) verifies <strong>on
+upload, before the artifact is published</strong>, as the first
+enforcement gate and the first stage of the artifact validation pipeline
+(master §5):</p>
+<ol type="1">
+<li><strong>Structure</strong> — the upload is a well-formed OTA
+<code>.zip</code> with the mandatory hash file and manifest
+(<code>ota-protocol</code> schema).</li>
+<li><strong>Hash</strong> — recomputed SHA-256 (and SHA-512 where
+present) over the received bytes MUST equal the declared hash; mismatch
+rejects the upload.</li>
+<li><strong>Signature</strong> — the detached signature MUST verify
+against a <strong>trusted build-pipeline public key</strong> selected by
+<code>key_id</code> from the server trust store; failure rejects the
+upload.</li>
+<li><strong>Version monotonicity</strong> — the release version MUST be
+strictly greater than the current target for the same artifact lineage
+(anti-downgrade at the control plane; master §5/§6).</li>
+<li><strong>Target compatibility</strong> — the artifact’s declared
+target matches a known device/board profile (master §5).</li>
+</ol>
+<p>Verification is a <strong>distinct step</strong> from storage: only
+an artifact that passes all stages is written to the
+<code>Storage</code> brick (MinIO/S3) and becomes eligible for a
+release/deploy. The verifier reuses <code>security</code> crypto
+primitives via <code>ota-artifact-validator</code>; it contains no
+transport logic (§9). Every admin upload/publish action is audit-logged
+(master §6).</p>
+<h2 id="device-side-re-verification-before-apply">6. Device-side
+re-verification before apply</h2>
+<p>The Android agent (<code>ota-android-agent</code>)
+<strong>re-verifies independently before apply</strong> — server-side
+verification is not trusted transitively (defense-in-depth across an
+untrusted network; ADR-0002 §2 verify-before-apply driver):</p>
+<ol type="1">
+<li>The agent downloads the <strong>byte-identical</strong> artifact
+over HTTPS with Range (ADR-0004 §3.3); no content compression is applied
+to the artifact path so the bytes the device hashes equal the bytes the
+server signed (ADR-0004 §3.2).</li>
+<li>The agent recomputes SHA-256 (and SHA-512 where available) and
+compares against the manifest hash; mismatch aborts before any
+apply.</li>
+<li>The agent verifies the detached signature against the <strong>public
+key in the on-device trust store</strong> (selected by
+<code>key_id</code>); the trust store and its rotation are specified in
+<a href="key_management.md">key_management.md</a>. Failure aborts.</li>
+<li>Only a <strong>fully verified local artifact</strong> is handed to
+<code>ota-update-engine-bridge</code> for apply. The MVP chooses
+<strong>local-verified-file apply</strong> over streaming an unverified
+payload straight to <code>applyPayload</code>, because the
+verify-before-apply requirement mandates a fully verified local artifact
+before apply (ADR-0002 §4.1; ADR-0004 §3.3 Option B). A
+stage-then-verify-then-<code>file://</code>-apply fallback is retained
+for flaky networks; both paths satisfy verify-before-apply because
+<code>update_engine</code> independently verifies
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> + AVB before commit
+(ADR-0004 §3.3, §4).</li>
+</ol>
+<p>The device re-verify step is kept as a <strong>distinct gate in front
+of the apply path</strong> so a TUF refresh/verify flow can be inserted
+ahead of the existing hash+signature check without changing the apply
+path (§8; ADR-0002 §4.2). KMP <code>Security-KMP</code> provides the
+device-side crypto primitives (§9).</p>
+<h2 id="composition-with-avb-dm-verity-ab">7. Composition with AVB /
+dm-verity / A/B</h2>
+<p>Helix signing <strong>complements, never replaces</strong>, the
+native Android trust chain (master §6; ADR-0002 §1):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Owner</th>
+<th>Protects</th>
+<th>Helix relationship</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Helix detached signature + SHA-256</td>
+<td>Helix (build pipeline → server → device)</td>
+<td>Artifact authenticity + integrity <strong>before</strong> apply, on
+both server and device</td>
+<td>Helix-owned; the subject of this document</td>
+</tr>
+<tr>
+<td><code>update_engine</code> <code>FILE_HASH</code> /
+<code>METADATA_HASH</code> + payload signature</td>
+<td>AOSP</td>
+<td>Payload integrity during streaming/apply to the inactive slot</td>
+<td>Helix serves byte-identical so these verify (ADR-0004 §3.2);
+UNVERIFIED Android-15 constants (§11)</td>
+</tr>
+<tr>
+<td>AVB / dm-verity</td>
+<td>AOSP</td>
+<td>Verified boot: every block of the system partition is hash-verified
+at runtime against a signed root</td>
+<td>Independent of Helix signing; Helix does not modify the AVB
+chain</td>
+</tr>
+<tr>
+<td>A/B <code>boot_control</code> + auto-rollback</td>
+<td>AOSP</td>
+<td>Atomic apply to the inactive slot; automatic rollback to the
+last-good slot on boot failure</td>
+<td>Provides the zero-bricking guarantee independent of any Helix or TUF
+metadata layer (ADR-0002 §5.1)</td>
+</tr>
+</tbody>
+</table>
+<p>Key composition points:</p>
+<ul>
+<li><strong>Layered, not overlapping:</strong> Helix verifies
+<em>which</em> artifact is authorized and <em>that</em> it is authentic
+before apply; AVB verifies <em>that the running system</em> is intact at
+boot; A/B guarantees the apply is atomic and reversible (ADR-0002 §1). A
+failure at any Helix gate aborts before <code>update_engine</code> is
+invoked; a failure at the AVB/boot stage triggers native A/B rollback
+regardless of Helix.</li>
+<li><strong>Byte-identity is the contract</strong> that lets these
+layers coexist: re-compressing or re-wrapping the artifact would break
+both the <code>update_engine</code> hash check and a future TUF target
+entry (ADR-0004 §3.2; ADR-0002 §4.2). The detached-signature design (§3)
+preserves it.</li>
+<li><strong>No double-signing collision:</strong> the artifact retains
+its existing AOSP/payload signature unchanged; the Helix detached
+signature is a separate, additive artifact (ADR-0002 §3.2
+additive/non-invasive layering).</li>
+</ul>
+<h2 id="mvp-forward-interfaces-tufuptane-drop-in-per-adr-0002">8.
+MVP-forward interfaces (TUF/Uptane drop-in per ADR-0002)</h2>
+<p>The MVP signing/verification interfaces are designed so TUF (then a
+Director+Image split) drops in <strong>without rework</strong> (ADR-0002
+§4.2). The four seams:</p>
+<ol type="1">
+<li><strong>Opaque target identity.</strong> Every artifact is
+identified by <strong>path + length + SHA-256</strong>, so a TUF
+<code>targets</code> entry layers over it byte-identically later;
+artifacts keep their existing signature (ADR-0002 §4.2). The MVP
+manifest (<code>ota-protocol</code>) records exactly these fields.</li>
+<li><strong>Signer abstraction.</strong> Signing sits behind an
+interface compatible with <code>go-securesystemslib</code>
+<code>signature.Signer</code> (the integration point go-tuf/v2 uses), so
+the MVP detached-signature signer and a future TUF role signer share one
+seam (ADR-0002 §4.2, §3.2).</li>
+<li><strong>Verify-gate as a distinct step.</strong> Device-side
+verification is a separate step that <strong>gates apply</strong>, so a
+TUF refresh/verify flow (role order root→timestamp→snapshot→targets;
+expiry; version monotonicity; threshold sigs) can be inserted in front
+of the existing hash+signature check without changing the apply path
+(ADR-0002 §4.2; §6 above).</li>
+<li><strong>Per-device “what should this device install”
+decision.</strong> The control plane reserves a per-device target
+decision (already required by staged rollout) so a TUF/Uptane
+<strong>Director</strong> repository can later mint per-device
+<code>targets.json</code> from the inventory DB (ADR-0002 §4.2; §4.3
+step 5).</li>
+</ol>
+<p>Sequencing for 1.0.1+ is owned by ADR-0002 §4.3 and is
+<strong>not</strong> reordered here: prototype the server publish path +
+a Go refresh client; ADR + spike the on-device client (the dominant,
+UNVERIFIED cost); define the offline key-custody ceremony; only then
+make device-side TUF verification mandatory; the Director+Image split is
+a stretch. No on-device trust mechanism beyond MVP plain signing is made
+mandatory without that spike (ADR-0002 §4.3, §6).</p>
+<h2 id="catalogue-reuse-and-module-boundaries">9. Catalogue reuse and
+module boundaries</h2>
+<p>Per catalogue-first reuse (§11.4.74, UNVERIFIED clause), no bespoke
+crypto is invented where a catalogue submodule exists (ADR-0002
+§4.2):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Submodule(s)</th>
+<th>Class</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server-side hash + signature primitives</td>
+<td><code>security</code></td>
+<td>reuse</td>
+<td>Crypto primitives only; consumed by
+<code>ota-artifact-validator</code>. UNVERIFIED that
+<code>security</code> exposes the SHA-256/512 + signature-verify
+primitives needed.</td>
+</tr>
+<tr>
+<td>Device-side hash + signature primitives</td>
+<td><code>Security-KMP</code></td>
+<td>reuse</td>
+<td>KMP crypto for the agent’s re-verify gate. UNVERIFIED surface.</td>
+</tr>
+<tr>
+<td>Artifact validation pipeline
+(structure→hash→sig→version→target)</td>
+<td><code>ota-artifact-validator</code> (NEW)</td>
+<td>new</td>
+<td>Operates on raw artifact bytes; <strong>no transport</strong>;
+depends on <code>security</code> + <code>ota-protocol</code>.
+Independently testable.</td>
+</tr>
+<tr>
+<td>Manifest / target identity schema (path+length+sha256, key_id)</td>
+<td><code>ota-protocol</code> (NEW)</td>
+<td>new</td>
+<td>Pure contracts; no business logic, no transport, no storage.</td>
+</tr>
+<tr>
+<td>Device apply bridge + device re-verify hook</td>
+<td><code>ota-update-engine-bridge</code> (NEW)</td>
+<td>new</td>
+<td>Android-only, thin; wraps AOSP
+<code>update_engine</code>/<code>boot_control</code>. No networking or
+policy.</td>
+</tr>
+<tr>
+<td>Blob staging / byte-identical serve</td>
+<td><code>Storage</code></td>
+<td>reuse</td>
+<td>Object persistence behind a storage port; serves byte-identical with
+Range.</td>
+</tr>
+<tr>
+<td>Upload request handling, audit</td>
+<td><code>middleware</code>, <code>auth</code></td>
+<td>reuse</td>
+<td>Request-auth + audit middleware; no signing logic.</td>
+</tr>
+</tbody>
+</table>
+<p>The signer abstraction, verify-gate, validator, and bridge are kept
+independently testable so the signing/verify path is Uptane-swappable
+(§11.4.28 decoupling; ADR-0002 §7).</p>
+<h2 id="testing-four-layer">10. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 (UNVERIFIED clause), the signing/verify path
+— a <strong>safety-critical path targeting ≥90% coverage</strong>
+(master §13; ADR-0002 §7) — ships all four layers with no-bluff positive
+evidence (§7.1):</p>
+<ul>
+<li><strong>Layer 1 — Source-presence gate.</strong> Static check that
+the source actually contains: a server verify-on-upload step rejecting
+bad hash/signature; a device re-verify-before-apply step; a signer
+abstraction matching the <code>signature.Signer</code> seam; the
+opaque-target (path+length+sha256+key_id) manifest fields; and the
+verify-gate-distinct-from-apply structure. Absence of any is a
+build-time failure.</li>
+<li><strong>Layer 2 — Artifact gate (bytes shipped).</strong> Confirm
+the shipped artifacts: the released <code>.zip</code> is
+<strong>byte-identical</strong> to the signed bytes (no
+re-compression/re-wrap), carries the mandatory hash file, and its
+declared SHA-256 matches the bytes; confirm the device build embeds a
+non-empty trust store with at least the active build-pipeline public
+key.</li>
+<li><strong>Layer 3 — Runtime / integration.</strong> End-to-end: sign →
+upload → server verifies → publish → device downloads byte-identical →
+device re-verifies → apply via <code>update_engine</code>.
+<strong>Negative runtime cases (must reject, not apply):</strong>
+tampered byte → server reject AND device reject; valid hash but
+wrong/forged signature → reject at both gates; signature by an
+untrusted/rotated-out <code>key_id</code> → reject; downgrade (lower
+version) → server reject; truncated/range-corrupted download → device
+hash mismatch abort. Confirm AVB/A/B still rolls back on a corrupt-slot
+boot independent of Helix gates (master §13 corrupt-slot→A/B
+fallback).</li>
+<li><strong>Layer 4 — Mutation meta-test (PASS→FAIL on
+negation).</strong> Mutate the verify logic and require the suite to
+flip PASS→FAIL: e.g. force <code>verifySignature</code> to
+always-return-true, skip the device re-verify call, accept a
+non-monotonic version, or compare against the wrong <code>key_id</code>
+— each mutation MUST be caught by Layer 3. A surviving mutant is a
+coverage defect on a safety-critical path.</li>
+</ul>
+<h2 id="open-unverified-items">11. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>Signature scheme: DEFAULT pinned (ED25519), final
+brick-confirmation tracked.</strong> The MVP DEFAULT is
+<strong>ED25519</strong>, with <code>key_id</code>-based algorithm
+agility for ECDSA-P256 / RSA-PSS fallback (§3). What remains is the
+tracked <strong>confirm-against-the-<code>security</code>-brick</strong>
+item: that the <code>security</code> / <code>Security-KMP</code>
+submodules actually expose ED25519 (and the fallback primitives).
+<strong>UNVERIFIED</strong> surface only. (Continuation.)</li>
+<li><strong><code>security</code> / <code>Security-KMP</code> crypto
+surface.</strong> That these submodules expose the required SHA-256/512
++ signature primitives is <strong>UNVERIFIED</strong> (ADR-0002 §8 item
+9; reuse map §3).</li>
+<li><strong>Android-15 / RK3588 <code>update_engine</code>
+constants</strong> (<code>FILE_HASH</code>, <code>METADATA_HASH</code>,
+payload-signature behavior) the device verify-gate composes with are
+<strong>UNVERIFIED</strong> (ADR-0004 §6; ADR-0002 §8 item 8).</li>
+<li><strong>Single-signing-key exposure is an accepted MVP
+residual</strong> — no rollback/freeze/mix-and-match/ mirror-denial
+mitigation until TUF in 1.0.1+ (ADR-0002 §5.2; threat_model §171–182).
+Tracked, not fixed, in the MVP.</li>
+<li><strong>HelixConstitution clause numbers</strong> (§11.4.61, §7.1,
+§11.4.6, §11.4.74, §11.4.28, §11.4.123, §11.4.125, §1) are
+<strong>UNVERIFIED</strong> against the authoritative text (corpus
+convention).</li>
+</ol>
+<h2 id="compliance-notes-helixconstitution">12. Compliance notes
+(HelixConstitution)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause (UNVERIFIED numbers)</th>
+<th>How this spec complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.61 (ToC)</td>
+<td>ToC present immediately after the metadata table.</td>
+</tr>
+<tr>
+<td>§7.1 / §11.4.6 (no-bluff / no-guessing)</td>
+<td>Every claim cites an ADR, the master design, or the threat model;
+the signature scheme has a pinned MVP DEFAULT (ED25519) with only its
+<code>security</code>-brick exposure left as a tracked confirm item; the
+submodule crypto surface and Android-15 constants are carried as
+<strong>UNVERIFIED</strong> rather than asserted.</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first reuse)</td>
+<td>Crypto routed through <code>security</code> /
+<code>Security-KMP</code>; validation/bridge/contracts in the justified
+NEW submodules; no bespoke crypto invented (§9).</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>Signer abstraction + distinct verify-gate + validator + bridge are
+independently testable and Uptane-swappable (§8, §9).</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§10 specifies all four layers on the ≥90% safety-critical
+signing/verify path.</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>UNVERIFIED items are closed by the ADR-0002 §4.3 spikes (server
+publish + Go refresh client; on-device client; key-custody ceremony) and
+by Layer-3 runtime evidence, not by assertion.</td>
+</tr>
+<tr>
+<td>§11.4.125 (code-review gate)</td>
+<td>Subject to the mandatory adversarial code-review subagent before
+acceptance (master §14).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources">13. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>:</p>
+<ul>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— §1, §2, §3.1–§3.2, §4.1–§4.3, §5, §7, §8.</li>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>research/adr/adr-0004-transport.md</code></a>
+— §3.2, §3.3, §4, §6 (byte-identity, Range, verify-before-apply).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— §5 (MVP flow), §6 (security &amp; trust model), §13 (four-layer
+testing).</li>
+<li><a
+href="../../00-master/threat_model.md"><code>00-master/threat_model.md</code></a>
+— signing-key asset + residual risk (lines ~90, 108, 154–182).</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>00-master/submodule_reuse_map.md</code></a>
+— §3 (artifact intake/validation, Android client), §4 (NEW
+submodules).</li>
+<li><a
+href="../../00-master/documentation_standards.md"><code>00-master/documentation_standards.md</code></a>
+— §2 (metadata), §8 (anti-bluff), §9 (canonical submodules).</li>
+<li><a href="transport_security.md">transport_security.md</a>, <a
+href="key_management.md">key_management.md</a> — companion MVP security
+specs.</li>
+</ul>
+</body>
+</html>

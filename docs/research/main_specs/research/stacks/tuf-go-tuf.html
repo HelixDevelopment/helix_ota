@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>tuf-go-tuf</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="helix-ota-stack-research-tuf-go-tufv2-supply-chain-integrity-for-ota-artifacts">Helix
+OTA — Stack Research: TUF + go-tuf/v2 (supply-chain integrity for OTA
+artifacts)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Evaluation of The Update Framework (TUF) and the
+<code>github.com/theupdateframework/go-tuf/v2</code> library as the
+metadata/signing layer that wraps Helix OTA’s already-signed update
+artifacts. Covers the four top-level roles, the attack classes TUF
+mitigates, the maturity of the go-tuf/v2 metadata + client API, how TUF
+layers over the native A/B <code>payload.bin</code>/<code>.zip</code>
+artifacts, and the adoption effort for the Go control plane. Library
+facts verified live against the GitHub API and pkg.go.dev on
+2026-06-07.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>go-tuf/v2 <code>metadata/updater</code> and
+<code>metadata/trustedmetadata</code> client-flow APIs could not be
+fully enumerated from pkg.go.dev in this pass (the package index
+rendered the constructor/repository surface but truncated the client
+subpackages). Adoption-effort figures are estimates, not measured.
+Android-side TUF client maturity is the weakest link and is flagged
+below.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Server-side (Go) story is strong and verifiable; device-side
+(Android) TUF client story needs a dedicated follow-up because go-tuf/v2
+is a Go library, not an Android one.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial research note</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Roles, attack classes, library version/license/maturity, and
+metadata API surface verified against primary sources. Unverifiable
+specifics are marked “UNVERIFIED — needs confirmation”.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Feed into ADR on supply-chain security; pair with the
+artifact-signing research note and the Android client integration spec.
+Spike a minimal go-tuf/v2 repo + refresh client before committing the
+dependency. Open a separate investigation for the on-device TUF client
+(Go-on-Android via the engine, or a hand-rolled minimal verifier).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope--question">§1. Scope &amp; question</a></li>
+<li><a href="#2-what-tuf-is">§2. What TUF is</a></li>
+<li><a href="#3-the-four-top-level-roles">§3. The four top-level
+roles</a></li>
+<li><a href="#4-attack-classes-mitigated">§4. Attack classes
+mitigated</a></li>
+<li><a href="#5-go-tufv2--facts-maturity-api-surface">§5. go-tuf/v2 —
+facts, maturity, API surface</a></li>
+<li><a href="#6-how-tuf-layers-over-signed-ota-artifacts">§6. How TUF
+layers over signed OTA artifacts</a></li>
+<li><a href="#7-effort-to-adopt-in-helix-ota">§7. Effort to adopt in
+Helix OTA</a></li>
+<li><a href="#8-risks-gaps--open-questions">§8. Risks, gaps &amp; open
+questions</a></li>
+<li><a href="#9-recommendation">§9. Recommendation</a></li>
+<li><a href="#10-sources">§10. Sources</a></li>
+</ul>
+<h2 id="scope-question">§1. Scope &amp; question</h2>
+<p>Helix OTA already plans per-artifact integrity: SHA-256 + a detached
+signature, verified server-side on upload and device-side before
+<code>update_engine.applyPayload</code>. The open question is whether to
+add <strong>TUF</strong> on top, and if so whether
+<code>go-tuf/v2</code> is the right implementation for the Go control
+plane. TUF does not replace artifact signing — it answers a different
+question: <em>“can a client trust the metadata that tells it which
+artifact is current, and can it keep trusting it after a key or a mirror
+is compromised?”</em> This note evaluates roles, mitigated attacks,
+go-tuf/v2 maturity, the layering model, and adoption cost.</p>
+<h2 id="what-tuf-is">§2. What TUF is</h2>
+<p>TUF (The Update Framework) is a CNCF-graduated specification for
+securing software-update systems. Its core idea is <strong>separation of
+trust across multiple signing roles with independent keys, expiration,
+and version pinning</strong>, so that compromise of any one key
+(especially online keys) does not let an attacker push arbitrary, stale,
+or inconsistent updates. The current spec version pinned by go-tuf/v2 is
+<code>SPECIFICATION_VERSION = "1.0.31"</code> (from the package
+constants). TUF is metadata-centric: clients fetch a small set of signed
+JSON metadata files, validate them in a fixed order, and only then trust
+the hashes/lengths that point at the actual artifacts.</p>
+<h2 id="the-four-top-level-roles">§3. The four top-level roles</h2>
+<p>Quotes below are from the TUF specification
+(theupdateframework.github.io/specification/latest). All four are signed
+roles; <code>root</code> is the trust anchor and is the only role
+shipped/pinned out-of-band.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Responsibility (spec)</th>
+<th>Key posture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>root</strong></td>
+<td>“delegates trust to specific keys trusted for all other top-level
+roles.” The trust anchor; distributes/rotates the public keys of all
+roles.</td>
+<td>Offline, highest security; threshold-signed.</td>
+</tr>
+<tr>
+<td><strong>targets</strong></td>
+<td>“signs metadata that describes” the target files (the artifacts) —
+names, lengths, hashes — and “can delegate full or partial trust to
+other roles.”</td>
+<td>Offline preferred; can delegate to per-product/per-channel
+roles.</td>
+</tr>
+<tr>
+<td><strong>snapshot</strong></td>
+<td>“signs a metadata file that provides information about the latest
+version of all targets metadata on the repository.” Prevents
+inconsistent (mix-and-match) metadata views.</td>
+<td>Can be online (e.g. CI-signed).</td>
+</tr>
+<tr>
+<td><strong>timestamp</strong></td>
+<td>“periodically signs a timestamped statement containing the hash of
+the snapshot file.” Proves freshness and bounds replay windows.</td>
+<td>Online; “the risk posed to clients by the compromise of this key is
+minimal.”</td>
+</tr>
+</tbody>
+</table>
+<p>Client verification order is fixed: root → timestamp → snapshot →
+targets (then delegated targets). <strong>Delegations</strong>
+(incl. hash-bin and succinct hash-bin / TAP-15) let <code>targets</code>
+hand off subtrees of the target namespace to other keys — directly
+useful for Helix’s per-device-group / per-channel artifact
+partitioning.</p>
+<h2 id="attack-classes-mitigated">§4. Attack classes mitigated</h2>
+<p>From the TUF spec’s security goals (short quotes). These are the
+concrete classes that justify TUF <em>on top of</em> plain artifact
+signing:</p>
+<ul>
+<li><strong>Arbitrary software installation</strong> — attacker cannot
+“provide arbitrary files in response to download requests.”</li>
+<li><strong>Rollback attacks</strong> — cannot “trick clients into
+installing software that is older than that which the client previously
+knew to be available.” (Version pinning across metadata.)</li>
+<li><strong>Fast-forward attacks</strong> — cannot “arbitrarily increase
+the version numbers of metadata files” (which would otherwise poison
+rollback protection after recovery).</li>
+<li><strong>Indefinite freeze attacks</strong> — cannot serve “the same,
+outdated metadata without the client being aware” (timestamp expiry
+bounds this).</li>
+<li><strong>Endless data attacks</strong> — cannot respond with “huge
+amounts of data” (lengths are pinned in metadata).</li>
+<li><strong>Slow retrieval attacks</strong> — spec addresses
+trickle-feeding data to stall clients. (UNVERIFIED — phrasing not
+re-quoted in this pass; spec lists it under the same security
+section.)</li>
+<li><strong>Extraneous dependencies attacks</strong> — cannot cause
+“clients to download or install software dependencies that are not the
+intended dependencies.”</li>
+<li><strong>Mix-and-match attacks</strong> — cannot “trick clients into
+using a combination of metadata that never existed together” (snapshot
+role).</li>
+<li><strong>Wrong software installation</strong> — cannot “provide a
+file that is not the one the client wanted.”</li>
+<li><strong>Malicious mirrors preventing updates</strong> — “a
+repository mirror cannot prevent updates from good mirrors.”</li>
+<li><strong>Key compromise resilience</strong> — compromising “a single
+key or less than a given threshold of keys” cannot “compromise clients”
+(threshold signing + offline root/targets).</li>
+</ul>
+<p>Plain SHA-256 + per-artifact signature covers <em>wrong/arbitrary
+file</em> only if the signing key is intact and the device already knows
+the correct hash. It does <strong>not</strong> cover rollback, freeze,
+mix-and-match, mirror-denial, or graceful recovery from key compromise.
+That delta is the case for TUF.</p>
+<h2 id="go-tufv2-facts-maturity-api-surface">§5. go-tuf/v2 — facts,
+maturity, API surface</h2>
+<p><strong>Verified facts (GitHub API + pkg.go.dev,
+2026-06-07):</strong></p>
+<ul>
+<li>Module path: <code>github.com/theupdateframework/go-tuf/v2</code>
+(v2 is a major-version module; import path includes
+<code>/v2</code>).</li>
+<li>License: <strong>Apache-2.0</strong> (verified via GitHub API
+<code>license.spdx_id</code>).</li>
+<li>Latest release: <strong>v2.4.2</strong>, published
+<strong>2026-05-19</strong> (verified via
+<code>gh api .../releases</code>). Preceding: v2.4.1 (2026-01-26),
+v2.4.0 (2026-01-21), v2.3.1 (2026-01-19), v2.3.0 (2025-11-05).</li>
+<li>Stars: <strong>705</strong>; not archived; last push
+<strong>2026-06-03</strong> (active). (Star count is a weak proxy and
+recorded only for context.)</li>
+<li>Pinned spec version: <code>1.0.31</code>.</li>
+<li>Crypto: ED25519, RSA (e.g. <code>rsassa-pss-sha256</code>),
+ECDSA.</li>
+<li>Features: consistent snapshots; standard + hash-bin delegations;
+<strong>succinct hash-bin delegations (TAP-15)</strong>;
+<strong>TAP-4</strong> multi-repository consensus; unrecognized-field
+preservation (forward-compat).</li>
+</ul>
+<p><strong>Maturity:</strong> go-tuf/v2 is a ground-up redesign of the
+legacy <code>go-tuf</code> v0.7.0 (which the project describes as hard
+to maintain), modeled on python-tuf’s architecture. The project states
+it is “used in production by various tech companies and open-source
+organizations.” That production claim is the project’s own (not
+independently audited here) — treat as <strong>UNVERIFIED — needs
+confirmation</strong> for any specific adopter list. The API is
+generics-based and clean.</p>
+<p><strong>Metadata API surface (verified on pkg.go.dev):</strong></p>
+<ul>
+<li>Constructors: <code>Root(...) *Metadata[RootType]</code>,
+<code>Targets(...)</code>, <code>Snapshot(...)</code>,
+<code>Timestamp(...)</code>.</li>
+<li>Signing/verify:
+<code>(*Metadata[T]).Sign(signer signature.Signer)</code>,
+<code>VerifyDelegate(role, meta)</code>,
+<code>ClearSignatures()</code>.</li>
+<li>(De)serialization: <code>ToBytes/FromBytes</code>,
+<code>ToFile/FromFile</code>.</li>
+<li>Targets helpers: <code>TargetFiles.FromFile/FromBytes</code>
+(computes length+hashes), <code>VerifyLengthHashes(data)</code>.</li>
+<li>Root key admin: <code>RootType.AddKey/RevokeKey</code>,
+<code>IsExpired</code>.</li>
+<li>Delegations: <code>Delegations</code> with
+<code>Roles []DelegatedRole</code>, <code>SuccinctRoles</code>,
+<code>GetRolesForTarget(path)</code>,
+<code>DelegatedRole.IsDelegatedPath(path)</code>.</li>
+<li>Keys: <code>KeyFromPublicKey</code>, <code>Key.ID()</code>,
+<code>Key.ToPublicKey()</code>. Signer integration is via
+<code>secure-systems-lab/go-securesystemslib</code>
+<code>signature.Signer</code>.</li>
+<li>Subpackages: <code>metadata</code>, <code>metadata/config</code>,
+<code>metadata/fetcher</code>, <code>metadata/trustedmetadata</code>,
+<code>metadata/updater</code>, <code>metadata/multirepo</code>.</li>
+</ul>
+<p>The <strong>client refresh + download flow</strong> lives in
+<code>metadata/updater</code> (ngclient-style <code>Updater</code>:
+<code>Refresh()</code>, target lookup, <code>DownloadTarget</code>)
+built on <code>metadata/trustedmetadata</code> (the trusted set
+enforcing the root→timestamp→snapshot→targets order). The exact
+signatures of these two subpackages were <strong>not</strong> fully
+captured in this pass (pkg.go.dev truncated them) — <strong>UNVERIFIED —
+needs confirmation</strong>; verify against
+<code>metadata/updater</code> examples before estimating client
+code.</p>
+<h2 id="how-tuf-layers-over-signed-ota-artifacts">§6. How TUF layers
+over signed OTA artifacts</h2>
+<p>TUF is <strong>additive and non-invasive</strong> to the existing
+artifact pipeline. The artifacts themselves (the
+<code>payload.bin</code> inside the A/B OTA <code>.zip</code>, or the
+full <code>.zip</code>) remain byte-identical and keep their own
+AOSP/payload signature; TUF treats each as an opaque <strong>target
+file</strong> identified by path + length + SHA-256/SHA-512 hash.</p>
+<p>Proposed layering for Helix OTA:</p>
+<ol type="1">
+<li><strong>Build/publish (Go control plane):</strong> when a release is
+uploaded to MinIO/S3, the server computes
+<code>TargetFiles.FromFile(...)</code>, adds the entry to a
+<code>targets</code> (or delegated per-channel) metadata, bumps
+<code>snapshot</code> and <code>timestamp</code>, signs each with the
+appropriate signer, and publishes the metadata next to the blobs.</li>
+<li><strong>Trust roots:</strong> <code>root</code> and
+<code>targets</code> keys held offline (HSM/KMS, ceremony-rotated);
+<code>snapshot</code>/<code>timestamp</code> can be online (signed by
+the control plane or CI). <code>timestamp</code> re-signed on the OTA
+poll cadence to bound freeze windows.</li>
+<li><strong>Distribution:</strong> metadata served over the existing
+HTTP/3→HTTP/2 + Brotli path; consistent-snapshot naming makes it
+CDN/cache-friendly.</li>
+<li><strong>Device:</strong> client fetches metadata, runs TUF
+verification (role order, expiry, version monotonicity, threshold sigs),
+resolves the target hash, then downloads the artifact and verifies
+length+hash <strong>before</strong> handing <code>payload.bin</code> to
+<code>update_engine.applyPayload</code>. The native A/B engine’s own
+payload signature check remains as defense-in-depth.</li>
+</ol>
+<p>Net: TUF wraps the metadata/trust decision; the A/B engine still does
+the atomic, anti-bricking apply + automatic boot-failure rollback. They
+are complementary, not overlapping.</p>
+<h2 id="effort-to-adopt-in-helix-ota">§7. Effort to adopt in Helix
+OTA</h2>
+<p>All figures are <strong>estimates, not measured</strong> — flagged
+accordingly.</p>
+<p><strong>Server-side (Go) — LOW-to-MEDIUM.</strong> go-tuf/v2 is
+idiomatic Go, Apache-2.0, single dependency tree (relies on
+<code>go-securesystemslib</code>). The publish path (build
+targets/snapshot/timestamp, sign, write) is a few hundred lines wrapping
+the verified constructor + <code>Sign</code> + delegation APIs. Hooks
+cleanly into the existing upload/MinIO flow. Estimated 1–2
+engineer-weeks for a first integration + tests. <strong>UNVERIFIED —
+needs confirmation</strong> via a spike.</p>
+<p><strong>Key management — MEDIUM-to-HIGH (process, not code).</strong>
+The real cost is operational: offline root/targets key custody, a
+documented signing ceremony, threshold + rotation policy, and timestamp
+re-signing automation. This is inherent to TUF, not to go-tuf, and is
+where most adopters spend effort.</p>
+<p><strong>Device-side (Android) — HIGH / OPEN.</strong> This is the
+critical gap. go-tuf/v2 is a <strong>Go</strong> library; the Android
+client is Kotlin + a foreground service. Options, all unproven for Helix
+here: - (a) Run go-tuf/v2 on-device via a Go-built native lib
+(gomobile/JNI) — adds a Go toolchain + binary-size cost to the APK. -
+(b) Hand-roll a minimal TUF client in Kotlin that implements only the
+refresh/verify flow against our metadata — full control, but
+security-sensitive code we’d own. - (c) Use an existing JVM/Android TUF
+client — <strong>none verified to exist or be maintained</strong>;
+<strong>UNVERIFIED — needs confirmation</strong>. This decision
+dominates the adoption cost and must be its own ADR/spike before
+committing.</p>
+<h2 id="risks-gaps-open-questions">§8. Risks, gaps &amp; open
+questions</h2>
+<ul>
+<li><strong>Device client is the long pole.</strong> No verified
+production-grade Android/Kotlin TUF client found. Resolve before
+adopting TUF as a hard requirement.</li>
+<li><strong>Operational burden of offline keys.</strong> TUF’s
+guarantees depend on root/targets keys being offline and
+threshold-signed; weak key custody negates most benefits. Needs an
+HSM/KMS + ceremony plan.</li>
+<li><strong><code>metadata/updater</code> API not fully
+verified</strong> in this pass — confirm the
+<code>Updater</code>/<code>TrustedMetadata</code> signatures against
+current examples before sizing client work.</li>
+<li><strong>Production-adopter and “minimal risk on timestamp
+compromise” claims</strong> are the project’s/spec’s own wording — fine
+to cite, not independently audited here.</li>
+<li><strong>Spec slow-retrieval phrasing</strong> not re-quoted — minor;
+confirm if cited verbatim downstream.</li>
+<li><strong>Star count (705)</strong> is context only; do not use as a
+maturity gate.</li>
+</ul>
+<h2 id="recommendation">§9. Recommendation</h2>
+<p><strong>Adopt TUF as the metadata/trust layer for the server-side
+publish pipeline now; gate device-side enforcement behind a dedicated
+Android-client spike.</strong> go-tuf/v2 (v2.4.2, Apache-2.0, actively
+maintained, spec 1.0.31, generics API, TAP-4/TAP-15 support) is a sound,
+low-risk choice for the Go control plane and materially closes attack
+classes that plain per-artifact signing leaves open (rollback, freeze,
+mix-and-match, mirror-denial, key-compromise recovery). The blocker is
+not the library but the absence of a verified Android TUF client and the
+operational key-management process. Recommended sequence: (1) prototype
+the server publish + a Go reference refresh client to validate the model
+end-to-end; (2) ADR + spike for the on-device client (gomobile
+vs. hand-rolled Kotlin); (3) define the key-custody ceremony; (4) only
+then make device-side TUF verification mandatory. Keep the existing
+SHA-256 + artifact signature and the A/B engine’s payload check as
+defense-in-depth regardless.</p>
+<p><strong>Overall confidence: medium.</strong> Library facts (version,
+date, license, API, maturity signals) are HIGH (verified against GitHub
+API + pkg.go.dev). Roles/attacks are HIGH (TUF spec). Adoption-effort
+numbers and the Android-client path are LOW-to-MEDIUM (estimates + an
+unresolved gap).</p>
+<h2 id="sources">§10. Sources</h2>
+<p>Consulted 2026-06-07:</p>
+<ul>
+<li>TUF specification (roles, attack classes):
+https://theupdateframework.github.io/specification/latest/</li>
+<li>TUF project homepage: https://theupdateframework.io/</li>
+<li>go-tuf repository (README, status, features):
+https://github.com/theupdateframework/go-tuf</li>
+<li>go-tuf releases (version + dates, verified via GitHub API
+<code>repos/theupdateframework/go-tuf/releases</code>):
+https://github.com/theupdateframework/go-tuf/releases</li>
+<li>go-tuf repo metadata (stars=705, license=Apache-2.0, pushed
+2026-06-03, archived=false), verified via GitHub API
+<code>repos/theupdateframework/go-tuf</code>.</li>
+<li>go-tuf/v2 metadata package API (constructors, Sign/VerifyDelegate,
+TargetFiles, Delegations, subpackages, SPEC 1.0.31):
+https://pkg.go.dev/github.com/theupdateframework/go-tuf/v2/metadata</li>
+<li>TAP-4 (multi-repo consensus) and TAP-15 (succinct hash-bin
+delegations): TUF TAPs — https://github.com/theupdateframework/taps
+(referenced via go-tuf feature list; TAP text not re-fetched this pass —
+UNVERIFIED for exact TAP wording).</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SECURITY_LAYERS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SECURITY_LAYERS</h1>
+</header>
+<h1 id="helix-ota-security-layers-defense-in-depth">Helix OTA — Security
+Layers (Defense-in-Depth)</h1>
+<h2 id="overview">Overview</h2>
+<p>This diagram illustrates the <strong>defense-in-depth security
+architecture</strong> of the Helix OTA platform. Multiple independent
+security layers protect the system — if one layer is compromised,
+subsequent layers continue to provide protection. Security is applied at
+every boundary: network, transport, application, data, and device
+levels.</p>
+<hr />
+<h2 id="diagram">Diagram</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph OuterMost[&quot;🛡️ LAYER 1: Network Perimeter&quot;]
+        WAF[&quot;🔥 Web Application Firewall&lt;br/&gt;────────────────────&lt;br/&gt;• Rate limiting (100 req/min/IP)&lt;br/&gt;• IP allowlisting (operator access)&lt;br/&gt;• DDoS protection&lt;br/&gt;• Geo-blocking (if enabled)&lt;br/&gt;• Request size limits&quot;]
+        LB[&quot;⚖️ Load Balancer / Reverse Proxy&lt;br/&gt;────────────────────&lt;br/&gt;• TLS 1.3 termination&lt;br/&gt;• HSTS headers enforced&lt;br/&gt;• X-Forwarded-For stripping&lt;br/&gt;• Connection pooling&quot;]
+    end
+
+    subgraph Transport[&quot;🔐 LAYER 2: Transport Security&quot;]
+        MTLS[&quot;🔑 Mutual TLS (mTLS)&lt;br/&gt;────────────────────&lt;br/&gt;• Device certificates validated&lt;br/&gt;• Server certificate pinned&lt;br/&gt;• Certificate rotation (90-day)&lt;br/&gt;• CRL / OCSP checking&quot;]
+        HTTPS[&quot;🔒 HTTPS Everywhere&lt;br/&gt;────────────────────&lt;br/&gt;• TLS 1.3 minimum&lt;br/&gt;• Strong cipher suites only&lt;br/&gt;• No HTTP fallback&lt;br/&gt;• Certificate pinning on device&quot;]
+    end
+
+    subgraph Application[&quot;🧱 LAYER 3: Application Security&quot;]
+        AUTH[&quot;👤 Authentication &amp; Authorization&lt;br/&gt;────────────────────&lt;br/&gt;• JWT with RS256 (15min access)&lt;br/&gt;• Refresh tokens (7-day rotation)&lt;br/&gt;• API key authentication (devices)&lt;br/&gt;• RBAC: admin/operator/viewer&lt;br/&gt;• Organization isolation&quot;]
+        INPUT[&quot;✅ Input Validation&lt;br/&gt;────────────────────&lt;br/&gt;• Schema validation (all endpoints)&lt;br/&gt;• SQL injection prevention (ORM)&lt;br/&gt;• Path traversal blocking&lt;br/&gt;• Content-Type enforcement&lt;br/&gt;• Payload size limits&quot;]
+        RATE[&quot;⏱️ Rate Limiting&lt;br/&gt;────────────────────&lt;br/&gt;• Per-device: 1 check/5min&lt;br/&gt;• Per-IP: 100 req/min&lt;br/&gt;• Per-API-key: 1000 req/hr&lt;br/&gt;• Redis-backed token bucket&quot;]
+    end
+
+    subgraph Data[&quot;💾 LAYER 4: Data Security&quot;]
+        ENCRYPT_DB[&quot;🗄️ Database Encryption&lt;br/&gt;────────────────────&lt;br/&gt;• AES-256 encryption at rest&lt;br/&gt;• TLS for DB connections&lt;br/&gt;• Column-level encryption (secrets)&lt;br/&gt;• Encrypted backups (S3 SSE)&quot;]
+        ENCRYPT_OBJ[&quot;📦 Object Storage Encryption&lt;br/&gt;────────────────────&lt;br/&gt;• MinIO server-side encryption&lt;br/&gt;• AES-256-GCM per object&lt;br/&gt;• Separate encryption keys&lt;br/&gt;• Presigned URL time-limited (1h)&quot;]
+        SECRETS[&quot;🗝️ Secrets Management&lt;br/&gt;────────────────────&lt;br/&gt;• HashiCorp Vault integration&lt;br/&gt;• Key rotation (90-day schedule)&lt;br/&gt;• Signing key revocation list&lt;br/&gt;• Database credentials rotation&quot;]
+    end
+
+    subgraph Artifact[&quot;📜 LAYER 5: Artifact Integrity&quot;]
+        HASH[&quot;#️⃣ Hash Verification&lt;br/&gt;────────────────────&lt;br/&gt;• SHA-256 on upload&lt;br/&gt;• SHA-256 on download&lt;br/&gt;• Chunk-level hash verification&lt;br/&gt;• Hash stored in DB (signed)&quot;]
+        SIG[&quot;✍️ Code Signing&lt;br/&gt;────────────────────&lt;br/&gt;• Ed25519 signatures&lt;br/&gt;• Signing key per organization&lt;br/&gt;• Key rotation without disruption&lt;br/&gt;• Signature covers hash + manifest&quot;]
+        QUAR[&quot;🦠 Quarantine Pipeline&lt;br/&gt;────────────────────&lt;br/&gt;• Malware scanning (ClamAV)&lt;br/&gt;• Suspicious pattern detection&lt;br/&gt;• Rejected → quarantine bucket&lt;br/&gt;• Forensic analysis support&quot;]
+    end
+
+    subgraph Device[&quot;📱 LAYER 6: Device Security&quot;]
+        VERIFIED[&quot;✅ Verified Boot&lt;br/&gt;────────────────────&lt;br/&gt;• Android Verified Boot (AVB)&lt;br/&gt;• Boot image signature check&lt;br/&gt;• Rollback protection&lt;br/&gt;• dm-verity for system partition&quot;]
+        AB[&quot;🔄 A/B Partition Safety&lt;br/&gt;────────────────────&lt;br/&gt;• Dual-slot system partition&lt;br/&gt;• Failed boot → auto-rollback&lt;br/&gt;• Explicit commit required&lt;br/&gt;• Max 3 boot attempts on new slot&quot;]
+        CLIENT_CERT[&quot;🎫 Device Identity&lt;br/&gt;────────────────────&lt;br/&gt;• Unique device certificate&lt;br/&gt;• Hardware-backed keystore&lt;br/&gt;• Device ID bound to cert&lt;br/&gt;• Certificate revocation support&quot;]
+        SELINUX[&quot;🛡️ SELinux / Sandboxing&lt;br/&gt;────────────────────&lt;br/&gt;• OTA client in restricted domain&lt;br/&gt;• Minimal file access&lt;br/&gt;• No shell escape&lt;br/&gt;• update_engine SELinux policy&quot;]
+    end
+
+    subgraph Monitoring[&quot;📊 LAYER 7: Monitoring &amp; Response&quot;]
+        AUDIT[&quot;📋 Audit Logging&lt;br/&gt;────────────────────&lt;br/&gt;• All API calls logged&lt;br/&gt;• All state changes tracked&lt;br/&gt;• Immutable audit trail&lt;br/&gt;• 90-day retention minimum&quot;]
+        ALERT[&quot;🚨 Anomaly Detection&lt;br/&gt;────────────────────&lt;br/&gt;• Unusual failure rate alerts&lt;br/&gt;• Geographically anomalous requests&lt;br/&gt;• Repeated auth failures&lt;br/&gt;• Artifact tampering attempts&quot;]
+        INC[&quot;🔄 Incident Response&lt;br/&gt;────────────────────&lt;br/&gt;• Auto-pause on critical events&lt;br/&gt;• Emergency halt capability&lt;br/&gt;• Rollback procedures&lt;br/&gt;• Key revocation workflow&quot;]
+    end
+
+    WAF --&gt; LB --&gt; MTLS --&gt; HTTPS
+    HTTPS --&gt; AUTH --&gt; INPUT --&gt; RATE
+    RATE --&gt; ENCRYPT_DB --&gt; ENCRYPT_OBJ --&gt; SECRETS
+    SECRETS --&gt; HASH --&gt; SIG --&gt; QUAR
+    QUAR --&gt; VERIFIED --&gt; AB --&gt; CLIENT_CERT --&gt; SELINUX
+    SELINUX --&gt; AUDIT --&gt; ALERT --&gt; INC
+
+    style WAF fill:#E53935,stroke:#B71C1C,color:#fff
+    style LB fill:#E53935,stroke:#B71C1C,color:#fff
+    style MTLS fill:#F57C00,stroke:#E65100,color:#fff
+    style HTTPS fill:#F57C00,stroke:#E65100,color:#fff
+    style AUTH fill:#FDD835,stroke:#F57F17,color:#000
+    style INPUT fill:#FDD835,stroke:#F57F17,color:#000
+    style RATE fill:#FDD835,stroke:#F57F17,color:#000
+    style ENCRYPT_DB fill:#43A047,stroke:#1B5E20,color:#fff
+    style ENCRYPT_OBJ fill:#43A047,stroke:#1B5E20,color:#fff
+    style SECRETS fill:#43A047,stroke:#1B5E20,color:#fff
+    style HASH fill:#1E88E5,stroke:#0D47A1,color:#fff
+    style SIG fill:#1E88E5,stroke:#0D47A1,color:#fff
+    style QUAR fill:#1E88E5,stroke:#0D47A1,color:#fff
+    style VERIFIED fill:#8E24AA,stroke:#4A148C,color:#fff
+    style AB fill:#8E24AA,stroke:#4A148C,color:#fff
+    style CLIENT_CERT fill:#8E24AA,stroke:#4A148C,color:#fff
+    style SELINUX fill:#8E24AA,stroke:#4A148C,color:#fff
+    style AUDIT fill:#546E7A,stroke:#263238,color:#fff
+    style ALERT fill:#546E7A,stroke:#263238,color:#fff
+    style INC fill:#546E7A,stroke:#263238,color:#fff</code></pre>
+<h2 id="security-layer-summary">Security Layer Summary</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Name</th>
+<th>Protects Against</th>
+<th>Key Controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td>Network Perimeter</td>
+<td>DDoS, unauthorized access, brute force</td>
+<td>WAF, rate limiting, IP allowlisting, TLS termination</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>Transport Security</td>
+<td>MITM, eavesdropping, replay attacks</td>
+<td>mTLS, TLS 1.3, certificate pinning, HSTS</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>Application Security</td>
+<td>Injection, auth bypass, abuse</td>
+<td>JWT/RBAC, input validation, per-endpoint rate limits</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td>Data Security</td>
+<td>Data breach, credential leak</td>
+<td>AES-256 at rest, TLS in transit, Vault secrets, key rotation</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td>Artifact Integrity</td>
+<td>Tampered updates, malware, supply chain</td>
+<td>SHA-256, Ed25519 signing, malware scan, quarantine</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td>Device Security</td>
+<td>Persistent compromise, boot attacks</td>
+<td>AVB, A/B partitions, hardware keystore, SELinux</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td>Monitoring &amp; Response</td>
+<td>Slow compromise, insider threats</td>
+<td>Audit log, anomaly detection, auto-pause, incident response</td>
+</tr>
+</tbody>
+</table>
+<h2 id="threat-model-summary">Threat Model Summary</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Threat</th>
+<th>Layer(s) Mitigating</th>
+<th>Residual Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Man-in-the-middle</strong></td>
+<td>Layer 2 (mTLS, pinning)</td>
+<td>Low — requires compromised CA + device key</td>
+</tr>
+<tr>
+<td><strong>Malicious update</strong></td>
+<td>Layer 5 (signing + hash + scan)</td>
+<td>Very low — requires compromised signing key</td>
+</tr>
+<tr>
+<td><strong>Server compromise</strong></td>
+<td>Layer 4 (encryption at rest) + Layer 7 (audit)</td>
+<td>Medium — data encrypted, but memory accessible</td>
+</tr>
+<tr>
+<td><strong>Device cloning</strong></td>
+<td>Layer 6 (hardware keystore)</td>
+<td>Low — requires physical access + TEE exploit</td>
+</tr>
+<tr>
+<td><strong>Supply chain attack</strong></td>
+<td>Layer 5 (signing) + Layer 4 (key management)</td>
+<td>Low — signing keys in Vault, rotation policy</td>
+</tr>
+<tr>
+<td><strong>Insider threat</strong></td>
+<td>Layer 3 (RBAC) + Layer 7 (audit)</td>
+<td>Medium — admin access is broad; audit provides detection</td>
+</tr>
+<tr>
+<td><strong>DDoS</strong></td>
+<td>Layer 1 (WAF, rate limit)</td>
+<td>Low — absorbed at perimeter</td>
+</tr>
+<tr>
+<td><strong>Zero-day in update_engine</strong></td>
+<td>Layer 6 (A/B rollback, SELinux)</td>
+<td>Medium — blast radius limited by sandboxing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="compliance-considerations">Compliance Considerations</h2>
+<ul>
+<li><strong>SOC 2 Type II</strong>: Audit logging (Layer 7), access
+control (Layer 3), encryption (Layer 4)</li>
+<li><strong>ISO 27001</strong>: Risk assessment, key management,
+incident response</li>
+<li><strong>Common Criteria (EAL4+)</strong>: Verified boot, secure
+update chain (Layers 5–6)</li>
+</ul>
+</body>
+</html>

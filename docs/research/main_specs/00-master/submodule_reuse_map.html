@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>submodule_reuse_map</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="submodule-reuse-map">Submodule Reuse Map</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Catalogue-first reuse map binding each Helix OTA component to the
+verified submodule(s) that satisfy it (reuse / extend / new), with the
+decoupled boundary and any upstream additions each binding requires.
+Specifies the six NEW submodules to be created. Derived from the master
+design (<a
+href="2026-06-07-helix-ota-design.md"><code>2026-06-07-helix-ota-design.md</code></a>
+§10) and the canonical catalogue (<a
+href="documentation_standards.md"><code>documentation_standards.md</code></a>
+§9).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Exact HelixConstitution clause numbering is UNVERIFIED (carried from
+the corpus convention). Some catalogue submodules expose capabilities
+Helix OTA needs but whose precise public surface has not been inspected
+in this revision; those bindings are marked UNVERIFIED where the
+satisfying API has not been confirmed. The six NEW repos are not yet
+created.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Inspect each reuse/extend submodule’s actual public API to confirm
+it satisfies the stated boundary and remove the UNVERIFIED tags;
+finalize the NEW-submodule list immediately before repo creation (master
+§10) and create PUBLIC repos on GitHub + GitLab per locked decision D4;
+fold any approved upstream additions back into the owning submodule
+rather than forking.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-legend-and-conventions">Legend and conventions</a></li>
+<li><a href="#3-component--submodule-reuse-map">Component → submodule
+reuse map</a></li>
+<li><a href="#4-new-submodules-decoupled-boundaries">NEW submodules
+(decoupled boundaries)</a></li>
+<li><a href="#5-upstream-additions-summary">Upstream additions
+summary</a></li>
+<li><a href="#6-catalogue-first-compliance">Catalogue-first
+compliance</a></li>
+<li><a href="#7-anti-bluff-notes">Anti-bluff notes</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document maps every Helix OTA component to the catalogue
+submodule(s) that satisfy it, classifies each binding as
+<strong>reuse</strong>, <strong>extend</strong>, or
+<strong>new</strong>, states the decoupled boundary each binding must
+respect (§11.4.28, UNVERIFIED), and records any <strong>upstream
+additions</strong> a binding would require in the owning submodule.</p>
+<p>It is normative for component-to-submodule allocation. It honors
+<strong>catalogue-first</strong> (§11.4.74, UNVERIFIED): a component
+MUST be satisfied by an existing catalogue submodule where one exists; a
+NEW submodule is justified only when no catalogue submodule covers the
+need. Only the verified canonical submodule names from <a
+href="documentation_standards.md#9-submodule-catalogue-canonical-names"><code>documentation_standards.md</code>
+§9</a> are used; no submodule name is invented (§7.1 / §11.4.6 /
+§11.4.123, UNVERIFIED clause numbers).</p>
+<p>The twelve components covered are those named in the operator brief
+and the master design (§4–§5): auth, artifact intake/validation,
+storage, rollout engine, device registry, telemetry, transport,
+notifications, config, caching, docs export, and the Android client.</p>
+<h2 id="legend-and-conventions">2. Legend and conventions</h2>
+<ul>
+<li><strong>reuse</strong> — consume the catalogue submodule as-is; no
+upstream change required.</li>
+<li><strong>extend</strong> — consume the catalogue submodule, but the
+binding needs an <em>upstream addition</em> (new interface, adapter, or
+option) contributed back to that submodule (not forked).</li>
+<li><strong>new</strong> — no catalogue submodule covers the need;
+satisfied by a NEW submodule (§4).</li>
+<li><strong>Boundary</strong> — the decoupling contract the binding must
+respect (one purpose, well-defined interface, independently testable;
+§11.4.28, UNVERIFIED).</li>
+<li><strong>Upstream additions</strong> — the concrete change a binding
+requires in the owning submodule, or <em>None</em> when pure reuse.</li>
+<li><code>UNVERIFIED</code> — tags any claim, capability, or clause
+number not confirmed from a real source in this revision (§7.1 / §11.4.6
+/ §11.4.123, UNVERIFIED clause numbers). In particular, the precise
+public API of each catalogue submodule has not been inspected in this
+revision; “satisfies” claims about specific submodule capabilities are
+UNVERIFIED unless otherwise confirmed.</li>
+</ul>
+<p>Canonical catalogue names used below (verified set, from <a
+href="documentation_standards.md#9-submodule-catalogue-canonical-names"><code>documentation_standards.md</code>
+§9</a>): <code>auth</code>, <code>security</code>,
+<code>database</code>, <code>Storage</code>, <code>observability</code>,
+<code>eventbus</code>, <code>ratelimiter</code>,
+<code>middleware</code>, <code>http3</code>, <code>mdns</code>,
+<code>recovery</code>, <code>Herald</code>, <code>config</code>,
+<code>discovery</code>, <code>cache</code>, <code>docs_chain</code> /
+<code>Document</code> / <code>Formatters</code>,
+<code>containers</code>; KMP: <code>Auth-KMP</code>,
+<code>Security-KMP</code>, <code>Storage-KMP</code>,
+<code>Config-KMP</code>.</p>
+<h2 id="component-submodule-reuse-map">3. Component → submodule reuse
+map</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Catalogue submodule(s)</th>
+<th>NEW submodule(s)</th>
+<th>Class</th>
+<th>Boundary</th>
+<th>Upstream additions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Auth</strong> (OAuth2/JWT, RBAC, API keys, audit)</td>
+<td><code>auth</code>, <code>security</code>, <code>middleware</code>;
+KMP: <code>Auth-KMP</code>, <code>Security-KMP</code></td>
+<td>—</td>
+<td>reuse</td>
+<td>Identity, token issue/verify, RBAC, and request-auth middleware stay
+in <code>auth</code>/<code>security</code>/<code>middleware</code>;
+Helix OTA only wires policies and routes — no auth logic re-implemented.
+(UNVERIFIED: that <code>auth</code> already exposes OAuth2/JWT + RBAC as
+Helix OTA needs.)</td>
+<td>None expected; if device-token-bound-to-hardware-id (master §6) is
+not present, add a device-identity token option upstream in
+<code>security</code>/<code>Security-KMP</code> (extend).</td>
+</tr>
+<tr>
+<td><strong>Artifact intake / validation</strong></td>
+<td><code>Storage</code> (blob staging), <code>security</code>
+(hash/signature primitives), <code>middleware</code> (upload)</td>
+<td><code>ota-artifact-validator</code>, <code>ota-protocol</code>
+(manifest schema)</td>
+<td>new + reuse</td>
+<td>Validation pipeline (structure → hash → signature → version
+monotonicity → target compatibility, master §5) lives in
+<code>ota-artifact-validator</code>; it depends on <code>security</code>
+for crypto primitives and <code>ota-protocol</code> for the manifest
+schema. No transport in the validator.</td>
+<td>None in catalogue; new logic is contained in
+<code>ota-artifact-validator</code>. (UNVERIFIED: <code>security</code>
+exposes the SHA-256/512 + signature-verify primitives the validator
+needs.)</td>
+</tr>
+<tr>
+<td><strong>Storage</strong> (artifact blobs, MinIO/S3)</td>
+<td><code>Storage</code>; KMP: <code>Storage-KMP</code></td>
+<td>—</td>
+<td>reuse</td>
+<td>Object/blob persistence behind a storage port; Helix OTA holds no
+direct S3/MinIO SDK calls outside the <code>Storage</code> abstraction.
+(UNVERIFIED: <code>Storage</code> provides an S3/MinIO-compatible
+backend.)</td>
+<td>None expected; if a streaming/range-get for large OTA
+<code>.zip</code> is missing, add it upstream in <code>Storage</code>
+(extend).</td>
+</tr>
+<tr>
+<td><strong>Rollout engine</strong> (staged %, halt/advance)</td>
+<td><code>database</code> (phase/cohort state),
+<code>observability</code>/<code>Herald</code> (signals consumed)</td>
+<td><code>ota-rollout-engine</code></td>
+<td>new</td>
+<td>Staged-rollout + halt/advance logic is OS-agnostic and HTTP-free;
+engine state persists via a storage port backed by
+<code>database</code>; it consumes telemetry signals but contains no
+ingest. (master §8)</td>
+<td>None in catalogue; rollout logic is new in
+<code>ota-rollout-engine</code>.</td>
+</tr>
+<tr>
+<td><strong>Device registry / inventory</strong></td>
+<td><code>database</code>, <code>discovery</code>,
+<code>mdns</code></td>
+<td><code>ota-protocol</code> (device + status types)</td>
+<td>reuse</td>
+<td>Device records, groups, and inventory persist via
+<code>database</code>; on-network device presence/lookup via
+<code>discovery</code>/<code>mdns</code>; wire types come from
+<code>ota-protocol</code>. Registry exposes a typed device port; no
+rollout or telemetry logic.</td>
+<td>None expected. (UNVERIFIED: <code>discovery</code>/<code>mdns</code>
+fit the device-presence use case for the Android-on-Orange-Pi
+target.)</td>
+</tr>
+<tr>
+<td><strong>Telemetry</strong> (event ingest, health, metrics)</td>
+<td><code>observability</code>, <code>Herald</code> (alerting)</td>
+<td><code>ota-telemetry-schema</code></td>
+<td>new + reuse</td>
+<td>Event/metric <strong>schema + codecs</strong> live in
+<code>ota-telemetry-schema</code> (shared server + agent);
+pipeline/export and alerting reuse <code>observability</code> +
+<code>Herald</code>. Schema module carries no transport or storage.
+(master §9)</td>
+<td>None in catalogue; schema is new. Alert routing wired in
+<code>Herald</code>.</td>
+</tr>
+<tr>
+<td><strong>Transport</strong> (HTTP/3→HTTP/2, Brotli, REST)</td>
+<td><code>http3</code>, <code>middleware</code>,
+<code>ratelimiter</code>, <code>recovery</code></td>
+<td><code>ota-protocol</code> (REST/wire contracts)</td>
+<td>reuse</td>
+<td><code>http3</code> provides the drop-in
+<code>net/http.Handler</code> with HTTP/2 fallback (master §3);
+<code>middleware</code> carries Brotli/gzip negotiation,
+<code>ratelimiter</code> throttling, <code>recovery</code>
+panic-recovery. Transport carries no business logic; request/response
+contracts come from <code>ota-protocol</code>.</td>
+<td>None expected; if Brotli content-negotiation is not already in
+<code>middleware</code>, add it upstream (extend). (UNVERIFIED: Brotli
+negotiation present in <code>middleware</code>.)</td>
+</tr>
+<tr>
+<td><strong>Notifications</strong> (alerts on failure/halt)</td>
+<td><code>Herald</code>, <code>eventbus</code></td>
+<td>—</td>
+<td>reuse</td>
+<td>Alert/notification dispatch via <code>Herald</code>; internal
+fan-out of domain events via <code>eventbus</code>. Helix OTA publishes
+events; it does not implement a notifier. (UNVERIFIED:
+<code>Herald</code> covers the required alert channels.)</td>
+<td>None expected.</td>
+</tr>
+<tr>
+<td><strong>Config</strong> (poll interval + jitter, runtime
+config)</td>
+<td><code>config</code>; KMP: <code>Config-KMP</code></td>
+<td>—</td>
+<td>reuse</td>
+<td>All runtime configuration (e.g. 15 min + jitter poll, master §5/D7)
+flows through <code>config</code> (server) and <code>Config-KMP</code>
+(agent). No bespoke config parsing in Helix OTA modules.</td>
+<td>None expected.</td>
+</tr>
+<tr>
+<td><strong>Caching</strong> (optional Redis)</td>
+<td><code>cache</code></td>
+<td>—</td>
+<td>reuse</td>
+<td>Optional caching layer behind the <code>cache</code> abstraction,
+used only where a measured need exists (master §3). No direct Redis
+client outside <code>cache</code>.</td>
+<td>None expected.</td>
+</tr>
+<tr>
+<td><strong>Docs export</strong> (PDF/HTML/DOCX, Mermaid renders)</td>
+<td><code>docs_chain</code> / <code>Document</code> /
+<code>Formatters</code>, <code>containers</code> (substrate)</td>
+<td>—</td>
+<td>reuse</td>
+<td>Multi-format export pipeline (master §12) reuses
+<code>docs_chain</code>/<code>Document</code>/<code>Formatters</code>;
+runs on the <code>containers</code> substrate (§11.4.76, UNVERIFIED).
+Source of truth stays Markdown + Mermaid; renders are derived.</td>
+<td>None expected; if a Mermaid→draw.io/UML render target is missing,
+add it upstream in the export chain (extend). (UNVERIFIED: render
+targets available.)</td>
+</tr>
+<tr>
+<td><strong>Android client</strong>
+(poll/download/verify/apply/report)</td>
+<td>KMP: <code>Auth-KMP</code>, <code>Security-KMP</code>,
+<code>Storage-KMP</code>, <code>Config-KMP</code></td>
+<td><code>ota-android-agent</code>,
+<code>ota-update-engine-bridge</code>, <code>ota-protocol</code>,
+<code>ota-telemetry-schema</code></td>
+<td>new + reuse</td>
+<td><code>ota-android-agent</code> (KMP) orchestrates
+poll/download/verify/apply/report, consuming <code>ota-protocol</code>
+(wire types), <code>ota-update-engine-bridge</code> (apply via AOSP
+<code>update_engine</code>/<code>boot_control</code>),
+<code>ota-telemetry-schema</code> (reports), and the KMP catalogue
+submodules for auth/crypto/storage/config. Agent holds no server logic;
+bridge is Android-only and thin.</td>
+<td>None in catalogue; device-apply + agent logic are new.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="new-submodules-decoupled-boundaries">4. NEW submodules
+(decoupled boundaries)</h2>
+<p>These six NEW submodules are justified because no catalogue submodule
+(§3) covers their purpose. Per locked decision D4 (master §2) they get
+<strong>PUBLIC</strong> repos created on GitHub + GitLab, with the final
+list confirmed in the MVP spec immediately before creation (master §10).
+Boundaries below mirror master §10 and the decoupling principle
+(§11.4.28, UNVERIFIED).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>NEW submodule</th>
+<th>Purpose</th>
+<th>Decoupled boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ota-protocol</code></td>
+<td>Shared wire types, manifest schema, status/event enums (Go +
+KMP).</td>
+<td>Pure contracts only — no business logic, no transport, no storage.
+Consumed by transport, artifact intake, device registry, and the Android
+client.</td>
+</tr>
+<tr>
+<td><code>ota-artifact-validator</code></td>
+<td>Structure / hash / signature / metadata validation pipeline for OTA
+artifacts.</td>
+<td>OS-aware via plugins; <strong>no transport</strong>. Depends on
+<code>security</code> (crypto primitives) and <code>ota-protocol</code>
+(manifest schema). Independently testable on raw artifact bytes.</td>
+</tr>
+<tr>
+<td><code>ota-rollout-engine</code></td>
+<td>Staged-rollout + halt/advance logic, OS-agnostic.</td>
+<td><strong>No HTTP</strong> — pure engine plus a storage port (backed
+by <code>database</code>). Consumes telemetry signals; emits phase
+decisions. Independently testable with a fake clock + fake
+telemetry.</td>
+</tr>
+<tr>
+<td><code>ota-update-engine-bridge</code></td>
+<td>Wrapper over AOSP <code>update_engine</code> /
+<code>boot_control</code> for applying updates to the inactive A/B
+slot.</td>
+<td><strong>Android-only</strong>, thin and testable. No polling, no
+networking, no business policy — only the apply/verify bridge surface.
+Consumed by <code>ota-android-agent</code>.</td>
+</tr>
+<tr>
+<td><code>ota-android-agent</code></td>
+<td>KMP device agent: poll, download, verify, apply, report.</td>
+<td>Consumes <code>ota-protocol</code> +
+<code>ota-update-engine-bridge</code> +
+<code>ota-telemetry-schema</code> and the KMP catalogue submodules. No
+server-side logic; the only OS-apply path is the bridge.</td>
+</tr>
+<tr>
+<td><code>ota-telemetry-schema</code></td>
+<td>Telemetry event / metric schema + codecs.</td>
+<td>Shared by server + agents; <strong>no transport, no
+storage</strong>. Pure schema + codecs. Reused by the telemetry pipeline
+(<code>observability</code>) and the Android agent.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="upstream-additions-summary">5. Upstream additions summary</h2>
+<p>Most bindings are pure <strong>reuse</strong> (no upstream change).
+The bindings that <em>may</em> require an upstream addition (classified
+<strong>extend</strong>, contributed back — never forked) are, each
+UNVERIFIED pending inspection of the owning submodule’s actual
+surface:</p>
+<ul>
+<li><code>security</code> / <code>Security-KMP</code> — device-identity
+token bound to hardware id (Android KeyStore), if not already present
+(Auth component). (UNVERIFIED)</li>
+<li><code>Storage</code> — streaming/range-get for large OTA
+<code>.zip</code> artifacts, if not already present (Storage component).
+(UNVERIFIED)</li>
+<li><code>middleware</code> — Brotli content-negotiation with gzip
+fallback, if not already present (Transport component).
+(UNVERIFIED)</li>
+<li><code>docs_chain</code> / <code>Document</code> /
+<code>Formatters</code> — Mermaid→draw.io/UML render target, if not
+already present (Docs export component). (UNVERIFIED)</li>
+</ul>
+<p>No upstream addition is presented as confirmed-needed; each is
+conditional on inspecting the submodule first (see Continuation). New
+behavior with no catalogue home is contained entirely in the six NEW
+submodules (§4), keeping catalogue submodules unforked.</p>
+<h2 id="catalogue-first-compliance">6. Catalogue-first compliance</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rule (UNVERIFIED clause numbers)</th>
+<th>How this map honors it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.74 catalogue-first</td>
+<td>Every component is satisfied by a catalogue submodule where one
+exists (§3); a NEW submodule is used only where the catalogue has no
+cover, and that absence is the stated justification (§4).</td>
+</tr>
+<tr>
+<td>§11.4.28 decoupling</td>
+<td>Each binding states a single-purpose, well-defined,
+independently-testable boundary (§3, §4).</td>
+</tr>
+<tr>
+<td>§11.4.76 containers substrate</td>
+<td>Docs export and dev/build run on the <code>containers</code>
+substrate (§3 Docs export). (UNVERIFIED)</td>
+</tr>
+<tr>
+<td>D4 PUBLIC new repos</td>
+<td>The six NEW submodules get PUBLIC GitHub + GitLab repos, listed
+before bulk creation (§4).</td>
+</tr>
+<tr>
+<td>§7.1 / §11.4.6 / §11.4.123 anti-bluff</td>
+<td>No invented submodule names; unconfirmed capabilities/claims tagged
+UNVERIFIED (§7).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="anti-bluff-notes">7. Anti-bluff notes</h2>
+<p>Per HelixConstitution §7.1, §11.4.6, and §11.4.123 (UNVERIFIED clause
+numbers):</p>
+<ul>
+<li>Submodule names are taken <strong>only</strong> from the verified
+catalogue (<a
+href="documentation_standards.md#9-submodule-catalogue-canonical-names"><code>documentation_standards.md</code>
+§9</a>); none is invented. The dashboard-React submodules mentioned in
+master §10 (<code>UI-Components-React</code>,
+<code>Dashboard-Analytics-React</code>, <code>Auth-Context-React</code>)
+are <strong>not</strong> on the verified catalogue §9 and are therefore
+deliberately <strong>omitted</strong> from this map rather than asserted
+as catalogue submodules (UNVERIFIED whether they belong to the
+catalogue).</li>
+<li>The six NEW submodule names and boundaries are reproduced from the
+master design (§10), not invented here; they remain pending repo
+creation.</li>
+<li>The precise public API of each catalogue submodule has
+<strong>not</strong> been inspected in this revision; every “satisfies”
+/ “exposes” claim about a specific submodule capability is tagged
+UNVERIFIED, and confirming them is tracked in the Continuation row.</li>
+<li>HelixConstitution clause numbers (§11.4.74, §11.4.28, §11.4.76,
+§11.4.61, §7.1, §11.4.6, §11.4.123) are carried from the corpus
+convention and are UNVERIFIED against the authoritative constitution
+text.</li>
+</ul>
+</body>
+</html>

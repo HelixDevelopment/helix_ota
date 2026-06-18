@@ -1,0 +1,107 @@
+# clients/ota-manager/.github/workflows/ota-manager-tauri.yml
+#
+# Desktop build for the OTA Manager (Tauri v2).  Triggered ONLY on version
+# tags matching ota-manager-v* (e.g. ota-manager-v1.0.0).  Builds native
+# binaries for Linux, macOS, and Windows via the tauri-action.
+#
+# Prerequisites:
+#   - The Tauri project must be initialised at clients/ota-manager/src-tauri/
+#     (Tauri v2, Rust toolchain, tauri.conf.json).
+#   - Linux build requires system libraries: libwebkit2gtk, libgtk-3-dev,
+#     libssl-dev, etc. (installed via the setup step).
+#   - macOS and Windows runners have the necessary SDKs pre-installed.
+#
+# Secrets (repository-level):
+#   - TAURI_PRIVATE_KEY  — signing key for Tauri updater (optional)
+#   - TAURI_KEY_PASSWORD — password for the signing key (optional)
+
+name: OTA Manager Desktop
+
+on:
+  push:
+    tags:
+      - "ota-manager-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false  # one platform's failure should not cancel the others
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: clients/ota-manager
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ---- Linux system dependencies for Tauri v2 ---------------------------
+      - name: Install Linux dependencies (Tauri)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev
+
+      # ---- Rust toolchain ----------------------------------------------------
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            clients/ota-manager/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('clients/ota-manager/src-tauri/Cargo.lock') }}
+
+      # ---- Build + upload ---------------------------------------------------
+      - name: Build Tauri desktop app
+        uses: tauri-apps/tauri-action@v0
+        with:
+          projectPath: clients/ota-manager
+          args: --target universal-apple-darwin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      # ---- Upload individual binaries as build artifacts --------------------
+      # The tauri-action uploads a release asset; we also attach the binary as
+      # a workflow artifact for quick download from the Actions tab.
+      - name: Upload Tauri artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-manager-desktop-${{ runner.os }}
+          path: |
+            clients/ota-manager/src-tauri/target/release/bundle/
+            !clients/ota-manager/src-tauri/target/release/bundle/**/*.d
+          retention-days: 30

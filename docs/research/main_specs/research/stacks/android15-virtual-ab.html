@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>android15-virtual-ab</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="android-15-virtual-ab-with-compression-device-side-core-research-note">Android
+15 Virtual A/B with Compression — Device-Side Core Research Note</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Primary-source research on Android 15 Virtual A/B with compression
+(VABc) complete. Covers snapshot/COW internals (dm-snapshot deprecation,
+dm-user, snapuserd), dynamic partitions (<code>super</code>),
+compression methods (none/gz/lz4/zstd + XOR) and storage tradeoffs, the
+post-OTA merge phase and first-boot flow, failure handling / cancel
+semantics, and RK3588 / Orange Pi 5 Max considerations. Conclusion:
+Virtual A/B compressed (lz4 default, zstd optional) is the device-side
+mechanism that delivers the “no-corruption” guarantee through atomic
+slot-switch + power-fail-resumable userspace merge; Helix must build
+payloads correctly and orchestrate, not re-implement the apply/merge
+path.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Several quantitative figures (VABc <sub>45%/</sub>55% snapshot
+reduction, XOR 25–40% reduction, sizing example outputs,
+<code>FinalOTASnapshotSize = FinalDessertSize × 0.7</code>) are taken
+from current AOSP docs prose and are version-sensitive; re-confirm
+against the exact Android 15/16 docs revision before quoting in
+contracts — marked UNVERIFIED where exactness matters. RK3588 / Orange
+Pi 5 Max Virtual A/B status is <strong>not</strong> documented by AOSP
+and depends on the Rockchip BSP / vendor build config; treated as
+UNVERIFIED and flagged as a required hardware-validation task.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (first revision)</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Follow-up should: (1) pin exact Android 15
+(<code>vabc_features.mk</code>) defaults and confirm
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD</code> +
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_FACTOR</code> defaults; (2)
+empirically benchmark lz4 vs zstd merge time / CPU / storage on the
+target RK3588 board; (3) confirm whether the chosen RK3588 Android 15
+BSP ships VABc-enabled, dynamic partitions, and <code>dm-user</code>
+kernel module; (4) define Helix telemetry for <code>MergeStatus</code>
+transitions and merge-resume failures; (5) document the
+<code>update_engine</code> cancel contract and Helix’s safe-cancel
+window.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--question">Scope &amp; Question</a></li>
+<li><a href="#2-executive-summary">Executive Summary</a></li>
+<li><a href="#3-dynamic-partitions--the-super-partition">Dynamic
+Partitions &amp; the <code>super</code> Partition</a></li>
+<li><a href="#4-virtual-ab-vs-classic-ab">Virtual A/B vs Classic
+A/B</a></li>
+<li><a href="#5-snapshot--cow-internals">Snapshot / COW
+Internals</a></li>
+<li><a
+href="#6-the-compressed-device-mapper-stack-dm-user--snapuserd">The
+Compressed Device-Mapper Stack (dm-user / snapuserd)</a></li>
+<li><a href="#7-compression-none--gz--lz4--zstd--xor">Compression: none
+/ gz / lz4 / zstd + XOR</a></li>
+<li><a href="#8-storage-tradeoffs--super-sizing">Storage Tradeoffs &amp;
+<code>super</code> Sizing</a></li>
+<li><a href="#9-the-update-lifecycle-write--reboot--merge--complete">The
+Update Lifecycle: Write → Reboot → Merge → Complete</a></li>
+<li><a href="#10-failure-handling-cancel--rollback">Failure Handling,
+Cancel &amp; Rollback</a></li>
+<li><a href="#11-rk3588--orange-pi-5-max-considerations">RK3588 / Orange
+Pi 5 Max Considerations</a></li>
+<li><a
+href="#12-implications-for-helix-ota-the-no-corruption-guarantee">Implications
+for Helix OTA (the no-corruption guarantee)</a></li>
+<li><a href="#13-open-questions--unverified-items">Open Questions /
+UNVERIFIED Items</a></li>
+<li><a href="#14-sources-consulted">Sources Consulted</a></li>
+<li><a href="#15-confidence">Confidence</a></li>
+</ol>
+<hr />
+<h2 id="scope-question">1. Scope &amp; Question</h2>
+<p>Helix OTA targets <strong>Android 15 first</strong>, using
+<strong>native A/B + Virtual A/B</strong> on device with a
+<strong>custom Go control plane</strong> as the server. This note is the
+<strong>device-side core</strong>: it explains exactly how a modern
+Android 15 device applies an update without risking a corrupt/bricked
+state, so that Helix can build the right artifacts and orchestrate
+safely. It answers:</p>
+<ul>
+<li>How do <strong>dynamic partitions</strong> (<code>super</code>) and
+<strong>Virtual A/B</strong> work together?</li>
+<li>What are the <strong>snapshot / COW</strong> internals (dm-snapshot,
+dm-user, snapuserd)?</li>
+<li>What <strong>compression</strong> options exist (none/gz/lz4/zstd,
+plus XOR) and what are the <strong>storage tradeoffs</strong>?</li>
+<li>What happens in the <strong>merge phase</strong> and
+<strong>post-OTA first boot</strong>?</li>
+<li>How does <strong>failure handling / cancel / rollback</strong>
+preserve the no-corruption guarantee?</li>
+<li>What is the situation on <strong>RK3588 / Orange Pi 5
+Max</strong>?</li>
+</ul>
+<p>This is the underpinning for the claim that the <strong>on-device
+<code>update_engine</code> + Virtual A/B path is the trustworthy atomic
+core</strong>, and Helix should wrap it (see
+<code>aosp-update-engine.md</code> and
+<code>adr-0001-wrapped-engine.md</code>).</p>
+<hr />
+<h2 id="executive-summary">2. Executive Summary</h2>
+<ul>
+<li><strong>Virtual A/B (VAB)</strong> is Android’s seamless-update
+mechanism that gives you A/B safety (two slots, atomic switch, automatic
+rollback) <strong>without</strong> physically duplicating every dynamic
+partition. Instead of a full B copy, the update is written to a
+<strong>Copy-on-Write (COW)</strong> area as a
+<strong>snapshot</strong>, then <strong>merged</strong> into the base
+after a confirmed-good boot. It is driven by the same
+<code>update_engine</code> daemon as classic A/B. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</li>
+<li><strong>Virtual A/B Compression (VABc)</strong> compresses the COW
+block data. AOSP states the COW format supports four operations —
+<strong>Copy, Replace (compressed), Zero, XOR</strong> — and that
+compression cuts snapshot size by roughly <strong>~45% on a full OTA and
+~55% on an incremental OTA</strong> (UNVERIFIED exact figures; from AOSP
+prose). (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</li>
+<li><strong>COW format / device-mapper evolution:</strong> Android 11
+used the <strong>kernel COW format</strong> (no compression); Android 12
+added an <strong>Android-specific COW format</strong> with compression
+(still translated to kernel COW for merge); <strong>Android 13+ removed
+reliance on kernel COW <em>and</em> <code>dm-snapshot</code></strong>,
+moving the entire snapshot read/write/merge into
+<strong>userspace</strong> via the <strong><code>dm-user</code></strong>
+kernel shim + <strong><code>snapuserd</code></strong> daemon. Android 15
+inherits the Android 13+ userspace model. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</li>
+<li><strong>Compression methods</strong> for VABc:
+<strong><code>lz4</code> (default), <code>zstd</code>,
+<code>none</code></strong>, configured via
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD</code>; a
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_FACTOR</code> (4k…256k, default
+64k) controls the max compression window. <strong>XOR
+compression</strong> (Android 13+) is a separate, complementary feature.
+(<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">AOSP
+Implement Virtual A/B</a>) <code>gz</code>/gzip appears in the
+historical COW format; <strong>lz4 and zstd are the practical Android
+13+ choices</strong>. (gz status for Android 15 marked UNVERIFIED.)</li>
+<li><strong>Storage tradeoff:</strong> VAB shrinks <code>super</code> to
+roughly half the classic-A/B allocation (no resident B slots), but the
+COW snapshot needs transient space during the update — placed in
+<code>super</code> if it fits, otherwise spilling to
+<strong><code>/data</code></strong>. AOSP’s comparison table: classic
+A/B ≈ 9 GB resident <code>super</code>; VAB ≈ 4.5 GB <code>super</code>
++ ~3.8 GB transient on <code>/data</code>; <strong>VAB compressed ≈ 4.5
+GB <code>super</code> + ~2.1 GB transient on
+<code>/data</code></strong>. (UNVERIFIED exact numbers; illustrative
+from AOSP.) (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>, <a
+href="https://source.android.com/docs/core/ota/dynamic_partitions/how_to_size_super">Size
+the super partition</a>)</li>
+<li><strong>Lifecycle:</strong> <code>update_engine</code> writes the
+inactive slot’s snapshots (COW) → bootloader switches active slot →
+device boots new slot with <code>/system</code> mounted <strong>through
+<code>dm-verity</code> over <code>dm-user</code></strong> (I/O served by
+<code>snapuserd</code>) → on <code>boot completed</code>,
+<code>update_engine</code> calls
+<code>ScheduleWaitMarkBootSuccessful()</code> /
+<code>WaitForMergeOrSchedule()</code>, marks boot successful, then runs
+the <strong>merge</strong> (snapshot collapsed into base;
+<code>dm-verity</code> collapses back onto <code>dm-linear</code>,
+<code>dm-user</code> removed). Merge is <strong>resumable across
+reboots</strong> and <strong>power-fail safe</strong>. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>, <a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">Implement
+Virtual A/B - patches</a>)</li>
+<li><strong>Failure handling = the no-corruption guarantee:</strong> if
+the new slot fails to boot, the bootloader rolls back to the old slot
+(snapshot still discardable). Merge interruptions don’t lose data; merge
+resumes after reboot. The dangerous window is <strong>after merge has
+started but before completion</strong>: rebooting to the old slot then
+is unsafe and AOSP has explicit CLs to prevent it. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">AOSP
+Implement Virtual A/B - patches</a>)</li>
+<li><strong>RK3588 / Orange Pi 5 Max:</strong>
+<strong>UNVERIFIED.</strong> AOSP documents the mechanism, not specific
+SoCs. Whether a given RK3588 Android 15 build ships <strong>dynamic
+partitions + VAB + VABc + <code>dm-user</code></strong> depends entirely
+on the <strong>Rockchip BSP and the integrator’s board config</strong>;
+many Rockchip Android images historically ship a Rockchip-specific OTA
+flow and may not enable dynamic partitions/VAB by default. This must be
+validated on the actual target image before Helix can rely on the native
+VAB path.</li>
+<li><strong>Conclusion:</strong> the Virtual A/B compressed path is the
+right device-side core for Helix’s no-corruption guarantee — it provides
+atomic slot switch, automatic rollback, and a power-fail-resumable
+userspace merge. Helix’s job is to (a) <strong>produce a correct
+payload</strong> that targets this mechanism, (b) <strong>drive
+<code>applyPayload</code> and observe merge status</strong>, and (c)
+<strong>never</strong> introduce a code path that reboots to the old
+slot mid-merge.</li>
+</ul>
+<hr />
+<h2 id="dynamic-partitions-the-super-partition">3. Dynamic Partitions
+&amp; the <code>super</code> Partition</h2>
+<p><strong>Dynamic partitions</strong> (Android 10+) are a userspace
+partitioning system that lets the OS create/resize/destroy logical
+partitions (e.g., <code>system</code>, <code>vendor</code>,
+<code>product</code>, <code>system_ext</code>) at OTA time without a
+fixed physical partition table. They all live inside one physical
+container partition called <strong><code>super</code></strong>
+(<code>/dev/block/by-name/super</code>). (<a
+href="https://source.android.com/docs/core/ota/dynamic_partitions/ab_launch">AOSP
+OTA for A/B devices with dynamic partitions</a>)</p>
+<p>Inside <code>super</code>, the normal mount stack for a read-only
+system image is:</p>
+<ol type="1">
+<li>Physical <code>super</code> partition.</li>
+<li><strong><code>dm-linear</code></strong> — maps the logical
+partition’s extents within <code>super</code>.</li>
+<li><strong><code>dm-verity</code></strong> — cryptographic block-level
+integrity over the partition (this is part of what makes corruption
+<em>detectable</em> and rollback-triggering).</li>
+</ol>
+<p>Dynamic partitions are the prerequisite for Virtual A/B: because
+logical partitions can be re-described cheaply, VAB can keep a single
+base copy and overlay a snapshot rather than reserving a whole second
+physical slot. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</p>
+<hr />
+<h2 id="virtual-ab-vs-classic-ab">4. Virtual A/B vs Classic A/B</h2>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 27%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Classic A/B</th>
+<th>Virtual A/B (compressed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slots</td>
+<td>Two <strong>physical</strong> copies of each updatable
+partition</td>
+<td>One base copy in <code>super</code>; second “slot” is a
+<strong>snapshot/COW</strong> overlay</td>
+</tr>
+<tr>
+<td>Resident storage</td>
+<td>~2× partition size always resident</td>
+<td>~1× resident; COW is <strong>transient</strong>, reclaimed after
+merge</td>
+</tr>
+<tr>
+<td>Boot partitions (<code>boot</code>, etc.)</td>
+<td>Duplicated</td>
+<td>Still <strong>duplicated</strong> (small); only dynamic partitions
+are snapshotted</td>
+</tr>
+<tr>
+<td>Update applied by</td>
+<td><code>update_engine</code></td>
+<td><code>update_engine</code> (same daemon)</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Bootloader slot switch</td>
+<td>Bootloader slot switch (discard snapshot)</td>
+</tr>
+<tr>
+<td>Extra step</td>
+<td>None</td>
+<td><strong>Merge phase</strong> after confirmed boot</td>
+</tr>
+<tr>
+<td>Compression</td>
+<td>N/A</td>
+<td>none / lz4 / zstd (+ XOR)</td>
+</tr>
+</tbody>
+</table>
+<p>Key point: VAB <strong>keeps all the A/B safety properties</strong>
+(atomic switch, automatic rollback, “seamless” background install while
+the device is usable) while trading a small amount of <strong>post-boot
+merge time</strong> and <strong>transient COW space</strong> for a much
+smaller resident footprint. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>; see also <code>aosp-update-engine.md</code>.)</p>
+<hr />
+<h2 id="snapshot-cow-internals">5. Snapshot / COW Internals</h2>
+<h3 id="cow-format-and-operations">5.1 COW format and operations</h3>
+<p>The Android COW format supports four block operations (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>):</p>
+<ul>
+<li><strong>Copy</strong> — replace block X with block Y read from the
+<strong>base</strong> device (intra-partition move; no new data
+stored).</li>
+<li><strong>Replace</strong> — replace block X with a
+<strong>compressed</strong> block Y stored in the snapshot (the bulk of
+“new” data).</li>
+<li><strong>Zero</strong> — fill block X with zeros (cheap; stores no
+payload).</li>
+<li><strong>XOR</strong> (Android 13+) — store the <strong>XOR
+difference</strong> between the old and new block. When only a few bytes
+change, the XOR is mostly zeros and compresses extremely well, so the
+snapshot stores far less than a full 4K block.</li>
+</ul>
+<h3
+id="cow-format-kernel-evolution-why-android-13-matters-for-android-15">5.2
+COW format / kernel evolution (why Android 13+ matters for Android
+15)</h3>
+<ul>
+<li><strong>Android 11:</strong> <strong>kernel COW format</strong> via
+<code>dm-snapshot</code>; <strong>no compression</strong>.</li>
+<li><strong>Android 12:</strong> <strong>Android-specific COW
+format</strong> that supports compression, but it had to be
+<strong>translated to the kernel COW format</strong> before the kernel
+<code>dm-snapshot</code> merge.</li>
+<li><strong>Android 13+ (and thus Android 15):</strong> removed reliance
+on <strong>both</strong> the kernel COW format <strong>and</strong>
+<code>dm-snapshot</code>. The snapshot is now <strong>read, written, and
+merged entirely in userspace</strong> by <code>snapuserd</code>, with
+the kernel only providing the <strong><code>dm-user</code></strong>
+passthrough block device.</li>
+</ul>
+<p>(<a href="https://source.android.com/docs/core/ota/virtual_ab">AOSP
+Virtual A/B overview</a>)</p>
+<p>This is significant for Helix: on Android 15 the merge is a
+<strong>userspace</strong> operation, so its progress, pausing, and
+resumption are observable/controllable through
+<code>update_engine</code> / <code>snapuserd</code> rather than buried
+in kernel <code>dm-snapshot</code>.</p>
+<hr />
+<h2 id="the-compressed-device-mapper-stack-dm-user-snapuserd">6. The
+Compressed Device-Mapper Stack (dm-user / snapuserd)</h2>
+<p>With <strong>compressed</strong> snapshots the read path for
+<code>/system</code> becomes (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>):</p>
+<pre><code>super (physical)
+  └─ dm-linear  (system_base: extents within super)
+       └─ dm-user  (routes block I/O to a userspace daemon)
+            └─ dm-verity (integrity verification)
+                 └─ /system mount</code></pre>
+<ul>
+<li><strong><code>dm-user</code></strong> is a kernel module that
+creates a control device at
+<strong><code>/dev/dm-user/&lt;control-name&gt;</code></strong>. The
+kernel forwards block read/write requests to a
+<strong>userspace</strong> process that polls this device. AOSP notes
+<code>dm-user</code> is a <strong>non-upstream</strong> kernel interface
+that Google reserves the right to modify. (Kernel config:
+<code>CONFIG_DM_USER=m</code> or <code>y</code>; if modular, load it in
+the first-stage ramdisk via
+<code>BOARD_GENERIC_RAMDISK_KERNEL_MODULES_LOAD</code>.) (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">AOSP
+Implement Virtual A/B</a>)</li>
+<li><strong><code>snapuserd</code></strong> is the userspace daemon that
+<strong>implements</strong> the COW: during OTA install it
+<strong>writes compressed</strong> new block data into the snapshot;
+during normal operation and during merge it <strong>serves
+reads</strong> (decompressing on the fly) and <strong>performs the
+merge</strong>. All snapshot I/O goes through it. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</li>
+</ul>
+<h3 id="the-init-snapuserd-handoff-why-selinux-ordering-matters">6.1 The
+init / snapuserd handoff (why SELinux ordering matters)</h3>
+<p>Booting with compressed snapshots requires a careful, synchronized
+<strong>init ↔︎ snapuserd transition</strong> to avoid an I/O deadlock
+when SELinux policy is loaded (the daemon serving the pages that init
+needs to read cannot itself be blocked). The AOSP-documented sequence
+(<a href="https://source.android.com/docs/core/ota/virtual_ab">AOSP
+Virtual A/B overview</a>):</p>
+<ol type="1">
+<li>First-stage <code>init</code> launches the <strong>ramdisk</strong>
+<code>snapuserd</code>, saves its file descriptor to the
+environment.</li>
+<li>Root switches to the system partition; <strong>system
+<code>init</code></strong> runs.</li>
+<li>System <code>init</code> reads the combined sepolicy and
+<code>mlock()</code>s the ext4-backed pages it needs.</li>
+<li>Device-mapper snapshot tables are deactivated; the ramdisk
+<code>snapuserd</code> is <strong>stopped</strong> (preventing the IO
+deadlock).</li>
+<li>Using the preserved fd, <code>init</code> <strong>relaunches
+<code>snapuserd</code></strong> with the correct SELinux context; tables
+are reactivated.</li>
+<li><code>init</code> calls <code>munlockall()</code>; normal I/O
+resumes.</li>
+</ol>
+<p>In Android 13, <code>snapuserd</code> moved from the
+<strong>vendor</strong> ramdisk to the <strong>generic</strong> ramdisk,
+which affects recovery and <code>fastbootd</code> boot sequences. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">AOSP
+Implement Virtual A/B - patches</a>)</p>
+<hr />
+<h2 id="compression-none-gz-lz4-zstd-xor">7. Compression: none / gz /
+lz4 / zstd + XOR</h2>
+<h3 id="methods-and-configuration">7.1 Methods and configuration</h3>
+<p>Per <a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">AOSP
+Implement Virtual A/B</a>, VABc compression methods are:</p>
+<ul>
+<li><strong><code>lz4</code></strong> — default for compressed VAB; very
+fast compress/decompress, modest ratio. Good for merge speed and low
+CPU.</li>
+<li><strong><code>zstd</code></strong> — better ratio than lz4 at a
+configurable speed/ratio level; decompression speed stays roughly
+constant across levels. Better for minimizing snapshot/transfer size
+when CPU/merge-time budget allows.</li>
+<li><strong><code>none</code></strong> — uncompressed (largest transient
+footprint).</li>
+</ul>
+<p>Android 13+ enable example:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode makefile"><code class="sourceCode makefile"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ch">$(</span><span class="kw">call</span><span class="st"> inherit-product</span><span class="kw">,</span><span class="st"> </span><span class="ch">$(</span><span class="dt">SRC_TARGET_DIR</span><span class="ch">)</span><span class="st">/product/generic_ramdisk.mk</span><span class="ch">)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ch">$(</span><span class="kw">call</span><span class="st"> inherit-product</span><span class="kw">,</span><span class="st"> </span><span class="ch">$(</span><span class="dt">SRC_TARGET_DIR</span><span class="ch">)</span><span class="st">/product/virtual_ab_ota/vabc_features.mk</span><span class="ch">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD</span> <span class="ch">:=</span><span class="st"> lz4      </span><span class="co"># or zstd / none</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">PRODUCT_VIRTUAL_AB_COMPRESSION_FACTOR</span> <span class="ch">:=</span><span class="st"> 65536    </span><span class="co"># 64k window</span></span></code></pre></div>
+<ul>
+<li><strong><code>PRODUCT_VIRTUAL_AB_COMPRESSION_FACTOR</code></strong>
+= max compressible window. Supported: <strong>4k, 8k, 16k, 32k, 64k,
+128k, 256k</strong> (default <strong>64k</strong>). Larger windows can
+improve ratio at some CPU/memory cost. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">AOSP
+Implement Virtual A/B</a>)</li>
+<li><strong>Compression level</strong> is algorithm-specific (zstd
+exposes levels trading speed vs ratio). (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">AOSP
+Implement Virtual A/B</a>)</li>
+</ul>
+<p><strong><code>gz</code>/gzip:</strong> present in the historical
+Android COW format description; for Android 13+/15 the documented,
+supported configuration values are <strong>lz4 / zstd / none</strong>.
+Treat <strong>gz as legacy</strong> for Android 15 unless the target
+build explicitly exposes it — <strong>UNVERIFIED</strong> for Android
+15.</p>
+<h3 id="xor-compression-android-13">7.2 XOR compression (Android
+13+)</h3>
+<p>A separate, complementary feature: stores <strong>XOR-compressed
+differential bytes</strong> between old and new blocks. AOSP states it
+reduces snapshot size by roughly <strong>25–40%</strong> when only a few
+bytes per block change (UNVERIFIED exact figures). It is most valuable
+for <strong>incremental/delta</strong> OTAs where many blocks change
+slightly. Note AOSP wording is inconsistent across pages on whether XOR
+is “enabled by default” vs “disabled by default” in a given release —
+<strong>UNVERIFIED</strong>; confirm for the exact Android 15 build. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>, <a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">AOSP
+Implement Virtual A/B</a>)</p>
+<h3 id="algorithm-tradeoff-summary-for-helix-tuning">7.3 Algorithm
+tradeoff summary (for Helix tuning)</h3>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 20%" />
+<col style="width: 22%" />
+<col style="width: 8%" />
+<col style="width: 20%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Compress speed</th>
+<th>Decompress speed</th>
+<th>Ratio</th>
+<th>Merge/CPU cost</th>
+<th>When to pick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>none</code></td>
+<td>n/a</td>
+<td>fastest</td>
+<td>none</td>
+<td>lowest CPU, largest space</td>
+<td>abundant storage, weak CPU</td>
+</tr>
+<tr>
+<td><code>lz4</code> (default)</td>
+<td>very fast</td>
+<td>very fast</td>
+<td>low–moderate</td>
+<td>low</td>
+<td>balanced default; constrained CPU like an SBC</td>
+</tr>
+<tr>
+<td><code>zstd</code></td>
+<td>fast (level-tunable)</td>
+<td>fast &amp; stable</td>
+<td>higher</td>
+<td>higher than lz4</td>
+<td>minimize transient footprint / <code>/data</code> pressure</td>
+</tr>
+</tbody>
+</table>
+<p>Quantitative algorithm comparisons for ratio/speed are well
+established generally (zstd &gt; gzip ratio at higher speed; lz4
+fastest) per general benchmarks (<a
+href="https://morotti.github.io/lzbench-web/">lzbench</a>), but
+<strong>AOSP does not publish merge-time/CPU numbers per method for
+VAB</strong> — Helix must <strong>benchmark on the actual RK3588
+target</strong>. (UNVERIFIED for the specific board.)</p>
+<hr />
+<h2 id="storage-tradeoffs-super-sizing">8. Storage Tradeoffs &amp;
+<code>super</code> Sizing</h2>
+<p>VAB lets you <strong>shrink <code>super</code></strong> (no resident
+B slots) to give more room to <code>/data</code>, but the COW snapshot
+needs <strong>transient</strong> space during an update; if it doesn’t
+fit in <code>super</code> it spills to
+<strong><code>/data</code></strong>. If users lack free
+<code>/data</code>, <strong>update success rates drop</strong>. (<a
+href="https://source.android.com/docs/core/ota/dynamic_partitions/how_to_size_super">AOSP
+Size the super partition</a>)</p>
+<p>AOSP sizing formulas (<a
+href="https://source.android.com/docs/core/ota/dynamic_partitions/how_to_size_super">AOSP
+Size the super partition</a>) — figures <strong>UNVERIFIED</strong> as
+exact, version-sensitive:</p>
+<p><strong>VAB without compression:</strong></p>
+<pre><code>FinalDessertSize = FactorySize + (FactorySize × ExpectedGrowth)
+# relying on /data:
+Super = Max(FinalDessertSize, FinalDessertSize × 2 - AllowedUserdataUse)
+# never touch /data:
+Super = FinalDessertSize × 2</code></pre>
+<p><strong>VAB with compression:</strong></p>
+<pre><code>FinalOTASnapshotSize = FinalDessertSize × 0.7
+# relying on /data:
+Super = Max(FinalDessertSize, FinalDessertSize + FinalOTASnapshotSize - AllowedUserdataUse)
+# never touch /data:
+Super = FinalDessertSize + FinalOTASnapshotSize</code></pre>
+<p><strong>Worked example (4 GB factory, 50% growth) from AOSP:</strong>
+- Uncompressed, relying on 1 GB free: final 6 GB → <code>super</code>
+<strong>11 GB</strong>. - Compressed, relying on 1 GB free: final 6 GB,
+snapshot 4.2 GB → <code>super</code> <strong>9.2 GB</strong>.</p>
+<p><strong>Illustrative footprint comparison (AOSP overview table;
+UNVERIFIED exact):</strong> classic A/B ≈ 9 GB resident
+<code>super</code>; VAB ≈ 4.5 GB <code>super</code> + ~3.8 GB transient
+on <code>/data</code>; <strong>VAB compressed ≈ 4.5 GB
+<code>super</code> + ~2.1 GB transient on <code>/data</code></strong>.
+The transient space is reclaimed after merge/reboot. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</p>
+<p><strong>Helix takeaway:</strong> on storage-constrained SBC-class
+devices, <strong>compression (lz4 minimum, zstd if CPU allows)
+materially raises update success rates</strong> by reducing COW spill
+into <code>/data</code>. Helix’s control plane should track free
+<code>/data</code> and treat low-space devices as elevated-risk for a
+given rollout.</p>
+<hr />
+<h2 id="the-update-lifecycle-write-reboot-merge-complete">9. The Update
+Lifecycle: Write → Reboot → Merge → Complete</h2>
+<ol type="1">
+<li><strong>Install / write phase (device online, slot A
+active).</strong> <code>update_engine</code> applies
+<code>payload.bin</code> to the <strong>inactive</strong> slot, writing
+new block data <strong>into the COW snapshot</strong> (via
+<code>snapuserd</code>, compressed). The active slot keeps running; the
+update is “seamless.” (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</li>
+<li><strong>Slot switch.</strong> When the payload is fully written and
+verified, the bootloader is told to boot the <strong>new</strong> slot
+next (boot_control HAL). The COW/snapshot is what makes the new slot’s
+view of <code>/system</code> etc.</li>
+<li><strong>First boot of new slot.</strong> The system boots with
+<code>/system</code> mounted via <strong><code>dm-verity</code> over
+<code>dm-user</code></strong>; all reads are served by
+<code>snapuserd</code> (base block, or decompressed snapshot block, or
+XOR-reconstructed block). dm-verity still verifies integrity, so a
+corrupt block is <strong>detected</strong>, not silently used.</li>
+<li><strong>Mark boot successful + schedule merge.</strong> On boot
+completion (Android 11+), <code>update_engine</code> calls
+<strong><code>ScheduleWaitMarkBootSuccessful()</code></strong> and
+<strong><code>WaitForMergeOrSchedule()</code></strong>, marks the slot
+successful (so the bootloader won’t fall back), and starts the
+<strong>merge</strong>. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>, <a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">Implement
+Virtual A/B - patches</a>)</li>
+<li><strong>Merge phase (userspace).</strong> <code>snapuserd</code>
+collapses the COW snapshot into the base device. AOSP describes the
+teardown: after merge completes the framework <strong>collapses
+<code>dm-verity</code> back onto <code>dm-linear</code></strong> and
+<strong>removes the <code>dm-user</code></strong> layer. Merge “usually
+takes a few minutes,” runs in the background, and is <strong>resumable
+across reboots without data loss</strong>. After merge, the update is
+<strong>complete</strong>. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab">AOSP Virtual
+A/B overview</a>)</li>
+<li><strong>MergeStatus tracking.</strong> The boot_control HAL exposes
+a <code>MergeStatus</code> enum: <strong><code>NONE</code>,
+<code>UNKNOWN</code>, <code>SNAPSHOTTED</code>, <code>MERGING</code>,
+<code>CANCELLED</code></strong> — the canonical state machine Helix
+should surface in telemetry. (<a
+href="https://source.android.com/docs/core/ota/ab">AOSP A/B docs /
+boot_control HAL</a>)</li>
+</ol>
+<hr />
+<h2 id="failure-handling-cancel-rollback">10. Failure Handling, Cancel
+&amp; Rollback</h2>
+<p>This section is the heart of the <strong>no-corruption
+guarantee</strong>.</p>
+<ul>
+<li><strong>Failed first boot → automatic rollback.</strong> If the new
+slot fails to boot (e.g., it never marks boot successful within the
+bootloader’s retry budget), the bootloader falls back to the <strong>old
+slot</strong>. Because the merge has <strong>not</strong> happened yet,
+the base is intact and the snapshot is simply discarded. No corruption.
+(<a href="https://source.android.com/docs/core/ota/virtual_ab">AOSP
+Virtual A/B overview</a>)</li>
+<li><strong>dm-verity integrity.</strong> Reads through the new slot are
+verity-checked; corruption is <strong>detected</strong> rather than
+consumed, which is what allows the system to fail safely toward
+rollback.</li>
+<li><strong>Power-fail during install.</strong> The slot switch is the
+atomic commit point; a crash before it leaves the device booting the old
+slot normally. The COW snapshot is just discarded.</li>
+<li><strong>Power-fail during merge.</strong> Merge is
+<strong>resumable</strong>: the COW/merge state is persisted, and on
+reboot <code>snapuserd</code> resumes where it left off. No data loss.
+(<a href="https://source.android.com/docs/core/ota/virtual_ab">AOSP
+Virtual A/B overview</a>)</li>
+<li><strong>The dangerous window — reboot to old slot <em>after merge
+has started</em>.</strong> AOSP explicitly warns that if merging has
+begun and the device then reboots to the <strong>old</strong> slot, it
+can become inoperable. There are specific CLs/patches to prevent
+premature merge initiation and to enforce correct state tracking across
+reboots. <strong>Implication for Helix: never trigger a slot revert once
+<code>MergeStatus == MERGING</code>.</strong> (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">AOSP
+Implement Virtual A/B - patches</a>)</li>
+<li><strong>Cancel semantics.</strong>
+<code>update_engine_client --cancel</code> during the merge phase
+historically caused a <strong>segfault</strong>; the fix added
+<code>StopActionInternal</code> to cancel pending tasks safely and track
+the pending task ID. Helix should: (a) only cancel during the
+<strong>install</strong> phase (safe), (b) treat cancel during
+<strong>merge</strong> as unsupported/forbidden, and (c) verify the
+target build includes the relevant fixes. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">AOSP
+Implement Virtual A/B - patches</a>)</li>
+<li><strong>Other documented failure modes</strong> (apply patches
+before relying on VAB in production): allocation-space verification when
+sideloading, wild-pointer errors when slot-success marking is delayed,
+and corrupted <code>vbmeta</code> from improper dm-verity configuration.
+(<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">AOSP
+Implement Virtual A/B - patches</a>)</li>
+<li><strong>Recovery / fastbootd.</strong> Because
+<code>snapuserd</code> moved to the generic ramdisk (Android 13+),
+VAB-aware flows exist in both recovery and <code>fastbootd</code>;
+sideload/recovery OTA must allocate COW space correctly. (<a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">AOSP
+Implement Virtual A/B - patches</a>)</li>
+</ul>
+<p><strong>Net:</strong> the only state that can brick a VAB device is
+mishandling the <strong>post-merge-start</strong> window. Everything
+else (failed boot, power loss pre-commit, power loss mid-merge) is
+recoverable by design. Helix’s safety model should encode “no revert
+after merge start” as an invariant.</p>
+<hr />
+<h2 id="rk3588-orange-pi-5-max-considerations">11. RK3588 / Orange Pi 5
+Max Considerations</h2>
+<p><strong>Overall status: UNVERIFIED — requires hardware/image
+validation.</strong> AOSP documents the <em>mechanism</em>; it does not
+certify specific SoCs/boards. The following are the concrete things
+Helix must confirm on the <strong>actual Android 15 image</strong> for
+the RK3588 / Orange Pi 5 Max target:</p>
+<ol type="1">
+<li><strong>Is the build A/B (not A-only)?</strong> Many Rockchip
+Android factory images historically ship <strong>A-only</strong> with a
+<strong>Rockchip-proprietary OTA</strong> (e.g., <code>rkupdate</code> /
+<code>update.img</code>) rather than AOSP <code>update_engine</code>
+A/B. If the target is A-only, the AOSP Virtual A/B path <strong>does not
+apply</strong> and the no-corruption story changes substantially.
+<strong>UNVERIFIED — confirm.</strong></li>
+<li><strong>Are dynamic partitions enabled?</strong> VAB requires
+<code>super</code> / dynamic partitions
+(<code>BOARD_SUPER_PARTITION_SIZE</code>, update groups). Confirm the
+board config defines <code>super</code> and logical partitions.
+<strong>UNVERIFIED.</strong></li>
+<li><strong>Is VAB enabled, and VABc?</strong> Confirm
+<code>PRODUCT_VIRTUAL_AB_OTA</code> (and <code>vabc_features.mk</code> /
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD</code>) are inherited in the
+device makefiles. <strong>UNVERIFIED.</strong></li>
+<li><strong>Kernel support.</strong> RK3588 vendor kernels are typically
+<strong>5.10-class</strong> (Rockchip BSP). VAB needs
+<code>CONFIG_DM_SNAPSHOT</code>; compressed VAB needs <strong>kernel
+4.19+</strong> and <strong><code>CONFIG_DM_USER</code></strong>
+(built-in or modular + loaded in first-stage ramdisk). Confirm
+<code>dm-user</code> is present — it is a <strong>non-upstream</strong>
+module, so it must be carried in the Rockchip kernel.
+<strong>UNVERIFIED.</strong></li>
+<li><strong>Storage class &amp; sizing.</strong> Orange Pi 5 Max uses
+eMMC and/or NVMe (RK3588). Compression (lz4) is recommended to limit COW
+spill into <code>/data</code>; pick <code>super</code> sizing per §8.
+eMMC write endurance/throughput affects merge time —
+<strong>benchmark</strong>. <strong>UNVERIFIED.</strong></li>
+<li><strong>CPU for compression.</strong> RK3588 is an 8-core (4×A76 +
+4×A55) SoC — comfortably able to run lz4 and likely zstd at reasonable
+levels during merge, but <strong>decompression on every
+<code>/system</code> read until merge completes</strong> adds latency on
+the post-OTA boot. Benchmark lz4 vs zstd merge time and first-boot read
+latency on the board. <strong>UNVERIFIED.</strong></li>
+<li><strong>Bootloader / AVB.</strong> RK3588 uses U-Boot + Rockchip
+miniloader/idbloader; A/B slot management and AVB/vbmeta must be wired
+into <code>boot_control</code> for rollback to actually work. Confirm
+<code>boot_control</code> HAL is the AOSP one (not a Rockchip stub).
+<strong>UNVERIFIED.</strong></li>
+</ol>
+<p><strong>Practical guidance:</strong> Helix should treat “native AOSP
+Virtual A/B available and correct on this RK3588 image” as a
+<strong>gating prerequisite</strong> that must be empirically proven
+(apply a test OTA, observe <code>MergeStatus</code> transitions, force a
+failed boot to confirm rollback, force power loss mid-merge to confirm
+resume). If the stock Rockchip image is A-only/proprietary, a separate
+ADR is needed on whether to (a) bring up AOSP VAB on the board, or (b)
+wrap the Rockchip OTA mechanism instead.</p>
+<p>Sources for hardware context: <a
+href="https://orangepi.net/wp-content/uploads/2024/09/OrangePi_5_RK3588S_User-Manual_v2.1.1.pdf">Orange
+Pi 5 / RK3588 user manuals</a>, <a
+href="https://github.com/7Ji/orangepi5-rkloader">7Ji/orangepi5-rkloader
+(bootloader/GPT layout)</a>. These confirm the boards’ boot/partition
+basics but <strong>do not</strong> confirm AOSP VAB enablement.</p>
+<hr />
+<h2 id="implications-for-helix-ota-the-no-corruption-guarantee">12.
+Implications for Helix OTA (the no-corruption guarantee)</h2>
+<ol type="1">
+<li><strong>The atomic core is the device’s <code>update_engine</code> +
+Virtual A/B.</strong> Helix must <strong>wrap</strong>, not
+re-implement, the install/merge path (consistent with
+<code>adr-0001-wrapped-engine.md</code>). The corruption-resistance
+comes from: atomic slot switch, dm-verity detection, automatic rollback
+on failed boot, and the resumable userspace merge.</li>
+<li><strong>Build payloads that target VABc.</strong> Payload generation
+(<code>ota_from_target_files</code>, see
+<code>aosp-update-engine.md</code>) must produce a payload whose COW
+operations match the device’s enabled compression. Helix’s build
+pipeline should pin the compression method and factor and keep them
+consistent with the device build.</li>
+<li><strong>Default to <code>lz4</code>, offer <code>zstd</code> per
+fleet segment.</strong> lz4 minimizes CPU/merge time (good for SBC-class
+RK3588); zstd reduces transient <code>/data</code> pressure on
+storage-constrained devices. Make this a per-rollout knob driven by
+device telemetry (free <code>/data</code>, SoC class).</li>
+<li><strong>Surface <code>MergeStatus</code> as first-class
+telemetry.</strong> Track
+<code>SNAPSHOTTED → MERGING → (complete)</code> and alert on
+stuck/<code>CANCELLED</code>. The control plane should consider an
+update “done” only after merge completion, not at reboot.</li>
+<li><strong>Encode the safety invariant: no revert after
+<code>MERGING</code>.</strong> Helix must never instruct a device to
+switch back to the old slot once merge has started. Cancel is only safe
+during install.</li>
+<li><strong>Gate on free <code>/data</code>.</strong> Low-space devices
+have lower update success; the control plane should defer or warn, and
+prefer compression for them.</li>
+<li><strong>RK3588 enablement is a prerequisite, not an
+assumption.</strong> Validate VAB availability on the real image before
+relying on the native path; otherwise raise an ADR.</li>
+</ol>
+<hr />
+<h2 id="open-questions-unverified-items">13. Open Questions / UNVERIFIED
+Items</h2>
+<ul>
+<li>Exact Android 15 defaults for
+<code>PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD</code> and whether XOR is
+on/off by default. <strong>UNVERIFIED.</strong></li>
+<li>Exact VABc/XOR space-saving percentages and the AOSP footprint table
+numbers for the Android 15 docs revision.
+<strong>UNVERIFIED.</strong></li>
+<li><code>gz</code>/gzip availability as a selectable VABc method on
+Android 15 (appears legacy). <strong>UNVERIFIED.</strong></li>
+<li>Whether the target RK3588 / Orange Pi 5 Max Android 15 image ships
+A/B + dynamic partitions + VAB + VABc + <code>dm-user</code> (vs A-only
+Rockchip OTA). <strong>UNVERIFIED — top-priority hardware
+validation.</strong></li>
+<li>Real lz4-vs-zstd merge time, CPU, and first-boot read-latency
+numbers on the RK3588 target. <strong>UNVERIFIED —
+benchmark.</strong></li>
+<li>Precise <code>update_engine</code> cancel contract and which fixes
+the target build includes. <strong>UNVERIFIED — confirm against
+build.</strong></li>
+</ul>
+<hr />
+<h2 id="sources-consulted">14. Sources Consulted</h2>
+<p>Primary (AOSP, consulted directly): - <a
+href="https://source.android.com/docs/core/ota/virtual_ab">Virtual A/B
+overview — source.android.com</a> - <a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement">Implement
+Virtual A/B — source.android.com</a> - <a
+href="https://source.android.com/docs/core/ota/virtual_ab/implement-patches">Implement
+Virtual A/B - patches — source.android.com</a> - <a
+href="https://source.android.com/docs/core/ota/ab">A/B (seamless) system
+updates — source.android.com</a> - <a
+href="https://source.android.com/docs/core/ota/dynamic_partitions/ab_launch">OTA
+for A/B devices with dynamic partitions — source.android.com</a> - <a
+href="https://source.android.com/docs/core/ota/dynamic_partitions/how_to_size_super">Size
+the super partition — source.android.com</a> - <a
+href="https://source.android.com/docs/core/ota/reduce_size">Reduce OTA
+size — source.android.com</a></p>
+<p>Source / code references (referenced, not all line-by-line read): -
+<a
+href="https://android.googlesource.com/platform/system/update_engine/">platform/system/update_engine
+— Git at Google</a> - <a
+href="https://android.googlesource.com/platform/system/core/+/master/fs_mgr/libsnapshot/snapshot.cpp">fs_mgr/libsnapshot/snapshot.cpp
+— Git at Google</a> - <a
+href="https://cs.android.com/android/platform/superproject/+/master:system/core/fs_mgr/libsnapshot/snapuserd/dm-snapshot-merge/snapuserd_readahead.cpp">snapuserd
+dm-snapshot-merge readahead — cs.android.com</a> - <a
+href="https://android.googlesource.com/platform/external/zstd/">platform/external/zstd
+— Git at Google</a></p>
+<p>Hardware context (RK3588 / Orange Pi 5 — do not confirm VAB
+enablement): - <a
+href="https://orangepi.net/wp-content/uploads/2024/09/OrangePi_5_RK3588S_User-Manual_v2.1.1.pdf">Orange
+Pi 5 RK3588S User Manual (PDF)</a> - <a
+href="https://github.com/7Ji/orangepi5-rkloader">7Ji/orangepi5-rkloader
+— GitHub</a></p>
+<p>Secondary / context: - <a
+href="https://www.esper.io/blog/android-13-virtual-ab-requirement">Android
+13’s Virtual A/B Mandate — esper.io</a> - <a
+href="https://morotti.github.io/lzbench-web/">lzbench compression
+benchmark</a></p>
+<p>Internal cross-references: <code>aosp-update-engine.md</code>,
+<code>adr-0001-wrapped-engine.md</code>,
+<code>adr-0005-delta-updates.md</code>.</p>
+<hr />
+<h2 id="confidence">15. Confidence</h2>
+<p><strong>Overall confidence: MEDIUM-HIGH</strong> on the Virtual A/B /
+VABc mechanism, COW internals, dm-user/snapuserd architecture, merge
+lifecycle, and failure/cancel semantics — these are drawn directly from
+current AOSP primary documentation and corroborated across multiple AOSP
+pages.</p>
+<p><strong>LOW</strong> confidence on (a) exact quantitative figures
+(compression %s, sizing table outputs, XOR default state) which are
+version-sensitive prose and flagged UNVERIFIED, and (b)
+<strong>everything specific to RK3588 / Orange Pi 5 Max</strong>, where
+AOSP provides no guarantees and the outcome depends entirely on the
+Rockchip BSP and the integrator’s board configuration. The RK3588 VAB
+enablement question is the single highest-priority item to validate
+empirically before Helix relies on the native Virtual A/B path for its
+no-corruption guarantee.</p>
+</body>
+</html>

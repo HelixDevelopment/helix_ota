@@ -1,0 +1,38 @@
+%% Helix OTA — 1.0.1 staged rollout (canonical)
+%% Source of truth: 1.0.1-staged-rollout/README.md §2-§3 (engine + health-gated halt),
+%%                   00-master/2026-06-07-helix-ota-design.md §8 (staged rollout engine)
+%% Phased 1.0.1 flow with halt-on-failure. NOTE: MVP (1.0.0) is all-at-once; this is the 1.0.1 engine.
+%% Safety invariant: halt wins over advance when both could trigger in one evaluation window.
+flowchart TD
+    START([Operator publishes release 1.0.1<br/>defines ordered phases]) --> CFG["Phase config<br/>{percentage, success_threshold,<br/>error_threshold, duration, auto_progress}"]
+    CFG --> P5["Phase: 5% cohort<br/>(deterministic stable cohort = hash of device-id)"]
+
+    P5 --> MON5{"Monitor telemetry<br/>within duration window"}
+    MON5 -->|error_threshold breached| HALT["HALT / PAUSE deployment<br/>(automatic, halt wins over advance)"]
+    MON5 -->|success_threshold met| P10["Phase: 10% cohort"]
+    MON5 -->|window elapses, neither met| HOLD5["Hold / await operator"]
+
+    P10 --> MON10{"Monitor telemetry"}
+    MON10 -->|error_threshold breached| HALT
+    MON10 -->|success_threshold met| P30["Phase: 30% cohort"]
+    MON10 -->|window elapses, neither met| HOLD10["Hold / await operator"]
+
+    P30 --> MON30{"Monitor telemetry"}
+    MON30 -->|error_threshold breached| HALT
+    MON30 -->|success_threshold met| P100["Phase: 100% (full fleet)"]
+    MON30 -->|window elapses, neither met| HOLD30["Hold / await operator"]
+
+    P100 --> MON100{"Monitor telemetry"}
+    MON100 -->|error_threshold breached| HALT
+    MON100 -->|success_threshold met| DONE([Rollout complete])
+    MON100 -->|window elapses, neither met| HOLD100["Hold / await operator"]
+
+    HALT --> ABORT{"Operator decision"}
+    ABORT -->|abort| ROLLBACK["Authorized recall / rollback to N-1<br/>(1.0.1 end-user rollback; anti-downgrade preserved)"]
+    ABORT -->|resume after fix| CFG
+
+    %% Health-gated halt feed (post-boot health window, automatic canary abort)
+    HEALTH[["Post-boot health window<br/>crash rate, service health,<br/>regression vs baseline"]] -.feeds.-> MON5
+    HEALTH -.feeds.-> MON10
+    HEALTH -.feeds.-> MON30
+    HEALTH -.feeds.-> MON100

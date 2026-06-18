@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>migration_002_design</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">migration_002_design</h1>
+</header>
+<h1
+id="helix-ota-migration-002-design-staged-rollout-deployment_phases-rollouts-rollback_history">Helix
+OTA — Migration 002 Design (Staged Rollout: deployment_phases, rollouts,
+rollback_history)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-08</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active (design — DDL to be authored + validated against live
+Postgres before apply)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Design of migration <code>002_staged_rollout</code> that extends the
+<code>helix_ota</code> schema (migration 001) with the three tables
+deferred from MVP: <code>deployment_phases</code> (the ordered
+percentage plan), <code>rollouts</code> (the per-deployment engine
+cursor + control-plane status), and <code>rollback_history</code> (audit
+of abort/rollback/recall). Backs the storage port in <a
+href="rollout_engine.md"><code>rollout_engine.md</code></a> §6. TUF
+metadata is <strong>explicitly deferred</strong> (§5).</td>
+</tr>
+<tr>
+<td>Status summary 2</td>
+<td>This is a <strong>design</strong> document: it specifies tables,
+columns, constraints, indexes, the
+<code>deployments</code>/<code>rollouts</code> integration, the up/down
+pair, and the validation gate. The literal
+<code>.up.sql</code>/<code>.down.sql</code> are authored from this
+design and validated against live Postgres (as migration 001 was), then
+placed in <code>1.0.0-mvp/database/migrations/</code> — UNVERIFIED
+whether 1.0.1 migrations co-locate there or move to a
+<code>1.0.1-staged-rollout/database/migrations/</code> dir (§6.4).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>The brick treats <code>Phases</code> as immutable; the schema
+enforces that with no UPDATE path on <code>deployment_phases</code>
+after rollout start (§3.1). Two status columns on <code>rollouts</code>
+(engine vs control-plane, <code>rollout_engine.md</code> §6.3) must stay
+reconciled by a single writer — encoded as constraints + app discipline,
+not a DB trigger (§3.2).</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Promotes <code>README.md</code> §6 (“adds
+<code>deployment_phases</code>, <code>rollouts</code>,
+<code>rollback_history</code> … migration <code>002_*</code>”) into
+concrete DDL design aligned to migration 001’s conventions (schema
+<code>helix_ota</code>, <code>gen_random_uuid()</code>,
+<code>TIMESTAMPTZ</code>, CHECK-constrained enums,
+<code>BEGIN/COMMIT</code> transactional).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Author <code>002_staged_rollout.up.sql</code> +
+<code>.down.sql</code> from this design; validate up→down→up against a
+live Postgres 14+; wire the storage-port repo
+(<code>rollout_engine.md</code> §6); add migration-runner test.</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Helix OTA control-plane team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><a href="rollout_engine.md"><code>rollout_engine.md</code></a>; <a
+href="../1.0.0-mvp/database/migrations/001_initial_schema.up.sql"><code>../1.0.0-mvp/database/migrations/001_initial_schema.up.sql</code></a>;
+<a
+href="../1.0.0-mvp/database/migrations/001_initial_schema.down.sql"><code>../1.0.0-mvp/database/migrations/001_initial_schema.down.sql</code></a>;
+<a href="README.md"><code>README.md</code></a>; <a
+href="../research/additions_synthesis.md"><code>../research/additions_synthesis.md</code></a>
+(§8 G7, §10 K8); <code>submodules/ota-rollout-engine</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">table of contents</h2>
+<ul>
+<li><a href="#1-purpose-and-scope">§1. purpose and scope</a></li>
+<li><a href="#2-conventions-inherited-from-migration-001">§2.
+conventions inherited from migration 001</a></li>
+<li><a href="#3-table-designs">§3. table designs</a>
+<ul>
+<li><a href="#31-deployment_phases">§3.1 deployment_phases</a></li>
+<li><a href="#32-rollouts">§3.2 rollouts</a></li>
+<li><a href="#33-rollback_history">§3.3 rollback_history</a></li>
+</ul></li>
+<li><a href="#4-deployments-integration-no-breaking-change">§4.
+deployments integration (no breaking change)</a></li>
+<li><a href="#5-tuf-metadata-note-deferred--not-created">§5. tuf
+metadata note (deferred — not created)</a></li>
+<li><a href="#6-updown-migration-design-and-validation">§6. up/down
+migration design and validation</a></li>
+<li><a href="#7-mapping-to-the-engine-state-storage-port">§7. mapping to
+the engine state (storage port)</a></li>
+<li><a href="#8-anti-bluff--unverified-register">§8. anti-bluff /
+unverified register</a></li>
+</ul>
+<hr />
+<h2 id="purpose-and-scope">§1. purpose and scope</h2>
+<p>Migration 001 deliberately <strong>omitted</strong> staged-rollout
+and rollback tables, documenting them as “DEFERRED to 1.0.1” (001 header
+lines 8–11). Migration 002 adds exactly those, no more:</p>
+<ul>
+<li><code>deployment_phases</code> — the ordered percentage plan for a
+staged deployment; one row per phase, mirroring the brick’s
+<code>Phase</code> struct (<code>rollout_engine.md</code> §2.1).</li>
+<li><code>rollouts</code> — one row per staged deployment: the brick
+engine cursor (<code>current_phase</code>, <code>engine_status</code>,
+<code>phase_started_at</code>) plus the control-plane lifecycle
+<code>status</code> (<code>paused/aborted/rolled_back</code>). This is
+the row the <code>StoragePort</code> loads/saves
+(<code>rollout_engine.md</code> §6.2).</li>
+<li><code>rollback_history</code> — append-only audit of every abort /
+server-driven recall (rollback), closing synthesis §8 G7’s
+<code>rollback_history</code> item and feeding 1.0.2’s end-user
+rollback.</li>
+</ul>
+<p>Out of scope (explicitly <strong>not</strong> created): any TUF
+metadata table (§5), any column on <code>deployments</code> (the MVP
+<code>rollout_strategy</code> JSONB already carries the staged marker,
+§4), and end-user/multi-version rollback state (1.0.2, synthesis §10
+K8).</p>
+<h2 id="conventions-inherited-from-migration-001">§2. conventions
+inherited from migration 001</h2>
+<p>Migration 002 follows 001 byte-for-byte in style so the corpus stays
+uniform:</p>
+<ul>
+<li>Wrapped in a single <code>BEGIN; … COMMIT;</code> (all-or-nothing on
+transactional runners; 001 note).</li>
+<li><code>SET LOCAL search_path = helix_ota, public;</code>.</li>
+<li>PKs are <code>UUID PRIMARY KEY DEFAULT gen_random_uuid()</code>
+(pgcrypto, already created by 001).</li>
+<li>Timestamps <code>TIMESTAMPTZ NOT NULL DEFAULT now()</code>.</li>
+<li>Enums as <code>VARCHAR(n)</code> + <code>CHECK (... IN (...))</code>
+(not native PG enums — matches 001’s <code>*_status_chk</code> pattern,
+keeps additive evolution cheap).</li>
+<li>FKs named <code>&lt;table&gt;_&lt;ref&gt;_fk</code> with explicit
+<code>ON DELETE</code> semantics; indexes named
+<code>idx_&lt;table&gt;_&lt;cols&gt;</code>.</li>
+<li>JSONB for open/extensible blobs (<code>metadata</code>,
+<code>details</code>) defaulting to <code>'{}'::jsonb</code>.</li>
+<li><code>helix_ota</code> schema only (modular-monolith, ADR-0003 — one
+schema; 001 line 16).</li>
+</ul>
+<h2 id="table-designs">§3. table designs</h2>
+<h3 id="deployment_phases">§3.1 deployment_phases</h3>
+<p>One row per ordered phase of a staged deployment. Columns mirror the
+brick <code>Phase</code> (<code>rollout_engine.md</code> §2.1) so a
+<code>Load</code> materializes <code>[]Phase</code> directly.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID PK</td>
+<td><code>gen_random_uuid()</code></td>
+</tr>
+<tr>
+<td><code>deployment_id</code></td>
+<td>UUID NOT NULL</td>
+<td>FK → <code>deployments(id)</code> ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td><code>phase_index</code></td>
+<td>INT NOT NULL</td>
+<td>0-based order; the brick’s slice index</td>
+</tr>
+<tr>
+<td><code>percentage</code></td>
+<td>INT NOT NULL</td>
+<td>cumulative cohort %, the brick <code>Phase.Percentage</code></td>
+</tr>
+<tr>
+<td><code>success_threshold</code></td>
+<td>NUMERIC(4,3) NOT NULL</td>
+<td>fraction <code>[0,1]</code> (e.g. <code>0.950</code>)</td>
+</tr>
+<tr>
+<td><code>error_threshold</code></td>
+<td>NUMERIC(4,3) NOT NULL</td>
+<td>fraction <code>[0,1]</code></td>
+</tr>
+<tr>
+<td><code>duration_seconds</code></td>
+<td>BIGINT NOT NULL</td>
+<td>evaluation window in seconds; <code>0</code> = no time bound (brick:
+<code>Duration==0</code>)</td>
+</tr>
+<tr>
+<td><code>auto_progress</code></td>
+<td>BOOLEAN NOT NULL DEFAULT TRUE</td>
+<td>brick <code>Phase.AutoProgress</code></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>TIMESTAMPTZ NOT NULL DEFAULT now()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Constraints (enforce the brick’s <code>validatePhases</code> at the
+DB layer too — defense in depth):</p>
+<pre><code>CONSTRAINT deployment_phases_deployment_fk
+    FOREIGN KEY (deployment_id) REFERENCES helix_ota.deployments (id) ON DELETE CASCADE,
+CONSTRAINT deployment_phases_index_chk      CHECK (phase_index &gt;= 0),
+CONSTRAINT deployment_phases_pct_chk        CHECK (percentage &gt; 0 AND percentage &lt;= 100),
+CONSTRAINT deployment_phases_success_chk    CHECK (success_threshold &gt;= 0 AND success_threshold &lt;= 1),
+CONSTRAINT deployment_phases_error_chk      CHECK (error_threshold   &gt;= 0 AND error_threshold   &lt;= 1),
+CONSTRAINT deployment_phases_duration_chk   CHECK (duration_seconds  &gt;= 0),
+CONSTRAINT deployment_phases_idx_uniq       UNIQUE (deployment_id, phase_index),
+CONSTRAINT deployment_phases_pct_uniq       UNIQUE (deployment_id, percentage)</code></pre>
+<p>Index:
+<code>idx_deployment_phases_deployment ON deployment_phases (deployment_id, phase_index)</code>
+(covers the ordered <code>Load</code>).</p>
+<p>Notes:</p>
+<ul>
+<li>The <strong>strictly-increasing</strong> and <strong>final-phase-=
+100</strong> invariants are cross-row and are NOT expressed as table
+CHECKs (Postgres CHECK is per-row). They are enforced by the brick’s
+<code>validatePhases</code> at create time
+(<code>rollout_engine.md</code> §8.2) and re-asserted by a
+migration-time / repo-level assertion; the
+<code>deployment_phases_pct_uniq</code> constraint at least forbids
+duplicate percentages. (UNVERIFIED whether to add an EXCLUSION/trigger
+for strict monotonicity — deferred; the brick is the authoritative
+validator, §8.)</li>
+<li><strong>Immutability:</strong> the brick treats <code>Phases</code>
+as immutable. The repo writes these rows once (at
+<code>POST .../rollout</code>, <code>rollout_engine.md</code> §8.2) and
+never <code>UPDATE</code>s them; <code>Save</code> touches only
+<code>rollouts</code>. No DB trigger enforces this in 002 (app
+discipline + no UPDATE path); a future hardening could add an
+<code>AFTER UPDATE</code> guard.</li>
+</ul>
+<h3 id="rollouts">§3.2 rollouts</h3>
+<p>One row per staged deployment — the <code>StoragePort</code> key
+(<code>rollout_engine.md</code> §6.2). Carries <strong>both</strong>
+status columns (<code>rollout_engine.md</code> §6.3).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID PK</td>
+<td></td>
+</tr>
+<tr>
+<td><code>deployment_id</code></td>
+<td>UUID NOT NULL</td>
+<td>FK → <code>deployments(id)</code> ON DELETE CASCADE;
+<strong>UNIQUE</strong> (one rollout per deployment) — also the
+storage-port key</td>
+</tr>
+<tr>
+<td><code>engine_status</code></td>
+<td>VARCHAR(20) NOT NULL DEFAULT ‘pending’</td>
+<td>brick <code>Status</code>:
+<code>pending/active/halted/held/completed</code></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>VARCHAR(20) NOT NULL DEFAULT ‘pending’</td>
+<td>control-plane status: brick set +
+<code>paused/aborted/rolled_back</code></td>
+</tr>
+<tr>
+<td><code>current_phase</code></td>
+<td>INT NOT NULL DEFAULT 0</td>
+<td>brick <code>State.CurrentPhase</code> (index into
+<code>deployment_phases</code>)</td>
+</tr>
+<tr>
+<td><code>phase_started_at</code></td>
+<td>TIMESTAMPTZ</td>
+<td>brick <code>State.PhaseStartedAt</code>; NULL before start</td>
+</tr>
+<tr>
+<td><code>started_at</code></td>
+<td>TIMESTAMPTZ</td>
+<td>when the rollout was first started</td>
+</tr>
+<tr>
+<td><code>completed_at</code></td>
+<td>TIMESTAMPTZ</td>
+<td>terminal timestamp (completed/aborted/rolled_back)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>TIMESTAMPTZ NOT NULL DEFAULT now()</td>
+<td></td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>TIMESTAMPTZ NOT NULL DEFAULT now()</td>
+<td>brick <code>State.UpdatedAt</code>; bumped on every
+<code>Save</code></td>
+</tr>
+</tbody>
+</table>
+<p>Constraints:</p>
+<pre><code>CONSTRAINT rollouts_deployment_fk
+    FOREIGN KEY (deployment_id) REFERENCES helix_ota.deployments (id) ON DELETE CASCADE,
+CONSTRAINT rollouts_deployment_uniq UNIQUE (deployment_id),
+CONSTRAINT rollouts_engine_status_chk
+    CHECK (engine_status IN (&#39;pending&#39;,&#39;active&#39;,&#39;halted&#39;,&#39;held&#39;,&#39;completed&#39;)),
+CONSTRAINT rollouts_status_chk
+    CHECK (status IN (&#39;pending&#39;,&#39;active&#39;,&#39;halted&#39;,&#39;held&#39;,&#39;completed&#39;,&#39;paused&#39;,&#39;aborted&#39;,&#39;rolled_back&#39;)),
+CONSTRAINT rollouts_current_phase_chk CHECK (current_phase &gt;= 0),
+CONSTRAINT rollouts_time_order_chk
+    CHECK (completed_at IS NULL OR started_at IS NULL OR completed_at &gt;= started_at)</code></pre>
+<p>Indexes:</p>
+<pre><code>idx_rollouts_status ON rollouts (status)          -- scheduler scans active, non-paused
+idx_rollouts_engine_status ON rollouts (engine_status)</code></pre>
+<p>Reconciliation rule (app-enforced, §2 conventions — no trigger): the
+control plane is the single writer (<code>rollout_engine.md</code>
+§6.3). When <code>status</code> ∈
+{<code>active</code>,<code>held</code>,<code>halted</code>,
+<code>completed</code>,<code>pending</code>} it MUST equal
+<code>engine_status</code>; <code>paused/aborted/rolled_back</code> are
+control-plane-only overlays. (UNVERIFIED whether to harden this with a
+CHECK relating the two columns — a partial CHECK like
+“<code>status = engine_status</code> OR
+<code>status IN ('paused','aborted','rolled_back')</code>” is feasible
+and recommended; deferred to DDL authoring, §8.)</p>
+<h3 id="rollback_history">§3.3 rollback_history</h3>
+<p>Append-only audit of abort / server-driven recall (rollback). Closes
+synthesis §8 G7’s <code>rollback_history</code> item. FKs use
+<code>ON DELETE SET NULL</code> so history outlives the deployments it
+references (mirrors 001’s
+<code>telemetry_events</code>/<code>audit_logs</code> survivability
+pattern).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID PK</td>
+<td></td>
+</tr>
+<tr>
+<td><code>deployment_id</code></td>
+<td>UUID</td>
+<td>FK → <code>deployments(id)</code> ON DELETE SET NULL — the rollout
+that was aborted/recalled</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>VARCHAR(20) NOT NULL</td>
+<td><code>abort</code> (halt forward progress) or <code>rollback</code>
+(server-driven recall to N-1)</td>
+</tr>
+<tr>
+<td><code>from_release_id</code></td>
+<td>UUID</td>
+<td>FK → <code>releases(id)</code> ON DELETE SET NULL — release being
+rolled away from (NULL for abort)</td>
+</tr>
+<tr>
+<td><code>to_release_id</code></td>
+<td>UUID</td>
+<td>FK → <code>releases(id)</code> ON DELETE SET NULL — previous-good
+release recalled to (NULL for abort)</td>
+</tr>
+<tr>
+<td><code>recall_deployment_id</code></td>
+<td>UUID</td>
+<td>FK → <code>deployments(id)</code> ON DELETE SET NULL — the new
+deployment created by a recall (<code>rollout_engine.md</code>
+§5.6)</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>TEXT</td>
+<td>operator-supplied reason / engine halt reason</td>
+</tr>
+<tr>
+<td><code>triggered_by</code></td>
+<td>UUID</td>
+<td>FK → <code>users(id)</code> ON DELETE SET NULL (NULL when
+engine/scheduler-triggered)</td>
+</tr>
+<tr>
+<td><code>details</code></td>
+<td>JSONB NOT NULL DEFAULT ‘{}’::jsonb</td>
+<td>brick <code>Decision.Reason</code>, cohort %, counts, etc.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>TIMESTAMPTZ NOT NULL DEFAULT now()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Constraints:</p>
+<pre><code>CONSTRAINT rollback_history_kind_chk CHECK (kind IN (&#39;abort&#39;,&#39;rollback&#39;)),
+CONSTRAINT rollback_history_deployment_fk
+    FOREIGN KEY (deployment_id)        REFERENCES helix_ota.deployments (id) ON DELETE SET NULL,
+CONSTRAINT rollback_history_from_release_fk
+    FOREIGN KEY (from_release_id)      REFERENCES helix_ota.releases (id)    ON DELETE SET NULL,
+CONSTRAINT rollback_history_to_release_fk
+    FOREIGN KEY (to_release_id)        REFERENCES helix_ota.releases (id)    ON DELETE SET NULL,
+CONSTRAINT rollback_history_recall_fk
+    FOREIGN KEY (recall_deployment_id) REFERENCES helix_ota.deployments (id) ON DELETE SET NULL,
+CONSTRAINT rollback_history_user_fk
+    FOREIGN KEY (triggered_by)         REFERENCES helix_ota.users (id)       ON DELETE SET NULL,
+-- A &#39;rollback&#39; records both from/to releases; an &#39;abort&#39; records neither.
+CONSTRAINT rollback_history_kind_ref_chk CHECK (
+    (kind = &#39;rollback&#39; AND from_release_id IS NOT NULL AND to_release_id IS NOT NULL)
+    OR (kind = &#39;abort&#39; AND from_release_id IS NULL AND to_release_id IS NULL)
+)</code></pre>
+<p>Indexes:</p>
+<pre><code>idx_rollback_history_deployment ON rollback_history (deployment_id)
+idx_rollback_history_kind       ON rollback_history (kind)
+idx_rollback_history_created    ON rollback_history (created_at)</code></pre>
+<blockquote>
+<p>The <code>kind_ref_chk</code> is a design choice; if 1.0.2 introduces
+rollback kinds where releases are unknown, relax it then. For 1.0.1 the
+two kinds have exactly these reference shapes
+(<code>rollout_engine.md</code> §5.5/§5.6).</p>
+</blockquote>
+<h2 id="deployments-integration-no-breaking-change">§4. deployments
+integration (no breaking change)</h2>
+<p>Migration 002 adds <strong>no column</strong> to
+<code>deployments</code>. The MVP
+<code>deployments.rollout_strategy</code> JSONB (001 lines 252) already
+carries the strategy marker; a staged deployment writes:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;mode&quot;</span><span class="fu">:</span> <span class="st">&quot;staged&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<p>instead of the MVP <code>{"mode":"all_at_once"}</code>. The MVP
+<code>deployments.status</code> CHECK already includes
+<code>paused</code> (001 line 270:
+<code>draft/active/paused/completed/failed/cancelled</code>), so pause
+maps cleanly onto the existing deployment status without a 002
+alteration. <code>device_deployments.phase_id</code> was intentionally
+omitted at MVP (001 line 289); 002 does <strong>not</strong> add it
+either — phase membership is computed deterministically from
+<code>(device_id, deployment_id, current_percentage)</code> via the
+brick’s <code>InCohort</code> (<code>rollout_engine.md</code> §4), so it
+need not be persisted per device. (UNVERIFIED future need: if per-device
+phase attribution is required for analytics, add a nullable
+<code>device_deployments.phase_index</code> in a later migration — not
+now, to avoid a write per device.)</p>
+<p>This keeps 002 <strong>purely additive</strong> (three new tables,
+zero <code>ALTER TABLE</code>), the safest migration shape and easiest
+to reverse (§6).</p>
+<h2 id="tuf-metadata-note-deferred-not-created">§5. tuf metadata note
+(deferred — not created)</h2>
+<p>Per <code>README.md</code> §6 (“plus TUF metadata storage”) and
+ADR-0002 / synthesis §10 C5/K2, device-side TUF/Uptane is
+<strong>deferred</strong>. Migration 002 <strong>does NOT create any TUF
+metadata table</strong>. This is recorded explicitly (as 001 recorded
+the staged-rollout deferral) so the omission is a documented decision,
+not an oversight:</p>
+<ul>
+<li>The 1.0.1 trust model stays MVP plain-signing (ed25519 + SHA-256 +
+AVB), layered so TUF drops in byte-identically later
+(<code>endpoints.md</code> §1; <code>rollout_engine.md</code> §11).</li>
+<li>When TUF lands (later 1.0.1 sub-spec or 1.0.2), a separate migration
+(e.g. <code>003_tuf_metadata</code>) will add <code>tuf_metadata</code>
+(root/timestamp/snapshot/targets roles, version, expiry) and the
+Director/Image repository split — <strong>independent</strong> of the
+rollout tables. The rollout engine is trust-model-agnostic: adding TUF
+MUST NOT alter
+<code>deployment_phases</code>/<code>rollouts</code>/<code>rollback_history</code>.</li>
+</ul>
+<p>The DDL header comment of <code>002_*.up.sql</code> MUST carry this
+deferral note verbatim (matching 001’s in-file deferral comments).</p>
+<h2 id="updown-migration-design-and-validation">§6. up/down migration
+design and validation</h2>
+<h3 id="up-002_staged_rollout.up.sql">§6.1 up
+(<code>002_staged_rollout.up.sql</code>)</h3>
+<p><code>BEGIN;</code> → <code>SET LOCAL search_path</code> →
+<code>CREATE TABLE deployment_phases</code> →
+<code>CREATE TABLE rollouts</code> →
+<code>CREATE TABLE rollback_history</code> → the indexes →
+<code>COMMIT;</code>. Creation order respects FKs
+(<code>deployment_phases</code>/<code>rollouts</code>/<code>rollback_history</code>
+all reference 001 tables that already exist; no inter-002 FK ordering
+hazard). No <code>CREATE EXTENSION</code>/<code>CREATE SCHEMA</code>
+needed (001 made them).</p>
+<h3 id="down-002_staged_rollout.down.sql">§6.2 down
+(<code>002_staged_rollout.down.sql</code>)</h3>
+<p>Reverse order, <code>DROP TABLE IF EXISTS ... CASCADE</code> for
+<code>rollback_history</code>, then <code>rollouts</code>, then
+<code>deployment_phases</code>, inside <code>BEGIN;…COMMIT;</code>.
+Because 002 is purely additive (no <code>ALTER</code>), the down is a
+clean drop with no data-restoration concern;
+<code>deployments.rollout_strategy</code> values of
+<code>{"mode":"staged"}</code> written while 002 was live are left as-is
+(harmless JSONB the MVP code treats as an unknown mode → it MUST fall
+back to not offering staged behavior; UNVERIFIED that MVP code
+defensively handles an unknown <code>mode</code>, §8).</p>
+<h3 id="validation-gate-as-migration-001">§6.3 validation gate (as
+migration 001)</h3>
+<p>Before the DDL is accepted it MUST pass, against a <strong>live
+Postgres 14+</strong> (not just lint):</p>
+<ol type="1">
+<li><code>up</code> applies cleanly on a DB with 001 already
+applied.</li>
+<li><code>down</code> reverses cleanly (tables gone, 001 intact).</li>
+<li><code>up → down → up</code> is idempotent (re-apply works).</li>
+<li>The brick’s <code>validatePhases</code> boundary cases round-trip: a
+valid 5/10/30/50/100 plan inserts; a duplicate-percentage plan is
+rejected by <code>deployment_phases_pct_uniq</code>; out-of-range
+threshold rejected by the CHECKs.</li>
+<li>A migration-runner test asserts the three tables + their constraints
+exist (artifact gate, <code>rollout_engine.md</code> §10 layer 2).</li>
+</ol>
+<h3 id="file-placement-unverified">§6.4 file placement (UNVERIFIED)</h3>
+<p>Migration 001 lives in <code>1.0.0-mvp/database/migrations/</code>.
+Whether 002 co-locates there (single linear migration history for the
+one <code>helix_ota</code> schema — recommended, since migrations are
+schema-global not phase-scoped) or under
+<code>1.0.1-staged-rollout/database/migrations/</code> is an
+<strong>UNVERIFIED</strong> corpus-layout decision (§8). This design
+recommends <strong>co-location</strong> in
+<code>1.0.0-mvp/database/migrations/002_staged_rollout.{up,down}.sql</code>
+so the runner sees one ordered sequence; the spec lives here in the
+1.0.1 phase dir.</p>
+<h2 id="mapping-to-the-engine-state-storage-port">§7. mapping to the
+engine state (storage port)</h2>
+<p>The <code>StoragePort</code> impl (<code>rollout_engine.md</code>
+§6.2) materializes <code>rollout.State</code> from these tables:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th><code>rollout.State</code></th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DeploymentID</code></td>
+<td><code>rollouts.deployment_id</code></td>
+</tr>
+<tr>
+<td><code>Phases</code></td>
+<td><code>SELECT … FROM deployment_phases WHERE deployment_id=$1 ORDER BY phase_index</code>,
+each row →
+<code>Phase{Percentage, SuccessThreshold, ErrorThreshold, Duration: duration_seconds*time.Second, AutoProgress}</code></td>
+</tr>
+<tr>
+<td><code>CurrentPhase</code></td>
+<td><code>rollouts.current_phase</code></td>
+</tr>
+<tr>
+<td><code>Status</code></td>
+<td><code>rollouts.engine_status</code></td>
+</tr>
+<tr>
+<td><code>PhaseStartedAt</code></td>
+<td><code>rollouts.phase_started_at</code></td>
+</tr>
+<tr>
+<td><code>UpdatedAt</code></td>
+<td><code>rollouts.updated_at</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>Save</code> upserts only the <code>rollouts</code> cursor
+columns (<code>engine_status</code>, <code>current_phase</code>,
+<code>phase_started_at</code>, <code>updated_at</code>) under
+<code>SELECT … FOR UPDATE</code> on the <code>rollouts</code> row
+(<code>rollout_engine.md</code> §6.4); <code>deployment_phases</code> is
+never updated by <code>Save</code>. <code>Load</code> returns
+<code>rollout.ErrNotFound</code> (wrapped) when no <code>rollouts</code>
+row exists for the deployment id.</p>
+<p>The control-plane lifecycle verbs (<code>rollout_engine.md</code> §5)
+write <code>rollouts.status</code> (and <code>rollback_history</code>)
+directly, outside the brick’s <code>Save</code> path, keeping the
+brick’s engine cursor and the control-plane overlay in distinct columns
+(§3.2).</p>
+<h2 id="anti-bluff-unverified-register">§8. anti-bluff / unverified
+register</h2>
+<p>Per Constitution §11.4.6 (no-guessing) / §7.1 (no-bluff); MUST NOT be
+propagated as fact.</p>
+<ul>
+<li><strong>This is a design, not the applied DDL.</strong> The literal
+<code>.up.sql</code>/<code>.down.sql</code> are authored from this
+design and <strong>validated against live Postgres</strong> (§6.3)
+before being trusted — exactly as migration 001 was. No claim here is
+“it runs” until that gate passes.</li>
+<li><strong>Cross-row phase invariants</strong> (strictly-increasing
+percentage, final = 100) are <strong>not</strong> expressible as per-row
+Postgres CHECKs; they are enforced by the brick’s
+<code>validatePhases</code> (verified in <code>types.go</code>), with
+<code>deployment_phases_pct_uniq</code> as the only DB-level guard
+against duplicates. Whether to add an EXCLUSION constraint / trigger for
+strict monotonicity is <strong>UNVERIFIED / deferred</strong>
+(§3.1).</li>
+<li><strong>The two-status reconciliation</strong> (§3.2) is enforced by
+app discipline (single writer); a relating CHECK is <strong>recommended
+but UNVERIFIED</strong> pending DDL authoring.</li>
+<li><strong><code>deployment_phases</code> immutability</strong> has
+<strong>no DB trigger</strong> in 002 — relies on the repo never issuing
+an UPDATE (the brick treats <code>Phases</code> as immutable, verified).
+A future <code>AFTER UPDATE</code> guard is possible.</li>
+<li><strong>MVP code’s handling of an unknown
+<code>rollout_strategy.mode</code></strong> after a 002 down-migration
+(§6.2) is <strong>UNVERIFIED</strong> — it should defensively treat any
+non-<code>all_at_once</code> mode as non-staged.</li>
+<li><strong>File placement</strong> of 002 (§6.4) is an
+<strong>UNVERIFIED</strong> corpus-layout decision; co-location with 001
+is recommended, not confirmed.</li>
+<li><strong><code>device_deployments.phase_index</code></strong> is
+intentionally NOT added; the future need for per-device phase
+attribution is <strong>UNVERIFIED</strong> (§4).</li>
+<li><strong>Numeric precision choices</strong>
+(<code>NUMERIC(4,3)</code> for thresholds, <code>BIGINT</code> seconds
+for duration) are design picks sufficient for <code>[0,1]</code>
+fractions and <code>time.Duration</code> ranges; confirm against the
+brick’s <code>float64</code>/<code>time.Duration</code> at repo-mapping
+time.</li>
+<li><strong>HelixConstitution clause numbers</strong> cited remain
+<strong>UNVERIFIED</strong> against the authoritative text (consistent
+with <code>endpoints.md</code> §16 and migration 001’s provenance
+notes).</li>
+</ul>
+</body>
+</html>

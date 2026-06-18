@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>android-update-engine-api</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="android-update_engine-api-ota-package-structure-stack-research-note">Android
+<code>update_engine</code> API &amp; OTA Package Structure — Stack
+Research Note</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Deep-dive on the on-device client contract for Android A/B OTA: the
+<code>ota_update.zip</code> layout, <code>payload.bin</code> +
+<code>payload_properties.txt</code>, the exact
+<code>UpdateEngine.applyPayload(...)</code> overloads and the four
+header properties (<code>FILE_HASH</code> / <code>FILE_SIZE</code> /
+<code>METADATA_HASH</code> / <code>METADATA_SIZE</code>),
+local-<code>file://</code> vs HTTPS-stream apply,
+<code>UpdateEngineCallback</code> status + error-code constants with
+literal integer values, <code>ZIP_STORED</code> + HTTP Range streaming,
+system-UID / <code>@SystemApi</code> permission requirements, and
+<code>ota_from_target_files</code> generation + signing. Constants and
+signatures verified against primary AOSP sources. Conclusion: the Helix
+Android client must run with <code>android.uid.system</code> (or as a
+privileged system app) and call <code>applyPayload</code> with headers
+derived from <code>payload_properties.txt</code>; for
+verify-before-apply safety, the <code>file://</code> (local) apply path
+is the safer mode because the artifact can be fully fetched, hashed, and
+signature-checked before handing the descriptor to
+<code>update_engine</code>.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Some <code>ErrorCodeConstants</code> integer values (the 4..12 range
+and 51/52/60/61) are read from the AOSP <code>UpdateEngine.java</code>
+mirror and <code>error_code.h</code>; cross-check the gaps (codes
+13..50) against the Android 15 tree before quoting in code.
+<code>@RequiresPermission</code> is NOT present on
+<code>applyPayload</code> in the mirror read — access control is via
+<code>@SystemApi</code> + selinux + access to
+<code>/data/ota_package/</code>, not a manifest permission. Marked
+UNVERIFIED where a value could not be pinned to a single literal
+source.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (first revision)</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Follow-up should pin: (1) full <code>ErrorCodeConstants</code> table
+for the exact Android 15 (<code>android-15.0.0_rNN</code>) tag; (2) the
+<code>IUpdateEngine</code> AIDL/<code>IUpdateEngineStableCallback</code>
+stable surface and whether Helix should bind via the stable AIDL; (3)
+<code>care_map.pb</code> / <code>apex_info.pb</code> handling for
+Virtual A/B + APEX; (4) selinux policy (<code>update_engine</code>,
+<code>update_engine_client</code> domains) needed for a
+third-party-signed system app; (5) <code>--payload_signer</code>
+integration into the Helix Go build pipeline and AVB/vbmeta key
+rotation.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--question">Scope &amp; Question</a></li>
+<li><a href="#2-executive-summary">Executive Summary</a></li>
+<li><a href="#3-ota-package-ota_updatezip-layout">OTA Package
+(<code>ota_update.zip</code>) Layout</a></li>
+<li><a
+href="#4-payloadbin--payload_propertiestxt"><code>payload.bin</code> +
+<code>payload_properties.txt</code></a></li>
+<li><a href="#5-the-client-api-updateengineapplypayload">The Client API:
+<code>UpdateEngine.applyPayload(...)</code></a></li>
+<li><a href="#6-the-four-header-properties">The Four Header
+Properties</a></li>
+<li><a
+href="#7-local-file-apply-vs-https-stream-apply-verify-before-apply">Local
+<code>file://</code> Apply vs HTTPS-Stream Apply
+(verify-before-apply)</a></li>
+<li><a
+href="#8-updateenginecallback-status-constants--error-codes"><code>UpdateEngineCallback</code>:
+Status Constants &amp; Error Codes</a></li>
+<li><a
+href="#9-zip_stored--http-range-streaming"><code>ZIP_STORED</code> +
+HTTP Range Streaming</a></li>
+<li><a href="#10-system-uid--permission-requirements">System-UID /
+Permission Requirements</a></li>
+<li><a
+href="#11-ota_from_target_files-generation--signing"><code>ota_from_target_files</code>
+Generation + Signing</a></li>
+<li><a href="#12-implications-for-helix-ota">Implications for Helix
+OTA</a></li>
+<li><a href="#13-open-questions--unverified-items">Open Questions /
+UNVERIFIED Items</a></li>
+<li><a href="#14-sources-consulted">Sources Consulted</a></li>
+<li><a href="#15-confidence">Confidence</a></li>
+</ol>
+<hr />
+<h2 id="scope-question">1. Scope &amp; Question</h2>
+<p>Helix OTA targets <strong>Android 15 first</strong>, native
+<strong>A/B + Virtual A/B</strong> on device, with a <strong>custom Go
+control plane</strong> as the server. This note answers the
+<em>client/contract</em> questions that the broader
+<code>aosp-update-engine.md</code> note deferred:</p>
+<ul>
+<li>What is the exact byte/file layout of an A/B
+<code>ota_update.zip</code>?</li>
+<li>What are <code>payload.bin</code> and
+<code>payload_properties.txt</code>, and how do they feed the client
+API?</li>
+<li>What are the exact <code>applyPayload(...)</code> overloads, and
+what do the four header properties (<code>FILE_HASH</code>,
+<code>FILE_SIZE</code>, <code>METADATA_HASH</code>,
+<code>METADATA_SIZE</code>) mean?</li>
+<li>Local <code>file://</code> apply vs HTTPS streaming apply — which is
+safer for <strong>verify-before-apply</strong>?</li>
+<li>What are the <code>UpdateEngineCallback</code> status + error-code
+constants (with literal values)?</li>
+<li>How does <code>ZIP_STORED</code> enable HTTP-Range streaming?</li>
+<li>What permission / UID does the calling app need?</li>
+<li>How is the package generated and signed by
+<code>ota_from_target_files</code>?</li>
+</ul>
+<p>This is the <strong>client integration contract</strong> that the
+Helix Android agent must implement, and the <strong>build/signing
+contract</strong> the Helix Go pipeline must satisfy.</p>
+<hr />
+<h2 id="executive-summary">2. Executive Summary</h2>
+<ul>
+<li>An A/B <strong><code>ota_update.zip</code></strong> is a normal ZIP
+containing (typically): <code>payload.bin</code>,
+<code>payload_properties.txt</code>,
+<code>META-INF/com/android/metadata</code>,
+<code>META-INF/com/android/metadata.pb</code>,
+<code>META-INF/com/android/otacert</code>, <code>care_map.pb</code>, and
+<code>apex_info.pb</code>. The package is <strong>whole-zip
+signed</strong> (the signature lives in the ZIP comment / EOCD area) and
+verified against <code>otacert</code>. (Confirmed: SystemUpdaterSample
+README + AOSP OTA tools.)</li>
+<li><strong><code>payload.bin</code></strong> is the actual update image
+(already internally compressed).
+<strong><code>payload_properties.txt</code></strong> is a tiny text file
+containing exactly four <code>KEY=VALUE</code> lines —
+<code>FILE_HASH</code>, <code>FILE_SIZE</code>,
+<code>METADATA_HASH</code>, <code>METADATA_SIZE</code> — generated by
+<code>system/update_engine/scripts/brillo_update_payload</code>. These
+four lines are passed verbatim as the <code>headerKeyValuePairs</code>
+argument to <code>applyPayload</code>.</li>
+<li><strong><code>UpdateEngine.applyPayload</code></strong> has two
+overloads:
+<ul>
+<li><code>applyPayload(String url, long offset, long size, String[] headerKeyValuePairs)</code></li>
+<li><code>applyPayload(AssetFileDescriptor assetFd, String[] headerKeyValuePairs)</code>
+Plus <code>bind(UpdateEngineCallback)</code> /
+<code>bind(UpdateEngineCallback, Handler)</code> to register callbacks
+(<code>onStatusUpdate(int status, float percent)</code>,
+<code>onPayloadApplicationComplete(int errorCode)</code>).</li>
+</ul></li>
+<li>The URL form accepts <strong><code>file://…</code></strong> (local
+apply — <code>update_engine</code> reads the whole zip from disk) or
+<strong><code>http(s)://…</code></strong> (streaming —
+<code>update_engine</code> issues HTTP <strong>Range</strong> requests
+against <code>payload.bin</code> using the supplied
+<code>offset</code>/<code>size</code>). For streaming, all ZIP entries
+must be stored <strong>uncompressed
+(<code>ZIP_STORED</code>)</strong>.</li>
+<li><strong>Verify-before-apply: the local <code>file://</code> path is
+the safer mode.</strong> It lets the Helix agent download the entire
+artifact, verify its whole-zip signature and the
+<code>payload_properties.txt</code> hashes/sizes <em>before</em>
+invoking <code>update_engine</code>, then hand it a <code>file://</code>
+URL (or <code>AssetFileDescriptor</code>). <code>update_engine</code>
+still independently verifies
+<code>METADATA_HASH</code>/<code>FILE_HASH</code> and the payload
+signature, giving defense-in-depth. Streaming verifies during/after
+download, so a partial/poisoned stream is only caught mid-apply.</li>
+<li><strong><code>UpdateStatusConstants</code></strong>:
+<code>IDLE=0, CHECKING_FOR_UPDATE=1, UPDATE_AVAILABLE=2, DOWNLOADING=3, VERIFYING=4, FINALIZING=5, UPDATED_NEED_REBOOT=6, REPORTING_ERROR_EVENT=7, ATTEMPTING_ROLLBACK=8, DISABLED=9</code>
+(and <code>CLEANUP_PREVIOUS_UPDATE</code> on Virtual A/B trees —
+UNVERIFIED exact value, see §8).
+<strong><code>ErrorCodeConstants</code></strong>:
+<code>SUCCESS=0, ERROR=1, …, PAYLOAD_HASH_MISMATCH_ERROR=10, PAYLOAD_SIZE_MISMATCH_ERROR=11, DOWNLOAD_PAYLOAD_VERIFICATION_ERROR=12, PAYLOAD_TIMESTAMP_ERROR=51, UPDATED_BUT_NOT_ACTIVE=52, NOT_ENOUGH_SPACE=60, DEVICE_CORRUPTED=61</code>.</li>
+<li><strong>Permissions</strong>: <code>android.os.UpdateEngine</code>
+is <code>@SystemApi</code> — only system apps can use it. The practical
+requirement is the calling app runs as the <strong>system UID</strong>
+(<code>android:sharedUserId="android.uid.system"</code> +
+platform-signed) or is installed as a <strong>privileged system
+app</strong> in <code>/system/priv-app/</code>, with access to
+<code>/data/ota_package/</code>. There is <strong>no plain manifest
+permission</strong> that grants this to a normal app.</li>
+<li><strong>Generation/signing</strong>:
+<code>ota_from_target_files</code> (in
+<code>build/make/tools/releasetools</code>) turns a
+<code>target-files.zip</code> into the OTA zip.
+<code>-k</code>/<code>--package_key</code> selects the whole-package
+signing key (default <code>default_system_dev_certificate</code> from
+<code>META/misc_info.txt</code>, falling back to
+<code>build/target/product/security/testkey</code>).
+<code>--payload_signer</code> controls the A/B <strong>payload +
+metadata</strong> signature (default: <code>openssl pkeyutl</code> with
+the package private key). Each key is a <code>.x509.pem</code> cert +
+<code>.pk8</code> private key pair.</li>
+</ul>
+<hr />
+<h2 id="ota-package-ota_update.zip-layout">3. OTA Package
+(<code>ota_update.zip</code>) Layout</h2>
+<p>An Android A/B OTA package is a standard ZIP archive. The entries
+that matter (confirmed against the AOSP <code>SystemUpdaterSample</code>
+README and OTA tooling):</p>
+<pre><code>ota_update.zip
+├── payload.bin                              # the A/B update image (the bulk of the zip)
+├── payload_properties.txt                   # 4 lines: FILE_HASH / FILE_SIZE / METADATA_HASH / METADATA_SIZE
+├── care_map.pb                              # blocks that must be preserved/verified (Virtual A/B)
+├── apex_info.pb                             # APEX module info (when APEX present)
+└── META-INF/
+    └── com/android/
+        ├── metadata                         # human/parsable OTA metadata (legacy text form)
+        ├── metadata.pb                      # OTA metadata (protobuf form)
+        └── otacert                          # the X.509 cert the package is verified against</code></pre>
+<p>Key facts:</p>
+<ul>
+<li>The <strong>whole zip is signed</strong> by <code>signapk</code>;
+the signature is appended in the ZIP <strong>central-directory / EOCD
+comment</strong> region (the same “whole-file” signing scheme used for
+OTA packages). On device, the package signature is checked against
+<code>otacert</code> before apply. (AOSP “Sign builds for
+release”.)</li>
+<li><code>META-INF/com/android/metadata(.pb)</code> carries pre/post
+build fingerprints, device names, OTA type (full vs incremental),
+timestamps, and — for <strong>streaming</strong> — the <strong>byte
+offsets and lengths</strong> of the entries inside the zip, which the
+client turns into HTTP Range requests. (SystemUpdaterSample: “The config
+contains the file names and offset of the files inside the zip.”)</li>
+<li><code>payload.bin</code> is <strong>already internally
+compressed</strong> by the payload generator, so storing the zip entries
+uncompressed (<code>ZIP_STORED</code>, see §9) costs almost
+nothing.</li>
+</ul>
+<hr />
+<h2 id="payload.bin-payload_properties.txt">4. <code>payload.bin</code>
++ <code>payload_properties.txt</code></h2>
+<p><code>payload.bin</code> is the binary consumed by
+<code>update_engine</code>’s payload consumer. It begins with a
+<strong>payload metadata</strong> region (magic <code>CrAU</code>,
+header + manifest + metadata signature) followed by the operation data
+blobs. <code>update_engine</code> reads/verifies the
+<strong>metadata</strong> first (sized by <code>METADATA_SIZE</code>,
+hashed by <code>METADATA_HASH</code>), then streams/applies the rest
+(sized by <code>FILE_SIZE</code>, hashed by <code>FILE_HASH</code>).
+(AOSP <code>payload_metadata.{h,cc}</code>.)</p>
+<p><code>payload_properties.txt</code> is produced by
+<code>system/update_engine/scripts/brillo_update_payload</code>. It
+contains exactly the four properties, e.g. (literal example from
+AOSP/community sources):</p>
+<pre><code>FILE_HASH=lURPCIkIAjtMOyB/EjQcl8zDzqtD6Ta3tJef6G/+z2k=
+FILE_SIZE=871903868
+METADATA_HASH=tBvj43QOB0Jn++JojcpVdbRLz0qdAuL+uTkSy7hokaw=
+METADATA_SIZE=70604</code></pre>
+<ul>
+<li><code>*_HASH</code> values are <strong>SHA-256,
+base64-encoded</strong>.</li>
+<li><code>*_SIZE</code> values are <strong>bytes</strong>
+(decimal).</li>
+<li>These four lines are read by the client and passed
+<strong>verbatim</strong> as the
+<code>String[] headerKeyValuePairs</code> argument to
+<code>applyPayload</code>.</li>
+</ul>
+<blockquote>
+<p>The Helix Go build pipeline must surface these four values to the
+control plane (or let the agent read <code>payload_properties.txt</code>
+directly from the package), because the agent cannot apply without
+them.</p>
+</blockquote>
+<hr />
+<h2 id="the-client-api-updateengine.applypayload...">5. The Client API:
+<code>UpdateEngine.applyPayload(...)</code></h2>
+<p>From AOSP
+<code>frameworks/base/core/java/android/os/UpdateEngine.java</code>
+(<code>@SystemApi</code>). Verified overloads:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Streaming or local-by-URL form</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">applyPayload</span><span class="op">(</span><span class="bu">String</span> url<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                         <span class="dt">long</span> offset<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                         <span class="dt">long</span> size<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                         <span class="bu">String</span><span class="op">[]</span> headerKeyValuePairs<span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// File-descriptor form (Android 8.0+/AssetFileDescriptor variant)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">applyPayload</span><span class="op">(</span><span class="at">@NonNull</span> AssetFileDescriptor assetFd<span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">@NonNull</span> <span class="bu">String</span><span class="op">[]</span> headerKeyValuePairs<span class="op">)</span></span></code></pre></div>
+<p>Callback registration:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">bind</span><span class="op">(</span><span class="dt">final</span> UpdateEngineCallback callback<span class="op">,</span> <span class="dt">final</span> <span class="bu">Handler</span> handler<span class="op">)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">bind</span><span class="op">(</span><span class="dt">final</span> UpdateEngineCallback callback<span class="op">)</span></span></code></pre></div>
+<p><code>UpdateEngineCallback</code> (verified against
+<code>UpdateEngineCallback.java</code>):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">abstract</span> <span class="dt">void</span> <span class="fu">onStatusUpdate</span><span class="op">(</span><span class="dt">int</span> status<span class="op">,</span> <span class="dt">float</span> percent<span class="op">);</span>          <span class="co">// status ∈ UpdateStatusConstants</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">abstract</span> <span class="dt">void</span> <span class="fu">onPayloadApplicationComplete</span><span class="op">(</span><span class="dt">int</span> errorCode<span class="op">);</span>        <span class="co">// errorCode ∈ ErrorCodeConstants</span></span></code></pre></div>
+<p>Typical call flow for the Helix agent:</p>
+<ol type="1">
+<li><code>UpdateEngine engine = new UpdateEngine();</code></li>
+<li><code>engine.bind(callback);</code></li>
+<li>Read the 4 lines from <code>payload_properties.txt</code> into
+<code>String[] props</code>.</li>
+<li>Compute <code>offset</code>/<code>size</code> of the
+<code>payload.bin</code> entry within the zip.</li>
+<li><code>engine.applyPayload(url, offset, size, props);</code>
+<ul>
+<li><code>url = "file:///data/ota_package/ota_update.zip"</code> for
+local apply, OR</li>
+<li><code>url = "https://cdn.example/ota_update.zip"</code> for
+streaming.</li>
+</ul></li>
+<li>Drive UI/telemetry from <code>onStatusUpdate</code>; finalize on
+<code>onPayloadApplicationComplete(SUCCESS)</code> then reboot.</li>
+</ol>
+<blockquote>
+<p>Note on <code>offset</code>/<code>size</code>: for both the
+<code>file://</code> and <code>https://</code> URL forms,
+<code>offset</code>/<code>size</code> describe the
+<strong><code>payload.bin</code> entry’s position inside the outer
+zip</strong> (not the whole zip). <code>update_engine</code> reads only
+that byte range as the payload.</p>
+</blockquote>
+<hr />
+<h2 id="the-four-header-properties">6. The Four Header Properties</h2>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 18%" />
+<col style="width: 27%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Meaning</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FILE_HASH</code></td>
+<td>base64(SHA-256)</td>
+<td>Hash of the <strong>entire <code>payload.bin</code></strong>;
+<code>update_engine</code> rejects with
+<code>PAYLOAD_HASH_MISMATCH_ERROR</code> (10) on mismatch</td>
+<td><code>payload_properties.txt</code></td>
+</tr>
+<tr>
+<td><code>FILE_SIZE</code></td>
+<td>bytes (decimal)</td>
+<td>Total length of <code>payload.bin</code>; mismatch →
+<code>PAYLOAD_SIZE_MISMATCH_ERROR</code> (11)</td>
+<td><code>payload_properties.txt</code></td>
+</tr>
+<tr>
+<td><code>METADATA_HASH</code></td>
+<td>base64(SHA-256)</td>
+<td>Hash of the <strong>payload metadata prefix</strong> (first
+<code>METADATA_SIZE</code> bytes); verified <strong>early</strong>,
+before downloading the rest</td>
+<td><code>payload_properties.txt</code></td>
+</tr>
+<tr>
+<td><code>METADATA_SIZE</code></td>
+<td>bytes (decimal)</td>
+<td>Length of the metadata prefix region of
+<code>payload.bin</code></td>
+<td><code>payload_properties.txt</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>METADATA_HASH</code>/<code>METADATA_SIZE</code> exist so the
+engine can validate the small leading metadata region
+<strong>before</strong> committing to the (potentially huge) full
+download — important for the streaming path where you want to fail fast.
+The payload’s own embedded metadata signature (signed by the payload
+key, see §11) is verified in addition to these hashes.</p>
+<hr />
+<h2 id="local-file-apply-vs-https-stream-apply-verify-before-apply">7.
+Local <code>file://</code> Apply vs HTTPS-Stream Apply
+(verify-before-apply)</h2>
+<p>Both modes go through the same <code>applyPayload</code>; the
+difference is the <code>url</code> scheme.</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 37%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Local (<code>file://</code>)</th>
+<th>Streaming (<code>https://</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What downloads the bytes</td>
+<td>The <strong>Helix agent</strong> downloads the full zip to
+<code>/data/ota_package/</code>, then points <code>update_engine</code>
+at it</td>
+<td><code>update_engine</code> itself downloads via HTTP
+<strong>Range</strong> as it applies</td>
+</tr>
+<tr>
+<td>Disk usage</td>
+<td>Needs room for the whole package on <code>/data</code></td>
+<td>Minimal extra storage (streams into the inactive slot)</td>
+</tr>
+<tr>
+<td>Verify-before-apply</td>
+<td><strong>Strong</strong> — agent can verify whole-zip signature
+<strong>and</strong> the
+<code>FILE_HASH</code>/<code>METADATA_HASH</code> of
+<code>payload.bin</code> <strong>before</strong> calling
+<code>applyPayload</code></td>
+<td><strong>Weaker</strong> — engine verifies <code>METADATA_HASH</code>
+early and <code>FILE_HASH</code> as data arrives; a corrupted/MITM’d
+stream is only caught during apply</td>
+</tr>
+<tr>
+<td>Network requirement during apply</td>
+<td>None (already on disk)</td>
+<td>Live connection for the whole apply; CDN must support Range +
+<code>ZIP_STORED</code></td>
+</tr>
+<tr>
+<td>Resumability</td>
+<td>Agent controls download/retry policy</td>
+<td>Engine resumes the HTTP transfer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation for Helix (verify-before-apply):</strong>
+prefer the <strong>local <code>file://</code></strong> (or
+<code>AssetFileDescriptor</code>) path. The Helix agent should:</p>
+<ol type="1">
+<li>Download the full <code>ota_update.zip</code> to
+<code>/data/ota_package/</code>.</li>
+<li>Verify the <strong>whole-zip signature</strong> against the
+Helix-pinned <code>otacert</code>/cert chain.</li>
+<li>Independently verify <code>FILE_HASH</code> / <code>FILE_SIZE</code>
+/ <code>METADATA_HASH</code> / <code>METADATA_SIZE</code> from
+<code>payload_properties.txt</code>.</li>
+<li>Only then call
+<code>applyPayload(file://…, offset, size, props)</code>.</li>
+</ol>
+<p><code>update_engine</code> then re-verifies metadata + payload
+signature, giving two independent verification layers (agent-level +
+engine-level) — a defense-in-depth posture consistent with Helix’s
+Uptane/TUF-style supply-chain goals. Streaming remains an option for
+storage-constrained devices but trades away the pre-apply full-artifact
+verification window. <em>(Engineering assessment — HIGH confidence on
+the mechanics, MEDIUM on it being the universally “right” choice for
+every Helix device class.)</em></p>
+<hr />
+<h2 id="updateenginecallback-status-constants-error-codes">8.
+<code>UpdateEngineCallback</code>: Status Constants &amp; Error
+Codes</h2>
+<h3
+id="updateengine.updatestatusconstants-verified-integer-values"><code>UpdateEngine.UpdateStatusConstants</code>
+(verified integer values)</h3>
+<table>
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IDLE</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>CHECKING_FOR_UPDATE</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>UPDATE_AVAILABLE</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>DOWNLOADING</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td><code>VERIFYING</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>FINALIZING</code></td>
+<td>5</td>
+</tr>
+<tr>
+<td><code>UPDATED_NEED_REBOOT</code></td>
+<td>6</td>
+</tr>
+<tr>
+<td><code>REPORTING_ERROR_EVENT</code></td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>ATTEMPTING_ROLLBACK</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>DISABLED</code></td>
+<td>9</td>
+</tr>
+<tr>
+<td><code>CLEANUP_PREVIOUS_UPDATE</code></td>
+<td>UNVERIFIED — present on Virtual A/B trees; confirm value (commonly
+12 in <code>update_status.h</code>) for the Android 15 tag</td>
+</tr>
+</tbody>
+</table>
+<p>The Java constants are required by AOSP comments to agree with
+<code>system/update_engine/client_library/include/update_engine/update_status.h</code>.</p>
+<h3
+id="updateengine.errorcodeconstants-verified-where-literal-sourced"><code>UpdateEngine.ErrorCodeConstants</code>
+(verified where literal-sourced)</h3>
+<table>
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SUCCESS</code></td>
+<td>0</td>
+<td>apply succeeded</td>
+</tr>
+<tr>
+<td><code>ERROR</code></td>
+<td>1</td>
+<td>generic error</td>
+</tr>
+<tr>
+<td><code>FILESYSTEM_COPIER_ERROR</code></td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST_INSTALL_RUNNER_ERROR</code></td>
+<td>5</td>
+<td>post-install script failed</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_MISMATCHED_TYPE_ERROR</code></td>
+<td>6</td>
+<td>full vs incremental mismatch</td>
+</tr>
+<tr>
+<td><code>INSTALL_DEVICE_OPEN_ERROR</code></td>
+<td>7</td>
+<td></td>
+</tr>
+<tr>
+<td><code>KERNEL_DEVICE_OPEN_ERROR</code></td>
+<td>8</td>
+<td></td>
+</tr>
+<tr>
+<td><code>DOWNLOAD_TRANSFER_ERROR</code></td>
+<td>9</td>
+<td>network/transfer failure (streaming)</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_HASH_MISMATCH_ERROR</code></td>
+<td>10</td>
+<td><code>FILE_HASH</code> mismatch</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_SIZE_MISMATCH_ERROR</code></td>
+<td>11</td>
+<td><code>FILE_SIZE</code> mismatch</td>
+</tr>
+<tr>
+<td><code>DOWNLOAD_PAYLOAD_VERIFICATION_ERROR</code></td>
+<td>12</td>
+<td>payload signature/verification failed</td>
+</tr>
+<tr>
+<td><code>PAYLOAD_TIMESTAMP_ERROR</code></td>
+<td>51</td>
+<td>target build older than current (anti-rollback)</td>
+</tr>
+<tr>
+<td><code>UPDATED_BUT_NOT_ACTIVE</code></td>
+<td>52</td>
+<td>applied but slot not made active</td>
+</tr>
+<tr>
+<td><code>NOT_ENOUGH_SPACE</code></td>
+<td>60</td>
+<td>insufficient space (Virtual A/B COW)</td>
+</tr>
+<tr>
+<td><code>DEVICE_CORRUPTED</code></td>
+<td>61</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Codes between 13 and 50 (e.g. metadata-signature errors) exist in the
+underlying <code>system/update_engine/common/error_code.h</code> C++
+enum but are not all surfaced as named Java
+<code>ErrorCodeConstants</code>. Relevant C++ values verified from
+<code>error_code.h</code>:</p>
+<table>
+<thead>
+<tr>
+<th><code>error_code.h</code> enum</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kSuccess</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>kError</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>kPayloadHashMismatchError</code></td>
+<td>10</td>
+</tr>
+<tr>
+<td><code>kPayloadSizeMismatchError</code></td>
+<td>11</td>
+</tr>
+<tr>
+<td><code>kDownloadPayloadVerificationError</code></td>
+<td>12</td>
+</tr>
+<tr>
+<td><code>kDownloadPayloadPubKeyVerificationError</code></td>
+<td>18</td>
+</tr>
+<tr>
+<td><code>kDownloadMetadataSignatureError</code></td>
+<td>24</td>
+</tr>
+<tr>
+<td><code>kDownloadMetadataSignatureVerificationError</code></td>
+<td>25</td>
+</tr>
+<tr>
+<td><code>kDownloadMetadataSignatureMismatch</code></td>
+<td>26</td>
+</tr>
+<tr>
+<td><code>kDownloadOperationHashVerificationError</code></td>
+<td>27</td>
+</tr>
+<tr>
+<td><code>kDownloadOperationHashMissingError</code></td>
+<td>38</td>
+</tr>
+<tr>
+<td><code>kDownloadMetadataSignatureMissingError</code></td>
+<td>39</td>
+</tr>
+<tr>
+<td><code>kPayloadTimestampError</code></td>
+<td>51</td>
+</tr>
+<tr>
+<td><code>kUpdatedButNotActive</code></td>
+<td>52</td>
+</tr>
+<tr>
+<td><code>kNotEnoughSpace</code></td>
+<td>60</td>
+</tr>
+<tr>
+<td><code>kDeviceCorrupted</code></td>
+<td>61</td>
+</tr>
+</tbody>
+</table>
+<p>The Java <code>ErrorCodeConstants</code> are required by AOSP
+comments to agree with
+<code>system/update_engine/common/error_code.h</code>.</p>
+<hr />
+<h2 id="zip_stored-http-range-streaming">9. <code>ZIP_STORED</code> +
+HTTP Range Streaming</h2>
+<p>For the streaming apply path:</p>
+<ul>
+<li><strong>Every ZIP entry in the OTA package must be stored
+uncompressed (<code>ZIP_STORED</code>)</strong>, not
+<code>ZIP_DEFLATED</code>. SystemUpdaterSample README: <em>“ZIP entries
+in such a package need to be saved uncompressed
+(<code>ZIP_STORED</code>), so that their data can be downloaded directly
+with the offset and length.”</em></li>
+<li>Because <code>payload.bin</code> is already internally compressed by
+the payload generator, storing it <code>ZIP_STORED</code> adds only
+marginal size: <em>“Since <code>payload.bin</code> itself is already in
+compressed format, the size penalty is marginal.”</em></li>
+<li>The streaming metadata (in
+<code>META-INF/com/android/metadata(.pb)</code>) gives the
+<strong>offset and length</strong> of each entry inside the outer zip.
+The client passes <code>payload.bin</code>’s offset/size into
+<code>applyPayload(url, offset, size, props)</code>, and
+<code>update_engine</code> issues HTTP <strong>Range:
+bytes=offset-(offset+size-1)</strong> requests directly against
+<code>payload.bin</code> — downloading only the bytes it needs rather
+than the whole package.</li>
+<li><strong>Server/CDN requirement:</strong> the host serving
+<code>ota_update.zip</code> over HTTPS must support <strong>HTTP Range
+requests</strong> (<code>Accept-Ranges: bytes</code>,
+<code>206 Partial Content</code>). Compressing the zip on the wire
+(transfer encoding) would break byte-range offsets, so serve it
+as-is.</li>
+</ul>
+<p>This is exactly the constraint the Helix Go control plane / CDN must
+honor: build packages with <code>ZIP_STORED</code>, publish per-entry
+offsets/sizes, and serve over a Range-capable HTTPS endpoint.</p>
+<hr />
+<h2 id="system-uid-permission-requirements">10. System-UID / Permission
+Requirements</h2>
+<ul>
+<li><code>android.os.UpdateEngine</code> and
+<code>UpdateEngineCallback</code> are annotated
+<strong><code>@SystemApi</code></strong> — <em>“only system apps can
+access them.”</em> They are <strong>not</strong> in the public SDK.</li>
+<li>There is <strong>no <code>@RequiresPermission</code> / manifest
+permission</strong> on <code>applyPayload</code> in the AOSP mirror that
+a normal third-party app could request. Access is gated by being a
+<strong>system-privileged caller</strong> + selinux.</li>
+<li>Practical requirements for the Helix Android agent:
+<ol type="1">
+<li>Run as the <strong>system UID</strong> via
+<code>android:sharedUserId="android.uid.system"</code>
+<strong>and</strong> sign with the <strong>platform key</strong>, OR be
+installed as a <strong>privileged system app</strong> under
+<code>/system/priv-app/</code> (also platform/OEM-signed).</li>
+<li>Have read/write access to
+<strong><code>/data/ota_package/</code></strong> (used for local
+<code>file://</code> apply and where <code>update_engine</code> expects
+packages).</li>
+<li>Bind to the <code>update_engine</code> daemon over Binder/AIDL (the
+<code>UpdateEngine</code> class wraps <code>IUpdateEngine</code>);
+selinux policy must allow the app’s domain to talk to the
+<code>update_engine</code> service.</li>
+</ol></li>
+<li>Because platform-signing / <code>/system/priv-app/</code> placement
+is an <strong>integrator/OEM</strong> capability, the Helix agent must
+be shipped as part of the system image (or via an OEM partnership), not
+as a Play-Store app. <em>(This matches the broader
+<code>aosp-update-engine.md</code> “wrap, don’t replace”
+conclusion.)</em></li>
+</ul>
+<hr />
+<h2 id="ota_from_target_files-generation-signing">11.
+<code>ota_from_target_files</code> Generation + Signing</h2>
+<p><code>ota_from_target_files</code>
+(<code>build/make/tools/releasetools/ota_from_target_files.py</code>)
+converts a build’s <strong><code>target-files.zip</code></strong> into
+the OTA package.</p>
+<p>Generation:</p>
+<ul>
+<li><strong>Full</strong> OTA: produced from a single
+<code>target-files.zip</code> (contains everything for the target
+slot).</li>
+<li><strong>Incremental/delta</strong> OTA: produced by diffing against
+a <code>PREVIOUS-target-files.zip</code> (smaller payload).</li>
+<li>The tool calls into the <code>update_engine</code> payload generator
+(<code>delta_generator</code> / <code>brillo_update_payload</code>) to
+produce <code>payload.bin</code> and writes
+<code>payload_properties.txt</code> with the four hash/size values
+(§4).</li>
+<li>For <strong>streaming</strong>, the tool produces a package whose
+entries are <code>ZIP_STORED</code> and emits the per-entry offset/size
+streaming metadata.</li>
+</ul>
+<p>Signing (two distinct signatures):</p>
+<ol type="1">
+<li><strong>Whole-package signature</strong> — selected by
+<code>-k</code> / <code>--package_key</code>.
+<ul>
+<li>Default: <code>default_system_dev_certificate</code> from the input
+target-files’ <code>META/misc_info.txt</code>; if unset, falls back to
+<code>build/target/product/security/testkey</code>.</li>
+<li>Performed by <code>signapk</code> (whole-file/zip-comment signing).
+On device, verified against <code>otacert</code>.</li>
+</ul></li>
+<li><strong>A/B payload + metadata signature</strong> — controlled by
+<code>--payload_signer</code>.
+<ul>
+<li>Default: signs the payload and metadata by calling
+<strong><code>openssl pkeyutl</code></strong> with the package private
+key.</li>
+<li>This is the signature <code>update_engine</code> checks via
+<code>METADATA_HASH</code> / payload pubkey verification (errors
+18/24/25/26 in §8).</li>
+</ul></li>
+</ol>
+<p>Key material:</p>
+<ul>
+<li>Each key = a <strong><code>.x509.pem</code></strong> certificate + a
+<strong><code>.pk8</code></strong> private key. The <code>.pk8</code>
+must be kept secret. (AOSP “Sign builds for release”.)</li>
+<li><strong>For Helix:</strong> the Go build pipeline must (a) run
+<code>ota_from_target_files</code> with <code>ZIP_STORED</code> +
+streaming metadata, (b) sign the package with a Helix-controlled
+<code>--package_key</code> whose cert is embedded as
+<code>otacert</code> and pinned on device, and (c) sign the payload via
+<code>--payload_signer</code>. Key rotation and HSM-backed
+<code>--payload_signer</code> integration are a follow-up (see
+Continuation row).</li>
+</ul>
+<hr />
+<h2 id="implications-for-helix-ota">12. Implications for Helix OTA</h2>
+<ul>
+<li><strong>Client contract is small and stable.</strong> Helix’s
+Android agent = <code>bind()</code> + read
+<code>payload_properties.txt</code> + <code>applyPayload(...)</code> +
+handle
+<code>onStatusUpdate</code>/<code>onPayloadApplicationComplete</code>.
+Map the status/error constants in §8 directly into Helix telemetry
+codes.</li>
+<li><strong>Ship as a system component.</strong> The agent must be
+platform-signed and run as <code>android.uid.system</code> (or
+<code>/system/priv-app/</code>). This is non-negotiable for
+<code>@SystemApi</code> access and confirms Helix can’t be a normal
+app.</li>
+<li><strong>Prefer local <code>file://</code> apply for
+verify-before-apply.</strong> Download → verify whole-zip signature +
+the four hashes → <code>applyPayload(file://…)</code>. Streaming is an
+opt-in for storage-constrained fleets, with the CDN supporting Range +
+<code>ZIP_STORED</code>.</li>
+<li><strong>Build pipeline owns two signatures.</strong>
+<code>--package_key</code> (otacert-pinned) and
+<code>--payload_signer</code>. The four
+<code>payload_properties.txt</code> values must flow from the build into
+the control-plane release metadata so the agent (and the control plane)
+can pass/validate them.</li>
+<li><strong>Anti-rollback is enforced by the engine</strong> via
+<code>PAYLOAD_TIMESTAMP_ERROR</code> (51); Helix’s rollout policy should
+never try to push an older build to a newer device — the engine will
+refuse it.</li>
+</ul>
+<hr />
+<h2 id="open-questions-unverified-items">13. Open Questions / UNVERIFIED
+Items</h2>
+<ul>
+<li><code>CLEANUP_PREVIOUS_UPDATE</code> status constant value on the
+<strong>Android 15</strong> tree — UNVERIFIED (commonly 12 in
+<code>update_status.h</code>; confirm).</li>
+<li>The full set of <code>ErrorCodeConstants</code> exposed in Java for
+<strong>Android 15</strong> (codes 13..50 surface inconsistently between
+the C++ <code>error_code.h</code> enum and the Java constants) — needs
+confirmation against <code>android-15.0.0_rNN</code>.</li>
+<li>Whether Helix should bind via <code>IUpdateEngine</code> or the
+<strong>stable AIDL</strong> <code>IUpdateEngineStable</code> /
+<code>IUpdateEngineStableCallback</code> surface (relevant for
+forward-compat across Android versions) — UNVERIFIED, needs
+confirmation.</li>
+<li>Exact selinux domains/policy needed for a Helix-signed system app to
+reach <code>update_engine</code> — not researched here.</li>
+<li><code>care_map.pb</code> / <code>apex_info.pb</code> exact handling
+for Virtual A/B + APEX during streaming — deferred.</li>
+</ul>
+<hr />
+<h2 id="sources-consulted">14. Sources Consulted</h2>
+<p>Primary (AOSP source / official docs):</p>
+<ul>
+<li><code>UpdateEngine.java</code> (frameworks/base) — applyPayload
+overloads, bind, <code>@SystemApi</code>, header example: <a
+href="https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/os/UpdateEngine.java"
+class="uri">https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/os/UpdateEngine.java</a>
+and AOSP mirror <a
+href="https://github.com/aosp-mirror/platform_frameworks_base/blob/master/core/java/android/os/UpdateEngine.java"
+class="uri">https://github.com/aosp-mirror/platform_frameworks_base/blob/master/core/java/android/os/UpdateEngine.java</a>
+and Code Search <a
+href="https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/os/UpdateEngine.java"
+class="uri">https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/os/UpdateEngine.java</a></li>
+<li><code>UpdateEngineCallback.java</code> (frameworks/base) — callback
+methods &amp; constants references: <a
+href="https://github.com/aosp-mirror/platform_frameworks_base/blob/master/core/java/android/os/UpdateEngineCallback.java"
+class="uri">https://github.com/aosp-mirror/platform_frameworks_base/blob/master/core/java/android/os/UpdateEngineCallback.java</a></li>
+<li><code>error_code.h</code> (system/update_engine) — C++ ErrorCode
+enum values: <a
+href="https://android.googlesource.com/platform/system/update_engine/+/master/common/error_code.h"
+class="uri">https://android.googlesource.com/platform/system/update_engine/+/master/common/error_code.h</a></li>
+<li><code>payload_metadata.{h,cc}</code> (system/update_engine) —
+payload metadata structure: <a
+href="https://cs.android.com/android/platform/superproject/+/master:system/update_engine/payload_consumer/payload_metadata.h"
+class="uri">https://cs.android.com/android/platform/superproject/+/master:system/update_engine/payload_consumer/payload_metadata.h</a>
+and <a
+href="https://android.googlesource.com/platform/system/update_engine/+/master/payload_consumer/payload_metadata.cc"
+class="uri">https://android.googlesource.com/platform/system/update_engine/+/master/payload_consumer/payload_metadata.cc</a></li>
+<li><code>payload_properties.{h,cc}</code> (system/update_engine) —
+properties generation: <a
+href="https://android.googlesource.com/platform/system/update_engine/+/refs/tags/aml_cbr_330810000/payload_generator/payload_properties.h"
+class="uri">https://android.googlesource.com/platform/system/update_engine/+/refs/tags/aml_cbr_330810000/payload_generator/payload_properties.h</a></li>
+<li><code>brillo_update_payload</code> script — produces
+<code>payload_properties.txt</code>: <a
+href="https://android.googlesource.com/platform/system/update_engine/+/HEAD/scripts/brillo_update_payload"
+class="uri">https://android.googlesource.com/platform/system/update_engine/+/HEAD/scripts/brillo_update_payload</a></li>
+<li><code>SystemUpdaterSample</code> README
+(bootable/recovery/updater_sample) — package layout, streaming vs
+non-streaming, <code>ZIP_STORED</code>, system-app requirement: <a
+href="https://android.googlesource.com/platform/bootable/recovery/+/master/updater_sample/README.md"
+class="uri">https://android.googlesource.com/platform/bootable/recovery/+/master/updater_sample/README.md</a></li>
+<li><code>ota_from_target_files.py</code>
+(build/make/tools/releasetools) — generation + signing options: <a
+href="https://github.com/aosp-mirror/platform_build/blob/master/tools/releasetools/ota_from_target_files.py"
+class="uri">https://github.com/aosp-mirror/platform_build/blob/master/tools/releasetools/ota_from_target_files.py</a>
+and <a
+href="https://android.googlesource.com/platform/build/+/master/tools/releasetools/ota_from_target_files.py"
+class="uri">https://android.googlesource.com/platform/build/+/master/tools/releasetools/ota_from_target_files.py</a></li>
+<li>“A/B (seamless) system updates” — Android Open Source Project: <a
+href="https://source.android.com/docs/core/ota/ab"
+class="uri">https://source.android.com/docs/core/ota/ab</a></li>
+<li>“Sign builds for release” — Android Open Source Project
+(<code>.x509.pem</code>/<code>.pk8</code>, package signing): <a
+href="https://source.android.com/docs/core/ota/sign_builds"
+class="uri">https://source.android.com/docs/core/ota/sign_builds</a></li>
+</ul>
+<p>Secondary (community, used only to corroborate, not as primary
+truth):</p>
+<ul>
+<li><code>chendongqi/ab_ota_update_sample</code>
+(<code>UpdateManager.java</code>): <a
+href="https://github.com/chendongqi/ab_ota_update_sample"
+class="uri">https://github.com/chendongqi/ab_ota_update_sample</a></li>
+<li><code>chenxiaolong/Custota</code> (third-party A/B OTA updater for
+custom servers): <a href="https://github.com/chenxiaolong/Custota"
+class="uri">https://github.com/chenxiaolong/Custota</a></li>
+<li>Rawsec — “Android OTA payload dumping / extraction” (package
+internals): <a
+href="https://blog.raw.pm/en/android-OTA-payload-dumping/"
+class="uri">https://blog.raw.pm/en/android-OTA-payload-dumping/</a></li>
+</ul>
+<hr />
+<h2 id="confidence">15. Confidence</h2>
+<p><strong>Overall confidence: HIGH</strong> for the API surface
+(<code>applyPayload</code> overloads, <code>bind</code>, callback
+signatures), the four header properties and their semantics, the OTA
+package layout, <code>ZIP_STORED</code> + Range streaming, the
+<code>@SystemApi</code> / system-UID requirement, and the
+<code>ota_from_target_files</code> <code>--package_key</code> /
+<code>--payload_signer</code> signing model — all read from primary AOSP
+source files and official docs.</p>
+<p><strong>MEDIUM</strong> for the complete
+<code>ErrorCodeConstants</code> integer table on the exact
+<strong>Android 15</strong> tag (gaps 13..50 not all enumerated; values
+quoted are from the master mirror and <code>error_code.h</code>) and for
+<code>CLEANUP_PREVIOUS_UPDATE</code>’s exact value — flagged UNVERIFIED
+in §8/§13.</p>
+<p><strong>MEDIUM</strong> for the engineering recommendation that local
+<code>file://</code> apply is the “right” default for Helix (the
+<em>mechanics</em> of why it’s safer for verify-before-apply are HIGH
+confidence; the blanket recommendation depends on Helix device storage
+constraints).</p>
+</body>
+</html>

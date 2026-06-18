@@ -1,0 +1,34 @@
+%% Helix OTA — trust chain (canonical)
+%% Source of truth: 1.0.0-mvp/security/signing_verification.md §2 (4 gates) + §4-§7,
+%%                   00-master/2026-06-07-helix-ota-design.md §6 (security & trust model)
+%% build-pipeline signing -> server verify -> device re-verify -> AVB/dm-verity -> A/B.
+%% MVP DEFAULT signature scheme = ED25519 with key_id-based algorithm agility (ECDSA-P256 / RSA-PSS).
+%% TUF/Uptane device-side enforcement DEFERRED to 1.0.1 (ADR-0002); seams are MVP-forward.
+flowchart LR
+    subgraph BUILD["Build pipeline"]
+        KEY["private signing key (offline/HSM-preferred)<br/>ED25519 default; key_id binds key+algorithm"]
+        BP["sign artifact (detached) + emit SHA-256 hash file"]
+    end
+    KEY --> BP
+    BP -->|"{bytes unchanged, sha256, sha512?, detached_signature, key_id}"| ART["Signed OTA .zip<br/>byte-identical (ZIP_STORED)"]
+
+    ART -->|upload| SRV["Go control plane (Gin /api/v1)<br/>ota-artifact-validator + security brick"]
+    SRV -->|"GATE 1: structure to hash to signature to version to target"| OK1{verify on upload}
+    OK1 -->|reject| REJ1["422 HASH_MISMATCH / SIGNATURE_INVALID<br/>(not stored, not published)"]
+    OK1 -->|pass| STORE["Storage brick (MinIO/S3)<br/>byte-identical, Range-served"]
+
+    STORE -->|"HTTPS Range, Content-Encoding: identity"| DEV["Android agent (ota-android-agent)<br/>Security-KMP primitives"]
+    DEV -->|"GATE 2: re-verify hash + signature by key_id"| OK2{re-verify before apply}
+    OK2 -->|reject| REJ2["abort before apply (defense in depth)"]
+    OK2 -->|fully verified local artifact| BRIDGE["ota-update-engine-bridge<br/>applyPayload(file://verified)"]
+
+    BRIDGE --> UE["update_engine<br/>GATE 3: FILE_HASH / METADATA_HASH + payload signature"]
+    UE -->|apply to inactive slot| AVB["AVB / dm-verity<br/>GATE 4: verified boot (signed root)"]
+    AVB --> AB["A/B boot_control<br/>atomic apply + automatic rollback on boot failure"]
+    AB -->|boot fail| RB["native A/B rollback to last-good slot<br/>(zero-bricking, independent of Helix/TUF)"]
+    AB -->|boot ok| COMMIT["commit new slot — update confirmed"]
+
+    %% MVP-forward seams (TUF/Uptane drop-in, ADR-0002, deferred to 1.0.1)
+    TUF[["1.0.1+ TUF/Uptane (DEFERRED)<br/>opaque target id (path+length+sha256),<br/>signer abstraction, distinct verify-gate,<br/>per-device Director targets"]]
+    TUF -.layers byte-identically over.-> ART
+    TUF -.inserts ahead of.-> OK2

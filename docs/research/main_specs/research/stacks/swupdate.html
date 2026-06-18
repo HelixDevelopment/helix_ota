@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>swupdate</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-stack-research-note-swupdate">Helix OTA — Stack
+Research Note: SWUpdate</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Evidence-based evaluation of <strong>SWUpdate</strong> as a
+candidate device-side update-execution engine for the <strong>future
+Helix Linux phase only</strong>. Covers the <code>.swu</code> (cpio)
+package format, <code>sw-description</code> + Lua parser, C/Lua
+handlers, double-copy (A/B) via Software collections + bootloader env,
+streaming installation, suricatta backends (hawkBit DDI, general-purpose
+HTTP, wfx, Lua suricatta module), delta/zchunk + rdiff, and storage
+backends. SWUpdate is an <strong>embedded-Linux</strong> engine with
+<strong>no Android target</strong>; it is <strong>out of scope for the
+Android-15-first phase</strong>. Assessed here as foundation-corpus
+input alongside RAUC and OSTree. Overall <strong>scorability for the
+landscape matrix: see §13</strong>.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>A small number of facts depend on edition-specific doc pages and may
+drift across releases (notably: exact set of streaming-capable handlers,
+exact crypto digest provider names, and whether wfx is built by
+default). These are tagged “UNVERIFIED — needs confirmation” inline.
+Android is <strong>not</strong> a SWUpdate target — irrelevant to MVP.
+SWUpdate’s native server protocol is hawkBit DDI; Helix wants a custom
+Go control plane, so the suricatta↔︎server contract must be reimplemented
+(hawkBit-compatible or general-HTTP) or written as a Lua suricatta
+module.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>No fabricated stars/dates/figures; every version/date/claim either
+cites a consulted URL or is flagged unverified. The GitHub star count
+was <strong>not</strong> captured and is intentionally omitted rather
+than invented.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial research pass (web-verified 2026-06-07)</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>Primary sources are the official SWUpdate docs at
+<code>sbabic.github.io/swupdate</code> (swupdate / suricatta / handlers
+/ delta-update pages) and the upstream
+<code>github.com/sbabic/swupdate</code> repo (releases, license).
+Secondary cross-checks (DeepWiki, third-party blogs) are labelled as
+such. Latest release confirmed <strong>2026.05 (2026-05-29)</strong>
+from the GitHub releases page.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Feed into <code>research/ota_landscape_report.md</code> (the report
+previously <strong>excluded</strong> SWUpdate from scoring — this note
+supplies the missing score) and the engine-selection ADR (ADR-0001).
+When the Linux phase is scheduled, deepen with a hands-on spike: build a
+signed <code>.swu</code>, install it double-copy with a bootloader env
+(U-Boot/EFI Boot Guard), drive it from the Helix Go control plane via
+either the general-purpose HTTP contract or a Lua suricatta module, and
+benchmark zchunk delta. Re-verify version/release facts before any
+decision is locked.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope--relevance-to-helix">§1. Scope &amp; relevance to
+Helix</a></li>
+<li><a href="#2-what-swupdate-is-snapshot">§2. What SWUpdate is
+(snapshot)</a></li>
+<li><a href="#3-the-swu-package-format">§3. The <code>.swu</code>
+package format</a></li>
+<li><a href="#4-sw-description-and-the-lua-parser">§4.
+<code>sw-description</code> and the Lua parser</a></li>
+<li><a href="#5-handlers-c-and-lua--storage-backends">§5. Handlers (C
+and Lua) &amp; storage backends</a></li>
+<li><a href="#6-ab-double-copy--bootloader-env">§6. A/B, double-copy
+&amp; bootloader env</a></li>
+<li><a href="#7-streaming-installation">§7. Streaming
+installation</a></li>
+<li><a href="#8-suricatta-hawkbit--the-control-plane-question">§8.
+Suricatta, hawkBit &amp; the control-plane question</a></li>
+<li><a href="#9-delta--incremental-updates">§9. Delta / incremental
+updates</a></li>
+<li><a href="#10-security-signing--verification">§10. Security: signing
+&amp; verification</a></li>
+<li><a href="#11-android-fit--go-control-plane-fit">§11. Android fit
+&amp; Go control-plane fit</a></li>
+<li><a href="#12-wrappability-for-helix">§12. Wrappability for
+Helix</a></li>
+<li><a href="#13-scorability-15-landscape-matrix">§13. Scorability (1–5,
+landscape matrix)</a></li>
+<li><a href="#14-pros--cons--risks--recommendation">§14. Pros / cons /
+risks &amp; recommendation</a></li>
+<li><a href="#15-sources-consulted">§15. Sources consulted</a></li>
+<li><a href="#16-confidence">§16. Confidence</a></li>
+</ul>
+<h2 id="scope-relevance-to-helix">§1. Scope &amp; relevance to
+Helix</h2>
+<p>Helix OTA is <strong>Android 15 first</strong>: native A/B via
+Android’s <code>update_engine</code> / <code>payload.bin</code>, plus a
+custom Go control plane. SWUpdate does <strong>not</strong> apply to
+that phase — it is an embedded-Linux update framework with <strong>no
+Android target</strong>. Its relevance is strictly the <strong>future
+Helix Linux / universal phase</strong>, where Helix would need a
+device-side apply engine for non-Android Linux targets. In that role
+SWUpdate is one of the three dominant open-source options (alongside
+RAUC and Mender), and is the most flexible/handler-driven of them:
+rather than RAUC’s “declarative slots” model, SWUpdate is an extensible
+install pipeline driven by a per-update manifest
+(<code>sw-description</code>) and pluggable handlers.</p>
+<p>This note evaluates SWUpdate against Helix’s locked constraints: a
+custom <strong>Go</strong> control plane, HTTP delivery (Helix mandates
+Brotli + HTTP/3→HTTP/2 fallback, REST primary), strong supply-chain
+integrity, and the ability to <strong>wrap</strong> the engine behind an
+OS-adapter interface rather than adopt a vendor server stack. SWUpdate
+is attractive here because its device daemon (suricatta) is explicitly
+designed to talk to a remote server, and the server side is
+replaceable.</p>
+<h2 id="what-swupdate-is-snapshot">§2. What SWUpdate is (snapshot)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project</td>
+<td>SWUpdate (“software update for embedded systems”)</td>
+<td>high — official docs</td>
+</tr>
+<tr>
+<td>Origin / maintainer</td>
+<td>Created/maintained by Stefano Babic (<code>sbabic</code>); widely
+used in Yocto/OE-based products</td>
+<td>high</td>
+</tr>
+<tr>
+<td>Repo</td>
+<td><code>github.com/sbabic/swupdate</code></td>
+<td>high</td>
+</tr>
+<tr>
+<td>License</td>
+<td><strong>GPL-2.0-only</strong> (SPDX <code>GPL-2.0-only</code>) per
+GitHub</td>
+<td>high — GitHub repo metadata</td>
+</tr>
+<tr>
+<td>Language</td>
+<td>Primarily <strong>C</strong>, with <strong>Lua</strong> for
+extensibility (parser, handlers, suricatta modules)</td>
+<td>high — docs</td>
+</tr>
+<tr>
+<td>Latest release</td>
+<td><strong>2026.05, released 2026-05-29</strong> (per GitHub releases
+at time of fetch); prior: 2025.12 (2025-12-03), 2025.05 (2025-05-06),
+2024.12.1 (2026-01-22), 2024.12 (2024-12-01)</td>
+<td>medium — single fetch, re-verify before locking</td>
+</tr>
+<tr>
+<td>Release cadence</td>
+<td>Roughly twice-yearly date-versioned releases
+(<code>YYYY.MM</code>)</td>
+<td>medium — inferred from tag pattern</td>
+</tr>
+<tr>
+<td>GitHub stars</td>
+<td><strong>Not captured</strong> — intentionally omitted (anti-bluff;
+do not invent)</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Default web/server libs</td>
+<td>Mongoose web server (embedded HTTP), upgraded to
+<strong>7.21</strong> in 2026.05; libcurl for client transport</td>
+<td>medium — release notes</td>
+</tr>
+</tbody>
+</table>
+<p>SWUpdate runs on the target as either a one-shot installer
+(<code>swupdate -i image.swu</code>), an embedded web-server mode
+(Mongoose, local upload UI/API), or a <strong>suricatta</strong> polling
+daemon. It does <strong>not</strong> ship a fleet control plane — the
+server side is the integrator’s responsibility (exactly what Helix
+wants).</p>
+<h2 id="the-.swu-package-format">§3. The <code>.swu</code> package
+format</h2>
+<p>An update is delivered as a single <strong><code>.swu</code></strong>
+file, which is a <strong>cpio archive</strong>:</p>
+<ul>
+<li>cpio was chosen because it is “a simple, well-established, and
+streamable format.”</li>
+<li>Supported variants: <strong>New ASCII format (magic
+<code>070701</code>)</strong> and <strong>New CRC format (magic
+<code>070702</code>)</strong>. The CRC variant carries a 32-bit checksum
+of data bytes that SWUpdate verifies.</li>
+<li><strong><code>sw-description</code> must be the first entry</strong>
+in the archive, followed by the artifact files it references.</li>
+<li>cpio’s per-file size is bounded by its <strong>32-bit</strong> size
+field (≈4 GB per single artifact) — relevant only for very large
+monolithic images.</li>
+</ul>
+<p>Because cpio is streamable and <code>sw-description</code> comes
+first, SWUpdate can parse the manifest and begin installing the first
+artifact while later artifacts are still arriving over the network —
+valuable on low-RAM / low-flash devices.</p>
+<p>Source: SWUpdate docs <code>swupdate.html</code>; DeepWiki usage
+guide (secondary).</p>
+<h2 id="sw-description-and-the-lua-parser">§4.
+<code>sw-description</code> and the Lua parser</h2>
+<p><code>sw-description</code> is the per-update manifest: it lists
+images/files, target devices/volumes, handlers, versions, hashes, and
+install options. Two parsers are supported:</p>
+<ul>
+<li><strong>Internal parser</strong> based on <strong>libconfig</strong>
+(the default, libconfig syntax).</li>
+<li><strong>External Lua parser</strong> — <code>sw-description</code>
+format can be customized by calling an external parser written in
+<strong>Lua</strong>.</li>
+</ul>
+<p>This is a notable flexibility advantage over RAUC’s fixed manifest:
+Helix could, in the Linux phase, shape the manifest contract to match
+its control-plane metadata without forking the engine.</p>
+<p>Source: SWUpdate docs <code>swupdate.html</code>.</p>
+<h2 id="handlers-c-and-lua-storage-backends">§5. Handlers (C and Lua)
+&amp; storage backends</h2>
+<p>SWUpdate’s install model is <strong>handler-driven</strong>: each
+artifact in <code>sw-description</code> names a handler responsible for
+writing it. Handlers may be <strong>built-in C</strong> or <strong>Lua
+scripts</strong> loaded at runtime.</p>
+<p>Documented install targets / storage backends include:</p>
+<ul>
+<li><strong>Raw block / embedded media:</strong> eMMC, SD, Raw NAND, NOR
+and SPI-NOR flashes (raw handler).</li>
+<li><strong>UBI volumes</strong> (NAND/UBI handler).</li>
+<li><strong>Single-file update inside a mounted
+filesystem.</strong></li>
+<li><strong>Partitioner / diskpart</strong> support;
+<strong>btrfs</strong> partitioner support added in 2023.05 (per release
+notes, secondary).</li>
+<li><strong>Delta handlers</strong> (rdiff, zchunk — see §9), which
+assemble the target artifact then pass it to a <strong>secondary
+handler</strong> to perform the actual write.</li>
+</ul>
+<p>The handler abstraction means a target-specific or Helix-specific
+write path can be added without touching the core. UNVERIFIED — needs
+confirmation: the exact, current full handler list and which handlers
+support streaming should be re-read from <code>handlers.html</code> for
+the targeted release.</p>
+<p>Source: SWUpdate docs <code>swupdate.html</code>,
+<code>handlers.html</code>.</p>
+<h2 id="ab-double-copy-bootloader-env">§6. A/B, double-copy &amp;
+bootloader env</h2>
+<p>SWUpdate does <strong>not</strong> impose a slot model. Two
+approaches are documented:</p>
+<ul>
+<li><strong>Single-copy:</strong> SWUpdate runs in an
+<strong>initrd</strong>, updating the (single) main system in place.
+Atomicity/rollback then relies on the initrd flow rather than a
+redundant slot.</li>
+<li><strong>Double-copy (A/B):</strong> achieved via <strong>Software
+collections</strong> — the manifest defines multiple collections
+(e.g. <code>stable</code>, <code>alt</code>) and the operator selects
+the target with <code>--select &lt;collection&gt;,&lt;mode&gt;</code>
+(e.g. <code>--select stable,alt</code>), so the update is written to the
+<strong>inactive</strong> copy. This is SWUpdate’s A/B equivalent, but
+it is <strong>convention + configuration</strong>, not a built-in slot
+manager like RAUC or <code>update_engine</code>.</li>
+</ul>
+<p>Atomic switchover and rollback are delegated to the
+<strong>bootloader environment</strong>, which SWUpdate can
+set/erase:</p>
+<ul>
+<li><strong>U-Boot</strong> environment variables.</li>
+<li><strong>GRUB</strong> environment block variables.</li>
+<li><strong>EFI Boot Guard</strong> variables.</li>
+</ul>
+<p>So the typical A/B flow is: write inactive copy → set bootloader “try
+new copy / boot count” variable → reboot → confirm-good (clear the try
+flag) or auto-revert on failed boot. Compared to RAUC, the slot/rollback
+logic is <strong>less turnkey and more
+integrator-assembled</strong>.</p>
+<p>Source: SWUpdate docs <code>swupdate.html</code>.</p>
+<h2 id="streaming-installation">§7. Streaming installation</h2>
+<p>A core SWUpdate design principle: “SWUpdate is thought to be able to
+<strong>stream the received image directly into the target, without any
+temporary copy</strong>.” Streaming is <strong>configurable
+per-image</strong> — some artifacts can stream while others use a
+temporary extraction. The rationale given is that on
+resource-constrained systems “the amount of RAM to copy the images could
+be not enough.”</p>
+<p>This pairs well with the cpio format (§3) and is a genuine
+differentiator for small devices. For Helix’s mandated HTTP delivery,
+SWUpdate’s client uses libcurl, so Brotli content-encoding and HTTP/2
+are feasible at the transport layer (HTTP/3 support would depend on the
+libcurl build — UNVERIFIED — needs confirmation).</p>
+<p>Source: SWUpdate docs <code>swupdate.html</code>.</p>
+<h2 id="suricatta-hawkbit-the-control-plane-question">§8. Suricatta,
+hawkBit &amp; the control-plane question</h2>
+<p><strong>Suricatta</strong> is SWUpdate’s polling daemon mode (named
+after the meerkat, a mongoose relative): it “regularly polls a remote
+server for updates, downloads, and installs them.” Suricatta supports
+multiple backends, <strong>selectable at runtime</strong>:</p>
+<blockquote>
+<p>“If multiple server support is compiled in, the <code>-S</code> /
+<code>--server</code> option or a <code>server</code> entry in the
+configuration file’s <code>[suricatta]</code> section selects the one to
+use at run-time.”</p>
+</blockquote>
+<p>Backends:</p>
+<ol type="1">
+<li><p><strong>hawkBit</strong> — via the <strong>hawkBit Direct Device
+Integration (DDI) API</strong>. This is SWUpdate’s most mature/native
+server protocol and pairs with Eclipse hawkBit (already covered in
+<code>eclipse-hawkbit.md</code>).</p></li>
+<li><p><strong>General-purpose HTTP server</strong> — “a very simple
+backend that uses standard HTTP response codes to signal if an update is
+available.” The device sends device info via <strong>GET query
+parameters</strong>; the server replies with status codes:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>302 Found</td>
+<td>New software available at URL in the <code>Location</code>
+header</td>
+</tr>
+<tr>
+<td>400 Bad Request</td>
+<td>Query parameters missing / wrong format</td>
+</tr>
+<tr>
+<td>403 Forbidden</td>
+<td>Client certificate not valid</td>
+</tr>
+<tr>
+<td>404 Not Found</td>
+<td>No update available for this device</td>
+</tr>
+<tr>
+<td>503 Unavailable</td>
+<td>Update available but server busy (with
+<code>Retry-after</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Responses can carry <code>Content-MD5</code> and
+<code>Retry-after</code>. A mock reference server lives at
+<code>examples/suricatta/server_general.py</code>.</p></li>
+<li><p><strong>wfx</strong> — integration with the Eclipse
+<strong>wfx</strong> workflow executor (Device Artifact Update
+workflows). UNVERIFIED — needs confirmation whether wfx support is built
+by default vs. opt-in.</p></li>
+<li><p><strong>Lua suricatta module</strong> — <code>server_lua.c</code>
+bridges the suricatta interface into Lua, so a <strong>complete
+suricatta backend can be written in Lua</strong> instead of C (“an
+option for writing such in C instead of Lua”).</p></li>
+</ol>
+<p><strong>Control-plane implication for Helix:</strong> there are three
+viable integration paths for the custom Go control plane, in increasing
+effort/decreasing coupling: - (a) Make the Go control plane speak the
+<strong>general-purpose HTTP contract</strong> above — trivial to
+implement in Go (it is just status codes + a <code>Location</code> URL +
+query params). - (b) Make the Go control plane implement the
+<strong>hawkBit DDI</strong> API surface (more work, but reuses
+SWUpdate’s most-tested client path and aligns with the existing hawkBit
+research). - (c) Ship a <strong>Lua suricatta module</strong> on-device
+that speaks Helix’s own REST/Brotli/HTTP-3 protocol directly — maximum
+protocol freedom, on-device Lua maintenance cost.</p>
+<p>Option (a) is the cheapest and most aligned with “minimal wrapping +
+custom Go control plane.” Option (c) is the most flexible and lets Helix
+keep its mandated transport semantics end-to-end.</p>
+<p>Source: SWUpdate docs <code>suricatta.html</code>;
+<code>suricatta/server_general.c</code> (master).</p>
+<h2 id="delta-incremental-updates">§9. Delta / incremental updates</h2>
+<p>SWUpdate supports two delta mechanisms:</p>
+<ul>
+<li><strong>zchunk</strong> — the chosen format for delta delivery. A
+zchunk file has a header describing all chunks; the device generates the
+header of the <strong>running</strong> artifact, compares, and downloads
+<strong>only the missing chunks</strong>, reusing the rest locally. The
+delta handler assembles the full artifact then hands off to a
+<strong>secondary handler</strong> for the write.</li>
+<li><strong>rdiff</strong> (librsync) — applies binary delta patches
+generated by librsync’s <code>rdiff</code>. Documented prime use case:
+read-only rootfs receiving small security/feature patches.</li>
+</ul>
+<p>2026.05 release notes mention “<strong>Delta Update with
+Hawkbit</strong>,” indicating server-coordinated delta is an active,
+maintained path.</p>
+<p>For Helix this matters because the design corpus mandates
+delta/incremental updates (cf. ADR-0005). SWUpdate’s zchunk model is
+range-request friendly (download missing chunks) and fits HTTP range/CDN
+delivery well.</p>
+<p>Source: SWUpdate docs <code>delta-update.html</code>,
+<code>handlers.html</code>; 2026.05 release notes.</p>
+<h2 id="security-signing-verification">§10. Security: signing &amp;
+verification</h2>
+<ul>
+<li>“<strong>Images are authenticated and verified before
+installing.</strong>”</li>
+<li>Configurable digest/crypto providers — documented options include
+<strong>OpenSSL CMS (PKCS#7)</strong> and <strong>OpenSSL RSA</strong>
+signing, with CA-path certificate validation. (Exact current provider
+identifiers — e.g. <code>opensslCMS</code> / <code>opensslRSA</code> —
+should be re-confirmed per release: UNVERIFIED — needs
+confirmation.)</li>
+<li>The <code>.swu</code> (cpio) container is signed/verified;
+per-artifact hashes are declared in <code>sw-description</code>.</li>
+<li>Encryption of artifacts is also supported (symmetric, configured in
+the manifest) — UNVERIFIED — needs confirmation of exact cipher/mode for
+the targeted release.</li>
+</ul>
+<p>This is sufficient for Helix’s integrity needs at the device-apply
+layer, though Helix’s broader supply-chain trust model (TUF/Uptane per
+ADR-0002) would sit <strong>above</strong> SWUpdate, not inside it.</p>
+<p>Source: SWUpdate docs <code>swupdate.html</code>.</p>
+<h2 id="android-fit-go-control-plane-fit">§11. Android fit &amp; Go
+control-plane fit</h2>
+<ul>
+<li><strong>Android-15 fit: none.</strong> SWUpdate is an embedded-Linux
+engine; it does not run as the Android updater, does not produce/consume
+<code>payload.bin</code>, and does not integrate with Android’s
+<code>update_engine</code> / boot_control HAL / Virtual A/B. For the
+Android MVP it is irrelevant. (Scores 1 for Android-15 fit in §13.)</li>
+<li><strong>Go fit: pattern-level, good on the server contract.</strong>
+SWUpdate itself is C/Lua, so there is no Go device-side reuse. But its
+<strong>server contracts are easy Go targets</strong> — the
+general-purpose HTTP backend is just status codes + headers, trivially
+served by a Go HTTP handler; hawkBit DDI is a documented REST API a Go
+service can implement. Helix’s Go control plane does
+<strong>not</strong> need to embed any SWUpdate code to drive a SWUpdate
+fleet. (Scores 3 — usable, integration work on the protocol, no Go reuse
+of the engine.)</li>
+</ul>
+<h2 id="wrappability-for-helix">§12. Wrappability for Helix</h2>
+<p>“Wrapping” in Helix means putting the engine behind an OS-adapter
+interface and driving it from the Go control plane, without adopting the
+engine’s vendor server.</p>
+<ul>
+<li>SWUpdate is <strong>highly wrappable</strong> as a
+<strong>device-side apply engine</strong> for Linux: it can be invoked
+one-shot (<code>swupdate -i</code>), or run as suricatta against a
+Helix-supplied server, and its handler/parser/suricatta layers are all
+replaceable in Lua. The server side is explicitly the integrator’s.</li>
+<li>The caveat vs. RAUC: A/B slot management and rollback are
+<strong>assembled by the integrator</strong> (Software collections +
+bootloader env), so the wrapper carries more responsibility for the
+slot/confirm/rollback state machine than with RAUC’s built-in
+slots.</li>
+<li>Net: strong wrappability for the <strong>Linux phase only</strong>;
+<strong>zero</strong> wrappability for Android (it doesn’t run there).
+Wrap-ability scored <strong>4</strong> for the Linux role (one point
+below RAUC because the A/B/rollback orchestration is less turnkey).</li>
+</ul>
+<h2 id="scorability-15-landscape-matrix">§13. Scorability (1–5,
+landscape matrix)</h2>
+<p>Scored on the existing <code>ota_landscape_report.md</code> rubric
+(§2.1): <strong>1–5, relative to Helix’s locked strategy</strong>
+(Android-15-first, native A/B, custom Go control plane, minimal
+wrapping). Higher = better fit for Helix. The report previously
+<strong>excluded</strong> SWUpdate from scoring; this row fills that
+gap. As with RAUC/OSTree, a low A/B/Android score reflects the
+<strong>Linux-phase-only</strong> role and is not disqualifying for that
+role.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stack (slug)</th>
+<th style="text-align: center;">Mechanism</th>
+<th style="text-align: center;">Rollback</th>
+<th style="text-align: center;">Staged-rollout</th>
+<th style="text-align: center;">A/B</th>
+<th style="text-align: center;">Android-15 fit</th>
+<th style="text-align: center;">Go fit</th>
+<th style="text-align: center;">Wrap-ability</th>
+<th style="text-align: center;">License</th>
+<th style="text-align: center;">Maturity</th>
+<th style="text-align: center;"><strong>Total /45</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>swupdate</code></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>29</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Per-criterion justification (traceable to sections above):</p>
+<ul>
+<li><strong>Mechanism (4):</strong> Handler-driven streaming install
+pipeline; cpio <code>.swu</code> + <code>sw-description</code>; very
+flexible but not Helix’s native Android mechanism. [§3–§5, §7]</li>
+<li><strong>Rollback (3):</strong> Rollback is <strong>delegated to the
+bootloader env</strong> (U-Boot/GRUB/EFI Boot Guard) and assembled by
+the integrator; no built-in slot-confirm state machine like
+RAUC/<code>update_engine</code>. [§6]</li>
+<li><strong>Staged-rollout (3):</strong> No native rollout orchestration
+in the engine, but <strong>suricatta + hawkBit DDI/wfx</strong> gives a
+real path to staged rollout when paired with a server (better than
+RAUC’s 1, worse than hawkBit’s 5 since the engine itself does none).
+[§8]</li>
+<li><strong>A/B (3):</strong> Double-copy is achievable via
+<strong>Software collections + bootloader env</strong>, but it is
+convention/config, not a first-class slot manager. Below RAUC’s 5.
+[§6]</li>
+<li><strong>Android-15 fit (1):</strong> No Android target at all;
+irrelevant to the MVP. [§1, §11]</li>
+<li><strong>Go fit (3):</strong> No Go reuse of the engine, but the
+<strong>server contract is a trivial Go target</strong> (general-HTTP)
+or a documented one (hawkBit DDI). [§8, §11]</li>
+<li><strong>Wrap-ability (4):</strong> Excellent as a wrapped Linux
+apply engine (one-shot or suricatta; Lua-extensible; integrator owns the
+server); minus one vs RAUC because A/B/rollback orchestration is less
+turnkey. Zero for Android. [§12]</li>
+<li><strong>License (4):</strong> <strong>GPL-2.0-only</strong> —
+copyleft. Fine for a separate on-device daemon driven over a protocol
+(no linking into Helix proprietary code), but GPL obligations on any
+modified/distributed SWUpdate binaries must be respected; matches RAUC’s
+4-tier (RAUC is LGPL, slightly more permissive — hence not a 5 here).
+[§2]</li>
+<li><strong>Maturity (4):</strong> Long-lived, actively maintained
+(2026.05 release 2026-05-29), broad Yocto/OE adoption, hawkBit/wfx/delta
+features maintained. Not a 5 only because Android-phase relevance is nil
+and production scale evidence wasn’t independently quantified here.
+[§2]</li>
+</ul>
+<p><strong>Total 29/45</strong> — comparable to RAUC (30) and above
+OSTree (25) in the existing matrix, i.e. a <strong>credible Linux-phase
+device-apply candidate</strong>, ranked just below RAUC primarily on
+turnkey A/B/rollback, and well below the Android-phase leaders
+(<code>aosp-update-engine</code> 39, <code>eclipse-hawkbit</code> 36) —
+expected, since SWUpdate is out of scope for the Android MVP.</p>
+<h2 id="pros-cons-risks-recommendation">§14. Pros / cons / risks &amp;
+recommendation</h2>
+<p><strong>Pros</strong> - Streaming install with minimal scratch
+storage — strong on constrained devices. [§7] - Extremely flexible: Lua
+parser, C/Lua handlers, Lua suricatta module — shapeable to Helix’s
+metadata/protocol without forking. [§4, §5, §8] - Server side is the
+integrator’s; <strong>three</strong> clean integration paths for a Go
+control plane (general-HTTP, hawkBit DDI, Lua module). [§8] - Real delta
+support (zchunk + rdiff) aligning with ADR-0005. [§9] - Broad bootloader
+env support (U-Boot/GRUB/EFI Boot Guard). [§6] - Mature, actively
+released (2026.05). [§2]</p>
+<p><strong>Cons / risks</strong> - <strong>No Android target</strong> —
+irrelevant to the Android-15-first MVP. [§1, §11] - A/B and rollback are
+<strong>integrator-assembled</strong> (Software collections + bootloader
+env), more work and more failure surface than RAUC’s built-in slots.
+[§6] - <strong>GPL-2.0-only</strong> copyleft — manageable for a
+separate daemon, but distribution of modified binaries carries
+obligations; review before shipping device images. [§2] - Native server
+protocol is hawkBit DDI; to use Helix’s mandated REST/Brotli/HTTP-3
+transport semantics end-to-end you must either map onto the general-HTTP
+contract or write a Lua suricatta module. [§8]</p>
+<p><strong>Recommendation:</strong> Keep SWUpdate as a <strong>strong,
+optional wrappable device-apply engine for the future Helix Linux
+phase</strong>, on par with RAUC and ahead of OSTree for this role.
+<strong>Do not adopt for the Android MVP</strong> (no Android support).
+When the Linux phase is scheduled, run a spike comparing SWUpdate
+(Software collections + bootloader env) vs RAUC (built-in slots) for A/B
+turnkey-ness, and prototype the Helix Go control plane against
+SWUpdate’s general-purpose HTTP contract first (cheapest), with a Lua
+suricatta module as the fallback for full transport fidelity.</p>
+<h2 id="sources-consulted">§15. Sources consulted</h2>
+<p>Primary (official): - SWUpdate docs — main:
+https://sbabic.github.io/swupdate/swupdate.html - SWUpdate docs —
+suricatta: https://sbabic.github.io/swupdate/suricatta.html - SWUpdate
+docs — handlers: https://sbabic.github.io/swupdate/handlers.html -
+SWUpdate docs — delta update:
+https://sbabic.github.io/swupdate/delta-update.html - SWUpdate docs —
+index: https://sbabic.github.io/swupdate/ - GitHub — releases (latest
+2026.05, 2026-05-29): https://github.com/sbabic/swupdate/releases -
+GitHub — <code>suricatta/server_general.c</code> (general-HTTP backend):
+https://github.com/sbabic/swupdate/blob/master/suricatta/server_general.c
+- GitHub — <code>doc/source/suricatta.rst</code>:
+https://github.com/sbabic/swupdate/blob/master/doc/source/suricatta.rst</p>
+<p>Secondary (cross-check, labelled): - DeepWiki SWUpdate usage guides:
+https://deepwiki.com/sbabic/swupdate/4-usage-guides - The Good Penguin —
+Delta OTA Update with SWUpdate:
+https://www.thegoodpenguin.co.uk/blog/delta-ota-update-with-swupdate/</p>
+<p>Internal cross-references: -
+<code>research/ota_landscape_report.md</code> (§2.1 rubric; SWUpdate
+previously excluded from scoring — this note supplies the score) -
+<code>stacks/rauc.md</code>, <code>stacks/ostree.md</code>,
+<code>stacks/eclipse-hawkbit.md</code>, <code>stacks/mender.md</code> -
+<code>research/adr/adr-0001-wrapped-engine.md</code>,
+<code>adr-0002-supply-chain-trust.md</code>,
+<code>adr-0005-delta-updates.md</code></p>
+<h2 id="confidence">§16. Confidence</h2>
+<p><strong>Overall confidence: HIGH</strong> on the architecture/feature
+claims (package format, suricatta backends incl. Lua module + runtime
+selection, double-copy/bootloader env, streaming, delta zchunk/rdiff,
+GPL-2.0-only license, 2026.05 release) — all traced to official docs /
+GitHub fetched 2026-06-07. <strong>MEDIUM/LOW</strong> and tagged
+<strong>UNVERIFIED — needs confirmation</strong> on: exact current
+handler list and which stream, precise crypto provider identifiers and
+encryption cipher/mode, whether wfx is built by default, and
+HTTP/3-via-libcurl availability. GitHub star count was deliberately
+<strong>not</strong> asserted. Re-verify all version/release facts
+before any decision is locked in ADR-0001.</p>
+</body>
+</html>

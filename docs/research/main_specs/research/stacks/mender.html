@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>mender</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-stack-research-mender">Helix OTA — Stack Research:
+Mender</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Evidence-based research note on Mender (mendersoftware) as a
+candidate wrapped OTA engine for Helix. Covers client+server
+architecture, A/B + delta, phased deployments, the reality of Android
+support, client language, server/client coupling, and the open-source vs
+commercial licensing split. Sourced from Mender official docs, mender.io
+marketing/pricing pages, and the GitHub client repo, all consulted
+2026-06-07.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Mender has <strong>no Android support</strong> (official docs list
+Debian-family Linux, Yocto, Buildroot/OpenWRT, and Zephyr/MCU only —
+Android is not mentioned). Most fleet-orchestration features Helix needs
+(phased rollouts, dynamic grouping, RBAC, delta generation) are
+paid/Enterprise-only, not in the open-source server. This makes Mender a
+poor fit for Helix’s Android-15-first + native-A/B +
+custom-Go-control-plane mandate.</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>Android-15 fit is effectively zero; differentiating control-plane
+features are behind the commercial license.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>initial research</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>All load-bearing claims verified against primary sources or
+explicitly flagged UNVERIFIED.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Feed into <code>research/ota_landscape_report.md</code> and ADR-0001
+(engine selection). Compare head-to-head with the hawkBit note. If Helix
+keeps the native-A/B + custom-Go control plane, Mender is a
+reference/anti-pattern source, not a wrap target.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-summary--verdict">§1. Summary &amp; verdict</a></li>
+<li><a href="#2-what-mender-is">§2. What Mender is</a></li>
+<li><a href="#3-client-architecture">§3. Client architecture</a></li>
+<li><a href="#4-server-architecture">§4. Server architecture</a></li>
+<li><a href="#5-ab-updates--delta-updates">§5. A/B updates &amp; delta
+updates</a></li>
+<li><a href="#6-phased-deployments--fleet-orchestration">§6. Phased
+deployments &amp; fleet orchestration</a></li>
+<li><a href="#7-android-support--the-reality">§7. Android support — the
+reality</a></li>
+<li><a href="#8-client-language--coupling">§8. Client language &amp;
+coupling</a></li>
+<li><a href="#9-licensing-open-source-vs-commercial">§9. Licensing: open
+source vs commercial</a></li>
+<li><a href="#10-fit-for-helix">§10. Fit for Helix</a></li>
+<li><a href="#11-confidence--open-questions">§11. Confidence &amp; open
+questions</a></li>
+<li><a href="#12-sources-consulted">§12. Sources consulted</a></li>
+</ul>
+<h2 id="summary-verdict">§1. Summary &amp; verdict</h2>
+<p>Mender is a mature, production-grade OTA solution for
+<strong>embedded Linux</strong> (and, more recently, Zephyr/MCU). Its
+client-server design, dual-A/B-rootfs robustness model, Update Modules
+framework, and delta/phased-rollout capabilities are exactly the feature
+set Helix cares about — <strong>but for the wrong platform</strong>.
+Mender has no Android support, and the orchestration features that
+overlap most with Helix’s control plane (phased rollouts, dynamic
+grouping, RBAC, server-side delta generation) are gated behind paid
+Professional/Enterprise tiers, not the open-source server.</p>
+<p>For Helix (Android 15 first, native A/B via AOSP
+<code>update_engine</code>, custom Go control plane) Mender is
+<strong>not a viable wrap target</strong>. It is most useful as a
+<strong>design reference</strong> for the control-plane API shape, the
+Update Modules abstraction, and the robustness/rollback model. Overall
+confidence: <strong>high</strong> on the disqualifying facts (Android,
+licensing split); <strong>medium</strong> on exact feature-to-tier
+mapping (marketing pages shift).</p>
+<h2 id="what-mender-is">§2. What Mender is</h2>
+<p>Mender (by Northern.tech / mendersoftware) is an open-source,
+end-to-end OTA update manager for IoT and embedded Linux devices. It
+comprises two halves:</p>
+<ul>
+<li><strong>Mender Server</strong> — central management of deployments,
+device inventory, and artifacts, exposed via web UI + REST APIs.</li>
+<li><strong>Mender Client</strong> — a device-side daemon (or standalone
+CLI) that polls the server, downloads artifacts, and installs them
+robustly.</li>
+</ul>
+<p>It is positioned for embedded Linux fleets (industrial IoT, gateways,
+medical/automotive embedded). Source: <a
+href="https://docs.mender.io/overview/introduction">Introduction |
+Mender docs</a>, <a
+href="https://mender.io/engineers/how-mender-works">How Mender
+works</a>.</p>
+<h2 id="client-architecture">§3. Client architecture</h2>
+<ul>
+<li>The client runs in <strong>managed mode</strong> (a daemon that
+continuously polls the server for updates) or <strong>standalone
+mode</strong> (manually triggered via CLI; supports fully offline
+updates from a local web server or USB).</li>
+<li>The modern client is split into core subcomponents
+<strong><code>mender-auth</code> / <code>mender-authd</code></strong>
+(authentication) and <strong><code>mender-update</code> /
+<code>mender-updated</code></strong> (update execution). Earlier
+versions shipped a single <code>mender-client</code> binary/service.
+Source: <a
+href="https://docs.mender.io/client-installation/overview">Client
+installation overview</a>, <a
+href="https://docs.mender.io/artifact-creation/standalone-deployment">Standalone
+deployment</a>.</li>
+<li><strong>Update Modules framework</strong>: rather than hardcoding
+install methods, the client invokes <strong>independent
+executables</strong> in <code>/usr/share/mender/modules/v3</code> with a
+defined parameter/state interface. This lets Mender support arbitrary
+packaging formats — full rootfs images, application/package updates,
+containers, bootloaders — without changing the client core. Source: <a
+href="https://mender.io/engineers/how-mender-works">How Mender
+works</a>, <a
+href="https://docs.mender.io/client-installation/use-an-updatemodule">Use
+an Update Module</a>.</li>
+<li>Security posture: device has <strong>no open ports</strong>; all
+comms are client-initiated HTTPS polling with end-to-end TLS. Source: <a
+href="https://mender.io/engineers/how-mender-works">How Mender
+works</a>.</li>
+</ul>
+<h2 id="server-architecture">§4. Server architecture</h2>
+<ul>
+<li>The Mender Server is a <strong>microservices</strong> architecture
+spread across multiple repositories. Source: <a
+href="https://mender.io/engineers/how-mender-works">How Mender works</a>
+and corroborating community/vendor write-ups.</li>
+<li><strong>API gateway</strong>: Traefik routes device/user/API
+requests to the appropriate microservice. (Vendor/community-sourced;
+consistent across multiple writeups — treat the specific gateway =
+Traefik as <strong>medium confidence</strong>, exact at time of
+writing.)</li>
+<li><strong>Message broker</strong>: NATS, used by some microservices
+for orchestration and remote troubleshooting.</li>
+<li><strong>Database</strong>: MongoDB for persistent backend
+state.</li>
+<li><strong>Artifact storage</strong>: S3 bucket (or S3-API-compatible)
+or Azure Storage Account.</li>
+</ul>
+<p>Note: this stack (microservices + MongoDB + NATS + Traefik) is
+materially different from Helix’s mandated stack (Go + Gin, PostgreSQL
+relational state, MinIO/S3 blobs, REST-primary). Adopting the Mender
+server wholesale would conflict with the locked Helix decisions.</p>
+<h2 id="ab-updates-delta-updates">§5. A/B updates &amp; delta
+updates</h2>
+<p><strong>A/B (dual-rootfs):</strong> For OS updates, Mender requires a
+<strong>dual A/B root filesystem partition layout</strong>. The client
+runs in the active partition (A), writes the update to the inactive
+partition (B), and on reboot the bootloader tries B. If boot succeeds, B
+is committed (made permanent); if it fails, the device automatically
+falls back to the unchanged A partition — atomic, image-based,
+power-loss-safe. Reboot downtime is roughly ~60s per Mender’s own
+figure. Source: <a
+href="https://mender.io/engineers/how-mender-works">How Mender
+works</a>.</p>
+<p>This is conceptually the <strong>same robustness model</strong> as
+Android’s native A/B / Virtual A/B, but implemented via Mender’s own
+bootloader integration (U-Boot / GRUB), <strong>not</strong> via
+Android’s <code>update_engine</code>. (Mender’s open-source licenses
+list includes <code>u-boot</code> under GPLv2 and <code>grub</code>
+under GPLv3, confirming bootloader-side integration — see §9.)</p>
+<p><strong>Delta updates:</strong> Mender supports binary delta updates,
+advertised as saving ~70–90% bandwidth (vendor figure —
+<strong>UNVERIFIED</strong> as an independent benchmark; it is Mender’s
+own marketing claim). Mender 3.6 added <strong>auto-generation of delta
+updates</strong>, and a later capability adds <strong>server-side
+generation</strong> so per-device deltas are produced transparently by
+the server. Source: <a
+href="https://mender.io/blog/mender-3-6-auto-generation-of-delta-updates">Mender
+3.6: Auto-generation of delta updates</a>, <a
+href="https://mender.io/blog/server-side-generation-of-delta-updates">Server-side
+generation of delta updates</a>. <strong>Important:</strong> delta
+generation is a <strong>paid feature</strong> (see §9).</p>
+<h2 id="phased-deployments-fleet-orchestration">§6. Phased deployments
+&amp; fleet orchestration</h2>
+<p>Mender supports <strong>phased rollouts</strong> (gradually rolling
+out an update across a fleet in time-delayed phases), <strong>dynamic
+grouping</strong> (auto-group devices by inventory attributes),
+<strong>scheduled deployments</strong>, and <strong>automatic
+retry</strong> of failed deployments. Source: <a
+href="https://mender.io/blog/manage-and-deploy-over-the-air-ota-software-updates-at-scale">Delta
+updates, phased rollouts, scheduling blog</a>, <a
+href="https://mender.io/pricing/plans">Pricing/plans</a>.</p>
+<p>Critically, per the pricing page (consulted 2026-06-07): -
+<strong>Phased rollouts</strong> — listed as
+<strong>Enterprise</strong>-tier. - <strong>Dynamic groups &amp;
+deployments</strong> — <strong>Enterprise</strong>-tier. -
+<strong>Scheduled deployments</strong> and <strong>automatic
+retry</strong> — begin at <strong>Professional</strong> tier.</p>
+<p>So the orchestration features that most overlap with Helix’s intended
+control plane are <strong>not</strong> in the free open-source
+offering.</p>
+<h2 id="android-support-the-reality">§7. Android support — the
+reality</h2>
+<p>This is the decisive finding for Helix.</p>
+<ul>
+<li><strong>Official device-support docs</strong> list: Debian-family
+Linux (Debian, Ubuntu, Raspberry Pi OS — officially supported), Yocto
+Project (via board integration), other Linux via Buildroot/OpenWRT or
+compile-from-source, and <strong>Zephyr OS</strong> (via the Mender MCU
+client, Zephyr 4.2). <strong>Android is not mentioned at all.</strong>
+Source: <a href="https://docs.mender.io/overview/device-support">Device
+Support | Mender docs</a>.</li>
+<li>A prior search-surfaced statement of Mender’s position is explicit:
+<strong>“Mender does not yet support Android.”</strong> (Attributed to
+Mender’s FAQ/docs via search; the live device-support page simply omits
+Android entirely. Treat the exact wording as <strong>medium
+confidence</strong>, but the substance — no official Android support —
+is <strong>high confidence</strong> because Android appears nowhere in
+the supported-platform list.)</li>
+<li>Mender’s A/B model is <strong>bootloader-driven
+(U-Boot/GRUB)</strong>, fundamentally different from Android’s
+<code>update_engine</code> + boot_control HAL + Virtual A/B. There is
+<strong>no Mender Android client</strong> and no integration with
+<code>update_engine</code>.</li>
+</ul>
+<p><strong>Implication:</strong> Mender cannot be “pointed at” an
+Android 15 device. Using it for Helix would require building an Android
+client and an Android A/B integration from scratch — i.e.,
+re-implementing the exact thing Helix already plans to do natively. That
+eliminates Mender’s wrap value.</p>
+<h2 id="client-language-coupling">§8. Client language &amp;
+coupling</h2>
+<ul>
+<li><strong>Client language:</strong> The Mender Client (v3.x line,
+<code>mender-client</code> package) is written in <strong>Go</strong>.
+Source: search-surfaced Debian/APT package note (“mender-client package
+corresponds to the Mender Client written in Go (version 3.x.y)”). The
+newer split daemons
+(<code>mender-authd</code>/<code>mender-updated</code>) continue the Go
+client lineage. The client repo is licensed Apache-2.0 (see §9). (Note:
+a separate C++ rewrite effort has been reported in the Mender ecosystem
+for newer client versions — <strong>UNVERIFIED</strong> here; not
+confirmed against a primary source as of 2026-06-07. The 3.x Go client
+is the verified baseline.)</li>
+<li><strong>Coupling (client↔︎server):</strong> Loose at the wire level —
+pure <strong>HTTPS polling</strong>, client-initiated, no open device
+ports, REST APIs. The client can run <strong>fully standalone</strong>
+(no server at all), which demonstrates the update-execution layer is
+decoupled from the orchestration layer. The <strong>Update
+Modules</strong> boundary is a clean, executable-based extension point.
+This means the <em>client robustness/execution model</em> is reusable in
+spirit even if the server is not.</li>
+<li>For Helix, the client being Go aligns with Helix’s Go mandate — but
+the client is Linux/bootloader-coupled, so the alignment is
+superficial.</li>
+</ul>
+<h2 id="licensing-open-source-vs-commercial">§9. Licensing: open source
+vs commercial</h2>
+<p><strong>Client:</strong> Released under the <strong>Apache License
+v2.0</strong> (“All content in this project is licensed under the Apache
+License v2, unless indicated otherwise”). Source: <a
+href="https://github.com/mendersoftware/mender/blob/master/LICENSE">mender
+LICENSE on GitHub</a>.</p>
+<p><strong>Third-party/bundled components</strong> (from the
+open-source-licenses doc): include Apache-2.0 (e.g. Google Cloud Go
+libs), <strong>GPLv2</strong> (<code>u-boot</code>), and
+<strong>GPLv3</strong> (<code>grub</code>) — relevant because the
+bootloader pieces carry copyleft. Source: <a
+href="https://docs.mender.io/release-information/open-source-licenses">Open
+source licenses | Mender docs</a>.</p>
+<p><strong>Server / feature split (open-core model):</strong> Mender
+follows an <strong>open-core</strong> model. There is a free
+<strong>Open Source</strong> plan, and paid
+<strong>Basic/Starter</strong>, <strong>Professional</strong>, and
+<strong>Enterprise</strong> plans (Professional/Enterprise also offered
+as a hosted SaaS; Enterprise also on-prem). Per the pricing page
+(consulted 2026-06-07; prices/tiers change frequently — treat exact $ as
+<strong>medium confidence</strong>):</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Tier (as listed 2026-06-07)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core OTA (A/B rootfs, robust update, Update Modules)</td>
+<td>Open Source</td>
+</tr>
+<tr>
+<td>Scheduled deployments</td>
+<td>Professional+</td>
+</tr>
+<tr>
+<td>Automatic retry of deployments</td>
+<td>Professional+</td>
+</tr>
+<tr>
+<td>Delta updates (robust delta)</td>
+<td>Professional+</td>
+</tr>
+<tr>
+<td>Server-side / automatic delta generation</td>
+<td>Enterprise</td>
+</tr>
+<tr>
+<td><strong>Phased rollouts</strong></td>
+<td>Enterprise</td>
+</tr>
+<tr>
+<td><strong>Dynamic groups &amp; deployments</strong></td>
+<td>Enterprise</td>
+</tr>
+<tr>
+<td><strong>RBAC</strong></td>
+<td>Enterprise</td>
+</tr>
+</tbody>
+</table>
+<p>Indicative pricing seen: Basic ~$34/mo (≤50 devices), Professional
+~$291/mo (≤250 devices), Enterprise custom/sales-quote, no monthly
+option. Source: <a href="https://mender.io/pricing/plans">Pricing -
+Plans | Mender</a>. Northern.tech also publishes a separate
+<strong>Mender Server Enterprise</strong> license doc — i.e., the
+enterprise server is <strong>not</strong> under the OSS license. Source:
+<a
+href="https://docs.mender.io/release-information/open-source-licenses/mender-server-enterprise">Mender
+Server Enterprise license | docs</a>.</p>
+<p><strong>Bottom line on licensing:</strong> The piece Helix would most
+want to study/reuse (the control plane: phased rollouts, grouping, RBAC,
+delta orchestration) is the <strong>commercially licensed</strong> part.
+The freely-licensed parts are the client and the basic server.</p>
+<h2 id="fit-for-helix">§10. Fit for Helix</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Android 15 fit</td>
+<td><strong>Effectively zero.</strong> No Android client, no
+<code>update_engine</code> integration, Android absent from supported
+platforms. Would require building Android support from scratch.</td>
+</tr>
+<tr>
+<td>Go fit</td>
+<td>Client is Go (good in principle); server is Go microservices but
+with Mongo/NATS/Traefik, conflicting with Helix’s Gin + Postgres + MinIO
++ REST stack.</td>
+</tr>
+<tr>
+<td>Wrapability</td>
+<td><strong>Poor.</strong> Can’t wrap what doesn’t run on Android.
+Server wrap conflicts with locked stack + open-core licensing of the
+needed features.</td>
+</tr>
+<tr>
+<td>Reuse value</td>
+<td><strong>Reference-only.</strong> Update Modules abstraction,
+standalone/managed split, dual-A/B commit/rollback semantics,
+polling-based no-open-ports security model, and REST API shape are worth
+studying for Helix’s own design.</td>
+</tr>
+<tr>
+<td>License risk</td>
+<td>Apache-2.0 client is fine to learn from; Enterprise server features
+are proprietary — do not copy. Bootloader bits are GPL.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> Do <strong>not</strong> adopt or
+wrap Mender for Helix. Keep the locked Helix decision (native A/B via
+AOSP <code>update_engine</code> + custom Go control plane). Use Mender
+as a <strong>design reference</strong> (Update Modules pattern, rollback
+semantics, control-plane API ergonomics) in
+<code>ota_landscape_report.md</code> / ADR-0001.</p>
+<h2 id="confidence-open-questions">§11. Confidence &amp; open
+questions</h2>
+<p><strong>Overall confidence: HIGH</strong> on the disqualifying facts
+(no Android support; orchestration features are paid).
+<strong>MEDIUM</strong> on exact feature-to-tier mapping and pricing
+numbers (marketing/pricing pages change), and on the server’s exact
+internal component list (Traefik/NATS/Mongo — vendor/community sourced,
+plausibly current but not pinned to a versioned spec).</p>
+<p>Open / UNVERIFIED items needing confirmation: - Exact current pricing
+and the precise tier boundary for each feature (re-check the live
+pricing page near decision time). - Whether the newest Mender client is
+a <strong>C++ rewrite</strong> (reported in the ecosystem) vs the
+verified Go 3.x baseline — <strong>UNVERIFIED</strong>. - The ~70–90%
+delta bandwidth savings is a <strong>vendor claim</strong>, not an
+independent benchmark — <strong>UNVERIFIED</strong>. - The exact wording
+“Mender does not yet support Android” was surfaced via search, not
+re-confirmed on a live page; the substantive fact (Android not
+supported) is confirmed by its absence from the device-support list.</p>
+<h2 id="sources-consulted">§12. Sources consulted</h2>
+<p>All consulted 2026-06-07.</p>
+<ul>
+<li>Mender — Device Support:
+https://docs.mender.io/overview/device-support</li>
+<li>Mender — Introduction:
+https://docs.mender.io/overview/introduction</li>
+<li>Mender — How Mender works:
+https://mender.io/engineers/how-mender-works</li>
+<li>Mender — Client installation overview:
+https://docs.mender.io/client-installation/overview</li>
+<li>Mender — Standalone deployment:
+https://docs.mender.io/artifact-creation/standalone-deployment</li>
+<li>Mender — Use an Update Module:
+https://docs.mender.io/client-installation/use-an-updatemodule</li>
+<li>Mender — Pricing / Plans: https://mender.io/pricing/plans</li>
+<li>Mender — Open source licenses:
+https://docs.mender.io/release-information/open-source-licenses</li>
+<li>Mender — Mender Server Enterprise license:
+https://docs.mender.io/release-information/open-source-licenses/mender-server-enterprise</li>
+<li>Mender client LICENSE (Apache-2.0):
+https://github.com/mendersoftware/mender/blob/master/LICENSE</li>
+<li>Mender GitHub client repo:
+https://github.com/mendersoftware/mender</li>
+<li>Mender blog — 3.6 auto-generation of delta updates:
+https://mender.io/blog/mender-3-6-auto-generation-of-delta-updates</li>
+<li>Mender blog — Server-side generation of delta updates:
+https://mender.io/blog/server-side-generation-of-delta-updates</li>
+<li>Mender blog — Delta updates, phased rollouts, scheduling:
+https://mender.io/blog/manage-and-deploy-over-the-air-ota-software-updates-at-scale</li>
+</ul>
+</body>
+</html>

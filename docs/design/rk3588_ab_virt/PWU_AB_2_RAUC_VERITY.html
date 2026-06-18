@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PWU-AB-2 RAUC dm-verity A/B update</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PWU-AB-2 RAUC dm-verity A/B update</h1>
+</header>
+<h1
+id="pwu-ab-2-rauc-dm-verity-ab-update-env-scheme-reconciliation-applyverifymark-goodrollback-design">PWU-AB-2
+— RAUC dm-verity A/B update: env-scheme reconciliation +
+apply→verify→mark-good→rollback design</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-11T00:00:00Z <strong>Status (§11.4.6):</strong> DESIGN + CONFIG
+ARTIFACTS ONLY — nothing here is a proven RAUC update. The config files
+in <a
+href="../../../tests/emulator/ab_virt/rauc/"><code>../../../tests/emulator/ab_virt/rauc/</code></a>
+are authored, parse-clean, and internally coherent with the proven GPT
+layout; <strong>no RAUC bundle has been built and no
+<code>rauc install</code> has run</strong>. Every “MUST build” / “does
+not exist yet” / “to be run by the conductor” marker below is honest.
+The two proven pieces this builds on are PWU-AB-1 (slot switch) and
+PWU-AB-3 (auto-rollback), both verified live on macOS under real
+<strong>U-Boot 2024.01 + QEMU <code>-machine virt</code> + HVF</strong>
+(evidence: <a
+href="../../../tests/emulator/ab_virt/uboot_ab/README.md"><code>uboot_ab/README.md</code></a>
+Status §; <code>docs/qa/20260611T094958Z-ab-slot-switch/</code>,
+<code>docs/qa/20260611T095918Z-ab-rollback/</code>).</p>
+<p>Authoritative parent design: <a
+href="../../research/rk3588_emulator/REPORT.md"><code>../../research/rk3588_emulator/REPORT.md</code></a>
+(PWU-AB-2). State machine this reconciles with: <a
+href="../../../tests/emulator/ab_virt/uboot_ab/README.md"><code>../../../tests/emulator/ab_virt/uboot_ab/README.md</code></a>
++ <a
+href="../../../tests/emulator/ab_virt/uboot_ab/boot.cmd"><code>../../../tests/emulator/ab_virt/uboot_ab/boot.cmd</code></a>.
+Test driver this unblocks: <a
+href="../../../tests/emulator/ab_virt/ab_rauc_verity.sh"><code>../../../tests/emulator/ab_virt/ab_rauc_verity.sh</code></a>
+(its TODO a–d). Shared <code>fw_env</code> dependency: <a
+href="PWU_AB_4_APPLY_PORT.md"><code>PWU_AB_4_APPLY_PORT.md</code></a>
+§3.</p>
+<hr />
+<h2 id="the-integration-gap-the-thing-this-pwu-exists-to-close">1. The
+integration gap (the thing this PWU exists to close)</h2>
+<p><code>ab_rauc_verity.sh</code>’s <code>§11.4.6 honest gap</code> is
+real: RAUC’s native U-Boot backend and this project’s
+<code>boot.cmd</code> express A/B slot state in <strong>two different
+counter schemes</strong> that share ONE anchor variable
+(<code>BOOT_ORDER</code>). The reconciliation must let a single
+<code>boot.scr</code> serve BOTH the proven manual bootcount path
+(PWU-AB-1/AB-3) AND a real <code>rauc install</code> apply, without
+breaking either.</p>
+<h3
+id="raucs-u-boot-env-scheme-from-the-upstream-sources-verbatim-7">1.1
+RAUC’s U-Boot env scheme (from the upstream sources, verbatim §7)</h3>
+<p>RAUC’s <code>[system] bootloader=uboot</code> backend
+(<code>src/bootchooser.c</code>, the <code>contrib/uboot.sh</code>
+example boot script, and the upstream U-Boot <code>bootmeth_rauc</code>)
+uses:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+<th>Who writes it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BOOT_ORDER</code></td>
+<td>space-separated bootname list; <strong>head = slot tried
+first</strong> (<code>"A B"</code> ⇒ try A then B).</td>
+<td><code>rauc</code> (<code>mark-active</code> / <code>install</code>)
++ the boot script (on exhaustion-reset).</td>
+</tr>
+<tr>
+<td><code>BOOT_&lt;bootname&gt;_LEFT</code></td>
+<td>per-slot remaining boot attempts (<code>BOOT_A_LEFT</code>,
+<code>BOOT_B_LEFT</code>). Initialised to <code>3</code> (the upstream
+default / <code>CONFIG_BOOTMETH_RAUC_DEFAULT_TRIES</code>).</td>
+<td>the boot script decrements the chosen slot by 1 each boot;
+<code>rauc status mark-good &lt;slot&gt;</code> <strong>resets the
+booted slot’s LEFT to its default</strong>;
+<code>rauc status mark-bad</code> sets it to <code>0</code>.</td>
+</tr>
+<tr>
+<td><code>rauc.slot</code> (kernel arg)</td>
+<td>tells the booted userspace which bootname it is, so
+<code>rauc</code> can self-detect the active slot.</td>
+<td>the boot script appends it to <code>bootargs</code> for the chosen
+slot.</td>
+</tr>
+</tbody>
+</table>
+<p>RAUC’s boot algorithm (the <code>contrib/uboot.sh</code> example,
+verbatim in §7): iterate <code>BOOT_ORDER</code>; for the first slot
+whose <code>BOOT_&lt;bootname&gt;_LEFT &gt; 0</code>, <strong>decrement
+that slot’s LEFT, set <code>bootargs</code> (root +
+<code>rauc.slot=&lt;name&gt;</code>), <code>saveenv</code>, and boot
+it</strong>. If NO slot has attempts left, reset all LEFT counters to
+default and <code>reset</code> (reboot). The “promotion” of a slot is
+<code>BOOT_ORDER</code> head-order; the “demotion” of a failing slot is
+its <code>LEFT</code> reaching 0 (so the iteration skips it and the
+next-in-order slot wins).</p>
+<h3 id="this-projects-boot.cmd-scheme-proven-pwu-ab-1ab-3">1.2 This
+project’s <code>boot.cmd</code> scheme (proven, PWU-AB-1/AB-3)</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BOOT_ORDER</code></td>
+<td><strong>head = active slot</strong> — IDENTICAL semantics to RAUC.
+This is the shared anchor.</td>
+</tr>
+<tr>
+<td><code>bootcount</code> / <code>bootlimit</code></td>
+<td>a SINGLE global attempt counter (U-Boot’s
+<code>CONFIG_BOOTCOUNT_LIMIT</code> increments <code>bootcount</code>
+before the script runs; the script’s guard swaps <code>BOOT_ORDER</code>
+when <code>bootcount &gt; bootlimit</code>).</td>
+</tr>
+<tr>
+<td><code>upgrade_available</code></td>
+<td><code>1</code> = update on probation (counter armed); <code>0</code>
+= confirmed-good (counter frozen). Gates whether <code>bootcount</code>
+is saved/incremented.</td>
+</tr>
+<tr>
+<td><code>helix_slot</code> (kernel arg)</td>
+<td>this project’s analogue of <code>rauc.slot</code> — already on
+<code>/proc/cmdline</code> (<a
+href="../../../tests/emulator/ab_virt/uboot_ab/boot.cmd"><code>boot.cmd:100</code></a>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="where-they-agree-and-disagree">1.3 Where they agree and
+disagree</h3>
+<ul>
+<li><strong>Agree (load-bearing):</strong> <code>BOOT_ORDER</code> head
+= active slot. PWU-AB-1/AB-3 already adopted the RAUC/Mender
+<code>BOOT_ORDER</code> convention — that is why this reconciliation is
+<em>additive</em>, not a rewrite.</li>
+<li><strong>Disagree:</strong> the counter. RAUC = <strong>per-slot
+<code>BOOT_&lt;bootname&gt;_LEFT</code></strong> (multi-try, slot-local
+demotion). This project = <strong>global
+<code>bootcount</code>/<code>bootlimit</code> +
+<code>upgrade_available</code> gate</strong> (single-try probation,
+swap-on-exhaust). They are NOT the same variable and a naive “use both”
+would let two independent rollback engines fight over
+<code>BOOT_ORDER</code>.</li>
+</ul>
+<hr />
+<h2 id="reconciliation-decision">2. Reconciliation DECISION</h2>
+<blockquote>
+<p><strong>DECISION: EXTEND <code>boot.cmd</code> to ALSO honor RAUC’s
+per-slot <code>BOOT_&lt;bootname&gt;_LEFT</code> counters as an ADDITIVE
+second layer, keeping the proven
+<code>bootcount</code>/<code>bootlimit</code>/<code>upgrade_available</code>
+guard byte-for-byte intact. Do NOT replace <code>boot.cmd</code> with
+the stock <code>contrib/uboot.sh</code>.</strong></p>
+</blockquote>
+<h3 id="why-extend-our-boot.cmd-not-adopt-raucs-uboot.sh">2.1 Why
+extend-our-boot.cmd, NOT adopt rauc’s <code>uboot.sh</code></h3>
+<ol type="1">
+<li><strong>Preserves the GREEN proofs (the overriding constraint,
+§11.4.114).</strong> PWU-AB-1 (slot switch) and PWU-AB-3 (auto-rollback)
+are GREEN against the <em>current</em> <code>boot.cmd</code> on the
+<em>real</em> <code>u-boot.bin</code> artifact. Replacing it with
+<code>contrib/uboot.sh</code> would discard the proven
+<code>bootcount</code>/<code>bootlimit</code>/<code>upgrade_available</code>
+guard those tests assert on — a regression of two passing PWUs to win
+one. The constitution’s known-good-tag discipline (§11.4.114) makes
+“keep the proven mechanism, add to it” the correct path.</li>
+<li><strong><code>contrib/uboot.sh</code> is explicitly an EXAMPLE,
+target-specific.</strong> Its verbatim body (§7) hard-codes
+<code>nand read … ${kernel_a_nandoffset}</code> for kernel-on-NAND +
+rootfs-on-eMMC (<code>/dev/mmcblk0p1</code>) — neither matches this
+emulator (kernel <code>Image</code> on a FAT partition loaded via
+<code>load virtio 0:1</code>, rootfs on
+<code>/dev/vda2</code>/<code>/dev/vda3</code>). RAUC’s own docs say
+“you’ll have to adjust it for your use-case” and “for minor changes in
+boot logic or variable names simply change the boot script and/or the
+RAUC <code>system.conf</code> <code>bootname</code> settings.” Adapting
+it = re-deriving <code>boot.cmd</code>’s load path anyway, with the
+proofs thrown away.</li>
+<li><strong>The anchor already matches.</strong> Both schemes pick the
+active slot by the <strong>head of <code>BOOT_ORDER</code></strong>.
+<code>rauc status mark-active &lt;slot&gt;</code> (and
+<code>rauc install</code>’s activation) <strong>write
+<code>BOOT_ORDER</code> with the new slot at the head</strong> — exactly
+what <code>boot.cmd</code>’s
+<code>setexpr active_slot sub "[ ].*$" "" "${BOOT_ORDER}"</code> already
+reads. So a <code>rauc install</code> that re-orders
+<code>BOOT_ORDER</code> to head=B is <em>already honored</em> by the
+proven head-select logic with ZERO change. The slot-switch half of the
+RAUC apply works against the unmodified <code>boot.cmd</code>.</li>
+<li><strong>Additive <code>BOOT_&lt;bootname&gt;_LEFT</code> honoring is
+a small, safe superset.</strong> The only new behaviour needed is: when
+RAUC has armed per-slot LEFT counters, <code>boot.cmd</code> should (a)
+skip a head slot whose <code>BOOT_&lt;head&gt;_LEFT == 0</code> (RAUC
+demotion), and (b) decrement the chosen slot’s LEFT +
+<code>saveenv</code> (so <code>rauc status mark-good</code> — which
+resets LEFT — closes the probation). This is layered AROUND the existing
+guard, default-inert when the LEFT vars are absent (the PWU-AB-1/AB-3
+path, which sets no LEFT vars, is unchanged).</li>
+</ol>
+<h3
+id="the-extended-boot.cmd-state-machine-design-to-be-implemented-re-proven">2.2
+The extended <code>boot.cmd</code> state machine (DESIGN — to be
+implemented + re-proven)</h3>
+<blockquote>
+<p>This is the <strong>design</strong> for the <code>boot.cmd</code>
+extension. It is NOT yet written into <code>boot.cmd</code> (that is a
+separate PWU step with its own §11.4.115 RED→GREEN + independent review
+§11.4.142). The current <code>boot.cmd</code> is unchanged and its
+PWU-AB-1/AB-3 proofs stand.</p>
+</blockquote>
+<p>Insertion point: AFTER the existing
+<code>bootcount &gt; bootlimit</code> guard (<a
+href="../../../tests/emulator/ab_virt/uboot_ab/boot.cmd"><code>boot.cmd:59-69</code></a>)
+and BEFORE the head-slot <code>setexpr</code> (<a
+href="../../../tests/emulator/ab_virt/uboot_ab/boot.cmd"><code>boot.cmd:75</code></a>).
+The existing guard and head-select stay verbatim. New additive block
+(hush, mirrors <code>contrib/uboot.sh</code> iteration but adapted to
+this emulator’s <code>load virtio</code> + <code>/dev/vda</code>
+layout):</p>
+<pre><code># ---- RAUC per-slot attempt layer (ADDITIVE; inert when LEFT vars absent) -----
+# Only engages when a `rauc install`/mark-active armed per-slot counters. When
+# absent (the PWU-AB-1/AB-3 manual-bootcount path) this whole block is a no-op
+# because the `test -n` guards leave the chosen slot as BOOT_ORDER&#39;s head.
+setenv rauc_chosen &quot;&quot;
+for s in ${BOOT_ORDER}; do
+  if test -z &quot;${rauc_chosen}&quot;; then
+    # read this slot&#39;s LEFT counter (BOOT_A_LEFT / BOOT_B_LEFT); absent =&gt; treat
+    # as &quot;not RAUC-managed&quot; so the head wins (preserves PWU-AB-1/AB-3).
+    if test &quot;${s}&quot; = &quot;A&quot;; then setenv _left &quot;${BOOT_A_LEFT}&quot;; else setenv _left &quot;${BOOT_B_LEFT}&quot;; fi
+    if test -n &quot;${_left}&quot;; then
+      if test 0x${_left} -gt 0; then
+        echo &quot;A/B(RAUC): slot ${s} has ${_left} attempts left -&gt; choosing it&quot;
+        setenv rauc_chosen &quot;${s}&quot;
+        # decrement + persist so a never-confirmed slot exhausts its tries and
+        # the NEXT boot&#39;s iteration skips it (RAUC demotion).
+        if test &quot;${s}&quot; = &quot;A&quot;; then setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; else setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; fi
+        saveenv
+      else
+        echo &quot;A/B(RAUC): slot ${s} exhausted (LEFT=0) -&gt; skip&quot;
+      fi
+    else
+      # LEFT var absent for this slot =&gt; non-RAUC-managed; head wins.
+      setenv rauc_chosen &quot;${s}&quot;
+    fi
+  fi
+done
+# If RAUC counters were present and ALL exhausted, rauc_chosen is &quot;&quot; -&gt; reset to
+# default tries and reboot (mirrors contrib/uboot.sh &quot;No valid slot&quot; recovery).
+if test -n &quot;${BOOT_A_LEFT}${BOOT_B_LEFT}&quot;; then
+  if test -z &quot;${rauc_chosen}&quot;; then
+    echo &quot;A/B(RAUC): no slot with attempts left -&gt; reset tries to 3 + reboot&quot;
+    setenv BOOT_A_LEFT 3
+    setenv BOOT_B_LEFT 3
+    saveenv
+    reset
+  fi
+  # Promote the RAUC-chosen slot to the head so the existing setexpr picks it.
+  if test &quot;${rauc_chosen}&quot; = &quot;A&quot;; then setenv BOOT_ORDER &quot;A B&quot;; else setenv BOOT_ORDER &quot;B A&quot;; fi
+fi</code></pre>
+<p>The existing
+<code>setexpr active_slot sub "[ ].*$" "" "${BOOT_ORDER}"</code> (<a
+href="../../../tests/emulator/ab_virt/uboot_ab/boot.cmd"><code>boot.cmd:75</code></a>)
+then reads the (now possibly RAUC-promoted) head, and the existing
+<code>root_part</code> map + <code>load virtio 0:1 … Image</code> +
+<code>booti</code> run UNCHANGED. The kernel <code>bootargs</code> line
+gains <code>rauc.slot=${active_slot}</code> alongside the existing
+<code>helix_slot=${active_slot}</code> so in-guest <code>rauc</code>
+self-detects the slot (<code>system.conf</code> <code>bootname</code>
+matches).</p>
+<p><strong>Coexistence rule (the one invariant that keeps both engines
+from fighting):</strong> the global
+<code>bootcount</code>/<code>bootlimit</code> guard fires ONLY when
+<code>upgrade_available != 0</code> causes U-Boot to increment
+<code>bootcount</code> past <code>bootlimit</code>. A RAUC apply that
+arms per-slot LEFT counters SHOULD leave
+<code>upgrade_available=0</code> (so the global guard stays inert) and
+rely on the LEFT layer for demotion — OR set
+<code>upgrade_available=1</code> and use the global guard, but NOT both
+for the same apply. The two paths are mutually exclusive per apply;
+<code>boot.cmd</code>’s LEFT block is inert when LEFT vars are absent,
+and the global guard is inert when <code>upgrade_available=0</code>.
+PWU-AB-1/AB-3 use the global path (no LEFT vars); a
+<code>rauc install</code> uses the LEFT path
+(<code>upgrade_available</code> untouched at 0).</p>
+<h3 id="honest-boundary-11.4.6">2.3 Honest boundary (§11.4.6)</h3>
+<ul>
+<li>The §2.2 extension is <strong>designed, not implemented or
+proven</strong>. Its hush syntax (<code>for s in ${BOOT_ORDER}</code>,
+nested <code>if test … -gt 0</code>, <code>setexpr … - 1</code>) mirrors
+the verbatim <code>contrib/uboot.sh</code> (§7) which is known-good
+U-Boot hush, but it has NOT been compiled via <code>mkimage</code> or
+run under U-Boot in THIS emulator. A separate PWU implements + re-proves
+it (§11.4.115 RED→GREEN: assert the current <code>boot.cmd</code> does
+NOT honor LEFT counters → wire the block → assert it does, both
+PWU-AB-1/AB-3 still GREEN).</li>
+<li>The simplest <em>first</em> GREEN for PWU-AB-2 does NOT even need
+§2.2: because <code>rauc install</code>/<code>mark-active</code>
+re-orders <code>BOOT_ORDER</code> to head=new-slot, and the proven
+<code>boot.cmd</code> already selects the head, a single-try RAUC apply
+(LEFT default 1, or relying purely on the head re-order + the existing
+global guard for rollback) switches slots against the UNMODIFIED
+<code>boot.cmd</code>. The §2.2 multi-try LEFT layer is the
+<em>full-fidelity</em> RAUC behaviour; the <em>minimal</em> PWU-AB-2
+GREEN can ride the existing head-select. The test plan (§6) proves the
+minimal path first.</li>
+</ul>
+<hr />
+<h2
+id="the-apply-verify-mark-good-rollback-design-mapped-to-rauc-commands-the-gpt-layout">3.
+The apply → verify → mark-good → rollback design (mapped to rauc
+commands + the GPT layout)</h2>
+<p>GPT layout (the load-bearing contract, UNCHANGED from <a
+href="../../../tests/emulator/ab_virt/assemble_ab_disk.sh"><code>assemble_ab_disk.sh</code></a>
++ <a
+href="../../../tests/emulator/ab_virt/uboot_ab/boot.cmd"><code>boot.cmd:34-40</code></a>):</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Part</th>
+<th>Partlabel</th>
+<th>Role</th>
+<th>RAUC <code>bootname</code></th>
+<th>Device</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>p1</td>
+<td><code>boot</code></td>
+<td>FAT: kernel <code>Image</code> + <code>boot.scr</code> (+ env,
+PWU-AB-4 §3)</td>
+<td>—</td>
+<td><code>load virtio 0:1</code></td>
+</tr>
+<tr>
+<td>p2</td>
+<td><code>rootfs_a</code></td>
+<td>slot A root</td>
+<td><code>A</code></td>
+<td><code>/dev/vda2</code></td>
+</tr>
+<tr>
+<td>p3</td>
+<td><code>rootfs_b</code></td>
+<td>slot B root</td>
+<td><code>B</code></td>
+<td><code>/dev/vda3</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>rauc command (in-guest)</th>
+<th>Effect on GPT + env</th>
+<th>Runtime signature (§11.4.108)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>baseline</strong></td>
+<td><code>rauc status --detailed</code></td>
+<td>none</td>
+<td>reports slot A <code>booted</code>+<code>good</code>, B
+inactive</td>
+</tr>
+<tr>
+<td><strong>apply</strong></td>
+<td><code>rauc install /root/update.raucb</code></td>
+<td>verifies bundle sig against keyring → writes the verity rootfs image
+to the <strong>inactive</strong> slot (B = <code>/dev/vda3</code>) →
+activates B: writes <code>BOOT_ORDER="B A"</code> (+ arms
+<code>BOOT_B_LEFT</code> to default via the U-Boot backend /
+<code>fw_setenv</code>)</td>
+<td><code>rauc install</code> rc=0; <code>/dev/vda3</code> block hash
+changed (real bytes written)</td>
+</tr>
+<tr>
+<td><strong>activate</strong></td>
+<td>(done by <code>rauc install</code>’s U-Boot backend, OR explicitly
+<code>rauc status mark-active other</code>)</td>
+<td><code>BOOT_ORDER</code> head = B; per-slot LEFT armed</td>
+<td><code>fw_printenv BOOT_ORDER</code> ⇒ <code>B A</code></td>
+</tr>
+<tr>
+<td><strong>reboot</strong></td>
+<td><code>reboot</code></td>
+<td>U-Boot re-sources <code>boot.scr</code> → head=B →
+<code>root=/dev/vda3</code> <code>rauc.slot=B helix_slot=B</code></td>
+<td><code>/proc/cmdline</code> has <code>helix_slot=B</code>;
+<code>findmnt /</code> ⇒ verity dm device over
+<code>/dev/vda3</code></td>
+</tr>
+<tr>
+<td><strong>verify (verity)</strong></td>
+<td>(kernel brings up dm-verity for the verity-mounted root)</td>
+<td>dm-verity target active over the slot device</td>
+<td><code>dmsetup status</code> ⇒ ≥1 <code>verity</code> target;
+<code>dmesg</code> ⇒ <code>device-mapper: verity</code></td>
+</tr>
+<tr>
+<td><strong>mark-good</strong></td>
+<td><code>rauc status mark-good booted</code></td>
+<td>resets the <strong>booted</strong> slot’s
+<code>BOOT_&lt;bootname&gt;_LEFT</code> to default ⇒ slot CONFIRMED, no
+rollback</td>
+<td><code>fw_printenv BOOT_B_LEFT</code> ⇒ default
+(e.g. <code>3</code>); <code>rauc status</code> ⇒ B
+<code>good</code></td>
+</tr>
+<tr>
+<td><strong>rollback (unhealthy)</strong></td>
+<td>(mark-good NEVER runs)</td>
+<td>each boot decrements <code>BOOT_B_LEFT</code>; once <code>0</code>
+the §2.2 iteration skips B → head A wins → boots
+<code>/dev/vda2</code></td>
+<td>post-rollback <code>helix_slot=A</code> <code>/etc/slot_id=A</code>
+— composes proven PWU-AB-3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verity-specific note (§11.4.6 honest):</strong>
+<code>format=verity</code> makes the <em>bundle</em> integrity-protected
+(the bundle’s payload is a dm-verity image whose root hash is in the
+signed manifest; RAUC verifies the whole bundle’s signature + the verity
+hash before install). Whether the <em>installed slot</em> is then
+mounted <strong>as</strong> a dm-verity device at runtime depends on how
+the rootfs image + the slot are configured (a verity-protected rootfs
+needs the verity metadata on/beside the slot + the kernel/initramfs to
+set up the dm-verity target with the manifest’s root hash). The minimal
+PWU-AB-2 GREEN proves the <strong>apply+slot-switch</strong> under real
+RAUC; the <strong>runtime dm-verity-active root</strong> is the stronger
+signature (<code>HELIX_DMVERITY=[1-9]</code> in
+<code>ab_rauc_verity.sh</code>) and may require an
+initramfs/verity-mount step that is called out as a follow-on if the
+plain ext4 slot mount does not bring up a verity target. Do NOT claim
+runtime verity until <code>dmsetup status</code> shows it.</p>
+<hr />
+<h2
+id="concrete-bundle-build-recipe-the-conductors-container-step-not-run-here">4.
+Concrete bundle-build recipe (the conductor’s container step — NOT run
+here)</h2>
+<p>All of this runs in the aarch64 build container (like
+<code>build_image.sh</code>), writing into the
+<strong>gitignored</strong> <code>out/</code> tree. <strong>No key is
+committed (§11.4.10).</strong> The keygen helper (<a
+href="../../../tests/emulator/ab_virt/rauc/gen_dev_keys.sh"><code>../../../tests/emulator/ab_virt/rauc/gen_dev_keys.sh</code></a>)
+generates a throwaway self-signed dev cert+key into
+<code>out/rauc-keys/</code> at build time.</p>
+<h3 id="dev-signing-key-cert-self-signed-throwaway-11.4.10">4.1 Dev
+signing key + cert (self-signed, throwaway — §11.4.10)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># (gen_dev_keys.sh does exactly this, into out/rauc-keys/, key chmod 600)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> req <span class="at">-x509</span> <span class="at">-newkey</span> rsa:4096 <span class="at">-nodes</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-keyout</span> out/rauc-keys/dev.key.pem <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-out</span>    out/rauc-keys/dev.cert.pem <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-subj</span> <span class="st">&quot;/O=Helix OTA dev/CN=helix-ota-ab-virt-dev&quot;</span> <span class="at">-days</span> 365</span></code></pre></div>
+<p>The SAME <code>dev.cert.pem</code> is the bundle’s signing cert AND
+the guest keyring (<code>/etc/rauc/system.conf [keyring] path=</code>) —
+self-signed dev trust. A production build uses a real PKI (§11.4.10);
+this is a dev-only emulator key, never committed, never reused.</p>
+<h3 id="manifest-formatverity">4.2 Manifest
+(<code>format=verity</code>)</h3>
+<p>Template: <a
+href="../../../tests/emulator/ab_virt/rauc/manifest.raucm.in"><code>../../../tests/emulator/ab_virt/rauc/manifest.raucm.in</code></a>.
+The build substitutes <code>@COMPATIBLE@</code>, <code>@VERSION@</code>,
+<code>@ROOTFS_IMAGE@</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[update]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">compatible</span><span class="ot">=</span><span class="st">helix-ota-ab-virt</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span><span class="ot">=</span><span class="st">@VERSION@</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[bundle]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="dt">format</span><span class="ot">=</span><span class="st">verity</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[image.rootfs]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">filename</span><span class="ot">=</span><span class="st">@ROOTFS_IMAGE@</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># sha256 + size are filled in automatically by `rauc bundle`.</span></span></code></pre></div>
+<h3 id="build-the-bundle">4.3 Build the bundle</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># stage the new rootfs image (the slot payload) into a temp bundle dir, render</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the manifest, then sign+pack. RAUC computes the verity hash + the image</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># sha256/size automatically for format=verity.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> out/bundle-src</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> out/images/rootfs.ext2 out/bundle-src/rootfs.ext4.img    <span class="co"># the slot payload</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-e</span> <span class="st">&quot;s/@COMPATIBLE@/helix-ota-ab-virt/&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">-e</span> <span class="st">&quot;s/@VERSION@/</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y.%m.%d<span class="va">)</span><span class="st">-1/&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">-e</span> <span class="st">&quot;s/@ROOTFS_IMAGE@/rootfs.ext4.img/&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    tests/emulator/ab_virt/rauc/manifest.raucm.in <span class="op">&gt;</span> out/bundle-src/manifest.raucm</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">rauc</span> <span class="at">--cert</span> out/rauc-keys/dev.cert.pem <span class="at">--key</span> out/rauc-keys/dev.key.pem <span class="dt">\</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>     bundle out/bundle-src/ out/images/update.raucb</span></code></pre></div>
+<p>Then stage <code>out/images/update.raucb</code> into the guest at
+<code>RAUC_BUNDLE</code> (default <code>/root/update.raucb</code>) —
+e.g. via a second boot partition file, a 9p/virtfs mount, or by writing
+it into a slot the test reads. (The exact staging path is the
+conductor’s choice at run time; <code>ab_rauc_verity.sh</code> reads
+<code>RAUC_BUNDLE</code>.)</p>
+<h3 id="etcraucsystem.conf-in-both-slot-rootfs">4.4
+<code>/etc/rauc/system.conf</code> (in BOTH slot rootfs)</h3>
+<p>Authored: <a
+href="../../../tests/emulator/ab_virt/rauc/system.conf"><code>../../../tests/emulator/ab_virt/rauc/system.conf</code></a>.
+Bound to THIS emulator’s layout:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[system]</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">compatible</span><span class="ot">=</span><span class="st">helix-ota-ab-virt</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bootloader</span><span class="ot">=</span><span class="st">uboot</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">mountprefix</span><span class="ot">=</span><span class="st">/mnt/rauc</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># bundle-formats: allow verity (the bundle we build); -plain forbids unsigned plain.</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="dt">bundle-formats</span><span class="ot">=</span><span class="st">-plain</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[keyring]</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="dt">path</span><span class="ot">=</span><span class="st">/etc/rauc/dev.cert.pem</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[slot.rootfs.0]</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="dt">device</span><span class="ot">=</span><span class="st">/dev/vda2</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="dt">type</span><span class="ot">=</span><span class="st">ext4</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="dt">bootname</span><span class="ot">=</span><span class="st">A</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">[slot.rootfs.1]</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="dt">device</span><span class="ot">=</span><span class="st">/dev/vda3</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="dt">type</span><span class="ot">=</span><span class="st">ext4</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="dt">bootname</span><span class="ot">=</span><span class="st">B</span></span></code></pre></div>
+<p><code>bootname=A</code>/<code>bootname=B</code> match the
+<code>BOOT_ORDER</code> tokens <code>boot.cmd</code> already reads (§2).
+<code>device=/dev/vda2</code>/<code>/dev/vda3</code> match the proven
+GPT contract. <code>bootloader=uboot</code> selects RAUC’s U-Boot
+backend, which reads/writes <code>BOOT_ORDER</code> +
+<code>BOOT_&lt;bootname&gt;_LEFT</code> via
+<code>fw_setenv</code>/<code>fw_printenv</code> (§5).</p>
+<h3 id="etcfw_env.config-in-both-slot-rootfs-shared-with-pwu-ab-4-3">4.5
+<code>/etc/fw_env.config</code> (in BOTH slot rootfs — SHARED with
+PWU-AB-4 §3)</h3>
+<p>Authored: <a
+href="../../../tests/emulator/ab_virt/rauc/fw_env.config"><code>../../../tests/emulator/ab_virt/rauc/fw_env.config</code></a>.
+<strong>This is the single biggest UNVERIFIED dependency</strong>
+(§11.4.6): it MUST point <code>fw_setenv</code>/<code>fw_printenv</code>
+at the EXACT location the QEMU <code>u-boot.bin</code> stores its
+environment (<code>CONFIG_ENV_IS_IN_*</code>). For the
+<code>qemu_arm64</code> U-Boot defconfig that is <strong>most commonly
+<code>CONFIG_ENV_IS_IN_FAT</code></strong> (env in a file
+<code>uboot.env</code> on the FAT boot partition) — but it MAY be a raw
+offset (<code>CONFIG_ENV_IS_IN_*</code> raw) depending on the built
+config. The authored file documents BOTH candidate forms and is marked
+UNVERIFIED until checked against the built <code>u-boot.bin</code>:</p>
+<pre><code># CANDIDATE A (CONFIG_ENV_IS_IN_FAT — env as a file on the FAT boot partition):
+#   fw_env.config does NOT support FAT-file env directly; if the built U-Boot
+#   uses ENV_IS_IN_FAT, the persistent-env work in PWU_AB_4 §3 must instead
+#   place a raw env region OR use libubootenv&#39;s FAT support where available.
+# CANDIDATE B (raw env region on the boot device — RECOMMENDED to wire so
+#   fw_setenv works): a single env copy at a fixed offset on /dev/vda1.
+#   &lt;device&gt; &lt;offset&gt; &lt;env-size&gt; &lt;sector-size&gt;
+# /dev/vda1 0x000000 0x4000 0x200
+#
+# UNVERIFIED (§11.4.6): the real offset/size/redundancy MUST be read from the
+# built u-boot.bin CONFIG_ENV_* before this is trusted. See PWU_AB_4 §3 +
+# the Negative finding in §8.</code></pre>
+<blockquote>
+<p><strong>§11.4.6 / §11.4.108 warning:</strong> if
+<code>fw_env.config</code> does not match the bootloader’s env storage
+byte-for-byte, the guest writes an env the bootloader never reads — a
+silent SOURCE→RUNTIME gap. The conductor MUST verify
+<code>fw_printenv</code> round-trips against U-Boot’s view (set in
+U-Boot, read with <code>fw_printenv</code>; set with
+<code>fw_setenv</code>, read at the <code>=&gt;</code> prompt) BEFORE
+trusting any <code>rauc install</code> slot arm. This verification is a
+gating step of the bundle-build PWU.</p>
+</blockquote>
+<h3 id="guest-package-dependency">4.6 Guest package dependency</h3>
+<p><code>u-boot-tools</code>
+(<code>fw_setenv</code>/<code>fw_printenv</code>, libubootenv) MUST be
+in the guest. <code>build_image.sh</code> currently has
+<code>BR2_PACKAGE_RAUC=y</code> + the U-Boot target but
+<strong>not</strong> an explicit <code>BR2_PACKAGE_UBOOT_TOOLS=y</code>
+for the <em>target</em> — that add is part of the bundle-build PWU (a
+<code>build_image.sh</code> change, separate commit + review §11.4.142).
+<code>ab_rauc_verity.sh</code> already calls <code>fw_setenv</code>
+(line 237), so the test will surface its absence honestly as a non-zero
+rc (the RED baseline).</p>
+<hr />
+<h2 id="how-rauc-drives-the-env-the-wire-between-rauc-and-boot.cmd">5.
+How RAUC drives the env (the wire between <code>rauc</code> and
+<code>boot.cmd</code>)</h2>
+<ol type="1">
+<li><code>rauc install</code> (or
+<code>rauc status mark-active other</code>) → RAUC’s U-Boot backend
+calls <code>fw_setenv</code> to write <code>BOOT_ORDER</code> with the
+new slot at the head AND set the new slot’s
+<code>BOOT_&lt;bootname&gt;_LEFT</code> to the default tries.</li>
+<li>Reboot → <code>boot.scr</code> (extended <code>boot.cmd</code>,
+§2.2) reads <code>BOOT_ORDER</code> head + (additively) the
+<code>BOOT_&lt;bootname&gt;_LEFT</code> counter, decrements it,
+<code>saveenv</code>, boots the slot with
+<code>rauc.slot=&lt;name&gt;</code>.</li>
+<li>In-guest <code>rauc status mark-good booted</code> →
+<code>fw_setenv</code> resets the booted slot’s
+<code>BOOT_&lt;bootname&gt;_LEFT</code> to default ⇒ slot confirmed
+(probation closed). This is the RAUC analogue of PWU-AB-4 §4’s
+healthy-marker
+(<code>fw_setenv upgrade_available 0; bootcount 0</code>); per §11.4.74
+the RAUC bundle path SHOULD reuse <code>rauc status mark-good</code> as
+the marker.</li>
+<li>Unhealthy: <code>mark-good</code> never runs →
+<code>BOOT_&lt;bootname&gt;_LEFT</code> decrements each boot → reaches 0
+→ §2.2 iteration skips it → head falls through to the other slot ⇒
+auto-rollback (composes proven PWU-AB-3).</li>
+</ol>
+<p>All of (1)/(3) require the §4.5 <code>fw_env.config</code> to be
+correct — that is the gating verification.</p>
+<hr />
+<h2 id="red-green-test-plan-references-ab_rauc_verity.sh">6. RED → GREEN
+test plan (references <code>ab_rauc_verity.sh</code>)</h2>
+<p>The driver <a
+href="../../../tests/emulator/ab_virt/ab_rauc_verity.sh"><code>ab_rauc_verity.sh</code></a>
+is authored with <code>RED_MODE</code> (default <code>1</code>) per
+§11.4.115. This plan maps its assertions to the build order.</p>
+<h3
+id="red-baseline-red_mode1-current-artifact-no-bundle-no-system.conf-wired">6.1
+RED baseline (<code>RED_MODE=1</code>, current artifact — NO bundle, NO
+system.conf wired)</h3>
+<p>Run AS-IS once PWU-AB-1 is GREEN and the disk exists. Expected:
+<code>rauc install</code> returns non-zero (no bundle / no
+<code>system.conf</code>), no dm-verity target, slot stays A. The
+driver’s RED assertions (<code>ab_rauc_verity.sh:327-330</code>) assert
+exactly this defect-present baseline → captures the honest “apply
+unproven” state. A GREEN here would be a §11.4 bluff.</p>
+<h3
+id="wire-the-minimal-apply-rides-the-unmodified-boot.cmd-head-select-2.3">6.2
+Wire the minimal apply (rides the UNMODIFIED <code>boot.cmd</code>
+head-select, §2.3)</h3>
+<ol type="1">
+<li>Build the bundle (§4.3) + stage into the guest.</li>
+<li>Add <code>system.conf</code> (§4.4) + <code>fw_env.config</code>
+(§4.5, <strong>verified</strong> §4.5 warning) +
+<code>u-boot-tools</code> (§4.6) to BOTH slots via
+<code>build_image.sh</code> overlay; verify
+<code>fw_printenv</code>/<code>fw_setenv</code> round-trip against
+U-Boot (the gating check).</li>
+<li><code>rauc install</code> writes B + re-orders
+<code>BOOT_ORDER="B A"</code> (head=B). The proven <code>boot.cmd</code>
+head-select already boots B. Flip <code>RED_MODE=0</code>.</li>
+</ol>
+<h3 id="green-guard-red_mode0">6.3 GREEN guard
+(<code>RED_MODE=0</code>)</h3>
+<p>The SAME driver assertions (<code>ab_rauc_verity.sh:319-323</code>)
+now guard the GREEN behaviour: <code>HELIX_RAUC_INSTALL_RC=0</code>,
+<code>HELIX_POSTSLOT=B</code> (slot switched by the real RAUC apply),
+<code>HELIX_ROOTDEV=</code> captured, <code>HELIX_DMVERITY=[1-9]</code>
+(verity-active — see the §3 verity honesty note; if runtime verity needs
+the initramfs step, that is a flagged follow-on and this assertion stays
+RED until it lands — do NOT force GREEN), and
+<code>not HELIX_POSTSLOT=A</code>.</p>
+<h3 id="full-coverage-11.4.27-11.4.85-1.1">6.4 Full coverage (§11.4.27 /
+§11.4.85 / §1.1)</h3>
+<ul>
+<li><strong>Healthy path:</strong> install B → reboot →
+<code>rauc status mark-good booted</code> → B confirmed
+(<code>BOOT_B_LEFT</code> reset). Evidence: <code>fw_printenv</code>
+before/after mark-good.</li>
+<li><strong>Unhealthy path (composes PWU-AB-3):</strong> install B →
+reboot → mark-good never runs → <code>BOOT_B_LEFT</code> decrements to 0
+→ §2.2 skip → rollback to A. Asserts <code>HELIX_POSTSLOT=A</code> after
+the exhaustion reboot.</li>
+<li><strong>Chaos (§11.4.85):</strong> power-cut (QMP) during
+<code>rauc install</code> slot write → the inactive slot is either
+old-consistent or the install is re-runnable (RAUC writes the inactive
+slot, never the running one — no brick); power-cut during the
+<code>fw_setenv</code> arm → env is old-or-new, never half (the §4.5
+verification proves atomicity).</li>
+<li><strong>Determinism (§11.4.50):</strong> N identical PASS +
+identical evidence hashes on the same disk MD5 + bundle MD5.</li>
+<li><strong>§1.1 paired mutation:</strong> (a) corrupt the bundle
+signature → <code>rauc install</code> MUST FAIL (proves the keyring gate
+is real, not bypassed); (b) point <code>system.conf</code>
+<code>[slot.rootfs.1] device=</code> at <code>/dev/vda2</code> (the
+ACTIVE slot) → RAUC MUST refuse to install onto the booted slot (proves
+slot-detection is real).</li>
+</ul>
+<h3 id="evidence-11.4.511.4.6911.4.8311.4.107">6.5 Evidence
+(§11.4.5/§11.4.69/§11.4.83/§11.4.107)</h3>
+<p>Under <code>docs/qa/&lt;run-id&gt;-ab-rauc-verity/</code> (the driver
+already writes these): <code>console.log</code> (full
+U-Boot+kernel+guest, live not frozen — the
+<code>HELIX_DONE_RAUC_MARK</code> sentinel proves a live post-reboot
+shell),
+<code>rauc_status_pre.txt</code>/<code>rauc_status_post.txt</code>,
+<code>verdict.txt</code>. Add <code>fw_env_before/after.txt</code> (the
+env transition = the §11.4.108 runtime signature) +
+<code>slot_block_hash.txt</code> (pre/post inactive-slot hash = real
+bytes written, not faked) when the apply is wired.</p>
+<hr />
+<h2
+id="verbatim-upstream-rauc-contribuboot.sh-the-reference-algorithm-11.4.99">7.
+Verbatim upstream RAUC <code>contrib/uboot.sh</code> (the reference
+algorithm, §11.4.99)</h2>
+<p>Fetched 2026-06-11 from
+<code>https://raw.githubusercontent.com/rauc/rauc/master/contrib/uboot.sh</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is only an example to show a possible bootcmd script to implement A/B</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># slot selection for kernel on NAND and rootfs on eMMC. It&#39;s expected that</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># you&#39;ll have to adjust it for your use-case.</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">${BOOT_ORDER}</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="ex">setenv</span> BOOT_ORDER <span class="st">&quot;A B&quot;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">${BOOT_A_LEFT}</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="ex">setenv</span> BOOT_A_LEFT 3</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">${BOOT_B_LEFT}</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="ex">setenv</span> BOOT_B_LEFT 3</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">setenv</span> bootargs</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> BOOT_SLOT <span class="kw">in</span> <span class="st">&quot;</span><span class="va">${BOOT_ORDER}</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">test</span> <span class="st">&quot;x</span><span class="va">${bootargs}</span><span class="st">&quot;</span> != <span class="st">&quot;x&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># skip remaining slots</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="bu">test</span> <span class="st">&quot;x</span><span class="va">${BOOT_SLOT}</span><span class="st">&quot;</span> = <span class="st">&quot;xA&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">test</span> 0x<span class="va">${BOOT_A_LEFT}</span> <span class="at">-gt</span> 0<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>      <span class="bu">echo</span> <span class="st">&quot;Found valid slot A, </span><span class="va">${BOOT_A_LEFT}</span><span class="st"> attempts remaining&quot;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>      <span class="ex">setexpr</span> BOOT_A_LEFT <span class="va">${BOOT_A_LEFT}</span> <span class="at">-</span> 1</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>      <span class="ex">setenv</span> load_kernel <span class="st">&quot;nand read </span><span class="va">${kernel_loadaddr}</span><span class="st"> </span><span class="va">${kernel_a_nandoffset}</span><span class="st"> </span><span class="va">${kernel_size}</span><span class="st">&quot;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      <span class="ex">setenv</span> bootargs <span class="st">&quot;</span><span class="va">${default_bootargs}</span><span class="st"> root=/dev/mmcblk0p1 rauc.slot=A&quot;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="bu">test</span> <span class="st">&quot;x</span><span class="va">${BOOT_SLOT}</span><span class="st">&quot;</span> = <span class="st">&quot;xB&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">test</span> 0x<span class="va">${BOOT_B_LEFT}</span> <span class="at">-gt</span> 0<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>      <span class="bu">echo</span> <span class="st">&quot;Found valid slot B, </span><span class="va">${BOOT_B_LEFT}</span><span class="st"> attempts remaining&quot;</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>      <span class="ex">setexpr</span> BOOT_B_LEFT <span class="va">${BOOT_B_LEFT}</span> <span class="at">-</span> 1</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>      <span class="ex">setenv</span> load_kernel <span class="st">&quot;nand read </span><span class="va">${kernel_loadaddr}</span><span class="st"> </span><span class="va">${kernel_b_nandoffset}</span><span class="st"> </span><span class="va">${kernel_size}</span><span class="st">&quot;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>      <span class="ex">setenv</span> bootargs <span class="st">&quot;</span><span class="va">${default_bootargs}</span><span class="st"> root=/dev/mmcblk0p2 rauc.slot=B&quot;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">test</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">${bootargs}</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="ex">saveenv</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;No valid slot found, resetting tries to 3&quot;</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="ex">setenv</span> BOOT_A_LEFT 3</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  <span class="ex">setenv</span> BOOT_B_LEFT 3</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="ex">saveenv</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  <span class="ex">reset</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Loading kernel&quot;</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="ex">run</span> load_kernel</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot; Starting kernel&quot;</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="ex">bootm</span> <span class="va">${loadaddr_kernel}</span></span></code></pre></div>
+<p>This is the EXAMPLE this project ADAPTS (not adopts): the
+<code>nand read … mmcblk0p1</code> load/root lines are replaced by this
+emulator’s <code>load virtio 0:1 … Image</code> +
+<code>root=/dev/vda${root_part}</code> (the §2.2 block keeps the
+<code>BOOT_ORDER</code>/<code>BOOT_&lt;bootname&gt;_LEFT</code>
+iteration + decrement + reset-and-reboot recovery, drops the NAND/mmc
+specifics).</p>
+<hr />
+<h2 id="sources-verified-2026-06-11">8. Sources verified 2026-06-11</h2>
+<ul>
+<li><strong>RAUC U-Boot integration</strong>
+(<code>[system] bootloader=uboot</code>,
+<code>[slot.rootfs.N] bootname/device</code>, <code>BOOT_ORDER</code> +
+<code>BOOT_&lt;bootname&gt;_LEFT</code>,
+<code>fw_setenv</code>/<code>fw_printenv</code> +
+<code>/etc/fw_env.config</code>, <code>contrib/uboot.sh</code>):
+https://rauc.readthedocs.io/en/latest/integration.html</li>
+<li><strong>RAUC examples</strong> (<code>rauc bundle</code> args,
+<code>openssl req -x509 -newkey rsa:4096</code> dev cert,
+<code>manifest.raucm</code> <code>[bundle] format=verity</code> +
+<code>[image.rootfs]</code>, <code>system.conf</code>
+<code>[keyring]</code>, <code>rauc install</code>):
+https://rauc.readthedocs.io/en/latest/examples.html</li>
+<li><strong>RAUC <code>contrib/uboot.sh</code></strong> (verbatim
+algorithm, §7):
+https://raw.githubusercontent.com/rauc/rauc/master/contrib/uboot.sh</li>
+<li><strong>U-Boot RAUC Bootmeth</strong> (<code>BOOT_ORDER</code>,
+<code>BOOT_&lt;bootname&gt;_LEFT</code>,
+<code>CONFIG_BOOTMETH_RAUC_DEFAULT_TRIES</code>, decrement-by-1,
+all-zero reset, <code>raucargs</code>/<code>rauc.slot</code>):
+https://docs.u-boot.org/en/latest/develop/bootstd/rauc.html</li>
+<li><strong>U-Boot Boot Count Limit</strong> (this project’s
+<code>bootcount</code>/<code>bootlimit</code>/<code>altbootcmd</code>/<code>upgrade_available</code>
+scheme, the global-counter layer §1.2):
+https://docs.u-boot.org/en/latest/api/bootcount.html</li>
+<li><strong>U-Boot environment tools</strong>
+(<code>fw_setenv</code>/<code>fw_printenv</code>,
+<code>fw_env.config</code>):
+https://docs.u-boot.org/en/latest/develop/environment.html</li>
+<li><strong>Mender U-Boot integration</strong> (<code>BOOT_ORDER</code>
+head = active slot, the shared anchor):
+https://docs.mender.io/operating-system-updates-yocto-project/board-integration/bootloader-support/u-boot/manual-u-boot-integration</li>
+</ul>
+<p><strong>Negative finding (§11.4.99):</strong> RAUC’s official
+full-system QEMU example is <strong>x86 + GRUB</strong>, NOT arm64 +
+U-Boot — the GRUB env-block mechanics do NOT transfer, and the
+arm64+U-Boot <code>fw_env.config</code> offset/size is target-specific
+and MUST be read from THIS emulator’s built <code>u-boot.bin</code>
+<code>CONFIG_ENV_IS_IN_*</code> (the <code>qemu_arm64</code> defconfig
+commonly uses <code>CONFIG_ENV_IS_IN_FAT</code>, which libubootenv’s
+classic <code>fw_env.config</code> raw-offset form does NOT directly
+support — this is the §4.5 UNVERIFIED gating dependency, shared with
+<code>PWU_AB_4_APPLY_PORT.md</code> §3). Do NOT assume the upstream
+example’s offsets transfer.</p>
+<p><strong>Negative finding (§11.4.6 — runtime verity):</strong>
+<code>[bundle] format=verity</code> protects the BUNDLE (signed manifest
++ verity-hashed payload, verified before install). It does NOT by itself
+guarantee the INSTALLED slot is mounted as a runtime dm-verity device —
+that needs the verity metadata available to the booted kernel/initramfs
++ a dm-verity mount step. The <code>HELIX_DMVERITY=[1-9]</code>
+assertion in <code>ab_rauc_verity.sh</code> is the runtime-verity
+signature and stays RED until that mount path is proven; the minimal
+PWU-AB-2 GREEN proves apply+slot-switch under real RAUC, not necessarily
+runtime-verity. No runtime-verity claim is made until
+<code>dmsetup status</code> shows it.</p>
+</body>
+</html>
