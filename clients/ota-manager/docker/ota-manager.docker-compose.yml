@@ -1,0 +1,84 @@
+# clients/ota-manager/docker/ota-manager.docker-compose.yml
+#
+# Full-stack OTA Manager deployment: SPA frontend, Go control-plane backend,
+# and PostgreSQL database, wired as a single docker-compose/podman-compose
+# stack.
+#
+# Usage:
+#   docker compose -f clients/ota-manager/docker/ota-manager.docker-compose.yml up -d
+#   podman-compose -f clients/ota-manager/docker/ota-manager.docker-compose.yml up -d
+#
+# The stack serves:
+#   - ota-manager  (SPA) on host port 8081 → container port 80
+#   - ota-server   (API) on host port 8080 → container port 8080
+#   - postgres     (DB)  on host port 5432 → container port 5432
+#
+# Environment variables override default secrets.  At minimum set
+# HELIX_ADMIN_PASSWORD before deployment:
+#
+#   export HELIX_ADMIN_PASSWORD=<strong-password>
+#   docker compose -f <path> up -d
+
+version: "3.9"
+
+services:
+  # ---- OTA Manager (React SPA, served by Nginx) ----------------------------
+  ota-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    environment:
+      # The SPA uses relative API paths (/api/...); the nginx sidecar proxies
+      # them to ota-server.  When deployed behind a reverse-proxy that hosts
+      # both on the same origin, keep VITE_API_BASE_URL=/api.  When the SPA is
+      # served from the Go server's /manager path (embed.go), this env var is
+      # unused (the Go runtime serves the API at its own base path).
+      - VITE_API_BASE_URL=/api
+    depends_on:
+      ota-server:
+        condition: service_started
+    restart: unless-stopped
+
+  # ---- OTA Server (Gin modular monolith) -----------------------------------
+  ota-server:
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # Admin credentials — override HELIX_ADMIN_PASSWORD in production.
+      - HELIX_ADMIN_PASSWORD=${HELIX_ADMIN_PASSWORD:-admin}
+      - HELIX_ADMIN_USERNAME=${HELIX_ADMIN_USERNAME:-admin@helix.example}
+      - HELIX_TOKEN_SECRET=${HELIX_TOKEN_SECRET:-}
+      # When DATABASE_URL is set the server connects to PostgreSQL; omit for
+      # in-memory (dev-only — restarts lose all state).
+      - HELIX_DATABASE_URL=${HELIX_DATABASE_URL:-postgres://helix:${PG_PASSWORD:-helix}@postgres:5432/helix_ota?sslmode=disable}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- PostgreSQL (production data store) ----------------------------------
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: helix_ota
+      POSTGRES_USER: helix
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-helix}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helix -d helix_ota"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  pgdata:
