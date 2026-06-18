@@ -180,6 +180,14 @@ func (s *Server) Router() *gin.Engine {
 
 		// Audit log read (operational_endpoints.md §4.3) — admin only.
 		auth.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
+
+		// Projects (multi-project support). Writes operator/admin, delete admin-only,
+		// reads viewer+.
+		auth.POST("/projects", requireRole(RoleOperator, RoleAdmin), s.handleCreateProject)
+		auth.GET("/projects", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListProjects)
+		auth.GET("/projects/:projectId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetProject)
+		auth.PATCH("/projects/:projectId", requireRole(RoleAdmin), s.handleUpdateProject)
+		auth.DELETE("/projects/:projectId", requireRole(RoleAdmin), s.handleDeleteProject)
 	}
 
 	return r

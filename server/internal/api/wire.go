@@ -218,3 +218,26 @@ type TelemetryAck struct {
 	Rejected  int    `json:"rejected"`
 	RequestID string `json:"request_id,omitempty"`
 }
+
+// --- projects ---
+
+// CreateProjectRequest is POST /projects (admin/operator).
+type CreateProjectRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+// UpdateProjectRequest is PATCH /projects/{projectId} (admin).
+type UpdateProjectRequest struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// ProjectResponse is a project response body.
+type ProjectResponse struct {
+	ProjectID   string    `json:"project_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}

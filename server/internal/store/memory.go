@@ -32,6 +32,11 @@ type MemoryRepository struct {
 	members     map[string][]GroupMember // groupID -> ordered members (with join time)
 	idem        map[string]string        // Idempotency-Key -> resultID
 
+	// Projects (multi-project support).
+	projects  map[string]Project // by projectID
+	prjOrder  []string           // insertion order for stable listing
+	prjByName map[string]string  // name -> projectID (uniqueness)
+
 	// Emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql).
 	fabNodes    map[string]FabricNode       // by nodeID
 	fabTargets  map[string]FabricTarget     // by targetID
@@ -49,6 +54,8 @@ func NewMemoryRepository() *MemoryRepository {
 		artifacts:   make(map[string]Artifact),
 		releases:    make(map[string]Release),
 		deployments: make(map[string]Deployment),
+		projects:    make(map[string]Project),
+		prjByName:   make(map[string]string),
 		groups:      make(map[string]Group),
 		grpByName:   make(map[string]string),
 		members:     make(map[string][]GroupMember),
@@ -612,4 +619,76 @@ func (m *MemoryRepository) PutIdempotent(_ context.Context, key, resultID string
 	if _, exists := m.idem[key]; !exists {
 		m.idem[key] = resultID
 	}
+}
+
+// --- projects ---
+
+func (m *MemoryRepository) CreateProject(_ context.Context, p Project) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if existing, ok := m.prjByName[p.Name]; ok && existing != p.ProjectID {
+		return ErrConflict
+	}
+	if _, exists := m.projects[p.ProjectID]; !exists {
+		m.prjOrder = append(m.prjOrder, p.ProjectID)
+	}
+	m.projects[p.ProjectID] = p
+	m.prjByName[p.Name] = p.ProjectID
+	return nil
+}
+
+func (m *MemoryRepository) GetProject(_ context.Context, projectID string) (Project, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	p, ok := m.projects[projectID]
+	if !ok {
+		return Project{}, ErrNotFound
+	}
+	return p, nil
+}
+
+func (m *MemoryRepository) ListProjects(_ context.Context) ([]Project, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]Project, 0, len(m.prjOrder))
+	for _, id := range m.prjOrder {
+		out = append(out, m.projects[id])
+	}
+	return out, nil
+}
+
+func (m *MemoryRepository) UpdateProject(_ context.Context, p Project) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	old, ok := m.projects[p.ProjectID]
+	if !ok {
+		return ErrNotFound
+	}
+	if other, taken := m.prjByName[p.Name]; taken && other != p.ProjectID {
+		return ErrConflict
+	}
+	if old.Name != p.Name {
+		delete(m.prjByName, old.Name)
+		m.prjByName[p.Name] = p.ProjectID
+	}
+	m.projects[p.ProjectID] = p
+	return nil
+}
+
+func (m *MemoryRepository) DeleteProject(_ context.Context, projectID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	p, ok := m.projects[projectID]
+	if !ok {
+		return ErrNotFound
+	}
+	delete(m.projects, projectID)
+	delete(m.prjByName, p.Name)
+	for i, id := range m.prjOrder {
+		if id == projectID {
+			m.prjOrder = append(m.prjOrder[:i], m.prjOrder[i+1:]...)
+			break
+		}
+	}
+	return nil
 }

@@ -806,3 +806,25 @@ func nullTime(t time.Time) any {
 	}
 	return t
 }
+
+// --- projects (stub — pgx implementation not yet wired) ---
+
+func (r *PostgresRepository) CreateProject(_ context.Context, p Project) error {
+	return errors.New("store: postgres project implementation not yet available")
+}
+
+func (r *PostgresRepository) GetProject(_ context.Context, projectID string) (Project, error) {
+	return Project{}, errors.New("store: postgres project implementation not yet available")
+}
+
+func (r *PostgresRepository) ListProjects(_ context.Context) ([]Project, error) {
+	return nil, errors.New("store: postgres project implementation not yet available")
+}
+
+func (r *PostgresRepository) UpdateProject(_ context.Context, p Project) error {
+	return errors.New("store: postgres project implementation not yet available")
+}
+
+func (r *PostgresRepository) DeleteProject(_ context.Context, projectID string) error {
+	return errors.New("store: postgres project implementation not yet available")
+}
