@@ -1,0 +1,19 @@
+# docs_chain context: features-status
+# Syncs docs/features/Status.md + Status_Summary.md → HTML → PDF exports
+context: features-status
+description: Feature inventory status doc chain
+nodes:
+  status_md:       { kind: markdown, path: docs/features/Status.md }
+  status_sum_md:   { kind: markdown, path: docs/features/Status_Summary.md }
+  status_html:     { kind: html,     path: docs/features/Status.html }
+  status_sum_html: { kind: html,     path: docs/features/Status_Summary.html }
+  status_pdf:      { kind: pdf,      path: docs/features/Status.pdf }
+  status_sum_pdf:  { kind: pdf,      path: docs/features/Status_Summary.pdf }
+edges:
+  - { type: derive-from, from: status_md,     to: status_html,     transform: md2html }
+  - { type: derive-from, from: status_html,   to: status_pdf,      transform: html2pdf }
+  - { type: derive-from, from: status_sum_md, to: status_sum_html, transform: md2html }
+  - { type: derive-from, from: status_sum_html, to: status_sum_pdf, transform: html2pdf }
+transforms:
+  md2html:  { builtin: pandoc-html }
+  html2pdf: { builtin: weasyprint-pdf }
