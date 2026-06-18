@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RESUMPTION</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-session-resumption-canonical-always-current">Helix OTA
+— Session Resumption (canonical, always-current)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-11T10:10:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active — the §11.4.131 single canonical out-of-the-box
+session-resumption file</td>
+</tr>
+<tr>
+<td>Standard path</td>
+<td><code>docs/RESUMPTION.md</code> (this file — the fixed
+project-declared §11.4.131 entry point; do not move without a §11.4.66
+operator decision)</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Point any fresh session at THIS file. It carries a SHORT one-line
+resume + a FULL block, the read-first handoff docs, exact live-state
+anchors, current PHASE + NEXT + terminal goal, and the binding
+constraints. Moment-valid for HEAD on <code>main</code> (all 4 remotes
+aligned). <strong>2026-06-11: 🎉 PWU-AB-1 FULL A/B SLOT SWITCH PROVEN
+GREEN on this macOS host</strong> — real U-Boot 2024.01 + QEMU
+<code>virt</code>+HVF, same <code>u-boot.bin</code>+disk booted twice
+differing only in <code>BOOT_ORDER</code> routes root to a different
+physical slot, guest reports it from userspace (Run
+A→<code>/etc/slot_id=A</code>+<code>/dev/vda2</code>+<code>helix_slot=A</code>;
+Run B→<code>B</code>+<code>/dev/vda3</code>+<code>helix_slot=B</code>;
+both live shells; neither cross-boots). 10/10 anti-bluff asserts PASS,
+<strong>§11.4.50 determinism 3/3 identical</strong>, RED→GREEN
+§11.4.115, evidence
+<code>docs/qa/20260611T094958Z-ab-slot-switch/</code> (240-line consoles
++ <code>determinism_soak.txt</code>). build8 produced a genuine
+<code>u-boot.bin</code> (1.0M) + the 2-slot GPT
+<code>ab_disk.img</code>. NEXT: PWU-AB-2 RAUC dm-verity
+(<code>ab_rauc_verity.sh</code> authored — flags the real RAUC↔︎boot.cmd
+env-scheme integration gap + needs a <code>.raucb</code> bundle),
+PWU-AB-3 corrupt-slot auto-rollback (<code>ab_rollback.sh</code>
+authored — bootcount&gt;bootlimit BOOT_ORDER swap); both parse-clean +
+UNVERIFIED-pending-conductor-run. <strong>2026-06-10→11 autonomous
+session: EVERY achievable software tier GREEN + §11.4.50 determinism
+soaks + sustained loadtest, THEN an operator-directed 6-stream
+parallel-hardening round (real coverage gains api 87.7%/fabric
+96.7%/transport 94.9%, dashboard 58→93, §11.4.65 PDF backfill 66
+siblings, extended security suite 26/0/0 ×3 — two real defects
+found+fixed honestly). Full §11.4.27 test-type matrix
+(unit/integration/e2e/full-automation/security/DDoS/scaling/chaos/stress/perf/UI/Challenges)
+re-confirmed. See <code>docs/qa/STABILITY_REPORT.md</code> Rev 2 +
+<code>docs/qa/20260610T16{20Z-overnight-revalidation,40Z-determinism-soak}/</code>.</strong>
+Android bricks product-identical to proof (pins
+<code>1061015</code>/<code>8bb8d2f</code> unchanged), not re-run
+(§12.6/§11.4.6). BLOCKED (hardware): T2 Cuttlefish / GSI-A·B real-apply
+/ T3 RK3588 → no release tag (§11.4.40 would be a bluff).
+Achievable+zero-risk queue is EXHAUSTED; remaining items are
+hardware-gated or correctly-deferred-as-risky (fabric scheduler =
+unwired §11.4.124).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="short-paste-this-first-sentence-into-a-fresh-session">SHORT —
+paste this first sentence into a fresh session</h2>
+<blockquote>
+<p>Read <code>docs/research/main_specs/CONTINUATION.md</code> first, run
+<code>git fetch --all --prune</code>, then continue the Helix OTA
+autonomous loop toward the next validated-and-published version tag —
+current PHASE is “OVERNIGHT STABLE — every achievable tier RE-VERIFIED
+GREEN on this HEAD (see docs/qa/STABILITY_REPORT.md Rev 2); P4
+Cuttlefish + GSI-A/B + T3 RK3588 remain hardware-BLOCKED so no release
+tag yet (§11.4.40); achievable+zero-risk queue EXHAUSTED”; HEAD is
+<code>0d27438</code> on <code>main</code> (all 5 remotes aligned).</p>
+</blockquote>
+<h2 id="full-detailed-resumption-block">FULL — detailed resumption
+block</h2>
+<h3 id="read-first-in-order">0. Read FIRST (in order)</h3>
+<ol type="1">
+<li><code>docs/research/main_specs/CONTINUATION.md</code> — the live
+work-state handoff (DONE / NEXT / locked decisions). <strong>This is the
+primary handoff doc.</strong></li>
+<li><code>.remember/remember.md</code> — present but currently empty; no
+extra state there.</li>
+<li><code>docs/design/EMULATED_DEVICE_TESTING.md</code> — the tiered
+emulator-testing plan (Tier-1/2/3) now in flight.</li>
+<li>Then run: <code>git fetch --all --prune</code> and reconcile
+<code>HEAD..@{u}</code> before any edit (§11.4.37
+fetch-before-edit).</li>
+</ol>
+<h3 id="exact-live-state-anchors-moment-valid-2026-06-10">1. Exact
+live-state anchors (moment-valid 2026-06-10)</h3>
+<ul>
+<li><strong>HEAD commit:</strong> <code>a58f7f8</code> —
+<code>test(parallel-round-2): integration-port fix + deviceemu/submodule coverage + e2e halt-safety + bank-wire</code>
+(on <code>main</code>, all 5 remotes aligned). Recent chain:
+<code>a58f7f8</code> (parallel round 2) ← <code>fc383f2</code> (doc
+sync) ← <code>dead6ef</code> (PWU-5 security) ← <code>a151bd2</code>
+(parallel round 1) ← overnight re-validation/soak ←
+<code>eb9e1c4</code>. <strong>Build state: GREEN — comprehensively
+re-verified; see docs/qa/STABILITY_REPORT.md Rev 3.</strong> Owned
+submodules advanced + pushed: <code>ota-protocol</code> →
+<code>eda12b7</code> (→100% cov), <code>ota-artifact-validator</code> →
+<code>087fa08</code> (→100% cov).</li>
+<li><strong>Parallel-hardening round (operator-directed 6 subagent
+streams, all landed + pushed):</strong> real anti-bluff coverage gains —
+<code>internal/api</code> 81.2→87.7%, <code>internal/fabric</code>
+83.6→96.7%, <code>internal/transport</code> 79.5→94.9%,
+<code>internal/rollout</code> +11.3pts, <code>internal/store</code>
++2.7pts (non-integration); <strong>dashboard Vitest 58→93</strong>
+(Audit/Deployments/Groups, ×3 deterministic); <strong>§11.4.65 PDF
+backfill</strong> (66 <code>.html</code>/<code>.pdf</code> siblings via
+new <code>scripts/sync_md_siblings.sh</code>); <strong>extended security
+suite</strong> <code>tests/security/security_probes_extended.sh</code>
+(6 probe families, <strong>26/0/0 ×3</strong>). Independent
+conductor-verification caught + fixed real defects in the agents’ output
+(a dashboard query bug; two security-suite defects — 1s-TTL provisioning
++ bare-wait hang).</li>
+<li><strong>Parallel round 2 (operator-directed, 5 background streams +
+conductor main-stream, all landed + pushed
+<code>a58f7f8</code>):</strong> ✅ <strong>integration-port collision
+FIXED</strong> (the round-1 follow-up) — cross-process flock
+(<code>pg_itest_lock_test.go</code> in store+rollout) serializes the
+shared Postgres so <code>go test -tags integration ./...</code> runs
+parallel-clean (§11.4.115 RED→GREEN, verified ×2); ✅ <strong>deviceemu
+76→94%</strong> (21 real error/orchestration tests); ✅
+<strong>ota-protocol 99.3→100%</strong> (submodule
+<code>eda12b7</code>); ✅ <strong>ota-artifact-validator
+98.5→100%</strong> (submodule <code>087fa08</code>, §G2 security
+invariants); ✅ <strong>e2e
+<code>tests/e2e/rollout_halt_safety.sh</code></strong> (47/0/0 — the
+safety-critical rollout halt-on-breach path, previously
+happy-path-only); ✅ <strong>HelixQA bank → 11 challenges</strong>
+(extended security wired, dry-run 11/0/0 + self-test).</li>
+<li><strong>REMAINING follow-ups (genuine, actionable, NOT
+hardware-blocked — DIMINISHING-RETURNS, do only if directed):</strong>
+(a) coverage deepening on the other owned submodules
+(<code>ota-telemetry-schema</code>, <code>ota-rollout-engine</code>) per
+§11.4.28; (b) store non-integration coverage (~45% — the pgx paths are
+integration-tagged, so this is largely a tag artifact; with
+<code>-tags integration</code> store is 88.7%); (c) additional e2e
+scenarios (delta-apply, multi-device rollout). NOTE:
+core/api/fabric/transport/deviceemu + both top bricks are now at
+high/100% coverage — further coverage work risks low-value filler (§11.4
+anti-bluff), so prefer real feature/defect work or hardware-tier unblock
+over coverage-chasing. NOTE (§11.4.6 fact-correction):
+<code>weasyprint</code> 66.0 + <code>pandoc</code> 3.9 ARE present on
+this host — the prior “no weasyprint/LaTeX → PDF gap” note is stale. PDF
+siblings ARE generated via the documented §11.4.65 pipeline
+<code>pandoc &lt;f&gt;.md -s --metadata title=&lt;base&gt; -o &lt;f&gt;.html &amp;&amp; weasyprint &lt;f&gt;.html &lt;f&gt;.pdf</code>
+(NOTE: <code>scripts/export_docs.sh</code>’s OWN PDF path needs a LaTeX
+engine, which IS genuinely absent — use the weasyprint pipeline for
+PDF).</li>
+<li><strong>Wave 6 shipped this session (2026-06-10, on
+<code>main</code>, all 4 upstreams):</strong>
+<ul>
+<li><code>16b4b23</code> android gitlink → ota-android-agent
+<code>26bd0a2</code> (<strong>:android AAR now builds</strong> —
+root-caused to an unpinned <code>kotlin.android</code> plugin, NOT MPP;
+<code>:core</code> 47/0 green).</li>
+<li><code>12087bc</code> <strong>emulator
+failure→recall(forward-fix)→recovery e2e</strong>
+(<code>TestRecallRecoveryE2E</code> PASS +<code>-race</code>; podman
+shell variant <code>tests/emulator/tier1_recall_recovery_e2e.sh</code>
+syntax-clean, <strong>conductor must run it live</strong>).</li>
+<li><code>19e1346</code> <strong>dashboard §11.4.135 regression
+guard</strong> for the DeviceStatus.health-object crash (Vitest 58,
+RED/GREEN polarity).</li>
+<li><code>3c85b14</code> <strong>security probes</strong>
+recall+telemetry 28/0 (surfaced a STRONGER trust boundary — strict
+<code>bindJSON</code> rejects injected keys 400).</li>
+<li><code>88bd2c2</code> <strong>recall lifecycle e2e</strong> live 35/0
+(<code>tests/e2e/recall_lifecycle.sh</code>).</li>
+<li><code>5123e67</code> <strong>HelixQA bluff audit + real bank
+runner</strong> (<code>tools/helixqa/run_bank.sh</code>): VERDICT
+<strong>HelixQA is NOT a bluff</strong> — canonical engine gates on
+dispatch-exit-0 + non-empty evidence ledger + catches its own negation;
+the real gap was an INCORPORATION gap (§11.4.27, never wired as a
+submodule / bank never machine-executed). Runner: dry-run 10/0/0 +
+self-test PASS. Audit:
+<code>docs/research/helixqa_bluff_audit/REPORT.md</code>.</li>
+<li><code>71be1cd</code> <strong>per-event telemetry
+<code>duration_ms</code>+<code>bytes_transferred</code>
+end-to-end</strong> (closed the parked WIDEN row-4): ota-protocol
+gitlink → <code>3d360ab</code> (additive, validation rejects negative),
+emulator emits → server ingest → store (memory+pgx) → read view;
+<code>TestEmulatorTelemetryFieldsEndToEnd</code> exact-value PASS +
+real-Postgres parity
+(<code>TestPostgresRepositoryContract_Integration</code>, podman PG, 0
+skips).</li>
+<li><code>8a03a63</code>+<code>de87e21</code> <strong>emulation
+test-fabric research + full design</strong>
+(<code>docs/research/emulation_infra/REPORT.md</code> cited;
+<code>docs/design/emulation_fabric/{DESIGN,ROADMAP,TEST_COVERAGE_PLAN}.md</code>+<code>SCHEMA.sql</code>)
+— tiers T0–T3/Tfw/Tcp, extends containers submodule, honest macOS-M3 KVM
+gaps.</li>
+</ul></li>
+<li><strong>Queue done this session (all pushed, all 4
+upstreams):</strong> ✅ HelixQA LIVE full-bank <strong>10/0</strong>
+(<code>d5fcf4a</code> — fixed run_bank LIVE-mode <code>&lt;pw&gt;</code>
+substitution + free-port isolation); ✅ podman recall→recovery e2e
+<strong>7/7</strong> (<code>71c3f77</code>); ✅ <strong>HelixQA wired as
+a submodule</strong> at <code>submodules/helixqa</code> pinned latest
+<code>fe17c08</code>, gate Part C PASS, install_upstreams done
+(<code>d488e6e</code>, §11.4.27); ✅ <strong>emulation P1 T1-tier
+AVD-HVF boot smoke</strong> arm64-v8a booted+accel-proven
+(<code>5d6b3ae</code>).</li>
+<li><strong>Wave 7 (5-agent parallel, all pushed):</strong> ✅
+<strong>fabric target-registry</strong> project-side Go
+(<code>c709c92</code> — server/internal/fabric + store memory+pgx,
+exclusive-lease §11.4.119 + non-empty-evidence §11.4.69, real-PG
+integration 0 skips, §1.1 mutation); ✅ <strong>on-device AVD
+instrumentation test</strong> → ota-android-agent <code>1061015</code>
+(<code>8266355</code> gitlink; OK 5 tests 3x;
+UpdateEngine-present-but-degrades-to-Failed FACT); ✅ <strong>P2 Tfw
+QEMU smoke</strong> authored, honest SKIP (qemu absent —
+<code>brew install qemu</code> to activate) (<code>504c92b</code>); ✅
+<strong>helix-deps.yaml §11.4.31</strong> + native test_cases bank
+(<code>607e7c3</code>); ✅ spec_impl_alignment row-4 RESOLVED +
+coverage_ledger Rev2 (<code>7a7cb48</code>).</li>
+<li><strong>Overnight stability hardening (2026-06-10, all
+pushed):</strong> ✅ <strong>P2 QEMU firmware tier ACTIVATED</strong> —
+<code>brew install qemu</code> (11.0.1), tier_fw_qemu_smoke.sh real edk2
+UEFI boot PASS (<code>93ac0a3</code>); ✅ <strong>run_bank –self-test
+wired into the pre-build gate</strong> (<code>60da61a</code>, §1.1 every
+build); ✅ <strong>Challenges submodule incorporated</strong> at
+submodules/challenges (<code>438057d</code>, §11.4.27, gate PASS,
+helix-deps 11 deps); ✅ <strong>comprehensive stability sweep ALL
+GREEN</strong> on HEAD 438057d (Go all-tiers+race, pgx integration,
+meta-test, dashboard 58, HelixQA LIVE bank 10/0, podman full-lifecycle +
+fleet 5/5 + recall-recovery, QEMU tier, AVD boot + on-device, submodule
+cores) — see <code>docs/qa/STABILITY_REPORT.md</code>. DEFERRED
+zero-risk: fabric scheduler P3 (would be unwired §11.4.124), HelixQA
+in-tree compile (../containers layout, HelixQA-side). [CORRECTED
+2026-06-10 overnight: the prior “PDF doc siblings (no weasyprint/LaTeX)”
+deferral was stale — weasyprint 66.0 IS present; PDF siblings for the
+handoff docs ARE now generated via pandoc+weasyprint; only a full-corpus
+PDF backfill remains as optional follow-up.]</li>
+<li><strong>Remaining NEXT (real PWUs):</strong> (1) emulation
+<strong>P4 Cuttlefish</strong> (Linux+KVM) for real
+<code>update_engine</code> A/B + the <strong>GSI-A/B real-apply</strong>
+question (REPORT §2.2/§8 — on a google_apis AVD UpdateEngine is present
+but unusable for a non-system caller); (2) <strong>P2 QEMU</strong>
+activate (<code>brew install qemu</code> → tier_fw_qemu_smoke.sh goes
+green); (3) <strong>P3 fabric scheduler</strong> wiring on top of the
+registry (Nomad/LAVA backend); (4) wire HelixQA’s missing
+<code>challenges</code> submodule (its go.mod
+<code>replace digital.vasic.challenges</code> points at an absent
+<code>submodules/challenges</code>); (5) HelixQA:
+<code>run_bank.sh --self-test</code> into the pre-build gate,
+Dispatcher→autonomous-runner (§11.4.124); (6) OPTIONAL full-corpus PDF
+backfill: weasyprint 66.0 + pandoc 3.9 ARE present, and the handoff
+docs’ .pdf siblings are now generated via
+<code>pandoc -s … &amp;&amp; weasyprint</code>; a one-shot pass to
+(re)generate .pdf siblings across the ENTIRE docs corpus (not just
+handoff docs) is the only remaining §11.4.65 PDF item — low-priority,
+non-blocking.</li>
+<li><strong>Wave 5 shipped (on <code>main</code>):</strong>
+<code>2391cb6</code> <strong>full OTA lifecycle + multi-device fleet
+PROVEN on podman</strong> (single device 1.0.0→1.1.0 with the complete
+download→success telemetry accepted; fleet 5/5 → 1.0.0→1.2.0; evidence
+<code>docs/qa/20260610T11191*/</code> + <code>...111928Z-fleet/</code>);
+<code>f5a3428</code> N-device scaling (50 concurrent, ~1580 ops/sec, 0
+err, -race); <code>4658125</code> dashboard Fleet-detail + a real
+product bug fix (DeviceStatus.health object). <strong>The emulator now
+fully runs+tests the codebase end-to-end on podman — the prior “honest
+gap” is closed.</strong></li>
+<li><strong>NEXT non-blocked candidates:</strong> richer telemetry
+ingest fields (duration_ms/bytes_transferred — needs the device to send
+them); a rollback/recall lifecycle e2e on the emulator (drive a failure
+event → recall forward-fix); migrate the dashboard health-bug to a
+Fixed.md ATM entry. <strong>BLOCKED:</strong> ATM-003 Tier-2 (Linux+KVM
+Cuttlefish, design ready in docs/design/CUTTLEFISH_TIER2.md) + ATM-004
+Tier-3 (RK3588 hardware).</li>
+<li><strong>Waves 3–4 also shipped (on <code>main</code>):</strong>
+<code>3c57867</code> closed both protocol gaps
+(UpdateAvailable.deployment_id [ota-protocol→7920842] + GET
+/deployments); <code>8c0521d</code> Tier-1 podman container e2e (PROVEN:
+control-plane container boots, ota-device-emu container runs the real
+round-trip — evidence docs/qa/20260610T105306Z/); <code>5d4920e</code>
+dashboard ArtifactUpload + populated-detail (Vitest 50, Playwright 20);
+submodule pins bumped — constitution <code>ba0f702</code>,
+ota-rollout-engine <code>7a90912</code>, ota-artifact-validator
+<code>77c6b48</code>, containers <code>845ad45</code>. Tracker live at
+docs/Issues.md (ATM-003/004 Operator-blocked: Tier-2
+Cuttlefish-on-Linux-KVM / Tier-3 RK3588 hardware) + docs/Fixed.md.</li>
+<li><strong>Just-shipped this session (on <code>main</code>, pushed all
+4 upstreams):</strong>
+<ul>
+<li><code>50ef5c6</code> —
+<code>feat(api): per-device telemetry filters + group/members pagination</code>
+(OpenAPI synced, redocly-clean).</li>
+<li><code>b0b8ee2</code> —
+<code>chore(dashboard): sync API client to new pagination/filter params</code>
+(dashboard client lockstep).</li>
+<li><code>7dc3334</code> —
+<code>feat(emulator): Tier-1 Go OTA device-emulator + resilience</code>
+(<code>server/internal/deviceemu</code> +
+<code>cmd/ota-device-emu</code>; surfaced the telemetry deployment_id
+protocol gap).</li>
+<li><code>fa571b8</code> —
+<code>test(dashboard): comprehensive UI testing system</code> (Vitest 43
++ Playwright 17 + a11y).</li>
+<li><code>a839220</code> —
+<code>test(qa): autonomous e2e (50/50) + security (39/39) + HelixQA bank</code>.</li>
+<li><strong><code>containers</code> submodule</strong> advanced to
+<code>845ad45</code> —
+<code>feat(emulator): ota-device-emu runtime image + on-demand boot recipe</code>
+(pushed to its github origin); parent gitlink bumped in this
+commit.</li>
+</ul></li>
+<li><strong>Branch:</strong> <code>main</code>. All work merges to
+<code>main</code>; commit + push fan out to all upstreams.</li>
+<li><strong>Upstreams (4):</strong> <code>github</code>
+(<code>git@github.com:HelixDevelopment/helix_ota.git</code>, also
+<code>origin</code> fetch), <code>gitlab</code>
+(<code>git@gitlab.com:helixdevelopment1/helix_ota.git</code>),
+<code>gitflic</code>
+(<code>git@gitflic.ru:helixdevelopment/helix_ota.git</code>),
+<code>gitverse</code>
+(<code>git@gitverse.ru:helixdevelopment/helix_ota.git</code>).
+<code>origin</code> push fans out to all four.</li>
+<li><strong>No in-flight background PIDs / detached pushes known at
+handoff time</strong> — verify with <code>git status</code> + check
+<code>qa-results/push_failures/</code> per §11.4.88 before assuming
+clean.</li>
+<li><strong>Container runtime on this host:</strong> <code>podman</code>
+(the pgx integration + dev stack boot via the <code>containers</code>
+submodule on podman). <strong>No host QEMU / no AVD / no nested KVM on
+this Apple-Silicon host</strong> — see binding constraints.</li>
+</ul>
+<h3 id="current-phase-immediate-next-terminal-goal">2. Current PHASE +
+immediate NEXT + terminal goal</h3>
+<ul>
+<li><strong>PHASE (ACTIVE 2026-06-11): RK3588 / Orange Pi 5 Max A/B
+device emulator</strong> — operator mandate “implement everything you
+can for Linux and if possible for macOS; we will provide a Linux host.”
+Research DONE (<code>docs/research/rk3588_emulator/REPORT.md</code>,
+cited §11.4.123): the dev-host-feasible path on THIS Mac is a QEMU
+<code>virt</code>+HVF Linux guest + <strong>U-Boot bootcount/altbootcmd
+auto-rollback + RAUC <code>format=verity</code> dm-verity A/B
+slots</strong> (reuse RAUC+U-Boot §11.4.74; extend
+<code>containers/pkg/vm</code>). Real Android <code>update_engine</code>
+A/B stays Linux+KVM-gated (Cuttlefish T2 — for the incoming Linux
+host).</li>
+<li><strong>Immediate NEXT (priority order — RK3588 emulator PWUs per
+REPORT §6):</strong>
+<ol type="1">
+<li><strong>macOS dev-host A/B-virt tier:</strong>
+<code>tests/emulator/ab_virt/build_image.sh</code> builds the base
+aarch64 Buildroot guest in a podman container (macOS-portable: named
+container + named-volume DL cache + <code>podman cp</code> extract — NO
+<code>/Volumes/T7</code> bind-mount, NO <code>:Z</code>; output
+gitignored §11.4.77). <strong>STATE (HEAD <code>0d27438</code>): ✅
+PWU-AB-0 base aarch64 Buildroot image BUILT; ✅ PWU-AB-1 FOUNDATION
+GREEN — <code>tests/emulator/ab_virt/boot_smoke.sh</code> boots it under
+<code>qemu-system-aarch64 -M virt -accel hvf</code> to a LIVE
+interactive userspace (kernel on real Apple CPU MIDR 0x610f + getty
+login + post-login uname + interactive sentinel; 196-line evidence
+<code>docs/qa/20260611T061626Z-ab-virt-boot/console.log</code>,
+anti-bluff §11.4.107); ✅ A/B slot mechanism AUTHORED (parse-clean +
+coherent, NOT yet run):
+<code>tests/emulator/ab_virt/assemble_ab_disk.sh</code> (2-slot GPT
+builder, stamps <code>out/.disk_ok</code>) +
+<code>tests/emulator/ab_virt/uboot_ab/boot.cmd</code>
+(BOOT_ORDER/bootcount/altbootcmd slot-select); ✅ 4 parallel streams
+committed — HelixQA bank <code>HOTA-AB-VIRT-BOOT</code> (dry-run
+12/0/0), §11.4.45 Status docs
+<code>docs/emulator/rk3588_ab_virt/</code>, Cuttlefish PWU-CF-2
+corrupt-slot rollback, the A/B-authoring. ⏳ build8
+(<code>build_image.sh</code> + U-Boot qemu_arm64 + RAUC +
+libssl-dev/bison/flex) building <code>u-boot.bin</code>.
+Root-caused+fixed en route: orphaned-rootless-podman-storage disk
+overflow (28GB), invalid Bootlin toolchain, single-quote/paren
+shell-syntax bug, U-Boot openssl/evp.h missing-libssl-dev.</strong>
+IMMINENT NEXT (HEADLINE, gated only on build8’s u-boot.bin): run
+<code>assemble_ab_disk.sh</code> → boot via U-Boot
+(<code>-bios u-boot.bin -drive ab_disk.img</code>) → prove root==slot-B
+after apply+flip+reboot (RED→GREEN §11.4.115, captured evidence). Then
+PWU-AB-2 (RAUC dm-verity), PWU-AB-3 (corrupt-slot auto-rollback —
+headline), PWU-AB-4 (agent ApplyPort over ota-protocol), PWU-AB-5 (chaos
++ HelixQA bank). Build hygiene: named container +
+<code>podman rm -f helix_ab_build</code> after each build; NO
+apostrophes/parens inside the single-quoted podman <code>bash -c</code>;
+U-Boot needs libssl-dev/bison/flex in the build container.</li>
+<li><strong>Linux/Cuttlefish T2 tier:</strong> implement the
+<code>/dev/kvm</code>-gated harness (§11.4.3/§11.4.81) from
+<code>docs/design/CUTTLEFISH_TIER2.md</code> — honest SKIP here, ready
+to verify on the incoming Linux host (real <code>update_engine</code>
+A/B + AVB/dm-verity + auto-rollback).</li>
+<li>Older NEXT-wave (hardware/ingest-gated): device-side TUF; row-4
+richer telemetry fields. NOTE: this is a multi-DAY effort (research est.
+~5-9 eng-days, mostly the iterative Buildroot guest image) — proceeds
+across loop cycles; report “all done” only when genuinely proven
+(§11.4.6).</li>
+</ol></li>
+<li><strong>Terminal goal (loop stop condition A, §11.4.126):</strong> a
+new fully-validated-and-verified version (tag) created AND published
+across all owned submodules + main repo to all 4 upstreams.</li>
+</ul>
+<h3 id="binding-constraints-do-not-violate">3. Binding constraints (do
+not violate)</h3>
+<ul>
+<li><strong>Anti-bluff covenant §11.4</strong> — every PASS carries
+positive captured evidence; metadata-only / config-only /
+absence-of-error / grep-without-runtime PASS forbidden. Tests AND
+HelixQA Challenges bound equally.</li>
+<li><strong>Absolute no-force-push §11.4.113</strong> — force-push
+(<code>--force</code>, <code>--force-with-lease</code>,
+<code>+&lt;ref&gt;</code>) is STRICTLY forbidden on every
+repo/submodule. Integrate via fetch → merge-onto-latest-main →
+fast-forward push.</li>
+<li><strong>podman-only on this host</strong> — use the
+<code>containers</code> submodule
+(<code>vasic-digital/containers</code>, §11.4.76) for any containerized
+workload; never host-direct emulator/<code>adb</code>/<code>qemu</code>
+(§11.4.109 guard).</li>
+<li><strong>Tier-2 Android A/B is host-gated</strong> — real
+<code>update_engine</code> A/B + AVB/dm-verity auto-rollback needs
+Cuttlefish on a Linux + nested-KVM box; the Apple-Silicon
+<code>applehv</code> host cannot run it. NOT structurally impossible
+(§11.4.112) — host/hardware-gated only.</li>
+<li><strong>Exact naming/versions:</strong> Go module
+<code>github.com/HelixDevelopment/helix_ota/server</code>; submodules
+under <code>submodules/</code>; constitution submodule at
+<code>constitution/</code>. Toolchain: Go 1.26.2, Gradle 9.5 + Kotlin
+2.3.20 (AGP 8.5.2 + plain <code>kotlin.android</code> builds; Kotlin MPP
+does NOT). No LaTeX/drawio/plantuml/graphviz/docker on host (so
+<code>export_docs.sh</code>’s LaTeX-based PDF path is unavailable) — BUT
+PDF siblings ARE produced via <code>pandoc -s</code> +
+<code>weasyprint</code> 66.0 (both present); use that pipeline for
+§11.4.65 PDF.</li>
+<li><strong>Commit/push discipline §2.1 + §11.4.88</strong> — commit +
+push to ALL 4 upstreams; pushes may run detached.</li>
+</ul>
+<h2 id="how-a-fresh-session-resumes-from-this-file-alone">How a fresh
+session resumes from this file alone</h2>
+<p>Given only this file’s path, a new agent: reads §0 handoff docs, runs
+<code>git fetch --all</code>, confirms HEAD against §1, picks up the §2
+PHASE/NEXT, and works under the §3 constraints toward the terminal goal
+— zero additional context required.</p>
+</body>
+</html>

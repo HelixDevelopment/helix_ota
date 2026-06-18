@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix OTA</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Helix OTA</h1>
+</header>
+<h1 id="helix-ota-version-roadmap">Helix OTA — Version Roadmap</h1>
+<blockquote>
+<p><strong>Document ID:</strong> <code>HELOTA-ROADMAP-001</code><br />
+<strong>Version:</strong> 1.0.0-draft<br />
+<strong>Status:</strong> Active<br />
+<strong>Last Updated:</strong> 2026-03-04<br />
+<strong>Constitution Reference:</strong> HelixConstitution v1 §1–§4</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-roadmap-philosophy">Roadmap Philosophy</a></li>
+<li><a href="#2-guiding-principles">Guiding Principles</a></li>
+<li><a href="#3-version-overview-matrix">Version Overview
+Matrix</a></li>
+<li><a href="#4-100-mvp--minimum-viable-product">1.0.0-MVP — Minimum
+Viable Product</a></li>
+<li><a href="#5-101-rollback--rollback-support">1.0.1-rollback —
+Rollback Support</a></li>
+<li><a
+href="#6-102-delta-updates--deltadifferential-updates">1.0.2-delta-updates
+— Delta/Differential Updates</a></li>
+<li><a
+href="#7-110-linux-support--linux-distribution-ota">1.1.0-linux-support
+— Linux Distribution OTA</a></li>
+<li><a href="#8-120-windows-support--windows-ota">1.2.0-windows-support
+— Windows OTA</a></li>
+<li><a
+href="#9-200-multi-os-universal--universal-multi-os">2.0.0-multi-os-universal
+— Universal Multi-OS</a></li>
+<li><a href="#10-cross-cutting-concerns">Cross-Cutting Concerns</a></li>
+<li><a href="#appendix-a--submodule-dependency-map">Appendix A —
+Submodule Dependency Map</a></li>
+<li><a href="#appendix-b--testing-standards-reference">Appendix B —
+Testing Standards Reference</a></li>
+</ol>
+<hr />
+<h2 id="roadmap-philosophy">1. Roadmap Philosophy</h2>
+<p>The Helix OTA version roadmap is a <strong>contract</strong>, not a
+wishlist. Every version boundary is a hard gate: no feature crosses the
+gate without passing mutation testing, nano-detail documentation, and
+anti-bluff verification per the HelixConstitution.</p>
+<h3 id="why-versioned-milestones">Why Versioned Milestones?</h3>
+<p>An OTA system operates at the intersection of <strong>safety-critical
+infrastructure</strong> and <strong>distributed systems
+correctness</strong>. A failed update can brick a device, and a
+compromised update pipeline can compromise an entire fleet. We do not
+ship “mostly working” update mechanisms.</p>
+<p>The roadmap follows a strict additive strategy:</p>
+<pre><code>MVP (Android-only) → Rollback → Delta → Linux → Windows → Universal</code></pre>
+<p>Each version <strong>extends</strong> the previous one without
+breaking backward compatibility. There are no “rewrite” versions—only
+additive capability layers.</p>
+<h3 id="anti-bluff-guarantee">Anti-Bluff Guarantee</h3>
+<p>Per HelixConstitution §2.3, the anti-bluff principle states:</p>
+<blockquote>
+<p><em>No feature is “done” until it has been tested under mutation,
+documented to nano-detail, and verified against its acceptance criteria
+by an independent reviewer.</em></p>
+</blockquote>
+<p>This means the roadmap timeline is <strong>evidence-bound</strong>,
+not date-bound. A version ships when its acceptance criteria are met,
+not when a calendar says so.</p>
+<hr />
+<h2 id="guiding-principles">2. Guiding Principles</h2>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 31%" />
+<col style="width: 22%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Principle</th>
+<th>Source</th>
+<th>Application</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>P1</td>
+<td><strong>Anti-Bluff</strong></td>
+<td>HelixConstitution §2.3</td>
+<td>No feature declared complete without mutation-tested evidence</td>
+</tr>
+<tr class="even">
+<td>P2</td>
+<td><strong>Test-First</strong></td>
+<td>HelixConstitution §1.1</td>
+<td>Every feature has tests written before implementation; mutation
+testing coverage ≥ 85%</td>
+</tr>
+<tr class="odd">
+<td>P3</td>
+<td><strong>Nano-Detail Docs</strong></td>
+<td>HelixConstitution §3.1</td>
+<td>Every API endpoint, data model, and state transition documented to
+specification grade</td>
+</tr>
+<tr class="even">
+<td>P4</td>
+<td><strong>Fail-Safe by Default</strong></td>
+<td>HelixConstitution §4.2</td>
+<td>A/B partition design; updates never destroy the running system</td>
+</tr>
+<tr class="odd">
+<td>P5</td>
+<td><strong>Minimal Trusted Compute Base</strong></td>
+<td>Architecture Decision</td>
+<td>Only update_engine + our client touch partitions; no third-party OTA
+agents</td>
+</tr>
+<tr class="even">
+<td>P6</td>
+<td><strong>Submodule Reuse</strong></td>
+<td>vasic-digital Constitution</td>
+<td>Leverage existing submodules; never re-implement solved
+problems</td>
+</tr>
+<tr class="odd">
+<td>P7</td>
+<td><strong>Progressive Delivery</strong></td>
+<td>Industry Standard (Google Omaha)</td>
+<td>Rollout 0→100% in configurable increments; pause/resume at any
+point</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="version-overview-matrix">3. Version Overview Matrix</h2>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 32%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Version</th>
+<th>Codename</th>
+<th>Scope</th>
+<th>Estimated Complexity</th>
+<th>Key Deliverable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>1.0.0-MVP</code></td>
+<td>—</td>
+<td>Android 15 / RK3588 OTA</td>
+<td><strong>Large</strong> (12–16 weeks)</td>
+<td>Full A/B update pipeline for Orange Pi 5 Max</td>
+</tr>
+<tr class="even">
+<td><code>1.0.1-rollback</code></td>
+<td>rollback</td>
+<td>Multi-version rollback</td>
+<td><strong>Medium</strong> (4–6 weeks)</td>
+<td>Safe rollback for last N images</td>
+</tr>
+<tr class="odd">
+<td><code>1.0.2-delta-updates</code></td>
+<td>delta</td>
+<td>Differential payloads</td>
+<td><strong>Large</strong> (6–8 weeks)</td>
+<td>60–90% bandwidth reduction</td>
+</tr>
+<tr class="even">
+<td><code>1.1.0-linux-support</code></td>
+<td>linux</td>
+<td>Ubuntu/Debian/Fedora/Arch</td>
+<td><strong>Large</strong> (8–12 weeks)</td>
+<td>Linux distribution OTA</td>
+</tr>
+<tr class="odd">
+<td><code>1.2.0-windows-support</code></td>
+<td>windows</td>
+<td>Windows Update + MSI/MSIX</td>
+<td><strong>Large</strong> (8–10 weeks)</td>
+<td>Windows OTA client</td>
+</tr>
+<tr class="even">
+<td><code>2.0.0-multi-os-universal</code></td>
+<td>universal</td>
+<td>Plugin architecture</td>
+<td><strong>Extra Large</strong> (12–16 weeks)</td>
+<td>OS-agnostic update pipeline</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> Complexity estimates assume a team of 2–3
+engineers working full-time. Actual timelines adjust based on mutation
+testing throughput (HelixConstitution §1.1).</p>
+</blockquote>
+<hr />
+<h2 id="mvp-minimum-viable-product">4. 1.0.0-MVP — Minimum Viable
+Product</h2>
+<h3 id="overview">4.1 Overview</h3>
+<p>The MVP delivers a complete, production-grade OTA update system for
+<strong>Android 15 on Orange Pi 5 Max (RK3588)</strong>. It covers the
+full lifecycle: device registration → update check → download → verify →
+apply → report.</p>
+<h3 id="architecture">4.2 Architecture</h3>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                    Helix OTA Server (Go)                  │
+│  ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌───────────┐  │
+│  │ REST API │ │ Rollout  │ │ Artifact  │ │ Telemetry │  │
+│  │ Handlers │ │ Manager  │ │ Store     │ │ Collector │  │
+│  └────┬─────┘ └────┬─────┘ └─────┬─────┘ └─────┬─────┘  │
+│       │            │             │              │         │
+│  ┌────┴────────────┴─────────────┴──────────────┴─────┐  │
+│  │              vasic-digital Submodule Layer          │  │
+│  │  auth · database · cache · EventBus · Storage ·     │  │
+│  │  observability · security · middleware · config ·   │  │
+│  │  ratelimiter · concurrency · recovery               │  │
+│  └────────────────────┬───────────────────────────────┘  │
+│                       │                                   │
+│              ┌────────┴────────┐                          │
+│              │   PostgreSQL    │                          │
+│              └─────────────────┘                          │
+└──────────────────────────────────────────────────────────┘
+                        │
+                   HTTPS (REST)
+                        │
+┌──────────────────────────────────────────────────────────┐
+│             Android 15 Client (Orange Pi 5 Max)          │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐  │
+│  │ Update Check │  │ Downloader   │  │ update_engine │  │
+│  │ Scheduler    │  │ (resumable)  │  │ Integration   │  │
+│  └──────┬───────┘  └──────┬───────┘  └───────┬───────┘  │
+│         │                 │                   │          │
+│  ┌──────┴─────────────────┴───────────────────┴───────┐  │
+│  │          SHA-256 + RSA Signature Verifier          │  │
+│  └──────────────────────────┬─────────────────────────┘  │
+│                             │                            │
+│              ┌──────────────┴──────────────┐             │
+│              │   A/B Partition (RK3588)    │             │
+│              │  system_a / system_b        │             │
+│              │  boot_a   / boot_b          │             │
+│              │  vendor_a / vendor_b        │             │
+│              └─────────────────────────────┘             │
+└──────────────────────────────────────────────────────────┘
+                        │
+                   HTTPS (REST)
+                        │
+┌──────────────────────────────────────────────────────────┐
+│                   Dashboard Web UI                        │
+│  Secure Login │ Upload OTA Zip │ Manage Rollouts │ Fleet │
+└──────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="ota-server-go-feature-list">4.3 OTA Server (Go) — Feature
+List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>REST API — Update Check</strong></td>
+<td><code>GET /api/v1/devices/{id}/update-check</code> returns available
+update or 204 No Update</td>
+<td>Response &lt; 200ms p95; returns payload URL, SHA-256, size, version
+when update available</td>
+</tr>
+<tr class="even">
+<td><strong>REST API — Artifact Download</strong></td>
+<td><code>GET /api/v1/artifacts/{id}/download</code> streams OTA zip
+with Range header support</td>
+<td>Supports resume via Range header; returns Content-Length, SHA-256 in
+headers</td>
+</tr>
+<tr class="odd">
+<td><strong>REST API — Status Report</strong></td>
+<td><code>POST /api/v1/devices/{id}/status</code> accepts device update
+status events</td>
+<td>Accepts: <code>DOWNLOADING</code>, <code>DOWNLOAD_PAUSED</code>,
+<code>VERIFYING</code>, <code>APPLYING</code>, <code>REBOOTING</code>,
+<code>SUCCESS</code>, <code>FAILED</code>; idempotent</td>
+</tr>
+<tr class="even">
+<td><strong>REST API — Artifact Upload</strong></td>
+<td><code>POST /api/v1/artifacts</code> uploads OTA zip with
+validation</td>
+<td>Validates: zip structure (payload.bin + payload_properties.txt +
+care_map.pb), SHA-256 match, RSA signature present; rejects invalid
+artifacts with 422</td>
+</tr>
+<tr class="odd">
+<td><strong>REST API — Rollout Management</strong></td>
+<td><code>POST /api/v1/rollouts</code> creates rollout;
+<code>PATCH /api/v1/rollouts/{id}</code> updates percentage</td>
+<td>Rollout: 0–100% in configurable increments (1%, 5%, 10%, 25%);
+pause/resume; target device groups</td>
+</tr>
+<tr class="even">
+<td><strong>Device Registration</strong></td>
+<td><code>POST /api/v1/devices</code> registers device with hardware
+fingerprint</td>
+<td>Required fields: serial, model (rk3588_opi5max), current_version,
+slot_suffix; returns device ID + JWT</td>
+</tr>
+<tr class="odd">
+<td><strong>Device Authentication</strong></td>
+<td>Mutual TLS or JWT-based device auth</td>
+<td>Devices authenticate on every request; invalid auth → 401; token
+rotation every 24h</td>
+</tr>
+<tr class="even">
+<td><strong>Artifact Validation</strong></td>
+<td>Server-side validation of uploaded OTA zips</td>
+<td>Reject: wrong payload format, missing signature, SHA-256 mismatch,
+unsupported target device; validation runs in &lt; 30s for 2GB
+payload</td>
+</tr>
+<tr class="odd">
+<td><strong>Rollout Engine</strong></td>
+<td>Percentage-based rollout assignment</td>
+<td>Deterministic device→cohort assignment (hash(device_id) mod 100 &lt;
+rollout_pct); cohort membership stable across check-ins</td>
+</tr>
+</tbody>
+</table>
+<h3 id="android-15-client-feature-list">4.4 Android 15 Client — Feature
+List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>update_engine Integration</strong></td>
+<td>Drive <code>update_engine</code> via Binder IPC to apply A/B
+updates</td>
+<td>Successfully calls <code>ApplyPayload()</code> with downloaded
+payload; handles <code>onStatusUpdate</code> callbacks; maps engine
+states to server status events</td>
+</tr>
+<tr class="even">
+<td><strong>Periodic Update Checking</strong></td>
+<td>Check server for updates every N hours (configurable, default
+4h)</td>
+<td>Uses WorkManager for scheduling; respects device idle / battery
+constraints; exponential backoff on failure (1h → 2h → 4h → 8h → 24h
+max)</td>
+</tr>
+<tr class="odd">
+<td><strong>Resumable Download</strong></td>
+<td>Download OTA zip with HTTP Range resume</td>
+<td>Handles network interruption gracefully; resumes from last byte;
+stores partial download in encrypted app-specific storage; cleans up on
+completion</td>
+</tr>
+<tr class="even">
+<td><strong>SHA-256 + RSA Verification</strong></td>
+<td>Verify payload integrity and authenticity before applying</td>
+<td>SHA-256 computed over <code>payload.bin</code> matches
+server-provided digest; RSA-2048/4096 signature verified against
+embedded public key; rejects tampered payloads</td>
+</tr>
+<tr class="odd">
+<td><strong>A/B Partition Update</strong></td>
+<td>Apply update via update_engine to inactive slot</td>
+<td>Writes to inactive slot only; post-install verification via
+update_engine; sets active slot via <code>IBootControl</code> HAL; never
+modifies running slot</td>
+</tr>
+<tr class="even">
+<td><strong>Status Reporting</strong></td>
+<td>Report update lifecycle events to server</td>
+<td>Reports at each state transition; includes error details on failure;
+retries on network error with backoff; offline queue with max 1000
+events</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dashboard-web-ui-feature-list">4.5 Dashboard Web UI — Feature
+List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Secure Login</strong></td>
+<td>Admin authentication with MFA support</td>
+<td>Login via username/password + TOTP; session timeout 30min; RBAC:
+admin, operator, viewer</td>
+</tr>
+<tr class="even">
+<td><strong>Upload OTA Zip</strong></td>
+<td>Upload and validate OTA artifacts</td>
+<td>Drag-and-drop upload; server-side validation feedback; shows
+SHA-256, size, target device, version after upload</td>
+</tr>
+<tr class="odd">
+<td><strong>Manage Rollouts</strong></td>
+<td>Create, pause, resume, and monitor rollouts</td>
+<td>Create rollout: select artifact → select device group → set initial
+percentage; increase percentage in steps; pause/resume at any time</td>
+</tr>
+<tr class="even">
+<td><strong>Monitor Fleet</strong></td>
+<td>Real-time device fleet status dashboard</td>
+<td>Shows: total devices, devices on each version, update
+success/failure counts, active rollouts with progress bars; auto-refresh
+every 30s</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure">4.6 Infrastructure</h3>
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 35%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Technology</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Database</td>
+<td>PostgreSQL 16</td>
+<td>Device registry, artifacts, rollouts, telemetry events</td>
+</tr>
+<tr class="even">
+<td>Containerization</td>
+<td>vasic-digital/containers submodule</td>
+<td>Docker Compose for dev; Kubernetes manifests for prod</td>
+</tr>
+<tr class="odd">
+<td>Artifact Storage</td>
+<td>vasic-digital/storage submodule (S3-compatible)</td>
+<td>OTA zip storage with multipart upload</td>
+</tr>
+<tr class="even">
+<td>Observability</td>
+<td>vasic-digital/observability submodule</td>
+<td>Prometheus metrics, Grafana dashboards, structured logging</td>
+</tr>
+<tr class="odd">
+<td>Authentication</td>
+<td>vasic-digital/auth submodule</td>
+<td>JWT issuance, token rotation, RBAC enforcement</td>
+</tr>
+<tr class="even">
+<td>Caching</td>
+<td>vasic-digital/cache submodule (Redis)</td>
+<td>Device check-in deduplication, rollout percentage cache</td>
+</tr>
+<tr class="odd">
+<td>Rate Limiting</td>
+<td>vasic-digital/ratelimiter submodule</td>
+<td>Per-device rate limits on update check (max 1/min)</td>
+</tr>
+<tr class="even">
+<td>Concurrency</td>
+<td>vasic-digital/concurrency submodule</td>
+<td>Goroutine pool for artifact validation, rollout computation</td>
+</tr>
+<tr class="odd">
+<td>Recovery</td>
+<td>vasic-digital/recovery submodule</td>
+<td>Panic recovery middleware, graceful shutdown</td>
+</tr>
+<tr class="even">
+<td>Configuration</td>
+<td>vasic-digital/config submodule</td>
+<td>Environment-based config, hot-reload for non-critical params</td>
+</tr>
+<tr class="odd">
+<td>Event Bus</td>
+<td>vasic-digital/EventBus submodule</td>
+<td>Async event processing for telemetry ingestion, rollout
+triggers</td>
+</tr>
+<tr class="even">
+<td>Middleware</td>
+<td>vasic-digital/middleware submodule</td>
+<td>Request logging, auth, CORS, request ID propagation</td>
+</tr>
+<tr class="odd">
+<td>Security</td>
+<td>vasic-digital/security submodule</td>
+<td>TLS termination, certificate management, input sanitization</td>
+</tr>
+</tbody>
+</table>
+<h3 id="core-api-endpoints">4.7 Core API Endpoints</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Device Registration</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>devices</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Request:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;serial&quot;</span><span class="op">:</span> <span class="st">&quot;RK3588-OP5M-001&quot;</span><span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;model&quot;</span><span class="op">:</span> <span class="st">&quot;rk3588_opi5max&quot;</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;current_version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.0-20260301&quot;</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;slot_suffix&quot;</span><span class="op">:</span> <span class="st">&quot;_a&quot;</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;hardware_fingerprint&quot;</span><span class="op">:</span> <span class="st">&quot;sha256:abc123...&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Response: 201 Created</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;device_id&quot;</span><span class="op">:</span> <span class="st">&quot;dev_01HXYZ...&quot;</span><span class="op">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;auth_token&quot;</span><span class="op">:</span> <span class="st">&quot;eyJhbGci...&quot;</span><span class="op">,</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;check_interval_seconds&quot;</span><span class="op">:</span> <span class="dv">14400</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Update Check</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>GET <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>devices<span class="op">/{</span>device_id<span class="op">}/</span>update<span class="op">-</span>check</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Response: 200 OK (update available)</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;update_available&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_01HABC...&quot;</span><span class="op">,</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.1-20260315&quot;</span><span class="op">,</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;download_url&quot;</span><span class="op">:</span> <span class="st">&quot;/api/v1/artifacts/art_01HABC.../download&quot;</span><span class="op">,</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;sha256&quot;</span><span class="op">:</span> <span class="st">&quot;e3b0c44298fc1c149afbf4c8996fb924...&quot;</span><span class="op">,</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;size_bytes&quot;</span><span class="op">:</span> <span class="dv">1073741824</span><span class="op">,</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;signature_url&quot;</span><span class="op">:</span> <span class="st">&quot;/api/v1/artifacts/art_01HABC.../signature&quot;</span><span class="op">,</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;metadata&quot;</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;changelog_url&quot;</span><span class="op">:</span> <span class="st">&quot;/api/v1/artifacts/art_01HABC.../changelog&quot;</span><span class="op">,</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;mandatory&quot;</span><span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;deadline&quot;</span><span class="op">:</span> <span class="st">&quot;2026-04-15T00:00:00Z&quot;</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">// Status Report</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>POST <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>devices<span class="op">/{</span>device_id<span class="op">}/</span>status</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">// Request:</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_01HABC...&quot;</span><span class="op">,</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;status&quot;</span><span class="op">:</span> <span class="st">&quot;APPLYING&quot;</span><span class="op">,</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;progress_percent&quot;</span><span class="op">:</span> <span class="dv">67</span><span class="op">,</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;error&quot;</span><span class="op">:</span> null<span class="op">,</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;timestamp&quot;</span><span class="op">:</span> <span class="st">&quot;2026-03-04T12:34:56Z&quot;</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="co">// Artifact Upload</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>POST <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>artifacts</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="co">// Multipart form: file=update.zip, metadata={&quot;version&quot;:&quot;15.0.1-20260315&quot;,&quot;target_model&quot;:&quot;rk3588_opi5max&quot;}</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="co">// Response: 201 Created</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_01HABC...&quot;</span><span class="op">,</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;sha256&quot;</span><span class="op">:</span> <span class="st">&quot;e3b0c44298fc1c149afbf4c8996fb924...&quot;</span><span class="op">,</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;size_bytes&quot;</span><span class="op">:</span> <span class="dv">1073741824</span><span class="op">,</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;validation_status&quot;</span><span class="op">:</span> <span class="st">&quot;VALID&quot;</span><span class="op">,</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;created_at&quot;</span><span class="op">:</span> <span class="st">&quot;2026-03-04T10:00:00Z&quot;</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="co">// Rollout Management</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>rollouts                    <span class="co">// Create rollout</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>GET    <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>rollouts<span class="op">/{</span>id<span class="op">}</span>               <span class="co">// Get rollout status</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>PATCH  <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>rollouts<span class="op">/{</span>id<span class="op">}</span>               <span class="co">// Update rollout (change %, pause/resume)</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co">// Create Request:</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_01HABC...&quot;</span><span class="op">,</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;device_group&quot;</span><span class="op">:</span> <span class="st">&quot;all&quot;</span><span class="op">,</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;initial_percentage&quot;</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;increment_step&quot;</span><span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;auto_advance&quot;</span><span class="op">:</span> <span class="ot">true</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="dependencies">4.8 Dependencies</h3>
+<ul>
+<li><strong>No previous version dependency</strong> (this is the first
+release)</li>
+<li>External dependencies: Android 15 AOSP <code>update_engine</code>,
+RK3588 A/B partition layout, PostgreSQL 16</li>
+</ul>
+<h3 id="new-submodules-needed">4.9 New Submodules Needed</h3>
+<p>None. All infrastructure is provided by existing vasic-digital
+submodules.</p>
+<h3 id="risk-assessment">4.10 Risk Assessment</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 31%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>update_engine API incompatibility on RK3588</td>
+<td>Medium</td>
+<td>Critical</td>
+<td>Validate update_engine Binder interface on Orange Pi 5 Max in week
+1; maintain compatibility shim</td>
+</tr>
+<tr class="even">
+<td>A/B partition layout differs from reference</td>
+<td>Medium</td>
+<td>High</td>
+<td>Document exact RK3588 partition table early; test with
+<code>flash_image</code> on real hardware</td>
+</tr>
+<tr class="odd">
+<td>Artifact upload timeout for large OTA zips (&gt;2GB)</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Use chunked upload with vasic-digital/storage multipart; server-side
+async validation</td>
+</tr>
+<tr class="even">
+<td>PostgreSQL connection pool exhaustion under load</td>
+<td>Low</td>
+<td>Medium</td>
+<td>vasic-digital/database provides pool configuration; load test at 10K
+concurrent devices</td>
+</tr>
+<tr class="odd">
+<td>Client clock drift causes update check staleness</td>
+<td>Low</td>
+<td>Low</td>
+<td>Server returns <code>check_interval_seconds</code>; client uses
+elapsed-realtime not wall clock</td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing-requirements-helixconstitution-1.1">4.11 Testing
+Requirements (HelixConstitution §1.1)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 37%" />
+<col style="width: 13%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test Category</th>
+<th>Minimum Coverage</th>
+<th>Tool</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit Tests</td>
+<td>85% line coverage</td>
+<td>Go <code>testing</code>, AndroidX Test</td>
+<td>Every handler, service, and model</td>
+</tr>
+<tr class="even">
+<td>Mutation Testing</td>
+<td>85% mutation score</td>
+<td><code>go-mutesting</code> (server), Stryker.NET-equivalent for
+Android</td>
+<td><strong>Mandatory gate</strong> per §1.1</td>
+</tr>
+<tr class="odd">
+<td>Integration Tests</td>
+<td>All API endpoints</td>
+<td><code>testcontainers-go</code> (PostgreSQL), Android
+Instrumentation</td>
+<td>Full request/response lifecycle</td>
+</tr>
+<tr class="even">
+<td>End-to-End Tests</td>
+<td>1 full OTA cycle on real hardware</td>
+<td>Custom test harness on Orange Pi 5 Max</td>
+<td>Upload artifact → create rollout → device checks → downloads →
+verifies → applies → reboots → reports success</td>
+</tr>
+<tr class="odd">
+<td>Chaos Tests</td>
+<td>Network partition, server restart</td>
+<td>Custom: kill server mid-download, kill update_engine mid-apply</td>
+<td>Device must resume or recover safely</td>
+</tr>
+<tr class="even">
+<td>Security Tests</td>
+<td>Auth bypass, signature forgery, replay attacks</td>
+<td>OWASP ZAP, custom pen-test scripts</td>
+<td>Zero tolerance for auth bypass</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="rollback-rollback-support">5. 1.0.1-rollback — Rollback
+Support</h2>
+<h3 id="overview-1">5.1 Overview</h3>
+<p>Adds multi-version rollback capability, allowing administrators and
+devices to safely revert to a previously known-good system image. The
+A/B partition scheme on RK3588 already provides single-version rollback
+(one slot back); this version extends that to N versions.</p>
+<h3 id="feature-list">5.2 Feature List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Multi-Version Image Store</strong></td>
+<td>Keep last N system images in server-side artifact repository</td>
+<td>N is configurable (default: 3); images are pruned on LRU basis; disk
+usage alerting at 80% capacity</td>
+</tr>
+<tr class="even">
+<td><strong>Server-Side Rollback Trigger</strong></td>
+<td>Admin triggers rollback for device group or individual device</td>
+<td><code>POST /api/v1/rollouts/{id}/rollback</code>; server creates new
+rollout targeting the previous artifact; devices check in and receive
+rollback directive</td>
+</tr>
+<tr class="odd">
+<td><strong>Client-Initiated Rollback API</strong></td>
+<td>Device requests rollback via
+<code>POST /api/v1/devices/{id}/rollback</code></td>
+<td>Client sends current_version + target_version; server validates
+target is in allowed rollback window; returns rollback artifact URL</td>
+</tr>
+<tr class="even">
+<td><strong>Rollback Safety Verification</strong></td>
+<td>Pre-rollback health check before committing rollback</td>
+<td>Client verifies: (1) target image signature still valid, (2) battery
+&gt; 30% or AC power, (3) storage sufficient for A/B swap; aborts if any
+check fails</td>
+</tr>
+<tr class="odd">
+<td><strong>Rollback Audit Trail</strong></td>
+<td>Every rollback is logged with reason, initiator, and outcome</td>
+<td>Rollback events stored in PostgreSQL; dashboard shows rollback
+history per device; alerting on rollback rate &gt; 5% of fleet</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-api-additions">5.3 Key API Additions</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server-side rollback trigger</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>POST <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>rollouts<span class="op">/{</span>id<span class="op">}/</span>rollback</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;target_version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.0-20260301&quot;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;reason&quot;</span><span class="op">:</span> <span class="st">&quot;boot_failure_detected&quot;</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;scope&quot;</span><span class="op">:</span> <span class="st">&quot;device_group&quot;</span><span class="op">,</span>   <span class="co">// or &quot;single_device&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;device_group&quot;</span><span class="op">:</span> <span class="st">&quot;rk3588_opi5max&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Client-initiated rollback</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>POST <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>devices<span class="op">/{</span>device_id<span class="op">}/</span>rollback</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;current_version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.1-20260315&quot;</span><span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;target_version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.0-20260301&quot;</span><span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;reason&quot;</span><span class="op">:</span> <span class="st">&quot;post_update_anomaly&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Response: 200 OK</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;rollback_artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_01HDEF...&quot;</span><span class="op">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;download_url&quot;</span><span class="op">:</span> <span class="st">&quot;/api/v1/artifacts/art_01HDEF.../download&quot;</span><span class="op">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;sha256&quot;</span><span class="op">:</span> <span class="st">&quot;abc123...&quot;</span><span class="op">,</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;requires_reboot&quot;</span><span class="op">:</span> <span class="ot">true</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="dependencies-1">5.4 Dependencies</h3>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 32%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dependency</th>
+<th>Version</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0.0-MVP</td>
+<td>Required</td>
+<td>Rollback builds on MVP’s artifact storage, device registry, and
+update pipeline</td>
+</tr>
+</tbody>
+</table>
+<h3 id="new-submodules-needed-1">5.5 New Submodules Needed</h3>
+<p>None. Leverages existing vasic-digital/storage for image retention
+and vasic-digital/EventBus for rollback event propagation.</p>
+<h3 id="risk-assessment-1">5.6 Risk Assessment</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 31%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rollback image no longer compatible with current bootloader</td>
+<td>Low</td>
+<td>Critical</td>
+<td>Store bootloader version alongside artifact; validate bootloader
+compatibility before rollback</td>
+</tr>
+<tr class="even">
+<td>Storage exhaustion from retaining N images</td>
+<td>Medium</td>
+<td>High</td>
+<td>LRU eviction with disk usage monitoring; configurable N per device
+group</td>
+</tr>
+<tr class="odd">
+<td>Rollback loop (rollback → fail → rollback → fail)</td>
+<td>Medium</td>
+<td>High</td>
+<td>Circuit breaker: max 3 rollback attempts per device per 24h;
+escalate to manual intervention</td>
+</tr>
+<tr class="even">
+<td>Race condition: rollback triggered while update is applying</td>
+<td>Low</td>
+<td>Critical</td>
+<td>State machine lock: device can only process one update/rollback at a
+time; reject rollback if status=APPLYING</td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing-requirements">5.7 Testing Requirements</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test Category</th>
+<th>Specific Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit</td>
+<td>Rollout rollback handler, image store eviction, safety verification
+logic</td>
+</tr>
+<tr class="even">
+<td>Mutation</td>
+<td>85% mutation score on all new rollback code paths</td>
+</tr>
+<tr class="odd">
+<td>Integration</td>
+<td>Server-side rollback → device receives directive → applies →
+reports; client-initiated rollback flow</td>
+</tr>
+<tr class="even">
+<td>E2E</td>
+<td>Full rollback cycle on real hardware: update → boot failure →
+rollback → verify old system boots</td>
+</tr>
+<tr class="odd">
+<td>Chaos</td>
+<td>Kill server during rollback download; kill update_engine during
+rollback apply</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="delta-updates-deltadifferential-updates">6. 1.0.2-delta-updates
+— Delta/Differential Updates</h2>
+<h3 id="overview-2">6.1 Overview</h3>
+<p>Implements delta (differential) update generation and delivery,
+reducing OTA payload sizes by 60–90% compared to full updates. Delta
+payloads contain only the binary differences between the source and
+target partition images.</p>
+<h3 id="feature-list-1">6.2 Feature List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Delta Payload Generation</strong></td>
+<td>Server-side service generates delta payloads between consecutive
+versions</td>
+<td>Uses <code>brillo_update_payload</code> or bsdiff algorithm;
+generates delta within 4 hours for 2GB partitions; stores delta
+alongside full artifact</td>
+</tr>
+<tr class="even">
+<td><strong>Delta Generation Service</strong></td>
+<td>Background worker that generates deltas upon artifact upload</td>
+<td>Triggered by EventBus on <code>artifact.uploaded</code> event;
+queues delta generation; reports generation status via API</td>
+</tr>
+<tr class="odd">
+<td><strong>Bandwidth Reduction</strong></td>
+<td>Delta payloads are 60–90% smaller than full payloads</td>
+<td>Measured on real RK3588 images: minor version bump ≥ 60% reduction;
+patch-level bump ≥ 80% reduction</td>
+</tr>
+<tr class="even">
+<td><strong>Automatic Delta Selection</strong></td>
+<td>Server selects delta vs. full update based on device’s current
+version</td>
+<td>Device reports <code>source_version</code> in update check; server
+returns delta if available for source→target; falls back to full update
+otherwise</td>
+</tr>
+<tr class="odd">
+<td><strong>Delta Fallback</strong></td>
+<td>Client falls back to full update if delta apply fails</td>
+<td><code>update_engine</code> returns
+<code>DELTA_APPLICATION_FAILED</code>; client re-requests update check
+with <code>delta_failed=true</code>; server returns full payload</td>
+</tr>
+<tr class="even">
+<td><strong>Delta Integrity Verification</strong></td>
+<td>Delta payloads are verified same as full payloads</td>
+<td>SHA-256 + RSA signature on delta payload; source partition hash
+verified before delta apply</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-api-additions-1">6.3 Key API Additions</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Update check with delta support</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>GET <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>devices<span class="op">/{</span>device_id<span class="op">}/</span>update<span class="op">-</span>check<span class="op">?</span>source_version<span class="op">=</span><span class="fl">15.0</span><span class="er">.0</span><span class="op">-</span><span class="dv">20260301</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Response: 200 OK (delta available)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;update_available&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_delta_01H...&quot;</span><span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;update_type&quot;</span><span class="op">:</span> <span class="st">&quot;DELTA&quot;</span><span class="op">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;source_version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.0-20260301&quot;</span><span class="op">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;target_version&quot;</span><span class="op">:</span> <span class="st">&quot;15.0.1-20260315&quot;</span><span class="op">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;download_url&quot;</span><span class="op">:</span> <span class="st">&quot;/api/v1/artifacts/art_delta_01H.../download&quot;</span><span class="op">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;sha256&quot;</span><span class="op">:</span> <span class="st">&quot;def456...&quot;</span><span class="op">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;size_bytes&quot;</span><span class="op">:</span> <span class="dv">214748364</span><span class="op">,</span>  <span class="co">// ~200MB vs ~1GB full</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;size_savings_percent&quot;</span><span class="op">:</span> <span class="dv">80</span><span class="op">,</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;full_update_fallback_url&quot;</span><span class="op">:</span> <span class="st">&quot;/api/v1/artifacts/art_01HABC.../download&quot;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Delta generation status</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>GET <span class="op">/</span>api<span class="op">/</span>v1<span class="op">/</span>artifacts<span class="op">/{</span>source_id<span class="op">}/</span>deltas</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Response:</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;deltas&quot;</span><span class="op">:</span> <span class="op">[</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;target_artifact_id&quot;</span><span class="op">:</span> <span class="st">&quot;art_01HABC...&quot;</span><span class="op">,</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;status&quot;</span><span class="op">:</span> <span class="st">&quot;GENERATED&quot;</span><span class="op">,</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;size_bytes&quot;</span><span class="op">:</span> <span class="dv">214748364</span><span class="op">,</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;size_savings_percent&quot;</span><span class="op">:</span> <span class="dv">80</span><span class="op">,</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;generation_time_seconds&quot;</span><span class="op">:</span> <span class="dv">7200</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">]</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="dependencies-2">6.4 Dependencies</h3>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 32%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dependency</th>
+<th>Version</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0.0-MVP</td>
+<td>Required</td>
+<td>Delta builds on MVP’s artifact storage and update pipeline</td>
+</tr>
+<tr class="even">
+<td>1.0.1-rollback</td>
+<td>Recommended</td>
+<td>Delta updates increase rollback complexity; having rollback support
+first reduces risk</td>
+</tr>
+</tbody>
+</table>
+<h3 id="new-submodules-needed-2">6.5 New Submodules Needed</h3>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Submodule</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>helix-delta-gen</code></td>
+<td>Delta generation service; wraps <code>brillo_update_payload</code> /
+bsdiff; runs as background worker</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-assessment-2">6.6 Risk Assessment</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 31%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Delta generation takes too long (&gt;8h for large partitions)</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Parallelize by partition; incremental delta (only changed
+partitions); limit delta to consecutive versions</td>
+</tr>
+<tr class="even">
+<td>Delta apply fails on device due to source partition drift</td>
+<td>Medium</td>
+<td>High</td>
+<td>Verify source partition SHA-256 before delta apply; fall back to
+full update on mismatch</td>
+</tr>
+<tr class="odd">
+<td>Storage overhead: N×M delta combinations (N source × M target)</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Only generate deltas for consecutive versions; limit to last 3
+source versions</td>
+</tr>
+<tr class="even">
+<td>bsdiff memory usage during generation (&gt;16GB RAM for 2GB
+partition)</td>
+<td>Low</td>
+<td>High</td>
+<td>Use streaming bsdiff variant; run on high-memory builder node; cap
+memory at 32GB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing-requirements-1">6.7 Testing Requirements</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test Category</th>
+<th>Specific Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit</td>
+<td>Delta selection logic, source→target mapping, fallback trigger</td>
+</tr>
+<tr class="even">
+<td>Mutation</td>
+<td>85% mutation score on delta generation and selection code</td>
+</tr>
+<tr class="odd">
+<td>Integration</td>
+<td>Upload artifact → delta generated → device checks in → receives
+delta → applies</td>
+</tr>
+<tr class="even">
+<td>E2E</td>
+<td>Full delta update cycle on real hardware; measure actual bandwidth
+reduction</td>
+</tr>
+<tr class="odd">
+<td>Performance</td>
+<td>Delta generation time benchmarked at ≤ 4h for 2GB partition</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="linux-support-linux-distribution-ota">7. 1.1.0-linux-support —
+Linux Distribution OTA</h2>
+<h3 id="overview-3">7.1 Overview</h3>
+<p>Extends Helix OTA to support Linux distribution updates on RK3588 and
+generic x86_64/ARM64 hardware. This is a <strong>minor version
+bump</strong> (1.1.0) because it adds a new OS platform without changing
+the existing Android pipeline.</p>
+<h3 id="feature-list-2">7.2 Feature List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Ubuntu/Debian APT Updates</strong></td>
+<td>Trigger <code>apt upgrade</code> via OTA; distribute custom .deb
+packages</td>
+<td>Server pushes package list; client runs
+<code>apt-get upgrade --assume-yes</code>; reports success/failure per
+package; supports dry-run mode</td>
+</tr>
+<tr class="even">
+<td><strong>Fedora/rpm-ostree Atomic Updates</strong></td>
+<td>Integrate with rpm-ostree for atomic system updates</td>
+<td>Client runs <code>rpm-ostree upgrade</code>; transactional: either
+all packages apply or none; instant rollback via
+<code>rpm-ostree rollback</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Arch Linux pacman Updates</strong></td>
+<td>Trigger <code>pacman -Syu</code> via OTA with custom repository
+support</td>
+<td>Client syncs custom repository; applies updates; handles .pacnew
+file merging; reports conflicts</td>
+</tr>
+<tr class="even">
+<td><strong>Generic Linux Rootfs A/B Updates</strong></td>
+<td>Full rootfs A/B swap for any Linux distribution</td>
+<td>Client writes new rootfs to inactive partition; updates bootloader;
+reboots; identical flow to Android A/B but for Linux rootfs</td>
+</tr>
+<tr class="odd">
+<td><strong>OSTree Integration</strong></td>
+<td>OSTree-based update delivery for immutable Linux distros</td>
+<td>Client pulls OSTree commit from Helix server (acting as OSTree
+remote); deploys new commit; atomic swap</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-architecture-addition">7.3 Key Architecture Addition</h3>
+<pre><code>┌─────────────────────────────────────────────┐
+│           OS Adapter Interface              │
+│  ┌──────────┐ ┌──────────┐ ┌────────────┐  │
+│  │ Android  │ │  Linux   │ │  Windows   │  │
+│  │ Adapter  │ │ Adapter  │ │  Adapter   │  │
+│  │(1.0.0)   │ │(1.1.0)   │ │(1.2.0)     │  │
+│  └──────────┘ └──────────┘ └────────────┘  │
+└─────────────────────────────────────────────┘</code></pre>
+<p>Each OS adapter implements a common interface:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// OSAdapter defines the contract for OS-specific update logic</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OSAdapter <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// CheckForUpdate queries the device&#39;s current state and returns</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// whether an update is available for this OS type.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    CheckForUpdate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> device Device<span class="op">)</span> <span class="op">(*</span>UpdateInfo<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ApplyUpdate triggers the OS-specific update mechanism.</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    ApplyUpdate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> device Device<span class="op">,</span> artifact Artifact<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// VerifyUpdate confirms the update was applied correctly.</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    VerifyUpdate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> device Device<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Rollback reverts to the previous system state.</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    Rollback<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> device Device<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ReportStatus returns the current update status.</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    ReportStatus<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> device Device<span class="op">)</span> <span class="op">(*</span>UpdateStatus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="dependencies-3">7.4 Dependencies</h3>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 32%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dependency</th>
+<th>Version</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0.0-MVP</td>
+<td>Required</td>
+<td>Server infrastructure, dashboard, device registry</td>
+</tr>
+<tr class="even">
+<td>1.0.1-rollback</td>
+<td>Required</td>
+<td>Rollback is critical for Linux A/B updates and rpm-ostree</td>
+</tr>
+<tr class="odd">
+<td>1.0.2-delta-updates</td>
+<td>Recommended</td>
+<td>Delta updates equally valuable for Linux rootfs updates</td>
+</tr>
+</tbody>
+</table>
+<h3 id="new-submodules-needed-3">7.5 New Submodules Needed</h3>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Submodule</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>helix-linux-client</code></td>
+<td>Linux OTA client (Go binary); supports APT, rpm-ostree, pacman,
+rootfs A/B, OSTree</td>
+</tr>
+<tr class="even">
+<td><code>helix-ostree-adapter</code></td>
+<td>Server-side OSTree repository management and delta generation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-assessment-3">7.6 Risk Assessment</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 31%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>APT dependency hell on heterogeneous device fleet</td>
+<td>High</td>
+<td>High</td>
+<td>Pin package versions server-side; pre-validate dependency trees in
+CI before rollout</td>
+</tr>
+<tr class="even">
+<td>rpm-ostree layering conflicts</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Document supported layering patterns; reject updates with
+conflicting layers</td>
+</tr>
+<tr class="odd">
+<td>pacman .pacnew handling differs across installations</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Default: preserve existing config; report .pacnew files for manual
+review</td>
+</tr>
+<tr class="even">
+<td>Rootfs A/B requires bootloader-specific integration (GRUB, U-Boot,
+systemd-boot)</td>
+<td>High</td>
+<td>Critical</td>
+<td>Support U-Boot first (RK3588 native); add GRUB and systemd-boot
+adapters incrementally</td>
+</tr>
+<tr class="odd">
+<td>OSTree static delta generation adds server complexity</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Reuse <code>helix-delta-gen</code> architecture; extend for OSTree
+delta format</td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing-requirements-2">7.7 Testing Requirements</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test Category</th>
+<th>Specific Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit</td>
+<td>Each OS adapter’s <code>CheckForUpdate</code>,
+<code>ApplyUpdate</code>, <code>Rollback</code> implementations</td>
+</tr>
+<tr class="even">
+<td>Mutation</td>
+<td>85% mutation score on all OS adapter code</td>
+</tr>
+<tr class="odd">
+<td>Integration</td>
+<td>Each Linux adapter against containerized OS images (Ubuntu, Fedora,
+Arch)</td>
+</tr>
+<tr class="even">
+<td>E2E</td>
+<td>Full A/B rootfs update on RK3588 running Debian; rpm-ostree upgrade
+on Fedora VM; pacman update on Arch container</td>
+</tr>
+<tr class="odd">
+<td>Chaos</td>
+<td>Kill <code>apt</code>/<code>pacman</code> mid-transaction; verify
+rollback works; test with broken package repositories</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="windows-support-windows-ota">8. 1.2.0-windows-support — Windows
+OTA</h2>
+<h3 id="overview-4">8.1 Overview</h3>
+<p>Adds Windows as a supported OTA target platform, enabling centralized
+update management for Windows devices alongside Android and Linux
+fleets.</p>
+<h3 id="feature-list-3">8.2 Feature List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Windows Update Wrapper</strong></td>
+<td>Integrate with Windows Update API to manage OS updates via
+Helix</td>
+<td>Client calls Windows Update Agent API; Helix server controls
+approval timing; reports WSUS-like compliance data</td>
+</tr>
+<tr class="even">
+<td><strong>MSI/MSIX Package Distribution</strong></td>
+<td>Distribute custom MSI/MSIX packages via OTA</td>
+<td>Server stores MSI/MSIX artifacts; client downloads and installs via
+<code>msiexec</code> / <code>Add-AppxPackage</code>; rollback via MSI
+uninstall</td>
+</tr>
+<tr class="odd">
+<td><strong>Windows Service Client</strong></td>
+<td>Helix OTA client runs as a Windows Service</td>
+<td>Installed as NT service with auto-start; runs under
+<code>LOCAL_SYSTEM</code>; communicates with server over HTTPS; supports
+service pause/resume</td>
+</tr>
+<tr class="even">
+<td><strong>Registry-Based Configuration</strong></td>
+<td>Store client configuration in Windows Registry</td>
+<td>Registry path: <code>HKLM\SOFTWARE\HelixOTA\Client</code>;
+configurable: server URL, check interval, proxy settings; changes take
+effect without restart</td>
+</tr>
+</tbody>
+</table>
+<h3 id="windows-client-architecture">8.3 Windows Client
+Architecture</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Windows Service main loop</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>HelixOTAService<span class="op">)</span> Execute<span class="op">()</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    ticker <span class="op">:=</span> time<span class="op">.</span>NewTicker<span class="op">(</span>s<span class="op">.</span>config<span class="op">.</span>CheckInterval<span class="op">)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>ticker<span class="op">.</span>C<span class="op">:</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            update<span class="op">,</span> err <span class="op">:=</span> s<span class="op">.</span>checkForUpdate<span class="op">()</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                s<span class="op">.</span>log<span class="op">.</span>Error<span class="op">(</span><span class="st">&quot;update check failed&quot;</span><span class="op">,</span> <span class="st">&quot;error&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> update <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>                s<span class="op">.</span>applyUpdate<span class="op">(</span>update<span class="op">)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>s<span class="op">.</span>shutdownCh<span class="op">:</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="dependencies-4">8.4 Dependencies</h3>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 32%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dependency</th>
+<th>Version</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.1.0-linux-support</td>
+<td>Required</td>
+<td>OS adapter interface defined in 1.1.0; Windows adapter implements
+the same interface</td>
+</tr>
+</tbody>
+</table>
+<h3 id="new-submodules-needed-4">8.5 New Submodules Needed</h3>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Submodule</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>helix-windows-client</code></td>
+<td>Windows Service client (Go binary cross-compiled for
+windows/amd64)</td>
+</tr>
+<tr class="even">
+<td><code>helix-msi-packager</code></td>
+<td>MSI packaging tool for creating Helix OTA installer</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-assessment-4">8.6 Risk Assessment</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 31%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Windows Update API requires elevated privileges</td>
+<td>High</td>
+<td>Medium</td>
+<td>Run service as <code>LOCAL_SYSTEM</code>; document privilege
+requirements</td>
+</tr>
+<tr class="even">
+<td>MSI rollback on partial install failure</td>
+<td>Medium</td>
+<td>High</td>
+<td>Use MSI transaction support; test all rollback paths</td>
+</tr>
+<tr class="odd">
+<td>Windows Defender SmartScreen blocks client binary</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Code-sign with EV certificate; submit to Microsoft for
+whitelisting</td>
+</tr>
+<tr class="even">
+<td>Cross-compilation from Linux produces subtle runtime issues</td>
+<td>Medium</td>
+<td>High</td>
+<td>Run full test suite on native Windows; use Windows CI runner for
+validation</td>
+</tr>
+<tr class="odd">
+<td>Registry permission issues on locked-down corporate devices</td>
+<td>Low</td>
+<td>High</td>
+<td>Document required registry permissions; provide Group Policy
+template</td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing-requirements-3">8.7 Testing Requirements</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test Category</th>
+<th>Specific Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit</td>
+<td>Windows adapter, MSI packager, registry configuration reader</td>
+</tr>
+<tr class="even">
+<td>Mutation</td>
+<td>85% mutation score on Windows adapter code</td>
+</tr>
+<tr class="odd">
+<td>Integration</td>
+<td>Windows Service lifecycle (install → start → check → update → stop →
+uninstall)</td>
+</tr>
+<tr class="even">
+<td>E2E</td>
+<td>Full MSI distribution cycle on Windows 10/11 VM; Windows Update
+integration test</td>
+</tr>
+<tr class="odd">
+<td>Security</td>
+<td>Verify service runs with minimal privileges; test with UAC enabled;
+verify TLS certificate validation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="multi-os-universal-universal-multi-os">9.
+2.0.0-multi-os-universal — Universal Multi-OS</h2>
+<h3 id="overview-5">9.1 Overview</h3>
+<p>The 2.0.0 release unifies all OS-specific adapters into a
+<strong>plugin architecture</strong>, making Helix OTA a truly
+OS-agnostic update platform. This is a <strong>major version
+bump</strong> because it introduces a breaking change to the internal
+adapter API (though external APIs remain backward-compatible).</p>
+<h3 id="feature-list-4">9.2 Feature List</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 31%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Plugin Architecture</strong></td>
+<td>OS adapters are dynamically loaded plugins (Go plugins or WASM)</td>
+<td>New OS support added without recompiling server; plugins declare
+capabilities via manifest; server validates plugin signatures</td>
+</tr>
+<tr class="even">
+<td><strong>OS-Agnostic Update Pipeline</strong></td>
+<td>Unified pipeline that works for any OS type</td>
+<td>Pipeline stages: check → download → verify → apply → report; each
+stage delegates to plugin; stages are composable</td>
+</tr>
+<tr class="odd">
+<td><strong>Unified Dashboard</strong></td>
+<td>Single dashboard for all OS types</td>
+<td>Dashboard shows devices across Android, Linux, Windows in one view;
+filters by OS type; OS-specific detail views</td>
+</tr>
+<tr class="even">
+<td><strong>Cross-OS Dependency Management</strong></td>
+<td>Track and manage dependencies that span OS boundaries</td>
+<td>E.g., Android app update requires corresponding backend API version;
+dependency graph validated before rollout</td>
+</tr>
+<tr class="odd">
+<td><strong>Plugin SDK</strong></td>
+<td>Public SDK for building third-party OS adapters</td>
+<td>SDK includes: adapter interface, test harness, documentation,
+example plugin (FreeBSD); plugins compile against stable API</td>
+</tr>
+</tbody>
+</table>
+<h3 id="plugin-architecture">9.3 Plugin Architecture</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Plugin manifest (plugin.yaml)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> helix<span class="op">-</span>adapter<span class="op">-</span>freebsd</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>version<span class="op">:</span> <span class="fl">1.0</span><span class="er">.0</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>os_type<span class="op">:</span> freebsd</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>capabilities<span class="op">:</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span> full_update</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span> delta_update</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span> rollback</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>signature<span class="op">:</span> <span class="st">&quot;RSA-SHA256:abc123...&quot;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Plugin loading</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> LoadPlugin<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> path <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>OSAdapter<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    manifest<span class="op">,</span> err <span class="op">:=</span> ParseManifest<span class="op">(</span>path <span class="op">+</span> <span class="st">&quot;/plugin.yaml&quot;</span><span class="op">)</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;parse manifest: %w&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> VerifyPluginSignature<span class="op">(</span>manifest<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;signature verification failed: %w&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    adapter<span class="op">,</span> err <span class="op">:=</span> pluginOpen<span class="op">(</span>path <span class="op">+</span> <span class="st">&quot;/adapter.so&quot;</span><span class="op">)</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;load plugin: %w&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> adapter<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="dependencies-5">9.4 Dependencies</h3>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 32%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dependency</th>
+<th>Version</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0.0-MVP through 1.2.0-windows</td>
+<td>All required</td>
+<td>Plugin architecture extracts and generalizes all existing
+adapters</td>
+</tr>
+<tr class="even">
+<td>1.0.1-rollback</td>
+<td>Required</td>
+<td>Rollback must work across all OS plugins</td>
+</tr>
+<tr class="odd">
+<td>1.0.2-delta-updates</td>
+<td>Required</td>
+<td>Delta generation must be plugin-aware</td>
+</tr>
+</tbody>
+</table>
+<h3 id="new-submodules-needed-5">9.5 New Submodules Needed</h3>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Submodule</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>helix-plugin-sdk</code></td>
+<td>Public SDK for building OS adapter plugins</td>
+</tr>
+<tr class="even">
+<td><code>helix-plugin-registry</code></td>
+<td>Plugin storage, versioning, and distribution service</td>
+</tr>
+<tr class="odd">
+<td><code>helix-adapter-freebsd</code></td>
+<td>Reference third-party plugin (FreeBSD support)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-assessment-5">9.6 Risk Assessment</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 31%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Risk</th>
+<th>Probability</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Go plugin system has compatibility limitations (compiler version,
+libc)</td>
+<td>High</td>
+<td>Critical</td>
+<td>Evaluate WASM as alternative plugin runtime; provide WASM SDK as
+fallback</td>
+</tr>
+<tr class="even">
+<td>Plugin sandboxing: malicious plugin could compromise server</td>
+<td>Medium</td>
+<td>Critical</td>
+<td>Run plugins in isolated process; restrict filesystem/network access;
+sign all plugins</td>
+</tr>
+<tr class="odd">
+<td>Breaking change to adapter API alienates existing users</td>
+<td>Medium</td>
+<td>High</td>
+<td>Maintain backward-compatible API wrapper; deprecation period of 2
+minor versions</td>
+</tr>
+<tr class="even">
+<td>Cross-OS dependency graph becomes intractable</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Limit dependency depth to 3 levels; provide visualization tool; warn
+on circular dependencies</td>
+</tr>
+<tr class="odd">
+<td>Plugin load-time performance regression</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Lazy-load plugins; cache compiled plugin instances; benchmark ≤
+100ms plugin load time</td>
+</tr>
+</tbody>
+</table>
+<h3 id="testing-requirements-4">9.7 Testing Requirements</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test Category</th>
+<th>Specific Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit</td>
+<td>Plugin loader, manifest parser, signature verifier, dependency graph
+resolver</td>
+</tr>
+<tr class="even">
+<td>Mutation</td>
+<td>85% mutation score on plugin infrastructure code</td>
+</tr>
+<tr class="odd">
+<td>Integration</td>
+<td>Load/unload plugin at runtime; plugin communicates with server
+pipeline; hot-swap plugin version</td>
+</tr>
+<tr class="even">
+<td>E2E</td>
+<td>Full update cycle using third-party plugin (FreeBSD); verify plugin
+isolation</td>
+</tr>
+<tr class="odd">
+<td>Security</td>
+<td>Pen-test plugin sandbox; attempt privilege escalation from plugin;
+verify signature rejection for tampered plugins</td>
+</tr>
+<tr class="even">
+<td>Performance</td>
+<td>Plugin load time ≤ 100ms; plugin call overhead ≤ 1ms per stage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cross-cutting-concerns">10. Cross-Cutting Concerns</h2>
+<h3 id="security-model-all-versions">10.1 Security Model (All
+Versions)</h3>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concern</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Transport Security</td>
+<td>TLS 1.3 mandatory; certificate pinning on client</td>
+</tr>
+<tr class="even">
+<td>Payload Integrity</td>
+<td>SHA-256 hash verified before apply; hash embedded in signed
+metadata</td>
+</tr>
+<tr class="odd">
+<td>Payload Authenticity</td>
+<td>RSA-2048/4096 signature on all artifacts; public key embedded in
+client</td>
+</tr>
+<tr class="even">
+<td>Device Authentication</td>
+<td>mTLS or JWT with per-device secrets; token rotation every 24h</td>
+</tr>
+<tr class="odd">
+<td>Server Authentication</td>
+<td>Client validates server certificate against pinned CA</td>
+</tr>
+<tr class="even">
+<td>Supply Chain</td>
+<td>Artifact signing occurs in isolated CI pipeline; signing key never
+leaves HSM</td>
+</tr>
+<tr class="odd">
+<td>Replay Protection</td>
+<td>Nonce-based request signing; server rejects replayed update
+checks</td>
+</tr>
+</tbody>
+</table>
+<h3 id="observability-all-versions">10.2 Observability (All
+Versions)</h3>
+<p>Every version must expose:</p>
+<ul>
+<li><strong>Metrics</strong>: Prometheus-compatible metrics for request
+latency, error rates, device check-in frequency, update success/failure
+rates, artifact download throughput</li>
+<li><strong>Logging</strong>: Structured JSON logging with request IDs;
+log levels: DEBUG, INFO, WARN, ERROR; PII redaction</li>
+<li><strong>Tracing</strong>: OpenTelemetry distributed tracing from
+dashboard → server → client (where network allows)</li>
+<li><strong>Alerting</strong>: PagerDuty integration for: update failure
+rate &gt; 5%, artifact validation failure, server error rate &gt; 1%,
+database connection pool exhaustion</li>
+</ul>
+<h3 id="backward-compatibility">10.3 Backward Compatibility</h3>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 27%" />
+<col style="width: 30%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>From → To</th>
+<th>API Compatibility</th>
+<th>Client Compatibility</th>
+<th>Database Migration</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0.0 → 1.0.1</td>
+<td>Additive only</td>
+<td>1.0.0 clients work with 1.0.1 server</td>
+<td>Forward-compatible</td>
+</tr>
+<tr class="even">
+<td>1.0.1 → 1.0.2</td>
+<td>Additive only</td>
+<td>1.0.1 clients work with 1.0.2 server</td>
+<td>Forward-compatible</td>
+</tr>
+<tr class="odd">
+<td>1.0.2 → 1.1.0</td>
+<td>Additive only</td>
+<td>1.0.x Android clients work with 1.1.0 server</td>
+<td>Forward-compatible</td>
+</tr>
+<tr class="even">
+<td>1.1.0 → 1.2.0</td>
+<td>Additive only</td>
+<td>1.1.x clients work with 1.2.0 server</td>
+<td>Forward-compatible</td>
+</tr>
+<tr class="odd">
+<td>1.2.0 → 2.0.0</td>
+<td>Additive external; internal adapter API changes</td>
+<td>1.x clients work with 2.0.0 server (external API compatible)</td>
+<td>Migration script provided</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-a-submodule-dependency-map">Appendix A — Submodule
+Dependency Map</h2>
+<pre><code>vasic-digital/
+├── auth            ← Used by: 1.0.0+ (device auth, dashboard auth)
+├── database        ← Used by: 1.0.0+ (PostgreSQL access layer)
+├── cache           ← Used by: 1.0.0+ (Redis for check-in dedup, rollout cache)
+├── observability   ← Used by: 1.0.0+ (metrics, logging, tracing)
+├── security        ← Used by: 1.0.0+ (TLS, cert management, input sanitization)
+├── middleware      ← Used by: 1.0.0+ (request logging, auth, CORS)
+├── config          ← Used by: 1.0.0+ (environment config, hot-reload)
+├── EventBus        ← Used by: 1.0.0+ (async telemetry, rollout triggers)
+├── Storage         ← Used by: 1.0.0+ (artifact storage, S3-compatible)
+├── ratelimiter     ← Used by: 1.0.0+ (per-device rate limiting)
+├── concurrency     ← Used by: 1.0.0+ (goroutine pools for validation)
+├── recovery        ← Used by: 1.0.0+ (panic recovery, graceful shutdown)
+└── containers      ← Used by: 1.0.0+ (Docker Compose / K8s deployment)</code></pre>
+<hr />
+<h2 id="appendix-b-testing-standards-reference">Appendix B — Testing
+Standards Reference</h2>
+<p>Per HelixConstitution §1.1, the following testing standards apply to
+<strong>all versions</strong>:</p>
+<h3 id="b.1-mutation-testing-requirements">B.1 Mutation Testing
+Requirements</h3>
+<ol type="1">
+<li><strong>Scope</strong>: All production Go code in the server; all
+critical-path code in Android/Linux/Windows clients</li>
+<li><strong>Minimum Score</strong>: 85% mutation kill rate</li>
+<li><strong>Tooling</strong>: <code>go-mutesting</code> for server;
+platform-native mutation tools for clients</li>
+<li><strong>Gate</strong>: CI pipeline blocks merge if mutation score
+drops below 85%</li>
+<li><strong>Frequency</strong>: Mutation testing runs on every PR
+targeting a release branch</li>
+</ol>
+<h3 id="b.2-test-coverage-requirements">B.2 Test Coverage
+Requirements</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Code Category</th>
+<th>Minimum Line Coverage</th>
+<th>Minimum Branch Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>API Handlers</td>
+<td>90%</td>
+<td>85%</td>
+</tr>
+<tr class="even">
+<td>Business Logic (Rollout, Artifact)</td>
+<td>95%</td>
+<td>90%</td>
+</tr>
+<tr class="odd">
+<td>Data Models</td>
+<td>80%</td>
+<td>75%</td>
+</tr>
+<tr class="even">
+<td>Client Update Pipeline</td>
+<td>90%</td>
+<td>85%</td>
+</tr>
+<tr class="odd">
+<td>OS Adapters</td>
+<td>85%</td>
+<td>80%</td>
+</tr>
+<tr class="even">
+<td>Plugin Infrastructure (2.0.0)</td>
+<td>90%</td>
+<td>85%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b.3-test-environment-requirements">B.3 Test Environment
+Requirements</h3>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Environment</th>
+<th>Purpose</th>
+<th>Provisioning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Local (Docker Compose)</td>
+<td>Developer testing</td>
+<td><code>docker compose up</code> from vasic-digital/containers</td>
+</tr>
+<tr class="even">
+<td>CI (GitHub Actions / GitLab CI)</td>
+<td>Automated testing on PR</td>
+<td>Testcontainers for PostgreSQL, Redis</td>
+</tr>
+<tr class="odd">
+<td>Staging (Kubernetes)</td>
+<td>Pre-release validation</td>
+<td>vasic-digital/containers K8s manifests</td>
+</tr>
+<tr class="even">
+<td>Hardware Lab</td>
+<td>Orange Pi 5 Max real-device testing</td>
+<td>Minimum 2 devices per test run</td>
+</tr>
+<tr class="odd">
+<td>Chaos Lab</td>
+<td>Network partition, power failure testing</td>
+<td>Custom harness: tc netem, iptables, controlled power cuts</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<blockquote>
+<p><strong>End of Document</strong> — Helix OTA Version Roadmap
+v1.0.0-draft<br />
+<em>This document is a living artifact. Updates require review per
+HelixConstitution §3.2 (nano-detail documentation standard).</em></p>
+</blockquote>
+</body>
+</html>

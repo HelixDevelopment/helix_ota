@@ -1,0 +1,81 @@
+================================================================
+Helix OTA E2E challenge — REAL run evidence
+Captured: 2026-06-08T15:27:01Z
+Host: Darwin 24.5.0 arm64
+Tooling: curl 8.7.1 (x86_64-apple-darwin24.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.64.0 | jq-1.7.1-apple | go version go1.26.2 darwin/arm64
+Server: go run ./cmd/ota-server  (in-memory repo, plain HTTP :8080)
+Server env: HELIX_ADMIN_USERNAME=admin@helix.test HELIX_ADMIN_PASSWORD=*** HELIX_TOKEN_SECRET=***
+WIRE CHANGE under test (breaking): GET /groups/{id}/members response widened —
+  * was  {"group_id":"...","device_ids":[string]}
+  * now  {"group_id":"...","items":[{"device_id":"...","added_at":"<RFC3339>"}]}
+  * step 9 now reads .items[].device_id (the .device_ids read is GONE),
+    asserts the deprecated flat .device_ids array is ABSENT (null),
+    and asserts the membership's added_at is present + non-empty.
+  (group_id key, batch member-add 200 added/already_member/not_found,
+   delete-member 204, delete-group 204, 404-after-delete are UNCHANGED.)
+================================================================
+
+== Helix OTA operational + rollout E2E challenge ==
+base_url=http://127.0.0.1:8080 user=admin@helix.test run=e2e-1780932420-55684
+
+[PASS] GET /healthz -> 200
+[PASS] POST /auth/login (HTTP 200)
+[PASS] login token_type is Bearer
+[PASS] access_token is a signed claims blob carrying sub + admin role
+[PASS] anti-bluff: unauthenticated GET /telemetry/overview -> 401 (auth enforced)
+[PASS] POST /devices/register (HTTP 201)
+[PASS] device registration returned a device_token
+[PASS] GET /devices/{id}/status (HTTP 200)
+[PASS] device status echoes device_id
+[PASS] POST /groups (HTTP 201)
+[PASS] group create uses new 'group_id' key (old 'id' key absent)
+[PASS] group create echoes name
+[PASS] GET /groups/{id} (HTTP 200)
+[PASS] GET group echoes name
+[PASS] POST /groups/{id}/members (batch add registered device) (HTTP 200)
+[PASS] batch add put the registered device in .added
+[PASS] POST /groups/{id}/members (re-add) -> 200 (HTTP 200)
+[PASS] re-add reports the device in .already_member
+[PASS] POST /groups/{id}/members (unregistered id) -> 200 (HTTP 200)
+[PASS] unregistered device id is reported in .not_found
+[PASS] POST /groups/{id}/members (empty device_ids) -> 400 (HTTP 400)
+[PASS] POST /groups/{absent}/members -> 404 (HTTP 404)
+[PASS] GET /groups/{id}/members (HTTP 200)
+[PASS] member list echoes group_id
+[PASS] member list dropped the deprecated 'device_ids' array (now '.items[]')
+[PASS] member list .items[].device_id contains the added device
+[PASS] member item carries a non-empty added_at (2026-06-08T15:27:01.260752Z)
+[PASS] GET /telemetry/overview (HTTP 200)
+[PASS] telemetry overview has total + event_counts
+[PASS] GET /audit (HTTP 200)
+[PASS] audit log is non-empty (12 entries)
+[PASS] audit log contains GROUP_CREATE (the group we created was audited)
+[PASS] audit log contains GROUP_MEMBER_CREATE (member-add was audited)
+[PASS] anti-bluff: GET reads are not audited (only mutations)
+[PASS] GET /deployments/{absent}/rollout -> 404 (HTTP 404)
+[PASS] POST /deployments/{absent}/rollout -> 404 (deployment-existence gate) (HTTP 404)
+[SKIP] full pipeline (upload->release->deploy->rollout create/get/evaluate): requires a server-config-coupled signed artifact; set HELIX_E2E_TRY_PIPELINE=1 + HELIX_E2E_VERIFIED_RELEASE_ID=<id> to drive it. Rollout ROUTES were still asserted deterministically above (step 12).
+[PASS] DELETE /groups/{id}/members/{deviceId} -> 204 (HTTP 204)
+[PASS] DELETE /groups/{id} -> 204 (HTTP 204)
+[PASS] GET /groups/{deleted} -> 404 (deletion is real) (HTTP 404)
+
+== summary: 39 passed, 0 failed, 1 skipped ==
+RESULT: PASS
+
+challenge exit code: 0
+
+================================================================
+ANTI-BLUFF NOTE on the members assertion (proves it can FAIL)
+================================================================
+The step-9 assertions are polarity-correct against the breaking change:
+  * .items[].device_id read finds the added device  -> PASS (real added_at
+    captured above: 2026-06-08T15:27:01.260752Z)
+  * the deprecated .device_ids array is asserted ABSENT (null); a server still
+    emitting the old flat array would flip "[PASS] member list dropped the
+    deprecated 'device_ids' array" to FAIL.
+  * a missing/empty added_at flips "[PASS] member item carries a non-empty
+    added_at" to FAIL.
+A reader that still did `.device_ids | index($d)` against the NEW body would get
+null (no match) and FAIL — the old read no longer passes.
+
+Server stopped and TCP :8080 freed after the run (host left quiescent).

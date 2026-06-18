@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>uptane</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="uptane-research-note-helix-ota">Uptane — Research Note (Helix
+OTA)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Initial deep-dive on Uptane as an automotive/embedded security
+framework on top of TUF. Evaluated for relevance to Helix OTA (Android
+15 first, native A/B, custom Go control plane). Conclusion: adopt
+Uptane’s <em>metadata/security model</em> selectively; do not adopt it
+as the primary update transport/mechanism.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>(1) No first-class Android/AOSP <code>update_engine</code>
+integration exists in the Uptane ecosystem — UNVERIFIED that any
+production Android+Uptane stack ships today. (2) Primary reference
+client <code>aktualizr</code> is C++/Yocto-oriented, last tagged release
+Feb 2020 (see §6) — language/runtime mismatch with Helix’s Go control
+plane and Android client. (3) Primary/Secondary ECU model maps awkwardly
+onto a fleet of independent Android devices.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (research note, no code changes)</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Decide scope of Uptane adoption: (a) full framework, (b)
+“TUF/Uptane-inspired” metadata layer over Helix’s own Go server, or (c)
+none. Cross-reference with the TUF research note and the Mender decision
+in <code>additions/initial_research.md</code>. Prototype a
+Director-style metadata signer in Go and validate against the
+conformance suite.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-scope--question">Scope &amp; Question</a></li>
+<li><a href="#2-what-uptane-is">What Uptane Is</a></li>
+<li><a href="#3-standard-versions--governance">Standard, Versions &amp;
+Governance</a></li>
+<li><a href="#4-architecture-director--image-repositories">Architecture:
+Director + Image Repositories</a></li>
+<li><a href="#5-roles-metadata--verification-full-vs-partial">Roles,
+Metadata &amp; Verification (Full vs Partial)</a></li>
+<li><a href="#6-primary--secondary-ecu-model">Primary / Secondary ECU
+Model</a></li>
+<li><a href="#7-threat-model">Threat Model</a></li>
+<li><a href="#8-reference-implementations--ecosystem">Reference
+Implementations &amp; Ecosystem</a></li>
+<li><a href="#9-relevance-to-helix-ota-android-fleet">Relevance to Helix
+OTA (Android Fleet)</a></li>
+<li><a href="#10-recommendation">Recommendation</a></li>
+<li><a href="#11-sources-consulted">Sources Consulted</a></li>
+<li><a href="#12-confidence--verification-notes">Confidence &amp;
+Verification Notes</a></li>
+</ol>
+<hr />
+<h2 id="scope-question">1. Scope &amp; Question</h2>
+<p>Helix OTA targets Android 15 first, uses native A/B
+(<code>update_engine</code>) for atomic installs, and runs a custom Go
+control plane (see
+<code>docs/research/main_specs/additions/initial_research.md</code>,
+which currently leans toward wrapping Mender). The question: <strong>is
+Uptane relevant — as a transport, as a security/metadata layer, or as a
+model worth borrowing — and how does its automotive ECU model map onto a
+fleet of independent Android devices?</strong></p>
+<p>Uptane is <strong>not</strong> a competing OTA <em>delivery</em>
+engine like Mender/RAUC/SWUpdate/<code>update_engine</code>. It is a
+<strong>security framework</strong> that specifies how update
+<em>metadata</em> is signed, distributed, and verified so the system
+stays resilient even when parts of the update infrastructure are
+compromised. This is the lens to evaluate it through.</p>
+<h2 id="what-uptane-is">2. What Uptane Is</h2>
+<p>Uptane is “the first compromise-resilient software update security
+system for the automotive industry” (uptane.org). It extends <strong>TUF
+(The Update Framework)</strong> — the same role/metadata model used by
+PyPI, Docker/Notary, and Sigstore’s root-of-trust — with
+automotive-specific concepts: a <strong>Director repository</strong>, an
+<strong>inventory database</strong>, and a <strong>Primary/Secondary
+ECU</strong> distribution topology.</p>
+<p>Key point for Helix: Uptane is a <em>specification</em>, not a server
+product. You implement (or adopt an implementation of) repositories that
+emit signed metadata, and clients that verify it. The binary delivery
+mechanism (A/B, delta, full image) is orthogonal — Uptane secures
+<em>which</em> image is authorized and <em>that</em> it is
+authentic/fresh; it does not mandate how bytes are written to flash.</p>
+<h2 id="standard-versions-governance">3. Standard, Versions &amp;
+Governance</h2>
+<ul>
+<li><strong>Latest standard: Uptane Standard for Design and
+Implementation 2.1.0</strong>, released <strong>June 27, 2023</strong>
+(per uptane.org search metadata; the rendered doc body itself does not
+print a date — date is UNVERIFIED against an in-document statement but
+is consistent across uptane.org listing and Wikipedia).</li>
+<li>Version lineage available on uptane.org: 1.0.0, 1.1.0, 1.2.0, 2.0.0,
+2.1.0. IEEE/ISTO published <strong>IEEE-ISTO 6100.1.0.0</strong> (the
+1.0.0 standard) on <strong>July 31, 2019</strong>.</li>
+<li><strong>Governance:</strong>
+<ul>
+<li>July 2018 — adopted into <strong>IEEE-ISTO</strong> as the
+non-profit <strong>Uptane Alliance</strong>.</li>
+<li>After 1.0.0 — affiliated with the <strong>Linux Foundation</strong>
+as a <strong>Joint Development Foundation</strong> project (“Joint
+Development Foundation Projects, LLC, Uptane Series”), overseen by a
+Steering Committee under published bylaws.</li>
+<li>Current Steering Committee (per uptane.org/learn-more/about): Justin
+Cappos (NYU Tandon), Ira McDonald (High North Inc.), Andre Weimerskirch
+(Lear Corp. / UMTRI).</li>
+</ul></li>
+<li><strong>Origins:</strong> developed by NYU Secure Systems Lab with
+UMTRI and Southwest Research Institute (SwRI). The about page names NYU
+and UMTRI in leadership; the specific tri-institution founding (NYU +
+UMTRI + SwRI) is well documented historically but the about page does
+not enumerate all three — treat the SwRI attribution as widely reported
+but UNVERIFIED from the single page I fetched.</li>
+</ul>
+<p><strong>Maturity:</strong> A formally governed, multi-version
+ISO/IEEE-style standard with ~7 years of standardization history and
+real automotive backing — high on the maturity scale for <em>spec</em>
+maturity. Implementation maturity is more uneven (see §8).</p>
+<h2 id="architecture-director-image-repositories">4. Architecture:
+Director + Image Repositories</h2>
+<p>Uptane mandates (at minimum) <strong>two repositories</strong> (Best
+Practices 2.1.0 and Standard 2.1.0):</p>
+<ul>
+<li><strong>Image repository</strong> — stores binary images and their
+signed metadata. “Primarily controlled by human actors, and updated
+relatively infrequently.” Keys (Root, Targets, delegations)
+<strong>SHOULD be kept offline</strong>. This is the source of truth for
+<em>what valid images exist</em>.</li>
+<li><strong>Director repository</strong> — “Instructs ECUs as to which
+images will be installed by producing signed metadata on demand.”
+“Mostly controlled by automated, online processes” and connected to an
+<strong>inventory database</strong> of vehicles/ECUs. Director
+<strong>Timestamp/Snapshot/Targets SHOULD use online keys</strong> (so
+an automated process can mint fresh metadata per-device); Director
+<strong>Root SHOULD use offline keys</strong>.</li>
+</ul>
+<p>The split is the heart of Uptane’s compromise resilience: an attacker
+who breaks the <em>online</em> Director still cannot forge a valid image
+because the Image repository’s Targets metadata (offline-signed) must
+also match. An attacker who breaks the Image repo signing still cannot
+target a <em>specific</em> malicious image at a device without the
+Director. <strong>Security degrades only if BOTH are
+compromised.</strong></p>
+<p>Key-management guidance (Best Practices 2.1.0): use threshold signing
+for Root (example: 5-of-8 admin keys); Image-repo Snapshot/Timestamp may
+use small thresholds (e.g., 1-of-2). More than two repositories is
+permitted for conformant implementations.</p>
+<pre class="mermaid"><code>flowchart LR
+  subgraph ImageRepo[Image Repository - offline keys, infrequent]
+    IT[Targets.json: hashes, sizes of all valid images]
+    IS[Snapshot] --- ITS[Timestamp] --- IRoot[Root]
+  end
+  subgraph Director[Director Repository - online keys, per-device]
+    DT[Targets.json: which image THIS device installs]
+    DS[Snapshot] --- DTS[Timestamp] --- DRoot[Root - offline]
+    INV[(Inventory DB)]
+  end
+  Director --&gt;|signed metadata on demand| Primary
+  ImageRepo --&gt;|signed metadata + images| Primary
+  Primary[Primary ECU: full verification] --&gt;|distributes| Sec1[Secondary ECU]
+  Primary --&gt; Sec2[Secondary ECU: full or partial verification]</code></pre>
+<h2 id="roles-metadata-verification-full-vs-partial">5. Roles, Metadata
+&amp; Verification (Full vs Partial)</h2>
+<p>Inherited from TUF, each repository carries four top-level roles
+(Standard 2.1.0):</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 72%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Root</strong></td>
+<td>“Distributes public keys for verifying all the other roles’
+metadata” and revocations. Root of trust; ideally offline keys.</td>
+</tr>
+<tr>
+<td><strong>Targets</strong></td>
+<td>Signs “metadata used to verify the image, such as cryptographic
+hashes and file size.” Authorizes specific images.</td>
+</tr>
+<tr>
+<td><strong>Snapshot</strong></td>
+<td>Signs “metadata that indicates which images the repository has
+released at the same time.” Prevents mix-and-match.</td>
+</tr>
+<tr>
+<td><strong>Timestamp</strong></td>
+<td>Signs metadata “indicating whether there are new metadata or images
+on the repository.” Provides freshness / anti-freeze.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification modes:</strong></p>
+<ul>
+<li><strong>Full verification</strong> — the client cross-checks that
+<strong>Director Targets metadata matches Image-repository Targets
+metadata</strong> for the same image. This is what delivers resilience
+to single-repository key compromise. The <strong>Primary ECU SHALL
+perform full verification.</strong> Full verification also enables key
+rotation.</li>
+<li><strong>Partial verification</strong> — the client checks
+<strong>only the Director’s Targets metadata</strong> (and Root to
+bootstrap). Cheaper (RAM/flash/compute), but a partial-verifier cannot
+rotate keys without a firmware update and is less resilient. A Secondary
+ECU “SHOULD perform full verification” but “SHALL, at the very least,
+perform partial verification.”</li>
+</ul>
+<p>For Helix: an Android device has ample CPU/RAM, so it would always do
+<strong>full verification</strong> — partial verification is a
+concession to tiny microcontrollers we don’t have.</p>
+<h2 id="primary-secondary-ecu-model">6. Primary / Secondary ECU
+Model</h2>
+<p>In a vehicle, one <strong>Primary ECU</strong> (gateway/head-unit
+class) has the network connection. It downloads metadata + images,
+performs full verification, and <strong>distributes</strong> images and
+metadata to multiple <strong>Secondary ECUs</strong> over the internal
+vehicle bus. Secondaries may be too constrained to talk to the cloud or
+to do full verification, hence the partial-verification fallback and the
+Primary acting as a caching/forwarding hub.</p>
+<p><strong>Mapping to Helix’s device model — this is the awkward
+part:</strong></p>
+<ul>
+<li>Helix’s fleet is <strong>many independent, internet-connected,
+full-power devices</strong> (Orange Pi 5 Max / Android 15). There is no
+in-vehicle bus, no constrained downstream microcontroller that depends
+on a gateway.</li>
+<li>The natural mapping is <strong>“each Helix device == a Primary
+ECU”</strong> that does its own full verification directly against the
+Director + Image repositories. The Secondary-ECU tier is largely
+<strong>vacuous</strong> for Helix today.</li>
+<li>The Secondary model <em>would</em> become relevant only if Helix
+later manages sub-components behind a gateway device (e.g., peripheral
+MCUs, multi-board appliances). Worth keeping as a future extension hook,
+not a v1 concern.</li>
+<li>The Director’s <strong>per-device targeting</strong> (one Director
+<code>targets.json</code> minted per ECU/device, backed by an inventory
+DB) maps cleanly and usefully onto Helix’s <strong>granular staged
+rollout</strong> requirement (5/10/30/…/100%): the control plane already
+needs per-device “what should this device install” decisions, which is
+exactly the Director’s job.</li>
+</ul>
+<h2 id="threat-model">7. Threat Model</h2>
+<p>Uptane (Standard 2.1.0) explicitly defends against:</p>
+<ul>
+<li><strong>Rollback attacks</strong> (forcing an older, vulnerable
+image) — via Timestamp/Snapshot version pinning.</li>
+<li><strong>Freeze attacks</strong> (withholding updates so a device
+stays vulnerable) — via Timestamp freshness/expiry.</li>
+<li><strong>Mix-and-match attacks</strong> (assembling an inconsistent
+set of images) — via Snapshot.</li>
+<li><strong>Arbitrary software / malicious image attacks</strong> — via
+Targets hashes + the Director/Image cross-check.</li>
+<li><strong>Denial of service</strong> and
+<strong>eavesdropping</strong>.</li>
+</ul>
+<p>Core assumption: “attackers could compromise either a Director or
+Image repository server… but not both.” This dual-root design is the
+differentiator vs. a single-signing-key OTA system (which is what most
+off-the-shelf OTA tools, including basic Mender setups, effectively are
+unless hardened).</p>
+<h2 id="reference-implementations-ecosystem">8. Reference
+Implementations &amp; Ecosystem</h2>
+<ul>
+<li><strong>aktualizr</strong> (github.com/uptane/aktualizr) — the
+primary <strong>C++</strong> Uptane client. License
+<strong>MPL-2.0</strong>. ~83% C++. Repo not archived and shows commit
+history, <strong>but the latest tagged release shown is February
+2020</strong> — i.e., effectively low release cadence; treat as
+mature-but-quiet. Tightly coupled to <strong>Yocto + OSTree</strong> via
+the <code>meta-updater</code> layer. Originated from ATS/HERE OTA
+Connect (<code>advancedtelematic</code>).</li>
+<li><strong>meta-updater</strong> (github.com/uptane/meta-updater) —
+Yocto layer wiring aktualizr + OSTree for Uptane updates.
+Embedded-Linux-centric.</li>
+<li><strong>OTA Connect / HERE</strong> — commercial server side
+historically implementing the Director + Image repos
+(docs.ota.here.com). Now largely superseded by <strong>Torizon
+(Toradex)</strong> for embedded Linux.</li>
+<li><strong>Torizon Updates (Toradex)</strong> — productized
+Uptane-based OTA for embedded Linux/containers
+(developer.toradex.com).</li>
+<li><strong>Automotive Grade Linux (AGL)</strong> — incorporates Uptane
+via aktualizr (widely reported; specific current AGL version integration
+status is UNVERIFIED).</li>
+<li><strong>Rust implementation (“uptane-rs”)</strong> — I searched but
+<strong>did not find</strong> an authoritative, current Rust reference
+implementation. Mark as <strong>UNVERIFIED — needs
+confirmation</strong>; do not assume one exists.</li>
+<li><strong>Android / AOSP</strong> — Android’s
+<code>update_engine</code> (A/B “seamless” updates, since Android Nougat
+/ API 24) is the native install mechanism, but it is <strong>not
+Uptane-aware</strong>. I found <strong>no</strong> first-class Uptane
+client for AOSP. Any Helix Android+Uptane integration would be
+<strong>bespoke</strong>: a Go/JNI or native verifier that performs
+Uptane full verification and then hands the verified payload to
+<code>update_engine</code>. <strong>UNVERIFIED that any production
+Android+Uptane stack ships today.</strong></li>
+</ul>
+<h2 id="relevance-to-helix-ota-android-fleet">9. Relevance to Helix OTA
+(Android Fleet)</h2>
+<p><strong>What is genuinely valuable to borrow:</strong></p>
+<ol type="1">
+<li><strong>Dual-repository (Director + Image) compromise
+resilience.</strong> This is the strongest reason to care. Helix’s Go
+control plane is online and a juicy single point of failure; an attacker
+who pops the control-plane signing key should not be able to ship
+arbitrary firmware. Splitting authorization (online Director) from image
+authenticity (offline Image-repo Targets) is a directly applicable,
+high-value hardening.</li>
+<li><strong>TUF role model (Root/Targets/Snapshot/Timestamp) +
+threshold/offline keys.</strong> Gives rollback/freeze/mix-and-match
+resistance for free if implemented correctly.</li>
+<li><strong>Per-device Director targeting + inventory DB</strong> maps
+onto Helix’s staged-rollout and per-device telemetry needs.</li>
+<li><strong>Full verification</strong> semantics are a clear, testable
+security bar for the Android client.</li>
+</ol>
+<p><strong>What does NOT fit / is overhead:</strong></p>
+<ol type="1">
+<li><strong>Primary/Secondary ECU topology</strong> — vacuous for a
+fleet of independent full-power devices (see §6). Don’t build the
+Secondary tier in v1.</li>
+<li><strong>aktualizr / meta-updater</strong> —
+C++/Yocto/OSTree-centric; mismatched with Helix’s Go server + Android
+<code>update_engine</code>. Not a drop-in client.</li>
+<li><strong>Uptane as a transport</strong> — it isn’t one. It does not
+replace Mender/<code>update_engine</code>; it would sit <em>in front of
+/ alongside</em> whatever delivery engine Helix picks.</li>
+</ol>
+<p><strong>Integration sketch (if adopted):</strong> Helix Go control
+plane implements a <strong>Director repository</strong> (online keys,
+per-device <code>targets.json</code> driven by the rollout engine). A
+separate <strong>Image repository</strong> (offline-signed Targets, in
+CI/release pipeline) lists every valid build. The Android client
+performs <strong>full verification</strong> (cross-check Director vs
+Image Targets, validate Snapshot/Timestamp freshness, Root chain), then
+passes the verified payload to <code>update_engine</code> for the atomic
+A/B install. This layers cleanly over a Mender-or-custom delivery
+path.</p>
+<h2 id="recommendation">10. Recommendation</h2>
+<p><strong>Adopt the Uptane <em>security model</em> selectively; do not
+adopt Uptane (or aktualizr) as the OTA mechanism.</strong></p>
+<p>Concretely: - <strong>Do</strong> implement a
+<strong>TUF/Uptane-inspired metadata layer in Go</strong> (Director +
+Image repos, four roles, offline/online key split, full verification on
+the Android client). This is option (b) from the Continuation field —
+the best cost/benefit. - <strong>Do not</strong> pull in
+aktualizr/meta-updater or build the Primary/Secondary ECU tier for v1 —
+language/runtime/topology mismatch. - <strong>Keep</strong> the A/B /
+<code>update_engine</code> delivery path; Uptane verification gates it,
+it does not replace it. - <strong>Revisit full Uptane
+conformance</strong> only if Helix later needs automotive certification
+or a gateway-with-constrained-subcomponents topology.</p>
+<p>This keeps Helix’s “zero corruption, 100% safe, revertible, staged”
+guarantees while adding nation-state-grade compromise resilience that a
+single-key OTA server lacks — without taking on an embedded-Linux C++
+client that doesn’t fit Android.</p>
+<h2 id="sources-consulted">11. Sources Consulted</h2>
+<ul>
+<li>Uptane Standard for Design and Implementation 2.1.0 —
+https://uptane.org/docs/2.1.0/standard/uptane-standard (roles,
+repositories, full/partial verification, threat model, Primary/Secondary
+SHALL/SHOULD language).</li>
+<li>Uptane Best Practices 2.1.0 —
+https://uptane.org/docs/latest/deployment/best-practices (offline/online
+key guidance, thresholds, two-repository model, constrained-ECU partial
+verification).</li>
+<li>About / Governance — https://uptane.org/learn-more/about (IEEE-ISTO
+2018, Linux Foundation/JDF affiliation, Steering Committee
+members).</li>
+<li>IEEE-ISTO 6100.1.0.0 listing —
+https://uptane.org/papers/ieee-isto-6100.1.0.0.uptane-standard.html
+(July 31, 2019 IEEE/ISTO release).</li>
+<li>aktualizr repo — https://github.com/uptane/aktualizr (MPL-2.0, C++,
+latest tag Feb 2020).</li>
+<li>meta-updater — https://github.com/uptane/meta-updater (Yocto +
+OSTree integration).</li>
+<li>HERE OTA Connect docs —
+https://docs.ota.here.com/ota-client/latest/uptane.html (Director vs
+Image repo, online keys).</li>
+<li>Torizon Updates Technical Overview —
+https://developer.toradex.com/torizon/torizon-platform/torizon-updates/torizon-updates-technical-overview/
+(productized Uptane).</li>
+<li>Android update_engine —
+https://android.googlesource.com/platform/system/update_engine/ ; A/B
+since API 24 —
+https://android.googlesource.com/platform/bootable/recovery/+/master/updater_sample/README.md.</li>
+<li>Wikipedia (Uptane) — https://en.wikipedia.org/wiki/Uptane
+(cross-check of dates/governance; secondary source).</li>
+</ul>
+<h2 id="confidence-verification-notes">12. Confidence &amp; Verification
+Notes</h2>
+<p><strong>Overall confidence: HIGH</strong> on the framework’s
+architecture, roles, verification semantics, repository split, threat
+model, and governance lineage — these are taken directly from the
+primary uptane.org standard and best-practices documents (2.1.0).</p>
+<p><strong>MEDIUM/UNVERIFIED items, explicitly flagged:</strong> - Exact
+publication date of Standard 2.1.0 (June 27, 2023) — from
+listing/secondary metadata, not an in-document date string. UNVERIFIED.
+- SwRI as a third founding institution — widely reported historically
+but not confirmed on the single about-page fetched. UNVERIFIED here. -
+Existence of a current Rust (“uptane-rs”) reference implementation —
+<strong>not found</strong>; do not assume it exists. - Any shipping
+production <strong>Android + Uptane</strong> integration — <strong>not
+found</strong>; assume bespoke work required. - aktualizr “actively
+maintained” — repo is open and has history, but the latest <em>tagged
+release</em> dates to Feb 2020; characterize as mature/low-cadence, not
+abandoned. Re-verify before depending on it. - Current AGL Uptane
+integration version/status — UNVERIFIED.</p>
+<p>No stars, download counts, or adoption figures are asserted because I
+could not verify specific numbers; none were fabricated.</p>
+</body>
+</html>

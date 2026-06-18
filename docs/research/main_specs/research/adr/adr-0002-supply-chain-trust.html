@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>adr-0002-supply-chain-trust</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="adr-0002-supply-chain-trust-plain-signing-vs-tuf-vs-uptane-and-mvp-timing">ADR-0002
+— Supply-chain trust: plain signing vs TUF vs Uptane (and MVP
+timing)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR</td>
+<td>ADR-0002</td>
+</tr>
+<tr>
+<td>Title</td>
+<td>Supply-chain trust: plain signing vs TUF vs Uptane (and MVP
+timing)</td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Proposed</strong></td>
+</tr>
+<tr>
+<td>Decision drivers</td>
+<td>Compromise resilience of the OTA trust chain; minimal-wrapping
+locked strategy; mandated Go stack; Android-15-first phase;
+verify-before-apply requirement.</td>
+</tr>
+<tr>
+<td>Supersedes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Superseded by</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Resolves</td>
+<td><code>additions_synthesis.md</code> §5 C5 (TUF/Uptane timing);
+routed open question §7 ADR-0002.</td>
+</tr>
+<tr>
+<td>Related ADRs</td>
+<td>ADR-0001 (wrapped engine), ADR-0003 (server topology), ADR-0004
+(transport).</td>
+</tr>
+<tr>
+<td>Evidence base</td>
+<td><a
+href="../ota_landscape_report.md"><code>../ota_landscape_report.md</code></a>
+§3.3, §4; <a
+href="../stacks/tuf-go-tuf.md"><code>../stacks/tuf-go-tuf.md</code></a>;
+<a href="../stacks/uptane.md"><code>../stacks/uptane.md</code></a>; <a
+href="../additions_synthesis.md"><code>../additions_synthesis.md</code></a>
+§3, §5 C5, §6, §7.</td>
+</tr>
+<tr>
+<td>Anti-bluff rule</td>
+<td>Every claim traces to a cited note/report section. Items the notes
+flagged as unverified are carried forward as
+<strong>UNVERIFIED</strong>; this ADR introduces no facts absent from
+the underlying notes.</td>
+</tr>
+<tr>
+<td>Fixed-summary (Rev 2)</td>
+<td>Added §7 row for §11.4.123 (rock-solid-proof) marked
+unmappable-until-Constitution-present; re-attributed §4.1
+local-verified-file decision to the verify-before-apply driver rather
+than the synthesis note; flagged the
+<code>security</code>/<code>Security-KMP</code> catalogue bricks’ fit
+for TUF-role/threshold/offline-key primitives as UNVERIFIED in §8.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-context">Context</a></li>
+<li><a href="#2-decision-drivers">Decision drivers</a></li>
+<li><a href="#3-options-considered">Options considered</a>
+<ul>
+<li><a
+href="#31-option-a--plain-per-artifact-signing-only-sha-256--detached-signature--avb">3.1
+Option A — Plain per-artifact signing only (SHA-256 + detached signature
++ AVB)</a></li>
+<li><a
+href="#32-option-b--tuf-via-go-tufv2-server-side-device-enforcement-gated">3.2
+Option B — TUF via go-tuf/v2 server-side, device enforcement
+gated</a></li>
+<li><a
+href="#33-option-c--full-uptane-dual-repo--primarysecondary-now">3.3
+Option C — Full Uptane (dual-repo + Primary/Secondary) now</a></li>
+<li><a href="#34-option-d--aktualizr-as-a-product">3.4 Option D —
+aktualizr as a product</a></li>
+</ul></li>
+<li><a href="#4-decision">Decision</a>
+<ul>
+<li><a href="#41-mvp-trust-model-100">4.1 MVP trust model
+(1.0.0)</a></li>
+<li><a href="#42-mvp-forward-signing-interface-uptane-ready">4.2
+MVP-forward signing interface (Uptane-ready)</a></li>
+<li><a href="#43-adoption-sequencing-101">4.3 Adoption sequencing
+(1.0.1+)</a></li>
+</ul></li>
+<li><a href="#5-consequences">Consequences</a>
+<ul>
+<li><a href="#51-positive">5.1 Positive</a></li>
+<li><a href="#52-negative">5.2 Negative</a></li>
+</ul></li>
+<li><a href="#6-status">Status</a></li>
+<li><a href="#7-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#8-open--unverified-items">Open / UNVERIFIED items</a></li>
+<li><a href="#9-sources">Sources</a></li>
+</ol>
+<hr />
+<h2 id="context">1. Context</h2>
+<p>Helix OTA already plans per-artifact integrity for every release:
+<strong>SHA-256 + a detached signature, verified server-side on upload
+and device-side before apply</strong>, with the native Android A/B
+engine’s own payload signature check as a further layer. [tuf-go-tuf §1]
+[additions_synthesis §3] The two operator drafts independently converged
+on “artifact integrity = SHA-256 + signature verification, verified
+server-side on upload and device-side before apply.”
+[additions_synthesis §3]</p>
+<p>Draft <code>initial_research_02.md</code> went further, proposing TUF
+(via <code>go-tuf/v2</code>) inside the MVP security service.
+[additions_synthesis §2, §4] The locked scope, however, defers full
+Uptane to 1.0.1+. This is the contradiction recorded as
+<strong>C5</strong> in the reconciliation: <em>“02 puts TUF in MVP
+security service; locked scope defers full Uptane to 1.0.1+.”</em> The
+recorded resolution rule is: <strong>MVP ships signed-artifact + SHA-256
++ AVB; TUF/Uptane is an ADR-0002 hardening item for 1.0.1+; signing
+interfaces are designed MVP-forward so Uptane drops in without
+rework.</strong> [additions_synthesis §5 C5] This ADR is that decision,
+now backed by the landscape evidence.</p>
+<p>The trust question is distinct from the delivery question (ADR-0001).
+TUF/Uptane are <strong>not</strong> OTA delivery engines; they secure
+<em>which</em> artifact is authorized and <em>that</em> it is
+authentic/fresh, while the native A/B <code>update_engine</code> still
+performs the atomic, anti-bricking apply with automatic boot-failure
+rollback. [uptane §2, §9] [tuf-go-tuf §6] They are complementary, not
+overlapping. [tuf-go-tuf §6]</p>
+<p><strong>LOCKED context honored by this ADR (not re-decided
+here):</strong></p>
+<ul>
+<li>Native Android A/B (AOSP <code>update_engine</code>) on-device + a
+custom Go control plane; wrap OSS only where it adds value.
+[ota_landscape_report front-matter, §3.1, §3.2]</li>
+<li>Mandated stack: Go + Gin + Brotli + HTTP/3→HTTP/2, REST-primary;
+PostgreSQL + MinIO/S3. [ota_landscape_report front-matter]
+[additions_synthesis §1]</li>
+<li>Phase 1 target is Android 15 first (Orange Pi 5 Max / RK3588 class);
+Linux/universal is a later phase. [ota_landscape_report
+front-matter]</li>
+<li>The <em>delivery</em> engine (AOSP-native-only vs hawkBit vs Mender)
+is decided by ADR-0001, not here. [additions_synthesis §7]</li>
+</ul>
+<h3 id="why-plain-signing-is-not-enough-the-gap-this-adr-closes">Why
+plain signing is not enough (the gap this ADR closes)</h3>
+<p>Plain SHA-256 + per-artifact signature covers the <em>wrong/arbitrary
+file</em> class <strong>only if</strong> the signing key is intact and
+the device already knows the correct hash. It does <strong>not</strong>
+cover rollback, indefinite freeze, mix-and-match, malicious-mirror
+denial, or graceful recovery from key compromise. [tuf-go-tuf §4] That
+delta is the case for a metadata/trust framework on top. [tuf-go-tuf §4,
+§9]</p>
+<h2 id="decision-drivers">2. Decision drivers</h2>
+<ul>
+<li><strong>Compromise resilience.</strong> The online Go control plane
+is a single, attractive signing-key target; an attacker who pops it
+should not be able to ship arbitrary, stale, or device-targeted
+firmware. [uptane §9] [tuf-go-tuf §4]</li>
+<li><strong>Minimal-wrapping locked strategy.</strong> Adopt only the
+trust machinery that adds value over the existing per-artifact signing;
+avoid embedded-Linux/C++ baggage that mismatches Go+Android.
+[ota_landscape_report §3.3, §4]</li>
+<li><strong>Mandated stack fit.</strong> Prefer an idiomatic Go library
+that publishes over the existing HTTP/3→HTTP/2 + Brotli path and hooks
+into the MinIO/S3 upload flow. [tuf-go-tuf §5, §6]</li>
+<li><strong>Android-15-first reality.</strong> The device-side trust
+client is the dominant cost/risk and is currently unproven. [tuf-go-tuf
+§7, §8] [uptane §8]</li>
+<li><strong>Verify-before-apply requirement.</strong>
+Local-verified-file apply is safer than streaming an unverified payload
+straight to <code>applyPayload</code>. [additions_synthesis §6]</li>
+<li><strong>No-guessing / research-before-implementation.</strong> No
+trust mechanism is made mandatory on-device without a spike that
+resolves the open client path. [additions_synthesis §5 C5, §7]</li>
+</ul>
+<h2 id="options-considered">3. Options considered</h2>
+<h3
+id="option-a-plain-per-artifact-signing-only-sha-256-detached-signature-avb">3.1
+Option A — Plain per-artifact signing only (SHA-256 + detached signature
++ AVB)</h3>
+<p>Keep what both drafts already converged on: SHA-256 + detached
+signature verified server-side on upload and device-side before apply,
+plus Android Verified Boot (AVB) and the A/B engine’s own payload check.
+[additions_synthesis §3, §5 C5]</p>
+<ul>
+<li><strong>Pros:</strong> Zero new dependency; already in scope; native
+A/B provides atomic apply + automatic boot-failure rollback
+independently of any metadata layer. [ota_landscape_report §3.1] [uptane
+§9]</li>
+<li><strong>Cons:</strong> Does <strong>not</strong> mitigate rollback,
+fast-forward, indefinite-freeze, mix-and-match, malicious-mirror, or
+key-compromise-recovery attacks; security collapses to a single signing
+key. [tuf-go-tuf §4]</li>
+<li><strong>Verdict:</strong> Necessary but <strong>insufficient as the
+end state.</strong> Correct as the MVP floor and retained as
+defense-in-depth regardless of later layers. [tuf-go-tuf §9]
+[additions_synthesis §5 C5]</li>
+</ul>
+<h3
+id="option-b-tuf-via-go-tufv2-server-side-device-enforcement-gated">3.2
+Option B — TUF via go-tuf/v2 server-side, device enforcement gated</h3>
+<p>Adopt TUF (CNCF-graduated spec) using
+<code>github.com/theupdateframework/go-tuf/v2</code> as the server-side
+metadata/trust layer; gate <em>mandatory</em> device-side enforcement
+behind a dedicated Android-client spike. [tuf-go-tuf §9]
+[ota_landscape_report §3.3]</p>
+<p><strong>Verified library facts (GitHub API + pkg.go.dev,
+2026-06-07):</strong> module path
+<code>github.com/theupdateframework/go-tuf/v2</code>; license
+<strong>Apache-2.0</strong>; latest release <strong>v2.4.2
+(2026-05-19)</strong>; pinned spec version <strong>1.0.31</strong>;
+crypto ED25519/RSA/ECDSA; consistent snapshots, standard + hash-bin
+delegations, succinct hash-bin (TAP-15), multi-repo consensus (TAP-4);
+generics-based API. [tuf-go-tuf §5] Adopter list is the project’s own
+claim — <strong>UNVERIFIED</strong> for any specific adopter.
+[tuf-go-tuf §5]</p>
+<ul>
+<li><strong>Additive/non-invasive layering:</strong> artifacts
+(<code>payload.bin</code> / <code>.zip</code>) remain byte-identical and
+keep their AOSP/payload signature; TUF treats each as an opaque target
+file (path + length + SHA-256/512). The publish path computes
+<code>TargetFiles.FromFile(...)</code>, bumps <code>snapshot</code> +
+<code>timestamp</code>, signs, and writes metadata next to the blobs;
+served over the existing HTTP/3→HTTP/2 + Brotli path. [tuf-go-tuf
+§6]</li>
+<li><strong>Attack classes closed over plain signing:</strong>
+arbitrary-install, rollback, fast-forward, indefinite-freeze,
+endless-data, extraneous-dependencies, mix-and-match, wrong-software,
+malicious-mirror denial, and key-compromise resilience via thresholds +
+offline keys. [tuf-go-tuf §4]</li>
+<li><strong>Effort (estimates, UNVERIFIED until spiked):</strong>
+server-side LOW–MEDIUM (~1–2 engineer-weeks for first integration +
+tests); key management MEDIUM–HIGH (process: offline root/targets
+custody, signing ceremony, threshold + rotation, timestamp re-signing
+automation); device-side <strong>HIGH / OPEN</strong>. [tuf-go-tuf
+§7]</li>
+<li><strong>The blocker is device-side, not the library:</strong> no
+verified production-grade Android/Kotlin TUF client exists; on-device
+path is gomobile/JNI vs hand-rolled Kotlin vs an existing JVM client
+(<strong>none verified to exist or be maintained</strong>) — all
+<strong>UNVERIFIED</strong>. [tuf-go-tuf §7, §8] In the landscape matrix
+this is the dominant adoption risk and pins <code>tuf-go-tuf</code>
+Android-15 fit at 2/5 with an <strong>UNVERIFIED</strong> client.
+[ota_landscape_report §2.3]</li>
+<li><strong><code>metadata/updater</code> and
+<code>metadata/trustedmetadata</code> client-flow API
+signatures</strong> were not fully enumerated from pkg.go.dev
+(truncated) — <strong>UNVERIFIED</strong>; confirm before sizing client
+work. [tuf-go-tuf §5, §8]</li>
+<li><strong>Verdict:</strong> <strong>Adopt server-side now; gate
+device-side enforcement behind a spike.</strong> Strong Go fit (5/5),
+Apache-2.0, actively maintained; net wrap-ability high on server,
+blocked on device only by the missing client. [ota_landscape_report
+§2.3, §3.3] [tuf-go-tuf §9]</li>
+</ul>
+<h3 id="option-c-full-uptane-dual-repo-primarysecondary-now">3.3 Option
+C — Full Uptane (dual-repo + Primary/Secondary) now</h3>
+<p>Adopt the full Uptane standard (2.1.0): dual Image + Director
+repositories, four TUF roles per repo, and the Primary/Secondary ECU
+verification topology. [uptane §3, §4, §5, §6]</p>
+<ul>
+<li><strong>Genuinely valuable to borrow:</strong> dual-repository
+(Director + Image) compromise resilience — security degrades only if
+<strong>both</strong> repos are compromised; the TUF role model with
+threshold/offline keys; per-device Director targeting + inventory DB
+(maps onto staged rollout 5/10/30/…/100%); full-verification semantics
+as a testable Android security bar. [uptane §7, §9]</li>
+<li><strong>Does not fit / overhead now:</strong> the Primary/Secondary
+ECU tier is <strong>vacuous</strong> for a fleet of independent,
+full-power Android devices (no in-vehicle bus, no constrained downstream
+MCU) — each Helix device == a Primary doing full verification. [uptane
+§6, §9] No first-class AOSP Uptane client; any Android+Uptane
+integration is <strong>bespoke</strong>, and it is <strong>UNVERIFIED
+that any production Android+Uptane stack ships today.</strong> [uptane
+§8, §9] No authoritative current Rust (“uptane-rs”) reference
+implementation found — <strong>UNVERIFIED</strong>, do not assume one
+exists. [uptane §8]</li>
+<li><strong>Spec vs implementation maturity:</strong> spec maturity is
+high (IEEE-ISTO/Linux-Foundation governed; Standard 2.1.0 — exact
+publication date <strong>UNVERIFIED</strong>); implementation cadence is
+low. [uptane §3] [ota_landscape_report §2.3]</li>
+<li><strong>Verdict:</strong> <strong>Reject as a now-MVP whole-system
+adoption; adopt the <em>model</em> selectively as a 1.0.1+ stretch
+hardening goal</strong> — implement a Go Director + Image split, skip
+the Primary/Secondary tier, do not adopt aktualizr. [uptane §10]
+[ota_landscape_report §3.3, §4] This is the recorded C5 resolution.
+[additions_synthesis §5 C5]</li>
+</ul>
+<h3 id="option-d-aktualizr-as-a-product">3.4 Option D — aktualizr as a
+product</h3>
+<p>Use the primary Uptane reference client, <code>aktualizr</code> (C++,
+MPL-2.0). [uptane §8]</p>
+<ul>
+<li><strong>Cons:</strong> C++/Yocto/OSTree-coupled (mismatched with Go
++ Android <code>update_engine</code>); latest tagged release <strong>Feb
+2020</strong> (low cadence); no Go reference impl; no first-class
+Android integration. [uptane §8] In the landscape this drives Uptane’s
+wrap-ability to 2/5 (low as whole-system wrap; high only as a borrowable
+design). [ota_landscape_report §2.3]</li>
+<li><strong>Verdict:</strong> <strong>Reject</strong> for
+adoption/wrapping; retain the security <em>model</em> only. [uptane §10]
+[ota_landscape_report §4]</li>
+</ul>
+<h2 id="decision">4. Decision</h2>
+<p><strong>Adopt a phased trust model. MVP (1.0.0) ships plain
+per-artifact trust (signed artifact + SHA-256 + AVB). TUF (go-tuf/v2) is
+adopted server-side as the metadata/trust layer in 1.0.1+, with
+mandatory device-side enforcement gated behind an Android-client spike.
+The Uptane <em>dual-repo model</em> (Director + Image, in Go) is a
+1.0.1+ stretch hardening goal; full Uptane and aktualizr are rejected.
+Signing interfaces are designed MVP-forward so TUF/Uptane drop in
+without rework.</strong> [additions_synthesis §5 C5]
+[ota_landscape_report §3.3] [tuf-go-tuf §9] [uptane §10]</p>
+<h3 id="mvp-trust-model-1.0.0">4.1 MVP trust model (1.0.0)</h3>
+<ul>
+<li>Per-release <strong>SHA-256 + detached signature</strong>, verified
+server-side on upload and <strong>device-side before apply</strong>;
+plus <strong>AVB</strong> and the A/B engine’s own payload-signature
+check. These remain as defense-in-depth in every later phase.
+[additions_synthesis §3, §5 C5] [tuf-go-tuf §9]</li>
+<li><strong>Local-verified-file apply</strong> is chosen over streaming
+an unverified payload directly to <code>applyPayload</code>. This
+decision is justified by the <strong>verify-before-apply
+requirement</strong> (a recorded decision driver), which mandates a
+fully verified local artifact before apply; streaming an unverified
+payload would bypass that gate. (Draft 02’s
+<code>file://</code>-to-<code>applyPayload</code> path vs
+HTTPS-streaming path is an explicit pick the spec must justify;
+<code>additions_synthesis §6</code> flags this as a choice to be
+justified rather than as the deciding authority.) [additions_synthesis
+§6]</li>
+</ul>
+<h3 id="mvp-forward-signing-interface-uptane-ready">4.2 MVP-forward
+signing interface (Uptane-ready)</h3>
+<p>Design the MVP signing/verification interfaces so TUF (then a
+Director+Image split) drops in without rework: [additions_synthesis §5
+C5]</p>
+<ul>
+<li>Treat every artifact as an <strong>opaque target identified by path
++ length + SHA-256</strong> so a TUF <code>targets</code> entry layers
+over it byte-identically later (artifacts keep their existing
+signature). [tuf-go-tuf §6]</li>
+<li>Put signing behind a <strong>signer abstraction</strong> compatible
+with <code>go-securesystemslib</code> <code>signature.Signer</code> (the
+integration point go-tuf/v2 uses), so the MVP detached-signature signer
+and a future TUF role signer share one seam. [tuf-go-tuf §5]</li>
+<li>Keep verification a <strong>distinct device-side step that gates
+apply</strong>, so a TUF refresh/verify flow (role order
+root→timestamp→snapshot→targets, expiry, version monotonicity, threshold
+sigs) can be inserted in front of the existing hash+signature check
+without changing the apply path. [tuf-go-tuf §3, §6]</li>
+<li>Reserve a <strong>per-device “what should this device install”
+decision</strong> in the control plane (already required by staged
+rollout) so a Director repository can later mint per-device
+<code>targets.json</code> from the inventory DB. [uptane §6, §9]</li>
+<li>Route the <code>security</code>/signing work through the verified
+catalogue (<code>security</code>, KMP <code>Security-KMP</code>) rather
+than inventing new bricks. [additions_synthesis §6]</li>
+</ul>
+<h3 id="adoption-sequencing-1.0.1">4.3 Adoption sequencing (1.0.1+)</h3>
+<p>Per the TUF and Uptane notes, in order: [tuf-go-tuf §9] [uptane
+§10]</p>
+<ol type="1">
+<li>Prototype the <strong>server publish path + a Go reference refresh
+client</strong> end-to-end to validate the model. [tuf-go-tuf §9]</li>
+<li><strong>ADR + spike for the on-device client</strong> (gomobile/JNI
+vs hand-rolled Kotlin) — this dominates adoption cost and must resolve
+the <strong>UNVERIFIED</strong> client gap. [tuf-go-tuf §7, §9]</li>
+<li>Define the <strong>offline key-custody ceremony</strong> (HSM/KMS,
+threshold, rotation; timestamp re-signing automation). [tuf-go-tuf §7,
+§9]</li>
+<li>Only then make <strong>device-side TUF verification
+mandatory.</strong> [tuf-go-tuf §9]</li>
+<li><strong>Stretch:</strong> implement a TUF/Uptane-inspired
+<strong>Director (online keys, per-device) + Image (offline-keyed) split
+in Go</strong>, Android client does <strong>full verification</strong>;
+skip the Primary/Secondary tier; do <strong>not</strong> adopt
+aktualizr. [uptane §10] [ota_landscape_report §3.3]</li>
+</ol>
+<h2 id="consequences">5. Consequences</h2>
+<h3 id="positive">5.1 Positive</h3>
+<ul>
+<li><strong>Ships a safe MVP without blocking on an unsolved
+problem.</strong> The unresolved device-side TUF client (the long pole)
+does not gate 1.0.0; native A/B already guarantees atomic apply +
+automatic boot-failure rollback. [tuf-go-tuf §8] [ota_landscape_report
+§3.1]</li>
+<li><strong>Clear upgrade path with no artifact rework.</strong> TUF is
+additive/non-invasive — artifacts stay byte-identical, so 1.0.0 releases
+remain valid targets when TUF lands. [tuf-go-tuf §6]</li>
+<li><strong>Closes real attack classes in 1.0.1+</strong> (rollback,
+fast-forward, freeze, mix-and-match, mirror-denial, key-compromise
+recovery) that plain signing leaves open. [tuf-go-tuf §4]</li>
+<li><strong>Nation-state-grade compromise resilience available as a
+stretch</strong> via the dual-repo split, hardening the online Go
+control plane without an embedded-Linux C++ client. [uptane §9,
+§10]</li>
+<li><strong>Strong mandated-stack fit:</strong> go-tuf/v2 is idiomatic
+Go, Apache-2.0, actively maintained, single dependency tree, serves over
+the existing HTTP/3→HTTP/2 + Brotli path. [tuf-go-tuf §5, §6]
+[ota_landscape_report §2.3]</li>
+</ul>
+<h3 id="negative">5.2 Negative</h3>
+<ul>
+<li><strong>MVP retains a single-signing-key exposure</strong> (no
+rollback/freeze/mix-and-match/mirror-denial mitigation until 1.0.1+).
+[tuf-go-tuf §4] Mitigation: AVB + A/B payload check + server-side upload
+verification as interim depth. [additions_synthesis §3]</li>
+<li><strong>Operational key-management burden is inherent to
+TUF</strong> (offline custody, ceremony, threshold, rotation, timestamp
+automation) — MEDIUM–HIGH, process not code. [tuf-go-tuf §7]</li>
+<li><strong>Device-side client is HIGH/OPEN and UNVERIFIED</strong>: no
+verified production Android/Kotlin TUF client; gomobile adds Go
+toolchain + APK binary-size cost, hand-rolled Kotlin means owning
+security-sensitive code. [tuf-go-tuf §7, §8]</li>
+<li><strong>Unverified API surface:</strong>
+<code>metadata/updater</code> / <code>metadata/trustedmetadata</code>
+signatures not fully captured — client sizing is provisional until
+spiked. [tuf-go-tuf §5, §8]</li>
+<li><strong>Dual-repo stretch adds operational complexity</strong> (two
+repos, two key postures) that is only justified if the
+compromise-resilience requirement is firm. [uptane §4, §9]</li>
+<li><strong>Board-level unknowns persist</strong> for the device path
+(Android-15/RK3588 update_engine constants/AIDL headers
+<strong>UNVERIFIED</strong>), which the trust client must integrate
+against. [ota_landscape_report §3.1, §5]</li>
+</ul>
+<h2 id="status">6. Status</h2>
+<p><strong>Proposed.</strong> Pending operator review alongside ADR-0001
+(engine selection). The 1.0.1+ adoption steps in §4.3 (especially step
+2, the on-device client spike) are themselves gated and must close their
+<strong>UNVERIFIED</strong> items before device-side TUF enforcement
+becomes mandatory. [tuf-go-tuf §9] [additions_synthesis §7]</p>
+<h2 id="compliance-notes-helixconstitution">7. Compliance notes
+(HelixConstitution)</h2>
+<blockquote>
+<p>Clause text is not duplicated here; clauses are referenced by the
+numbering and short-labels used across the Helix corpus. The
+HelixConstitution source file is not present in this repository
+(<strong>UNVERIFIED</strong> against the source document); labels below
+are taken from <code>additions_synthesis.md</code> and the master design
+doc, which cite them. [additions_synthesis §1, §5; 00-master §15]</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>Label (per corpus)</th>
+<th>How this ADR complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.6</td>
+<td>No-guessing</td>
+<td>Every claim cites a note/report section; unverifiable items carried
+as <strong>UNVERIFIED</strong> (device client, adopter list,
+<code>updater</code> API, Uptane 2.1.0 date, uptane-rs, board
+specifics), never invented. [tuf-go-tuf §5, §8] [uptane §8, §12]</td>
+</tr>
+<tr>
+<td>§11.4.8</td>
+<td>Research-before-implementation</td>
+<td>Device-side TUF enforcement is gated behind a spike; no on-device
+trust mechanism is mandated without research evidence.
+[additions_synthesis §5 C5, §7]</td>
+</tr>
+<tr>
+<td>§7.1</td>
+<td>No-bluff / evidence-only</td>
+<td>MVP-vs-1.0.1 timing decided on evidence; draft marketing claims
+excluded; positive evidence only. [additions_synthesis §6; 00-master
+§15]</td>
+</tr>
+<tr>
+<td>§11.4.74</td>
+<td>Catalogue-first reuse</td>
+<td>Signing/verify routed through the verified catalogue
+(<code>security</code>, <code>Security-KMP</code>); no bespoke crypto
+brick invented where a catalogue brick exists. [additions_synthesis
+§6]</td>
+</tr>
+<tr>
+<td>§11.4.28</td>
+<td>Decoupling</td>
+<td>Signer abstraction + a distinct verify-gate step keep
+artifact-validator / signing / update_engine bridge independently
+testable and Uptane-swappable. [00-master §6 (decoupling
+principle)]</td>
+</tr>
+<tr>
+<td>§1 / §1.1</td>
+<td>Four-layer testing + mutation immunity</td>
+<td>Safety-critical signing-verify path targets ≥90% coverage under the
+four-layer + mutation regime (source-presence → artifact → runtime →
+mutation meta-test). [additions_synthesis §5 C8; 00-master §13]</td>
+</tr>
+<tr>
+<td>§11.4.123</td>
+<td>Rock-solid-proof</td>
+<td><strong>Unmappable-until-Constitution-present.</strong> The
+HelixConstitution source file is not in this repository, so the exact
+clause text/requirements of §11.4.123 cannot be verified; a definitive
+mapping is <strong>out-of-scope</strong> until the Constitution is
+available. As a provisional read against the short-label, the spikes in
+§4.3 (server publish + Go refresh client; on-device client ADR/spike;
+key-custody ceremony) are intended to replace the carried
+<strong>UNVERIFIED</strong> items in §8 with verified evidence before
+device-side enforcement is mandated — but whether that satisfies
+§11.4.123 is <strong>UNVERIFIED</strong> against the clause text.
+[additions_synthesis §5 C5, §7]</td>
+</tr>
+<tr>
+<td>§11.4.125</td>
+<td>Code-review gate</td>
+<td>This ADR is subject to the mandatory adversarial code-review
+subagent before acceptance. [00-master §14]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-unverified-items">8. Open / UNVERIFIED items</h2>
+<p>Carried forward (must close before device-side TUF enforcement is
+made mandatory):</p>
+<ol type="1">
+<li><strong>Android TUF client</strong> — no verified production
+Kotlin/JVM client; resolve gomobile/JNI vs hand-rolled Kotlin via spike
+(dominant adoption cost). <strong>UNVERIFIED.</strong> [tuf-go-tuf §7,
+§8] [ota_landscape_report §5]</li>
+<li><strong>go-tuf/v2 client-flow API</strong>
+(<code>metadata/updater</code>, <code>metadata/trustedmetadata</code>)
+signatures not fully enumerated. <strong>UNVERIFIED.</strong>
+[tuf-go-tuf §5, §8]</li>
+<li><strong>go-tuf/v2 production-adopter list</strong> — project’s own
+claim, not independently audited. <strong>UNVERIFIED.</strong>
+[tuf-go-tuf §5]</li>
+<li><strong>Uptane Standard 2.1.0 publication date</strong> (June 27,
+2023) — from listing/secondary metadata, not an in-document string.
+<strong>UNVERIFIED.</strong> [uptane §3, §12]</li>
+<li><strong>Rust (“uptane-rs”) reference implementation</strong> — not
+found; do not assume it exists. <strong>UNVERIFIED.</strong> [uptane §8,
+§12]</li>
+<li><strong>Any shipping production Android + Uptane
+integration</strong> — not found; assume bespoke.
+<strong>UNVERIFIED.</strong> [uptane §8, §12]</li>
+<li><strong>Adoption-effort figures</strong> (server ~1–2
+engineer-weeks; key-mgmt MEDIUM–HIGH; device HIGH) are estimates, not
+measured. <strong>UNVERIFIED</strong> until spiked. [tuf-go-tuf §7]</li>
+<li><strong>Android-15 / RK3588 update_engine constants/AIDL
+headers</strong> the trust client integrates against.
+<strong>UNVERIFIED</strong> (carried from ADR-0001 scope).
+[ota_landscape_report §3.1, §5]</li>
+<li><strong>Catalogue-brick fit for TUF primitives</strong> — the
+<code>security</code> / <code>Security-KMP</code> catalogue bricks are
+routed for signing/verify work (§4.2), but their actual fit for TUF-role
+/ threshold / offline-key primitives (i.e. whether they expose or can
+host these without bespoke crypto) has not been confirmed against the
+catalogue. <strong>UNVERIFIED.</strong> [additions_synthesis §6]</li>
+</ol>
+<h2 id="sources">9. Sources</h2>
+<p>All paths relative to
+<code>docs/research/main_specs/research/</code>:</p>
+<ul>
+<li><a
+href="../ota_landscape_report.md"><code>ota_landscape_report.md</code></a>
+— §2.3 (per-criterion scores for <code>tuf-go-tuf</code>,
+<code>uptane</code>), §3.3 (trust framework recommendation), §4 (what we
+will not use), §5 (open/UNVERIFIED).</li>
+<li><a
+href="../stacks/tuf-go-tuf.md"><code>stacks/tuf-go-tuf.md</code></a> —
+§1, §3 (roles), §4 (attack classes), §5 (verified library facts + API
+surface), §6 (layering), §7 (effort), §8 (risks/gaps), §9
+(recommendation).</li>
+<li><a href="../stacks/uptane.md"><code>stacks/uptane.md</code></a> —
+§2–§9 (model, dual-repo, roles, ECU model, threat model, ecosystem,
+relevance), §10 (recommendation), §12 (confidence/UNVERIFIED
+notes).</li>
+<li><a
+href="../additions_synthesis.md"><code>additions_synthesis.md</code></a>
+— §3 (points of agreement), §4 (destinations), §5 C5 + C8
+(contradictions/resolutions), §6 (corrections), §7 (routed open
+questions).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>../00-master/2026-06-07-helix-ota-design.md</code></a>
+— §6 (decoupling), §13 (testing), §14 (code-review gate), §15/§16
+(clause mapping, open ADRs).</li>
+</ul>
+</body>
+</html>

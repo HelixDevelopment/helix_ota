@@ -1,0 +1,1645 @@
+# Helix OTA 1.0.0-MVP REST API — OpenAPI 3.1 contract.
+# Companion prose: ./endpoints.md  (authoritative for behavior, ADR citations, UNVERIFIED notes).
+# LOCKED stack: Go + Gin + Brotli + HTTP/3(QUIC) via vasic-digital/http3 (HTTP/2 + gzip fallback);
+# REST primary (/api/v1); gRPC optional/internal only (out of scope here).
+# Trust (MVP): per-artifact SHA-256 + detached signature + AVB; TUF device-side deferred to 1.0.1 (ADR-0002).
+# Deployments: all-targets only for MVP (staged rollout 1.0.1, ADR-0003).
+# UNVERIFIED: AOSP optional payload_properties headers on Android 15; Range-over-HTTP/3 semantics (ADR-0004 §6).
+# Revision 2 (2026-06-08): synced to as-built server.go — added deltas (POST/GET), staged rollout
+# (create/get/evaluate), recall + rollback history, telemetry reads (device history + fleet overview),
+# device-group CRUD + batch membership, and the admin audit read. Shapes taken from the Go handlers
+# (handlers_*.go) + the ota-rollout-engine brick enums; no guessing (Constitution §11.4.6).
+openapi: 3.1.0
+info:
+  title: Helix OTA Control Plane API
+  version: 1.0.0-MVP
+  summary: REST API for the Helix OTA modular-monolith control plane (Android 15 first).
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  description: >
+    Control-plane endpoints (auth, devices, artifacts, releases, deployments, client
+    update-check + telemetry). JSON responses negotiate Brotli/gzip; the referenced
+    artifact-byte path is served identity-encoded, ZIP_STORED, with HTTP Range support.
+    Response-header conventions (applied to every negotiated JSON response, not repeated per
+    operation): 'Vary: Accept-Encoding' is always set (the Vary header component), and 'X-Request-Id'
+    is always returned. Rate-limited routes additionally return RateLimit-Limit / RateLimit-Remaining
+    / RateLimit-Reset (draft IETF RateLimit fields); on 429 a Retry-After header is returned.
+  contact:
+    name: Helix OTA control-plane team
+  # license: intentionally omitted — project license is UNVERIFIED in this revision.
+servers:
+  - url: https://{host}/api/v1
+    description: Helix OTA control plane (HTTP/3 primary, HTTP/2 fallback).
+    variables:
+      host:
+        default: helix.example
+tags:
+  - name: auth
+    description: OAuth2/JWT login and refresh.
+  - name: devices
+    description: Device registry and status.
+  - name: artifacts
+    description: OTA artifact intake and metadata.
+  - name: releases
+    description: Published, deployable versions.
+  - name: deployments
+    description: Release-to-target assignment (all-targets for MVP).
+  - name: client
+    description: Android-agent-facing update-check and telemetry.
+  - name: deltas
+    description: Base->target delta-artifact registration and lookup (delta_updates_design.md §4).
+  - name: rollout
+    description: Staged-rollout create/get/evaluate (1.0.1-staged-rollout; ota-rollout-engine brick).
+  - name: rollback
+    description: Server-driven recall (forward-fix) and rollback history (rollback_ux.md §7).
+  - name: telemetry
+    description: Operator-facing telemetry reads — per-device history and fleet overview (operational_endpoints.md §5).
+  - name: groups
+    description: Device-group CRUD and membership (operational_endpoints.md §6).
+  - name: audit
+    description: Admin-only audit-log read (operational_endpoints.md §4.3).
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      operationId: authLogin
+      summary: Exchange username/password for an access/refresh token pair (OAuth2 ROPC).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Token pair issued.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Vary: { $ref: '#/components/headers/Vary' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      operationId: authRefresh
+      summary: Rotate a refresh token into a new access/refresh pair.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: New token pair (old refresh token invalidated).
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Vary: { $ref: '#/components/headers/Vary' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /devices/register:
+    post:
+      tags: [devices]
+      operationId: registerDevice
+      summary: Provision a device and mint its device-scoped bearer token.
+      description: >
+        Auth: an operator bearer token (global bearerAuth) OR a provisioning token (provisioningToken
+        scheme) — either alone satisfies the operation. The response mints the device's own device-scoped
+        token.
+      security:
+        - bearerAuth: []
+        - provisioningToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeviceRegistration' }
+      responses:
+        '201':
+          description: Device registered.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceRegistered' }
+        '200':
+          description: Idempotent replay of a prior registration (same Idempotency-Key).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceRegistered' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /devices/{deviceId}/status:
+    get:
+      tags: [devices]
+      operationId: getDeviceStatus
+      summary: Current registry + last-known runtime status of a device.
+      description: >
+        RBAC: admin/operator/viewer may read any device. A device-scoped token (role=device) may
+        read ONLY its own deviceId (resource ownership: path deviceId must equal the token subject);
+        any other deviceId yields 403.
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Device status.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceStatus' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /artifacts/upload:
+    post:
+      tags: [artifacts]
+      operationId: uploadArtifact
+      summary: Upload an OTA artifact; runs server-side SHA-256 + signature validation.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, metadata]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: OTA package bytes (ZIP_STORED), served byte-identical later.
+                metadata:
+                  $ref: '#/components/schemas/ArtifactUploadMetadata'
+      responses:
+        '201':
+          description: Artifact stored and verified.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artifact' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/UnprocessableArtifact' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /artifacts/{artifactId}:
+    get:
+      tags: [artifacts]
+      operationId: getArtifact
+      summary: Artifact metadata (not the bytes; bytes are referenced from the update-check).
+      parameters:
+        - $ref: '#/components/parameters/ArtifactId'
+      responses:
+        '200':
+          description: Artifact metadata.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artifact' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /releases:
+    post:
+      tags: [releases]
+      operationId: createRelease
+      summary: Publish a validated artifact as a deployable version (monotonicity enforced).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReleaseCreate' }
+      responses:
+        '201':
+          description: Release published.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Release' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    get:
+      tags: [releases]
+      operationId: listReleases
+      summary: List releases (paginated, filterable).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - { name: os, in: query, required: false, schema: { $ref: '#/components/schemas/Os' } }
+        - { name: target_model, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Page of releases.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReleaseList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /releases/{releaseId}:
+    get:
+      tags: [releases]
+      operationId: getRelease
+      summary: Read a single release.
+      parameters:
+        - $ref: '#/components/parameters/ReleaseId'
+      responses:
+        '200':
+          description: Release.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Release' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /deployments:
+    post:
+      tags: [deployments]
+      operationId: createDeployment
+      summary: Assign a release to a target set. MVP supports strategy=all-targets only.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeploymentCreate' }
+      responses:
+        '201':
+          description: Deployment created.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Deployment' }
+        '200':
+          description: Idempotent replay of a prior deployment (same Idempotency-Key).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Deployment' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    get:
+      tags: [deployments]
+      operationId: listDeployments
+      summary: List active deployments.
+      description: >
+        Returns the set of currently-active deployments. Lets operators and agents enumerate what
+        is live (and read each deployment_id) without guessing ids. RBAC: viewer/operator/admin.
+      responses:
+        '200':
+          description: Active deployments.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeploymentList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /deployments/{deploymentId}:
+    get:
+      tags: [deployments]
+      operationId: getDeployment
+      summary: Read a deployment with aggregate progress.
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      responses:
+        '200':
+          description: Deployment status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeploymentStatus' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /client/update:
+    get:
+      tags: [client]
+      operationId: clientUpdateCheck
+      summary: Device update check. 204 when up to date; 200 with apply instructions otherwise.
+      description: >
+        RBAC: device tokens only; a device may act ONLY on its own deviceId — the effective device
+        id is the bearer-token subject, so a device cannot check updates for another device.
+        Returns 204 No Content when the device is already on target, or 200 with {url, offset, size,
+        sha256, signature, payload_properties} matching update_engine.applyPayload(url, offset, size,
+        headers).
+      parameters:
+        - name: current_version
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/SemVer' }
+          description: Optional client-reported version to let the server short-circuit.
+      responses:
+        '200':
+          description: Update available.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Vary: { $ref: '#/components/headers/Vary' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UpdateAvailable' }
+        '204':
+          description: Device already on target version (no body).
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /client/telemetry:
+    post:
+      tags: [client]
+      operationId: clientTelemetryReport
+      summary: Device reports a batch of lifecycle events and health (async ingest).
+      description: >
+        RBAC: device tokens only; a device may report ONLY for its own deviceId — the report is
+        bound to the bearer-token subject, so a body device_id naming another device yields 403.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TelemetryReport' }
+      responses:
+        '202':
+          description: Batch accepted for asynchronous ingestion.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Vary: { $ref: '#/components/headers/Vary' }
+            RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+            RateLimit-Reset: { $ref: '#/components/headers/RateLimitReset' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TelemetryAck' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /deltas:
+    post:
+      tags: [deltas]
+      operationId: registerDelta
+      summary: Register a generated base->target delta artifact.
+      description: >
+        RBAC operator/admin. Both referenced artifacts MUST exist and MUST differ. A duplicate
+        (base_artifact_id, target_artifact_id) pair is a 409 (handlers_delta.go:handleRegisterDelta).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeltaRegister' }
+      responses:
+        '201':
+          description: Delta registered.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeltaView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      tags: [deltas]
+      operationId: findDelta
+      summary: Look up the delta for a base->target artifact pair.
+      description: >
+        RBAC viewer+. Returns the delta for ?base=<id>&target=<id>, or 404 if none exists
+        (handlers_delta.go:handleFindDelta).
+      parameters:
+        - { name: base, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: target, in: query, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Delta found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeltaView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /deployments/{deploymentId}/rollout:
+    post:
+      tags: [rollout]
+      operationId: createRollout
+      summary: Create + start a staged rollout for a deployment.
+      description: >
+        RBAC operator/admin. The ota-rollout-engine brick validates the phase plan
+        (strictly-increasing percentages ending at 100, thresholds in [0,1]); a plan violation
+        is a 400 (handlers_rollout.go:handleCreateRollout).
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RolloutCreate' }
+      responses:
+        '201':
+          description: Rollout created + started.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RolloutState' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    get:
+      tags: [rollout]
+      operationId: getRollout
+      summary: Read the current rollout state for a deployment.
+      description: RBAC viewer+. 404 when the deployment has no rollout (handlers_rollout.go:handleGetRollout).
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      responses:
+        '200':
+          description: Rollout state.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RolloutState' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /deployments/{deploymentId}/rollout/evaluate:
+    post:
+      tags: [rollout]
+      operationId: evaluateRollout
+      summary: Apply a health verdict to the current phase and return the engine decision.
+      description: >
+        RBAC operator/admin. Submits a telemetry-derived health verdict; the engine returns a
+        decision (advance / hold / halt / complete) plus the updated state. 404 when the deployment
+        has no rollout (handlers_rollout.go:handleEvaluateRollout).
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RolloutVerdict' }
+      responses:
+        '200':
+          description: Engine decision + updated rollout state.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RolloutDecision' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /deployments/{deploymentId}/recall:
+    post:
+      tags: [rollback]
+      operationId: recallDeployment
+      summary: Server-driven recall (forward-fix) of a deployment to a previous-good release.
+      description: >
+        RBAC operator/admin. Implemented as a forward-fix (operator decision 2026-06-08, honor-AVB):
+        the current deployment is superseded and a NEW active deployment of to_release_id is created;
+        a rollback_history row (kind=rollback) is recorded. The deployment MUST exist and have a
+        current release; to_release_id MUST exist (handlers_recall.go:handleRecall).
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RecallRequest' }
+      responses:
+        '201':
+          description: Recall recorded; rollback_history row returned.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RollbackView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /deployments/{deploymentId}/rollbacks:
+    get:
+      tags: [rollback]
+      operationId: listRollbacks
+      summary: List the rollback/abort history for a deployment.
+      description: RBAC viewer+ (handlers_recall.go:handleListRollbacks).
+      parameters:
+        - $ref: '#/components/parameters/DeploymentId'
+      responses:
+        '200':
+          description: Rollback history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RollbackList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /devices/{deviceId}/telemetry:
+    get:
+      tags: [telemetry]
+      operationId: getDeviceTelemetry
+      summary: A device's telemetry event history, newest-first, cursor-paginated.
+      description: >
+        RBAC: admin/operator/viewer may read any device; a device-scoped token may read ONLY its own
+        deviceId (else 403). Items are newest-first; next_cursor is null on the last page. Optional
+        filters narrow the history before pagination: ?event (a known telemetry event type, else 400),
+        and an inclusive RFC3339 [since,until] window matched on the event timestamp
+        (handlers_telemetry.go:handleDeviceTelemetry).
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - { name: event, in: query, required: false, schema: { $ref: '#/components/schemas/TelemetryEventType' }, description: Filter to a single telemetry event type. }
+        - { name: since, in: query, required: false, schema: { type: string, format: date-time }, description: Inclusive RFC3339 lower bound on the event timestamp. }
+        - { name: until, in: query, required: false, schema: { type: string, format: date-time }, description: Inclusive RFC3339 upper bound on the event timestamp. }
+      responses:
+        '200':
+          description: Telemetry history page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TelemetryHistory' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /telemetry/overview:
+    get:
+      tags: [telemetry]
+      operationId: getTelemetryOverview
+      summary: Fleet-wide telemetry counts by event type, failure rate, and device counts by state.
+      description: RBAC viewer+ (handlers_telemetry.go:handleTelemetryOverview).
+      responses:
+        '200':
+          description: Fleet telemetry overview.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TelemetryOverview' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups:
+    post:
+      tags: [groups]
+      operationId: createGroup
+      summary: Create a named device group.
+      description: RBAC operator/admin. A duplicate group name is a 409 (handlers_group.go:handleCreateGroup).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupCreate' }
+      responses:
+        '201':
+          description: Group created.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      tags: [groups]
+      operationId: listGroups
+      summary: List device groups (each with its live member_count), cursor-paginated.
+      description: RBAC viewer+. next_cursor is null on the last page (handlers_group.go:handleListGroups).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Groups.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups/{groupId}:
+    get:
+      tags: [groups]
+      operationId: getGroup
+      summary: Read a single device group.
+      description: RBAC viewer+ (handlers_group.go:handleGetGroup).
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '200':
+          description: Group.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [groups]
+      operationId: updateGroup
+      summary: Update a device group's name and/or description.
+      description: >
+        RBAC operator/admin. A blank name leaves the existing name; description is set as sent
+        (an empty description clears it). A name collision is a 409 (handlers_group.go:handleUpdateGroup).
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupUpdate' }
+      responses:
+        '200':
+          description: Group updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [groups]
+      operationId: deleteGroup
+      summary: Delete a device group.
+      description: RBAC admin only (handlers_group.go:handleDeleteGroup).
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '204':
+          description: Group deleted (no body).
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /groups/{groupId}/members:
+    get:
+      tags: [groups]
+      operationId: listGroupMembers
+      summary: List a group's members with their join times, oldest-first and cursor-paginated.
+      description: RBAC viewer+. next_cursor is null on the last page (handlers_group.go:handleListGroupMembers).
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Group members.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupMembers' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [groups]
+      operationId: addGroupMembers
+      summary: Add a BATCH of devices to a group; partition into added / already-member / not-found.
+      description: >
+        RBAC operator/admin. device_ids MUST be non-empty (else 400). The group MUST exist (else 404).
+        Each id is partitioned: newly added, already a member, or not a registered device
+        (handlers_group.go:handleAddGroupMembers).
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemberAdd' }
+      responses:
+        '200':
+          description: Batch processed; per-id outcome partition.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberAddResult' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /groups/{groupId}/members/{deviceId}:
+    delete:
+      tags: [groups]
+      operationId: removeGroupMember
+      summary: Remove a device from a group.
+      description: RBAC operator/admin (handlers_group.go:handleRemoveGroupMember).
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Member removed (no body).
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /audit:
+    get:
+      tags: [audit]
+      operationId: listAudit
+      summary: Read the audit log (admin only), paginated and time-filterable.
+      description: >
+        RBAC admin only. Optional ?action / ?resource_type filters, ?since / ?until RFC3339 bounds,
+        ?limit (1..200, default 50), ?cursor. next_cursor is null on the last page
+        (handlers_audit.go:handleListAudit).
+      parameters:
+        - { name: action, in: query, required: false, schema: { type: string } }
+        - { name: resource_type, in: query, required: false, schema: { type: string } }
+        - { name: since, in: query, required: false, schema: { type: string, format: date-time }, description: Inclusive RFC3339 lower time bound. }
+        - { name: until, in: query, required: false, schema: { type: string, format: date-time }, description: Inclusive RFC3339 upper time bound. }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Audit-log page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditLogList' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        OAuth2/JWT access token (admin/operator/viewer) or device-scoped token (role=device).
+        RBAC enforced per-route; device tokens may act only on their own deviceId.
+    provisioningToken:
+      type: http
+      scheme: bearer
+      description: >
+        Alternative auth for POST /devices/register only: a provisioning token that authorizes a
+        device to enrol itself when no operator bearer is available. The global bearerAuth (operator
+        role) is the primary path; this scheme is the alternative (either satisfies the operation).
+
+  headers:
+    XRequestId:
+      description: Correlation id; mirrors error.request_id.
+      schema: { type: string }
+    Vary:
+      description: Always 'Accept-Encoding' for negotiated JSON responses.
+      schema: { type: string, const: Accept-Encoding }
+    RetryAfter:
+      description: Seconds to wait before retrying (on 429).
+      schema: { type: integer, minimum: 0 }
+    RateLimitLimit:
+      description: Request quota for the current window (draft IETF RateLimit field).
+      schema: { type: integer, minimum: 0 }
+    RateLimitRemaining:
+      description: Requests remaining in the current window (draft IETF RateLimit field).
+      schema: { type: integer, minimum: 0 }
+    RateLimitReset:
+      description: Seconds until the current rate-limit window resets (draft IETF RateLimit field).
+      schema: { type: integer, minimum: 0 }
+
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ArtifactId:
+      name: artifactId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ReleaseId:
+      name: releaseId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    DeploymentId:
+      name: deploymentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    GroupId:
+      name: groupId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 255 }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema: { type: string }
+
+  responses:
+    ValidationFailed:
+      description: Request failed validation.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthenticated:
+      description: Missing, invalid, or expired credentials.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but lacks the required role or resource ownership.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: State conflict (duplicate, non-monotonic version, overlapping deployment).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PayloadTooLarge:
+      description: Body exceeds the configured size cap.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnsupportedMediaType:
+      description: Unsupported media type for upload.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnprocessableArtifact:
+      description: Hash mismatch or signature invalid (HASH_MISMATCH / SIGNATURE_INVALID).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After: { $ref: '#/components/headers/RetryAfter' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    SemVer:
+      type: string
+      pattern: '^\d+\.\d+\.\d+$'
+      examples: ['1.1.0']
+    Os:
+      type: string
+      enum: [android]
+      description: MVP targets Android 15 first; Linux/universal is a later phase.
+    Sha256Hex:
+      type: string
+      pattern: '^[a-f0-9]{64}$'
+      description: Lowercase-hex SHA-256.
+
+    Error:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              enum:
+                - UNAUTHENTICATED
+                - FORBIDDEN
+                - NOT_FOUND
+                - VALIDATION_FAILED
+                - CONFLICT
+                - UNSUPPORTED_MEDIA_TYPE
+                - PAYLOAD_TOO_LARGE
+                - RATE_LIMITED
+                - SIGNATURE_INVALID
+                - HASH_MISMATCH
+                - VERSION_NOT_MONOTONIC
+                - INTERNAL
+            message: { type: string }
+            request_id: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  field: { type: string }
+                  issue: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      additionalProperties: false
+      properties:
+        username: { type: string, format: email }
+        password: { type: string, format: password, minLength: 1 }
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      additionalProperties: false
+      properties:
+        refresh_token: { type: string }
+
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in, refresh_token]
+      additionalProperties: false
+      properties:
+        access_token: { type: string, description: JWT access token. }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer, description: Access-token TTL in seconds. }
+        refresh_token: { type: string }
+        roles:
+          type: array
+          items: { type: string, enum: [admin, operator, viewer, device] }
+
+    DeviceRegistration:
+      type: object
+      required: [hardware_id, model, os]
+      additionalProperties: false
+      properties:
+        hardware_id: { type: string }
+        model: { type: string }
+        os: { $ref: '#/components/schemas/Os' }
+        os_version: { type: string }
+        current_version: { $ref: '#/components/schemas/SemVer' }
+        group: { type: string }
+        metadata:
+          type: object
+          additionalProperties: { type: string }
+
+    DeviceRegistered:
+      type: object
+      required: [device_id, hardware_id, device_token, token_type, expires_in, registered_at]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        hardware_id: { type: string }
+        device_token: { type: string, description: Device-scoped bearer JWT (role=device). }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer }
+        registered_at: { type: string, format: date-time }
+
+    DeviceStatus:
+      type: object
+      required: [device_id, hardware_id, update_state]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        hardware_id: { type: string }
+        current_version: { $ref: '#/components/schemas/SemVer' }
+        target_version:
+          oneOf:
+            - { $ref: '#/components/schemas/SemVer' }
+            - { type: 'null' }
+        last_seen: { type: string, format: date-time }
+        update_state: { $ref: '#/components/schemas/UpdateState' }
+        active_slot: { type: string, enum: [a, b] }
+        health:
+          type: object
+          additionalProperties: false
+          properties:
+            ok: { type: boolean }
+            last_error_code:
+              oneOf:
+                - { type: string }
+                - { type: 'null' }
+
+    UpdateState:
+      type: string
+      description: >
+        Device lifecycle state reported in DeviceStatus. Includes 'idle' (steady state with no
+        update in progress). Telemetry events use the narrower TelemetryEventType (no 'idle').
+      enum: [idle, download_started, installing, installed, verifying, success, failure]
+
+    TelemetryEventType:
+      type: string
+      description: >
+        Telemetry event kinds (master §9). Narrower than UpdateState: excludes 'idle' because an
+        idle device emits no telemetry event.
+      enum: [download_started, installing, installed, verifying, success, failure]
+
+    ArtifactUploadMetadata:
+      type: object
+      required: [sha256, signature, version, os, target_model]
+      additionalProperties: false
+      properties:
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        signature: { type: string, contentEncoding: base64, description: Detached signature. }
+        version: { $ref: '#/components/schemas/SemVer' }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        file_hash: { type: string, description: AOSP payload_properties FILE_HASH (base64). }
+        file_size: { type: integer, format: int64 }
+        metadata_hash: { type: string, description: AOSP payload_properties METADATA_HASH (base64). }
+        metadata_size: { type: integer, format: int64 }
+        payload_offset:
+          type: integer
+          format: int64
+          description: Offset of payload.bin within the uncompressed (ZIP_STORED) ZIP.
+        payload_size: { type: integer, format: int64 }
+
+    Artifact:
+      type: object
+      required: [artifact_id, sha256, size, os, target_model, version, verified, uploaded_at]
+      additionalProperties: false
+      properties:
+        artifact_id: { type: string, format: uuid }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        size: { type: integer, format: int64 }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        version: { $ref: '#/components/schemas/SemVer' }
+        storage_ref: { type: string, description: Opaque object-store reference (MinIO/S3). }
+        verified: { type: boolean }
+        uploaded_at: { type: string, format: date-time }
+
+    ReleaseCreate:
+      type: object
+      required: [artifact_id, version, os, target_model]
+      additionalProperties: false
+      properties:
+        artifact_id: { type: string, format: uuid }
+        version: { $ref: '#/components/schemas/SemVer' }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        notes: { type: string }
+        min_current_version: { $ref: '#/components/schemas/SemVer' }
+
+    Release:
+      type: object
+      required: [release_id, artifact_id, version, os, target_model, status, created_at]
+      additionalProperties: false
+      properties:
+        release_id: { type: string, format: uuid }
+        artifact_id: { type: string, format: uuid }
+        version: { $ref: '#/components/schemas/SemVer' }
+        os: { $ref: '#/components/schemas/Os' }
+        target_model: { type: string }
+        status: { type: string, enum: [published, archived] }
+        notes: { type: string }
+        created_at: { type: string, format: date-time }
+
+    ReleaseList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Release' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    DeploymentCreate:
+      type: object
+      required: [release_id, strategy]
+      additionalProperties: false
+      properties:
+        release_id: { type: string, format: uuid }
+        strategy:
+          type: string
+          const: all-targets
+          description: MVP supports only 'all-targets'; staged rollout is 1.0.1 (ADR-0003).
+        group: { type: string, description: Optional narrowing to a device group. }
+
+    Deployment:
+      type: object
+      required: [deployment_id, release_id, strategy, status, created_at]
+      additionalProperties: false
+      properties:
+        deployment_id: { type: string, format: uuid }
+        release_id: { type: string, format: uuid }
+        strategy: { type: string, const: all-targets }
+        group: { type: string }
+        status: { type: string, enum: [active, completed, halted] }
+        target_count: { type: integer, minimum: 0 }
+        created_at: { type: string, format: date-time }
+
+    DeploymentStatus:
+      allOf:
+        - { $ref: '#/components/schemas/Deployment' }
+        - type: object
+          additionalProperties: false
+          properties:
+            progress:
+              type: object
+              additionalProperties: false
+              properties:
+                pending: { type: integer, minimum: 0 }
+                downloading: { type: integer, minimum: 0 }
+                installed: { type: integer, minimum: 0 }
+                succeeded: { type: integer, minimum: 0 }
+                failed: { type: integer, minimum: 0 }
+
+    DeploymentList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Deployment' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    PayloadProperties:
+      type: object
+      description: >
+        AOSP payload_properties.txt headers passed straight to applyPayload keyValuePairHeaders.
+        Optional headers (SWITCH_SLOT_ON_REBOOT, RUN_POST_INSTALL, DISABLE_DOWNLOAD_RESUME) are
+        UNVERIFIED on Android 15 and intentionally omitted by default (ADR-0004 §4).
+      required: [FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE]
+      additionalProperties: false
+      properties:
+        FILE_HASH: { type: string, description: base64 hash of payload.bin. }
+        FILE_SIZE: { type: integer, format: int64 }
+        METADATA_HASH: { type: string, description: base64 hash of payload metadata. }
+        METADATA_SIZE: { type: integer, format: int64 }
+
+    UpdateAvailable:
+      type: object
+      description: >
+        Apply instructions for update_engine.applyPayload(url, offset, size, headers).
+        url is Range-served, Content-Encoding identity, ZIP_STORED.
+      required: [release_id, version, url, offset, size, sha256, signature, payload_properties]
+      additionalProperties: false
+      properties:
+        release_id: { type: string, format: uuid }
+        deployment_id:
+          type: string
+          format: uuid
+          description: >
+            Active deployment this offer belongs to. The device echoes it back in every
+            telemetry report (POST /client/telemetry requires deployment_id), so it can
+            self-serve the id from its own offer with no out-of-band step. Omitted for
+            legacy offers.
+        version: { $ref: '#/components/schemas/SemVer' }
+        url: { type: string, format: uri }
+        offset:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Offset of payload.bin within the uncompressed ZIP.
+        size: { type: integer, format: int64, minimum: 0 }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        signature: { type: string, contentEncoding: base64 }
+        payload_properties: { $ref: '#/components/schemas/PayloadProperties' }
+        delta:
+          description: >
+            Optional base->target delta payload the device MAY apply instead of the
+            full payload above, IFF its current version == delta.base_version. Absent
+            when no applicable delta is registered; the full payload is the fallback.
+          $ref: '#/components/schemas/DeltaUpdate'
+
+    DeltaUpdate:
+      type: object
+      description: Optional delta-payload offer within an UpdateAvailable (delta_updates_design.md).
+      required: [base_version, url, size, sha256]
+      additionalProperties: false
+      properties:
+        base_version: { $ref: '#/components/schemas/SemVer' }
+        url: { type: string, format: uri }
+        size: { type: integer, format: int64, minimum: 0 }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+
+    TelemetryEvent:
+      type: object
+      required: [event, timestamp]
+      additionalProperties: false
+      properties:
+        event: { $ref: '#/components/schemas/TelemetryEventType' }
+        version: { $ref: '#/components/schemas/SemVer' }
+        timestamp: { type: string, format: date-time }
+        error_code:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+        detail:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    TelemetryReport:
+      type: object
+      required: [device_id, events]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        deployment_id: { type: string, format: uuid }
+        events:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/TelemetryEvent' }
+        health:
+          type: object
+          additionalProperties: false
+          properties:
+            battery_pct: { type: integer, minimum: 0, maximum: 100 }
+            storage_free_mb: { type: integer, minimum: 0 }
+            active_slot: { type: string, enum: [a, b] }
+
+    TelemetryAck:
+      type: object
+      required: [accepted, rejected]
+      additionalProperties: false
+      properties:
+        accepted: { type: integer, minimum: 0 }
+        rejected: { type: integer, minimum: 0 }
+        request_id: { type: string }
+
+    # --- delta artifacts (handlers_delta.go) ---
+    DeltaRegister:
+      type: object
+      required: [base_artifact_id, target_artifact_id]
+      additionalProperties: false
+      properties:
+        base_artifact_id: { type: string, format: uuid }
+        target_artifact_id: { type: string, format: uuid, description: Must differ from base_artifact_id. }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        size: { type: integer, format: int64 }
+        storage_ref: { type: string }
+
+    DeltaView:
+      type: object
+      required: [id, base_artifact_id, target_artifact_id, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        base_artifact_id: { type: string, format: uuid }
+        target_artifact_id: { type: string, format: uuid }
+        sha256: { $ref: '#/components/schemas/Sha256Hex' }
+        size: { type: integer, format: int64 }
+        storage_ref: { type: string }
+        created_at: { type: string, format: date-time }
+
+    # --- staged rollout (handlers_rollout.go; ota-rollout-engine brick) ---
+    RolloutPhaseSpec:
+      type: object
+      additionalProperties: false
+      properties:
+        percentage: { type: integer, minimum: 0, maximum: 100 }
+        success_threshold: { type: number, minimum: 0, maximum: 1 }
+        error_threshold: { type: number, minimum: 0, maximum: 1 }
+        duration_seconds: { type: integer, format: int64, minimum: 0 }
+        auto_progress: { type: boolean }
+
+    RolloutCreate:
+      type: object
+      required: [phases]
+      additionalProperties: false
+      properties:
+        phases:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/RolloutPhaseSpec' }
+          description: >
+            Phase plan. The engine requires strictly-increasing percentages ending at 100 and
+            thresholds in [0,1]; a plan violation is a 400.
+
+    RolloutVerdict:
+      type: object
+      additionalProperties: false
+      properties:
+        success_rate: { type: number, minimum: 0, maximum: 1 }
+        error_rate: { type: number, minimum: 0, maximum: 1 }
+        post_boot_health_failed: { type: boolean }
+
+    RolloutState:
+      type: object
+      required: [deployment_id, status, current_phase, phases, updated_at]
+      additionalProperties: false
+      properties:
+        deployment_id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [pending, active, halted, held, completed]
+          description: ota-rollout-engine Status (types.go).
+        current_phase: { type: integer, minimum: 0 }
+        phases:
+          type: array
+          items: { $ref: '#/components/schemas/RolloutPhaseSpec' }
+        updated_at: { type: string, format: date-time }
+
+    RolloutDecision:
+      type: object
+      required: [action, reason, state]
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum: [halt, advance, hold, complete]
+          description: ota-rollout-engine Action (verdict.go).
+        reason:
+          type: string
+          enum:
+            - error_threshold_breached
+            - post_boot_health_failed
+            - success_threshold_met
+            - evaluation_window_open
+            - window_expired_below_threshold
+            - auto_progress_disabled
+            - no_active_phase
+          description: ota-rollout-engine Reason (verdict.go).
+        state: { $ref: '#/components/schemas/RolloutState' }
+
+    # --- recall + rollback history (handlers_recall.go) ---
+    RecallRequest:
+      type: object
+      required: [to_release_id]
+      additionalProperties: false
+      properties:
+        to_release_id: { type: string, format: uuid }
+        reason: { type: string }
+
+    RollbackView:
+      type: object
+      required: [id, deployment_id, kind, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        deployment_id: { type: string, format: uuid }
+        kind: { type: string, enum: [abort, rollback] }
+        from_release_id: { type: string, format: uuid }
+        to_release_id: { type: string, format: uuid }
+        recall_deployment_id: { type: string, format: uuid, description: The new forward-fix deployment created by a recall. }
+        reason: { type: string }
+        triggered_by: { type: string, description: Token subject of the operator that triggered the recall. }
+        details:
+          type: object
+          additionalProperties: { type: string }
+        created_at: { type: string, format: date-time }
+
+    RollbackList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/RollbackView' }
+
+    # --- telemetry reads (handlers_telemetry.go) ---
+    TelemetryEventView:
+      type: object
+      required: [event, timestamp, received_at]
+      additionalProperties: false
+      properties:
+        event: { $ref: '#/components/schemas/TelemetryEventType' }
+        version: { $ref: '#/components/schemas/SemVer' }
+        deployment_id: { type: string, format: uuid }
+        error_code: { type: string }
+        detail: { type: string }
+        timestamp: { type: string, format: date-time }
+        received_at: { type: string, format: date-time }
+
+    TelemetryHistory:
+      type: object
+      required: [device_id, items]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        items:
+          type: array
+          description: Newest-first telemetry events.
+          items: { $ref: '#/components/schemas/TelemetryEventView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+          description: Null on the last page.
+
+    TelemetryOverview:
+      type: object
+      required: [event_counts, total, failure_rate, by_state]
+      additionalProperties: false
+      properties:
+        event_counts:
+          type: object
+          additionalProperties: { type: integer, format: int64 }
+          description: Fleet-wide count keyed by telemetry event type.
+        total: { type: integer, format: int64, minimum: 0 }
+        failure_rate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: failure / (success + failure) among terminal outcomes; 0 when none yet.
+        by_state:
+          type: object
+          additionalProperties: { type: integer, format: int64 }
+          description: Fleet device count keyed by last-known update state.
+
+    # --- device groups (handlers_group.go) ---
+    GroupCreate:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string }
+
+    GroupUpdate:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name: { type: string, description: A blank name leaves the existing name unchanged. }
+        description: { type: string, description: Set as sent; an empty value clears the description. }
+
+    GroupView:
+      type: object
+      required: [group_id, name, member_count, created_at]
+      additionalProperties: false
+      properties:
+        group_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        member_count: { type: integer, minimum: 0, description: Live membership count. }
+        created_at: { type: string, format: date-time }
+
+    GroupList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+          description: Null on the last page.
+
+    MemberAdd:
+      type: object
+      required: [device_ids]
+      additionalProperties: false
+      properties:
+        device_ids:
+          type: array
+          minItems: 1
+          items: { type: string, format: uuid }
+
+    MemberAddResult:
+      type: object
+      required: [added, already_member, not_found]
+      additionalProperties: false
+      properties:
+        added:
+          type: array
+          items: { type: string, format: uuid }
+        already_member:
+          type: array
+          items: { type: string, format: uuid }
+        not_found:
+          type: array
+          items: { type: string, format: uuid }
+          description: Ids that are not registered devices.
+
+    GroupMemberView:
+      type: object
+      required: [device_id, added_at]
+      additionalProperties: false
+      properties:
+        device_id: { type: string, format: uuid }
+        added_at: { type: string, format: date-time }
+
+    GroupMembers:
+      type: object
+      required: [group_id, items]
+      additionalProperties: false
+      properties:
+        group_id: { type: string, format: uuid }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupMemberView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+          description: Null on the last page.
+
+    # --- audit log read (handlers_audit.go / audit_wire.go) ---
+    AuditActor:
+      type: object
+      required: [subject]
+      additionalProperties: false
+      properties:
+        user_id: { type: string, description: Durable users-row key; empty when the actor did not resolve to a users row. }
+        subject: { type: string, description: Token subject; always set. }
+
+    AuditLogEntry:
+      type: object
+      required: [id, actor, action, resource_type, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        actor: { $ref: '#/components/schemas/AuditActor' }
+        action: { type: string, description: "SCREAMING_SNAKE_CASE verb, e.g. DEVICE_REGISTER." }
+        resource_type: { type: string, enum: [artifact, release, deployment, device, group, group_member] }
+        resource_id: { type: string }
+        details:
+          type: object
+          additionalProperties: { type: string }
+        ip_address: { type: string }
+        user_agent: { type: string }
+        created_at: { type: string, format: date-time }
+
+    AuditLogList:
+      type: object
+      required: [items, next_cursor]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AuditLogEntry' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+          description: Null on the last page.

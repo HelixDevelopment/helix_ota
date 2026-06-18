@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>repo_audit</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">repo_audit</h1>
+</header>
+<h1 id="repository-public-visibility-audit-gap-g11">Repository
+Public-Visibility Audit (Gap G11)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-08T00:00:00Z <strong>Authority:</strong> Helix OTA release
+engineering — gap G11 (owned submodule + dependency repo visibility)
+<strong>Scope:</strong> GitHub org <code>HelixDevelopment</code> +
+GitLab group <code>helixdevelopment1</code> for the 6 owned
+<code>ota-*</code> submodules; plus parent repo and the
+<code>http3</code> / <code>containers</code> / constitution
+dependencies. <strong>Method:</strong> every cell is populated from a
+REAL CLI call (<code>gh repo view</code>,
+<code>glab api projects/...</code>) captured 2026-06-08. No assumptions
+(Constitution §11.4.6). Project policy: owned + dependency repos MUST be
+PUBLIC.</p>
+<h2 id="table_of_contents">table_of_contents</h2>
+<ul>
+<li><a href="#environment_and_auth">environment_and_auth</a></li>
+<li><a href="#owned_ota_submodules">owned_ota_submodules</a></li>
+<li><a href="#parent_repository">parent_repository</a></li>
+<li><a href="#dependency_repositories">dependency_repositories</a></li>
+<li><a href="#evidence_commands">evidence_commands</a></li>
+<li><a href="#action_items">action_items</a></li>
+<li><a
+href="#anti_bluff_unverified_register">anti_bluff_unverified_register</a></li>
+</ul>
+<h2 id="environment_and_auth">environment_and_auth</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Account</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gh</code></td>
+<td><code>/opt/homebrew/bin/gh</code></td>
+<td>✓ logged in github.com</td>
+<td><code>milos85vasic</code> (scopes: repo, read:org, admin:public_key,
+gist)</td>
+</tr>
+<tr>
+<td><code>glab</code></td>
+<td><code>/opt/homebrew/bin/glab</code></td>
+<td>✓ logged in gitlab.com (GITLAB_TOKEN env)</td>
+<td><code>milos85vasic</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both CLIs are authenticated — GitLab checks are REAL, not
+SKIPped.</p>
+<p>Source-of-truth note: <code>.gitmodules</code> declares the
+constitution submodule as
+<code>git@github.com:HelixDevelopment/HelixConstitution.git</code> (repo
+name <strong>HelixConstitution</strong>, not <code>constitution</code>)
+and the deps <code>http3</code> + <code>containers</code> under org
+<strong>vasic-digital</strong>. The audit was corrected to the real repo
+names/orgs after reading <code>.gitmodules</code>.</p>
+<h2 id="owned_ota_submodules">owned_ota_submodules</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo</th>
+<th>GitHub exists?</th>
+<th>GitHub visibility</th>
+<th>GitLab exists?</th>
+<th>GitLab visibility</th>
+<th>Policy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ota-protocol</td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ota-telemetry-schema</td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ota-artifact-validator</td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ota-rollout-engine</td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ota-update-engine-bridge</td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ota-android-agent</td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+</tbody>
+</table>
+<p>All 6 owned <code>ota-*</code> submodules exist and are PUBLIC on
+BOTH GitHub (<code>HelixDevelopment/&lt;name&gt;</code>) and GitLab
+(<code>helixdevelopment1/&lt;name&gt;</code>). No action needed.</p>
+<h2 id="parent_repository">parent_repository</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo</th>
+<th>GitHub exists?</th>
+<th>GitHub visibility</th>
+<th>GitLab exists?</th>
+<th>GitLab visibility</th>
+<th>Policy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>helix_ota</td>
+<td>YES (HelixDevelopment)</td>
+<td>PUBLIC</td>
+<td>YES (helixdevelopment1)</td>
+<td>public</td>
+<td>OK</td>
+</tr>
+</tbody>
+</table>
+<h2 id="dependency_repositories">dependency_repositories</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Declared origin (.gitmodules)</th>
+<th>GitHub exists?</th>
+<th>GitHub visibility</th>
+<th>GitLab exists?</th>
+<th>GitLab visibility</th>
+<th>Policy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixConstitution</td>
+<td><code>HelixDevelopment/HelixConstitution</code></td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES <code>helixdevelopment1/helixconstitution</code></td>
+<td>public</td>
+<td>OK (GitHub canonical)</td>
+</tr>
+<tr>
+<td>http3</td>
+<td><code>vasic-digital/http3</code></td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES <code>vasic-digital/http3</code></td>
+<td>public</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>containers</td>
+<td><code>vasic-digital/containers</code></td>
+<td>YES</td>
+<td>PUBLIC</td>
+<td>YES <code>vasic-digital/containers</code></td>
+<td><strong>private</strong></td>
+<td>ACTION (see G11-A1)</td>
+</tr>
+</tbody>
+</table>
+<p>Notes on dependency namespace reality (from real CLI): -
+<code>HelixDevelopment/constitution</code>,
+<code>vasic-digital/constitution</code> — DO NOT EXIST on GitHub (404).
+The canonical name is <code>HelixConstitution</code>. -
+<code>helixdevelopment1/containers</code> and
+<code>helixdevelopment1/http3</code> — DO NOT EXIST on GitLab (404). The
+deps live under <code>vasic-digital/*</code> on GitLab, matching
+<code>.gitmodules</code>. - <code>vasic-digital/HelixConstitution</code>
+on GitLab exists but is <strong>private</strong> (a mirror; the
+canonical constitution origin per <code>.gitmodules</code> is GitHub,
+which is PUBLIC).</p>
+<h2 id="evidence_commands">evidence_commands</h2>
+<p>GitHub (per repo):</p>
+<pre><code>gh repo view HelixDevelopment/&lt;name&gt; --json name,visibility,isPrivate,url
+gh repo view HelixDevelopment/HelixConstitution --json name,visibility,isPrivate,url
+gh repo view vasic-digital/http3 --json name,visibility,isPrivate,url
+gh repo view vasic-digital/containers --json name,visibility,isPrivate,url</code></pre>
+<p>GitLab (per repo):</p>
+<pre><code>glab api projects/helixdevelopment1%2F&lt;name&gt;
+glab api projects/vasic-digital%2Fhttp3
+glab api projects/vasic-digital%2Fcontainers
+glab api projects/helixdevelopment1%2Fhelixconstitution</code></pre>
+<p>Real captured output (verbatim, 2026-06-08):</p>
+<pre><code>GH ota-protocol            -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;,&quot;url&quot;:&quot;.../ota-protocol&quot;}
+GH ota-telemetry-schema    -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH ota-artifact-validator  -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH ota-rollout-engine      -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH ota-update-engine-bridge-&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH ota-android-agent       -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH helix_ota               -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH HelixConstitution       -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH vasic-digital/http3     -&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH vasic-digital/containers-&gt; {&quot;isPrivate&quot;:false,&quot;visibility&quot;:&quot;PUBLIC&quot;}
+GH HelixDevelopment/constitution -&gt; 404 (does not exist)
+GH HelixDevelopment/http3        -&gt; 404 (does not exist)
+GH HelixDevelopment/containers   -&gt; 404 (does not exist)
+
+GLAB helixdevelopment1/ota-protocol            -&gt; visibility: public
+GLAB helixdevelopment1/ota-telemetry-schema    -&gt; visibility: public
+GLAB helixdevelopment1/ota-artifact-validator  -&gt; visibility: public
+GLAB helixdevelopment1/ota-rollout-engine      -&gt; visibility: public
+GLAB helixdevelopment1/ota-update-engine-bridge-&gt; visibility: public
+GLAB helixdevelopment1/ota-android-agent       -&gt; visibility: public
+GLAB helixdevelopment1/helix_ota               -&gt; visibility: public
+GLAB helixdevelopment1/helixconstitution       -&gt; visibility: public
+GLAB vasic-digital/http3                        -&gt; visibility: public
+GLAB vasic-digital/containers                   -&gt; visibility: private
+GLAB helixdevelopment1/containers               -&gt; 404 Project Not Found
+GLAB helixdevelopment1/http3                    -&gt; 404 Project Not Found
+GLAB vasic-digital/constitution                 -&gt; 404 Project Not Found</code></pre>
+<h2 id="action_items">action_items</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Severity</th>
+<th>Repo / Host</th>
+<th>Finding</th>
+<th>Required action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G11-A1</td>
+<td>Medium</td>
+<td><code>vasic-digital/containers</code> (GitLab)</td>
+<td>GitLab mirror is <strong>private</strong> while GitHub origin is
+PUBLIC</td>
+<td>Make the GitLab <code>vasic-digital/containers</code> repo PUBLIC to
+match policy, OR document it as a deliberate non-public mirror (GitHub
+is the canonical PUBLIC origin per <code>.gitmodules</code>).</td>
+</tr>
+<tr>
+<td>G11-A2</td>
+<td>Low</td>
+<td><code>vasic-digital/HelixConstitution</code> (GitLab)</td>
+<td>GitLab mirror is <strong>private</strong>; canonical constitution
+origin is GitHub (PUBLIC)</td>
+<td>Confirm whether a PUBLIC GitLab constitution mirror is required. The
+canonical constitution origin
+(<code>HelixDevelopment/HelixConstitution</code>, GitHub) is PUBLIC, so
+policy is satisfied at the source-of-truth host; the GitLab private copy
+is informational only.</td>
+</tr>
+</tbody>
+</table>
+<p>No owned <code>ota-*</code> submodule is missing or private on either
+host — zero action items for the 6 owned repos.</p>
+<h2
+id="anti_bluff_unverified_register">anti_bluff_unverified_register</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GitLab auth</td>
+<td>VERIFIED</td>
+<td><code>glab auth status</code> → logged in as
+<code>milos85vasic</code>; all GitLab queries returned real API JSON
+(public/private/404), not auth failures.</td>
+</tr>
+<tr>
+<td>GitFlic / GitVerse mirrors</td>
+<td>UNVERIFIED</td>
+<td>Project policy mentions 4 upstreams (GitHub + GitLab + GitFlic +
+GitVerse). This audit covered only GitHub + GitLab (the two requested
+hosts + available CLIs). GitFlic/GitVerse were not queried — no CLI
+available in this environment. Out of G11 scope as specified.</td>
+</tr>
+<tr>
+<td>GitLab <code>helixconstitution</code> casing</td>
+<td>NOTED-AS-FACT</td>
+<td>GitLab normalized the path to lowercase
+<code>helixdevelopment1/helixconstitution</code> (GitLab project paths
+are case-normalized); the repo exists and is public.</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

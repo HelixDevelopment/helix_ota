@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>adr-0005-delta-updates</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="adr-0005-delta-updates-aosp-block-diffs-vs-custom-and-phase-placement">ADR-0005
+— Delta Updates: AOSP Block Diffs vs Custom (and Phase Placement)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR</td>
+<td>0005</td>
+</tr>
+<tr>
+<td>Title</td>
+<td>Delta updates: AOSP block diffs vs custom (and phase placement)</td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Proposed</strong></td>
+</tr>
+<tr>
+<td>Decision owners</td>
+<td>Lead architect (synthesis)</td>
+</tr>
+<tr>
+<td>Deciders / reviewers</td>
+<td>Operator; mandatory code-review subagent (§11.4.125)</td>
+</tr>
+<tr>
+<td>Supersedes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Superseded by</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Related</td>
+<td>[ADR-0001 engine selection], [ADR-0002 supply-chain trust],
+[ADR-0004 transport]; <a
+href="../ota_landscape_report.md"><code>../ota_landscape_report.md</code></a>;
+<a
+href="../additions_synthesis.md"><code>../additions_synthesis.md</code></a>;
+<a
+href="../stacks/aosp-update-engine.md"><code>../stacks/aosp-update-engine.md</code></a></td>
+</tr>
+<tr>
+<td>Decision needed</td>
+<td>Decide the delta-update approach for Helix OTA and which phase it
+lands in (MVP is likely full-payload-only).</td>
+</tr>
+<tr>
+<td>Anti-bluff rule</td>
+<td>Every claim traces to a cited source note/report. Unconfirmed facts
+carried forward as <strong>UNVERIFIED</strong>; this ADR introduces no
+facts absent from the underlying notes.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Fixed (Rev 2):</strong> Corrected Mender Android citation
+§6→§7; removed unsupported <code>report §2.3</code> over-cite from the
+§1 full-payload “Large” claim (now <code>aosp-update-engine §5</code>
+only); normalized malformed <code>[rauc §line 99]</code> tokens to
+<code>[rauc line 99]</code>.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-context">Context</a></li>
+<li><a href="#2-decision-drivers">Decision Drivers</a></li>
+<li><a href="#3-options-considered">Options Considered</a>
+<ul>
+<li><a href="#31-option-a--full-payload-only-no-deltas-for-mvp">3.1
+Option A — Full payload only (no deltas) for MVP</a></li>
+<li><a
+href="#32-option-b--aosp-native-incremental-payloads-ota_from_target_files--i">3.2
+Option B — AOSP-native incremental payloads
+(<code>ota_from_target_files -i</code>)</a></li>
+<li><a
+href="#33-option-c--custom-delta-format-bespoke-block-binary-diff">3.3
+Option C — Custom delta format (bespoke block/binary diff)</a></li>
+<li><a href="#34-option-d--wrap-a-third-party-delta-generator">3.4
+Option D — Wrap a third-party delta generator</a></li>
+<li><a
+href="#35-linux-phase-deltas-out-of-scope-for-the-android-decision">3.5
+Linux-phase deltas (out of scope for the Android decision)</a></li>
+</ul></li>
+<li><a href="#4-decision">Decision</a></li>
+<li><a href="#5-consequences">Consequences</a>
+<ul>
+<li><a href="#51-positive">5.1 Positive</a></li>
+<li><a href="#52-negative--costs">5.2 Negative / costs</a></li>
+<li><a href="#53-neutral--follow-ups">5.3 Neutral / follow-ups</a></li>
+</ul></li>
+<li><a href="#6-phase-placement">Phase Placement</a></li>
+<li><a
+href="#7-open--unverified-items-to-close-before-implementation">Open /
+UNVERIFIED Items to Close Before Implementation</a></li>
+<li><a href="#8-status">Status</a></li>
+<li><a href="#9-compliance-notes-helixconstitution">Compliance Notes
+(HelixConstitution)</a></li>
+<li><a href="#10-sources">Sources</a></li>
+</ol>
+<hr />
+<h2 id="context">1. Context</h2>
+<p>Helix OTA is <strong>Android 15 first</strong> (Orange Pi 5 Max /
+RK3588 class), using <strong>native Android A/B + Virtual A/B</strong>
+on device with a <strong>custom Go control plane</strong> as the server;
+Linux/universal is a later phase. [ota_landscape_report §metadata;
+aosp-update-engine §1] These are <strong>LOCKED</strong> decisions
+(native A/B + custom Go control plane; research decides the wrap target;
+mandated stack Go + Gin + Brotli + HTTP/3→HTTP/2, REST-primary,
+PostgreSQL + MinIO/S3). [ota_landscape_report lines 4–6]</p>
+<p>Update artifacts on Android are produced by
+<strong><code>ota_from_target_files</code></strong> from the build’s
+<code>target-files.zip</code>, yielding <code>payload.bin</code> +
+<code>payload_properties.txt</code>. The tool supports two artifact
+shapes:</p>
+<ul>
+<li><strong>Full payload</strong> — generated solely from the target
+image; contains everything needed to write the inactive slot; “Large.”
+[aosp-update-engine §5]</li>
+<li><strong>Incremental / delta payload</strong> — a differential update
+produced with the
+<strong><code>-i PREVIOUS-target-files.zip</code></strong> flag against
+the exact source build; “much smaller.” [aosp-update-engine §5 lines
+107–110]</li>
+</ul>
+<p>Two facts shape this ADR. First, <strong>delta generation already
+exists natively in AOSP</strong> — the same <code>update_engine</code>
+payload generator (<code>brillo_update_payload</code> wrapping
+<code>delta_generator</code>) produces both full and incremental
+<code>payload.bin</code>, and the on-device <code>applyPayload</code>
+path consumes both identically. [aosp-update-engine §5 line 124, §6]
+Second, <strong>incrementals are tightly version-coupled</strong>: an
+incremental only applies to its exact source build, gated by
+<code>META-INF/com/android/metadata</code> preconditions
+(<code>pre-build</code>, <code>pre-build-incremental</code>,
+<code>pre-device</code>). [aosp-update-engine §5 line 122, §7 item
+4]</p>
+<p>Independently of artifact format, <strong>Virtual A/B already
+provides on-device storage/bandwidth savings</strong> via COW
+compression (<code>Replace</code>/gzip, plus XOR diff since Android 13).
+Reported snapshot-size reductions: ~45% (full OTA) and ~55% (incremental
+OTA), with XOR adding a further ~25–40% on some devices. These figures
+are <strong>UNVERIFIED</strong> — sourced from the AOSP Virtual A/B page
+and flagged version-dependent; confirm against the Android 15/16 docs
+revision and on the RK3588 board. [aosp-update-engine §4 lines 91–92,
+§10 item 3]</p>
+<p>The operator drafts and synthesis already bias scope toward minimal
+MVP: the reconciliation defers user-/multi-version rollback past MVP
+(C6) and treats all unconfirmed delta-related constants as hypotheses
+for the research ADRs, not settled fact. [additions_synthesis §5 C6;
+§6]. This ADR is the routed decision point: <strong>“ADR-0005 Delta
+updates: AOSP block diffs vs custom, and phase placement.”</strong>
+[additions_synthesis §7]</p>
+<h2 id="decision-drivers">2. Decision Drivers</h2>
+<ul>
+<li><strong>Locked “wrap, do not replace” for the Android device
+path</strong> — Helix’s value-add is build/serve + rollout/telemetry,
+not re-implementing apply/verify/rollback. A custom delta format would
+re-derive a hardened, version-tracked AOSP capability for no Android
+upside. [aosp-update-engine §8 lines 180–182, §9]</li>
+<li><strong>MVP leanness</strong> — the master design and synthesis
+favor the smallest correct first version; full-payload-only is the
+simplest correct artifact and removes the version-matrix and per-pair
+generation burden from MVP. [additions_synthesis §5 C2, C6]</li>
+<li><strong>Bandwidth/cost</strong> — full payloads are “Large”
+[aosp-update-engine §5], so deltas are attractive once a release cadence
+and a base-build matrix exist; but Virtual A/B compression already
+recovers significant on-device cost even for full payloads (UNVERIFIED
+figures). [aosp-update-engine §4]</li>
+<li><strong>Anti-guessing / research-before-implementation</strong> —
+concrete savings numbers are UNVERIFIED and must be measured before
+committing to a delta pipeline (§11.4.6 / §11.4.8). [aosp-update-engine
+§10; additions_synthesis §6]</li>
+<li><strong>Verify-before-apply posture</strong> — the synthesis prefers
+the safer local-verified-file apply over opaque streaming, and keeps
+SHA-256 + per-artifact signature + the A/B engine’s own payload check as
+defense-in-depth; whichever artifact shape is chosen, the integrity
+contract is unchanged because TUF/signing treat <code>payload.bin</code>
+as an opaque target. [additions_synthesis §6; ota_landscape_report §3.3
+line 198]</li>
+</ul>
+<h2 id="options-considered">3. Options Considered</h2>
+<h3 id="option-a-full-payload-only-no-deltas-for-mvp">3.1 Option A —
+Full payload only (no deltas) for MVP</h3>
+<p>Serve only full <code>payload.bin</code> artifacts produced by
+<code>ota_from_target_files</code> (no <code>-i</code>). Every device
+receives a complete inactive-slot image regardless of its current build.
+[aosp-update-engine §5]</p>
+<ul>
+<li><strong>Pros:</strong> Simplest correct artifact; no source-build
+matrix; one artifact per release; trivially universal across device
+build states; integrity/serving contract (<code>ZIP_STORED</code> + HTTP
+Range + <code>FILE_HASH</code>/<code>METADATA_HASH</code>/sizes) is
+identical to the streaming design already specified. [aosp-update-engine
+§6 line 147, §7] Virtual A/B COW compression still reduces on-device
+storage cost for full OTAs (~45%, UNVERIFIED). [aosp-update-engine
+§4]</li>
+<li><strong>Cons:</strong> Largest network transfer per update — full
+payloads are “Large.” [aosp-update-engine §5] Bandwidth-sensitive fleets
+pay full-image cost on every release until deltas land.</li>
+</ul>
+<h3
+id="option-b-aosp-native-incremental-payloads-ota_from_target_files--i">3.2
+Option B — AOSP-native incremental payloads
+(<code>ota_from_target_files -i</code>)</h3>
+<p>Use AOSP’s built-in incremental mode:
+<code>ota_from_target_files -i PREVIOUS-target_files.zip TARGET dist incremental_ota_update.zip</code>,
+producing a much smaller <code>payload.bin</code> consumed by the same
+<code>applyPayload</code> path. This is the “AOSP block diffs” arm of
+the decision. [aosp-update-engine §5 lines 107–110, §6]</p>
+<ul>
+<li><strong>Pros:</strong> <strong>Native, battle-tested, zero new
+on-device code</strong> — incrementals are produced by the same
+generator and applied by the same daemon as full payloads; the device
+client and integrity contract are unchanged. [aosp-update-engine §5 line
+124, §6, §8] Materially smaller transfers (“much smaller” per docs).
+[aosp-update-engine §5] Pairs with XOR-COW compression for additional
+on-device savings (~55% incremental, +25–40% XOR; both UNVERIFIED).
+[aosp-update-engine §4] Stays inside the locked “wrap, do not replace”
+boundary. [aosp-update-engine §8]</li>
+<li><strong>Cons:</strong> <strong>Version coupling</strong> — an
+incremental applies only to its exact source build, enforced by
+<code>pre-build</code>/<code>pre-build-incremental</code> preconditions;
+the control plane must match each device’s reported build to the correct
+source→target delta. [aosp-update-engine §5 line 122, §7 item 4]
+Generation cost scales with the number of supported source builds (an
+N-base → 1-target matrix), and a full-payload fallback is still required
+for devices off the supported base set. [aosp-update-engine §5, §7 item
+4] Exact savings ratios for Helix images are UNVERIFIED until measured.
+[aosp-update-engine §10]</li>
+</ul>
+<h3 id="option-c-custom-delta-format-bespoke-blockbinary-diff">3.3
+Option C — Custom delta format (bespoke block/binary diff)</h3>
+<p>Design a Helix-specific block/binary diff format and a custom
+on-device apply path.</p>
+<ul>
+<li><strong>Rejected.</strong> This re-implements the dangerous,
+version-tracked apply/verify/rollback surface AOSP already provides,
+directly contradicting the locked “wrap, do not replace” conclusion for
+Android: “Reproducing them outside AOSP would mean re-deriving years of
+hardened boot/verify/rollback logic and tracking it across Android
+releases — a maintenance liability with no upside on Android.”
+[aosp-update-engine §8 lines 180–182] A custom format would also break
+the clean integrity seam where TUF/signing treat
+<code>payload.bin</code> as an opaque target. [ota_landscape_report §3.3
+line 198] No source note presents any Android benefit from a bespoke
+format over AOSP-native incrementals.</li>
+</ul>
+<h3 id="option-d-wrap-a-third-party-delta-generator">3.4 Option D — Wrap
+a third-party delta generator</h3>
+<p>Adopt an external OTA platform’s delta engine (e.g., Mender
+server-side delta generation).</p>
+<ul>
+<li><strong>Rejected for the Android path.</strong> Mender has
+<strong>no Android client and no <code>update_engine</code>
+integration</strong>; its A/B is bootloader-driven (U-Boot/GRUB),
+fundamentally different from Android’s <code>update_engine</code> +
+boot_control HAL + Virtual A/B. [mender §7 line 88; ota_landscape_report
+§4] Mender’s delta generation (auto/server-side) is a <strong>paid
+Professional/Enterprise feature</strong>, and its ~70–90%
+bandwidth-savings figure is a <strong>vendor claim, UNVERIFIED</strong>
+as an independent benchmark — conflicting with both the
+open-control-plane differentiator and the no-bluff rule. [mender §5 line
+69, §9 lines 111–112, line 140; ota_landscape_report §4] hawkBit, the
+front-runner wrap candidate, treats artifacts as <strong>opaque</strong>
+and provides no delta generation of its own. [ota_landscape_report §2.3
+line 96 (A/B=1, artifacts opaque)]</li>
+</ul>
+<h3 id="linux-phase-deltas-out-of-scope-for-the-android-decision">3.5
+Linux-phase deltas (out of scope for the Android decision)</h3>
+<p>For the later Linux/universal phase, bandwidth-efficient deltas exist
+in the shortlisted Linux engines and should be evaluated then, not
+now:</p>
+<ul>
+<li><strong>OSTree static deltas</strong> — pre-computed
+server-generated commit-to-commit diffs
+(<code>ostree static-delta generate</code>), using bsdiff for similar
+files plus fallback objects; “bandwidth-efficient updates without a
+custom diff format.” Concrete size ratios are
+<strong>UNVERIFIED</strong> pending benchmarking on representative
+images. [ostree §5 lines 83–93, line 158]</li>
+<li><strong>RAUC adaptive/casync</strong> — RAUC distinguishes
+<em>adaptive</em> updates (<code>block-hash-index</code>, skip unchanged
+blocks) from <em>delta</em> (casync chunked diff needing a separate
+chunk store); enabling streaming disables plain casync bundles. [rauc
+line 99]</li>
+</ul>
+<p>These belong to the Linux OS-adapter and are deferred to the
+Linux-phase engine ADR, consistent with the report’s “shortlist for the
+later Linux phase” verdicts. [ota_landscape_report §4]</p>
+<h2 id="decision">4. Decision</h2>
+<p><strong>MVP (1.0.0): full payload only (Option A).</strong> Ship
+complete <code>payload.bin</code> artifacts; do not generate or serve
+incrementals in MVP. Rely on <strong>Virtual A/B COW compression for
+on-device savings</strong> in the interim. [aosp-update-engine §4,
+§5]</p>
+<p><strong>Post-MVP (1.0.1+): adopt AOSP-native incremental payloads
+(Option B); reject custom and third-party delta formats (Options C,
+D).</strong> When deltas are introduced, use
+<code>ota_from_target_files -i</code> to produce source→target
+incrementals applied by the unchanged <code>applyPayload</code> path,
+with <strong>full payloads retained as the universal fallback</strong>
+for devices off the supported base-build set. [aosp-update-engine §5
+lines 107–110, §7 item 4]</p>
+<p>This honors the LOCKED decisions: native A/B + custom Go control
+plane (the control plane owns base-build matching and serving; AOSP owns
+apply); research decides the wrap target (no wrap dependency is taken
+for deltas — the native AOSP generator is used directly); and the
+mandated stack (deltas are served over the same <code>ZIP_STORED</code>
++ HTTP Range + Brotli + HTTP/3→HTTP/2 path with no new device code).
+[aosp-update-engine §6–§9; ota_landscape_report lines 4–6]</p>
+<p>The introduction of incrementals is <strong>gated on measured
+savings</strong> on representative Helix images / the RK3588 board
+(anti-guessing, §11.4.6 / §11.4.8); the UNVERIFIED COW/XOR percentages
+must not be quoted as fact in any contract or commitment.
+[aosp-update-engine §4, §10]</p>
+<h2 id="consequences">5. Consequences</h2>
+<h3 id="positive">5.1 Positive</h3>
+<ul>
+<li><strong>MVP is the simplest correct artifact path</strong> — one
+full payload per release, no source-build matrix, universal across
+device build states, identical integrity/serving contract to the
+existing streaming design. [aosp-update-engine §5, §6, §7]</li>
+<li><strong>No on-device delta code, ever</strong> — both full and
+(later) incremental payloads flow through the same
+<code>applyPayload</code>/callbacks surface; the thin Android client is
+unaffected by the delta decision. [aosp-update-engine §6, §8]</li>
+<li><strong>Clean integrity seam preserved</strong> —
+<code>payload.bin</code> stays an opaque, signed target file for
+SHA-256/signature and (later) TUF, regardless of full-vs-incremental
+shape. [ota_landscape_report §3.3 line 198; additions_synthesis §5
+C5]</li>
+<li><strong>Clear, low-risk upgrade path</strong> — moving to native
+incrementals later is additive (a build-pipeline +
+control-plane-targeting change), not a device or format change.
+[aosp-update-engine §5, §7]</li>
+</ul>
+<h3 id="negative-costs">5.2 Negative / costs</h3>
+<ul>
+<li><strong>MVP pays full-image bandwidth on every release</strong> —
+full payloads are “Large”; bandwidth-sensitive fleets bear higher
+transfer cost until 1.0.1+ deltas land. [aosp-update-engine §5]</li>
+<li><strong>Deferred complexity, not eliminated</strong> — incrementals
+introduce a <strong>source→target base-build matrix</strong>, per-pair
+generation cost, precondition matching in the control plane, and a
+mandatory full-payload fallback. [aosp-update-engine §5, §7 item 4]</li>
+<li><strong>Savings are UNVERIFIED</strong> — the headline COW/XOR and
+incremental-size figures are unconfirmed and version/board-dependent;
+the business case for deltas cannot be quoted until measured.
+[aosp-update-engine §4, §10]</li>
+</ul>
+<h3 id="neutral-follow-ups">5.3 Neutral / follow-ups</h3>
+<ul>
+<li>Telemetry must already model Virtual A/B states (“applied, pending
+reboot, merging, merged”); this is independent of the delta decision but
+interacts with measuring real-world apply/merge cost.
+[aosp-update-engine §4 line 94, §9 line 194]</li>
+<li>Linux-phase deltas (OSTree static deltas / RAUC adaptive) are
+deferred to the Linux engine ADR. [ostree §5; rauc line 99;
+ota_landscape_report §4]</li>
+</ul>
+<h2 id="phase-placement">6. Phase Placement</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Delta posture</th>
+<th>Rationale (traceable)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1.0.0-MVP</strong></td>
+<td><strong>Full payload only.</strong> Virtual A/B COW compression
+provides interim on-device savings.</td>
+<td>Simplest correct artifact; MVP leanness; savings figures UNVERIFIED.
+[aosp-update-engine §4, §5; additions_synthesis §5 C2/C6]</td>
+</tr>
+<tr>
+<td><strong>1.0.1+</strong></td>
+<td><strong>AOSP-native incrementals (<code>-i</code>)</strong> with
+full-payload fallback; gated on measured savings.</td>
+<td>Native, no new device code, smaller transfers;
+version-coupling/matrix cost justified once a release cadence exists.
+[aosp-update-engine §5, §7]</td>
+</tr>
+<tr>
+<td><strong>Linux phase</strong></td>
+<td>Evaluate <strong>OSTree static deltas</strong> / <strong>RAUC
+adaptive</strong> in the Linux OS-adapter ADR.</td>
+<td>Linux engines shortlisted for the later phase only.
+[ota_landscape_report §4; ostree §5; rauc line 99]</td>
+</tr>
+</tbody>
+</table>
+<p>This placement matches the synthesis’s MVP-minimal bias and routes
+the delta question exactly as the open-questions list intended.
+[additions_synthesis §5 C2/C6, §7]</p>
+<h2 id="open-unverified-items-to-close-before-implementation">7. Open /
+UNVERIFIED Items to Close Before Implementation</h2>
+<ol type="1">
+<li><strong>Virtual A/B COW/XOR savings</strong> (~45% full / ~55%
+incremental / +25–40% XOR) — <strong>UNVERIFIED</strong>; confirm
+against the Android 15/16 docs revision and measure on RK3588 / Orange
+Pi 5 Max. [aosp-update-engine §4 lines 91–92, §10 item 3]</li>
+<li><strong>Real incremental-vs-full size ratio on Helix images</strong>
+— not yet measured; the 1.0.1+ delta business case depends on it.
+[aosp-update-engine §5, §10]</li>
+<li><strong>Exact <code>ota_from_target_files</code> incremental +
+signing flag spelling</strong> for the Android 15 docs revision
+(<code>-i</code>, <code>--package_key</code>, AVB/<code>vbmeta</code>).
+<strong>UNVERIFIED.</strong> [aosp-update-engine §5 line 117, §10 item
+4]</li>
+<li><strong>Precondition/targeting fields</strong>
+(<code>pre-build</code>, <code>pre-build-incremental</code>,
+<code>pre-device</code>) the control plane must match for safe
+incremental delivery, plus optional headers
+(<code>SWITCH_SLOT_ON_REBOOT</code>, <code>RUN_POST_INSTALL</code>,
+<code>DISABLE_DOWNLOAD_RESUME</code>). <strong>UNVERIFIED</strong> exact
+set. [aosp-update-engine §5 line 122, §7 item 3, §10 item 1]</li>
+<li><strong>Board confirmation</strong> — whether the RK3588 target
+build ships classic A/B or Virtual A/B affects realized COW savings;
+needs hands-on confirmation. [aosp-update-engine §10 item 6]</li>
+<li><strong>Mender delta savings</strong> (~70–90%) remain a
+<strong>vendor claim, UNVERIFIED</strong> — do not cite if Option D is
+ever revisited. [mender line 140]</li>
+</ol>
+<h2 id="status">8. Status</h2>
+<p><strong>Proposed.</strong> Pending operator review gate and the
+mandatory code-review subagent pass (§11.4.125). No implementation of
+deltas is authorized until the gating measurements in §7 are closed
+(§11.4.6 / §11.4.8).</p>
+<h2 id="compliance-notes-helixconstitution">9. Compliance Notes
+(HelixConstitution)</h2>
+<blockquote>
+<p>Clause meanings sourced from the synthesis and master design, which
+cite the HelixConstitution; the full Constitution is not co-located in
+this repo, so clause numbers are carried forward exactly as those
+canonical docs use them. [additions_synthesis §1 line 34;
+2026-06-07-helix-ota-design §15 lines 183–189]</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>How this ADR complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>§11.4.6 (no-guessing)</strong></td>
+<td>Every savings/version constant is marked <strong>UNVERIFIED</strong>
+and excluded from any commitment; the delta business case is explicitly
+gated on measurement, not estimated. [additions_synthesis §1 line 34,
+§6]</td>
+</tr>
+<tr>
+<td><strong>§11.4.8 (research-before-implementation)</strong></td>
+<td>This is an evidence-based ADR routed from
+<code>additions_synthesis §7</code>; incremental adoption is deferred
+until §7 spikes/measurements are closed. [additions_synthesis §7; design
+§2 D3]</td>
+</tr>
+<tr>
+<td><strong>§7.1 (no-bluff / positive evidence)</strong></td>
+<td>Vendor marketing (Mender’s 70–90%, draft “most comprehensive”
+framing) is rejected, not propagated; every claim cites a source note.
+[additions_synthesis §6; design §15 line 184]</td>
+</tr>
+<tr>
+<td><strong>§11.4.74 (catalogue-first reuse)</strong></td>
+<td>Reuses the native AOSP delta generator and existing
+serving/transport submodules (<code>http3</code>,
+<code>Storage</code>/MinIO) rather than building a bespoke format;
+Custom (C) and third-party (D) rejected. [aosp-update-engine §5, §6;
+design §10 line 139]</td>
+</tr>
+<tr>
+<td><strong>§11.4.28 (decoupling)</strong></td>
+<td>The delta decision changes only build-pipeline + control-plane
+targeting; the <code>update_engine</code> bridge and OS-adapter seams
+are untouched, so the Linux phase can choose its own delta mechanism
+independently. [design line 107; ostree §5]</td>
+</tr>
+<tr>
+<td><strong>§1 / §1.1 (four-layer testing + mutation
+immunity)</strong></td>
+<td>Delta apply is a safety-critical path (apply + signing-verify):
+targets ≥90% coverage, with emulated A/B apply and a real-board
+download→verify→apply→reboot→verify + corrupt-slot fallback plan.
+[design §13 lines 173–175]</td>
+</tr>
+<tr>
+<td><strong>§11.4.125 (mandatory code-review gate)</strong></td>
+<td>ADR stays <strong>Proposed</strong> until the adversarial
+code-review subagent and operator review gate pass. [design §14 line
+177]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources">10. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>:</p>
+<ul>
+<li><a
+href="../ota_landscape_report.md"><code>research/ota_landscape_report.md</code></a>
+— landscape report &amp; engine-selection synthesis (LOCKED strategy,
+hawkBit/Mender verdicts, opaque-artifact note).</li>
+<li><a
+href="../additions_synthesis.md"><code>research/additions_synthesis.md</code></a>
+— operator-draft reconciliation (C2/C5/C6 resolutions; ADR-0005 routing;
+corrections of guessed/vendor claims; clause meanings).</li>
+<li><a
+href="../stacks/aosp-update-engine.md"><code>research/stacks/aosp-update-engine.md</code></a>
+— AOSP <code>update_engine</code> / native A/B + Virtual A/B;
+<code>ota_from_target_files</code> full vs incremental
+(<code>-i</code>); <code>applyPayload</code> contract; COW/XOR figures
+(UNVERIFIED); preconditions/targeting.</li>
+<li><a
+href="../stacks/mender.md"><code>research/stacks/mender.md</code></a> —
+Mender delta generation (paid; vendor savings claim UNVERIFIED); no
+Android client.</li>
+<li><a
+href="../stacks/ostree.md"><code>research/stacks/ostree.md</code></a> —
+OSTree static deltas (Linux phase).</li>
+<li><a href="../stacks/rauc.md"><code>research/stacks/rauc.md</code></a>
+— RAUC adaptive vs delta (Linux phase).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— master design (D3 engine-choice deferral, constitution clause mapping,
+testing/decoupling clauses).</li>
+</ul>
+<blockquote>
+<p>No statistics, dates, or citations were fabricated. Items not
+confirmed against a primary source are tagged
+<strong>UNVERIFIED</strong>.</p>
+</blockquote>
+</body>
+</html>

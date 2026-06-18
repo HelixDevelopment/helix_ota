@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>key_management</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="key-management-1.0.0-mvp">Key Management (1.0.0-MVP)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Normative MVP specification for cryptographic key management:
+custody of the build-pipeline artifact-signing key, key rotation
+(overlap via <code>key_id</code>), the on-device trust store of signing
+public keys, and the forward path to an offline signing ceremony
+(HSM/KMS, threshold, timestamp re-signing) when TUF/Uptane lands in
+1.0.1+ per ADR-0002. Routes signing/verify custody through the
+<code>security</code> / <code>Security-KMP</code> catalogue
+submodules.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HelixConstitution clause numbers are UNVERIFIED against the
+authoritative text. The MVP has <strong>no threshold signing, no
+offline-key custody, and no signed revocation</strong> — the
+build-pipeline signing key is a single key whose compromise cannot be
+actively invalidated fleet-wide except via the §5 signed
+trust-store-update push, which is the <strong>highest MVP residual
+risk</strong> (threat_model §171–182; ADR-0002 §5.2). The
+<code>security</code> / <code>Security-KMP</code> catalogue submodules’
+actual fit for key-custody / rotation / (future) threshold + offline-key
+primitives is UNVERIFIED (ADR-0002 §8 item 9; reuse map §3). The
+strength of Android-KeyStore device-key binding on the RK3588 / Orange
+Pi 5 Max board is UNVERIFIED. The concrete HSM/KMS product is not
+selected.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>Rev 2: committed the on-device trust-store UPDATE mechanism as MVP
+design (trust-store changes ship inside a signed OTA verified by the
+currently-trusted key; the only MVP rotation/recovery path) (§5, §9);
+sharpened “rotation is not revocation” — a compromised key cannot be
+actively invalidated fleet-wide except via that trust-store push, marked
+as the highest MVP residual risk (§4, §9); reflected the ED25519 DEFAULT
+signature scheme with <code>key_id</code> agility from
+signing_verification.md §3 (§2).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>Inspect <code>security</code> / <code>Security-KMP</code> to confirm
+they host key custody + rotation (and can later host
+threshold/offline-key primitives) and remove UNVERIFIED tags; define and
+dry-run the offline signing-ceremony runbook before any TUF root/targets
+keys are generated (ADR-0002 §4.3 step 3); select the HSM/KMS; produce
+the mTLS/device-cert provisioning plan if mTLS is adopted in 1.0.1+ (see
+transport_security.md §6).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-key-inventory-mvp">Key inventory (MVP)</a></li>
+<li><a href="#3-custody-of-the-build-pipeline-signing-key">Custody of
+the build-pipeline signing key</a></li>
+<li><a href="#4-key-rotation">Key rotation</a></li>
+<li><a href="#5-on-device-trust-store">On-device trust store</a></li>
+<li><a
+href="#6-forward-path-offline-signing-ceremony-tufuptane-101">Forward
+path: offline signing ceremony (TUF/Uptane, 1.0.1+)</a></li>
+<li><a href="#7-catalogue-reuse-and-module-boundaries">Catalogue reuse
+and module boundaries</a></li>
+<li><a href="#8-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#9-open--unverified-items">Open / UNVERIFIED items</a></li>
+<li><a href="#10-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#11-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies how Helix OTA manages cryptographic keys in
+the 1.0.0-MVP: where the <strong>build-pipeline artifact-signing
+key</strong> lives and who can use it (custody), how it is
+<strong>rotated</strong> without bricking the fleet, what the
+<strong>on-device trust store</strong> holds and how it is updated, and
+the <strong>forward path</strong> to a hardened offline signing ceremony
+(threshold, HSM/KMS, timestamp re-signing) when TUF/Uptane lands in
+1.0.1+ per ADR-0002.</p>
+<p>It is the companion to <a
+href="signing_verification.md">signing_verification.md</a> (which uses
+the keys) and <a href="transport_security.md">transport_security.md</a>
+(which manages the <em>separate</em> TLS certificate trust). It honors,
+and does not re-decide, the LOCKED strategy: signing + SHA-256 + AVB for
+MVP; TUF device-side deferred to 1.0.1 per ADR-0002. Key custody is
+routed through the verified catalogue (<code>security</code>,
+<code>Security-KMP</code>); no bespoke crypto/key brick is invented
+(ADR-0002 §4.2).</p>
+<h2 id="key-inventory-mvp">2. Key inventory (MVP)</h2>
+<p>Three distinct trust anchors exist in the MVP; they are managed and
+rotated <strong>independently</strong> so a compromise of one does not
+cascade:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Key / anchor</th>
+<th>Type</th>
+<th>Held by</th>
+<th>Verified against</th>
+<th>Specified in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Build-pipeline artifact-signing key</strong></td>
+<td>Asymmetric private (MVP DEFAULT = <strong>ED25519</strong>, with
+<code>key_id</code>-based algorithm agility for ECDSA-P256 / RSA-PSS
+fallback, see <a href="signing_verification.md">signing_verification.md
+§3</a>)</td>
+<td>Build pipeline (<strong>not</strong> the online control plane)</td>
+<td>Public key in the server trust store (upload) + on-device trust
+store (apply)</td>
+<td>This document §3–§5</td>
+</tr>
+<tr>
+<td><strong>TLS server certificate(s)</strong></td>
+<td>X.509 (TLS 1.3)</td>
+<td>Control-plane edge</td>
+<td>Device/client TLS trust roots</td>
+<td><a href="transport_security.md">transport_security.md §5</a></td>
+</tr>
+<tr>
+<td><strong>Device-identity key/token</strong></td>
+<td>Hardware-bound (Android KeyStore)</td>
+<td>Each device</td>
+<td><code>auth</code> (server) via the device token</td>
+<td>master §6; threat_model §4.7; this doc §5 (relationship only)</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>critical separation</strong>: the artifact-signing key
+proves <em>which firmware is authentic</em>; the TLS certificate proves
+<em>who the server is</em>; the device-identity key proves <em>which
+device is calling</em>. Compromise of the TLS cert or a device token
+does <strong>not</strong> allow artifact forgery, because artifacts are
+verified against the <em>signing</em> trust store on-device (<a
+href="signing_verification.md">signing_verification.md §6</a>;
+threat_model §4.6).</p>
+<h2 id="custody-of-the-build-pipeline-signing-key">3. Custody of the
+build-pipeline signing key</h2>
+<ul>
+<li><strong>The signing key is the build-pipeline key, not an
+online-control-plane key</strong> (master §6; threat_model §171–175).
+The online Go control plane verifies signatures (it holds
+<strong>public</strong> keys) but never holds the
+<strong>private</strong> signing key, so popping the control plane does
+not yield signing capability. This is the primary MVP blast-radius
+control (threat_model §171–175).</li>
+<li><strong>Custody routing:</strong> key custody is routed through the
+<code>security</code> catalogue submodule (server side) and
+<code>Security-KMP</code> (device side) rather than a bespoke key brick
+(ADR-0002 §4.2; reuse map §3). That these submodules expose key
+custody/rotation primitives is <strong>UNVERIFIED</strong> (ADR-0002 §8
+item 9) and must be confirmed before implementation (Continuation).</li>
+<li><strong>Use through the signer abstraction.</strong> The private key
+is used only via the signer abstraction (compatible with
+<code>go-securesystemslib</code> <code>signature.Signer</code>; <a
+href="signing_verification.md">signing_verification.md §4, §8</a>), so
+the same custody seam serves the MVP detached-signature signer and a
+future TUF role signer.</li>
+<li><strong>MVP custody posture (accepted residual):</strong> the MVP
+has <strong>no threshold signing and no offline-key custody</strong> —
+it is a single online-usable signing key in the build pipeline
+(threat_model §179–182; ADR-0002 §5.2). A stolen key is a fleet-wide
+compromise until rotation, and rotation in the MVP has limited recovery
+semantics (no signed key-revocation metadata; that is a TUF property
+deferred to 1.0.1+). This is tracked, not solved, in the MVP. The
+hardening path is §6.</li>
+<li><strong>Access control + audit:</strong> access to the signing key
+is restricted to the build pipeline’s signing step; every release/sign
+and every admin publish action is audit-logged (master §6).</li>
+</ul>
+<h2 id="key-rotation">4. Key rotation</h2>
+<p>The MVP supports <strong>rotation with overlap</strong> so a new
+signing key can be introduced before the old one is retired, avoiding a
+flag-day:</p>
+<ul>
+<li><strong><code>key_id</code> selects the verifying key.</strong> Each
+signed release carries a <code>key_id</code> (<a
+href="signing_verification.md">signing_verification.md §4</a>); the
+server and device trust stores can hold <strong>multiple</strong> active
+public keys, and verification selects the one named by
+<code>key_id</code>. This permits an <strong>overlap window</strong>:
+releases signed by the new key verify on devices that already trust it,
+while in-flight releases signed by the old key still verify.</li>
+<li><strong>Rotation procedure (MVP):</strong>
+<ol type="1">
+<li>Generate the new signing keypair (custody per §3).</li>
+<li><strong>Distribute the new public key to the device trust store
+first</strong> (§5) and to the server trust store, so both new and old
+<code>key_id</code>s verify (overlap begins).</li>
+<li>Switch the build pipeline to sign with the new key
+(<code>key_id</code> = new).</li>
+<li>After the fleet has converged on the new public key and no old-key
+releases remain in flight, <strong>retire the old public key</strong>
+from both trust stores (overlap ends).</li>
+</ol></li>
+<li><strong>Rotation is not revocation (highest MVP residual
+risk).</strong> Rotation <em>retires</em> an old key from trust stores
+on the next trust-store push; it does <strong>not</strong> actively
+invalidate a key. <strong>Explicitly: a compromised signing key cannot
+be actively invalidated fleet-wide in the MVP except via a
+trust-store-update push (§5) that removes it</strong> — there is
+<strong>no signed, freshness-checked revocation metadata</strong> that
+would let a device reject the compromised key on its own before that
+push reaches it (that is a TUF key-compromise-recovery property deferred
+to 1.0.1+; ADR-0002 §3.2, §5; threat_model §179–182). Until the
+trust-store-removal push lands on a given device, that device will still
+trust artifacts signed by the compromised key. This is the
+<strong>highest residual risk of the MVP key posture</strong>: the
+recovery window is bounded only by how fast the signed trust-store
+update converges across the fleet. Emergency rotation therefore depends
+entirely on the §5 trust-store-update push, which is itself the gating
+mechanism and must be integrity-protected.</li>
+<li><strong>TLS certificate rotation and device-token rotation</strong>
+are separate processes (<a
+href="transport_security.md">transport_security.md §5</a>; master §6)
+and do not interact with signing-key rotation.</li>
+</ul>
+<h2 id="on-device-trust-store">5. On-device trust store</h2>
+<ul>
+<li><strong>Contents:</strong> the device trust store holds the
+<strong>build-pipeline signing public key(s)</strong> used to verify
+artifact signatures before apply (<a
+href="signing_verification.md">signing_verification.md §6</a>; master
+§6). It is distinct from the TLS trust roots (<a
+href="transport_security.md">transport_security.md §5</a>) and from the
+device-identity key (below).</li>
+<li><strong>Initial provisioning:</strong> the trust store ships with
+the device build (the active build-pipeline public key is embedded), so
+a freshly imaged device can verify the first OTA. Device transport/trust
+config is carried via <code>Config-KMP</code> (master §6); the signing
+public keys themselves are consumed by the <code>Security-KMP</code>
+verify path.</li>
+<li><strong>Update mechanism (COMMITTED MVP design):</strong>
+introducing or retiring a signing public key (§4) requires updating the
+on-device trust store. The <strong>MVP design is committed, not
+deferred</strong>: trust-store changes <strong>ship inside a signed OTA
+that is verified by the currently-trusted signing key</strong> (the
+existing device re-verify-before-apply gate; <a
+href="signing_verification.md">signing_verification.md §6</a>) before
+any new key becomes authoritative. A trust-store update must itself be
+authenticated — otherwise it becomes the new single point of forgery —
+and binding it to a signed OTA reuses the exact authenticity gate
+already enforced for every artifact, adding no new trust root.
+<strong>Because the MVP has no signed revocation metadata until TUF (§4,
+1.0.1+), this OTA-delivered trust-store push is the only
+rotation/recovery path, so it must be specified now rather than left
+open.</strong> It is therefore specified here as the committed MVP
+mechanism. (The <code>security</code>/<code>Security-KMP</code>
+primitives that apply the trust-store change on-device remain a tracked
+confirm-against-the-brick item — §7, §9 — but the delivery design itself
+is decided.)</li>
+<li><strong>Relationship to device identity:</strong> the
+device-identity key (Android KeyStore, hardware-bound token; master §6;
+threat_model §4.7) is <strong>separate</strong> from the signing trust
+store — it authenticates the device <em>to the server</em>, not
+artifacts <em>to the device</em>. Its binding strength on the RK3588 /
+Orange Pi 5 Max board is <strong>UNVERIFIED</strong> (threat_model
+§4.7).</li>
+<li><strong>Fail-safe:</strong> a device that cannot verify an artifact
+against any trusted key MUST abort the apply (never apply on
+verification failure; <a
+href="signing_verification.md">signing_verification.md §6</a>); native
+A/B guarantees the running slot is untouched.</li>
+</ul>
+<h2 id="forward-path-offline-signing-ceremony-tufuptane-1.0.1">6.
+Forward path: offline signing ceremony (TUF/Uptane, 1.0.1+)</h2>
+<p>The MVP key posture (single online-usable key, no offline custody, no
+threshold) is deliberately the <em>floor</em>; ADR-0002 §4.3 owns the
+hardening sequence. This section is the forward-path specification, not
+a 1.0.0 deliverable.</p>
+<ul>
+<li><strong>Why it is needed:</strong> plain signing collapses to a
+single key; TUF adds <strong>thresholds + offline keys</strong> to
+survive key compromise and adds signed, freshness-checked metadata
+(rollback/freeze/mix-and-match/ mirror-denial resilience) — the attack
+classes the MVP leaves open (ADR-0002 §3.1, §3.2, §5; threat_model
+§179–182).</li>
+<li><strong>Offline key-custody ceremony (ADR-0002 §4.3 step
+3):</strong> define and dry-run a runbook covering:
+<ul>
+<li><strong>Root / targets keys held offline</strong> (HSM or
+KMS-backed), brought online only for signing ceremonies; the specific
+HSM/KMS product is <strong>not selected</strong> (Continuation).</li>
+<li><strong>Threshold signing</strong> for the high-value roles
+(root/targets), so no single key/operator can mint a release (ADR-0002
+§3.2 thresholds + offline keys).</li>
+<li><strong>Timestamp re-signing automation</strong> — the TUF
+<code>timestamp</code> (and <code>snapshot</code>) roles re-sign on a
+short cadence and use <strong>online</strong> keys, separate from the
+offline root/targets keys (ADR-0002 §3.2, §4.3).</li>
+<li><strong>Rotation + revocation</strong> semantics that TUF provides
+(delegations, key-compromise recovery), replacing the MVP’s limited
+retire-from-trust-store mechanism (§4).</li>
+</ul></li>
+<li><strong>MVP-forward seams that make this drop-in (no
+rework):</strong> the signer abstraction (one seam for MVP + TUF role
+signers), opaque target identity (path+length+sha256 layers under a TUF
+<code>targets</code> entry byte-identically), the distinct verify-gate
+(a TUF refresh/verify flow inserts ahead of the existing check), and the
+reserved per-device target decision (future Director repo) (<a
+href="signing_verification.md">signing_verification.md §8</a>; ADR-0002
+§4.2).</li>
+<li><strong>Gating:</strong> no on-device TUF enforcement (and thus no
+mandatory new key roles on-device) is made mandatory until the ADR-0002
+§4.3 spikes close — especially the <strong>on-device client
+spike</strong> (the dominant, UNVERIFIED cost) and the
+<strong>key-custody ceremony</strong> definition (ADR-0002 §4.3,
+§6).</li>
+</ul>
+<h2 id="catalogue-reuse-and-module-boundaries">7. Catalogue reuse and
+module boundaries</h2>
+<p>Per catalogue-first reuse (§11.4.74, UNVERIFIED clause); no bespoke
+key/crypto brick is invented (ADR-0002 §4.2):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Submodule(s)</th>
+<th>Class</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server-side signing-key custody + signature primitives</td>
+<td><code>security</code></td>
+<td>reuse</td>
+<td>Key custody + crypto primitives behind the signer abstraction.
+UNVERIFIED that <code>security</code> hosts custody/rotation (and later
+threshold/offline-key) primitives (ADR-0002 §8 item 9).</td>
+</tr>
+<tr>
+<td>Device-side verify-key handling + crypto</td>
+<td><code>Security-KMP</code></td>
+<td>reuse</td>
+<td>On-device trust-store verify path. UNVERIFIED surface.</td>
+</tr>
+<tr>
+<td>Device trust-root / signing-public-key config delivery</td>
+<td><code>Config-KMP</code></td>
+<td>reuse</td>
+<td>Carries device config incl. trust material; the trust-store
+<em>update</em> mechanism itself must be authenticated (§5).</td>
+</tr>
+<tr>
+<td>Device-identity key (hardware-bound token)</td>
+<td><code>Auth-KMP</code>, <code>Security-KMP</code>; server:
+<code>auth</code></td>
+<td>reuse</td>
+<td>Authenticates device to server (separate from signing trust).</td>
+</tr>
+<tr>
+<td>TLS certificate trust</td>
+<td><code>http3</code>, <code>Config-KMP</code></td>
+<td>reuse</td>
+<td>Separate anchor; see <a
+href="transport_security.md">transport_security.md §5</a>.</td>
+</tr>
+<tr>
+<td>Signer abstraction (<code>signature.Signer</code> seam)</td>
+<td>consumed by <code>ota-artifact-validator</code> / build signer</td>
+<td>new (consumer)</td>
+<td>One seam for MVP detached-sig + future TUF role signers (<a
+href="signing_verification.md">signing_verification.md §8</a>).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="testing-four-layer">8. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 (UNVERIFIED clause); key handling sits on
+the ≥90% safety-critical signing/verify path (master §13), with no-bluff
+positive evidence (§7.1):</p>
+<ul>
+<li><strong>Layer 1 — Source-presence gate.</strong> Static check that:
+the control plane holds <strong>only public</strong> verify keys (no
+signing private key in the online control-plane source); signing goes
+through the signer abstraction (not raw key use); verification selects
+the key by <code>key_id</code>; trust stores support <strong>multiple
+active keys</strong> (overlap); and a verification failure aborts apply.
+Absence is a build-time failure.</li>
+<li><strong>Layer 2 — Artifact gate (bytes shipped).</strong> Confirm
+the device build embeds a non-empty signing trust store with the active
+public key; confirm no signing <strong>private</strong> key is present
+in any shipped server/device artifact; confirm each released artifact
+carries a <code>key_id</code> resolvable in the trust store.</li>
+<li><strong>Layer 3 — Runtime / integration.</strong> Exercise rotation
+end-to-end: (a) distribute new public key → both old-<code>key_id</code>
+and new-<code>key_id</code> releases verify (overlap); (b) switch
+signing to the new key → new releases verify on updated devices; (c)
+retire old key → old-<code>key_id</code> releases no longer verify.
+<strong>Negative cases:</strong> a release whose <code>key_id</code> is
+unknown/retired → reject; a release signed by a key absent from the
+trust store → reject; an attempt to apply on verification failure →
+abort (A/B slot untouched).</li>
+<li><strong>Layer 4 — Mutation meta-test (PASS→FAIL on
+negation).</strong> Mutate key handling and require PASS→FAIL: accept
+any <code>key_id</code> regardless of trust store, skip the
+<code>key_id</code> lookup, treat a retired key as still trusted, or
+apply despite a verify failure — each MUST be caught by Layer 3. A
+surviving mutant is a defect on a safety-critical path.</li>
+</ul>
+<p>The offline-ceremony / HSM-KMS / threshold paths (§6) are
+<strong>not</strong> MVP-testable here; their validation is the ADR-0002
+§4.3 step-3 ceremony dry-run, which is the rock-solid-proof closure for
+those forward items.</p>
+<h2 id="open-unverified-items">9. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong><code>security</code> / <code>Security-KMP</code> host key
+custody + rotation</strong> (and can later host threshold/offline-key
+primitives) — <strong>UNVERIFIED</strong> (ADR-0002 §8 item 9; reuse map
+§3).</li>
+<li><strong>Signature scheme: DEFAULT pinned (ED25519)</strong>, with
+<code>key_id</code>-based algorithm agility for ECDSA-P256 / RSA-PSS
+fallback — decided in <a
+href="signing_verification.md">signing_verification.md §3</a>; only the
+confirm-against-the-<code>security</code>-brick (primitives exposed)
+remains tracked there.</li>
+<li><strong>On-device trust-store update mechanism — COMMITTED MVP
+design</strong> (trust-store changes ship inside a signed OTA verified
+by the currently-trusted key; the only MVP rotation/recovery path) (§5).
+Only the <code>security</code>/<code>Security-KMP</code> on-device apply
+primitive remains a confirm-against-the-brick item.</li>
+<li><strong>No threshold signing, no offline-key custody, no signed
+revocation in the MVP</strong> — single-signing-key exposure is an
+accepted MVP residual until 1.0.1+ TUF; a compromised key can only be
+invalidated fleet-wide via the §5 trust-store-update push, the
+<strong>highest MVP residual risk</strong> (ADR-0002 §5.2; threat_model
+§179–182).</li>
+<li><strong>HSM/KMS product not selected</strong>; offline
+signing-ceremony runbook not yet defined/dry-run (ADR-0002 §4.3 step 3)
+— forward item.</li>
+<li><strong>Android-KeyStore device-key binding strength on RK3588 /
+Orange Pi 5 Max</strong> — <strong>UNVERIFIED</strong> (threat_model
+§4.7).</li>
+<li><strong>HelixConstitution clause numbers</strong> —
+<strong>UNVERIFIED</strong> (corpus convention).</li>
+</ol>
+<h2 id="compliance-notes-helixconstitution">10. Compliance notes
+(HelixConstitution)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause (UNVERIFIED numbers)</th>
+<th>How this spec complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.61 (ToC)</td>
+<td>ToC present immediately after the metadata table.</td>
+</tr>
+<tr>
+<td>§7.1 / §11.4.6 (no-bluff / no-guessing)</td>
+<td>Every claim cites an ADR, master §6, or the threat model; the
+signature-scheme DEFAULT (ED25519) and the trust-store-update mechanism
+are now decided MVP design with only their
+<code>security</code>/<code>Security-KMP</code> primitive fit carried as
+<strong>UNVERIFIED</strong>; submodule custody fit, HSM/KMS, and
+KeyStore binding remain <strong>UNVERIFIED</strong>, not asserted. The
+MVP single-key residual — and that a compromised key is only recoverable
+via the §5 trust-store push — is stated, not hidden.</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first reuse)</td>
+<td>Key custody routed through <code>security</code> /
+<code>Security-KMP</code> / <code>Config-KMP</code> /
+<code>Auth-KMP</code>; no bespoke key brick invented (§7).</td>
+</tr>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>Three trust anchors managed independently; signing key used only via
+the signer abstraction seam (§2, §3, §7).</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§8 specifies all four layers, including rotation-overlap and
+verify-failure-abort mutations.</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>MVP claims closed by Layer-3 rotation evidence; forward
+(offline-ceremony/threshold) items closed by the ADR-0002 §4.3 step-3
+ceremony dry-run before any TUF keys are generated, not by
+assertion.</td>
+</tr>
+<tr>
+<td>§11.4.125 (code-review gate)</td>
+<td>Subject to the mandatory adversarial code-review subagent before
+acceptance (master §14).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources">11. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>:</p>
+<ul>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— §3.1–§3.2 (attack classes, thresholds/offline keys), §4.1–§4.3 (MVP
+trust, MVP-forward interface, adoption sequencing incl. key-custody
+ceremony), §5.2 (single-key negative), §8 (UNVERIFIED items).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— §6 (build-pipeline key signs; public key in device trust store; device
+identity; forward path), §13 (four-layer testing).</li>
+<li><a
+href="../../00-master/threat_model.md"><code>00-master/threat_model.md</code></a>
+— signing-key asset + single-key residual (lines ~90, 108, 154–182),
+§4.7 (device impersonation / KeyStore binding).</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>00-master/submodule_reuse_map.md</code></a>
+— §3 (artifact intake/validation, Android client), §5
+(security/Security-KMP device-identity upstream addition).</li>
+<li><a
+href="../../00-master/documentation_standards.md"><code>00-master/documentation_standards.md</code></a>
+— §2 (metadata), §8 (anti-bluff), §9 (canonical submodules).</li>
+<li><a href="signing_verification.md">signing_verification.md</a>, <a
+href="transport_security.md">transport_security.md</a> — companion MVP
+security specs.</li>
+</ul>
+</body>
+</html>

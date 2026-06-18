@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>tier2_cuttlefish_ab</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="tier2_cuttlefish_ab.sh-user-guide">tier2_cuttlefish_ab.sh — user
+guide</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-11T00:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active — host-gated (SKIPs cleanly off a Linux+KVM host)</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Helix OTA control-plane / device-integration team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><code>docs/design/CUTTLEFISH_TIER2.md</code> (the bring-up plan +
+sources), <code>docs/design/EMULATED_DEVICE_TESTING.md</code>
+(Tier-1/2/3 overview), <code>tests/emulator/ab_virt/</code> (the planned
+A/B-virt PWU-AB-3 this PWU-CF-2 case mirrors)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="overview">Overview</h2>
+<p><code>tests/emulator/tier2_cuttlefish_ab.sh</code> exercises the
+<strong>real Android <code>update_engine</code> A/B + AVB/dm-verity +
+auto-rollback</strong> flow on a Cuttlefish (<code>cvd</code>) virtual
+Android device — the hardware-free fidelity tier the dev-host QEMU
+A/B-virt tier (<code>tests/emulator/ab_virt/</code>) cannot reach, and
+the closest proxy for the Orange Pi 5 Max / RK3588 OTA apply.</p>
+<p>It runs in two phases on a Linux + nested-KVM host:</p>
+<ol type="1">
+<li><strong>Slot-flip phase</strong> — <code>launch_cvd</code> → read
+baseline active slot → apply an OTA payload to the inactive slot via
+<code>update_engine</code> → reboot → assert the active slot
+<strong>FLIPPED</strong> + dm-verity is present on the new slot.</li>
+<li><strong>Auto-rollback phase (PWU-CF-2, headline)</strong> — corrupt
+the now-INACTIVE previous slot (mark it unbootable / fail dm-verity),
+reboot, and assert the device <strong>AUTO-ROLLS-BACK</strong> to the
+known-good active slot (active slot does not revert to the corrupted
+one; boot succeeds on the good slot; the rollback trace is captured).
+This mirrors the planned <code>ab_virt</code> PWU-AB-3 corrupt-slot
+rollback case.</li>
+</ol>
+<h2 id="honest-status-11.4.6-11.4.123">Honest status (§11.4.6 /
+§11.4.123)</h2>
+<p>The <strong>entire Linux flow — including the PWU-CF-2 auto-rollback
+section — is <code>UNVERIFIED-pending-Linux-host</code>.</strong> It is
+implemented from the latest official AOSP docs (see
+<code>docs/design/CUTTLEFISH_TIER2.md</code> “Sources verified”), but
+has <strong>not</strong> been executed on a real Linux+KVM host. The
+Helix dev host is macOS on Apple Silicon (<code>applehv</code>
+hypervisor, no <code>/dev/kvm</code>), so the script <strong>SKIPs
+cleanly there</strong> (exit 3, <code>topology_unsupported</code>) —
+never a fake PASS.</p>
+<p>The auto-rollback section does <strong>not</strong> claim Android
+auto-rollback works until the script is run on the real host. The two
+AOSP-<code>UNCONFIRMED:</code> steps it depends on — the exact OTA-apply
+driver, and the exact safe corrupt-the-inactive-slot mechanism (legacy
+A/B direct write vs Virtual A/B COW/<code>snapuserd</code> path;
+<code>bootctl</code> availability) — are <strong>detected + attempted at
+runtime and FAIL honestly</strong> if they do not reproduce (§11.4.6
+no-guessing, §11.4.123 rock-solid-proof-or-research, §11.4.133
+verified-before-destructive-write).</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li><strong>Topology (mandatory):</strong> Debian-based Linux + usable
+<code>/dev/kvm</code> (nested-virt on a cloud instance, an M4+/macOS-15
+nested-virt Mac, or a Linux box). On any host without it, the script
+SKIPs (exit 3). Verify per <code>CUTTLEFISH_TIER2.md</code> §3:
+<code>grep -c -w "vmx\|svm" /proc/cpuinfo</code> (x86) or
+<code>find /dev -name kvm</code> (ARM64).</li>
+<li><strong>Cuttlefish host packages:</strong>
+<code>cuttlefish-base</code> installed (run <code>--prepare</code> once,
+then reboot — see Usage). Group membership in
+<code>kvm,cvdnetwork,render</code>.</li>
+<li><strong>Tooling:</strong> <code>git</code>,
+<code>apt</code>/<code>dpkg</code>, <code>python3</code>,
+<code>adb</code>/<code>fetch_cvd</code> (from the cvd host package), ~30
+GB disk, network (AOSP build fetch).</li>
+</ul>
+<h2 id="usage-examples">Usage examples</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-time prerequisite install (builds + installs the cuttlefish debs; needs sudo),</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># then REBOOT to load kernel modules + udev rules:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/tier2_cuttlefish_ab.sh</span> <span class="at">--prepare</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> reboot</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Normal run (Linux+KVM host) — runs the full slot-flip + auto-rollback flow:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/tier2_cuttlefish_ab.sh</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># On this macOS dev host — honest SKIP (the only thing verifiable here):</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">tests/emulator/tier2_cuttlefish_ab.sh</span>   <span class="co"># -&gt; [SKIP] ... topology_unsupported ; exit 3</span></span></code></pre></div>
+<h3 id="environment">Environment</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Var</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HELIX_CF_DIR</code></td>
+<td><code>./.cuttlefish</code></td>
+<td>cuttlefish workdir (debs, cvd images)</td>
+</tr>
+<tr>
+<td><code>HELIX_CF_TARGET</code></td>
+<td>auto by arch (<code>aosp_cf_arm64_only_phone</code> /
+<code>aosp_cf_x86_64_only_phone</code>)</td>
+<td>the cuttlefish build target</td>
+</tr>
+<tr>
+<td><code>HELIX_CF_EVIDENCE</code></td>
+<td><code>docs/qa/&lt;run-id&gt;/cuttlefish_ab/</code></td>
+<td>captured-evidence dir (§11.4.69/§11.4.83)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="inputs-outputs-side-effects">Inputs / Outputs /
+Side-effects</h2>
+<ul>
+<li><strong>Inputs:</strong> topology (Linux+KVM), cuttlefish host
+packages, an OTA payload (<code>ota.zip</code> +
+<code>update_device.py</code>) for the apply phase.</li>
+<li><strong>Outputs:</strong> captured evidence under the evidence dir —
+<code>kvm.txt</code>, <code>getprop_before.txt</code>,
+<code>update_engine.txt</code>, <code>slot_after.txt</code>,
+<code>verity.txt</code>, <code>virtual_ab.txt</code>,
+<code>corrupt_bootctl.txt</code> / <code>corrupt_dd.txt</code>,
+<code>corrupt_setactive.txt</code>,
+<code>slot_after_rollback.txt</code>, <code>rollback_trace.txt</code>,
+<code>rollback_logcat.txt</code>, <code>transcript.txt</code> — plus a
+<code>PASS</code> / <code>FAIL</code> / <code>SKIP</code> verdict on
+stdout.</li>
+<li><strong>Exit codes:</strong> <code>0</code> = PASS (real flow ran
+green on a Linux+KVM host), <code>1</code> = FAIL (a real defect, or an
+UNVERIFIED-pending-host step that did not reproduce — never a fake
+PASS), <code>3</code> = SKIP (topology absent / prerequisites
+missing).</li>
+<li><strong>Side-effects:</strong> boots a <code>cvd</code> virtual
+device; the auto-rollback phase performs a <strong>bounded</strong>
+corruption of the <strong>inactive</strong> slot only (one 4K block, or
+a <code>bootctl set-slot-as-unbootable</code> on the inactive index) —
+never the active/good slot (§11.4.133). Self-cleaning:
+<code>stop_cvd</code> runs on every exit path
+(<code>trap ... EXIT INT TERM</code>, §11.4.14).</li>
+</ul>
+<h2 id="edge-cases">Edge cases</h2>
+<ul>
+<li><strong>No <code>/dev/kvm</code> (e.g. macOS):</strong> SKIP exit 3,
+<code>topology_unsupported</code>. Verified on the macOS dev host.</li>
+<li><strong><code>cuttlefish-base</code> not installed:</strong> SKIP
+exit 3 with a pointer to <code>--prepare</code>.</li>
+<li><strong><code>fetch_cvd</code> / OTA package absent:</strong> the
+apply phase FAILs honestly (<code>UNVERIFIED-pending-host</code>), it
+does <strong>not</strong> fake a PASS.</li>
+<li><strong><code>bootctl</code> shell command absent:</strong> the
+corrupt phase falls back to a bounded dm-verity-fail write on the
+inactive <code>system&lt;slot&gt;</code> by-name partition; if neither
+is available it FAILs honestly (no silent skip-to-PASS).</li>
+<li><strong>Device hangs after corruption:</strong> treated as FAIL (a
+hang is <strong>not</strong> a rollback PASS); the
+<code>rollback_trace.txt</code> is captured for host-side
+forensics.</li>
+<li><strong>Auto-rollback does not occur (boots the corrupted
+slot):</strong> FAIL, not PASS.</li>
+</ul>
+<h2 id="internal-behaviour">Internal behaviour</h2>
+<p>Topology gate (Linux + readable/writable <code>/dev/kvm</code>) →
+arch→target selection → prerequisite/<code>--prepare</code> check →
+fetch+launch <code>cvd</code> → baseline slot → real
+<code>update_engine</code> apply → reboot + slot-flip assertion →
+dm-verity assertion → <strong>PWU-CF-2:</strong> detect A/B variant
+(<code>ro.virtual_ab.enabled</code>) → corrupt the inactive slot
+(<code>bootctl set-slot-as-unbootable</code>, else bounded
+dm-verity-fail write) → set the corrupted slot active to force the
+bad-boot path → reboot → assert boot succeeds on the known-good slot +
+capture the rollback trace. All <code>adb</code>/<code>curl</code>/loop
+waits are bounded; every PASS cites an evidence path (§11.4.69
+<code>ab_pass_with_evidence</code> shape).</p>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>tests/emulator/ab_virt/</code> — the dev-host QEMU A/B-virt
+tier whose PWU-AB-3 corrupt-slot rollback case this PWU-CF-2
+mirrors.</li>
+<li><code>docs/design/CUTTLEFISH_TIER2.md</code> — the bring-up plan,
+sourced FACTs, and the <code>UNCONFIRMED:</code> verify-before-run
+register (§8) this script honours at runtime.</li>
+</ul>
+<h2 id="last-verified">Last verified</h2>
+<ul>
+<li>macOS dev host SKIP path (exit 3,
+<code>topology_unsupported</code>): verified 2026-06-11.</li>
+<li><code>sh -n</code> + <code>bash -n</code> parse-clean (§11.4.67):
+verified 2026-06-11.</li>
+<li>Linux+KVM full flow (slot-flip + auto-rollback):
+<strong>UNVERIFIED-pending-Linux-host</strong> — to be run when the
+operator’s Linux+KVM host is attached.</li>
+</ul>
+</body>
+</html>

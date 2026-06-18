@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>architecture</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="mvp-server-architecture-modular-monolith">1.0.0-MVP — Server
+Architecture (Modular Monolith)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-07</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Defines the 1.0.0-MVP server architecture for the Helix OTA control
+plane: a single-deployable modular monolith in Go + Gin (per ADR-0003)
+with enforced internal package boundaries mirroring future services,
+extractable <code>rollout-engine</code> and <code>OS-adapter</code>
+seams, and the locked HTTP/3(QUIC)→HTTP/2 + Brotli transport (per
+ADR-0004). Composes from the verified submodule catalogue
+(catalogue-first).</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>hawkBit wrap (ADR-0001) is GATED, not committed; the rollout-engine
+package may front either the wrap or the Go-native fallback — both seam
+shapes are carried. Numeric split thresholds are UNVERIFIED. Exact
+public API of several catalogue submodules is UNVERIFIED (carried from
+the submodule reuse map). HelixConstitution clause numbers are
+UNVERIFIED against the authoritative text.</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>N/A (initial revision).</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>On approval: pin the <code>ota-*</code> new-submodule list before
+repo creation (master §10/D4); close the ADR-0001 hawkBit gates or
+select the Go-native fallback; set numeric split thresholds from MVP
+load tests (ADR-0003 §3.2) and record in an ADR revision; confirm
+catalogue submodule public surfaces to drop UNVERIFIED tags.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-purpose-and-scope">Purpose and scope</a></li>
+<li><a href="#2-topology-decision-recap">Topology decision
+(recap)</a></li>
+<li><a href="#3-process--deployment-view">Process &amp; deployment
+view</a></li>
+<li><a href="#4-internal-package-boundaries-the-seams">Internal package
+boundaries (the seams)</a></li>
+<li><a
+href="#5-extractable-seams-rollout-engine--os-adapter">Extractable
+seams: rollout-engine &amp; OS-adapter</a></li>
+<li><a href="#6-boundary-enforcement">Boundary enforcement</a></li>
+<li><a href="#7-transport-composition-http3--brotli">Transport
+composition (HTTP/3 + Brotli)</a></li>
+<li><a href="#8-catalogue-first-composition">Catalogue-first
+composition</a></li>
+<li><a href="#9-scale-trigger-to-split-into-services">Scale trigger to
+split into services</a></li>
+<li><a href="#10-testing-four-layer">Testing (four-layer)</a></li>
+<li><a href="#11-compliance-notes-helixconstitution">Compliance notes
+(HelixConstitution)</a></li>
+<li><a href="#12-open--unverified-items">Open / UNVERIFIED
+items</a></li>
+<li><a href="#13-sources">Sources</a></li>
+</ol>
+<blockquote>
+<p>The table-of-contents requirement is mandated by HelixConstitution
+§11.4.61 (UNVERIFIED clause number). This document carries its ToC
+immediately after the metadata table.</p>
+</blockquote>
+<hr />
+<h2 id="purpose-and-scope">1. Purpose and scope</h2>
+<p>This document specifies the <strong>server-side architecture</strong>
+of the Helix OTA control plane for <strong>1.0.0-MVP</strong>. It is
+normative for how the Go control plane is structured internally,
+deployed, and composed from the submodule catalogue. It does
+<strong>not</strong> re-decide the locked stack or the open ADR choices;
+it implements them:</p>
+<ul>
+<li><strong>Topology</strong> is fixed by <strong>ADR-0003</strong>
+(modular monolith with extractable seams). [adr-0003 §3]</li>
+<li><strong>Transport</strong> is fixed by <strong>ADR-0004</strong>
+(HTTP/3(QUIC) primary, HTTP/2 fallback, Brotli content compression, REST
+<code>/api/v1</code> primary). [adr-0004 §4]</li>
+<li><strong>Trust</strong> integration points are fixed by
+<strong>ADR-0002</strong> (signer abstraction + distinct verify-gate,
+Uptane-ready). [adr-0002 §4.2]</li>
+<li><strong>Engine wrap</strong> is <strong>GATED</strong> by
+<strong>ADR-0001</strong> (wrap hawkBit front-runner, Go-native rollout
+engine as the pre-authorized fallback). [adr-0001 §4]</li>
+</ul>
+<p>Scope is the <strong>Helix-authored Go control plane only</strong>.
+If ADR-0001 adopts hawkBit, hawkBit remains a <strong>separate
+deployable behind</strong> the control plane (never publicly exposed)
+and is orthogonal to this topology. [adr-0003 §3]</p>
+<h2 id="topology-decision-recap">2. Topology decision (recap)</h2>
+<p>ADR-0003 adopts <strong>Option B — a modular monolith with
+extractable seams</strong> for 1.0.0-MVP: one deployable Go binary (Gin,
+REST-primary, Brotli, HTTP/3→HTTP/2; PostgreSQL + MinIO/S3) with
+<strong>enforced internal module boundaries</strong> that mirror the
+future services, and the <strong>rollout-engine</strong> and
+<strong>OS-adapter</strong> built as cleanly extractable modules.
+Microservice extraction is deferred until a defined scale trigger fires
+(§9). [adr-0003 §3]</p>
+<p>This honors the locked strategy — native Android A/B
+(<code>update_engine</code> + AVB/dm-verity + auto-rollback) on device +
+a custom Go control plane — and the locked stack (D6). [master §2 D2/D6;
+adr-0003 §1]</p>
+<h2 id="process-deployment-view">3. Process &amp; deployment view</h2>
+<p>At MVP the Helix-authored control plane is <strong>one process / one
+binary</strong> on the <code>containers</code> submodule substrate
+(§11.4.76, UNVERIFIED). [adr-0003 §6; master §3]</p>
+<pre class="mermaid"><code>graph TB
+    subgraph Dashboard[&quot;Dashboard (React)&quot;]
+        UI[&quot;Helix OTA Dashboard&quot;]
+    end
+    subgraph Mono[&quot;Helix control plane — ONE Go binary (Gin, HTTP/3→HTTP/2, Brotli, REST /api/v1)&quot;]
+        HTTP[&quot;transport edge (http3 + middleware + ratelimiter + recovery)&quot;]
+        API[&quot;api (REST /api/v1 handlers)&quot;]
+        AV[&quot;artifact-validator (seam)&quot;]
+        RE[&quot;rollout-engine (EXTRACTABLE seam)&quot;]
+        DEV[&quot;device-registry&quot;]
+        TEL[&quot;telemetry-ingest + health&quot;]
+        OSA[&quot;os-adapter (EXTRACTABLE seam)&quot;]
+        UEB[&quot;update_engine-bridge (server side)&quot;]
+        PROTO[&quot;ota-protocol types&quot;]
+        AUTHZ[&quot;auth wiring (OAuth2/JWT, RBAC)&quot;]
+    end
+    subgraph External[&quot;Separate deployables (orthogonal to this topology)&quot;]
+        HB[&quot;hawkBit monolith — GATED (ADR-0001), behind control plane, never public&quot;]
+    end
+    subgraph Data[&quot;Data plane&quot;]
+        PG[(PostgreSQL)]
+        OBJ[(MinIO / S3)]
+        OTEL[(OpenTelemetry / Prometheus)]
+    end
+    subgraph Device[&quot;Android 15 device&quot;]
+        AGENT[&quot;OTA agent (KMP)&quot;]
+        UE[&quot;update_engine (Virtual A/B)&quot;]
+    end
+    UI --&gt; HTTP --&gt; API
+    API --&gt; AV --&gt; OBJ
+    API --&gt; RE --&gt; PG
+    API --&gt; DEV --&gt; PG
+    API --&gt; TEL --&gt; OTEL
+    API --&gt; AUTHZ
+    RE -. &quot;Management API (if wrap adopted)&quot; .-&gt; HB
+    OSA --&gt; UEB
+    AGENT --&gt;|HTTPS poll/report| HTTP
+    AGENT --&gt; UE</code></pre>
+<p>Key points: - <strong>One Helix deployable</strong> is the lowest MVP
+operational cost consistent with correctness — especially valuable if a
+JVM hawkBit is already running alongside. [adr-0003 §4.1] - The dashed
+<code>rollout-engine → hawkBit</code> edge exists <strong>only
+if</strong> ADR-0001’s wrap is adopted; under the Go-native fallback the
+rollout-engine package contains the engine itself. Either way the seam
+shape is identical to the rest of the binary (§5). [adr-0001 §4] -
+Artifacts are served <strong>byte-identical, <code>ZIP_STORED</code>,
+with HTTP Range, content-encoding <code>identity</code></strong> — never
+Brotli/gzip (§7). [adr-0004 §4]</p>
+<h2 id="internal-package-boundaries-the-seams">4. Internal package
+boundaries (the seams)</h2>
+<p>Internal Go packages mirror the future services and the decoupling
+principle’s named units. These are the <strong>enforced
+boundaries</strong> that keep the monolith from decaying into an
+unstructured single binary (ADR-0003 Option C). [adr-0003 §3.1; master
+§4]</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package (seam)</th>
+<th>Purpose</th>
+<th>Maps to NEW submodule</th>
+<th>Catalogue reuse</th>
+<th>Extractable now?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>artifact-validator</code></td>
+<td>Upload validation pipeline: structure → SHA-256 vs hash file →
+signature → version monotonicity → target compatibility → metadata
+extraction (see <a
+href="artifact_validation.md"><code>artifact_validation.md</code></a>).
+Defense-in-depth alongside device-side verify-before-apply.</td>
+<td><code>ota-artifact-validator</code>, <code>ota-protocol</code>
+(manifest schema)</td>
+<td><code>security</code> (hash/signature primitives),
+<code>Storage</code> (blob staging)</td>
+<td>No (in-binary; OS-aware via plugins)</td>
+</tr>
+<tr>
+<td><code>rollout-engine</code></td>
+<td>OS-agnostic staged-rollout state machine (percentage phases gated by
+success/error thresholds, pause/halt on breach). <strong>First split
+candidate.</strong></td>
+<td><code>ota-rollout-engine</code></td>
+<td><code>database</code> (phase/cohort state),
+<code>observability</code>/<code>Herald</code> (signals)</td>
+<td><strong>YES</strong> (designed extractable)</td>
+</tr>
+<tr>
+<td><code>ota-protocol</code> types</td>
+<td>Shared release/deployment/telemetry/device wire contracts. Pure
+contracts; no business logic, no transport, no storage.</td>
+<td><code>ota-protocol</code></td>
+<td>—</td>
+<td>N/A (already a contracts module)</td>
+</tr>
+<tr>
+<td><code>update_engine-bridge</code></td>
+<td>Server side of the thin Android <code>applyPayload</code> client
+contract.</td>
+<td><code>ota-update-engine-bridge</code> (device-side, Android-only
+counterpart)</td>
+<td>—</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>os-adapter</code></td>
+<td>Universality seam (Android Phase 1; Linux candidates RAUC/OSTree
+later), built as a module so a future-OS phase is an add, not a
+rewrite.</td>
+<td>(via bridge + protocol)</td>
+<td>—</td>
+<td><strong>YES</strong> (designed extractable)</td>
+</tr>
+<tr>
+<td><code>device-registry</code></td>
+<td>Device records, groups, inventory.</td>
+<td><code>ota-protocol</code> (device/status types)</td>
+<td><code>database</code>, <code>discovery</code>,
+<code>mdns</code></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>telemetry-ingest</code></td>
+<td>Event ingest → OpenTelemetry/Prometheus → health (see <a
+href="telemetry_processing.md"><code>telemetry_processing.md</code></a>);
+feeds rollout-engine halt logic.</td>
+<td><code>ota-telemetry-schema</code></td>
+<td><code>observability</code>, <code>Herald</code></td>
+<td>No (second split candidate per §9)</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td>REST <code>/api/v1</code> handlers wiring the seams; the only
+package that speaks HTTP for business endpoints.</td>
+<td><code>ota-protocol</code> (REST contracts)</td>
+<td><code>http3</code>, <code>middleware</code>,
+<code>ratelimiter</code>, <code>recovery</code></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>auth</code> wiring</td>
+<td>OAuth2/JWT, RBAC, API keys, audit — policy wiring only, no auth
+logic re-implemented.</td>
+<td>—</td>
+<td><code>auth</code>, <code>security</code>,
+<code>middleware</code></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Each seam has <strong>one purpose, a well-defined interface, and is
+independently testable</strong> (§11.4.28, UNVERIFIED). [adr-0003 §3.1;
+submodule-reuse-map §3/§4]</p>
+<h2 id="extractable-seams-rollout-engine-os-adapter">5. Extractable
+seams: rollout-engine &amp; OS-adapter</h2>
+<p>Two seams are designed for <strong>lift-out, not rewrite</strong>
+when a scale trigger fires (§9). [adr-0003 §3.1, §3.2]</p>
+<h3 id="rollout-engine">5.1 rollout-engine</h3>
+<ul>
+<li><strong>No HTTP.</strong> Pure engine plus a <strong>storage
+port</strong> (backed by <code>database</code>) and a
+<strong>telemetry-signal port</strong> (consumes signals from
+<code>telemetry-ingest</code>; contains no ingest itself).
+[submodule-reuse-map §4]</li>
+<li>Interface surface (illustrative; pure-Go, no Gin types cross the
+boundary):
+<ul>
+<li><code>StartPhase(deploymentID, phase) (PhaseState, error)</code></li>
+<li><code>ObserveTelemetry(signal) (PhaseDecision, error)</code> →
+<code>advance | hold | pause | halt</code></li>
+<li><code>CohortFor(deploymentID, phase) (DeviceSet, error)</code> —
+deterministic cohort selection</li>
+</ul></li>
+<li><strong>Idempotent state transitions</strong> + a <strong>fake clock
++ fake telemetry</strong> make it independently testable to the
+safety-critical ≥90% floor. [master §8; adr-0003 §6]</li>
+<li>Under ADR-0001’s wrap path, this package is the <strong>adapter to
+hawkBit’s Management API</strong> (drive create/start/pause/resume +
+emergency shutdown); under the fallback it <strong>is</strong> the
+Go-native wave state machine (Foundries.io-style
+<code>init→canary→expanding→complete/cancelled</code> + Memfault
+one-click abort). The <strong>port surface above is identical</strong>
+in both cases, so the wrap/fallback choice never changes the seam
+contract. [adr-0001 §4]</li>
+</ul>
+<h3 id="os-adapter">5.2 os-adapter</h3>
+<ul>
+<li>The <strong>universality boundary</strong>: Android now via the
+<code>update_engine-bridge</code>; Linux candidates (RAUC/OSTree) later.
+Built as a module so the Linux/universal phase is an
+<strong>add</strong>, not a rewrite. [adr-0003 §3.1; adr-0001 §4]</li>
+<li>Exposes an apply/verify port consumed by the device-facing flow; the
+server holds <strong>no OS-specific apply logic</strong> outside this
+seam. The Android device-side apply itself lives in
+<code>ota-update-engine-bridge</code> (Android-only, thin).
+[submodule-reuse-map §4]</li>
+</ul>
+<p>Because both seams are extractable by construction, satisfying a
+split trigger is a <strong>lift-out</strong>. [adr-0003 §3.2]</p>
+<h2 id="boundary-enforcement">6. Boundary enforcement</h2>
+<p>A monolith decays into ADR-0003 Option C without active enforcement.
+Mandatory controls:</p>
+<ul>
+<li><strong>Internal-import discipline.</strong> Cross-seam calls go
+<strong>only</strong> through the published package interface (ports);
+no reaching into another seam’s internals. Enforced in CI (e.g. an
+import-linter / <code>depguard</code>-style allow-list rule — tool
+choice UNVERIFIED, but the rule is mandatory). [adr-0003 §3.1,
+§4.2]</li>
+<li><strong>No transport types across seams.</strong>
+Gin/<code>http.Request</code> types are confined to the <code>api</code>
+and transport-edge packages; business seams take/return
+<code>ota-protocol</code> types only. [adr-0004 §4; submodule-reuse-map
+§3]</li>
+<li><strong>Independent testability per seam</strong> to its coverage
+floor (≥90% on signing-verify, apply, rollout-gate). [master §13;
+adr-0003 §6]</li>
+</ul>
+<p>This is what keeps every seam a <strong>lift-out</strong> when §9
+fires. [adr-0003 §3.2]</p>
+<h2 id="transport-composition-http3-brotli">7. Transport composition
+(HTTP/3 + Brotli)</h2>
+<p>Per ADR-0004, composed at the binary’s edge: [adr-0004 §4]</p>
+<ol type="1">
+<li><strong>Transport protocol:</strong> HTTP/3 (QUIC) primary via the
+<code>vasic-digital/http3</code> submodule (drop-in
+<code>net/http.Handler</code>), with automatic negotiation/fallback to
+<strong>HTTP/2</strong> (TLS 1.3 throughout) for clients/networks that
+cannot use QUIC/UDP-443. <strong>REST <code>/api/v1</code> is the
+primary surface</strong>; gRPC is optional/internal only. [adr-0004
+§4.1; master §3]</li>
+<li><strong>Two-class compression rule (load-bearing):</strong>
+<ul>
+<li><strong>Control-plane REST/JSON</strong> (poll/check-in, rollout
+assignment, telemetry ingest, dashboard): <strong>Brotli</strong>,
+negotiating to <strong>gzip</strong> via
+<code>Accept-Encoding</code>.</li>
+<li><strong>OTA artifacts</strong> (<code>payload.bin</code> / OTA ZIP):
+<strong>no content compression</strong> — served
+<strong>byte-identical</strong>,
+<strong><code>ZIP_STORED</code></strong>, content-encoding
+<strong><code>identity</code></strong>, with <strong>mandatory HTTP
+Range</strong> so streaming range-fetch and hash/signature verification
+hold. [adr-0004 §4.2]</li>
+</ul></li>
+<li><strong>Artifact delivery:</strong> device-pull streaming over HTTPS
+with mandatory Range (<code>Storage</code> brick + MinIO/S3); the
+control plane returns
+<code>{url, offset, size, FILE_HASH, FILE_SIZE, METADATA_HASH, METADATA_SIZE}</code>.
+[adr-0004 §4.3]</li>
+<li><strong>Resumability:</strong> do not send
+<code>DISABLE_DOWNLOAD_RESUME</code>; the server MUST honour
+Range/conditional requests so interrupted transfers resume from offset.
+[adr-0004 §4.4]</li>
+</ol>
+<p>Negotiation order at the edge: HTTP/3 → HTTP/2 → <code>br</code> →
+<code>gzip</code> → <code>identity</code>. The <strong>artifact path is
+pinned to <code>identity</code> + Range regardless</strong> of
+control-plane negotiation. A <strong>CI/serving guard</strong> MUST
+assert the artifact path is never Brotli/gzip-compressed or re-zipped
+with compression (would silently break streaming + hashing). [adr-0004
+§4, §5.2]</p>
+<blockquote>
+<p><strong>UNVERIFIED (needs spike):</strong> Range-request semantics
+over HTTP/3/HTTP/2 through the <code>http3</code> submodule + MinIO/S3
+end-to-end; QUIC/UDP-443 reachability and the HTTP/2 fallback trigger;
+Brotli quality/parameter tuning at fleet scale. [adr-0004 §6]</p>
+</blockquote>
+<h2 id="catalogue-first-composition">8. Catalogue-first composition</h2>
+<p>Cross-cutting concerns come from the <strong>verified submodule
+catalogue</strong> (§11.4.74, UNVERIFIED), embedded in the single binary
+— not re-implemented. Only canonical names are used; none invented.
+[master §10; submodule-reuse-map §3]</p>
+<ul>
+<li><strong>Transport edge:</strong> <code>http3</code>,
+<code>middleware</code> (Brotli/gzip negotiation),
+<code>ratelimiter</code>, <code>recovery</code>.</li>
+<li><strong>Auth:</strong> <code>auth</code>, <code>security</code>,
+<code>middleware</code> (OAuth2/JWT, RBAC, API keys, audit wiring).</li>
+<li><strong>Persistence:</strong> <code>database</code> (PostgreSQL
+state), <code>Storage</code> (MinIO/S3 blobs), <code>cache</code>
+(optional Redis only if a measured need exists).</li>
+<li><strong>Observability/alerting:</strong> <code>observability</code>
+(OpenTelemetry/Prometheus), <code>Herald</code> (alert routing),
+<code>eventbus</code> (internal domain-event fan-out).</li>
+<li><strong>Config:</strong> <code>config</code> (poll interval +
+jitter, runtime config).</li>
+<li><strong>Device presence:</strong> <code>discovery</code>,
+<code>mdns</code> (UNVERIFIED fit for the Android-on-Orange-Pi
+target).</li>
+<li><strong>Substrate:</strong> <code>containers</code> (canonical
+deployment substrate, §11.4.76).</li>
+</ul>
+<p><strong>NEW submodules</strong> (no catalogue cover; PUBLIC repos per
+D4, final list confirmed before creation): <code>ota-protocol</code>,
+<code>ota-artifact-validator</code>, <code>ota-rollout-engine</code>,
+<code>ota-update-engine-bridge</code>, <code>ota-android-agent</code>,
+<code>ota-telemetry-schema</code>. [master §10; submodule-reuse-map
+§4]</p>
+<blockquote>
+<p><strong>UNVERIFIED:</strong> the precise public API of each catalogue
+submodule has not been inspected this revision; “satisfies” claims are
+UNVERIFIED until confirmed. [submodule-reuse-map §7]</p>
+</blockquote>
+<h2 id="scale-trigger-to-split-into-services">9. Scale trigger to split
+into services</h2>
+<p>Extract a seam into its own service <strong>when any one
+fires</strong> (first-mover: rollout-engine; then telemetry ingestion):
+[adr-0003 §3.2]</p>
+<ol type="1">
+<li><strong>Divergent scaling pressure</strong> — telemetry-ingestion
+load and rollout-control load need materially different horizontal
+scaling. (Telemetry is plausibly the higher-volume of the two —
+<strong>UNVERIFIED</strong>; confirm via MVP load tests.)</li>
+<li><strong>Second OS target enters active development</strong> — the
+Linux/universal phase begins, so the <code>os-adapter</code> seam is
+extracted and Android/Linux paths deploy and scale independently.</li>
+<li><strong>Independent release cadence</strong> — a seam (most likely
+rollout-engine) needs a cadence the monolith’s release train
+blocks.</li>
+</ol>
+<p><strong>Numeric thresholds</strong> (device count, req/s, telemetry
+events/s) are <strong>UNVERIFIED</strong> — no load figures exist in the
+sources; set them from MVP load-test data and record in an ADR revision
+before the first split. Because the seams are extractable by
+construction (§5), satisfying a trigger is a <strong>lift-out</strong>,
+not a rewrite. [adr-0003 §3.2, §7]</p>
+<h2 id="testing-four-layer">10. Testing (four-layer)</h2>
+<p>Per HelixConstitution §1 (UNVERIFIED clause), every change ships four
+layers; safety-critical paths (signing-verify, apply, rollout-gate)
+target <strong>≥90% coverage</strong> with mutation immunity. [master
+§13; adr-0003 §6]</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What it asserts for this architecture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Source-presence gate</strong></td>
+<td>The seam packages (<code>artifact-validator</code>,
+<code>rollout-engine</code>, <code>ota-protocol</code>,
+<code>update_engine-bridge</code>, <code>os-adapter</code>,
+<code>telemetry-ingest</code>, <code>api</code>,
+<code>device-registry</code>) exist with their published port
+interfaces; the import-linter/boundary rule (§6) is present in CI
+config; the catalogue submodules (§8) are wired (not
+re-implemented).</td>
+</tr>
+<tr>
+<td><strong>2. Artifact gate</strong></td>
+<td>The build produces <strong>one</strong> Go binary (ADR-0003
+single-deployable); the binary embeds the catalogue bricks; the
+transport edge negotiates HTTP/3→HTTP/2 and the artifact route serves
+<code>identity</code> + Range (the CI/serving guard of §7 ships).</td>
+</tr>
+<tr>
+<td><strong>3. Runtime / integration</strong></td>
+<td>Boot the binary; exercise REST <code>/api/v1</code> over HTTP/3 with
+HTTP/2 fallback; stream a real <code>ZIP_STORED</code>
+<code>payload.bin</code> end-to-end with byte-range correctness + resume
+(the ADR-0004 §6 spike); confirm a cross-seam call only crosses via the
+port; confirm rollout-engine consumes telemetry signals and halts on
+threshold breach.</td>
+</tr>
+<tr>
+<td><strong>4. Mutation meta-test</strong></td>
+<td>Negate a boundary/seam invariant (e.g. allow a forbidden cross-seam
+import, or let the artifact route emit <code>br</code>) and assert the
+gate flips <strong>PASS→FAIL</strong>; negate a rollout halt condition
+and assert the rollout-gate test fails.</td>
+</tr>
+</tbody>
+</table>
+<p>No-bluff positive evidence only (§7.1, UNVERIFIED). The ADR-0004 §6
+spikes are the rock-solid-proof mechanism (§11.4.123, UNVERIFIED)
+closing the transport UNVERIFIEDs before those code paths are marked
+stable. [adr-0004 §8]</p>
+<h2 id="compliance-notes-helixconstitution">11. Compliance notes
+(HelixConstitution)</h2>
+<blockquote>
+<p>Clause numbers are carried from the corpus convention and are
+<strong>UNVERIFIED</strong> against the authoritative HelixConstitution
+text. [submodule-reuse-map §7]</p>
+</blockquote>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Clause</th>
+<th>How this architecture complies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.28 (decoupling)</td>
+<td>Each seam (§4) has one purpose, a well-defined port interface, and
+independent testability; the rollout-engine and os-adapter are
+extractable (§5); enforcement in §6. [adr-0003 §6]</td>
+</tr>
+<tr>
+<td>§11.4.6 / §11.4.8 (no-guessing / research-first)</td>
+<td>Built on the ADRs’ cited evidence; numeric split thresholds and
+transport spikes carried as <strong>UNVERIFIED</strong> rather than
+invented (§9, §7). [adr-0003 §7; adr-0004 §6]</td>
+</tr>
+<tr>
+<td>§11.4.74 (catalogue-first reuse)</td>
+<td>Cross-cutting concerns taken from the verified catalogue (§8); NEW
+submodules only where no catalogue cover exists. [master §10]</td>
+</tr>
+<tr>
+<td>§11.4.76 (containers substrate)</td>
+<td>The single deployable runs on the <code>containers</code> substrate;
+a future split reuses the same substrate (§3). [adr-0003 §6]</td>
+</tr>
+<tr>
+<td>§1 / §1.1 (four-layer + mutation)</td>
+<td>§10 testing; ≥90% floor on signing/apply/rollout-gate regardless of
+mono/micro packaging. [master §13]</td>
+</tr>
+<tr>
+<td>§11.4.123 (rock-solid proof)</td>
+<td>ADR-0004 §6 spikes close transport UNVERIFIEDs with executable
+evidence before the dependent paths are stable (§10).
+<strong>UNVERIFIED</strong> against clause text.</td>
+</tr>
+<tr>
+<td>D2 / D6 (locked)</td>
+<td>Native A/B + custom Go control plane (D2); mandated stack adopted
+verbatim (D6); engine wrap left to ADR-0001. [master §2]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-unverified-items">12. Open / UNVERIFIED items</h2>
+<ol type="1">
+<li><strong>ADR-0001 wrap vs fallback</strong> — the
+<code>rollout-engine</code> package fronts either hawkBit (gated) or the
+Go-native engine; both seam shapes carried until the gates close.
+[adr-0001 §5.3]</li>
+<li><strong>Numeric split thresholds</strong> — no load figures in
+sources; set from MVP load tests. <strong>UNVERIFIED.</strong> [adr-0003
+§7]</li>
+<li><strong>Transport spikes</strong> — Range-over-HTTP3 via
+<code>http3</code>+MinIO/S3; QUIC reachability + HTTP/2 fallback; Brotli
+tuning. <strong>UNVERIFIED (needs spike).</strong> [adr-0004 §6]</li>
+<li><strong>Catalogue submodule public surfaces</strong> —
+<code>auth</code>/<code>security</code>/<code>Storage</code>/<code>middleware</code>/<code>discovery</code>/<code>mdns</code>
+fit not yet inspected. <strong>UNVERIFIED.</strong> [submodule-reuse-map
+§7]</li>
+<li><strong>Boundary-enforcement tooling</strong> — the
+import-linter/<code>depguard</code> rule is mandatory; exact tool
+<strong>UNVERIFIED</strong>. [adr-0003 §3.1]</li>
+<li><strong>Constitution clause numbers</strong> — carried from corpus
+convention. <strong>UNVERIFIED.</strong></li>
+</ol>
+<h2 id="sources">13. Sources</h2>
+<p>All paths relative to <code>docs/research/main_specs/</code>.</p>
+<ul>
+<li><a
+href="../../research/adr/adr-0003-server-topology.md"><code>research/adr/adr-0003-server-topology.md</code></a>
+— modular-monolith decision, seams, scale trigger, compliance.</li>
+<li><a
+href="../../research/adr/adr-0004-transport.md"><code>research/adr/adr-0004-transport.md</code></a>
+— HTTP/3→HTTP/2, Brotli two-class rule, artifact
+Range/<code>ZIP_STORED</code>/<code>identity</code>, resume.</li>
+<li><a
+href="../../research/adr/adr-0001-wrapped-engine.md"><code>research/adr/adr-0001-wrapped-engine.md</code></a>
+— hawkBit wrap (gated) vs Go-native rollout-engine fallback;
+rollout-engine seam shape.</li>
+<li><a
+href="../../research/adr/adr-0002-supply-chain-trust.md"><code>research/adr/adr-0002-supply-chain-trust.md</code></a>
+— signer abstraction + verify-gate seam (artifact-validator integration
+point).</li>
+<li><a
+href="../../00-master/2026-06-07-helix-ota-design.md"><code>00-master/2026-06-07-helix-ota-design.md</code></a>
+— locked decisions, mandated stack, §4 architecture, §10 catalogue, §13
+testing.</li>
+<li><a
+href="../../00-master/submodule_reuse_map.md"><code>00-master/submodule_reuse_map.md</code></a>
+— component→submodule bindings, NEW-submodule boundaries, anti-bluff
+notes.</li>
+<li><a
+href="artifact_validation.md"><code>artifact_validation.md</code></a>,
+<a
+href="telemetry_processing.md"><code>telemetry_processing.md</code></a>
+— sibling server specs for the validator and telemetry seams.</li>
+</ul>
+</body>
+</html>

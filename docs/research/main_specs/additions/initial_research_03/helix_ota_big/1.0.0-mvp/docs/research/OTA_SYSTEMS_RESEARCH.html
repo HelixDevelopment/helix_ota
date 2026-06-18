@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix OTA</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Helix OTA</h1>
+</header>
+<h1
+id="comprehensive-ota-over-the-air-update-systems-research">Comprehensive
+OTA (Over-The-Air) Update Systems Research</h1>
+<blockquote>
+<p><strong>Date:</strong> March 2026<br />
+<strong>Purpose:</strong> Foundation for designing a custom OTA system
+targeting Android 15 on RK3588 (Orange Pi 5 Max)<br />
+<strong>Scope:</strong> Exhaustive survey of all major open-source and
+commercial OTA solutions</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-android-ota-systems">Android OTA Systems</a></li>
+<li><a href="#2-embeddediot-ota-systems">Embedded/IoT OTA
+Systems</a></li>
+<li><a href="#3-linux-distribution-ota">Linux Distribution OTA</a></li>
+<li><a href="#4-windows-ota">Windows OTA</a></li>
+<li><a href="#5-commercial-solutions">Commercial Solutions</a></li>
+<li><a href="#6-android-15--rk3588-specifics">Android 15 / RK3588
+Specifics</a></li>
+<li><a href="#7-comparative-analysis">Comparative Analysis</a></li>
+<li><a href="#8-recommendations-for-custom-ota-design">Recommendations
+for Custom OTA Design</a></li>
+</ol>
+<hr />
+<h2 id="android-ota-systems">1. Android OTA Systems</h2>
+<h3 id="aosp-update-engine-update_engine">1.1 AOSP Update Engine
+(update_engine)</h3>
+<p><strong>Architecture Overview:</strong> - The
+<code>update_engine</code> daemon (<code>system/update_engine/</code> in
+AOSP) is the core component responsible for applying A/B (seamless)
+updates on Android and ChromeOS. - Runs as a background daemon with low
+I/O priority to avoid disrupting the user experience. - Shared codebase
+between Android and ChromeOS.</p>
+<p><strong>Key Components &amp; Data Flow:</strong> 1. <strong>Update
+Check:</strong> The <code>UpdateCheckScheduler</code> periodically polls
+the update server (Omaha protocol) for available updates. 2.
+<strong>Download:</strong> The <code>DownloadAction</code> streams the
+update payload directly from network to the inactive partition — no
+intermediate cache storage is needed. 3. <strong>Install:</strong> The
+<code>InstallPlan</code> drives <code>FilesystemVerifierAction</code>
+and <code>ApplyPayloadAction</code> which apply operations (REPLACE,
+REPLACE_BZ, REPLACE_XZ, ZERO, SOURCE_COPY, SOURCE_BSDIFF, PUFFDIFF) to
+the inactive slot. 4. <strong>Post-install:</strong> After writing,
+partitions are mounted at <code>/postinstall</code> for verification. 5.
+<strong>Boot Control:</strong> Sets the active slot via
+<code>IBootControl</code> HAL, marking the new partition as bootable and
+setting the old one as uninstallable.</p>
+<p><strong>Payload Format:</strong> - An OTA zip contains
+<code>payload.bin</code>, <code>payload_properties.txt</code>, and
+<code>care_map.pb</code>. - <code>payload.bin</code> structure: Header
+(magic, version, manifest length, manifest signature, metadata
+signature) → Manifest (list of partition operations) → Extra data blobs.
+- The manifest describes operations per partition with source/target
+digest verification (SHA-256).</p>
+<p><strong>Update Verification Mechanisms:</strong> - SHA-256 hash
+verification of source and target partitions. - RSA signature
+verification of the payload manifest (Google’s key or OEM key). -
+Post-install verification: partitions are mounted and checked for basic
+bootability. - dm-verity verification on boot. -
+<code>care_map.pb</code> defines which blocks need verity check after
+update.</p>
+<p><strong>Rollback Capabilities:</strong> - A/B design inherently
+supports rollback: if the new slot fails to boot, the bootloader
+automatically falls back to the old slot. - Boot control HAL manages
+<code>unbootable</code> flag — if new slot fails to boot N times, it’s
+marked unbootable. - <code>snippet</code> rollback protection via
+Android Verified Boot (AVB).</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Omaha protocol supports
+fractional rollout — the server returns “no update” to a percentage of
+devices. - Google Play Services manages rollout percentages server-side.
+- Staged rollout: 1% → 5% → 10% → 25% → 50% → 100%.</p>
+<p><strong>Client-Server Protocol:</strong> - <strong>Omaha
+Protocol</strong> (Google’s update protocol): XML-based request/response
+over HTTPS. - Request includes: app_id, version, hardware_class,
+language, delta_ok, additional attributes. - Response includes: status,
+update check result, URLs, manifest, hash.</p>
+<p><strong>Language/Technology Stack:</strong> - C++ (core daemon),
+Brillo (ChromeOS derivative), DBus IPC, Binder (Android). - Build:
+Soong/Blueprint.</p>
+<p><strong>License:</strong> Apache 2.0 (AOSP)</p>
+<p><strong>Scalability:</strong> Google manages billions of Android
+devices; server infrastructure scales horizontally. Client is
+lightweight.</p>
+<p><strong>Strengths:</strong> - Battle-tested at Google scale (billions
+of devices). - Seamless, no-downtime updates. - Built-in rollback
+protection. - Delta updates supported (reduces bandwidth). - Integrated
+with Android security model (dm-verity, AVB).</p>
+<p><strong>Weaknesses:</strong> - Complex codebase; difficult to modify
+or extend. - Tightly coupled to AOSP build system. - Omaha protocol is
+XML-heavy and somewhat opaque. - Requires dual partition slots (A/B) or
+Virtual A/B. - Server-side infrastructure is not open-sourced.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Full support —
+this IS the Android OTA mechanism. Must be used or wrapped.</p>
+<p><strong>Encapsulatable:</strong> Partially. The update_engine client
+can be driven by a custom server (replace Omaha), but the payload format
+and partition layout must be maintained.</p>
+<hr />
+<h3 id="android-recovery-mode-ota">1.2 Android Recovery Mode OTA</h3>
+<p><strong>Architecture Overview:</strong> - The legacy (non-A/B) update
+mechanism, now deprecated starting Android 15. - Device reboots into a
+special recovery mode to apply the update. - Update package is
+downloaded to <code>/cache</code> or <code>/data</code> partition while
+the system is running.</p>
+<p><strong>Key Components &amp; Data Flow:</strong> 1.
+<strong>Download:</strong> System UI downloads OTA zip to
+<code>/cache</code> or <code>/data/ota/</code>. 2. <strong>Reboot to
+Recovery:</strong> <code>RecoverySystem.installPackage()</code> triggers
+reboot to recovery. 3. <strong>Verification:</strong> Recovery verifies
+the OTA package signature (RSA against embedded certificates in
+<code>/system/etc/security/otacerts.zip</code>). 4.
+<strong>Apply:</strong> <code>edify</code> scripting language
+(<code>updater</code> binary) executes the update script inside the zip.
+5. <strong>Reboot:</strong> Device reboots into the updated system.</p>
+<p><strong>Update Verification:</strong> - Package signature
+verification (RSA). - <code>assert()</code> commands in the updater
+script verify device compatibility. - Post-update dm-verity handles
+runtime integrity.</p>
+<p><strong>Rollback Capabilities:</strong> - Limited. If update fails
+mid-application, device may be bricked. - No automatic rollback — manual
+reflash required. - Some implementations use a <code>backup</code>
+partition to store the old system image.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Same Omaha protocol on
+server side. - Client just downloads and applies when told.</p>
+<p><strong>Client-Server Protocol:</strong> Same Omaha protocol as A/B
+updates.</p>
+<p><strong>Language/Technology Stack:</strong> - C/C++ (recovery
+binary), edify scripting language, Java (RecoverySystem API).</p>
+<p><strong>License:</strong> Apache 2.0 (AOSP)</p>
+<p><strong>Strengths:</strong> - Simpler than A/B updates. - No need for
+dual partition slots. - Lower storage requirements. - Well-understood,
+long history.</p>
+<p><strong>Weaknesses:</strong> - <strong>DEPRECATED in Android
+15.</strong> - Downtime during update (device is unusable in recovery).
+- Risk of bricking if update is interrupted. - No automatic rollback. -
+Requires dedicated <code>/cache</code> or <code>/data</code> space for
+update package.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> DEPRECATED.
+Android 15 CDD effectively mandates Virtual A/B. Not recommended for new
+designs.</p>
+<p><strong>Encapsulatable:</strong> Yes — the recovery update flow can
+be wrapped, but it’s legacy.</p>
+<hr />
+<h3 id="ab-seamless-updates-system">1.3 A/B (Seamless) Updates
+System</h3>
+<p><strong>Architecture Overview:</strong> - Introduced in Android 7.0,
+mandated for new devices since Android 8.0. - Two complete sets of
+partitions: <code>system_a</code>/<code>system_b</code>,
+<code>boot_a</code>/<code>boot_b</code>,
+<code>vendor_a</code>/<code>vendor_b</code>, etc. - Active slot is
+booted; update is written to inactive slot in background.</p>
+<p><strong>Key Components:</strong> - <strong>boot_control HAL:</strong>
+Manages slot selection, marks slots as bootable/unbootable. -
+<strong>update_engine:</strong> Background daemon that applies updates.
+- <strong>Slot suffixes:</strong> <code>_a</code> and <code>_b</code>
+appended to partition names. - <strong>misc partition:</strong> Stores
+boot control metadata (active slot, retry count, boot state).</p>
+<p><strong>Partition Layout:</strong></p>
+<pre><code>boot_a, boot_b
+system_a, system_b  
+vendor_a, vendor_b
+dtbo_a, dtbo_b
+vbmeta_a, vbmeta_b
+init_boot_a, init_boot_b  (Android 13+)
+misc (boot control info)</code></pre>
+<p><strong>Update Flow:</strong> 1. update_engine checks for update →
+downloads payload → writes to inactive slot. 2. Post-install
+verification (mount and check). 3. Mark inactive slot as active via
+boot_control HAL. 4. Reboot into new slot. 5. If boot fails N times,
+bootloader rolls back to old slot.</p>
+<p><strong>Verification:</strong> Same as update_engine (SHA-256, RSA
+signatures, dm-verity, post-install mount check).</p>
+<p><strong>Rollback:</strong> Automatic via bootloader — if new slot
+fails to boot within retry count, old slot is used.</p>
+<p><strong>Storage Overhead:</strong> ~2x for all A/B-protected
+partitions (significant on devices with limited storage).</p>
+<p><strong>Strengths:</strong> - Seamless, no-downtime updates. -
+Automatic rollback. - Reliable and battle-tested.</p>
+<p><strong>Weaknesses:</strong> - High storage overhead (dual
+partitions). - Flash wear from writing entire partitions. - Complexity
+in partition management.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Supported, but
+Virtual A/B is the current standard.</p>
+<p><strong>Encapsulatable:</strong> The A/B mechanism is
+hardware/bootloader-level; can be encapsulated by a higher-level OTA
+system.</p>
+<hr />
+<h3 id="virtual-ab-updates">1.4 Virtual A/B Updates</h3>
+<p><strong>Architecture Overview:</strong> - Introduced in Android 11,
+Android’s <strong>main update mechanism</strong> as of Android 13+. -
+Builds on A/B updates but uses <strong>snapshot-based merging</strong>
+via dm-snapshot instead of requiring dedicated B partitions. - Uses
+<code>super</code> partition with dynamic partitions — COW
+(Copy-on-Write) snapshots during update. - Non-A/B is deprecated in
+Android 15.</p>
+<p><strong>Key Innovation:</strong> - Instead of having physical
+<code>_b</code> partitions, Virtual A/B uses the <code>super</code>
+partition’s free space + COW snapshots. - During update, changes are
+written to COW snapshots. On reboot, the new system boots from
+snapshots. - After successful boot, snapshots are
+<strong>merged</strong> into the actual partitions in the background
+(merge can be interrupted and resumed).</p>
+<p><strong>Components:</strong> - <strong>snapshotctl:</strong> Manages
+COW snapshots. - <strong>update_engine:</strong> Same daemon, with
+Virtual A/B support. - <strong>dm-snapshot:</strong> Device-mapper
+snapshot target in Linux kernel. - <strong>libsnapshot:</strong>
+Userspace library for snapshot management. - <strong>super
+partition:</strong> Contains dynamic partitions (system, vendor,
+product, odm, etc.).</p>
+<p><strong>Update Flow:</strong> 1. update_engine creates COW snapshots
+for each partition being updated. 2. Update is written into snapshots
+(not touching live data). 3. On reboot, device boots from snapshot. 4.
+<code>snapshotctl</code> merges snapshots in background after successful
+boot. 5. If merge is interrupted, it resumes on next boot. 6. If boot
+fails, bootloader falls back — snapshots are discarded.</p>
+<p><strong>Storage Overhead:</strong> Much less than legacy A/B — only
+needs COW space for changed blocks, not full duplicate partitions.
+Typically 30-50% of A/B overhead.</p>
+<p><strong>Verification:</strong> Same mechanisms as A/B (SHA-256, RSA,
+dm-verity, post-install).</p>
+<p><strong>Rollback:</strong> Automatic. Failed boot → snapshots
+discarded → old system intact.</p>
+<p><strong>Strengths:</strong> - Lower storage overhead than legacy A/B.
+- Same seamless update experience. - Mandatory in Android 13+
+(effectively). - Better for devices with limited storage.</p>
+<p><strong>Weaknesses:</strong> - More complex implementation
+(dm-snapshot, COW, merge logic). - Merge phase can be slow on large
+partitions. - Requires kernel support for dm-snapshot and dm-user. -
+More complex boot flow.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> <strong>This is
+the required mechanism for Android 15.</strong> Must be implemented or
+adapted for RK3588.</p>
+<p><strong>Encapsulatable:</strong> The update_engine + Virtual A/B
+mechanism can be driven by a custom server. The payload format and merge
+logic must be preserved.</p>
+<hr />
+<h3 id="googles-ota-infrastructure">1.5 Google’s OTA Infrastructure</h3>
+<p><strong>Architecture Overview:</strong> - Google operates the
+server-side infrastructure for Pixel and GMS devices. - Uses the
+<strong>Omaha Protocol</strong> for update checks and delivery. - Update
+payloads hosted on Google’s CDN.</p>
+<p><strong>Key Components:</strong> - <strong>Omaha Server:</strong>
+Update check service (XML-based request/response). - <strong>Payload
+Server:</strong> Hosts OTA payloads for download. - <strong>Rollout
+Service:</strong> Manages phased deployment percentages. - <strong>CUPS
+(Chrome OS Update Server):</strong> Separate server for ChromeOS.</p>
+<p><strong>Client-Server Protocol:</strong> - Omaha Protocol v3 (XML
+over HTTPS). - Request: app_id, version, hardware_class, delta_ok,
+update_check. - Response: status, urls, manifest, packages (with hash,
+size).</p>
+<p><strong>Phased Deployment:</strong> - Server-controlled rollout
+percentages. - Device randomness determines which cohort a device falls
+into. - Can pause/resume rollouts.</p>
+<p><strong>License:</strong> Proprietary (server-side); Client is Apache
+2.0 in AOSP.</p>
+<p><strong>Scalability:</strong> Billions of devices globally; uses
+Google’s CDN infrastructure.</p>
+<p><strong>Strengths:</strong> - Battle-tested at unprecedented scale. -
+Phased rollout support. - Delta updates for bandwidth efficiency. -
+Tight integration with Android security model.</p>
+<p><strong>Weaknesses:</strong> - Server-side is proprietary and not
+available for custom deployments. - Omaha protocol is verbose (XML). -
+Limited customization options for OEMs.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Server not
+available for custom use; must build custom server or use
+alternative.</p>
+<p><strong>Encapsulatable:</strong> The Omaha client in AOSP can be
+redirected to a custom server by changing the update URL.</p>
+<hr />
+<h3 id="lineageos-ota-system">1.6 LineageOS OTA System</h3>
+<p><strong>Architecture Overview:</strong> - Simple REST API server that
+provides update metadata. - Client is the built-in Updater app in
+LineageOS ROM. - No phased rollout, no delta updates (traditionally),
+simple full-update model.</p>
+<p><strong>Key Components &amp; Data Flow:</strong> 1. Client (Updater
+app) sends POST request to OTA server with device info. 2. Server
+responds with JSON containing update metadata (URL, MD5, filename,
+timestamp, channel). 3. Client downloads the full ROM zip. 4. User
+applies update through recovery or the Updater app.</p>
+<p><strong>API Format:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;incremental&quot;</span><span class="fu">:</span> <span class="st">&quot;7f96568932&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;api_level&quot;</span><span class="fu">:</span> <span class="dv">19</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;url&quot;</span><span class="fu">:</span> <span class="st">&quot;http://download.lineageos.org/update.zip&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;1391086037&quot;</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;md5sum&quot;</span><span class="fu">:</span> <span class="st">&quot;4e0a335b378035d12cb6626b6623072b&quot;</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;changes&quot;</span><span class="fu">:</span> <span class="st">&quot;http://download.lineageos.org/CHANGES.txt&quot;</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;nightly&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;filename&quot;</span><span class="fu">:</span> <span class="st">&quot;lineage-21-20240130-NIGHTLY-device.zip&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;error&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Server Configuration:</strong> - Set
+<code>cm.updater.uri</code> in <code>build.prop</code> to point to
+custom OTA server URL. - Or override
+<code>conf_update_server_url_def</code> in <code>values.xml</code>.</p>
+<p><strong>Update Verification:</strong> MD5 checksum only (no
+cryptographic signatures beyond standard Android package
+verification).</p>
+<p><strong>Rollback:</strong> Not supported — manual reflash
+required.</p>
+<p><strong>Rollout:</strong> Not supported — all devices see all updates
+simultaneously.</p>
+<p><strong>Language/Technology Stack:</strong> - Server: PHP or Node.js
+(community implementations). - Client: Java/Android (Updater app in
+AOSP/LineageOS).</p>
+<p><strong>License:</strong> Apache 2.0 / GPLv2 (various components)</p>
+<p><strong>Scalability:</strong> Simple; limited by CDN capacity. No
+server-side device management.</p>
+<p><strong>Strengths:</strong> - Extremely simple to implement and
+deploy. - Works with any custom ROM. - Open-source server
+implementations available. - Easy to self-host.</p>
+<p><strong>Weaknesses:</strong> - No phased rollout. - No delta updates.
+- No rollback support. - MD5-only verification (weak). - No device
+management or inventory. - Recovery-mode only (downtime during
+update).</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Can work but
+doesn’t leverage A/B or Virtual A/B. Would need significant
+enhancement.</p>
+<p><strong>Encapsulatable:</strong> Very easily encapsulated — it’s just
+a REST API + download URL.</p>
+<hr />
+<h2 id="embeddediot-ota-systems">2. Embedded/IoT OTA Systems</h2>
+<h3 id="mender.io">2.1 Mender.io</h3>
+<p><strong>Architecture Overview:</strong> - End-to-end, client-server
+OTA update platform for embedded Linux and IoT devices. - Supports full
+system updates (rootfs), application updates, and container updates. -
+Enterprise and open-source editions.</p>
+<p><strong>Key Components:</strong> - <strong>Mender Client
+(mender):</strong> Runs on device, communicates with server, applies
+updates. - Written in Go. - Uses A/B partition scheme for rootfs
+updates. - State machine: Idle → Check Update → Download → Install →
+Reboot → Commit → Idle. - <strong>Mender Server:</strong> Web-based
+management UI + REST API. - Device inventory, deployment management,
+reporting. - Supports phased rollouts with percentage-based deployment.
+- <strong>Mender Artifact:</strong> Custom update artifact format
+(.mender) containing the update payload and metadata. - <strong>Mender
+Connect:</strong> Device-side component for troubleshooting and file
+transfer.</p>
+<p><strong>Data Flow:</strong> 1. Client polls server (or receives
+WebSocket notification) for pending deployments. 2. Server provides
+artifact download URL. 3. Client downloads artifact via HTTPS. 4. Client
+writes rootfs to inactive partition. 5. Reboot into new partition. 6. If
+successful, client sends commit signal → server marks deployment
+successful. 7. If failed (no commit within timeout), bootloader rolls
+back to old partition.</p>
+<p><strong>Update Verification:</strong> - RSA-2048/4096 signature
+verification on artifacts. - SHA-256 checksums on artifact contents. -
+TLS for transport security.</p>
+<p><strong>Rollback:</strong> - Automatic A/B rollback: if new partition
+doesn’t boot or doesn’t commit, bootloader reverts. - Configurable
+commit timeout.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Full phased rollout
+support in Enterprise edition. - Percentage-based deployment (e.g., 10%
+→ 50% → 100%). - Pause/resume capability. - Per-device-group
+deployment.</p>
+<p><strong>Client-Server Protocol:</strong> - REST API over HTTPS
+(JSON). - Device authentication via JWT tokens. - Polling model
+(default: every 30 minutes) or WebSocket push.</p>
+<p><strong>Language/Technology Stack:</strong> - Client: Go - Server: Go
+(backend), JavaScript/React (frontend) - Artifact: Custom format (tar.gz
+with manifest and signatures) - Integrations: Yocto, Buildroot, Debian,
+Ubuntu Core</p>
+<p><strong>License:</strong> - Client: Apache 2.0 / MIT - Server: Apache
+2.0 (open-source) + Enterprise (commercial) - Enterprise features: RBAC,
+phased rollout, dual hosting, compliance reporting</p>
+<p><strong>Scalability:</strong> - Tested with 10,000+ devices in
+open-source. - Enterprise supports 100,000+ devices. - Horizontally
+scalable server architecture.</p>
+<p><strong>Strengths:</strong> - Mature, well-documented,
+production-proven (1M+ devices). - End-to-end solution (client + server
++ UI). - A/B updates with automatic rollback. - Artifact signing and
+verification. - Yocto integration is excellent (meta-mender). - Phased
+rollout support (Enterprise). - Application and container updates in
+addition to system updates. - Active community and commercial support. -
+Microcontroller (MCU) support added recently.</p>
+<p><strong>Weaknesses:</strong> - Enterprise features (phased rollout,
+RBAC) are paywalled. - Go client may be heavy for very
+resource-constrained devices. - Artifact format is Mender-specific (not
+standard). - Limited delta/differential update support (Enterprise only,
+and limited). - Requires dual rootfs partitions (A/B). - Server setup
+requires Docker or Kubernetes.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> -
+<strong>Partial.</strong> Mender is designed for Linux, not Android.
+Could theoretically manage the Linux kernel and rootfs on an Android
+device, but would conflict with Android’s own update mechanisms. - Not a
+natural fit for Android 15’s Virtual A/B system. - Could be used for
+non-Android Linux on RK3588.</p>
+<p><strong>Encapsulatable:</strong> Yes — Mender’s client-server
+protocol is well-documented REST API. A custom client or server could be
+built to interoperate.</p>
+<hr />
+<h3 id="rauc-robust-auto-update-controller">2.2 RAUC (Robust Auto-Update
+Controller)</h3>
+<p><strong>Architecture Overview:</strong> - Lightweight, flexible
+update client for embedded Linux devices. - Focuses on the device-side
+update process; server-agnostic. - Designed by Pengutronix for
+industrial and automotive applications.</p>
+<p><strong>Key Components:</strong> - <strong>RAUC Client
+(rauc):</strong> The update daemon running on the device. - C-based,
+~512KB binary — very lightweight. - D-Bus API for integration with
+applications. - State machine-based update process. - <strong>RAUC
+Bundle:</strong> Update artifact format (.raucb) — a SquashFS image
+containing: - Rootfs images (or other payloads). - manifest.raucm (JSON
+manifest). - Cryptographic signatures. - <strong>RAUC Hawkbit:</strong>
+Optional integration with Eclipse hawkBit for fleet management.</p>
+<p><strong>Data Flow:</strong> 1. RAUC receives update bundle (via
+download, USB, or external trigger). 2. Verifies bundle signature
+(X.509). 3. Determines target slot (active vs inactive in A/B scheme).
+4. Writes image to inactive slot. 5. Updates bootloader environment to
+boot from new slot. 6. Reboots into new system. 7. On successful boot,
+marks new slot as good.</p>
+<p><strong>Update Verification:</strong> - X.509 certificate-based
+signature verification (asymmetric cryptography). - SHA-256 hash
+verification of bundle contents. - Optional per-recipient encryption
+(asymmetric). - HTTP(S) streaming support (install without intermediate
+storage).</p>
+<p><strong>Rollback:</strong> - A/B partition scheme with automatic
+rollback via bootloader. - Configurable boot count — if new slot fails N
+times, reverts. - Custom hooks for pre/post-install verification.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Not built into RAUC
+itself — requires hawkBit integration for fleet management. - RAUC +
+hawkBit provides full phased rollout support.</p>
+<p><strong>Client-Server Protocol:</strong> - RAUC itself is
+server-agnostic. - D-Bus API on the device side. - hawkBit integration
+uses hawkBit’s DDI API (REST over HTTP).</p>
+<p><strong>Language/Technology Stack:</strong> - Client: C (GLib-based)
+- Build integration: Yocto (meta-rauc), Buildroot, PTXdist - Bundle
+format: SquashFS + JSON manifest - Cryptography: OpenSSL</p>
+<p><strong>License:</strong> LGPL-2.1</p>
+<p><strong>Scalability:</strong> Client is extremely lightweight. Fleet
+scalability depends on server (hawkBit or custom).</p>
+<p><strong>Strengths:</strong> - Very lightweight client (~512KB). -
+Clean, well-designed architecture. - X.509-based signing (industry
+standard). - Flexible — supports various partition layouts and update
+strategies. - Not tied to any specific server — server-agnostic. -
+Excellent Yocto integration (meta-rauc). - D-Bus API for application
+integration. - Supports A/B, recovery, and custom partition schemes. -
+HTTP(S) streaming (no intermediate storage needed). - Per-recipient
+encryption. - Active development by Pengutronix (commercial +
+community). - Clean architecture for complex scenarios.</p>
+<p><strong>Weaknesses:</strong> - No built-in server or fleet management
+UI. - Requires external server (hawkBit or custom) for fleet management.
+- No built-in delta update support. - Smaller community than Mender. -
+Less documentation compared to Mender.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> - Not designed
+for Android. Could potentially work with Linux on RK3588. - Would need
+significant adaptation for Android’s Virtual A/B mechanism.</p>
+<p><strong>Encapsulatable:</strong> Very encapsulatable. RAUC is
+designed to be server-agnostic and can be integrated into any OTA
+infrastructure.</p>
+<hr />
+<h3 id="swupdate">2.3 SWUpdate</h3>
+<p><strong>Architecture Overview:</strong> - Highly configurable and
+extensible update framework for embedded Linux. - Supports multiple
+update strategies: A/B, recovery, single-copy with fallback. -
+Integrated web server for local updates + hawkBit backend for fleet
+deployments.</p>
+<p><strong>Key Components:</strong> - <strong>SWUpdate Client:</strong>
+Core daemon running on device. - C-based with Lua scripting support. -
+Parser-based architecture: different parsers handle different image
+formats. - Supports multiple handlers: raw, ubivol, CFI (flash), ext4,
+etc. - <strong>SWUpdate Web Server:</strong> Built-in web server for
+local (SOHO router-style) updates. - <strong>hawkBit
+Integration:</strong> For fleet deployment via Eclipse hawkBit. -
+<strong>SWU Image Format:</strong> Custom .swu format (CPIO archive with
+sw-description manifest).</p>
+<p><strong>Data Flow:</strong> 1. SWUpdate receives update image
+(download, USB, or from hawkBit). 2. Parses sw-description to determine
+what to install and where. 3. Verifies signature (RSA or CMS). 4. Writes
+images to target partitions/storage. 5. Updates bootloader environment.
+6. Reboots into new system.</p>
+<p><strong>Update Verification:</strong> - RSA or CMS signature
+verification. - SHA-256 hash verification. - Hardware revocation list
+support. - Custom verification scripts (Lua).</p>
+<p><strong>Rollback:</strong> - A/B partition support with
+bootloader-based rollback. - Recovery partition support. - Configurable
+post-install verification scripts.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Via hawkBit integration
+only. - No built-in phased rollout.</p>
+<p><strong>Client-Server Protocol:</strong> - hawkBit DDI API for fleet
+management. - Built-in web server for local updates. - Custom REST API
+endpoints.</p>
+<p><strong>Language/Technology Stack:</strong> - Client: C (with Lua
+scripting) - Image format: CPIO archive + sw-description
+(JSON/libconfig) - Build: Yocto, Buildroot - Crypto:
+OpenSSL/mbedTLS/wolfSSL</p>
+<p><strong>License:</strong> GPL-2.0 (or later)</p>
+<p><strong>Scalability:</strong> Depends on backend (hawkBit). Client is
+lightweight.</p>
+<p><strong>Strengths:</strong> - Very flexible and configurable. -
+Multiple update strategies supported. - Built-in web server for local
+updates. - Lua scripting for custom install logic. - Supports many
+storage types (eMMC, NAND, NOR, SPI, UBI, etc.). - Good hawkBit
+integration. - Active community. - Supports hardware compability
+checking.</p>
+<p><strong>Weaknesses:</strong> - GPL license may be restrictive for
+some commercial products. - Configuration is complex (sw-description
+format). - No built-in server/fleet management UI. - Less polished than
+Mender. - Security model is less robust than RAUC’s X.509 approach.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Linux-only; not
+designed for Android. Could work for Linux on RK3588.</p>
+<p><strong>Encapsulatable:</strong> Yes, especially with its modular
+handler architecture.</p>
+<hr />
+<h3 id="eclipse-hawkbit">2.4 Eclipse hawkBit</h3>
+<p><strong>Architecture Overview:</strong> - Open-source software update
+server for IoT device fleets. - Provides the management/backend layer;
+works with various update clients (SWUpdate, RAUC, Mender, custom). -
+Eclipse Foundation project.</p>
+<p><strong>Key Components:</strong> - <strong>hawkBit Server:</strong>
+Spring Boot-based Java application. - Management UI (Angular-based web
+interface). - REST API (DDI - Device Direct Integration, MGMT -
+Management API). - Rollout management with phased deployment. -
+<strong>hawkBit Device Simulator:</strong> For testing. - <strong>Update
+Clients:</strong> Not provided by hawkBit — uses existing clients (RAUC,
+SWUpdate, etc.).</p>
+<p><strong>Data Flow:</strong> 1. Devices poll hawkBit DDI API for
+pending updates. 2. hawkBit returns update metadata (URLs, hashes,
+size). 3. Device downloads artifacts from configured artifact repository
+(e.g., S3, local file server). 4. Device applies update using its native
+update mechanism. 5. Device reports status back to hawkBit. 6. hawkBit
+tracks deployment progress per device.</p>
+<p><strong>Update Verification:</strong> Server-side only — hawkBit
+verifies artifact integrity at upload time. Device-side verification is
+delegated to the update client.</p>
+<p><strong>Rollback:</strong> Not directly managed by hawkBit —
+delegated to client-side mechanism.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - <strong>Excellent
+support.</strong> This is hawkBit’s core strength. - Rollout groups with
+configurable percentages. - Auto-confirmation or manual confirmation per
+group. - Trigger-based rollouts. - Distribution set management. - Target
+filter queries for selective deployment.</p>
+<p><strong>Client-Server Protocol:</strong> - DDI (Device Direct
+Integration) API: REST over HTTP, JSON. - Polling-based (devices poll
+for updates). - Standard endpoints:
+<code>/controller/v1/{targetId}</code>. - Management API: REST, JSON,
+for administrative operations.</p>
+<p><strong>Language/Technology Stack:</strong> - Server: Java (Spring
+Boot), Angular (UI) - Database: SQL (MySQL, PostgreSQL, H2) - Artifact
+storage: File system, S3, Azure Blob</p>
+<p><strong>License:</strong> EPL-2.0 (Eclipse Public License 2.0)</p>
+<p><strong>Scalability:</strong> - Designed for fleet management at
+scale. - Horizontal scaling via Spring Boot and database clustering. -
+Tested with hundreds of thousands of devices.</p>
+<p><strong>Strengths:</strong> - Best-in-class phased rollout/rollout
+management. - Server-only — works with any update client. - Clean DDI
+API for device integration. - Professional management UI. - Eclipse
+Foundation governance. - Mature and widely deployed. - Flexible
+deployment strategies.</p>
+<p><strong>Weaknesses:</strong> - Java/Spring Boot server is
+resource-heavy. - No built-in update client — must integrate with
+RAUC/SWUpdate/custom. - DDI API is polling-based (no push/WebSocket). -
+Setup complexity (Java, database, etc.). - Less active development than
+Mender.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Could serve as
+the backend server for a custom Android OTA system. The DDI API could be
+adapted.</p>
+<p><strong>Encapsulatable:</strong> Yes — hawkBit is specifically
+designed to be client-agnostic. Custom Android client could use the DDI
+API.</p>
+<hr />
+<h3 id="ostree-rpm-ostree">2.5 OSTree + rpm-ostree</h3>
+<p><strong>Architecture Overview:</strong> - OSTree (libostree) is a
+“git for operating system binaries” — content-addressed, versioned
+filesystem tree management. - rpm-ostree builds on OSTree to provide
+hybrid image/package updates for RPM-based systems. - Used by Fedora
+CoreOS, Fedora Silverblue, CentOS Atomic, and others. -
+<strong>Note:</strong> Development focus is shifting to
+<code>bootc</code> (bootable containers) as the successor.</p>
+<p><strong>Key Components:</strong> - <strong>OSTree:</strong> Core
+library for managing versioned filesystem trees. - Content-addressed
+object store (like git, but for files). - Hard-link based checkout
+(zero-cost for identical files). - Atomic swap of bootloader target. -
+<strong>rpm-ostree:</strong> Layer on top of OSTree that adds RPM
+package support. - Can layer RPMs on top of base OSTree commit. - Hybrid
+image/package model. - <code>rpm-ostree install/upgrade/rollback</code>
+commands. - <strong>bootc:</strong> Emerging successor, using bootable
+OCI container images.</p>
+<p><strong>Data Flow:</strong> 1. <code>rpm-ostree upgrade</code> pulls
+new OSTree commit from remote repository. 2. New commit is deployed as a
+new deployment (hard-linked). 3. On next boot, bootloader points to new
+deployment. 4. Old deployment remains available for rollback. 5.
+Automatic cleanup of old deployments after N deployments.</p>
+<p><strong>Update Verification:</strong> - GPG signature verification on
+OSTree commits. - Content-addressed storage ensures integrity (SHA-256
+of content). - Static delta updates for efficient bandwidth usage.</p>
+<p><strong>Rollback:</strong> - Instant:
+<code>rpm-ostree rollback</code> swaps bootloader entry. - Previous
+deployment is always preserved. - Configurable number of deployments to
+keep.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Not built into OSTree
+itself. - Fedora uses different update channels (stable, testing, etc.).
+- Could be implemented with custom infrastructure.</p>
+<p><strong>Client-Server Protocol:</strong> - OSTree repository protocol
+(HTTP-based, like git smart HTTP). - Static delta files served over
+HTTP.</p>
+<p><strong>Language/Technology Stack:</strong> - C (libostree core) -
+Python (rpm-ostree compose) - Rust (bootc) - Build: Meson, RPM</p>
+<p><strong>License:</strong> LGPL-2.1 (OSTree), Apache-2.0
+(rpm-ostree)</p>
+<p><strong>Scalability:</strong> OSTree is highly efficient — delta
+updates, content deduplication, hard-link based. Server is a static HTTP
+repository.</p>
+<p><strong>Strengths:</strong> - Atomic updates with instant rollback. -
+Content-addressed = deduplication and integrity. - Hybrid image/package
+model (rpm-ostree). - Static deltas for bandwidth efficiency. -
+Zero-cost for unchanged files (hard links). - Battle-tested (Fedora
+CoreOS, Silverblue). - Works well with container-based workflows
+(bootc).</p>
+<p><strong>Weaknesses:</strong> - RPM-centric (rpm-ostree); not
+applicable to non-RPM systems directly. - Read-only /usr filesystem
+model. - Not designed for Android. - Learning curve for OSTree concepts.
+- bootc is still maturing. - Limited partial update support (mostly full
+system updates).</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not directly
+applicable to Android. Could be used for Linux on RK3588 but would need
+significant adaptation.</p>
+<p><strong>Encapsulatable:</strong> OSTree is a library that can be
+integrated. The repository protocol is simple HTTP.</p>
+<hr />
+<h3 id="foundries.io">2.6 Foundries.io</h3>
+<p><strong>Architecture Overview:</strong> - IoT device development and
+management platform. - Based on OSTree for update delivery. -
+FoundriesFactory: cloud-based CI/CD + OTA platform. - Linux
+microPlatform (LmP): minimal, OTA-updatable OS for IoT.</p>
+<p><strong>Key Components:</strong> - <strong>FoundriesFactory:</strong>
+Cloud service providing CI/CD, OTA, and device management. -
+<strong>Linux microPlatform (LmP):</strong> Reference OS built with
+Yocto, updated via OSTree. - <strong>fioctl:</strong> CLI tool for
+managing factories and devices. - <strong>aktualizr:</strong> OTA client
+(based on OSTree) running on devices.</p>
+<p><strong>Update Verification:</strong> - OSTree-based (GPG signatures,
+content-addressed). - Uptane framework for automotive-grade security. -
+Hardware root of trust support.</p>
+<p><strong>Rollback:</strong> OSTree-based instant rollback.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Via FoundriesFactory
+web UI. - Device group management. - Wave-based deployment.</p>
+<p><strong>Language/Technology Stack:</strong> - C++ (aktualizr client)
+- Python (fioctl CLI, server) - Yocto (LmP) - OSTree (update
+delivery)</p>
+<p><strong>License:</strong> Various open-source (MIT, Apache 2.0) +
+commercial subscription</p>
+<p><strong>Scalability:</strong> Cloud-managed; designed for fleet
+management.</p>
+<p><strong>Strengths:</strong> - Complete CI/CD to OTA pipeline. -
+Uptane security framework (automotive grade). - OSTree-based efficient
+updates. - Good for Yocto-based projects. - MCU support added.</p>
+<p><strong>Weaknesses:</strong> - Commercial subscription required. -
+Tied to FoundriesFactory cloud service. - Not designed for Android. -
+Smaller community.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Linux/IoT only;
+not applicable to Android.</p>
+<p><strong>Encapsulatable:</strong> Partially — aktualizr is open-source
+but designed for FoundriesFactory.</p>
+<hr />
+<h3 id="updatehub">2.7 UpdateHub</h3>
+<p><strong>Architecture Overview:</strong> - Cloud-based OTA update
+platform for embedded Linux devices. - Simplified, managed service
+approach.</p>
+<p><strong>Key Components:</strong> - <strong>UpdateHub Cloud:</strong>
+Managed server with web dashboard. - <strong>UpdateHub Agent:</strong>
+Device-side client (C-based). - Yocto integration (meta-updatehub).</p>
+<p><strong>Update Verification:</strong> RSA signature verification on
+packages.</p>
+<p><strong>Rollback:</strong> A/B partition with bootloader-based
+rollback.</p>
+<p><strong>Rollout/Phased Deployment:</strong> Supported via UpdateHub
+Cloud dashboard.</p>
+<p><strong>Language/Technology Stack:</strong> - Agent: C - Server:
+Cloud-hosted (proprietary) - Integration: Yocto</p>
+<p><strong>License:</strong> - Agent: MIT - Cloud: Proprietary (freemium
+model)</p>
+<p><strong>Strengths:</strong> - Easy to get started. - Managed cloud
+service. - Good Yocto integration.</p>
+<p><strong>Weaknesses:</strong> - Vendor lock-in to UpdateHub Cloud. -
+Limited customization. - Smaller community. - Cloud-dependent.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Linux only; not
+applicable to Android.</p>
+<p><strong>Encapsulatable:</strong> Limited — tied to UpdateHub
+Cloud.</p>
+<hr />
+<h3 id="nerveshub">2.8 NervesHub</h3>
+<p><strong>Architecture Overview:</strong> - OTA firmware management for
+Elixir/Nerves devices. - Designed specifically for the Nerves embedded
+Elixir framework.</p>
+<p><strong>Key Components:</strong> - <strong>NervesHub Web:</strong>
+Web dashboard for managing devices and firmware. - <strong>NervesHub
+Device:</strong> Device-side library (Elixir). - Firmware signed with
+Ed25519 or ECDSA keys.</p>
+<p><strong>Update Verification:</strong> Cryptographic signature
+verification (Ed25519/ECDSA).</p>
+<p><strong>Rollback:</strong> Not automatic — requires manual reversion
+to previous firmware.</p>
+<p><strong>Rollout/Phased Deployment:</strong> Supported via deployment
+groups.</p>
+<p><strong>Language/Technology Stack:</strong> - Elixir/Phoenix (server
+and device) - Nerves framework</p>
+<p><strong>License:</strong> Apache 2.0 (open-source) + commercial
+hosting</p>
+<p><strong>Scalability:</strong> Suitable for small-to-medium fleets;
+limited by Phoenix/Elixir scalability.</p>
+<p><strong>Strengths:</strong> - Excellent for Elixir/Nerves ecosystem.
+- Clean API and web interface. - Firmware signing built-in. -
+Open-source.</p>
+<p><strong>Weaknesses:</strong> - Elixir/Nerves ecosystem lock-in. - Not
+applicable to C/C++ or Android devices. - Small community. - Limited
+rollback support.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not applicable —
+Elixir/Nerves only.</p>
+<p><strong>Encapsulatable:</strong> Limited to Nerves ecosystem.</p>
+<hr />
+<h3 id="edgex-foundry">2.9 EdgeX Foundry</h3>
+<p><strong>Architecture Overview:</strong> - EdgeX Foundry is an
+<strong>IoT edge computing framework</strong>, not primarily an OTA
+update system. - It provides a microservices-based middleware for IoT
+edge computing. - OTA capability is not a core feature — it would need
+to be integrated via external tools.</p>
+<p><strong>Relevance to OTA:</strong> Indirect — EdgeX provides the
+infrastructure for managing IoT devices, but actual OTA updates would be
+handled by Mender, RAUC, hawkBit, or similar.</p>
+<p><strong>License:</strong> Apache 2.0</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not directly
+relevant for OTA.</p>
+<p><strong>Encapsulatable:</strong> N/A for OTA purposes.</p>
+<hr />
+<h3 id="bosch-iot-rollouts">2.10 Bosch IoT Rollouts</h3>
+<p><strong>Architecture Overview:</strong> - Commercial OTA update
+service from Bosch. - Part of the Bosch IoT Suite. - Targets automotive
+and industrial IoT.</p>
+<p><strong>Key Features:</strong> - Cloud-managed rollouts. - Firmware,
+software, and configuration updates. - Campaign-based deployment. -
+Integration with Bosch IoT Hub and IoT Things.</p>
+<p><strong>Update Verification:</strong> Cryptographic verification
+(details proprietary).</p>
+<p><strong>Rollback:</strong> Supported but details are proprietary.</p>
+<p><strong>Rollout/Phased Deployment:</strong> Full campaign-based
+rollout with targeting.</p>
+<p><strong>Language/Technology Stack:</strong> Proprietary (Java-based
+backend likely).</p>
+<p><strong>License:</strong> Proprietary / Commercial</p>
+<p><strong>Scalability:</strong> Enterprise-grade; designed for
+automotive scale.</p>
+<p><strong>Strengths:</strong> - Automotive-grade security and
+compliance. - Part of broader Bosch IoT Suite. - Campaign-based rollout.
+- Professional support.</p>
+<p><strong>Weaknesses:</strong> - Proprietary and expensive. - Vendor
+lock-in. - Limited public documentation. - Not open-source.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not specifically
+designed for Android. Could potentially manage Linux devices on
+RK3588.</p>
+<p><strong>Encapsulatable:</strong> No — proprietary service.</p>
+<hr />
+<h2 id="linux-distribution-ota">3. Linux Distribution OTA</h2>
+<h3 id="fedora-silverblue-ostree">3.1 Fedora Silverblue / OSTree</h3>
+<p><strong>Architecture Overview:</strong> - Fedora’s immutable desktop
+OS using OSTree for atomic system updates. - Read-only /usr, with /etc
+and /var writable. - Flatpak for application delivery. - Toolbox for
+development containers.</p>
+<p><strong>Update Mechanism:</strong> - <code>rpm-ostree upgrade</code>
+pulls new OSTree commit. - Hard-link based deployment — identical files
+are zero-cost. - Atomic swap at boot time via bootloader configuration.
+- Static delta updates for bandwidth efficiency.</p>
+<p><strong>Rollback:</strong> <code>rpm-ostree rollback</code> —
+instant, previous deployment always preserved.</p>
+<p><strong>Rollout:</strong> Different branches/channels (stable,
+testing, updates-testing).</p>
+<p><strong>License:</strong> LGPL-2.1 (OSTree), Apache-2.0 (rpm-ostree),
+various Fedora licenses</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Linux-only. Could
+run on RK3588 as Linux but not for Android.</p>
+<p><strong>Encapsulatable:</strong> OSTree is a library; the protocol is
+simple HTTP. Could be adapted.</p>
+<hr />
+<h3 id="ubuntu-core-snap-updates">3.2 Ubuntu Core / Snap Updates</h3>
+<p><strong>Architecture Overview:</strong> - Ubuntu Core is an
+immutable, all-snap OS for IoT. - Every component (kernel, OS, apps) is
+a snap package. - Snaps are SquashFS images with metadata and
+signatures.</p>
+<p><strong>Update Mechanism:</strong> - <code>snapd</code> daemon checks
+Snap Store periodically for updates. - Automatic background download and
+installation. - Snap-delta format for efficient OTA updates (50-90% size
+reduction in Ubuntu Core 26). - Channel-based: stable, candidate, beta,
+edge.</p>
+<p><strong>Update Verification:</strong> - Snap assertions:
+cryptographic signatures verifying snap authenticity. - Snap store is
+the central authority. - Model assertion ties device to authorized
+snaps.</p>
+<p><strong>Rollback:</strong> - Automatic: if new snap fails to start,
+snapd reverts to previous revision. - <code>snap revert</code> for
+manual rollback. - Up to 3 revisions kept by default.</p>
+<p><strong>Rollout/Phased Deployment:</strong> - Channel-based: promote
+from edge → beta → candidate → stable. - Snap Store controls which
+devices see which versions. - Progressive releases (beta feature).</p>
+<p><strong>Language/Technology Stack:</strong> - snapd: Go - Snaps:
+SquashFS + JSON metadata + assertions - Store: Proprietary (Canonical) -
+Client-server: Custom REST API over HTTPS</p>
+<p><strong>License:</strong> - snapd: GPL-3.0 - Ubuntu Core: Various
+open-source + proprietary bits - Snap Store: Proprietary (Canonical)</p>
+<p><strong>Scalability:</strong> Canonical manages the Snap Store for
+millions of devices.</p>
+<p><strong>Strengths:</strong> - Complete, integrated solution. -
+Automatic rollback. - Delta updates (snap-delta) are very efficient. -
+Channel-based deployment. - Transactional updates. - Security model with
+assertions. - Ubuntu Core 26 introduces much smaller updates.</p>
+<p><strong>Weaknesses:</strong> - Snap Store is proprietary
+(Canonical-controlled). - Vendor lock-in to Canonical ecosystem. - snapd
+is GPL-3.0 (copyleft concerns). - Slow startup times for snaps (SquashFS
+mount overhead). - Controversial in the Linux community. - Not designed
+for Android. - Requires Ubuntu Core OS.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not applicable to
+Android. Could run Ubuntu Core on RK3588 but not for Android OTA.</p>
+<p><strong>Encapsulatable:</strong> Limited — tightly coupled to snapd
+and Snap Store.</p>
+<hr />
+<h3 id="chromeos-update-mechanism">3.3 ChromeOS Update Mechanism</h3>
+<p><strong>Architecture Overview:</strong> - Uses the same
+<code>update_engine</code> as Android (shared codebase). - A/B partition
+scheme with USR-A and USR-B partitions. - Automatic background updates.
+- Update check at boot and periodically.</p>
+<p><strong>Key Differences from Android:</strong> - ChromeOS uses a
+simpler partition layout: <code>ROOT-A</code>, <code>ROOT-B</code>,
+<code>KERNEL-A</code>, <code>KERNEL-B</code>. - Update is applied to
+inactive partition, verified, then marked as active. - Sign-out (not
+reboot) can trigger update application. - P2P update sharing on local
+networks. - Enterprise policy for update management.</p>
+<p><strong>Update Flow:</strong> 1. <code>update_engine</code> checks
+Omaha server for updates. 2. Downloads payload in background. 3. Writes
+to inactive partition. 4. Post-install verification. 5. On next
+sign-out/reboot, new partition is used. 6. If fails, automatic
+rollback.</p>
+<p><strong>Verification:</strong> Same as Android (SHA-256, RSA
+signatures).</p>
+<p><strong>Rollback:</strong> Automatic via partition scheme.</p>
+<p><strong>Language/Technology Stack:</strong> C++ (update_engine),
+Omaha protocol.</p>
+<p><strong>License:</strong> Chromium OS is BSD-3-Clause / Apache 2.0;
+ChromeOS is proprietary.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Same
+update_engine as Android. Not directly applicable to RK3588 Android.</p>
+<p><strong>Encapsulatable:</strong> Same as Android update_engine.</p>
+<hr />
+<h3 id="coreos-flatcar-container-linux-update">3.4 CoreOS / Flatcar
+Container Linux Update</h3>
+<p><strong>Architecture Overview:</strong> - Container-optimized OS with
+automatic, atomic updates. - Uses A/B partition scheme: USR-A and USR-B.
+- <code>update_engine</code> (same as ChromeOS/Android) for applying
+updates. - <code>locksmith</code> or <code>Nebraska</code> for reboot
+management.</p>
+<p><strong>Key Components:</strong> - <strong>update_engine:</strong>
+Downloads and applies OS updates (same as ChromeOS). -
+<strong>locksmith:</strong> Reboot strategy manager (older, deprecated).
+- <strong>Nebraska:</strong> Modern update manager (Flatcar). -
+<strong>update-ctrl:</strong> Manual update control.</p>
+<p><strong>Partition Layout:</strong></p>
+<pre><code>USR-A, USR-B (read-only root filesystem)
+boot-A, boot-B (kernel + bootloader config)
+OEM partition (cloud-config)</code></pre>
+<p><strong>Update Strategies:</strong> - <strong>Off:</strong> No
+automatic updates. - <strong>Reboot:</strong> Update immediately on
+detection. - <strong>Best-effort:</strong> Update when no active
+containers (default). - <strong>Container-runtime:</strong> Coordinate
+with container runtime.</p>
+<p><strong>Verification:</strong> Same as ChromeOS (update_engine with
+Omaha protocol).</p>
+<p><strong>Rollback:</strong> Automatic — if new USR partition doesn’t
+boot, fall back to old.</p>
+<p><strong>Language/Technology Stack:</strong> C++ (update_engine), Go
+(Nebraska), Shell (locksmith).</p>
+<p><strong>License:</strong> Apache 2.0 (Flatcar); CoreOS was Apache 2.0
+(now Fedora CoreOS).</p>
+<p><strong>Scalability:</strong> Designed for server fleets; Kubernetes
+integration.</p>
+<p><strong>Strengths:</strong> - Automatic, transparent updates. -
+Battle-tested in container orchestration environments. - Multiple update
+strategies for different workloads. - A/B rollback protection. - Simple,
+container-optimized design.</p>
+<p><strong>Weaknesses:</strong> - Container-specific; not
+general-purpose. - Requires container workflow. - Limited flexibility
+for non-container use cases.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not applicable to
+Android.</p>
+<p><strong>Encapsulatable:</strong> update_engine is the same as
+Android/ChromeOS.</p>
+<hr />
+<h3 id="opensuse-microos">3.5 openSUSE MicroOS</h3>
+<p><strong>Architecture Overview:</strong> - Transactional update system
+using Btrfs snapshots. - Read-only root filesystem. -
+<code>transactional-update</code> command for atomic system updates.</p>
+<p><strong>Update Mechanism:</strong> 1.
+<code>transactional-update</code> creates a new Btrfs snapshot. 2.
+Updates are applied to the new snapshot. 3. On next boot, system boots
+into the new snapshot. 4. If anything fails, boot into previous snapshot
+(via GRUB).</p>
+<p><strong>Rollback:</strong> Instant via Btrfs snapshot selection in
+GRUB bootloader.</p>
+<p><strong>Rollout:</strong> Not built-in; relies on openSUSE release
+channels.</p>
+<p><strong>Language/Technology Stack:</strong> Btrfs, Bash
+(transactional-update), Zypper (package manager).</p>
+<p><strong>License:</strong> Various open-source (GPL, etc.)</p>
+<p><strong>Strengths:</strong> - Btrfs-based snapshots are very
+efficient. - Instant rollback via bootloader. - Works with RPM packages
+(Zypper). - Simple concept.</p>
+<p><strong>Weaknesses:</strong> - Requires Btrfs. - Not designed for
+embedded/Android. - Limited delta update support. - Rollback is manual
+(user must select in GRUB).</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not applicable to
+Android.</p>
+<p><strong>Encapsulatable:</strong> The Btrfs snapshot concept could be
+adapted but not directly.</p>
+<hr />
+<h3 id="nixos-atomic-updates">3.6 NixOS Atomic Updates</h3>
+<p><strong>Architecture Overview:</strong> - NixOS uses the Nix package
+manager’s unique approach to system configuration. - Each system
+configuration is a “profile generation” — a complete, immutable
+filesystem tree in <code>/nix/store</code>. -
+<code>/run/current-system</code> symlink points to the active
+generation.</p>
+<p><strong>Update Mechanism:</strong> 1.
+<code>nixos-rebuild switch</code> builds a new system configuration. 2.
+New generation is created in <code>/nix/store</code> (content-addressed,
+deduplicated). 3. Symlink is atomically updated to point to new
+generation. 4. GRUB entry is added for the new generation. 5. Reboot
+into new generation.</p>
+<p><strong>Rollback:</strong> -
+<code>nixos-rebuild switch --rollback</code> — instant, previous
+generation is always preserved. - GRUB menu lists all previous
+generations. - Generations can be garbage-collected after N days.</p>
+<p><strong>Verification:</strong> NAR hash verification (SHA-256 of
+every path in the store). Signed channels.</p>
+<p><strong>Rollout:</strong> Not built-in; uses Nix channels (stable,
+unstable).</p>
+<p><strong>Language/Technology Stack:</strong> Nix language, C++ (nix
+daemon), Bash.</p>
+<p><strong>License:</strong> LGPL-2.1 (Nix)</p>
+<p><strong>Strengths:</strong> - Truly atomic — entire system is a
+single immutable snapshot. - Perfect rollback — every previous
+generation is preserved. - Content-addressed = automatic deduplication.
+- Reproducible builds. - Very fine-grained control.</p>
+<p><strong>Weaknesses:</strong> - Requires Nix ecosystem (steep learning
+curve). - Large storage requirements (/nix/store grows). - Not designed
+for embedded/Android. - Complex setup. - Not bandwidth-efficient for
+remote updates (large closure transfers).</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not applicable to
+Android.</p>
+<p><strong>Encapsulatable:</strong> The concept is powerful but the Nix
+ecosystem is hard to extract.</p>
+<hr />
+<h2 id="windows-ota">4. Windows OTA</h2>
+<h3 id="windows-update-for-business-wufb">4.1 Windows Update for
+Business (WUfB)</h3>
+<p><strong>Architecture Overview:</strong> - Microsoft’s cloud-based
+update management service. - Integrated with Microsoft Intune and Azure
+AD. - Manages Windows 10/11 quality and feature updates.</p>
+<p><strong>Key Features:</strong> - Deployment rings (pilot, broad,
+etc.). - Update deferral policies. - Approval workflows. - Driver and
+firmware updates. - Integration with Microsoft Endpoint Manager.</p>
+<p><strong>Verification:</strong> Microsoft digital signatures, SHA-2
+code signing.</p>
+<p><strong>Rollback:</strong> Limited — Windows can uninstall some
+updates within 10 days (feature updates). Quality updates can be
+uninstalled individually.</p>
+<p><strong>Rollout:</strong> Ring-based deployment with configurable
+delays.</p>
+<p><strong>Language/Technology Stack:</strong> Proprietary (Microsoft),
+WSUS protocol, BITS (Background Intelligent Transfer Service).</p>
+<p><strong>License:</strong> Proprietary (requires Windows
+licensing)</p>
+<p><strong>Strengths:</strong> - Integrated with Microsoft ecosystem. -
+Ring-based deployment. - Cloud-managed. - Enterprise-grade support.</p>
+<p><strong>Weaknesses:</strong> - Windows-only. - Proprietary. -
+Requires Microsoft licensing. - Limited control over update content.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not
+applicable.</p>
+<p><strong>Encapsulatable:</strong> No.</p>
+<hr />
+<h3 id="wsus-windows-server-update-services">4.2 WSUS (Windows Server
+Update Services)</h3>
+<p><strong>Architecture Overview:</strong> - On-premises update server
+for Windows devices. - Downloads updates from Microsoft Update and
+distributes to internal devices. - Approve/decline individual
+updates.</p>
+<p><strong>Key Features:</strong> - Local update repository. - Update
+approval workflow. - Computer group targeting. - Reporting.</p>
+<p><strong>License:</strong> Free with Windows Server</p>
+<p><strong>Status:</strong> Being deprecated — Microsoft is pushing
+toward WUfB and Intune.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not
+applicable.</p>
+<p><strong>Encapsulatable:</strong> No.</p>
+<hr />
+<h3 id="open-source-windows-update-systems">4.3 Open-Source Windows
+Update Systems</h3>
+<ul>
+<li><strong>No significant open-source Windows update system
+exists.</strong></li>
+<li>WSUS alternatives are typically commercial patch management tools
+(Automox, ManageEngine, etc.).</li>
+<li><code>kbupdate</code> (PowerShell module) for offline patching — not
+a full OTA system.</li>
+<li>The Windows update protocol is proprietary and undocumented.</li>
+</ul>
+<hr />
+<h2 id="commercial-solutions">5. Commercial Solutions</h2>
+<h3 id="aws-iot-device-management">5.1 AWS IoT Device Management</h3>
+<p><strong>Architecture Overview:</strong> - AWS service for managing
+IoT device fleets. - OTA update capability through AWS IoT Jobs. -
+Integrates with AWS IoT Core for device connectivity.</p>
+<p><strong>Key Features:</strong> - <strong>AWS IoT Jobs:</strong>
+Define and deploy update jobs to device fleets. - <strong>Fleet
+indexing:</strong> Query and filter devices for targeted updates. -
+<strong>Secure tunneling:</strong> Remote access to devices. -
+<strong>Device Defender:</strong> Security auditing. - <strong>Code
+signing:</strong> AWS Signer for firmware signing.</p>
+<p><strong>Update Flow:</strong> 1. Create OTA update in AWS IoT
+console/API. 2. AWS IoT Jobs notifies devices via MQTT. 3. Device
+downloads firmware from S3 (pre-signed URL). 4. Device applies update.
+5. Device reports status via MQTT.</p>
+<p><strong>Update Verification:</strong> AWS Code Signer (RSA/ECDSA), S3
+integrity checks.</p>
+<p><strong>Rollback:</strong> Manual — deploy previous version as a new
+job.</p>
+<p><strong>Rollout:</strong> Job rollouts with configurable concurrency
+and rate.</p>
+<p><strong>Language/Technology Stack:</strong> MQTT, HTTPS, AWS SDK (C,
+Python, etc.), CloudFormation/Terraform.</p>
+<p><strong>License:</strong> Proprietary (AWS service), pay-per-use
+pricing.</p>
+<p><strong>Scalability:</strong> AWS-scale (millions of devices).</p>
+<p><strong>Strengths:</strong> - AWS ecosystem integration. - S3 +
+CloudFront for global delivery. - MQTT-based push notifications. -
+Fine-grained IAM access control. - Code signing integration. - Fleet
+indexing for targeted updates.</p>
+<p><strong>Weaknesses:</strong> - AWS lock-in. - Complex pricing model.
+- No built-in A/B update mechanism — must be implemented on device. -
+MQTT requires persistent connection or periodic polling. - Limited
+device-side update orchestration.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Could serve as
+the backend for a custom OTA system. Device-side client would need to be
+custom-built.</p>
+<p><strong>Encapsulatable:</strong> The AWS IoT Jobs protocol can be
+used as a transport layer; device-side logic is custom.</p>
+<hr />
+<h3 id="azure-iot-hub-device-update">5.2 Azure IoT Hub Device
+Update</h3>
+<p><strong>Architecture Overview:</strong> - Azure service for deploying
+OTA updates to IoT devices. - Supports image-based, package-based, and
+script-based updates. - Integrates with Azure IoT Hub for device
+connectivity.</p>
+<p><strong>Key Features:</strong> - <strong>Device Update
+Agent:</strong> Open-source C-based agent running on devices. -
+<strong>Update Manifest:</strong> JSON document describing the update
+(files, hashes, install steps). - <strong>Import Manifest:</strong>
+Describes how to ingest updates. - <strong>Deployment groups:</strong>
+Targeted rollouts. - <strong>Delta updates:</strong> Support for
+reducing download size.</p>
+<p><strong>Update Flow:</strong> 1. Import update into Device Update
+service. 2. Create deployment targeting a device group. 3. Device Update
+Agent receives notification via IoT Hub. 4. Agent downloads update
+content from Azure Blob Storage. 5. Agent applies update (via handler:
+swupdate, script, or custom). 6. Agent reports progress and result.</p>
+<p><strong>Update Verification:</strong> SHA-256 hash verification,
+optional code signing.</p>
+<p><strong>Rollback:</strong> Deploy previous version as a new update;
+no automatic rollback.</p>
+<p><strong>Rollout:</strong> Group-based deployment with
+percentage-based rollout.</p>
+<p><strong>Language/Technology Stack:</strong> - Agent: C (open-source)
+- Server: Azure (proprietary) - Protocol: MQTT/AMQP/HTTPS via IoT
+Hub</p>
+<p><strong>License:</strong> Agent is MIT; Service is proprietary (Azure
+pricing).</p>
+<p><strong>Scalability:</strong> Azure-scale.</p>
+<p><strong>Strengths:</strong> - Open-source device agent. - Azure
+ecosystem integration. - Multiple update types (image, package, script).
+- Delta update support. - Group-based deployment.</p>
+<p><strong>Weaknesses:</strong> - Azure lock-in. - Device agent is
+relatively new and less mature. - No built-in A/B mechanism. - Complex
+Azure pricing.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> The open-source
+agent could potentially be adapted for Android on RK3588, but would need
+significant work.</p>
+<p><strong>Encapsulatable:</strong> The agent is open-source (MIT) and
+can be modified. The protocol could be adapted.</p>
+<hr />
+<h3 id="jfrog-connect-formerly-upswift">5.3 JFrog Connect (formerly
+Upswift)</h3>
+<p><strong>Architecture Overview:</strong> - Commercial IoT device
+management and OTA update platform. - Now part of JFrog (artifactory
+ecosystem). - Supports Linux-based IoT devices.</p>
+<p><strong>Key Features:</strong> - Full system updates (rootfs). -
+Application/container updates. - File-based updates. - Device monitoring
+and commands. - Rollback support.</p>
+<p><strong>Update Verification:</strong> File hash verification.</p>
+<p><strong>Rollback:</strong> Supported — previous version can be
+redeployed.</p>
+<p><strong>Rollout:</strong> Group-based deployment.</p>
+<p><strong>Language/Technology Stack:</strong> Proprietary agent, JFrog
+Artifactory backend.</p>
+<p><strong>License:</strong> Proprietary / Commercial</p>
+<p><strong>Scalability:</strong> Enterprise-grade via JFrog
+infrastructure.</p>
+<p><strong>Strengths:</strong> - JFrog Artifactory integration for
+artifact management. - Multiple update types. - Good for software supply
+chain management. - Commercial support.</p>
+<p><strong>Weaknesses:</strong> - Proprietary and commercial. - JFrog
+ecosystem lock-in. - Limited public documentation. - Not designed for
+Android.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Linux/IoT only;
+not for Android.</p>
+<p><strong>Encapsulatable:</strong> No — proprietary.</p>
+<hr />
+<h3 id="memfault">5.4 Memfault</h3>
+<p><strong>Architecture Overview:</strong> - Embedded observability
+platform that added OTA update capabilities. - Primarily focused on
+device monitoring, debugging, and fleet analytics. - OTA is a newer
+feature, added for both MCU and embedded Linux.</p>
+<p><strong>Key Features:</strong> - <strong>OTA for MCU:</strong>
+Firmware updates for microcontrollers. - <strong>OTA for Embedded
+Linux:</strong> Full system updates for Linux devices. - <strong>Android
+OTA:</strong> Custom OTA client for Android devices using Memfault’s
+service. - Fleet-wide deployment with software version targeting. -
+Real-time monitoring of update progress. - Integration with Memfault’s
+observability (crash reporting, metrics).</p>
+<p><strong>Update Verification:</strong> Cryptographic verification
+(device-specific).</p>
+<p><strong>Rollback:</strong> Device-side A/B mechanism for Linux;
+chip-specific for MCU.</p>
+<p><strong>Rollout:</strong> Version-based targeting and phased
+deployment.</p>
+<p><strong>Language/Technology Stack:</strong> - SDK: C (MCU), Go
+(Linux), Java/Kotlin (Android) - Server: Proprietary (Memfault cloud) -
+Protocol: REST API over HTTPS</p>
+<p><strong>License:</strong> SDK is MIT/BSD; Cloud service is
+proprietary/commercial.</p>
+<p><strong>Scalability:</strong> Cloud-managed; designed for fleet
+scale.</p>
+<p><strong>Strengths:</strong> - Integrated observability (unique — OTA
++ monitoring + debugging). - Android OTA client available. - MCU
+support. - Real-time update monitoring. - Good developer experience.</p>
+<p><strong>Weaknesses:</strong> - Commercial (free tier limited). - OTA
+is not the primary focus — monitoring is. - Less mature OTA than Mender
+or RAUC. - Cloud-dependent. - Limited customization of update flow.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Has an Android
+OTA client. Could potentially work with RK3588 Android, but would need
+evaluation.</p>
+<p><strong>Encapsulatable:</strong> The Android SDK is available and
+could be integrated.</p>
+<hr />
+<h3 id="qualcomm-fota">5.5 Qualcomm FOTA</h3>
+<p><strong>Architecture Overview:</strong> - Qualcomm’s Firmware
+Over-The-Air solution for devices using Qualcomm chipsets. - Integrated
+into Qualcomm’s device management ecosystem. - Targets smartphones, IoT,
+and automotive.</p>
+<p><strong>Key Features:</strong> - Full firmware update (bootloader,
+modem, system). - Delta updates for bandwidth efficiency. -
+Hardware-backed security (Qualcomm Secure Boot). - Integration with
+Qualcomm’s Snapdragon platforms.</p>
+<p><strong>Update Verification:</strong> Qualcomm Secure Boot chain,
+hardware root of trust.</p>
+<p><strong>Rollback:</strong> Qualcomm’s A/B implementation with
+rollback.</p>
+<p><strong>License:</strong> Proprietary / Commercial (Qualcomm
+licensing required)</p>
+<p><strong>Scalability:</strong> Carrier-scale.</p>
+<p><strong>Strengths:</strong> - Deep hardware integration. -
+Hardware-backed security. - Delta updates. - Carrier-grade.</p>
+<p><strong>Weaknesses:</strong> - Qualcomm-only. - Proprietary and
+expensive. - Requires Qualcomm licensing. - Not applicable to
+RK3588.</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Not applicable —
+Qualcomm-specific.</p>
+<p><strong>Encapsulatable:</strong> No — tied to Qualcomm hardware.</p>
+<hr />
+<h3 id="applistent">5.6 Applistent</h3>
+<p><strong>Architecture Overview:</strong> - Limited public information
+available. - Appears to be a Japanese company providing OTA solutions. -
+Primarily for automotive and mobile devices.</p>
+<p><strong>Key Features:</strong> (based on limited public info) -
+Firmware OTA for embedded devices. - Automotive focus.</p>
+<p><strong>License:</strong> Proprietary / Commercial</p>
+<p><strong>Android 15 / RK3588 Compatibility:</strong> Unknown; likely
+not applicable.</p>
+<p><strong>Encapsulatable:</strong> Unknown.</p>
+<hr />
+<h2 id="android-15-rk3588-specifics">6. Android 15 / RK3588
+Specifics</h2>
+<h3 id="what-changed-in-android-15-for-ota">6.1 What Changed in Android
+15 for OTA</h3>
+<p><strong>Key Changes:</strong> 1. <strong>Non-A/B Updates
+Deprecated:</strong> Android 15 CDD effectively deprecates non-A/B
+(recovery-based) updates. Virtual A/B is the mandated update mechanism
+for new devices. 2. <strong>Virtual A/B Enhancements:</strong> Improved
+snapshot merge performance and reliability. 3. <strong>16KB Page Size
+Support:</strong> Android 15 introduces support for 16KB page sizes,
+which affects OTA payload generation and partition alignment. 4.
+<strong>Improved Post-Install Verification:</strong> Better checking of
+updated partitions. 5. <strong>Privacy Sandbox Integration:</strong>
+Some OTA-related privacy improvements. 6. <strong>Kernel 6.6
+GKI:</strong> Android 15 uses GKI kernel 6.6, which affects boot images
+and OTA payload structure. 7. <strong>init_boot Partition:</strong> The
+generic ramdisk is moved to <code>init_boot</code> partition (introduced
+in Android 13), meaning OTA must update this partition as well.</p>
+<p><strong>Impact on OTA Design:</strong> - Must use Virtual A/B or at
+minimum legacy A/B. - Recovery-only OTA is not viable for new devices. -
+Payload must include all dynamic partitions in super partition. - Must
+handle 16KB page alignment.</p>
+<hr />
+<h3 id="orange-pi-5-max-android-15-specifics">6.2 Orange Pi 5 Max
+Android 15 Specifics</h3>
+<p><strong>Hardware:</strong> - Rockchip RK3588: 4x Cortex-A76 @ 2.4GHz
++ 4x Cortex-A55 @ 1.8GHz - Mali-G610 GPU - 16GB LPDDR5 RAM - eMMC 5.1 +
+NVMe SSD storage - Gigabit Ethernet + Wi-Fi 6</p>
+<p><strong>Android on Orange Pi 5 Max:</strong> - Community builds exist
+(Android 14/15). - Rockchip provides Android BSP with RK3588 support. -
+Partition layout is Rockchip-specific (not standard AOSP). - Uses
+Rockchip’s parameter.txt for partition definition. - Default update
+mechanism is Rockchip’s recovery-based OTA (not A/B).</p>
+<p><strong>Challenges:</strong> - Rockchip BSP defaults to non-A/B
+layout. - Enabling A/B requires modifying parameter.txt and rebuilding.
+- Bootloader (U-Boot with Rockchip patches) must support A/B slot
+selection. - Community Android builds may not support Virtual A/B.</p>
+<hr />
+<h3 id="ab-partition-layout-for-rk3588">6.3 A/B Partition Layout for
+RK3588</h3>
+<p><strong>Standard Rockchip Partition Layout (Non-A/B):</strong></p>
+<pre><code>0x00002000@0x00004000(uboot)
+0x00002000@0x00006000(misc)
+0x00020000@0x00008000(boot)
+0x00040000@0x00028000(recovery)
+0x00010000@0x00068000(backup)
+-@0x00078000(rootfs:grow)</code></pre>
+<p><strong>A/B Partition Layout for RK3588 (Modified):</strong></p>
+<pre><code>0x00002000@0x00004000(uboot)
+0x00002000@0x00006000(misc)
+0x00020000@0x00008000(boot_a)
+0x00020000@0x00028000(boot_b)
+0x00040000@0x00048000(system_a)   -- or via super partition
+0x00040000@0x00088000(system_b)
+0x00010000@0x000c8000(vendor_a)
+0x00010000@0x000d8000(vendor_b)
+-@0x000e8000(userdata:grow)</code></pre>
+<p><strong>Virtual A/B Layout:</strong></p>
+<pre><code>0x00002000@0x00004000(uboot)
+0x00002000@0x00006000(misc)
+0x00020000@0x00008000(init_boot_a)
+0x00020000@0x00028000(init_boot_b)
+0x00400000@0x00048000(super)     -- contains dynamic partitions
+0x00002000@0x00448000(vbmeta_a)
+0x00002000@0x0044a000(vbmeta_b)
+-@0x0044c000(userdata:grow)</code></pre>
+<p><strong>Key Considerations:</strong> - RK3588 typically boots from
+eMMC or SD card; NVMe is secondary. - Rockchip U-Boot must be configured
+for A/B slot selection. - <code>misc</code> partition stores boot
+control information. - <code>super</code> partition uses dynamic
+partitions for Virtual A/B.</p>
+<hr />
+<h3 id="rockchip-rk3588-update-tools-and-mechanisms">6.4 Rockchip
+(RK3588) Update Tools and Mechanisms</h3>
+<p><strong>Tools:</strong> 1. <strong>RKDevTool (Windows):</strong>
+GUI-based firmware flashing tool for Rockchip devices. - Uses Rockchip
+USB download mode (Maskrom/Loader mode). - Flashes complete
+<code>update.img</code> to eMMC.</p>
+<ol start="2" type="1">
+<li><strong>upgrade_tool (Linux):</strong> Command-line firmware
+flashing tool.
+<ul>
+<li>Linux equivalent of RKDevTool.</li>
+<li>Can flash <code>update.img</code> or individual partitions.</li>
+</ul></li>
+<li><strong>SD_Firmware_Tool:</strong> Creates bootable SD cards for
+firmware update.
+<ul>
+<li>Device boots from SD card and flashes <code>update.img</code> to
+eMMC.</li>
+</ul></li>
+<li><strong>rkflash</strong>: Kernel module for accessing Rockchip eMMC
+from Linux.</li>
+</ol>
+<p><strong>Rockchip update.img Format:</strong> - Rockchip’s custom
+firmware image format. - Contains all partitions in a single file. -
+Includes a firmware header with partition table. - Generated by
+<code>afptool</code> and <code>rkImageMaker</code> from Rockchip
+SDK.</p>
+<p><strong>OTA Mechanism (Rockchip Android):</strong> 1. Build
+<code>recovery.img</code> with Rockchip’s custom recovery. 2. Generate
+OTA package using <code>ota_from_target_files</code>. 3. Push OTA zip to
+device (<code>/data/ota/</code> or <code>/cache/</code>). 4. Recovery
+mode applies the update. 5. Uses Rockchip’s custom <code>updater</code>
+binary.</p>
+<p><strong>RK3588 OTA Build Steps (from Neardi community):</strong> 1.
+Check for userdata partition (required for storing OTA package). 2.
+Compile recovery-related programs: <code>make recoveryimage</code>. 3.
+Generate OTA package: <code>make otapackage</code> or
+<code>ota_from_target_files</code>. 4. Push OTA zip to device. 5. Apply
+via recovery: <code>adb reboot recovery</code> or
+<code>Settings → System Update</code>.</p>
+<hr />
+<h3 id="recovery-based-vs-ab-update-for-rk3588">6.5 Recovery-Based vs
+A/B Update for RK3588</h3>
+<p><strong>Recovery-Based (Current Default):</strong> - ✅ Simpler to
+implement. - ✅ Lower storage requirements. - ❌ Downtime during update.
+- ❌ Risk of bricking. - ❌ No automatic rollback. - ❌ Deprecated in
+Android 15.</p>
+<p><strong>A/B Update:</strong> - ✅ No downtime. - ✅ Automatic
+rollback. - ✅ Android 15 compatible. - ❌ Higher storage requirements
+(dual partitions). - ❌ Requires modified partition layout. - ❌
+Requires A/B-capable bootloader.</p>
+<p><strong>Virtual A/B:</strong> - ✅ No downtime. - ✅ Automatic
+rollback. - ✅ Android 15 mandated. - ✅ Lower storage overhead than
+legacy A/B. - ❌ Most complex to implement. - ❌ Requires dm-snapshot
+kernel support. - ❌ Requires super partition with dynamic partitions. -
+❌ Requires significant Rockchip BSP modification.</p>
+<p><strong>Recommendation for RK3588:</strong> - Start with
+<strong>legacy A/B</strong> (simpler to implement, Android 15
+compatible). - Plan migration path to Virtual A/B. - Recovery-based is
+not viable for production.</p>
+<hr />
+<h3
+id="build-artifacts-ota-zip-format-flashing-images-hash-verification">6.6
+Build Artifacts: OTA Zip Format, Flashing Images, Hash Verification</h3>
+<p><strong>OTA Zip Format:</strong></p>
+<pre><code>ota_update.zip
+├── META-INF/
+│   └── com/
+│       └── android/
+│           ├── metadata          # Build info, device type, pre-device
+│           ├── otacert           # OTA signing certificate
+│           └── updater           # edify updater binary (non-A/B)
+├── payload.bin                   # Update payload (A/B / Virtual A/B)
+├── payload_properties.txt        # Payload metadata (offset, size, hash)
+├── care_map.pb                   # dm-verity care map
+└── apex/                         # APEX module updates (if any)</code></pre>
+<p><strong>payload.bin Structure:</strong></p>
+<pre><code>[Header]
+  - Magic: &quot;CrAU&quot;
+  - Major version: 2
+  - Manifest size (varint)
+  - Metadata signature size (varint)
+[Manifest (protocol buffer)]
+  - Partition operations list
+  - For each partition:
+    - Partition name, old/new partition info
+    - List of operations (REPLACE, SOURCE_COPY, SOURCE_BSDIFF, etc.)
+    - Source/target digest (SHA-256)
+[Metadata Signature]
+  - RSA signature over manifest
+[Extra Data]
+  - Data blobs referenced by operations</code></pre>
+<p><strong>payload_properties.txt:</strong></p>
+<pre><code>FILE_HASH=&lt;sha256_of_payload&gt;
+FILE_SIZE=&lt;payload_size&gt;
+METADATA_HASH=&lt;sha256_of_manifest&gt;
+METADATA_SIZE=&lt;manifest_size&gt;</code></pre>
+<p><strong>care_map.pb:</strong> - Protocol buffer defining which blocks
+need dm-verity verification after update. - Used by update_engine to
+mark verity-protected regions.</p>
+<p><strong>Flashing Images:</strong> - <code>boot.img</code>: Kernel +
+ramdisk (or <code>init_boot.img</code> for Android 13+). -
+<code>system.img</code>: System partition (or part of
+<code>super.img</code>). - <code>vendor.img</code>: Vendor partition (or
+part of <code>super.img</code>). - <code>super.img</code>: Contains
+dynamic partitions (system, vendor, product, odm). -
+<code>vbmeta.img</code>: Verified Boot metadata. -
+<code>dtbo.img</code>: Device Tree Blob Overlay. -
+<code>update.img</code>: Rockchip all-in-one firmware image (contains
+all partitions).</p>
+<p><strong>Hash Verification:</strong> - OTA package: SHA-256 of
+payload.bin verified against payload_properties.txt. - Payload manifest:
+RSA signature verified against OTA certificate. - Individual partitions:
+Source and target SHA-256 digests in manifest. - dm-verity: Runtime
+integrity verification of system/vendor partitions. - AVB (Android
+Verified Boot): Boot-time verification chain.</p>
+<hr />
+<h2 id="comparative-analysis">7. Comparative Analysis</h2>
+<h3 id="feature-matrix">7.1 Feature Matrix</h3>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 19%" />
+<col style="width: 8%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 9%" />
+<col style="width: 13%" />
+<col style="width: 10%" />
+<col style="width: 9%" />
+<col style="width: 7%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>AOSP Update Engine</th>
+<th>Mender</th>
+<th>RAUC</th>
+<th>SWUpdate</th>
+<th>hawkBit</th>
+<th>Ubuntu Core</th>
+<th>ChromeOS</th>
+<th>Flatcar</th>
+<th>NixOS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>A/B Updates</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>N/A (server)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌ (generations)</td>
+</tr>
+<tr class="even">
+<td><strong>Virtual A/B</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>N/A</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Automatic Rollback</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌ (delegated)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr class="even">
+<td><strong>Delta Updates</strong></td>
+<td>✅</td>
+<td>⚠️ (Enterprise)</td>
+<td>❌</td>
+<td>❌</td>
+<td>N/A</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Phased Rollout</strong></td>
+<td>✅ (Omaha)</td>
+<td>✅ (Enterprise)</td>
+<td>❌ (via hawkBit)</td>
+<td>❌ (via hawkBit)</td>
+<td>✅</td>
+<td>⚠️ (channels)</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="even">
+<td><strong>Cryptographic Signing</strong></td>
+<td>✅ (RSA)</td>
+<td>✅ (RSA)</td>
+<td>✅ (X.509)</td>
+<td>✅ (RSA/CMS)</td>
+<td>❌ (delegated)</td>
+<td>✅ (assertions)</td>
+<td>✅ (RSA)</td>
+<td>✅ (RSA)</td>
+<td>✅</td>
+</tr>
+<tr class="odd">
+<td><strong>Open Source Client</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>N/A</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr class="even">
+<td><strong>Open Source Server</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Android Support</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>⚠️ (custom)</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="even">
+<td><strong>Fleet Management</strong></td>
+<td>❌ (server proprietary)</td>
+<td>✅</td>
+<td>❌ (via hawkBit)</td>
+<td>❌ (via hawkBit)</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr class="odd">
+<td><strong>Device Inventory</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<h3 id="licensing-comparison">7.2 Licensing Comparison</h3>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Solution</th>
+<th>Client License</th>
+<th>Server License</th>
+<th>Commercial Aspects</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>AOSP Update Engine</td>
+<td>Apache 2.0</td>
+<td>Proprietary (Google)</td>
+<td>N/A</td>
+</tr>
+<tr class="even">
+<td>Mender</td>
+<td>Apache 2.0 / MIT</td>
+<td>Apache 2.0 (OSS) + Commercial (Enterprise)</td>
+<td>Enterprise features paywalled</td>
+</tr>
+<tr class="odd">
+<td>RAUC</td>
+<td>LGPL-2.1</td>
+<td>N/A (server-agnostic)</td>
+<td>Commercial support from Pengutronix</td>
+</tr>
+<tr class="even">
+<td>SWUpdate</td>
+<td>GPL-2.0+</td>
+<td>N/A (server-agnostic)</td>
+<td>N/A</td>
+</tr>
+<tr class="odd">
+<td>hawkBit</td>
+<td>N/A</td>
+<td>EPL-2.0</td>
+<td>N/A</td>
+</tr>
+<tr class="even">
+<td>Ubuntu Core</td>
+<td>GPL-3.0</td>
+<td>Proprietary (Canonical)</td>
+<td>Snap Store is proprietary</td>
+</tr>
+<tr class="odd">
+<td>AWS IoT</td>
+<td>AWS SDK</td>
+<td>Proprietary</td>
+<td>Pay-per-use</td>
+</tr>
+<tr class="even">
+<td>Azure IoT</td>
+<td>MIT (agent)</td>
+<td>Proprietary</td>
+<td>Azure pricing</td>
+</tr>
+<tr class="odd">
+<td>Memfault</td>
+<td>MIT/BSD</td>
+<td>Proprietary</td>
+<td>Commercial SaaS</td>
+</tr>
+<tr class="even">
+<td>JFrog Connect</td>
+<td>Proprietary</td>
+<td>Proprietary</td>
+<td>Commercial</td>
+</tr>
+</tbody>
+</table>
+<h3 id="encapsulability-assessment">7.3 Encapsulability Assessment</h3>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 44%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Solution</th>
+<th>Encapsulatable?</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>AOSP Update Engine</td>
+<td>⚠️ Partial</td>
+<td>Replace Omaha server; keep payload format and client</td>
+</tr>
+<tr class="even">
+<td>Mender</td>
+<td>✅ Yes</td>
+<td>Well-documented REST API; custom client possible</td>
+</tr>
+<tr class="odd">
+<td>RAUC</td>
+<td>✅ Yes</td>
+<td>Server-agnostic by design</td>
+</tr>
+<tr class="even">
+<td>SWUpdate</td>
+<td>✅ Yes</td>
+<td>Modular handler architecture</td>
+</tr>
+<tr class="odd">
+<td>hawkBit</td>
+<td>✅ Yes</td>
+<td>Client-agnostic DDI API</td>
+</tr>
+<tr class="even">
+<td>Ubuntu Core</td>
+<td>❌ No</td>
+<td>Tightly coupled to snapd and Snap Store</td>
+</tr>
+<tr class="odd">
+<td>AWS IoT</td>
+<td>⚠️ Partial</td>
+<td>Can use as transport; device logic is custom</td>
+</tr>
+<tr class="even">
+<td>Azure IoT</td>
+<td>⚠️ Partial</td>
+<td>Open-source agent (MIT); Azure-specific protocol</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="recommendations-for-custom-ota-design">8. Recommendations for
+Custom OTA Design</h2>
+<h3 id="architecture-recommendations">8.1 Architecture
+Recommendations</h3>
+<p>Based on the research, the recommended approach for a custom OTA
+system targeting Android 15 on RK3588 (Orange Pi 5 Max):</p>
+<ol type="1">
+<li><p><strong>Use Android’s update_engine as the update
+client.</strong> It is the only mechanism that properly supports Virtual
+A/B (required for Android 15) and is already part of AOSP. Do not
+reinvent the client-side update mechanism.</p></li>
+<li><p><strong>Build a custom OTA server</strong> that speaks a
+simplified protocol (not Omaha XML). The server should:</p>
+<ul>
+<li>Provide a REST API for update checks (JSON instead of XML).</li>
+<li>Host OTA payloads on CDN-compatible storage.</li>
+<li>Manage device inventory and deployment groups.</li>
+<li>Support phased rollouts (percentage-based).</li>
+<li>Track deployment status per device.</li>
+</ul></li>
+<li><p><strong>Wrap/encapsulate the update_engine client</strong>
+by:</p>
+<ul>
+<li>Replacing the Omaha update check with a custom update check
+service.</li>
+<li>Using <code>update_engine_client</code> CLI or DBus API to trigger
+updates.</li>
+<li>Providing OTA payloads in the standard format (payload.bin +
+payload_properties.txt + care_map.pb).</li>
+</ul></li>
+<li><p><strong>Implement A/B partition layout on RK3588</strong> (start
+with legacy A/B, plan for Virtual A/B):</p>
+<ul>
+<li>Modify <code>parameter.txt</code> for A/B partitions.</li>
+<li>Configure Rockchip U-Boot for A/B slot selection.</li>
+<li>Implement boot_control HAL.</li>
+</ul></li>
+<li><p><strong>Use hawkBit as the server backend</strong> (optional) for
+fleet management, or build a lightweight custom server:</p>
+<ul>
+<li>hawkBit provides phased rollout, device inventory, and deployment
+management.</li>
+<li>Custom adapter would translate hawkBit DDI API to Android
+update_engine commands.</li>
+</ul></li>
+</ol>
+<h3 id="key-design-decisions">8.2 Key Design Decisions</h3>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 41%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Decision</th>
+<th>Recommendation</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Update Client</td>
+<td>AOSP update_engine</td>
+<td>Only client supporting Virtual A/B; required for Android 15</td>
+</tr>
+<tr class="even">
+<td>Partition Scheme</td>
+<td>Legacy A/B (initial), Virtual A/B (future)</td>
+<td>A/B is simpler; Virtual A/B is the standard</td>
+</tr>
+<tr class="odd">
+<td>Server Protocol</td>
+<td>REST/JSON (custom)</td>
+<td>Simpler than Omaha; easier to implement and maintain</td>
+</tr>
+<tr class="even">
+<td>Payload Format</td>
+<td>Standard Android OTA (payload.bin)</td>
+<td>Required for compatibility with update_engine</td>
+</tr>
+<tr class="odd">
+<td>Signing</td>
+<td>RSA-4096 with OTA certificate</td>
+<td>Standard Android approach; proven security</td>
+</tr>
+<tr class="even">
+<td>Delta Updates</td>
+<td>Supported via payload format</td>
+<td>update_engine supports SOURCE_BSDIFF/PUFFDIFF</td>
+</tr>
+<tr class="odd">
+<td>Phased Rollout</td>
+<td>Server-side percentage control</td>
+<td>Simple, effective, hawkBit-compatible</td>
+</tr>
+<tr class="even">
+<td>Device Auth</td>
+<td>JWT or mTLS</td>
+<td>Industry standard; secure</td>
+</tr>
+<tr class="odd">
+<td>Artifact Storage</td>
+<td>S3-compatible object storage</td>
+<td>CDN-compatible, scalable</td>
+</tr>
+<tr class="even">
+<td>Fleet Management</td>
+<td>hawkBit or custom</td>
+<td>hawkBit is mature; custom is simpler</td>
+</tr>
+</tbody>
+</table>
+<h3 id="critical-path-for-rk3588-android-15-ota">8.3 Critical Path for
+RK3588 Android 15 OTA</h3>
+<ol type="1">
+<li><strong>Modify RK3588 partition layout</strong> for A/B support
+(parameter.txt + U-Boot).</li>
+<li><strong>Implement boot_control HAL</strong> for RK3588 (may need
+custom implementation for Rockchip bootloader).</li>
+<li><strong>Enable update_engine</strong> in the Android 15 build for
+RK3588.</li>
+<li><strong>Build OTA server</strong> with REST API (update check,
+download URL, deployment management).</li>
+<li><strong>Create update_engine integration layer</strong> that bridges
+the custom server to update_engine.</li>
+<li><strong>Implement device-side OTA app</strong> (or modify System
+Updates UI) to show update status.</li>
+<li><strong>Test full OTA flow:</strong> Build → Sign → Upload → Deploy
+→ Download → Apply → Reboot → Verify.</li>
+<li><strong>Add rollback testing:</strong> Force failed boots, verify
+automatic rollback.</li>
+<li><strong>Implement phased rollout</strong> in the OTA server.</li>
+<li><strong>Add monitoring and reporting:</strong> Device health, update
+success rates, failure analysis.</li>
+</ol>
+<h3 id="open-questions-risks">8.4 Open Questions / Risks</h3>
+<ol type="1">
+<li><strong>Rockchip U-Boot A/B support:</strong> Does the Rockchip
+U-Boot properly support A/B slot selection? May require custom
+patches.</li>
+<li><strong>Virtual A/B on RK3588:</strong> dm-snapshot and dm-user
+kernel module support in Rockchip’s kernel. May need custom kernel
+configuration.</li>
+<li><strong>super partition on RK3588:</strong> Dynamic partitions
+require proper super partition configuration. Rockchip BSP may need
+modification.</li>
+<li><strong>AVB on RK3588:</strong> Android Verified Boot 2.0 support.
+Rockchip has AVB support but may need proper key provisioning.</li>
+<li><strong>OTA package signing:</strong> Need to generate and provision
+OTA signing keys for the device.</li>
+<li><strong>Storage constraints:</strong> A/B requires ~2x storage for
+system partitions. eMMC size on Orange Pi 5 Max may be a
+constraint.</li>
+</ol>
+<hr />
+<h2 id="appendix-a-key-references">Appendix A: Key References</h2>
+<ul>
+<li><a href="https://source.android.com/docs/core/ota">AOSP OTA Updates
+Documentation</a></li>
+<li><a href="https://source.android.com/docs/core/ota/ab">A/B (Seamless)
+System Updates</a></li>
+<li><a
+href="https://source.android.com/docs/core/ota/virtual_ab">Virtual A/B
+Overview</a></li>
+<li><a href="https://source.android.com/docs/core/ota/tools">OTA Tools
+(ota_from_target_files)</a></li>
+<li><a
+href="https://chromium.googlesource.com/aosp/platform/system/update_engine/+/HEAD/README.md">ChromeOS
+Update Engine README</a></li>
+<li><a href="https://mender.io/engineers/how-mender-works">Mender
+Architecture</a></li>
+<li><a href="https://rauc.io">RAUC Documentation</a></li>
+<li><a href="https://swupdate.org">SWUpdate</a></li>
+<li><a href="https://eclipse.dev/hawkbit/">Eclipse hawkBit</a></li>
+<li><a href="https://coreos.github.io/rpm-ostree">rpm-ostree</a></li>
+<li><a
+href="https://flatcar-linux.org/docs/latest/setup/releases/update-strategies">Flatcar
+Update Strategies</a></li>
+<li><a
+href="https://learn.microsoft.com/en-us/azure/iot-hub-device-update/understand-device-update">Azure
+IoT Device Update</a></li>
+<li><a
+href="https://community.neardi.com/t/system-upgrade-via-ota-on-rk3588-platform/17">RK3588
+OTA Upgrade Guide</a></li>
+<li><a
+href="https://proteanos.com/doc/ota-updates-rauc-swupdate-mender-2026">OTA
+Comparison: RAUC vs SWUpdate vs Mender</a></li>
+<li><a
+href="https://bitsbooksbeyond.substack.com/p/under-the-hood-breaking-down-androids">Android
+Update Engine Deep Dive</a></li>
+</ul>
+<h2 id="appendix-b-glossary">Appendix B: Glossary</h2>
+<ul>
+<li><strong>A/B Updates:</strong> Update mechanism using two sets of
+partitions (slots), allowing seamless updates.</li>
+<li><strong>Virtual A/B:</strong> Enhanced A/B using dm-snapshot/COW to
+reduce storage overhead.</li>
+<li><strong>Omaha Protocol:</strong> Google’s XML-based update check
+protocol.</li>
+<li><strong>update_engine:</strong> Android/ChromeOS daemon for applying
+A/B updates.</li>
+<li><strong>payload.bin:</strong> Binary update payload used by
+update_engine.</li>
+<li><strong>dm-verity:</strong> Device-mapper verity target for runtime
+filesystem integrity verification.</li>
+<li><strong>AVB:</strong> Android Verified Boot — boot-time integrity
+verification.</li>
+<li><strong>Dynamic Partitions:</strong> Android partition scheme where
+system/vendor/product are logical partitions within a <code>super</code>
+partition.</li>
+<li><strong>COW:</strong> Copy-on-Write — technique used by Virtual A/B
+to track changes during update.</li>
+<li><strong>OTA:</strong> Over-The-Air — remote update delivery
+mechanism.</li>
+<li><strong>Delta Update:</strong> Update that only includes changes
+from previous version (smaller download).</li>
+<li><strong>Care Map:</strong> Protocol buffer describing which blocks
+need dm-verity verification after update.</li>
+<li><strong>edify:</strong> Scripting language used in Android
+recovery-mode updater.</li>
+<li><strong>DDI API:</strong> Device Direct Integration API — hawkBit’s
+device-facing REST API.</li>
+</ul>
+</body>
+</html>
