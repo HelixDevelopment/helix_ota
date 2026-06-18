@@ -60,3 +60,35 @@ HEAD at creation `a839220` + the docs commit on top.
 - **UNBLOCK CONDITION:** A physical RK3588 / Orange Pi 5 Max board
   reachable over ADB/SSH (or physically attached) for flashing.
 - **WHO:** Operator — attach / provide remote access to the board.
+
+---
+
+## §5. [ATM-011] Workable-items SQLite database (constitution §11.4.93 mandate) not started
+
+**Status:** In progress
+**Type:** Task
+**Description:** The constitution mandates a SQLite-backed single source of truth for workable items (`docs/.workable_items.db`, Go binary at `cmd/workable-items/`). Not started yet — no DB schema, no Go binary, no tracking.
+
+---
+
+## §6. [ATM-012] Build resource stats tracking (constitution §11.4.24 mandate) not started
+
+**Status:** In progress
+**Type:** Task
+**Description:** Constitution §11.4.24 mandates per-build resource telemetry (memory/CPU/IO). Not started. TSV registry + helper scripts need authoring.
+
+---
+
+## §7. [ATM-013] Stress + chaos coverage gap (constitution §11.4.85 mandate)
+
+**Status:** In progress
+**Type:** Task
+**Description:** Stress+chaos coverage exists for 2 of ~12 submodules (F86 — PARTIAL). Server endpoints now have stress+chaos (PR #13). Remaining submodules need coverage. Status: server DONE, submodule coverage growing.
+
+---
+
+## §8. [ATM-014] Docs Chain submodule distribution (constitution §11.4.106 Phase 6) operator-gated
+
+**Status:** In progress
+**Type:** Task
+**Description:** Docs Chain engine exists at `/Volumes/T7/Projects/docs_chain` with Phases 1-4 done and tested. Phase 6 (git submodule distribution) is operator-gated — needs explicit go-ahead to wire as a registered submodule. Meanwhile, `.docs_chain/` YAML contexts + `scripts/sync_status_docs.sh` are wired and working.
