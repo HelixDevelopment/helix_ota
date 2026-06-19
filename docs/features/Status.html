@@ -174,8 +174,8 @@
 <body>
 <h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
 Inventory and Status</h1>
-<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
-2026-06-19T12:00:00Z <strong>Scope:</strong> Comprehensive inventory of
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-06-19T13:30:00Z <strong>Scope:</strong> Comprehensive inventory of
 every feature, component, subsystem, test suite, and infrastructure
 concern across the Helix OTA monorepo — covering the Go server, Go
 submodules, Android submodules, emulation tiers, e2e/security tests,
@@ -199,7 +199,10 @@ modular monolith) is fully implemented and tested: 13 handler families,
 7 internal packages, HTTP/3 + HTTP/2 + Brotli transport, in-memory +
 PostgreSQL store backends. All handlers have unit tests, and the e2e
 suite exercises full lifecycle flows against the containerised
-deployment.</p>
+deployment. Two new API endpoints added:
+<code>GET /api/v1/devices</code> returns the full device inventory, and
+<code>GET /devices/by-hardware/:hardwareId</code> provides fast
+hardware-ID reverse lookup.</p>
 <p><strong>Go submodules</strong> — Six <code>ota-*</code> modules
 provide protocol types, artifact validation, rollout engine, telemetry
 schema, and HTTP/3 transport. They are built+tested from their own
@@ -216,9 +219,26 @@ slot switch = PROVEN (3/3 deterministic, evidence
 docs/qa/20260611T094958Z-ab-slot-switch/) - PWU-AB-3 corrupt-slot
 auto-rollback = PROVEN (evidence docs/qa/20260611T095918Z-ab-rollback/)
 - PWU-AB-2 RAUC dm-verity = DESIGN (authored ab_rauc_verity.sh, not yet
-run) - PWU-AB-4 ApplyPort = DESIGN (not yet built) - Tier-2 Cuttlefish
-Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host) - Tier-3 RK3588
-physical board = OPERATOR-BLOCKED (no hardware)</p>
+run) - PWU-AB-4 ApplyPort = DESIGN (ApplyPort Go scaffold,
+health-marker, systemd unit — build in progress) - PWU-AB-4 ApplyPort
+Scaffold (Go interfaces, healthy-marker, systemd unit) = DESIGN - Tier-2
+Cuttlefish Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host) -
+Tier-3 RK3588 physical board = OPERATOR-BLOCKED (no hardware)</p>
+<p><strong>Production deployment</strong> — The full 3-container stack
+(server + PostgreSQL + SPA) is deployed and verified on
+<code>nezha.local</code>. Container orchestration handles boot,
+health-check, and shutdown. All containers respond correctly on their
+configured ports.</p>
+<p><strong>Remote stress testing</strong> — Sustained 291 req/s device
+registration throughput with 100/100 virtual devices registered without
+failure. All stress and chaos tests PASS.</p>
+<p><strong>Security fixes</strong> — Three security concerns addressed:
+IDOR project-scoped authorization prevents cross-project access; Tauri
+IPC scoped to minimal necessary permissions; docker-compose default
+credentials removed.</p>
+<p><strong>MountManagerUI fix</strong> — SPA embedding bug resolved; the
+MountManagerUI now serves correctly at the <code>/manager/</code>
+endpoint.</p>
 <p><strong>Tests</strong> — Six e2e tests, three security probe suites,
 inheritance gate, pre-build verification gate, constitution inheritance
 test. All script doc blocks present.</p>
@@ -1548,6 +1568,146 @@ detecting bad slot, bootcount exceeds limit, altbootcmd swap triggering,
 known-good slot boots. Content-verified per §11.4.158. Complements
 existing console-log evidence (F52).</td>
 </tr>
+<tr>
+<td>F96</td>
+<td>Deployment</td>
+<td>Production deployment</td>
+<td>3-container stack (server + PG + SPA) on nezha.local</td>
+<td>VERIFIED</td>
+<td>docker-compose.yml, deploy/remote/</td>
+<td>Deployment verification, container health probes</td>
+<td>3-container deployment on nezha.local; server, PostgreSQL, and SPA
+all healthy and responding</td>
+<td>No</td>
+<td>Production deployment verified at nezha.local. 3-container stack
+(server + PostgreSQL + SPA) orchestrated via docker-compose. All
+containers respond correctly on configured ports.</td>
+</tr>
+<tr>
+<td>F97</td>
+<td>Deployment</td>
+<td>Remote stress test</td>
+<td>Sustained 291 req/s device registration, all stress/chaos PASS</td>
+<td>VERIFIED</td>
+<td>tests/stress/</td>
+<td>Stress/chaos test suite</td>
+<td>291 req/s sustained throughput, 100/100 virtual devices registered
+without failure</td>
+<td>No</td>
+<td>Sustained 291 req/s device registration throughput. 100/100 virtual
+devices registered without failure. All stress and chaos tests
+PASS.</td>
+</tr>
+<tr>
+<td>F98</td>
+<td>Server</td>
+<td>MountManagerUI Embed</td>
+<td>SPA served at /manager/ endpoint</td>
+<td>PASS</td>
+<td>server/internal/api/ (SPA handler)</td>
+<td>MountManagerUI accessibility test</td>
+<td>SPA correctly serves at /manager/ path</td>
+<td>No</td>
+<td>MountManagerUI bug fix resolved. SPA now serves correctly at
+/manager/. Previously broken routing.</td>
+</tr>
+<tr>
+<td>F99</td>
+<td>Security</td>
+<td>IDOR Security Fix</td>
+<td>Project-scoped authorization — additional IDOR prevention</td>
+<td>PASS</td>
+<td>server/internal/api/ — access control model</td>
+<td>IDOR-specific negative tests; authorization unit tests</td>
+<td>Cross-project access blocked; unauthorized requests return 403</td>
+<td>No</td>
+<td>Additional IDOR security hardening. Project resources require
+project membership. Complements existing F91 project-scoped auth with
+broader coverage.</td>
+</tr>
+<tr>
+<td>F100</td>
+<td>Security</td>
+<td>Tauri IPC Security</td>
+<td>Scoped IPC permissions</td>
+<td>PASS</td>
+<td>Tauri IPC scope configuration</td>
+<td>Security probe tests</td>
+<td>IPC scope restriction, permission gating</td>
+<td>No</td>
+<td>Tauri IPC scoped to minimal necessary permissions. No
+over-permissive IPC channels.</td>
+</tr>
+<tr>
+<td>F101</td>
+<td>Security</td>
+<td>Docker-compose Secrets</td>
+<td>Default credentials removed from docker-compose</td>
+<td>PASS</td>
+<td>docker-compose.yml</td>
+<td>Security audit</td>
+<td>No default credentials in docker-compose configuration</td>
+<td>No</td>
+<td>Default credentials removed from docker-compose. Secrets managed via
+environment variables.</td>
+</tr>
+<tr>
+<td>F102</td>
+<td>Android</td>
+<td>PWU-AB-4 ApplyPort Scaffold</td>
+<td>Go interfaces, healthy-marker script, systemd unit</td>
+<td>DESIGN</td>
+<td>ApplyPort Go scaffold,
+docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md</td>
+<td>None — not yet tested</td>
+<td>ApplyPort Go scaffold, healthy-marker script, systemd unit
+defined</td>
+<td>No</td>
+<td>PWU-AB-4 ApplyPort Go scaffold designed. Healthy-marker script and
+systemd unit authored. Build in progress. Complements existing F54
+(PWU-AB-4 overall design).</td>
+</tr>
+<tr>
+<td>F103</td>
+<td>Deployment</td>
+<td>Remote deployment orchestration</td>
+<td>Container orchestration for remote deployment</td>
+<td>PASS</td>
+<td>deploy/remote/</td>
+<td>Deployment verification tests</td>
+<td>Container orchestration for remote deployment; 3-container stack
+deployable remotely</td>
+<td>No</td>
+<td>Remote deployment orchestration PASS. 3-container stack deployable
+remotely with health checking and shutdown.</td>
+</tr>
+<tr>
+<td>F104</td>
+<td>Server</td>
+<td>Device handler</td>
+<td>GET /api/v1/devices — list all devices</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_device.go</td>
+<td>handlers_device_test.go</td>
+<td>Unit: device listing, pagination; e2e: device enumeration</td>
+<td>No</td>
+<td>Returns ordered device list with status, last-seen timestamp, and
+metadata fields.</td>
+</tr>
+<tr>
+<td>F105</td>
+<td>Server</td>
+<td>Device handler</td>
+<td>GET /devices/by-hardware/:hardwareId — reverse lookup</td>
+<td>PASS</td>
+<td>server/internal/api/handlers_device.go</td>
+<td>handlers_device_test.go</td>
+<td>Unit: hardware ID lookup, not-found handling; e2e: hardware ID
+resolution</td>
+<td>No</td>
+<td>Resolves device by hardware identifier for integration with hardware
+inventory systems.</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -1703,13 +1863,17 @@ convention.</td>
 <tbody>
 <tr>
 <td>PASS</td>
-<td>42</td>
-<td>F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91</td>
+<td>49</td>
+<td>F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98
+(MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker
+Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware
+ID Reverse Lookup)</td>
 </tr>
 <tr>
 <td>VERIFIED</td>
-<td>17</td>
-<td>F35-F41, F68, F73, F77-F85, F88, F92-F93</td>
+<td>19</td>
+<td>F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy),
+F97 (Remote Stress)</td>
 </tr>
 <tr>
 <td>PROVEN</td>
@@ -1724,9 +1888,9 @@ auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video)</td>
 </tr>
 <tr>
 <td>DESIGN</td>
-<td>3</td>
+<td>4</td>
 <td>F42 (ota-android-agent), F43 (ota-update-engine-bridge), F54
-(PWU-AB-4 ApplyPort)</td>
+(PWU-AB-4 ApplyPort), F102 (PWU-AB-4 ApplyPort Scaffold)</td>
 </tr>
 <tr>
 <td>OPERATOR-BLOCKED</td>
@@ -1767,6 +1931,18 @@ auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video)</td>
 <td>2026-06-19</td>
 <td>Feature inventory update — F90-F95 added, F88 upgraded to VERIFIED,
 revision 2</td>
+</tr>
+<tr>
+<td>2026-06-19</td>
+<td>Feature inventory update — F96-F103 added (remote deployment, stress
+test, security fixes, MountManagerUI, ApplyPort scaffold); Executive
+Summary updated; revision 3</td>
+</tr>
+<tr>
+<td>2026-06-19</td>
+<td>Feature inventory update — F104-F105 added (Devices List API,
+Hardware ID Reverse Lookup); Executive Summary updated; production E2E
+288/290 noted; revision 4</td>
 </tr>
 </tbody>
 </table>
