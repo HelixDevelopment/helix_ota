@@ -115,7 +115,7 @@ var validHistoryEvents = map[string]bool{
 
 // Item represents a row in the items table.
 type Item struct {
-	AtmID           string `json:"ota_id"`
+	OtaID           string `json:"ota_id"`
 	Type            string `json:"type"`
 	Status          string `json:"status"`
 	Severity        string `json:"severity"`
@@ -130,7 +130,7 @@ type Item struct {
 // HistoryEntry represents a row in item_history.
 type HistoryEntry struct {
 	ID           int    `json:"id"`
-	AtmID        string `json:"ota_id"`
+	OtaID        string `json:"ota_id"`
 	By           string `json:"by"`
 	Event        string `json:"event"`
 	OnDate       string `json:"on_date"`
@@ -252,7 +252,7 @@ func addItem(db *sql.DB, item *Item) error {
 	if len(item.Description) < 40 {
 		return fmt.Errorf("description must be >= 40 characters (got %d)", len(item.Description))
 	}
-	if item.AtmID == "" {
+	if item.OtaID == "" {
 		return errors.New("ota_id is required (e.g. OTA-NNN)")
 	}
 
@@ -269,29 +269,29 @@ func addItem(db *sql.DB, item *Item) error {
 	_, err := db.Exec(`INSERT INTO items
 		(ota_id, type, status, severity, title, description, composes_with, current_location, created_at, modified_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		item.AtmID, item.Type, item.Status, item.Severity, item.Title,
+		item.OtaID, item.Type, item.Status, item.Severity, item.Title,
 		item.Description, item.ComposesWith, item.CurrentLocation, item.CreatedAt, item.ModifiedAt)
 	if err != nil {
-		return fmt.Errorf("insert item %s: %w", item.AtmID, err)
+		return fmt.Errorf("insert item %s: %w", item.OtaID, err)
 	}
 
 	// History entry: Opened
-	return addHistory(db, item.AtmID, "AI", "Opened", "Item created", "", "")
+	return addHistory(db, item.OtaID, "AI", "Opened", "Item created", "", "")
 }
 
 // closeItem closes an item with type-appropriate closure vocabulary (§11.4.33).
-func closeItem(db *sql.DB, atmID string, evidence string) error {
+func closeItem(db *sql.DB, otaID string, evidence string) error {
 	var typ, currentStatus string
-	err := db.QueryRow(`SELECT type, status FROM items WHERE ota_id = ?`, atmID).Scan(&typ, &currentStatus)
+	err := db.QueryRow(`SELECT type, status FROM items WHERE ota_id = ?`, otaID).Scan(&typ, &currentStatus)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("item %s not found", atmID)
+			return fmt.Errorf("item %s not found", otaID)
 		}
-		return fmt.Errorf("query item %s: %w", atmID, err)
+		return fmt.Errorf("query item %s: %w", otaID, err)
 	}
 
 	if terminalStatuses[currentStatus] {
-		return fmt.Errorf("item %s is already closed (status: %s)", atmID, currentStatus)
+		return fmt.Errorf("item %s is already closed (status: %s)", otaID, currentStatus)
 	}
 
 	closureStatus, ok := closureStatusByType[typ]
@@ -301,16 +301,16 @@ func closeItem(db *sql.DB, atmID string, evidence string) error {
 
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	_, err = db.Exec(`UPDATE items SET status = ?, modified_at = ? WHERE ota_id = ?`,
-		closureStatus, now, atmID)
+		closureStatus, now, otaID)
 	if err != nil {
-		return fmt.Errorf("close item %s: %w", atmID, err)
+		return fmt.Errorf("close item %s: %w", otaID, err)
 	}
 
-	return addHistory(db, atmID, "AI", closureStatus, "Closed per §11.4.33", evidence, "")
+	return addHistory(db, otaID, "AI", closureStatus, "Closed per §11.4.33", evidence, "")
 }
 
 // reopenItem reopens an item with §11.4.34 details.
-func reopenItem(db *sql.DB, atmID, by, reason, evidence string) error {
+func reopenItem(db *sql.DB, otaID, by, reason, evidence string) error {
 	if !isValidReopenBy(by) {
 		return fmt.Errorf("invalid 'by' value %q; must be AI or User", by)
 	}
@@ -327,38 +327,38 @@ func reopenItem(db *sql.DB, atmID, by, reason, evidence string) error {
 	}
 
 	var currentStatus string
-	err := db.QueryRow(`SELECT status FROM items WHERE ota_id = ?`, atmID).Scan(&currentStatus)
+	err := db.QueryRow(`SELECT status FROM items WHERE ota_id = ?`, otaID).Scan(&currentStatus)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("item %s not found", atmID)
+			return fmt.Errorf("item %s not found", otaID)
 		}
-		return fmt.Errorf("query item %s: %w", atmID, err)
+		return fmt.Errorf("query item %s: %w", otaID, err)
 	}
 
 	if currentStatus != "Reopened" && !terminalStatuses[currentStatus] {
-		return fmt.Errorf("item %s is not closed or reopened (current: %s)", atmID, currentStatus)
+		return fmt.Errorf("item %s is not closed or reopened (current: %s)", otaID, currentStatus)
 	}
 
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	_, err = db.Exec(`UPDATE items SET status = 'Reopened', modified_at = ? WHERE ota_id = ?`,
-		now, atmID)
+		now, otaID)
 	if err != nil {
-		return fmt.Errorf("reopen item %s: %w", atmID, err)
+		return fmt.Errorf("reopen item %s: %w", otaID, err)
 	}
 
 	reasonDetail := fmt.Sprintf("%s: %s", by, reason)
-	return addHistory(db, atmID, by, "Reopened", reasonDetail, evidence, "")
+	return addHistory(db, otaID, by, "Reopened", reasonDetail, evidence, "")
 }
 
 // addHistory appends an entry to item_history.
-func addHistory(db *sql.DB, atmID, by, event, reason, evidencePath, outcome string) error {
+func addHistory(db *sql.DB, otaID, by, event, reason, evidencePath, outcome string) error {
 	if !validHistoryEvents[event] {
 		return fmt.Errorf("invalid history event %q", event)
 	}
 	_, err := db.Exec(`INSERT INTO item_history
 		(ota_id, by, event, on_date, reason, evidence_path, outcome)
 		VALUES (?, ?, ?, datetime('now'), ?, ?, ?)`,
-		atmID, by, event, reason, evidencePath, outcome)
+		otaID, by, event, reason, evidencePath, outcome)
 	return err
 }
 
@@ -385,7 +385,7 @@ func listItems(db *sql.DB, statusFilter string) ([]Item, error) {
 	var items []Item
 	for rows.Next() {
 		var it Item
-		if err := rows.Scan(&it.AtmID, &it.Type, &it.Status, &it.Severity,
+		if err := rows.Scan(&it.OtaID, &it.Type, &it.Status, &it.Severity,
 			&it.Title, &it.Description, &it.ComposesWith,
 			&it.CurrentLocation, &it.CreatedAt, &it.ModifiedAt); err != nil {
 			return nil, fmt.Errorf("scan item: %w", err)
@@ -396,9 +396,9 @@ func listItems(db *sql.DB, statusFilter string) ([]Item, error) {
 }
 
 // getHistory returns the history for a given OTA ID.
-func getHistory(db *sql.DB, atmID string) ([]HistoryEntry, error) {
+func getHistory(db *sql.DB, otaID string) ([]HistoryEntry, error) {
 	rows, err := db.Query(`SELECT id, ota_id, by, event, on_date, reason, evidence_path, outcome
-		FROM item_history WHERE ota_id = ? ORDER BY id`, atmID)
+		FROM item_history WHERE ota_id = ? ORDER BY id`, otaID)
 	if err != nil {
 		return nil, fmt.Errorf("history query: %w", err)
 	}
@@ -407,7 +407,7 @@ func getHistory(db *sql.DB, atmID string) ([]HistoryEntry, error) {
 	var entries []HistoryEntry
 	for rows.Next() {
 		var h HistoryEntry
-		if err := rows.Scan(&h.ID, &h.AtmID, &h.By, &h.Event, &h.OnDate,
+		if err := rows.Scan(&h.ID, &h.OtaID, &h.By, &h.Event, &h.OnDate,
 			&h.Reason, &h.EvidencePath, &h.Outcome); err != nil {
 			return nil, fmt.Errorf("scan history: %w", err)
 		}
@@ -422,7 +422,7 @@ func getHistory(db *sql.DB, atmID string) ([]HistoryEntry, error) {
 
 // ValidationResult holds per-item validation issues.
 type ValidationResult struct {
-	AtmID  string
+	OtaID  string
 	Issues []string
 	Pass   bool
 }
@@ -470,7 +470,7 @@ func validateAll(db *sql.DB) ([]ValidationResult, error) {
 		}
 
 		results = append(results, ValidationResult{
-			AtmID:  it.AtmID,
+			OtaID:  it.OtaID,
 			Issues: issues,
 			Pass:   len(issues) == 0,
 		})
@@ -485,7 +485,7 @@ func validateAll(db *sql.DB) ([]ValidationResult, error) {
 
 // DiffResult captures a single difference.
 type DiffResult struct {
-	AtmID  string
+	OtaID  string
 	Field  string
 	DBA    string
 	DBNotB string
@@ -496,10 +496,10 @@ func diffItems(a, b []Item) []DiffResult {
 	indexA := make(map[string]Item)
 	indexB := make(map[string]Item)
 	for _, it := range a {
-		indexA[it.AtmID] = it
+		indexA[it.OtaID] = it
 	}
 	for _, it := range b {
-		indexB[it.AtmID] = it
+		indexB[it.OtaID] = it
 	}
 
 	var diffs []DiffResult
@@ -508,33 +508,33 @@ func diffItems(a, b []Item) []DiffResult {
 	for id, itemA := range indexA {
 		itemB, ok := indexB[id]
 		if !ok {
-			diffs = append(diffs, DiffResult{AtmID: id, Field: "EXISTS", DBA: "yes", DBNotB: "no"})
+			diffs = append(diffs, DiffResult{OtaID: id, Field: "EXISTS", DBA: "yes", DBNotB: "no"})
 			continue
 		}
 		if itemA.Type != itemB.Type {
-			diffs = append(diffs, DiffResult{AtmID: id, Field: "type", DBA: itemA.Type, DBNotB: itemB.Type})
+			diffs = append(diffs, DiffResult{OtaID: id, Field: "type", DBA: itemA.Type, DBNotB: itemB.Type})
 		}
 		if itemA.Status != itemB.Status {
-			diffs = append(diffs, DiffResult{AtmID: id, Field: "status", DBA: itemA.Status, DBNotB: itemB.Status})
+			diffs = append(diffs, DiffResult{OtaID: id, Field: "status", DBA: itemA.Status, DBNotB: itemB.Status})
 		}
 		if itemA.Title != itemB.Title {
-			diffs = append(diffs, DiffResult{AtmID: id, Field: "title", DBA: itemA.Title, DBNotB: itemB.Title})
+			diffs = append(diffs, DiffResult{OtaID: id, Field: "title", DBA: itemA.Title, DBNotB: itemB.Title})
 		}
 		if itemA.Description != itemB.Description {
-			diffs = append(diffs, DiffResult{AtmID: id, Field: "description", DBA: itemA.Description, DBNotB: itemB.Description})
+			diffs = append(diffs, DiffResult{OtaID: id, Field: "description", DBA: itemA.Description, DBNotB: itemB.Description})
 		}
 	}
 
 	// Items in B but not A
 	for id := range indexB {
 		if _, ok := indexA[id]; !ok {
-			diffs = append(diffs, DiffResult{AtmID: id, Field: "EXISTS", DBA: "no", DBNotB: "yes"})
+			diffs = append(diffs, DiffResult{OtaID: id, Field: "EXISTS", DBA: "no", DBNotB: "yes"})
 		}
 	}
 
 	sort.Slice(diffs, func(i, j int) bool {
-		if diffs[i].AtmID != diffs[j].AtmID {
-			return diffs[i].AtmID < diffs[j].AtmID
+		if diffs[i].OtaID != diffs[j].OtaID {
+			return diffs[i].OtaID < diffs[j].OtaID
 		}
 		return diffs[i].Field < diffs[j].Field
 	})
@@ -568,17 +568,17 @@ func mdParseItem(heading string) *Item {
 	if end < 0 {
 		return nil
 	}
-	atmID := body[start+1 : start+end]
+	otaID := body[start+1 : start+end]
 
 	// Extract title (text after the ATM bracket)
 	title := strings.TrimSpace(body[start+end+1:])
 
-	if atmID == "" || title == "" {
+	if otaID == "" || title == "" {
 		return nil
 	}
 
 	return &Item{
-		AtmID:  atmID,
+		OtaID:  otaID,
 		Title:  title,
 		Status: "Queued",
 		Type:   "Task",
@@ -680,7 +680,7 @@ func runAdd(args []string) {
 				// handled by parseCommonFlags
 				i++
 			case args[i] == "--id" && i+1 < len(args):
-				item.AtmID = args[i+1]
+				item.OtaID = args[i+1]
 				i++
 			case args[i] == "--type" && i+1 < len(args):
 				item.Type = args[i+1]
@@ -725,7 +725,7 @@ func runAdd(args []string) {
 		fmt.Fprintf(os.Stderr, "WARN: checkpoint: %v\n", err)
 	}
 
-	fmt.Printf("OK: added %s (%s) at %s\n", item.AtmID, item.Type, item.CreatedAt)
+	fmt.Printf("OK: added %s (%s) at %s\n", item.OtaID, item.Type, item.CreatedAt)
 }
 
 // ---------------------------------------------------------------------------
@@ -733,14 +733,14 @@ func runAdd(args []string) {
 // ---------------------------------------------------------------------------
 
 func runClose(args []string) {
-	var atmID, evidence string
+	var otaID, evidence string
 
 	for i := 0; i < len(args); i++ {
 		switch {
 		case args[i] == "--db" && i+1 < len(args):
 			i++
 		case args[i] == "--id" && i+1 < len(args):
-			atmID = args[i+1]
+			otaID = args[i+1]
 			i++
 		case args[i] == "--evidence" && i+1 < len(args):
 			evidence = args[i+1]
@@ -748,7 +748,7 @@ func runClose(args []string) {
 		}
 	}
 
-	if atmID == "" {
+	if otaID == "" {
 		fmt.Fprintln(os.Stderr, "ERROR: --id is required")
 		os.Exit(1)
 	}
@@ -761,7 +761,7 @@ func runClose(args []string) {
 	}
 	defer db.Close()
 
-	if err := closeItem(db, atmID, evidence); err != nil {
+	if err := closeItem(db, otaID, evidence); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
@@ -770,7 +770,7 @@ func runClose(args []string) {
 		fmt.Fprintf(os.Stderr, "WARN: checkpoint: %v\n", err)
 	}
 
-	fmt.Printf("OK: closed %s\n", atmID)
+	fmt.Printf("OK: closed %s\n", otaID)
 }
 
 // ---------------------------------------------------------------------------
@@ -778,7 +778,7 @@ func runClose(args []string) {
 // ---------------------------------------------------------------------------
 
 func runReopen(args []string) {
-	var atmID, by, reason, evidence string
+	var otaID, by, reason, evidence string
 	by = "AI" // default
 
 	for i := 0; i < len(args); i++ {
@@ -786,7 +786,7 @@ func runReopen(args []string) {
 		case args[i] == "--db" && i+1 < len(args):
 			i++
 		case args[i] == "--id" && i+1 < len(args):
-			atmID = args[i+1]
+			otaID = args[i+1]
 			i++
 		case args[i] == "--by" && i+1 < len(args):
 			by = args[i+1]
@@ -800,7 +800,7 @@ func runReopen(args []string) {
 		}
 	}
 
-	if atmID == "" {
+	if otaID == "" {
 		fmt.Fprintln(os.Stderr, "ERROR: --id is required")
 		os.Exit(1)
 	}
@@ -821,7 +821,7 @@ func runReopen(args []string) {
 	}
 	defer db.Close()
 
-	if err := reopenItem(db, atmID, by, reason, evidence); err != nil {
+	if err := reopenItem(db, otaID, by, reason, evidence); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
@@ -830,7 +830,7 @@ func runReopen(args []string) {
 		fmt.Fprintf(os.Stderr, "WARN: checkpoint: %v\n", err)
 	}
 
-	fmt.Printf("OK: reopened %s (%s: %s)\n", atmID, by, reason)
+	fmt.Printf("OK: reopened %s (%s: %s)\n", otaID, by, reason)
 }
 
 // ---------------------------------------------------------------------------
@@ -872,7 +872,7 @@ func runList(args []string) {
 		if len(shortTitle) > 60 {
 			shortTitle = shortTitle[:57] + "..."
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", it.AtmID, it.Type, it.Status, it.Severity, shortTitle)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", it.OtaID, it.Type, it.Status, it.Severity, shortTitle)
 	}
 	w.Flush()
 	fmt.Printf("\n%d item(s)\n", len(items))
@@ -921,9 +921,9 @@ func runSync(args []string) {
 			_, err := db.Exec(`INSERT INTO items (ota_id, type, status, severity, title, description, composes_with, created_at)
 				VALUES (?, 'Task', 'Queued', 'Medium', ?, '(synced from Issues.md)', '[]', datetime('now'))
 				ON CONFLICT(ota_id) DO UPDATE SET title = excluded.title`,
-				item.AtmID, item.Title)
+				item.OtaID, item.Title)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "WARN: upsert %s: %v\n", item.AtmID, err)
+				fmt.Fprintf(os.Stderr, "WARN: upsert %s: %v\n", item.OtaID, err)
 				continue
 			}
 			count++
@@ -970,7 +970,7 @@ func runValidate(args []string) {
 			passed++
 		} else {
 			failed++
-			fmt.Fprintf(os.Stderr, "FAIL %s:\n", r.AtmID)
+			fmt.Fprintf(os.Stderr, "FAIL %s:\n", r.OtaID)
 			for _, issue := range r.Issues {
 				fmt.Fprintf(os.Stderr, "  - %s\n", issue)
 			}
@@ -1026,7 +1026,7 @@ func runDiff(args []string) {
 		}
 		fmt.Printf("%d difference(s) found:\n", len(diffs))
 		for _, d := range diffs {
-			fmt.Printf("  %s %s: %q vs %q\n", d.AtmID, d.Field, d.DBA, d.DBNotB)
+			fmt.Printf("  %s %s: %q vs %q\n", d.OtaID, d.Field, d.DBA, d.DBNotB)
 		}
 		return
 	}
@@ -1057,10 +1057,10 @@ func runDiff(args []string) {
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
 		parsed := mdParseItem(line)
-		if parsed == nil || seen[parsed.AtmID] {
+		if parsed == nil || seen[parsed.OtaID] {
 			continue
 		}
-		seen[parsed.AtmID] = true
+		seen[parsed.OtaID] = true
 		mdItems = append(mdItems, *parsed)
 	}
 
@@ -1071,6 +1071,6 @@ func runDiff(args []string) {
 	}
 	fmt.Printf("%d difference(s) between DB and Issues.md:\n", len(diffs))
 	for _, d := range diffs {
-		fmt.Printf("  %s %s: DB=%q MD=%q\n", d.AtmID, d.Field, d.DBA, d.DBNotB)
+		fmt.Printf("  %s %s: DB=%q MD=%q\n", d.OtaID, d.Field, d.DBA, d.DBNotB)
 	}
 }
