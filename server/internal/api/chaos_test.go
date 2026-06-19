@@ -282,4 +282,3 @@ func TestChaosStoreRestart(t *testing.T) {
 	}
 	t.Log(strings.TrimSpace(line))
 }
-
