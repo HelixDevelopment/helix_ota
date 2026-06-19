@@ -120,6 +120,44 @@ func (m *MemoryRepository) UpdateDevice(_ context.Context, d Device) error {
 	return nil
 }
 
+// ListDevices returns devices matching the filter, with cursor pagination.
+func (m *MemoryRepository) ListDevices(_ context.Context, f DeviceFilter) ([]Device, string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	start := decodeCursor(f.Cursor)
+
+	var matched []Device
+	for _, d := range m.devices {
+		if f.OSType != "" && d.OSType != f.OSType {
+			continue
+		}
+		if f.TargetModel != "" && d.Model != f.TargetModel {
+			continue
+		}
+		if f.Status != "" && d.UpdateState != f.Status {
+			continue
+		}
+		matched = append(matched, d)
+	}
+
+	if start > len(matched) {
+		start = len(matched)
+	}
+	end := start + limit
+	next := ""
+	if end < len(matched) {
+		next = encodeCursor(end)
+	} else {
+		end = len(matched)
+	}
+	return matched[start:end], next, nil
+}
+
 // CreateArtifact stores a verified artifact record.
 func (m *MemoryRepository) CreateArtifact(_ context.Context, a Artifact) error {
 	m.mu.Lock()

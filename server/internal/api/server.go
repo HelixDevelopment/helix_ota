@@ -132,6 +132,8 @@ func (s *Server) Router() *gin.Engine {
 	auth.Use(s.authMiddleware(), s.auditMiddleware())
 	{
 		auth.POST("/devices/register", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDevice)
+		auth.GET("/devices", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDevices)
+		auth.GET("/devices/by-hardware/:hardwareId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleDeviceByHardware)
 		auth.GET("/devices/:deviceId/status", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceStatus)
 
 		auth.POST("/artifacts/upload", requireRole(RoleOperator, RoleAdmin), s.handleUploadArtifact)

@@ -265,6 +265,16 @@ type AuditFilter struct {
 	Cursor       string
 }
 
+// DeviceFilter narrows a device list query. Status maps to
+// UpdateState; empty fields are not filtered.
+type DeviceFilter struct {
+	OSType      otaprotocol.OSType
+	TargetModel string
+	Status      string
+	Limit       int
+	Cursor      string
+}
+
 // ReleaseFilter narrows a release list query (endpoints.md §10.2).
 type ReleaseFilter struct {
 	OSType      otaprotocol.OSType
@@ -288,9 +298,9 @@ type Project struct {
 type ProjectRole string
 
 const (
-	ProjectRoleViewer  ProjectRole = "viewer"
+	ProjectRoleViewer   ProjectRole = "viewer"
 	ProjectRoleOperator ProjectRole = "operator"
-	ProjectRoleAdmin   ProjectRole = "admin"
+	ProjectRoleAdmin    ProjectRole = "admin"
 )
 
 // ProjectAccess ties a caller to their role within a single project.
@@ -327,6 +337,7 @@ type Repository interface {
 	GetDevice(ctx context.Context, deviceID string) (Device, error)
 	GetDeviceByHardwareID(ctx context.Context, hardwareID string) (Device, error)
 	UpdateDevice(ctx context.Context, d Device) error
+	ListDevices(ctx context.Context, f DeviceFilter) ([]Device, string, error)
 
 	// Artifacts.
 	CreateArtifact(ctx context.Context, a Artifact) error

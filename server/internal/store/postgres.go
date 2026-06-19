@@ -160,6 +160,37 @@ func (r *PostgresRepository) scanDevice(row pgx.Row) (Device, error) {
 	_ = json.Unmarshal(meta, &d.Metadata)
 	return d, nil
 }
+func (r *PostgresRepository) ListDevices(ctx context.Context, f DeviceFilter) ([]Device, string, error) {
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	start := decodeCursor(f.Cursor)
+
+	q := deviceSelect + ` WHERE ($1='' OR os_type=$1) AND ($2='' OR model=$2) AND ($3='' OR update_state=$3) ORDER BY device_id OFFSET $4 LIMIT $5`
+	rows, err := r.pool.Query(ctx, q, string(f.OSType), f.TargetModel, f.Status, start, limit+1)
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+	var out []Device
+	for rows.Next() {
+		d, serr := r.scanDevice(rows)
+		if serr != nil {
+			return nil, "", serr
+		}
+		out = append(out, d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
+	next := ""
+	if len(out) > limit {
+		out = out[:limit]
+		next = encodeCursor(start + limit)
+	}
+	return out, next, nil
+}
 
 // --- artifacts ---
 
