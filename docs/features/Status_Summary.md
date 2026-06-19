@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 3
-**Last modified:** 2026-06-19T13:00:00Z
+**Revision:** 4
+**Last modified:** 2026-06-19T13:30:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 ---
@@ -16,6 +16,9 @@ and what state it is in.
 - The **control-plane server** (Go/Gin) is fully built and tested — all APIs
   for managing devices, releases, deployments, rollouts, recalls, and audit
   logs have both unit tests and end-to-end tests running in containers.
+  New endpoints: `GET /api/v1/devices` (device inventory listing) and
+  `GET /devices/by-hardware/:hardwareId` (hardware-ID reverse lookup)
+  both PASS.
 - **Six reusable Go libraries** (protocol types, artifact validation, rollout
   engine, telemetry, HTTP/3) are built and tested with unit + stress + chaos
   tests.
@@ -71,11 +74,11 @@ a release tag.
 
 ## Page 2 — For software engineers
 
-**Feature inventory summary (all 103 items from Status.md):**
+**Feature inventory summary (all 105 items from Status.md):**
 
 | Status | Count | Key Items |
 |---|---|---|
-| PASS | 47 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103) |
+| PASS | 49 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List API (F104), Hardware ID Reverse Lookup (F105) |
 | VERIFIED | 19 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97) |
 | PROVEN | 5 | PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52), slot switch video (F94), rollback video (F95) |
 | PENDING_FORENSICS | 1 | PWU-AB-2 RAUC dm-verity (F53) |

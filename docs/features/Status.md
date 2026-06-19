@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 3
-**Last modified:** 2026-06-19T13:00:00Z
+**Revision:** 4
+**Last modified:** 2026-06-19T13:30:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -26,7 +26,9 @@ the deepest tiers.
 and tested: 13 handler families, 7 internal packages, HTTP/3 + HTTP/2 + Brotli
 transport, in-memory + PostgreSQL store backends. All handlers have unit tests,
 and the e2e suite exercises full lifecycle flows against the containerised
-deployment.
+deployment. Two new API endpoints added: `GET /api/v1/devices` returns the full
+device inventory, and `GET /devices/by-hardware/:hardwareId` provides fast
+hardware-ID reverse lookup.
 
 **Go submodules** — Six `ota-*` modules provide protocol types, artifact
 validation, rollout engine, telemetry schema, and HTTP/3 transport. They are
@@ -187,6 +189,8 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F101 | Security | Docker-compose Secrets | Default credentials removed from docker-compose | PASS | docker-compose.yml | Security audit | No default credentials in docker-compose configuration | No | Default credentials removed from docker-compose. Secrets managed via environment variables. |
 | F102 | Android | PWU-AB-4 ApplyPort Scaffold | Go interfaces, healthy-marker script, systemd unit | DESIGN | ApplyPort Go scaffold, docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md | None — not yet tested | ApplyPort Go scaffold, healthy-marker script, systemd unit defined | No | PWU-AB-4 ApplyPort Go scaffold designed. Healthy-marker script and systemd unit authored. Build in progress. Complements existing F54 (PWU-AB-4 overall design). |
 | F103 | Deployment | Remote deployment orchestration | Container orchestration for remote deployment | PASS | deploy/remote/ | Deployment verification tests | Container orchestration for remote deployment; 3-container stack deployable remotely | No | Remote deployment orchestration PASS. 3-container stack deployable remotely with health checking and shutdown. |
+| F104 | Server | Device handler | GET /api/v1/devices — list all devices | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: device listing, pagination; e2e: device enumeration | No | Returns ordered device list with status, last-seen timestamp, and metadata fields. |
+| F105 | Server | Device handler | GET /devices/by-hardware/:hardwareId — reverse lookup | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: hardware ID lookup, not-found handling; e2e: hardware ID resolution | No | Resolves device by hardware identifier for integration with hardware inventory systems. |
 
 ---
 
@@ -215,7 +219,7 @@ the following gaps exist for full-session video capture:
 
 | Status | Count | Items |
 |---|---|---|
-| PASS | 47 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy) |
+| PASS | 49 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup) |
 | VERIFIED | 19 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress) |
 | PROVEN | 5 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
 | PENDING_FORENSICS | 1 | F53 (PWU-AB-2 RAUC dm-verity) |
@@ -233,3 +237,4 @@ the following gaps exist for full-session video capture:
 | 2026-06-18 | Initial feature inventory creation (HEAD at time of writing). |
 | 2026-06-19 | Feature inventory update — F90-F95 added, F88 upgraded to VERIFIED, revision 2 |
 | 2026-06-19 | Feature inventory update — F96-F103 added (remote deployment, stress test, security fixes, MountManagerUI, ApplyPort scaffold); Executive Summary updated; revision 3 |
+| 2026-06-19 | Feature inventory update — F104-F105 added (Devices List API, Hardware ID Reverse Lookup); Executive Summary updated; production E2E 288/290 noted; revision 4 |
