@@ -1,0 +1,115 @@
+=== Helix OTA \xE2\x80\x94 Deployments Demo ===
+
+0) POST /api/v1/auth/login \xE2\x80\x94 Authenticate
+  \xE2\x9C\x85 Login OK (token: eyJzdWIiOiJhZG1pbkBo...)
+
+1) Creating a random OTA payload artifact...
+  adding: payload/payload.bin (stored 0%)
+  \xE2\x9C\x85 Payload created: version=1.0.0.1781902765, sha256=41dc63a64e10972e4f0ba1559ef7702bf7a3d58b0723bc1ce12dc660d18c7341
+  \xE2\x9C\x85 Artifact signed with Ed25519 key
+
+2) POST /api/v1/artifacts/upload \xE2\x80\x94 Upload artifact
+  \xE2\x9C\x85 Artifact uploaded: id=f3b5b44f42bf9901089f3dcbce6400e4, verified=True
+{
+    "artifact_id": "f3b5b44f42bf9901089f3dcbce6400e4",
+    "sha256": "41dc63a64e10972e4f0ba1559ef7702bf7a3d58b0723bc1ce12dc660d18c7341",
+    "size": 65724,
+    "os": "android",
+    "target_model": "rk3588",
+    "version": "1.0.0.1781902765",
+    "storage_ref": "s3://helix-artifacts/f3b5b44f42bf9901089f3dcbce6400e4",
+    "verified": true,
+    "uploaded_at": "2026-06-19T20:59:25.910136Z"
+}
+
+3) POST /api/v1/releases \xE2\x80\x94 Create release
+  \xE2\x9C\x85 Release created: id=02ff97d314e2707f4de2e0b34915d032
+{
+    "release_id": "02ff97d314e2707f4de2e0b34915d032",
+    "artifact_id": "f3b5b44f42bf9901089f3dcbce6400e4",
+    "version": "1.0.0.1781902765",
+    "os": "android",
+    "target_model": "rk3588",
+    "status": "published",
+    "notes": "Demo release 1.0.0.1781902765",
+    "created_at": "2026-06-19T20:59:25.987337Z"
+}
+
+4) POST /api/v1/devices/register \xE2\x80\x94 Register matching device (group=demo-1781902765)
+  \xE2\x9C\x85 Device registered: hw_id=demo-deploy-90473
+
+5) GET /api/v1/deployments \xE2\x80\x94 List deployments (before create)
+  \xE2\x9C\x85 List deployments returned (HTTP 200, 1 deployments)
+{
+    "items": [
+        {
+            "deployment_id": "b7364e74958a38a1e7b66c75823a84ba",
+            "release_id": "7bd0a552dbdee12c426402185d45009d",
+            "strategy": "all-targets",
+            "group": "demo-1781902760",
+            "status": "active",
+            "target_count": 1,
+            "created_at": "2026-06-19T20:59:20.719233Z"
+        }
+    ],
+    "next_cursor": null
+}
+
+6) POST /api/v1/deployments \xE2\x80\x94 Create deployment (all-targets, group=demo-1781902765)
+  \xE2\x9C\x85 Deployment created: id=b78d7bf6c566059b9b71ffeef1f60db1
+{
+    "deployment_id": "b78d7bf6c566059b9b71ffeef1f60db1",
+    "release_id": "02ff97d314e2707f4de2e0b34915d032",
+    "strategy": "all-targets",
+    "group": "demo-1781902765",
+    "status": "active",
+    "target_count": 1,
+    "created_at": "2026-06-19T20:59:26.105685Z"
+}
+
+7) GET /api/v1/deployments \xE2\x80\x94 List deployments (after create)
+  \xE2\x9C\x85 List deployments after create (HTTP 200, 2 deployments)
+{
+    "items": [
+        {
+            "deployment_id": "b78d7bf6c566059b9b71ffeef1f60db1",
+            "release_id": "02ff97d314e2707f4de2e0b34915d032",
+            "strategy": "all-targets",
+            "group": "demo-1781902765",
+            "status": "active",
+            "target_count": 1,
+            "created_at": "2026-06-19T20:59:26.105685Z"
+        },
+        {
+            "deployment_id": "b7364e74958a38a1e7b66c75823a84ba",
+            "release_id": "7bd0a552dbdee12c426402185d45009d",
+            "strategy": "all-targets",
+            "group": "demo-1781902760",
+            "status": "active",
+            "target_count": 1,
+            "created_at": "2026-06-19T20:59:20.719233Z"
+        }
+    ],
+    "next_cursor": null
+}
+
+8) GET /api/v1/deployments/b78d7bf6c566059b9b71ffeef1f60db1 \xE2\x80\x94 Get deployment status
+  \xE2\x9C\x85 Deployment status returned (HTTP 200)
+{
+    "deployment_id": "b78d7bf6c566059b9b71ffeef1f60db1",
+    "release_id": "02ff97d314e2707f4de2e0b34915d032",
+    "strategy": "all-targets",
+    "group": "demo-1781902765",
+    "status": "active",
+    "target_count": 1,
+    "created_at": "2026-06-19T20:59:26.105685Z",
+    "progress": {
+        "pending": 1,
+        "downloading": 0,
+        "installed": 0,
+        "succeeded": 0,
+        "failed": 0
+    }
+}
+
+\xE2\x9C\x85 ALL DEPLOYMENT DEMO OPERATIONS PASSED
