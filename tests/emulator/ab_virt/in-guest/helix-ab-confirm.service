@@ -1,0 +1,15 @@
+[Unit]
+Description=Helix OTA healthy-boot confirm — clears upgrade_available+bootcount on a healthy boot
+Documentation=docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md#4-the-healthy-marker-mechanism
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/helix-ab-confirm
+RemainAfterExit=yes
+# StandardOutput is inherited from the system manager (journald on systemd,
+# stdout on BusyBox init). The script uses logger for structured output.
+
+[Install]
+WantedBy=multi-user.target
