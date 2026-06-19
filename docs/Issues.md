@@ -1,13 +1,11 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 2
-**Last modified:** 2026-06-10T18:30:00Z
+**Revision:** 3
+**Last modified:** 2026-06-19T08:30:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
-short-form companion is [`Issues_Summary.md`](Issues_Summary.md). Items
-surfaced during the 2026-06-10 emulator-driven device-testing session;
-HEAD at creation `a839220` + the docs commit on top.
+short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ---
 
@@ -60,30 +58,6 @@ HEAD at creation `a839220` + the docs commit on top.
 - **UNBLOCK CONDITION:** A physical RK3588 / Orange Pi 5 Max board
   reachable over ADB/SSH (or physically attached) for flashing.
 - **WHO:** Operator — attach / provide remote access to the board.
-
----
-
-## §5. [OTA-011] Workable-items SQLite database (constitution §11.4.93 mandate) not started
-
-**Status:** In progress
-**Type:** Task
-**Description:** The constitution mandates a SQLite-backed single source of truth for workable items (`docs/.workable_items.db`, Go binary at `cmd/workable-items/`). Not started yet — no DB schema, no Go binary, no tracking.
-
----
-
-## §6. [OTA-012] Build resource stats tracking (constitution §11.4.24 mandate) not started
-
-**Status:** In progress
-**Type:** Task
-**Description:** Constitution §11.4.24 mandates per-build resource telemetry (memory/CPU/IO). Not started. TSV registry + helper scripts need authoring.
-
----
-
-## §7. [OTA-013] Stress + chaos coverage gap (constitution §11.4.85 mandate)
-
-**Status:** In progress
-**Type:** Task
-**Description:** Stress+chaos coverage exists for 2 of ~12 submodules (F86 — PARTIAL). Server endpoints now have stress+chaos (PR #13). Remaining submodules need coverage. Status: server DONE, submodule coverage growing.
 
 ---
 
