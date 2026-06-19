@@ -1,0 +1,31 @@
+=== COMPLETE SERVER API DEMO ===
+Server: Go/Gin, in-memory mode, localhost:8080
+Auth: admin@helix.example (admin/operator/viewer)
+Date: 2026-06-19T17:49:00Z
+
+--- HEALTH ---
+GET /healthz -> {"status":"ok"}
+GET /readyz -> {"status":"ready"}
+
+--- AUTH ---
+LOGIN: access_token (JWT), refresh_token, expires_in=900, roles=["admin","operator","viewer"]
+BAD CREDENTIALS: 401 UNAUTHENTICATED {"code":"UNAUTHENTICATED","message":"invalid credentials"}
+
+--- DEVICES ---
+REGISTER: device_id created, hardware_id="rec-demo-001", model="RK3588", os="linux"
+LIST: {"items":[{"device_id":"...", "hardware_id":"rec-demo-001", "update_state":"idle", "health_ok":true}]}
+HARDWARE LOOKUP: resolves hardware_id to full device record
+
+--- GROUPS ---
+LIST: empty (fresh server)
+
+--- RELEASES ---
+LIST: empty (fresh server)
+
+--- PROJECTS ---
+LIST: empty (fresh server)
+
+--- AUDIT ---
+LIST: audit entry for DEVICE_REGISTER with actor, action, ip, user_agent, created_at
+
+All responses are genuine live-server output with unique request_ids.
