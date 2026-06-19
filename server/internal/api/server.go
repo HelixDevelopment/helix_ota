@@ -190,6 +190,8 @@ func (s *Server) Router() *gin.Engine {
 		auth.DELETE("/projects/:projectId", requireRole(RoleAdmin), s.handleDeleteProject)
 	}
 
+	s.MountManagerUI(r)
+
 	return r
 }
 
