@@ -7,7 +7,7 @@ Short-form companion of [`Fixed.md`](Fixed.md) (§11.4.53 parity). Closed
 items only; open items appear in [`Issues_Summary.md`](Issues_Summary.md).
 Sorted closure-date DESC. All commit hashes read from `git log`.
 
-| ATM ID | # | Status | Type | One-line description |
+| OTA ID | # | Status | Type | One-line description |
 |---|---|---|---|---|
 | OTA-001 | §1 | Fixed (→ Fixed.md) | Bug | `UpdateAvailable` payload now carries `deployment_id` so devices can echo it in telemetry (commit `3c57867`, `TestEmulatorSelfServesDeploymentID`) |
 | OTA-002 | §2 | Implemented (→ Fixed.md) | Feature | New `GET /deployments` list endpoint enumerates deployments with cursor pagination (commit `3c57867`, `TestDeploymentListReturnsActive`) |
