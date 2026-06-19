@@ -198,26 +198,29 @@ HTML/PDF exports where those siblings exist on disk; `Revision` and `Last modifi
 from each document's own metadata header (`—` = absent). Every linked path was verified to exist
 on disk (HelixConstitution §11.4.57 / §7.1 anti-bluff, UNVERIFIED clause numbers).
 
-| Document | Last modified | Revision | Markdown | HTML | PDF |
-|---|---|---|---|---|---|
-| Issues — open workable items | 2026-06-10T18:30:00Z | 2 | [md](docs/Issues.md) | [html](docs/Issues.html) | [pdf](docs/Issues.pdf) |
-| Issues Summary — open, short-form | 2026-06-10T18:30:00Z | 2 | [md](docs/Issues_Summary.md) | [html](docs/Issues_Summary.html) | [pdf](docs/Issues_Summary.pdf) |
-| Fixed — closed workable items | 2026-06-10T18:30:00Z | 2 | [md](docs/Fixed.md) | [html](docs/Fixed.html) | [pdf](docs/Fixed.pdf) |
-| Fixed Summary — closed, short-form | 2026-06-10T18:30:00Z | 2 | [md](docs/Fixed_Summary.md) | [html](docs/Fixed_Summary.html) | [pdf](docs/Fixed_Summary.pdf) |
-| Session Resumption — canonical entry point | 2026-06-10T12:00:00Z | 2 | [md](docs/RESUMPTION.md) | [html](docs/RESUMPTION.html) | [pdf](docs/RESUMPTION.pdf) |
-| Spec-corpus continuation / handoff | 2026-06-10 | 3 | [md](docs/research/main_specs/CONTINUATION.md) | [html](docs/research/main_specs/CONTINUATION.html) | [pdf](docs/research/main_specs/CONTINUATION.pdf) |
-| Additions synthesis (gap closure) | 2026-06-08 | 3 | [md](docs/research/main_specs/research/additions_synthesis.md) | [html](docs/research/main_specs/research/additions_synthesis.html) | [pdf](docs/research/main_specs/research/additions_synthesis.pdf) |
-| 1.0.0-MVP API — operational endpoints | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.pdf) |
-| 1.0.0-MVP API — implemented endpoints | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.pdf) |
-| 1.0.0-MVP dashboard design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.md) | [html](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.html) | [pdf](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.pdf) |
-| 1.0.1 staged rollout — overview (README) | 2026-06-08 | 2 | [md](docs/research/main_specs/1.0.1-staged-rollout/README.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/README.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/README.pdf) |
-| 1.0.1 staged rollout — rollout engine | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.pdf) |
-| 1.0.1 staged rollout — migration 002 design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.pdf) |
-| 1.0.1 staged rollout — device TUF | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.pdf) |
-| 1.0.1 staged rollout — rollback UX | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.pdf) |
-| 1.0.3 delta updates — overview (README) | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/README.md) | [html](docs/research/main_specs/1.0.3-delta-updates/README.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/README.pdf) |
-| 1.0.3 delta updates — design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.md) | [html](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.pdf) |
-| Repo public-visibility audit (gap G11) | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/research/repo_audit.md) | [html](docs/research/main_specs/research/repo_audit.html) | [pdf](docs/research/main_specs/research/repo_audit.pdf) |
+| Document | Last modified | Revision | Markdown | HTML | PDF | DOCX |
+|---|---|---|---|---|---|---|---|
+| Issues — open workable items | 2026-06-19T08:30:00Z | 3 | [md](docs/Issues.md) | [html](docs/Issues.html) | [pdf](docs/Issues.pdf) | — |
+| Issues Summary — open, short-form | 2026-06-10T18:30:00Z | 2 | [md](docs/Issues_Summary.md) | [html](docs/Issues_Summary.html) | [pdf](docs/Issues_Summary.pdf) | — |
+| Fixed — closed workable items | 2026-06-10T18:30:00Z | 2 | [md](docs/Fixed.md) | [html](docs/Fixed.html) | [pdf](docs/Fixed.pdf) | — |
+| Fixed Summary — closed, short-form | 2026-06-10T18:30:00Z | 2 | [md](docs/Fixed_Summary.md) | [html](docs/Fixed_Summary.html) | [pdf](docs/Fixed_Summary.pdf) | — |
+| Feature Inventory — Status (§11.4.153 four-format) | 2026-06-19T13:30:00Z | 4 | [md](docs/features/Status.md) | [html](docs/features/Status.html) | [pdf](docs/features/Status.pdf) | [docx](docs/features/Status.docx) |
+| Feature Inventory — Status Summary | 2026-06-19T13:30:00Z | 4 | [md](docs/features/Status_Summary.md) | [html](docs/features/Status_Summary.html) | [pdf](docs/features/Status_Summary.pdf) | [docx](docs/features/Status_Summary.docx) |
+| Emulator (rk3588_ab_virt) — Status | 2026-06-11T13:15:00Z | 3 | [md](docs/emulator/rk3588_ab_virt/Status.md) | [html](docs/emulator/rk3588_ab_virt/Status.html) | [pdf](docs/emulator/rk3588_ab_virt/Status.pdf) | — |
+| Emulator (rk3588_ab_virt) — Status Summary | 2026-06-11T13:15:00Z | 3 | [md](docs/emulator/rk3588_ab_virt/Status_Summary.md) | [html](docs/emulator/rk3588_ab_virt/Status_Summary.html) | [pdf](docs/emulator/rk3588_ab_virt/Status_Summary.pdf) | — |
+| Spec-corpus continuation / handoff | 2026-06-10 | 3 | [md](docs/research/main_specs/CONTINUATION.md) | [html](docs/research/main_specs/CONTINUATION.html) | [pdf](docs/research/main_specs/CONTINUATION.pdf) | — |
+| Additions synthesis (gap closure) | 2026-06-08 | 3 | [md](docs/research/main_specs/research/additions_synthesis.md) | [html](docs/research/main_specs/research/additions_synthesis.html) | [pdf](docs/research/main_specs/research/additions_synthesis.pdf) | — |
+| 1.0.0-MVP API — operational endpoints | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/operational_endpoints.pdf) | — |
+| 1.0.0-MVP API — implemented endpoints | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.md) | [html](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.html) | [pdf](docs/research/main_specs/1.0.0-mvp/api/implemented_endpoints.pdf) | — |
+| 1.0.0-MVP dashboard design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.md) | [html](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.html) | [pdf](docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.pdf) | — |
+| 1.0.1 staged rollout — overview (README) | 2026-06-08 | 2 | [md](docs/research/main_specs/1.0.1-staged-rollout/README.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/README.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/README.pdf) | — |
+| 1.0.1 staged rollout — rollout engine | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/rollout_engine.pdf) | — |
+| 1.0.1 staged rollout — migration 002 design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/migration_002_design.pdf) | — |
+| 1.0.1 staged rollout — device TUF | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/device_tuf.pdf) | — |
+| 1.0.1 staged rollout — rollback UX | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.md) | [html](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.html) | [pdf](docs/research/main_specs/1.0.1-staged-rollout/rollback_ux.pdf) | — |
+| 1.0.3 delta updates — overview (README) | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/README.md) | [html](docs/research/main_specs/1.0.3-delta-updates/README.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/README.pdf) | — |
+| 1.0.3 delta updates — design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.md) | [html](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.pdf) | — |
+| Repo public-visibility audit (gap G11) | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/research/repo_audit.md) | [html](docs/research/main_specs/research/repo_audit.html) | [pdf](docs/research/main_specs/research/repo_audit.pdf) | — |
 <!-- doc-link-section:end -->
 
 ## 11. License
