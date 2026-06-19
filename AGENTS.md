@@ -41,6 +41,7 @@
   Constitution §11.4.158. Every feature/flow/edge-case recorded; every
   recording's on-screen content machine-read and verified as a genuine
   working result.
+- **Window-specific MP4 + vision validation.** §11.4.159. Every recording must be window-specific MP4 with expected-content specification BEFORE recording, vision validation AFTER recording, terminal window cleanup, and content-verification workflow.
 
 ## Project-specific agent rules
 
