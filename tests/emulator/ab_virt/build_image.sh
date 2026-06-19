@@ -75,7 +75,6 @@ BR2_PACKAGE_DOSFSTOOLS_MKFSDOTFAT=y
 BR2_PACKAGE_RAUC=y
 BR2_PACKAGE_LIBUBOOTENV=y
 BR2_PACKAGE_UBOOT_TOOLS=y
-BR2_PACKAGE_LVM2=y
 BR2_TARGET_UBOOT=y
 BR2_TARGET_UBOOT_BOARD_DEFCONFIG="qemu_arm64"
 BR2_TARGET_UBOOT_NEEDS_DTC=y
@@ -85,6 +84,18 @@ BR2_ROOTFS_OVERLAY="/work/rootfs-overlay"
 BR2_ROOTFS_OVERLAY_DELETE_STALE=y
 CFG
     make O=/work/out olddefconfig
+    # uboot-configure extracts U-Boot + runs its kconfig, making
+    # include/configs/qemu_arm64.h available. We patch in the FAT env
+    # string defines directly because CONFIG_ENV_FAT_INTERFACE etc. are
+    # NOT Kconfig options on qemu_arm64 for U-Boot 2024.01.
+    make O=/work/out uboot-configure
+    cat >> /work/out/build/uboot-2024.01/include/configs/qemu_arm64.h <<UHEAD
+/* FAT env support for A/B-virt emulator (PWU-AB-2) */
+#define CONFIG_ENV_FAT_INTERFACE         "virtio"
+#define CONFIG_ENV_FAT_DEVICE_AND_PART   "0:1"
+#define CONFIG_ENV_FAT_FILE              "uboot.env"
+UHEAD
+
 
     # Build the rootfs overlay files
     mkdir -p /work/rootfs-overlay/etc/rauc
@@ -141,6 +152,7 @@ FWEOF
     chmod 644 /work/rootfs-overlay/etc/rauc/dev.cert.pem \
             /work/rootfs-overlay/etc/rauc/system.conf \
             /work/rootfs-overlay/etc/fw_env.config 2>/dev/null || true
+
 
     # Build
     make O=/work/out -j$(nproc)
