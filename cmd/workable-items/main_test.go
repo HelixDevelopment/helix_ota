@@ -33,13 +33,13 @@ func testDB(t *testing.T) (*sql.DB, string) {
 }
 
 // testItem returns a valid Item for tests.
-func testItem(atmID string) *Item {
+func testItem(otaID string) *Item {
 	return &Item{
-		AtmID:        atmID,
+		OtaID:        otaID,
 		Type:         "Bug",
 		Status:       "Queued",
 		Severity:     "High",
-		Title:        "Test item " + atmID,
+		Title:        "Test item " + otaID,
 		Description:  "This is a test item with a sufficiently long description for the 40-character minimum requirement.",
 		ComposesWith: "[]",
 	}
@@ -65,8 +65,8 @@ func TestAddItem(t *testing.T) {
 	if len(items) != 1 {
 		t.Fatalf("expected 1 item, got %d", len(items))
 	}
-	if items[0].AtmID != "OTA-001" {
-		t.Errorf("expected OTA-001, got %s", items[0].AtmID)
+	if items[0].OtaID != "OTA-001" {
+		t.Errorf("expected OTA-001, got %s", items[0].OtaID)
 	}
 	if items[0].Status != "Queued" {
 		t.Errorf("expected Queued, got %s", items[0].Status)
@@ -137,7 +137,7 @@ func TestAddItemEmptyTitle(t *testing.T) {
 	}
 }
 
-func TestAddItemEmptyAtmID(t *testing.T) {
+func TestAddItemEmptyOtaID(t *testing.T) {
 	db, _ := testDB(t)
 	item := testItem("")
 	item.Title = "No ID item"
@@ -304,16 +304,16 @@ func TestReopenAllReasons(t *testing.T) {
 	}
 
 	for i, reason := range reasons {
-		atmID := fmt.Sprintf("OTA-REASON-%02d", i+1)
-		item := testItem(atmID)
+		otaID := fmt.Sprintf("OTA-REASON-%02d", i+1)
+		item := testItem(otaID)
 		if err := addItem(db, item); err != nil {
-			t.Fatalf("addItem %s: %v", atmID, err)
+			t.Fatalf("addItem %s: %v", otaID, err)
 		}
-		if err := closeItem(db, atmID, "evidence/"+atmID); err != nil {
-			t.Fatalf("closeItem %s: %v", atmID, err)
+		if err := closeItem(db, otaID, "evidence/"+otaID); err != nil {
+			t.Fatalf("closeItem %s: %v", otaID, err)
 		}
-		if err := reopenItem(db, atmID, "User", reason, "qa/"+atmID+"/reopen.log"); err != nil {
-			t.Fatalf("reopenItem %s reason=%s: %v", atmID, reason, err)
+		if err := reopenItem(db, otaID, "User", reason, "qa/"+otaID+"/reopen.log"); err != nil {
+			t.Fatalf("reopenItem %s reason=%s: %v", otaID, reason, err)
 		}
 	}
 
@@ -323,7 +323,7 @@ func TestReopenAllReasons(t *testing.T) {
 	}
 	for _, it := range items {
 		if it.Status != "Reopened" {
-			t.Errorf("%s: expected Reopened, got %s", it.AtmID, it.Status)
+			t.Errorf("%s: expected Reopened, got %s", it.OtaID, it.Status)
 		}
 	}
 }
@@ -391,16 +391,16 @@ func TestReopenItemNotFound(t *testing.T) {
 
 func TestRoundTrip(t *testing.T) {
 	db, _ := testDB(t)
-	atmID := "OTA-RT-001"
+	otaID := "OTA-RT-001"
 
 	// 1. Add
-	item := testItem(atmID)
+	item := testItem(otaID)
 	if err := addItem(db, item); err != nil {
 		t.Fatalf("add: %v", err)
 	}
 
 	// 2. Close
-	if err := closeItem(db, atmID, "evidence/roundtrip/v1"); err != nil {
+	if err := closeItem(db, otaID, "evidence/roundtrip/v1"); err != nil {
 		t.Fatalf("close: %v", err)
 	}
 	items, _ := listItems(db, "")
@@ -409,7 +409,7 @@ func TestRoundTrip(t *testing.T) {
 	}
 
 	// 3. Reopen
-	if err := reopenItem(db, atmID, "User", "end-user-report", "evidence/roundtrip/reopen.log"); err != nil {
+	if err := reopenItem(db, otaID, "User", "end-user-report", "evidence/roundtrip/reopen.log"); err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
 	items, _ = listItems(db, "")
@@ -418,7 +418,7 @@ func TestRoundTrip(t *testing.T) {
 	}
 
 	// 4. Close again
-	if err := closeItem(db, atmID, "evidence/roundtrip/v2"); err != nil {
+	if err := closeItem(db, otaID, "evidence/roundtrip/v2"); err != nil {
 		t.Fatalf("close (2nd): %v", err)
 	}
 	items, _ = listItems(db, "")
@@ -427,7 +427,7 @@ func TestRoundTrip(t *testing.T) {
 	}
 
 	// Verify full history
-	history, err := getHistory(db, atmID)
+	history, err := getHistory(db, otaID)
 	if err != nil {
 		t.Fatalf("getHistory: %v", err)
 	}
@@ -544,11 +544,11 @@ func TestListWithStatusFilter(t *testing.T) {
 	// Add items with different statuses
 	statuses := []string{"Queued", "In progress", "Reopened", "Fixed (→ Fixed.md)"}
 	for i, s := range statuses {
-		atmID := fmt.Sprintf("OTA-LIST-%02d", i+1)
-		item := testItem(atmID)
+		otaID := fmt.Sprintf("OTA-LIST-%02d", i+1)
+		item := testItem(otaID)
 		item.Status = s
 		if err := addItem(db, item); err != nil {
-			t.Fatalf("addItem %s: %v", atmID, err)
+			t.Fatalf("addItem %s: %v", otaID, err)
 		}
 	}
 
@@ -583,7 +583,7 @@ func TestListWithStatusFilter(t *testing.T) {
 
 func TestDiffIdenticalSlices(t *testing.T) {
 	items := []Item{
-		{AtmID: "OTA-001", Type: "Bug", Status: "Queued", Title: "Test", Description: string(make([]byte, 40))},
+		{OtaID: "OTA-001", Type: "Bug", Status: "Queued", Title: "Test", Description: string(make([]byte, 40))},
 	}
 	diffs := diffItems(items, items)
 	if len(diffs) != 0 {
@@ -593,10 +593,10 @@ func TestDiffIdenticalSlices(t *testing.T) {
 
 func TestDiffDifferentStatus(t *testing.T) {
 	a := []Item{
-		{AtmID: "OTA-001", Type: "Bug", Status: "Queued", Title: "Test", Description: string(make([]byte, 40))},
+		{OtaID: "OTA-001", Type: "Bug", Status: "Queued", Title: "Test", Description: string(make([]byte, 40))},
 	}
 	b := []Item{
-		{AtmID: "OTA-001", Type: "Bug", Status: "Fixed (→ Fixed.md)", Title: "Test", Description: string(make([]byte, 40))},
+		{OtaID: "OTA-001", Type: "Bug", Status: "Fixed (→ Fixed.md)", Title: "Test", Description: string(make([]byte, 40))},
 	}
 
 	diffs := diffItems(a, b)
@@ -610,19 +610,19 @@ func TestDiffDifferentStatus(t *testing.T) {
 
 func TestDiffMissingItem(t *testing.T) {
 	a := []Item{
-		{AtmID: "OTA-001", Type: "Bug", Status: "Queued", Title: "A", Description: string(make([]byte, 40))},
-		{AtmID: "OTA-002", Type: "Task", Status: "Queued", Title: "B", Description: string(make([]byte, 40))},
+		{OtaID: "OTA-001", Type: "Bug", Status: "Queued", Title: "A", Description: string(make([]byte, 40))},
+		{OtaID: "OTA-002", Type: "Task", Status: "Queued", Title: "B", Description: string(make([]byte, 40))},
 	}
 	b := []Item{
-		{AtmID: "OTA-001", Type: "Bug", Status: "Queued", Title: "A", Description: string(make([]byte, 40))},
+		{OtaID: "OTA-001", Type: "Bug", Status: "Queued", Title: "A", Description: string(make([]byte, 40))},
 	}
 
 	diffs := diffItems(a, b)
 	if len(diffs) != 1 {
 		t.Fatalf("expected 1 diff, got %d", len(diffs))
 	}
-	if diffs[0].AtmID != "OTA-002" {
-		t.Errorf("expected OTA-002 diff, got %s", diffs[0].AtmID)
+	if diffs[0].OtaID != "OTA-002" {
+		t.Errorf("expected OTA-002 diff, got %s", diffs[0].OtaID)
 	}
 }
 
@@ -794,10 +794,10 @@ func TestMultipleItems(t *testing.T) {
 	db, _ := testDB(t)
 
 	for i := 1; i <= 5; i++ {
-		atmID := fmt.Sprintf("OTA-MULTI-%02d", i)
-		item := testItem(atmID)
+		otaID := fmt.Sprintf("OTA-MULTI-%02d", i)
+		item := testItem(otaID)
 		if err := addItem(db, item); err != nil {
-			t.Fatalf("addItem %s: %v", atmID, err)
+			t.Fatalf("addItem %s: %v", otaID, err)
 		}
 	}
 
@@ -811,8 +811,8 @@ func TestMultipleItems(t *testing.T) {
 
 	// Verify ordering by OTA ID
 	for i := 1; i < len(items); i++ {
-		if items[i].AtmID <= items[i-1].AtmID {
-			t.Errorf("items not sorted: %s <= %s", items[i].AtmID, items[i-1].AtmID)
+		if items[i].OtaID <= items[i-1].OtaID {
+			t.Errorf("items not sorted: %s <= %s", items[i].OtaID, items[i-1].OtaID)
 		}
 	}
 }
