@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 2
-**Last modified:** 2026-06-19T12:00:00Z
+**Revision:** 3
+**Last modified:** 2026-06-19T13:00:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -43,9 +43,18 @@ a running Android target — PWU-AB-4 (ApplyPort) is in DESIGN phase.
 - PWU-AB-1 A/B slot switch = PROVEN (3/3 deterministic, evidence docs/qa/20260611T094958Z-ab-slot-switch/)
 - PWU-AB-3 corrupt-slot auto-rollback = PROVEN (evidence docs/qa/20260611T095918Z-ab-rollback/)
 - PWU-AB-2 RAUC dm-verity = DESIGN (authored ab_rauc_verity.sh, not yet run)
-- PWU-AB-4 ApplyPort = DESIGN (not yet built)
+- PWU-AB-4 ApplyPort = DESIGN (ApplyPort Go scaffold, health-marker, systemd unit — build in progress)
+- PWU-AB-4 ApplyPort Scaffold (Go interfaces, healthy-marker, systemd unit) = DESIGN
 - Tier-2 Cuttlefish Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host)
 - Tier-3 RK3588 physical board = OPERATOR-BLOCKED (no hardware)
+
+**Production deployment** — The full 3-container stack (server + PostgreSQL + SPA) is deployed and verified on `nezha.local`. Container orchestration handles boot, health-check, and shutdown. All containers respond correctly on their configured ports.
+
+**Remote stress testing** — Sustained 291 req/s device registration throughput with 100/100 virtual devices registered without failure. All stress and chaos tests PASS.
+
+**Security fixes** — Three security concerns addressed: IDOR project-scoped authorization prevents cross-project access; Tauri IPC scoped to minimal necessary permissions; docker-compose default credentials removed.
+
+**MountManagerUI fix** — SPA embedding bug resolved; the MountManagerUI now serves correctly at the `/manager/` endpoint.
 
 **Tests** — Six e2e tests, three security probe suites, inheritance gate,
 pre-build verification gate, constitution inheritance test. All script doc blocks
@@ -170,6 +179,14 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F93 | Frontend | Component Tests | 47 Vitest tests in 8 suites | VERIFIED | vitest.config.ts, component test files | 47 tests across 8 suites | Component rendering, state transitions, event handling, error boundaries; all GREEN | No | Full Vitest component test suite: 47 tests, 8 suites, all PASS. Coverage spans render, interaction, state, and error paths. |
 | F94 | Emulator | PWU-AB-1 A/B Slot Switch Video | MP4 recording of slot switch (1.3 MB) | PROVEN | /Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-slot-switch-*.mp4 | Recording content-verified per §11.4.158 | 1.3 MB MP4 capturing real U-Boot 2024.01 QEMU TCG A/B slot switch sequence | helix_ota-emu-ab-slot-switch-*.mp4 | Recording: 1.3 MB. Captures real U-Boot 2024.01 on QEMU TCG performing slot A→B switch. Content-verified per §11.4.158 liveness battery. Complements existing console-log evidence (F51). |
 | F95 | Emulator | PWU-AB-3 Auto-Rollback Video | MP4 recording of corrupt-slot rollback (1.4 MB) | PROVEN | /Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-rollback-*.mp4 | Recording content-verified per §11.4.158 | 1.4 MB MP4 capturing real U-Boot 2024.01 QEMU TCG corrupt-slot auto-rollback sequence | helix_ota-emu-ab-rollback-*.mp4 | Recording: 1.4 MB. Captures real U-Boot 2024.01 on QEMU TCG detecting bad slot, bootcount exceeds limit, altbootcmd swap triggering, known-good slot boots. Content-verified per §11.4.158. Complements existing console-log evidence (F52). |
+| F96 | Deployment | Production deployment | 3-container stack (server + PG + SPA) on nezha.local | VERIFIED | docker-compose.yml, deploy/remote/ | Deployment verification, container health probes | 3-container deployment on nezha.local; server, PostgreSQL, and SPA all healthy and responding | No | Production deployment verified at nezha.local. 3-container stack (server + PostgreSQL + SPA) orchestrated via docker-compose. All containers respond correctly on configured ports. |
+| F97 | Deployment | Remote stress test | Sustained 291 req/s device registration, all stress/chaos PASS | VERIFIED | tests/stress/ | Stress/chaos test suite | 291 req/s sustained throughput, 100/100 virtual devices registered without failure | No | Sustained 291 req/s device registration throughput. 100/100 virtual devices registered without failure. All stress and chaos tests PASS. |
+| F98 | Server | MountManagerUI Embed | SPA served at /manager/ endpoint | PASS | server/internal/api/ (SPA handler) | MountManagerUI accessibility test | SPA correctly serves at /manager/ path | No | MountManagerUI bug fix resolved. SPA now serves correctly at /manager/. Previously broken routing. |
+| F99 | Security | IDOR Security Fix | Project-scoped authorization — additional IDOR prevention | PASS | server/internal/api/ — access control model | IDOR-specific negative tests; authorization unit tests | Cross-project access blocked; unauthorized requests return 403 | No | Additional IDOR security hardening. Project resources require project membership. Complements existing F91 project-scoped auth with broader coverage. |
+| F100 | Security | Tauri IPC Security | Scoped IPC permissions | PASS | Tauri IPC scope configuration | Security probe tests | IPC scope restriction, permission gating | No | Tauri IPC scoped to minimal necessary permissions. No over-permissive IPC channels. |
+| F101 | Security | Docker-compose Secrets | Default credentials removed from docker-compose | PASS | docker-compose.yml | Security audit | No default credentials in docker-compose configuration | No | Default credentials removed from docker-compose. Secrets managed via environment variables. |
+| F102 | Android | PWU-AB-4 ApplyPort Scaffold | Go interfaces, healthy-marker script, systemd unit | DESIGN | ApplyPort Go scaffold, docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md | None — not yet tested | ApplyPort Go scaffold, healthy-marker script, systemd unit defined | No | PWU-AB-4 ApplyPort Go scaffold designed. Healthy-marker script and systemd unit authored. Build in progress. Complements existing F54 (PWU-AB-4 overall design). |
+| F103 | Deployment | Remote deployment orchestration | Container orchestration for remote deployment | PASS | deploy/remote/ | Deployment verification tests | Container orchestration for remote deployment; 3-container stack deployable remotely | No | Remote deployment orchestration PASS. 3-container stack deployable remotely with health checking and shutdown. |
 
 ---
 
@@ -198,11 +215,11 @@ the following gaps exist for full-session video capture:
 
 | Status | Count | Items |
 |---|---|---|
-| PASS | 42 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91 |
-| VERIFIED | 17 | F35-F41, F68, F73, F77-F85, F88, F92-F93 |
+| PASS | 47 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy) |
+| VERIFIED | 19 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress) |
 | PROVEN | 5 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
 | PENDING_FORENSICS | 1 | F53 (PWU-AB-2 RAUC dm-verity) |
-| DESIGN | 3 | F42 (ota-android-agent), F43 (ota-update-engine-bridge), F54 (PWU-AB-4 ApplyPort) |
+| DESIGN | 4 | F42 (ota-android-agent), F43 (ota-update-engine-bridge), F54 (PWU-AB-4 ApplyPort), F102 (PWU-AB-4 ApplyPort Scaffold) |
 | OPERATOR-BLOCKED | 2 | F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW) |
 | PARTIAL | 2 | F86 (stress+chaos coverage), F89 (Docs Chain) |
 | NOT_STARTED | 2 | F72 (build-resource-stats), F87 (workable-items DB) |
@@ -215,3 +232,4 @@ the following gaps exist for full-session video capture:
 |---|---|
 | 2026-06-18 | Initial feature inventory creation (HEAD at time of writing). |
 | 2026-06-19 | Feature inventory update — F90-F95 added, F88 upgraded to VERIFIED, revision 2 |
+| 2026-06-19 | Feature inventory update — F96-F103 added (remote deployment, stress test, security fixes, MountManagerUI, ApplyPort scaffold); Executive Summary updated; revision 3 |

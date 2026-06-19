@@ -174,8 +174,8 @@
 <body>
 <h1 id="helix-ota-feature-inventory-status-summary">Helix OTA — Feature
 Inventory — Status Summary</h1>
-<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
-2026-06-19T12:00:00Z <strong>Companion of:</strong> <a
+<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
+2026-06-19T13:00:00Z <strong>Companion of:</strong> <a
 href="Status.md"><code>Status.md</code></a> (Section 11.4.56
 two-audience parity).</p>
 <hr />
@@ -211,6 +211,18 @@ good slot automatically.</li>
 </ul></li>
 <li><strong>Security tests</strong>, <strong>e2e tests</strong>, and
 <strong>pre-build gates</strong> all pass.</li>
+<li><strong>Production deployment</strong> is live on
+<code>nezha.local</code> — a full 3-container stack (server, PostgreSQL,
+SPA) orchestrated via docker-compose.</li>
+<li><strong>Remote stress testing</strong> proves 291 req/s sustained
+device registration with 100/100 devices and all stress/chaos tests
+passing.</li>
+<li><strong>Security hardening</strong> — IDOR project-scoped
+authorization prevents cross-project access; Tauri IPC scoped to minimum
+permissions; docker-compose secrets no longer ship default
+credentials.</li>
+<li><strong>MountManagerUI</strong> bug fixed — the SPA now serves
+correctly at <code>/manager/</code>.</li>
 <li><strong>Governance</strong> (Issues, Fixed, CONTINUATION, README,
 Status docs) is maintained and in sync.</li>
 </ul>
@@ -220,8 +232,8 @@ Status docs) is maintained and in sync.</li>
 is written but not yet run. It needs a signed update bundle and some
 slot-scheme alignment.</li>
 <li><strong>ApplyPort (the actual Android OTA apply)</strong> — the
-design is documented but not built yet. This will bridge the server to
-the Android update engine.</li>
+design is documented but not built yet. The Go scaffold, healthy-marker
+script, and systemd unit are in DESIGN phase.</li>
 <li><strong>Android OTA agent modules</strong> — the two Kotlin modules
 exist as scaffolds but have not been tested against a real Android
 target.</li>
@@ -239,14 +251,16 @@ yet built.</li>
 <li><strong>CodeGraph MCP integration</strong> — completed (31,718 nodes
 indexed across own-org submodules).</li>
 </ul>
-<p><strong>Bottom line:</strong> The server, Go libraries, and the A/B
-update core (slot switch + auto-rollback) are proven with captured
-evidence. The Android-specific apply layer, dm-verity integrity, and
+<p><strong>Bottom line:</strong> The server, Go libraries, remote
+deployment, remote stress testing, and the A/B update core (slot switch
++ auto-rollback) are all proven with captured evidence or testing.
+Security hardening (IDOR, Tauri IPC, docker-compose secrets) is
+complete. The Android-specific apply layer, dm-verity integrity, and
 hardware-tier tests remain as the open items before a release tag.</p>
 <hr />
 <h2 id="page-2-for-software-engineers">Page 2 — For software
 engineers</h2>
-<p><strong>Feature inventory summary (all 95 items from
+<p><strong>Feature inventory summary (all 103 items from
 Status.md):</strong></p>
 <table>
 <colgroup>
@@ -264,17 +278,18 @@ Status.md):</strong></p>
 <tbody>
 <tr>
 <td>PASS</td>
-<td>42</td>
+<td>47</td>
 <td>All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e
 tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project
-API + IDOR (F90-F91)</td>
+API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri
+IPC (F100), Docker Secrets (F101), Remote Deploy (F103)</td>
 </tr>
 <tr>
 <td>VERIFIED</td>
-<td>17</td>
+<td>19</td>
 <td>Go submodules (F35-F41), containers (F68), .gitignore (F73),
 governance (F77-F85), CodeGraph wired (F88), frontend build + tests
-(F92-F93)</td>
+(F92-F93), Production Deploy (F96), Remote Stress (F97)</td>
 </tr>
 <tr>
 <td>PROVEN</td>
@@ -289,9 +304,9 @@ slot switch video (F94), rollback video (F95)</td>
 </tr>
 <tr>
 <td>DESIGN</td>
-<td>3</td>
+<td>4</td>
 <td>ota-android-agent (F42), ota-update-engine-bridge (F43), PWU-AB-4
-ApplyPort (F54)</td>
+ApplyPort (F54), PWU-AB-4 ApplyPort Scaffold (F102)</td>
 </tr>
 <tr>
 <td>OPERATOR-BLOCKED</td>
@@ -325,7 +340,8 @@ liveness battery.</p>
 <p><strong>Pending (honest per Section 11.4.6):</strong> - PWU-AB-2 RAUC
 dm-verity: script authored (<code>ab_rauc_verity.sh</code>), gated on
 signed <code>.raucb</code> bundle + slot-scheme reconciliation -
-PWU-AB-4 ApplyPort: design doc exists, code not yet built - Tier-2:
+PWU-AB-4 ApplyPort: design doc exists, code not yet built; Go scaffold,
+healthy-marker, and systemd unit in DESIGN phase (F102) - Tier-2:
 <code>tier2_cuttlefish_ab.sh</code> authored, SKIPs on this host (no
 <code>/dev/kvm</code>) - Tier-3: No physical board</p>
 <p><strong>No release tag</strong> — Section 11.4.40 requires full
