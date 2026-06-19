@@ -49,10 +49,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Admin credentials — override HELIX_ADMIN_PASSWORD in production.
-      - HELIX_ADMIN_PASSWORD=${HELIX_ADMIN_PASSWORD:-admin}
+      # Admin credentials — MUST be set via environment (no default for production safety).
+      - HELIX_ADMIN_PASSWORD=${HELIX_ADMIN_PASSWORD:?Set HELIX_ADMIN_PASSWORD — strong password (min 16 chars)}
       - HELIX_ADMIN_USERNAME=${HELIX_ADMIN_USERNAME:-admin@helix.example}
-      - HELIX_TOKEN_SECRET=${HELIX_TOKEN_SECRET:-}
+      - HELIX_TOKEN_SECRET=${HELIX_TOKEN_SECRET:?Set HELIX_TOKEN_SECRET — random 32+ byte hex string}
       # When DATABASE_URL is set the server connects to PostgreSQL; omit for
       # in-memory (dev-only — restarts lose all state).
       - HELIX_DATABASE_URL=${HELIX_DATABASE_URL:-postgres://helix:${PG_PASSWORD:-helix}@postgres:5432/helix_ota?sslmode=disable}
@@ -67,7 +67,7 @@ services:
     environment:
       POSTGRES_DB: helix_ota
       POSTGRES_USER: helix
-      POSTGRES_PASSWORD: ${PG_PASSWORD:-helix}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?Set PG_PASSWORD — strong password (min 16 chars)}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:

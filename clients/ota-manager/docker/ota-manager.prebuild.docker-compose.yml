@@ -1,0 +1,64 @@
+# clients/ota-manager/docker/ota-manager.prebuild.docker-compose.yml
+#
+# Full-stack OTA Manager deployment using PRE-BUILT container images.
+# No Dockerfile build needed on the target host — images are loaded from
+# tarballs or referenced from registries.
+#
+# Usage (after loading images):
+#   podman-compose -f clients/ota-manager/docker/ota-manager.prebuild.docker-compose.yml up -d
+#
+# The stack serves:
+#   - ota-manager  (SPA) on host port 8081 -> container port 80
+#   - ota-server   (API) on host port 8080 -> container port 8080
+#   - postgres     (DB)  on host port 5432 -> container port 5432
+
+version: "3.9"
+
+services:
+  # ---- OTA Manager (React SPA, served by Nginx) ----------------------------
+  ota-manager:
+    image: docker.io/library/nginx:stable-alpine
+    ports:
+      - "8081:80"
+    volumes:
+      # Bind-mount the pre-built SPA dist and nginx config — no image build needed.
+      - ./nginx.prebuild.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./spa-dist:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  # ---- OTA Server (Gin modular monolith) -----------------------------------
+  ota-server:
+    image: helix/ota-server:prebuilt
+    ports:
+      - "8080:8080"
+    environment:
+      - HELIX_ADMIN_PASSWORD=${HELIX_ADMIN_PASSWORD:?HELIX_ADMIN_PASSWORD must be set — use a strong password (min 16 chars)}
+      - HELIX_ADMIN_USERNAME=${HELIX_ADMIN_USERNAME:-admin@helix.example}
+      - HELIX_TOKEN_SECRET=${HELIX_TOKEN_SECRET:?HELIX_TOKEN_SECRET must be set — use a random 32+ byte hex string}
+      # HELIX_DATABASE_URL must come from the shell environment as a fully-formed URL
+      # (podman-compose does not handle nested variable interpolation safely).
+      # Example: export HELIX_DATABASE_URL='postgres://helix:ota_pg_secret@postgres:5432/helix_ota?sslmode=disable'
+      - HELIX_DATABASE_URL=${HELIX_DATABASE_URL:?Set HELIX_DATABASE_URL}
+    restart: unless-stopped
+
+  # ---- PostgreSQL (production data store) ----------------------------------
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_DB: helix_ota
+      POSTGRES_USER: helix
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?PG_PASSWORD must be set — use a strong password (min 16 chars)}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helix -d helix_ota"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  pgdata:
