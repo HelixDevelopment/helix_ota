@@ -1,0 +1,65 @@
+>>> gate: constitution-inheritance
+==================================================================
+A. Inheritance gate on clean tree (MUST PASS)
+==================================================================
+Helix OTA — constitution inheritance gate
+  ✓ Inv1: constitution/Constitution.md exists
+  ✓ Inv2: §11.4 forensic-anchor heading present
+  ✓ Inv3: constitution/CLAUDE.md anti-bluff covenant present
+  ✓ Inv4: constitution/AGENTS.md anti-bluff covenant present
+  ✓ Inv5: CLAUDE.md references the constitution submodule
+  ✓ Inv5: AGENTS.md references the constitution submodule
+  ✓ Inv5: HELIX_OTA_CONSTITUTION.md references the constitution submodule
+INHERITANCE GATE: PASS
+→ A PASS
+
+==================================================================
+B. §1.1 paired mutation (gate MUST FAIL under mutated Constitution)
+==================================================================
+Mutation applied: §11.4 anchor removed from Constitution.md
+Running consuming-project gate: bash /Volumes/T7/Projects/helix_ota/tests/inheritance_gate.sh
+Helix OTA — constitution inheritance gate
+  ✓ Inv1: constitution/Constitution.md exists
+  ✗ Inv2: §11.4 forensic-anchor heading MISSING
+  ✓ Inv3: constitution/CLAUDE.md anti-bluff covenant present
+  ✓ Inv4: constitution/AGENTS.md anti-bluff covenant present
+  ✓ Inv5: CLAUDE.md references the constitution submodule
+  ✓ Inv5: AGENTS.md references the constitution submodule
+  ✓ Inv5: HELIX_OTA_CONSTITUTION.md references the constitution submodule
+INHERITANCE GATE: FAIL
+✓ META-TEST PASS: gate correctly FAILed (rc=1) on mutated Constitution
+→ B PASS: gate correctly FAILed under mutation
+
+==================================================================
+C. Recursive owned-submodule inheritance pointers (runbook Step 9)
+==================================================================
+  ✓ submodules/ota-protocol: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/ota-telemetry-schema: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/ota-artifact-validator: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/ota-rollout-engine: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/ota-update-engine-bridge: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/ota-android-agent: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/helixqa: CLAUDE.md + AGENTS.md reference the Helix Constitution
+  ✓ submodules/challenges: CLAUDE.md + AGENTS.md reference the Helix Constitution
+
+CONSTITUTION INHERITANCE: PASS (gate real + mutation-proven + submodules wired)
+<<< gate: constitution-inheritance OK
+
+>>> gate: helixqa-bank-runner-self-test
+=== §1.1 paired-mutation self-test of run_bank.sh evidence ledger ===
+--- case A: missing evidence (gate MUST FAIL) ---
+[31m[FAIL][0m SELFTEST-MISSING-EVIDENCE [evidence MISSING/EMPTY: tools/helixqa/__does_not_exist__.txt]
+----------------------------------------------------------------
+challenges: 0 passed / 1 failed / 0 skipped (mode=dry)
+RESULT: FAIL
+OK: missing-evidence bank correctly FAILed (gate fired)
+--- case B: real evidence (gate MUST PASS) ---
+[32m[PASS-DRY][0m SELFTEST-REAL-EVIDENCE [evidence: .helixqa_selftest.ef36JO/real_evidence.txt]
+----------------------------------------------------------------
+challenges: 1 passed / 0 failed / 0 skipped (mode=dry)
+RESULT: PASS
+OK: real-evidence bank correctly PASSed
+RESULT: SELF-TEST PASS (evidence ledger catches its own negation)
+<<< gate: helixqa-bank-runner-self-test OK
+
+PRE-BUILD VERIFICATION: PASS

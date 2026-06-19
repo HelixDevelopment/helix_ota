@@ -1,17 +1,15 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 2
-**Last modified:** 2026-06-10T18:30:00Z
+**Revision:** 3
+**Last modified:** 2026-06-19T08:30:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
-§11.4.54 ATM-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
-short-form companion is [`Issues_Summary.md`](Issues_Summary.md). Items
-surfaced during the 2026-06-10 emulator-driven device-testing session;
-HEAD at creation `a839220` + the docs commit on top.
+§11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
+short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ---
 
-## §3. [ATM-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback) is host-gated
+## §3. [OTA-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback) is host-gated
 
 **Status:** Operator-blocked
 **Type:** Task
@@ -39,7 +37,7 @@ HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §4. [ATM-004] Emulator Tier-3 — real RK3588 / Orange Pi 5 Max vendor HAL, U-Boot slot-switch, dm-verity on real partitions
+## §4. [OTA-004] Emulator Tier-3 — real RK3588 / Orange Pi 5 Max vendor HAL, U-Boot slot-switch, dm-verity on real partitions
 
 **Status:** Operator-blocked
 **Type:** Task
@@ -60,3 +58,11 @@ HEAD at creation `a839220` + the docs commit on top.
 - **UNBLOCK CONDITION:** A physical RK3588 / Orange Pi 5 Max board
   reachable over ADB/SSH (or physically attached) for flashing.
 - **WHO:** Operator — attach / provide remote access to the board.
+
+---
+
+## §8. [OTA-014] Docs Chain submodule distribution (constitution §11.4.106 Phase 6) operator-gated
+
+**Status:** In progress
+**Type:** Task
+**Description:** Docs Chain engine exists at `/Volumes/T7/Projects/docs_chain` with Phases 1-4 done and tested. Phase 6 (git submodule distribution) is operator-gated — needs explicit go-ahead to wire as a registered submodule. Meanwhile, `.docs_chain/` YAML contexts + `scripts/sync_status_docs.sh` are wired and working.
