@@ -1,0 +1,160 @@
+# e2e trio — live-server, 2026-06-08T16:24:54Z
+----
+== Helix OTA operational + rollout E2E challenge ==
+base_url=http://127.0.0.1:8080 user=admin@helix.test run=e2e-1780935896-15466
+
+[32m[PASS][0m GET /healthz -> 200
+[32m[PASS][0m POST /auth/login (HTTP 200)
+[32m[PASS][0m login token_type is Bearer
+[32m[PASS][0m access_token is a signed claims blob carrying sub + admin role
+[32m[PASS][0m anti-bluff: unauthenticated GET /telemetry/overview -> 401 (auth enforced)
+[32m[PASS][0m POST /devices/register (HTTP 201)
+[32m[PASS][0m device registration returned a device_token
+[32m[PASS][0m GET /devices/{id}/status (HTTP 200)
+[32m[PASS][0m device status echoes device_id
+[32m[PASS][0m POST /groups (HTTP 201)
+[32m[PASS][0m group create uses new 'group_id' key (old 'id' key absent)
+[32m[PASS][0m group create echoes name
+[32m[PASS][0m GET /groups/{id} (HTTP 200)
+[32m[PASS][0m GET group echoes name
+[32m[PASS][0m POST /groups/{id}/members (batch add registered device) (HTTP 200)
+[32m[PASS][0m batch add put the registered device in .added
+[32m[PASS][0m POST /groups/{id}/members (re-add) -> 200 (HTTP 200)
+[32m[PASS][0m re-add reports the device in .already_member
+[32m[PASS][0m POST /groups/{id}/members (unregistered id) -> 200 (HTTP 200)
+[32m[PASS][0m unregistered device id is reported in .not_found
+[32m[PASS][0m POST /groups/{id}/members (empty device_ids) -> 400 (HTTP 400)
+[32m[PASS][0m POST /groups/{absent}/members -> 404 (HTTP 404)
+[32m[PASS][0m GET /groups/{id}/members (HTTP 200)
+[32m[PASS][0m member list echoes group_id
+[32m[PASS][0m member list dropped the deprecated 'device_ids' array (now '.items[]')
+[32m[PASS][0m member list .items[].device_id contains the added device
+[32m[PASS][0m member item carries a non-empty added_at (2026-06-08T16:24:57.340554Z)
+[32m[PASS][0m GET /telemetry/overview (HTTP 200)
+[32m[PASS][0m telemetry overview has total + event_counts
+[32m[PASS][0m GET /audit (HTTP 200)
+[32m[PASS][0m audit log is non-empty (5 entries)
+[32m[PASS][0m audit log contains GROUP_CREATE (the group we created was audited)
+[32m[PASS][0m audit log contains GROUP_MEMBER_CREATE (member-add was audited)
+[32m[PASS][0m anti-bluff: GET reads are not audited (only mutations)
+[32m[PASS][0m GET /deployments/{absent}/rollout -> 404 (HTTP 404)
+[32m[PASS][0m POST /deployments/{absent}/rollout -> 404 (deployment-existence gate) (HTTP 404)
+[33m[SKIP][0m full pipeline (upload->release->deploy->rollout create/get/evaluate): requires a server-config-coupled signed artifact; set HELIX_E2E_TRY_PIPELINE=1 + HELIX_E2E_VERIFIED_RELEASE_ID=<id> to drive it. Rollout ROUTES were still asserted deterministically above (step 12).
+[32m[PASS][0m DELETE /groups/{id}/members/{deviceId} -> 204 (HTTP 204)
+[32m[PASS][0m DELETE /groups/{id} -> 204 (HTTP 204)
+[32m[PASS][0m GET /groups/{deleted} -> 404 (deletion is real) (HTTP 404)
+
+== summary: 39 passed, 0 failed, 1 skipped ==
+RESULT: PASS
+== Helix OTA SIGNED artifact-pipeline E2E ==
+base_url=http://127.0.0.1:8080 run=pipe-1780935899-15849 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/PIPELINE_EVIDENCE.txt
+started: 2026-06-08T16:24:59Z
+
+openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
+[PASS] generated ephemeral ed25519 keypair (raw pubkey 32 bytes, base64 configured)
+building ota-server (go build ./cmd/ota-server) ...
+[PASS] go build ./cmd/ota-server succeeded
+server pid=16007 (port 8080), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:8080/healthz (HELIX_ARTIFACT_PUBKEY configured)
+[PASS] POST /auth/login (HTTP 200)
+[PASS] obtained admin access token
+[PASS] anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)
+[PASS] POST /artifacts/upload (signed BASE v1.0.0) (HTTP 201)
+[PASS] BASE artifact .verified == true
+      base_artifact_id=b2414dffcc7bef30af600935b6cab2a9 sha256=dcde2276aef9a3a4e26d0fc510dea2f338250a969a3bbe9eba5c7a6ee06b093f
+[PASS] POST /artifacts/upload (signed TARGET v1.1.0) (HTTP 201)
+[PASS] TARGET artifact .verified == true
+      target_artifact_id=064dcfabb73624790c4077c15d4d4ade sha256=6e63fe34f5a155662ab1285ad94954d10661106d84dd51bfce6bc23ef0c73d57
+[PASS] GET /artifacts/{id} (target) (HTTP 200)
+[PASS] GET artifact echoes target artifact_id
+[PASS] POST /releases (BASE v1.0.0) (HTTP 201)
+      base_release_id=0874c879ec34b1bfe5e0e531a23736f1
+[PASS] POST /releases (TARGET v1.1.0) (HTTP 201)
+      target_release_id=c1ca208d719c18c9980c5974d4c4f7b1
+[PASS] POST /devices/register (device on 1.0.0) (HTTP 201)
+      device_id=8c162badb9c7df827044f3f8d5426d47
+[PASS] POST /deployments (target release) (HTTP 201)
+      deployment_id=9de3cbf2ef7495705cfa10ccf9bb2630 target_count=1
+[PASS] POST /deployments/{id}/rollout (create) (HTTP 201)
+[PASS] rollout state echoes deployment_id
+[PASS] GET /deployments/{id}/rollout (HTTP 200)
+[PASS] POST /deployments/{id}/rollout/evaluate (HTTP 200)
+[PASS] rollout evaluate returned decision action: advance
+[PASS] POST /deltas (register base->target delta) (HTTP 201)
+[PASS] delta echoes base_artifact_id
+      delta_id=07d608cca550072f4c8bfd1f6ccc3563
+[PASS] GET /client/update (device on 1.0.0 -> sees 1.1.0) (HTTP 200)
+[PASS] update-check offers version 1.1.0
+[PASS] update-check release_id matches target release
+[PASS] update-check carries the artifact sha256
+[PASS] update-check carries the artifact signature
+[PASS] update-check INCLUDES a .delta block (delta-bearing update reached)
+[PASS] delta.base_version == 1.0.0 (the device's current)
+[PASS] delta.sha256 matches the registered delta
+      DELTA-BEARING UPDATE BODY: {"version":"1.1.0","release_id":"c1ca208d719c18c9980c5974d4c4f7b1","sha256":"6e63fe34f5a155662ab1285ad94954d10661106d84dd51bfce6bc23ef0c73d57","delta":{"base_version":"1.0.0","url":"https://artifacts.helix.example/07d608cca550072f4c8bfd1f6ccc3563.zip","size":4096,"sha256":"26e9f5988281a49a4f89376c9f3c79672c2f8fde19d916c308181ccec769d7b9"}}
+[PASS] GET /client/update (device already on 1.1.0 -> 204 no-content) (HTTP 204)
+
+finished: 2026-06-08T16:25:04Z
+== summary: 32 passed, 0 failed, 0 skipped ==
+RESULT: PASS
+== Helix OTA security probe suite ==
+base_url=http://127.0.0.1:8080 run=sec-1780935904-16494 evidence=/Volumes/T7/Projects/helix_ota/tests/security/RUN_EVIDENCE.txt
+started: 2026-06-08T16:25:04Z
+
+building ota-server ...
+[PASS] self-hosted ota-server healthy on http://127.0.0.1:8080
+[PASS] admin login established (fixtures only)
+      device A=7c8ed869b12bc87e2e9b781d9d1e6a4a  device B=ce6eae3713e4b5908d82a9a135846ce2
+
+--- A. unauthenticated access must be 401 ---
+[PASS] A1 unauth GET /telemetry/overview (HTTP 401)
+[PASS] A2 unauth GET /audit (HTTP 401)
+[PASS] A3 unauth POST /groups (mutation) (HTTP 401)
+[PASS] A4 unauth POST /devices/register (HTTP 401)
+[PASS] A5 unauth GET /client/update (HTTP 401)
+[PASS] A6 non-Bearer Authorization header -> 401 (HTTP 401)
+
+--- B. RBAC: device-role token on operator/admin routes must be 403 ---
+[PASS] B1 device token POST /groups (operator/admin only) (HTTP 403)
+[PASS] B2 device token GET /audit (admin only) (HTTP 403)
+[PASS] B3 device token POST /deltas (operator/admin only) (HTTP 403)
+[PASS] B4 device token GET /client/update is ACCEPTED (token is valid; B1-B3 are RBAC) (HTTP 204)
+
+--- C. resource ownership: a device may read only its OWN telemetry ---
+[PASS] C1 device A token GET device B telemetry -> 403 (HTTP 403)
+[PASS] C2 device A token GET its OWN telemetry -> 200 (ownership allows self) (HTTP 200)
+[PASS] C3 device A token POST telemetry FOR device B -> 403 (HTTP 403)
+
+--- D. token integrity: malformed/tampered tokens must be 401 ---
+[PASS] D1 garbage bearer token -> 401 (HTTP 401)
+[PASS] D2 admin token with FORGED signature -> 401 (sig verified) (HTTP 401)
+[PASS] D3 admin token with MUTATED claims (stale sig) -> 401 (HTTP 401)
+[PASS] D4 empty bearer token -> 401 (HTTP 401)
+
+--- E. injection strings must not 500 or leak (handled as 401/400/404) ---
+[PASS] E1 SQL-ish device id (unauth) -> 401 (auth precedes lookup) (HTTP 401)
+[PASS] E2 SQL-ish device id (authed) -> 404/400 not 5xx (HTTP 404)
+[PASS] E2b SQL-ish device id did not crash the server (no 5xx; HTTP 404)
+[PASS] E3 path-traversal artifact id -> 404/400 not 5xx (HTTP 404)
+[PASS] E3b path-traversal artifact id did not crash (no 5xx; HTTP 404)
+[PASS] E4 injection/XSS strings in group body -> 201/400 not 5xx (HTTP 201)
+[PASS] E4b injection body did not crash (no 5xx; HTTP 201)
+[PASS] E5 injection payload stored+returned as inert data (not interpreted)
+[PASS] E6 NoSQL-operator query params did not crash (no 5xx; HTTP 400)
+
+--- F. malformed / oversized JSON must be 400/413, never 500 ---
+[PASS] F1 malformed JSON body -> 400 (HTTP 400)
+[PASS] F1b malformed JSON did not crash (no 5xx; HTTP 400)
+[PASS] F2 truncated JSON body -> 400 (HTTP 400)
+[PASS] F3 wrong-typed field -> 400 (or accepted/conflict) not 5xx (HTTP 400)
+[PASS] F3b wrong-typed field did not crash (no 5xx; HTTP 400)
+[PASS] F4 1 MiB JSON body handled cleanly (400/413/201) not 5xx (HTTP 201)
+[PASS] F4b oversized body did not crash (no 5xx; HTTP 201)
+
+--- G. trust boundary: a request cannot supply the verification key ---
+[PASS] G1 upload with an attacker-supplied public_key field is rejected 422 SIGNATURE_INVALID (key is config-only)
+[PASS] G1b attacker-key upload did not crash (no 5xx; HTTP 422)
+
+finished: 2026-06-08T16:25:09Z
+== summary: 37 passed, 0 failed, 0 skipped ==
+RESULT: PASS
