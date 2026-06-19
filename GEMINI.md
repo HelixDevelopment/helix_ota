@@ -48,7 +48,7 @@ modules) and the dev/runtime infrastructure in `containers/`.
   upstreams (GitHub primary + GitLab + GitFlic + GitVerse). The parent's
   `origin` remote fans out pushes to all four.
 
-### Feature video recording + Status doc mandates (§11.4.153–§11.4.158)
+### Feature video recording + Status doc mandates (§11.4.153–§11.4.159)
 
 - `docs/features/Status.md` + `Status_Summary.md` MUST always reflect every
   feature with per-row video-recording confirmation (HTML+PDF+DOCX exports
@@ -73,6 +73,7 @@ modules) and the dev/runtime infrastructure in `containers/`.
 - Every recording's on-screen content MUST be machine-read and verified as a
   genuine working result per §11.4.158. A video without read-the-screen
   verification is not evidence.
+- §11.4.159 — window-specific MP4 with vision validation, expected-content specification before recording, content-verification workflow (SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT), terminal cleanup per window id, and root cause analysis on rejected recordings.
 
 ### Project-specific architecture notes
 
