@@ -40,8 +40,12 @@ log "  (long — toolchain + kernel + rootfs; transcript -> out/build.log)"
 # a volume). Running as root avoids the useradd/permission complexity.
 # This is a CONTAINER-ONLY build (sandboxed by podman), not a host build, so
 # running as root inside the container is standard for Buildroot CI.
+# U-Boot FAT-env patch (tested/emulator/ab_virt/patches/uboot/0001-fat-env-defines.patch).
+# Mounted read-only so the container can apply it via BR2_GLOBAL_PATCH_DIR.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 podman run --name "$BUILD_CTR" --arch arm64 \
   -v "${DL_VOL}:/dl" \
+  -v "${SCRIPT_DIR}/patches:/work/patches-src:ro" \
   -e BR2_VERSION="$BR2_VERSION" -e ROOT_PW="$ROOT_PW" \
   docker.io/library/debian:bookworm-slim bash -euo pipefail -c '
     export DEBIAN_FRONTEND=noninteractive
@@ -79,25 +83,37 @@ BR2_TARGET_UBOOT=y
 BR2_TARGET_UBOOT_BOARD_DEFCONFIG="qemu_arm64"
 BR2_TARGET_UBOOT_NEEDS_DTC=y
 BR2_TARGET_UBOOT_FORMAT_BIN=y
-BR2_TARGET_UBOOT_CUSTOM_MAKEOPTS="CONFIG_ENV_IS_IN_FAT=y CONFIG_ENV_FAT_INTERFACE=virtio CONFIG_ENV_FAT_DEVICE_AND_PART=0:1 CONFIG_ENV_FAT_FILE=uboot.env CONFIG_ENV_SIZE=0x4000 CONFIG_FAT_WRITE=y CONFIG_ENV_OFFSET=0x0"
+# CONFIG_ENV_FAT_INTERFACE / DEVICE_AND_PART / FILE are NOT Kconfig symbols
+# in U-Boot 2024.01 for qemu_arm64 -- they are legacy #defines patched via BSP
+# in the board header (patches/uboot/0001-fat-env-defines.patch).
+BR2_TARGET_UBOOT_CUSTOM_MAKEOPTS="CONFIG_ENV_IS_IN_FAT=y CONFIG_ENV_SIZE=0x4000 CONFIG_FAT_WRITE=y CONFIG_ENV_OFFSET=0x0"
 BR2_ROOTFS_OVERLAY="/work/rootfs-overlay"
 BR2_ROOTFS_OVERLAY_DELETE_STALE=y
+BR2_GLOBAL_PATCH_DIR="/work/patches"
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="/work/out/kernel-fragment.config"
 CFG
+
+    # Copy custom U-Boot patches (tests/emulator/ab_virt/patches/) into the
+    # container before building so BR2_GLOBAL_PATCH_DIR resolves correctly.
+    if [ -d /work/patches-src ]; then
+      cp -r /work/patches-src /work/patches
+    fi
+
     make O=/work/out olddefconfig
-    # uboot-configure extracts U-Boot + runs its kconfig, making
-    # include/configs/qemu_arm64.h available. We patch in the FAT env
-    # string defines directly because CONFIG_ENV_FAT_INTERFACE etc. are
-    # NOT Kconfig options on qemu_arm64 for U-Boot 2024.01.
-    make O=/work/out uboot-configure
-    cat >> /work/out/build/uboot-2024.01/include/configs/qemu_arm64.h <<UHEAD
-/* FAT env support for A/B-virt emulator (PWU-AB-2) */
-#define CONFIG_ENV_FAT_INTERFACE         "virtio"
-#define CONFIG_ENV_FAT_DEVICE_AND_PART   "0:1"
-#define CONFIG_ENV_FAT_FILE              "uboot.env"
-UHEAD
 
 
     # Build the rootfs overlay files
+    # in patches/uboot/0001-fat-env-defines.patch -- the CONFIG_ENV_FAT_* symbols
+    # are NOT Kconfig symbols for qemu_arm64 (they are legacy #defines), so a
+    # config fragment has no effect. CONFIG_ENV_IS_IN_FAT is already set in
+    # BR2_TARGET_UBOOT_CUSTOM_MAKEOPTS above.
+    # Kernel config fragment for VFAT/FAT filesystem + NLS codepage support
+    # (needed to mount /dev/vda1 FAT boot partition as /boot, so fw_setenv
+    # reads uboot.env via libubootenv + fw_env.config).
+    echo "CONFIG_FAT_FS=y" > /work/out/kernel-fragment.config
+    echo "CONFIG_VFAT_FS=y" >> /work/out/kernel-fragment.config
+    echo "CONFIG_NLS_CODEPAGE_437=y" >> /work/out/kernel-fragment.config
+    echo "CONFIG_NLS_ISO8859_1=y" >> /work/out/kernel-fragment.config
     mkdir -p /work/rootfs-overlay/etc/rauc
 
     cat > /work/rootfs-overlay/etc/rauc/system.conf <<SYSEOF
@@ -164,8 +180,8 @@ FWEOF
     # Sources: https://rauc.readthedocs.io/en/latest/using.html
     #          https://rauc.readthedocs.io/en/latest/examples.html
     # ---------------------------------------------------------------------------
-    echo "RAUC: installing rauc package for bundle build..."
-    apt-get install -y --no-install-recommends rauc >/dev/null 2>&1
+    echo "RAUC: installing rauc + squashfs-tools for bundle build..."
+    apt-get install -y --no-install-recommends rauc squashfs-tools >/dev/null 2>&1
 
     mkdir -p /work/out/bundle-src
     cp /work/out/images/rootfs.ext2 /work/out/bundle-src/rootfs.ext4.img
