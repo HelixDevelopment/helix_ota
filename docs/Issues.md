@@ -4,14 +4,14 @@
 **Last modified:** 2026-06-10T18:30:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
-§11.4.54 ATM-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
+§11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
 short-form companion is [`Issues_Summary.md`](Issues_Summary.md). Items
 surfaced during the 2026-06-10 emulator-driven device-testing session;
 HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §3. [ATM-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback) is host-gated
+## §3. [OTA-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback) is host-gated
 
 **Status:** Operator-blocked
 **Type:** Task
@@ -39,7 +39,7 @@ HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §4. [ATM-004] Emulator Tier-3 — real RK3588 / Orange Pi 5 Max vendor HAL, U-Boot slot-switch, dm-verity on real partitions
+## §4. [OTA-004] Emulator Tier-3 — real RK3588 / Orange Pi 5 Max vendor HAL, U-Boot slot-switch, dm-verity on real partitions
 
 **Status:** Operator-blocked
 **Type:** Task
@@ -63,7 +63,7 @@ HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §5. [ATM-011] Workable-items SQLite database (constitution §11.4.93 mandate) not started
+## §5. [OTA-011] Workable-items SQLite database (constitution §11.4.93 mandate) not started
 
 **Status:** In progress
 **Type:** Task
@@ -71,7 +71,7 @@ HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §6. [ATM-012] Build resource stats tracking (constitution §11.4.24 mandate) not started
+## §6. [OTA-012] Build resource stats tracking (constitution §11.4.24 mandate) not started
 
 **Status:** In progress
 **Type:** Task
@@ -79,7 +79,7 @@ HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §7. [ATM-013] Stress + chaos coverage gap (constitution §11.4.85 mandate)
+## §7. [OTA-013] Stress + chaos coverage gap (constitution §11.4.85 mandate)
 
 **Status:** In progress
 **Type:** Task
@@ -87,7 +87,7 @@ HEAD at creation `a839220` + the docs commit on top.
 
 ---
 
-## §8. [ATM-014] Docs Chain submodule distribution (constitution §11.4.106 Phase 6) operator-gated
+## §8. [OTA-014] Docs Chain submodule distribution (constitution §11.4.106 Phase 6) operator-gated
 
 **Status:** In progress
 **Type:** Task
