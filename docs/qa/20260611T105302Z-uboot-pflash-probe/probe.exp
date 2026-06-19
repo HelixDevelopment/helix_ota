@@ -1,0 +1,33 @@
+set timeout 45
+set flash [lindex $argv 0]
+set console [lindex $argv 1]
+log_file -noappend $console
+spawn qemu-system-aarch64 -M virt -accel hvf -cpu host -smp 1 -m 512 -nographic -drive if=pflash,format=raw,index=0,file=$flash
+# robust interrupt: hammer keys until the prompt appears
+set got 0
+for {set i 0} {$i < 40} {incr i} {
+  send " "
+  expect {
+    -re {=> $} { set got 1; break }
+    -re {Hit any key} { send " " }
+    timeout {}
+  }
+}
+if {$got == 0} { puts "FAIL: never reached U-Boot prompt"; exit 2 }
+send "printenv HELIX_PFLASH_TEST\r"
+expect -re {=> $}
+send "setenv HELIX_PFLASH_TEST persisted_via_pflash\r"
+expect -re {=> $}
+send "saveenv\r"
+expect { timeout {puts "FAIL: saveenv hung"; exit 2} -re {=> $} }
+send "reset\r"
+set got2 0
+for {set i 0} {$i < 40} {incr i} {
+  send " "
+  expect { -re {=> $} { set got2 1; break } -re {Hit any key} { send " " } timeout {} }
+}
+if {$got2 == 0} { puts "FAIL: no prompt after reset"; exit 2 }
+send "printenv HELIX_PFLASH_TEST\r"
+expect -re {=> $}
+send "reset\r"
+expect { timeout {exit 0} eof }

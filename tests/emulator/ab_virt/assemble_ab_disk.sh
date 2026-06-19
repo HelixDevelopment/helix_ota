@@ -77,6 +77,7 @@ command -v podman >/dev/null 2>&1 || { log "ABORT: podman not found"; exit 3; }
 [ -s "${IMG_DIR}/rootfs.ext2" ] || { log "ABORT: ${IMG_DIR}/rootfs.ext2 missing — run build_image.sh first"; exit 3; }
 [ -s "${IMG_DIR}/u-boot.bin" ]  || { log "ABORT: ${IMG_DIR}/u-boot.bin missing — u-boot.bin still building (PWU-AB-1 needs the real bootloader)"; exit 3; }
 [ -f "${UBOOT_DIR}/boot.cmd" ]  || { log "ABORT: ${UBOOT_DIR}/boot.cmd missing"; exit 3; }
+[ -f "${UBOOT_DIR}/uboot.env" ] || { log "ABORT: ${UBOOT_DIR}/uboot.env missing"; exit 3; }
 
 if [ "${1:-}" = "--clean" ]; then
   log "cleaning prior disk image + stale assemble container"
@@ -106,6 +107,7 @@ podman cp "${IMG_DIR}/Image"        "${ASM_CTR}:/asm/in/Image"        >>"${OUT}/
 podman cp "${IMG_DIR}/rootfs.ext2"  "${ASM_CTR}:/asm/in/rootfs.ext2"  >>"${OUT}/assemble.log" 2>&1
 podman cp "${IMG_DIR}/u-boot.bin"   "${ASM_CTR}:/asm/in/u-boot.bin"   >>"${OUT}/assemble.log" 2>&1
 podman cp "${UBOOT_DIR}/boot.cmd"   "${ASM_CTR}:/asm/in/boot.cmd"     >>"${OUT}/assemble.log" 2>&1
+podman cp "${UBOOT_DIR}/uboot.env"  "${ASM_CTR}:/asm/in/uboot.env"    >>"${OUT}/assemble.log" 2>&1
 
 # -----------------------------------------------------------------------------
 # In-container assembly. CRITICAL (the bug that broke earlier builds):
@@ -172,6 +174,10 @@ podman exec -e DISK_MB="$DISK_MB" -e BOOT_MB="$BOOT_MB" "$ASM_CTR" \
     mkfs.fat -F 32 -n BOOT boot.part >/dev/null
     mcopy -i boot.part in/Image    ::Image
     mcopy -i boot.part in/boot.scr ::boot.scr
+    # Generate U-Boot env binary blob from text source (MUST match CONFIG_ENV_SIZE=0x4000)
+    mkenvimage -s 0x4000 -o in/uboot.env.bin in/uboot.env
+    test -s in/uboot.env.bin || { echo ASM_FAIL: uboot.env.bin not produced; exit 13; }
+    mcopy -i boot.part in/uboot.env.bin ::uboot.env
     mdir -i boot.part ::
 
     # ---- prepare slot A rootfs: copy rootfs.ext2 + tag /etc/slot_id=A ----

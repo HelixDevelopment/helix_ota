@@ -1,8 +1,8 @@
 # PWU-AB-4 — In-guest OTA agent ApplyPort: closing the loop to the Helix control plane
 
-**Revision:** 1
-**Last modified:** 2026-06-11T00:00:00Z
-**Status (§11.4.6):** DESIGN ONLY — nothing in this document is built or proven. Every "MUST build" / "to be added" / "does not exist yet" marker below is honest. No working ApplyPort, no in-guest agent, no healthy-marker, and no fw_setenv wiring exists in the A/B-virt emulator at the time of writing. The two proven pieces this builds on are PWU-AB-1 (slot switch) and PWU-AB-3 (auto-rollback), both verified live on macOS under real U-Boot 2024.01 + QEMU virt + HVF.
+**Revision:** 2
+**Last modified:** 2026-06-19T00:00:00Z
+**Status (§11.4.6):** DESIGN + SCAFFOLD — the ApplyPort Go interfaces/struct (step 2 of §8) and the healthy-marker shell script + systemd unit (step 3) are authored and compile-clean, but the persistent-env gating dependency (§3 / PWU-AB-2 §4.5) is UNVERIFIED and the full agent loop is NOT wired. See [`docs/qa/20260619-pwu-ab4-scaffold/REPORT.md`](../../../docs/qa/20260619-pwu-ab4-scaffold/REPORT.md) for the scaffold capture evidence. Every "does not exist yet" / "UNVERIFIED" / "NOT wired" marker below is honest.
 
 Authoritative parent design: [`../../research/rk3588_emulator/REPORT.md`](../../research/rk3588_emulator/REPORT.md) (PWU-AB-4 row, line 78; reuse decision lines 45/55/91). State machine the loop drives: [`../../../tests/emulator/ab_virt/uboot_ab/README.md`](../../../tests/emulator/ab_virt/uboot_ab/README.md) ("A normal OTA apply → slot-switch", lines 83–89; the explicit "healthy-boot reset is in-guest, NOT in `boot.cmd`" note, lines 76–80).
 
@@ -89,13 +89,25 @@ The U-Boot doc and `uboot_ab/README.md:76-80` are explicit: the healthy reset is
 2. **`/etc/fw_env.config` in BOTH slot rootfs images** pointing at that exact env location (device path + offset + size + sector size). It MUST match the U-Boot env storage config byte-for-byte — a mismatch means the guest writes an env the bootloader never reads (a silent §11.4.108 SOURCE→RUNTIME gap, exactly the class the constitution warns about). This is added in `build_image.sh` (Buildroot rootfs overlay) + verified by `assemble_ab_disk.sh`.
 3. **`u-boot-tools` (`fw_setenv`/`fw_printenv`) in the guest** — a Buildroot package add (`BR2_PACKAGE_UBOOT_TOOLS` or equivalent) in `build_image.sh`.
 
+### PWU-AB-2 research findings: CONFIG_ENV_IS_IN_FAT vs raw env region
+
+The PWU-AB-2 design doc ([`PWU_AB_2_RAUC_VERITY.md`](PWU_AB_2_RAUC_VERITY.md) §4.5) documents the critical finding about the QEMU `qemu_arm64` U-Boot defconfig: it **most commonly uses `CONFIG_ENV_IS_IN_FAT`** — the environment is stored as a **file** (`uboot.env`) on the FAT boot partition, NOT at a raw offset on the boot device. This has three consequences for the shared fw_env mechanism:
+
+1. **Classic raw `fw_env.config` form does NOT directly address a FAT-file env.** The `<device> <offset> <size>` raw form (`/dev/vda1 0x000000 0x4000 0x200`) works only for a raw env region at a fixed offset. For a FAT-file env, either (A) recent libubootenv supports a FAT-file entry format, or (B) the U-Boot config is changed to `CONFIG_ENV_IS_IN_*` raw — placing the env at a fixed offset on the boot device — which the raw `fw_env.config` line then matches.
+
+2. **The `build_image.sh` fw_env.config is COMMENTED OUT** as of the proven 2026-06-19 build. The rootfs overlay at `build_image.sh:111-115` emits a commented `fw_env.config` with the explicit note: `# UNVERIFIED — guest has no MTD subsystem (proven 2026-06-19). Commented out until the env mechanism is resolved.`
+
+3. **Resolution path (RECOMMENDED by the PWU-AB-2 doc):** wire a **raw env region** on the boot device so that the classic `fw_env.config` raw form works — this is the simplest form for `fw_setenv`/`fw_printenv` and is platform-agnostic. The alternative (FAT-file env via libubootenv) depends on the build-time `u-boot.bin` configuration and may not be accessible from guest userspace without additional tooling. See PWU-AB-2 doc §4.5 for both candidate forms and the §11.4.108 verification warning.
+
+The `/etc/fw_env.config` file is authored at `tests/emulator/ab_virt/rauc/fw_env.config` (and its rootfs-overlay sibling at `tests/emulator/ab_virt/rootfs-overlay/etc/fw_env.config`). Both carry the same UNVERIFIED annotation and the same two-path documentation. A future PWU step (the bundle-build PWU) uncomments and corrects the numbers after reading the built `u-boot.bin` config and round-trip-verifying against U-Boot's actual env storage.
+
 ### Shared with PWU-AB-2 (RAUC dm-verity)
 
 RAUC's U-Boot integration uses the **same** `fw_setenv`/`fw_printenv` + `BOOT_ORDER`/`upgrade_available` env to drive slot state (RAUC U-Boot bootchooser; REPORT line 43). So building `/etc/fw_env.config` + the persistent env blob is a SHARED prerequisite of PWU-AB-2 and PWU-AB-4 — build it once, both consume it. RAUC's `rauc-mark-good`/bootchooser is in fact a candidate to BE the healthy-marker of §4 (reuse over hand-rolled).
 
 ---
 
-## 4. The healthy-marker mechanism (NEW — does NOT exist yet)
+## 4. The healthy-marker mechanism (SCAFFOLDED)
 
 The marker is the in-guest application code the U-Boot doc/README:76-80 require: on a confirmed-healthy boot it clears `upgrade_available`+`bootcount`, freezing the counter so the just-applied slot is CONFIRMED and no rollback fires.
 
@@ -194,17 +206,19 @@ The harness emits a JSONL verdict stream + atomically-rewritten status snapshot 
 
 ## 8. Build order (honest dependency chain)
 
-1. **PREREQUISITE (shared with PWU-AB-2):** persistent U-Boot env blob + `/etc/fw_env.config` + `u-boot-tools` in the guest (§3). Until this lands, the agent CANNOT persist a slot arm and the marker CANNOT confirm. This is the gating piece.
-2. `UBootSlotApplyPort` (new in-guest ApplyPort impl, §5) + inactive-slot writer (RAUC or dd fallback).
-3. Healthy-marker unit/script (§4).
-4. Guest agent driver tying poll→download→verify→apply→arm→reboot, reusing the `ota-protocol` client contract.
-5. The RED→GREEN apply-loop test (§7) against a live server.
+1. **PREREQUISITE (shared with PWU-AB-2):** persistent U-Boot env blob + `/etc/fw_env.config` + `u-boot-tools` in the guest (§3). Until this lands, the agent CANNOT persist a slot arm and the marker CANNOT confirm. This is the gating piece. **UNVERIFIED — see §3 CONFIG_ENV_IS_IN_FAT discussion.**
+2. `UBootSlotApplyPort` (new in-guest ApplyPort impl, §5) + inactive-slot writer (RAUC or dd fallback). **SCAFFOLDED** — interfaces/struct in `server/internal/device/applyport.go`, `fw_setenv` backend in `server/internal/device/fwenv.go`; the `SlotWriter` interface is defined but has no concrete implementation wired yet.
+3. Healthy-marker unit/script (§4). **SCAFFOLDED** — `tests/emulator/ab_virt/in-guest/helix-ab-confirm.sh` (bash, `sh -n` clean) + `helix-ab-confirm.service` (systemd unit). Not yet deployed into the guest image.
+4. Guest agent driver tying poll→download→verify→apply→arm→reboot, reusing the `ota-protocol` client contract. **DESIGN ONLY** — no code exists for this step.
+5. The RED→GREEN apply-loop test (§7) against a live server. **DESIGN ONLY** — the test plan is written; no test script exists.
 
 Every step lands with four-layer coverage (§11.4.4(b)) + independent review (§11.4.125/§11.4.142) + §1.1 mutation, evidence under `docs/qa/<run-id>/` (§11.4.83), per the REPORT's per-PWU contract (line 81).
 
 ---
 
-## Sources verified 2026-06-11
+## Sources verified 2026-06-11; scaffold evidence 2026-06-19
+
+- Scaffold capture: [`docs/qa/20260619-pwu-ab4-scaffold/REPORT.md`](../../../docs/qa/20260619-pwu-ab4-scaffold/REPORT.md) (`go build ./server/internal/device/` clean, `sh -n` on the healthy-marker script clean, source lines counted).
 
 - In-repo code (cited file:line throughout): `submodules/ota-protocol/types.go`, `enums.go`; `server/internal/api/handlers_client.go`, `wire.go`; `server/internal/deviceemu/emulator.go`; `server/cmd/ota-device-emu/main.go`; `submodules/ota-android-agent/.../poll/OtaPollWorker.kt`, `.../apply/ApplyPort.kt`, `.../apply/ReflectiveUpdateEngineApplyPort.kt`; `tests/emulator/ab_virt/uboot_ab/{README.md,boot.cmd}`, `ab_rollback.sh`, `assemble_ab_disk.sh`, `build_image.sh`; `docs/research/rk3588_emulator/REPORT.md`.
 - U-Boot Boot Count Limit (bootcount/bootlimit/altbootcmd/upgrade_available; healthy-reset is application responsibility): https://docs.u-boot.org/en/latest/api/bootcount.html

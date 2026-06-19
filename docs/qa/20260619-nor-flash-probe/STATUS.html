@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>STATUS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="pwu-ab-2-nor-flash-probe-mtd-availability-rootfs-rebuild-status">PWU-AB-2
+NOR flash probe — MTD availability + rootfs rebuild status</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-19T00:30:00Z</p>
+<h2 id="nor-flash-probe-result-critical-finding">1. NOR flash probe
+result (CRITICAL FINDING)</h2>
+<p><strong>Date:</strong> 2026-06-19 <strong>Method:</strong> Booted the
+existing rootfs.ext2 + kernel with <code>-accel tcg</code> (not HVF, to
+avoid the serial issue), logged in, and probed for MTD devices.</p>
+<p><strong>Result: NO MTD devices in the guest.</strong> Definitively
+proven:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Result</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ls /dev/mtd*</code></td>
+<td><code>MTDEXIT=1</code></td>
+<td>No MTD device nodes exist</td>
+</tr>
+<tr>
+<td><code>cat /proc/devices \| grep mtd</code></td>
+<td><code>NO_MTD_CLASS</code></td>
+<td>MTD subsystem not compiled into kernel</td>
+</tr>
+<tr>
+<td><code>cat /proc/iomem \| grep flash</code></td>
+<td><code>NO_IOMEM_FLASH_MATCH</code></td>
+<td>No flash region in memory map</td>
+</tr>
+<tr>
+<td><code>dmesg \| grep -iE "physmap\|cfi\|flash\|mtd"</code></td>
+<td><code>NO_DMESG_MTD</code></td>
+<td>No MTD driver probed at all</td>
+</tr>
+<tr>
+<td><code>/dev/mem</code> access</td>
+<td><code>MEMEXIT=0</code></td>
+<td><code>/dev/mem</code> IS accessible</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Root cause:</strong> The <code>qemu_arm64_defconfig</code>
+Linux kernel does not include MTD drivers (CONFIG_MTD, CONFIG_MTD_CFI,
+CONFIG_MTD_PHYSMAP are not set). The QEMU <code>-machine virt</code>
+platform exposes the system flash/pflash at a fixed address in the
+memory map, but without kernel MTD support, the guest cannot see it as
+<code>/dev/mtd0</code>.</p>
+<h2 id="impact-on-fw_env.config">2. Impact on fw_env.config</h2>
+<p>Since the guest has NO MTD devices, the classic
+<code>fw_env.config</code> raw device form
+(<code>/dev/mtd0 &lt;offset&gt; &lt;size&gt;</code>) <strong>cannot
+work</strong>. Even if we add kernel MTD drivers, pflash appears at a
+specific memory address that needs <code>CONFIG_MTD_PHYSMAP</code> with
+the correct <code>physmap.addr</code> and <code>physmap.len</code>
+parameters.</p>
+<p><code>/dev/mem</code> IS accessible (zero-copy read of physical
+memory), so a userspace helper could potentially read/write the U-Boot
+env at the pflash base address directly. But
+<code>fw_setenv</code>/<code>fw_printenv</code> from
+<code>u-boot-tools</code> need <code>/dev/mtd*</code> or a working
+<code>fw_env.config</code> — neither is available.</p>
+<p><strong>Decision for now:</strong> The <code>fw_env.config</code> in
+the overlay stays COMMENTED OUT. The env mechanism is deferred to a
+follow-up PWU (see §5 below).</p>
+<h2 id="rootfs-rebuild-build_image.sh-changes">3. Rootfs rebuild
+(build_image.sh changes)</h2>
+<p>The build is running with these changes:</p>
+<h3 id="config-additions">Config additions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Config symbol</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BR2_PACKAGE_UBOOT_TOOLS=y</code></td>
+<td>Provides <code>fw_setenv</code>/<code>fw_printenv</code> in the
+guest</td>
+</tr>
+<tr>
+<td><code>BR2_PACKAGE_LVM2=y</code></td>
+<td>Provides <code>dmsetup</code> for dm-verity status probing</td>
+</tr>
+<tr>
+<td><code>BR2_ROOTFS_OVERLAY="/work/rootfs-overlay"</code></td>
+<td>Installs RAUC config files into the rootfs</td>
+</tr>
+<tr>
+<td><code>BR2_ROOTFS_OVERLAY_DELETE_STALE=y</code></td>
+<td>Ensures overlay replaces stale files</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rootfs-overlay-files">Rootfs overlay files</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File in overlay</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/etc/rauc/system.conf</code></td>
+<td>RAUC A/B slot config — <strong>WIRED</strong></td>
+</tr>
+<tr>
+<td><code>/etc/fw_env.config</code></td>
+<td><strong>COMMENTED OUT</strong> (no MTD — see §1)</td>
+</tr>
+<tr>
+<td><code>/etc/rauc/dev.cert.pem</code></td>
+<td>Dev cert for RAUC keyring — <strong>WIRED</strong> (generated inside
+container)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-management-improvement">Key management improvement</h3>
+<p>The dev key+cert are generated INSIDE the container using
+<code>openssl req</code>, ensuring the cert in the rootfs keyring and
+the key extracted for host-side bundle signing are always in sync. The
+private key is: - Generated in the container at build time (ephemeral) -
+Copied to <code>/work/out/rauc-keys/dev.key.pem</code> inside the
+container - Extracted to <code>./out/rauc-keys/dev.key.pem</code> via
+<code>podman cp</code> - DELETED from the overlay BEFORE Buildroot
+copies it (so it NEVER ends up in the rootfs, per §11.4.10) -
+<code>chmod 600</code> on the host after extraction</p>
+<h2 id="build-status">4. Build status</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>build_image.sh</td>
+<td><strong>RUNNING</strong> (started ~2026-06-19T00:28:00Z, ~40 min
+expected)</td>
+</tr>
+<tr>
+<td>After build: boot_smoke.sh</td>
+<td>PENDING</td>
+</tr>
+<tr>
+<td>After build: ab_rauc_verity.sh RED_MODE=1</td>
+<td>PENDING</td>
+</tr>
+</tbody>
+</table>
+<h2 id="remaining-blockers-for-green-red_mode0">5. Remaining blockers
+for GREEN RED_MODE=0</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Blocker</th>
+<th>Status</th>
+<th>Required action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>/etc/rauc/system.conf</code> in rootfs</td>
+<td><strong>FIXED</strong> (this build)</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>dmsetup</code> in rootfs (lvm2)</td>
+<td><strong>FIXED</strong> (this build)</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>fw_setenv</code>/<code>fw_printenv</code> in rootfs</td>
+<td><strong>FIXED</strong> (this build, uboot-tools)</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>/etc/fw_env.config</code> — env mechanism</td>
+<td><strong>BLOCKED</strong> (no MTD)</td>
+<td>Need alternative approach (see §5.1)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>RAUC bundle (<code>update.raucb</code>)</td>
+<td><strong>BLOCKED</strong> (needs Linux)</td>
+<td>Run <code>rauc bundle</code> on Linux host/CI</td>
+</tr>
+<tr>
+<td>6</td>
+<td>RAUC U-Boot backend env scheme reconciliation</td>
+<td><strong>UNVERIFIED</strong></td>
+<td>Align RAUC’s <code>BOOT_ORDER+Boot_LEFT</code> with this project’s
+<code>bootcount+upgrade_available</code> scheme</td>
+</tr>
+</tbody>
+</table>
+<h3 id="alternative-approaches-for-u-boot-env-access">5.1 Alternative
+approaches for U-Boot env access</h3>
+<p>Since the kernel has no MTD and adding MTD drivers to the
+<code>qemu_arm64_defconfig</code> kernel requires a kernel rebuild, here
+are the viable paths:</p>
+<p><strong>PATH A (Recommended): Rebuild U-Boot with
+<code>CONFIG_ENV_IS_IN_FAT</code></strong> - Change the U-Boot config
+from <code>CONFIG_ENV_IS_IN_FLASH</code> to
+<code>CONFIG_ENV_IS_IN_FAT</code> - The env is stored as a file
+<code>uboot.env</code> on the FAT boot partition (vda1) -
+<code>fw_env.config</code> uses the FAT-file form:
+<code>/dev/vda1 0x0 0x4000 uboot.env</code> - Both U-Boot and Linux
+userspace (<code>fw_setenv</code>/<code>fw_printenv</code>) can access
+the same env - <strong>Effort:</strong> Medium (rebuild U-Boot with
+<code>BR2_TARGET_UBOOT_CUSTOM_CONFIG</code> to add
+<code>CONFIG_ENV_IS_IN_FAT=y</code>) - <strong>Risk:</strong> Low
+(well-documented, used by Mender and others)</p>
+<p><strong>PATH B: Keep FLASH env, add kernel MTD drivers</strong> - Add
+<code>CONFIG_MTD=y</code>, <code>CONFIG_MTD_CFI=y</code>,
+<code>CONFIG_MTD_PHYSMAP=y</code> to the kernel - Determine the pflash
+base address (<code>-machine virt</code> exposes it at <code>0x0</code>
+with <code>-bios</code>) - This exposes the env region as
+<code>/dev/mtd0</code> - <strong>Effort:</strong> Medium (kernel
+rebuild, need correct physmap parameters) - <strong>Risk:</strong>
+Medium (kernel may not detect the CFI flash correctly under virt)</p>
+<p><strong>PATH C: Userspace <code>/dev/mem</code> helper</strong> -
+Write a simple helper that reads/writes the U-Boot env at the known
+pflash memory address via <code>/dev/mem</code> - <code>/dev/mem</code>
+is accessible (proven above) - <strong>Effort:</strong> High (need to
+implement the env format parser) - <strong>Risk:</strong> High (fragile,
+address-dependent, bypasses kernel abstractions)</p>
+<p><strong>PATH D (for initial GREEN only): Skip fw_setenv in test, set
+BOOT_ORDER from U-Boot prompt</strong> - The expect driver already sets
+BOOT_ORDER at the U-Boot prompt (line 198 in ab_rauc_verity.sh) - RAUC’s
+<code>rauc install</code> needs fw_setenv to arm the boot selector - If
+we skip <code>rauc install</code>’s automatic slot arm and manually set
+BOOT_ORDER from U-Boot, we can still prove the dm-verity slot switch -
+<strong>Effort:</strong> Low (modify test driver) -
+<strong>Compromise:</strong> Proves dm-verity and slot switch but not
+the full RAUC apply-&gt;activate pipeline</p>
+</body>
+</html>
