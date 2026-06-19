@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 2
-**Last modified:** 2026-06-19T12:00:00Z
+**Revision:** 4
+**Last modified:** 2026-06-19T13:30:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 ---
@@ -16,6 +16,9 @@ and what state it is in.
 - The **control-plane server** (Go/Gin) is fully built and tested — all APIs
   for managing devices, releases, deployments, rollouts, recalls, and audit
   logs have both unit tests and end-to-end tests running in containers.
+  New endpoints: `GET /api/v1/devices` (device inventory listing) and
+  `GET /devices/by-hardware/:hardwareId` (hardware-ID reverse lookup)
+  both PASS.
 - **Six reusable Go libraries** (protocol types, artifact validation, rollout
   engine, telemetry, HTTP/3) are built and tested with unit + stress + chaos
   tests.
@@ -31,6 +34,14 @@ and what state it is in.
   - **Automatic rollback on a corrupt slot is proven** — when we mark a slot
     bad, the bootloader detects it and falls back to the good slot automatically.
 - **Security tests**, **e2e tests**, and **pre-build gates** all pass.
+- **Production deployment** is live on `nezha.local` — a full 3-container stack
+  (server, PostgreSQL, SPA) orchestrated via docker-compose.
+- **Remote stress testing** proves 291 req/s sustained device registration
+  with 100/100 devices and all stress/chaos tests passing.
+- **Security hardening** — IDOR project-scoped authorization prevents
+  cross-project access; Tauri IPC scoped to minimum permissions; docker-compose
+  secrets no longer ship default credentials.
+- **MountManagerUI** bug fixed — the SPA now serves correctly at `/manager/`.
 - **Governance** (Issues, Fixed, CONTINUATION, README, Status docs) is
   maintained and in sync.
 
@@ -39,7 +50,8 @@ and what state it is in.
 - **RAUC dm-verity tamper protection** — the test script is written but not yet
   run. It needs a signed update bundle and some slot-scheme alignment.
 - **ApplyPort (the actual Android OTA apply)** — the design is documented but
-  not built yet. This will bridge the server to the Android update engine.
+  not built yet. The Go scaffold, healthy-marker script, and systemd unit are in
+  DESIGN phase.
 - **Android OTA agent modules** — the two Kotlin modules exist as scaffolds but
   have not been tested against a real Android target.
 - **Full Android OTA test (Tier-2 Cuttlefish)** — cannot run on this Mac
@@ -51,24 +63,26 @@ and what state it is in.
 - **Workable-items SQLite database** — mandated but not yet built.
 - **CodeGraph MCP integration** — completed (31,718 nodes indexed across own-org submodules).
 
-**Bottom line:** The server, Go libraries, and the A/B update core (slot switch
-+ auto-rollback) are proven with captured evidence. The Android-specific apply
-layer, dm-verity integrity, and hardware-tier tests remain as the open items
-before a release tag.
+**Bottom line:** The server, Go libraries, remote deployment, remote stress
+testing, and the A/B update core (slot switch + auto-rollback) are all proven
+with captured evidence or testing. Security hardening (IDOR, Tauri IPC,
+docker-compose secrets) is complete. The Android-specific apply layer,
+dm-verity integrity, and hardware-tier tests remain as the open items before
+a release tag.
 
 ---
 
 ## Page 2 — For software engineers
 
-**Feature inventory summary (all 95 items from Status.md):**
+**Feature inventory summary (all 105 items from Status.md):**
 
 | Status | Count | Key Items |
 |---|---|---|
-| PASS | 42 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91) |
-| VERIFIED | 17 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93) |
+| PASS | 49 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List API (F104), Hardware ID Reverse Lookup (F105) |
+| VERIFIED | 19 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97) |
 | PROVEN | 5 | PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52), slot switch video (F94), rollback video (F95) |
 | PENDING_FORENSICS | 1 | PWU-AB-2 RAUC dm-verity (F53) |
-| DESIGN | 3 | ota-android-agent (F42), ota-update-engine-bridge (F43), PWU-AB-4 ApplyPort (F54) |
+| DESIGN | 4 | ota-android-agent (F42), ota-update-engine-bridge (F43), PWU-AB-4 ApplyPort (F54), PWU-AB-4 ApplyPort Scaffold (F102) |
 | OPERATOR-BLOCKED | 2 | Tier-2 Cuttlefish (F55 — needs Linux+KVM), Tier-3 HW (F56 — needs board) |
 | PARTIAL | 2 | Stress+chaos coverage (F86 — 2/12 submodules), Docs Chain (F89 — engine built, not submoduled) |
 | NOT_STARTED | 2 | Build-resource-stats (F72), workable-items DB (F87) |
@@ -84,7 +98,8 @@ before a release tag.
 **Pending (honest per Section 11.4.6):**
 - PWU-AB-2 RAUC dm-verity: script authored (`ab_rauc_verity.sh`), gated on
   signed `.raucb` bundle + slot-scheme reconciliation
-- PWU-AB-4 ApplyPort: design doc exists, code not yet built
+- PWU-AB-4 ApplyPort: design doc exists, code not yet built; Go scaffold,
+  healthy-marker, and systemd unit in DESIGN phase (F102)
 - Tier-2: `tier2_cuttlefish_ab.sh` authored, SKIPs on this host (no `/dev/kvm`)
 - Tier-3: No physical board
 

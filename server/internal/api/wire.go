@@ -77,6 +77,29 @@ type DeviceStatus struct {
 	Health         DeviceHealth `json:"health"`
 }
 
+// DeviceListItem is a single device in a paginated list (DeviceListItem schema).
+type DeviceListItem struct {
+	DeviceID       string             `json:"device_id"`
+	HardwareID     string             `json:"hardware_id"`
+	Model          string             `json:"model"`
+	OS             otaprotocol.OSType `json:"os"`
+	OSVersion      string             `json:"os_version,omitempty"`
+	CurrentVersion string             `json:"current_version,omitempty"`
+	TargetVersion  *string            `json:"target_version"`
+	Group          string             `json:"group,omitempty"`
+	UpdateState    string             `json:"update_state"`
+	ActiveSlot     string             `json:"active_slot,omitempty"`
+	HealthOK       bool               `json:"health_ok"`
+	LastSeen       *time.Time         `json:"last_seen,omitempty"`
+	RegisteredAt   time.Time          `json:"registered_at"`
+}
+
+// DeviceList is the paginated list body (DeviceList schema).
+type DeviceList struct {
+	Items      []DeviceListItem `json:"items"`
+	NextCursor *string          `json:"next_cursor"`
+}
+
 // --- artifacts ---
 
 // ArtifactUploadMetadata is the JSON metadata part of the multipart upload
