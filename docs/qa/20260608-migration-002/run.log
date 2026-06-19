@@ -1,0 +1,32 @@
+# Migration 001+002 up/down validation against real Postgres 16 (podman)
+Run: 2026-06-08T10:45:10Z  psql: psql (PostgreSQL) 16.14 (Homebrew)
+--- apply 001 up ---
+001 up: OK
+--- apply 002 up ---
+002 up: OK
+--- 1.0.1 tables present ---
+               List of relations
+  Schema   |       Name        | Type  | Owner 
+-----------+-------------------+-------+-------
+ helix_ota | deployment_phases | table | helix
+(1 row)
+
+\dt: extra argument "helix_ota.rollouts" ignored
+\dt: extra argument "helix_ota.rollback_history" ignored
+--- insert smoke (FK + CHECK exercised) ---
+    ?column?     
+-----------------
+ phase insert OK
+(1 row)
+
+--- reject bad rollback_history (abort with a release) MUST error ---
+ERROR:  new row for relation "rollback_history" violates check constraint "rollback_history_kind_ref_chk"
+--- apply 002 down ---
+002 down: OK
+ remaining_101 
+---------------
+             0
+(1 row)
+
+--- apply 001 down ---
+001 down: OK
