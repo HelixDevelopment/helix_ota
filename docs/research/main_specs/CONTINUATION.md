@@ -2,29 +2,39 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-11T13:15:00Z |
+| Last modified | 2026-06-19T23:30:00Z |
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
 
-## ⤴ CURRENT STATE (2026-06-11) — HEAD `42be557` — read `docs/RESUMPTION.md` FIRST
+## ⤴ CURRENT STATE (2026-06-19) — HEAD `0d45e640` — read `docs/RESUMPTION.md` FIRST
 
-**PWU-AB milestones landed GREEN + pushed (HEAD `42be557`, all 4 upstreams).** On the
-emulator A/B ladder (T1 = QEMU `virt` + HVF on this macOS host, real U-Boot 2024.01):
-**PWU-AB-1 FULL A/B slot switch is PROVEN** (commit `18ed84a`; evidence
-`docs/qa/20260611T094958Z-ab-slot-switch/` — Run A→slot A `/dev/vda2`, Run B→slot B
-`/dev/vda3`, the slot genuinely switched, `§11.4.50` determinism **2/2 identical** per the
-captured `determinism_soak.txt`) **AND PWU-AB-3 corrupt-slot AUTO-ROLLBACK is PROVEN**
-(commit `42be557`; evidence `docs/qa/20260611T095918Z-ab-rollback/` — U-Boot
-`bootcount=2 > bootlimit=1` → altbootcmd swap → fell back from bad slot B to good slot A,
-with a CONTROL run proving the rollback fires only on a bad slot). **PWU-AB-2 RAUC
-dm-verity** (`tests/emulator/ab_virt/ab_rauc_verity.sh`) is AUTHORED but **UNVERIFIED-pending**
-— needs a signed `.raucb` bundle + reconciling the RAUC slot-class scheme with the proven
-`boot.cmd` `BOOT_ORDER` env scheme. **T2 Cuttlefish** real-Android-A/B remains **SKIP-pending**
-the operator's incoming Linux + nested-KVM host (`/dev/kvm` absent on this Apple-Silicon
-host); **T3 RK3588** hardware PENDING (no board). Status docs:
-`docs/emulator/rk3588_ab_virt/Status.md` (Rev 3) + `Status_Summary.md` (Rev 3).
+**Stream D (Docs sync + CodeGraph re-index) and Stream E (Recording migration + GEMINI.md
+lockstep + worktree cleanup) landed GREEN (HEAD `0d45e640`, all 4 upstreams).**
+
+**Stream D — Docs sync — DONE:**
+- All Status.md + Status_Summary.md exported to HTML+PDF+DOCX via docs_chain
+- CodeGraph re-indexed (own-org submodules included)
+- docs_chain verify passed — drift-proof fingerprints in sync
+- Committed as merge commit `0d45e640` (Stream D + Stream A RAUC reconciliation)
+
+**Stream E — Recording migration + GEMINI.md lockstep + worktree cleanup — DONE:**
+- 29 recordings migrated from `/Volumes/T7/Downloads/Recordings/` to `$HOME/Downloads/`
+  per §11.4.158(D); all 29 files verified with non-zero size
+- Project-root `GEMINI.md` created carrying §11.4.158 as highest rule, matching
+  CLAUDE.md (lockstep per §11.4.157)
+- Constitution submodule GEMINI.md already at §11.4.158 — no back-fill needed
+- CONTINUATION.md updated to HEAD `0d45e640` with Stream E state
+- Stale worktrees pruned
+
+**Previously landed PWU-AB milestones (HEAD `42be557`):** On the emulator A/B ladder
+(T1 = QEMU `virt` + HVF on this macOS host, real U-Boot 2024.01): **PWU-AB-1 FULL A/B
+slot switch is PROVEN** (evidence `docs/qa/20260611T094958Z-ab-slot-switch/`) **AND
+PWU-AB-3 corrupt-slot AUTO-ROLLBACK is PROVEN** (evidence `docs/qa/20260611T095918Z-ab-rollback/`).
+PWU-AB-2 RAUC dm-verity currently being completed in Stream A worktree. **T2 Cuttlefish**
+real-Android-A/B remains **SKIP-pending** the operator's incoming Linux + nested-KVM host
+(`/dev/kvm` absent on this Apple-Silicon host); **T3 RK3588** hardware PENDING (no board).
 **No release tag** — §11.4.40 needs the full ladder GREEN (T2 + T3 still SKIP/PENDING), so a
 tag would be a bluff (§11.4.6). Everything below this box is prior-wave history.
 
