@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -156,6 +157,8 @@ func (s *slotDevice) detectSlot() {
 
 	// Neither available -- this is expected in a test/dev environment without
 	// a real boot chain. Default to A so tests and the CLI don't crash.
+	log.Printf("slot: neither %s nor %s available -- defaulting to A",
+		s.procCmdlinePath, s.etcSlotIDPath)
 	s.cachedSlot = "A"
 }
 
