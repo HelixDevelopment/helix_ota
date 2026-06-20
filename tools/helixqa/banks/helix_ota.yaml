@@ -582,4 +582,66 @@ bank:
         - "Run CONTROL: did NOT roll back to A (metamorphic: only the past-limit run rolls back)"
       skip_codes:
         "3": "out/.ok / out/.disk_ok / u-boot.bin / ab_disk.img / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+
+  # ---------------------------------------------------------------------------
+  # HELIXTRACK CHALLENGES (workable-items integration)
+  # ---------------------------------------------------------------------------
+  # Every challenge below exercises the real HelixTrack integration. A PASS
+  # requires the real feature to work — never a metadata/config-only pass.
+  # Dispatch: these require HelixTrack Core reachable on localhost:8080 and
+  # workable_items.db at docs/workable_items.db. Missing prereqs ⇒ exit 3 SKIP.
+
+  - id: HELIXTRACK-001
+    name: "HelixTrack Space Initialization"
+    description: >
+      Verify that a HelixTrack space directory auto-initializes when empty.
+      Test: create a temp space dir, invoke the launcher, verify config.json
+      and data/ directory are created with defaults.
+    category: integration
+    priority: high
+    tags: ["helixtrack", "space", "onboarding"]
+    estimated_duration: 30s
+    requires_env: []
+    dispatches_to: "scripts/testing/helixtrack_test_space_init.sh"
+    expected_result: "PASS: space auto-initialized with config.json + data/ dir"
+    asserted_lines:
+      - "config.json created with schema_version=1"
+      - "data/ directory created"
+      - "config.json:space_id matches expected"
+    documentation_refs:
+      - "helix_track/scripts/launchers/README.md"
+
+  - id: HELIXTRACK-002
+    name: "Workable Items ↔ HelixTrack Sync"
+    description: >
+      Verify that the docs_chain sync context correctly pushes workable items
+      from workable_items.db to HelixTrack API and pulls state back.
+      Requires HelixTrack Core running on localhost:8080.
+    category: integration
+    priority: high
+    tags: ["helixtrack", "sync", "docs_chain", "workable-items"]
+    estimated_duration: 60s
+    requires_env:
+      - HELIXTRACK_API
+      - HELIXTRACK_JWT
+    dispatches_to: "scripts/testing/helixtrack_test_sync.sh"
+    expected_result: "PASS: workable items synced bidirectionally"
+    documentation_refs:
+      - ".docs_chain/contexts/helixtrack.yaml"
+      - "scripts/sync_helixtrack_push.sh"
+      - "scripts/sync_helixtrack_pull.sh"
+
+  - id: HELIXTRACK-003
+    name: "Multi-Space Data Isolation"
+    description: >
+      Verify that two spaces have fully isolated data — a ticket created in
+      Space A is not visible in Space B.
+    category: integration
+    priority: high
+    tags: ["helixtrack", "space", "isolation", "multi-tenant"]
+    estimated_duration: 90s
+    requires_env:
+      - HELIXTRACK_API
+    dispatches_to: "scripts/testing/helixtrack_test_isolation.sh"
+    expected_result: "PASS: spaces fully isolated"
       evidence_artifact: docs/qa/20260611T095918Z-ab-rollback/verdict.txt
