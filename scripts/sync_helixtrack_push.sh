@@ -72,16 +72,20 @@ process_item() {
         *)       HT_TYPE="Task" ;;
     esac
 
-    # Map OTA status to HelixTrack status
+    # Map OTA status to HelixTrack status (ALL statuses covered)
+    # HelixTrack uses title-based lookup: values must match DB ticket_status.title
     case "$status" in
-        "In progress")         HT_STATUS="in_progress" ;;
-        "Ready for testing")   HT_STATUS="in_review" ;;
-        "In testing")          HT_STATUS="in_testing" ;;
-        "Fixed (→ Fixed.md)")  HT_STATUS="done" ;;
-        "Operator-blocked")    HT_STATUS="blocked" ;;
-        Queued)                HT_STATUS="open" ;;
-        Reopened)              HT_STATUS="reopened" ;;
-        *)                     HT_STATUS="open" ;;
+        "In progress")                 HT_STATUS="In Progress" ;;
+        "Ready for testing")           HT_STATUS="In Progress" ;;
+        "In testing")                  HT_STATUS="In Progress" ;;
+        "Fixed (→ Fixed.md)")          HT_STATUS="Done" ;;
+        "Implemented (→ Fixed.md)")    HT_STATUS="Done" ;;
+        "Completed (→ Fixed.md)")      HT_STATUS="Done" ;;
+        "Obsolete (→ Fixed.md)")       HT_STATUS="Done" ;;
+        "Operator-blocked")            HT_STATUS="Blocked" ;;
+        Queued)                        HT_STATUS="open" ;;
+        Reopened)                      HT_STATUS="In Progress" ;;
+        *)                             HT_STATUS="open" ;;
     esac
 
     local existing_id=""

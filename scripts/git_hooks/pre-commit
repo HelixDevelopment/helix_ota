@@ -31,9 +31,11 @@ if ! curl -sf -X POST "http://localhost:8080/do" \
 fi
 
 # Get JWT
+HT_USER="${HELIXTRACK_USER:-admin}"
+HT_PASS="${HELIXTRACK_PASS:-admin1234}"
 JWT=$(curl -s -X POST "http://localhost:8080/do" \
     -H "Content-Type: application/json" \
-    -d '{"action":"authenticate","jwt":"","object":"","data":{"username":"admin","password":"admin1234"}}' \
+    -d "{\"action\":\"authenticate\",\"jwt\":\"\",\"object\":\"\",\"data\":{\"username\":\"${HT_USER}\",\"password\":\"${HT_PASS}\"}}" \
     | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('token',''))" 2>/dev/null || true)
 
 if [ -z "$JWT" ]; then

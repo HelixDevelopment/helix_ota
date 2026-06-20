@@ -464,8 +464,10 @@ main() {
     if curl -sf -X POST "http://localhost:8080/do" \
         -H "Content-Type: application/json" \
         -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+        local ht_user="${HELIXTRACK_USER:-admin}"
+        local ht_pass="${HELIXTRACK_PASS:-admin1234}"
         JWT=$(curl -s -X POST http://localhost:8080/do -H "Content-Type: application/json" \
-            -d '{"action":"authenticate","jwt":"","object":"","data":{"username":"admin","password":"admin1234"}}' \
+            -d "{\"action\":\"authenticate\",\"jwt\":\"\",\"object\":\"\",\"data\":{\"username\":\"${ht_user}\",\"password\":\"${ht_pass}\"}}" \
             | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('token',''))" 2>/dev/null || true)
         if [ -n "$JWT" ]; then
             HELIXTRACK_API="http://localhost:8080/do" HELIXTRACK_JWT="$JWT" \
