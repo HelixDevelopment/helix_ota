@@ -3,14 +3,7 @@
 # migrate_workable_items.sh
 #
 # OTA-001: Idempotent migration from Issues.md / Fixed.md -> workable_items.db.
-#   - Reads Issues.md headings, inserts any missing items into DB.
-#   - Reads Fixed.md headings, updates status + migrates any DB item that
-#     is now documented as fixed/closed.
-#   - Safe to re-run (idempotent).
-#
-# IMPORTANT: An OTA number may appear in BOTH Issues.md and Fixed.md when
-# the number was reused for a different item after the original was closed.
-# In that situation, Issues.md takes precedence (the item is still open).
+# Uses Python3 for robust parsing (macOS/linux compatible).
 #
 set -uo pipefail
 
@@ -19,148 +12,143 @@ DB="${PROJECT_ROOT}/docs/workable_items.db"
 ISSUES="${PROJECT_ROOT}/docs/Issues.md"
 FIXED="${PROJECT_ROOT}/docs/Fixed.md"
 
+for f in "${DB}" "${ISSUES}" "${FIXED}"; do
+  if [[ ! -f "$f" ]]; then echo "ERROR: $f not found" >&2; exit 1; fi
+done
+
 echo "=== Migration: Issues.md + Fixed.md -> workable_items.db ==="
 echo "  DB:      ${DB}"
 echo "  Issues:  ${ISSUES}"
 echo "  Fixed:   ${FIXED}"
-echo ""
 
-for f in "${DB}" "${ISSUES}" "${FIXED}"; do
-  if [[ ! -f "$f" ]]; then
-    echo "ERROR: $f not found" >&2
-    exit 1
-  fi
-done
+python3 << PYEOF
+import re, sqlite3, sys
 
-if ! sqlite3 "${DB}" "SELECT 1;" >/dev/null 2>&1; then
-  echo "ERROR: Cannot connect to ${DB}" >&2
-  exit 1
-fi
+db_path = "${DB}"
+issues_path = "${ISSUES}"
+fixed_path = "${FIXED}"
 
-# ---- Determine which OTA numbers appear in both files (reused numbers) ----
-ISSUES_OTAS="$(grep -oE '\[OTA-[0-9]+\]' "${ISSUES}" | tr -d '[]' | sort -u)"
-FIXED_OTAS="$(grep -oE '\[OTA-[0-9]+\]' "${FIXED}" | tr -d '[]' | sort -u)"
-# Reused: appear in both
-REUSED_OTAS="$( (echo "${ISSUES_OTAS}" && echo "${FIXED_OTAS}") | sort | uniq -d)"
-echo "  Reused OTA numbers (in both Issues.md and Fixed.md):"
-if [[ -n "${REUSED_OTAS}" ]]; then
-  for ota in ${REUSED_OTAS}; do
-    issues_title="$(grep -E "^## §[0-9]+\. \[${ota}\]" "${ISSUES}" | sed 's/.*] //')"
-    fixed_title="$(grep -E "^## §[0-9]+\. \[${ota}\]" "${FIXED}" | sed 's/.*] //')"
-    echo "    ${ota}: Issues.md=\"${issues_title}\"  Fixed.md=\"${fixed_title}\""
-  done
-fi
+db = sqlite3.connect(db_path)
+cur = db.cursor()
 
-# ---- Helper: extract field from a markdown section by label ----
-extract_field() {
-  local section="$1"
-  local label="$2"
-  # Match "**Label:** value" on the same line
-  echo "${section}" | grep -oE "\*\*${label}:\*\*[[:space:]]*.*" | head -1 | sed "s/\*\*${label}:\*\*[[:space:]]*//" || true
-}
+# ---- Parse markdown sections ----
+def parse_sections(filepath):
+    """Return dict: {ota_id: {'title':str, 'status':str, 'type':str, 'description':str}}"""
+    with open(filepath) as f:
+        content = f.read()
 
-# ---- Helper: process a section from Issues.md ----
-migrate_from_issues() {
-  local section="$1"
-  local ota_id title status_text type_text description
+    sections = {}
+    # Split on ## § headings
+    lines = content.split('\n')
+    current_id = None
+    current_lines = []
 
-  ota_id="$(echo "${section}" | grep -oE '\[OTA-[0-9]+\]' | head -1 | tr -d '[]' || true)"
-  [[ -z "${ota_id}" ]] && return 0
+    def flush():
+        nonlocal current_id, current_lines
+        if current_id is None:
+            return
+        block = '\n'.join(current_lines)
+        title = ''
+        heading_match = re.search(r'\[(OTA-\d+)\]\s*(.*)', block.split('\n')[0])
+        if heading_match:
+            current_id = heading_match.group(1)
+            title = heading_match.group(2).strip()
 
-  title="$(echo "${section}" | grep -oE '^## §[0-9]+\. \[OTA-[0-9]+\].*' | sed -E 's/^## §[0-9]+\. \[OTA-[0-9]+\] //' || true)"
+        status_m = re.search(r'\*\*Status:\*\*\s*(.+?)(?:\s*\*\*|$)', block)
+        status = status_m.group(1).strip() if status_m else 'Queued'
 
-  status_text="$(extract_field "${section}" "Status")"
-  [[ -z "${status_text}" ]] && status_text="Queued"
+        type_m = re.search(r'\*\*Type:\*\*\s*(.+?)(?:\s*\*\*|$)', block)
+        typ = type_m.group(1).strip() if type_m else 'Task'
 
-  type_text="$(extract_field "${section}" "Type")"
-  [[ -z "${type_text}" ]] && type_text="Task"
+        desc_m = re.search(r'\*\*Description:\*\*\s*(.+?)$', block, re.MULTILINE)
+        desc = desc_m.group(1).strip() if desc_m else '(from doc)'
 
-  description="$(extract_field "${section}" "Description")"
-  [[ -z "${description}" ]] && description="(from Issues.md)"
+        sections[current_id] = {'title': title, 'status': status, 'type': typ, 'description': desc}
+        current_id = None
+        current_lines = []
 
-  existing="$(sqlite3 "${DB}" "SELECT COUNT(*) FROM items WHERE ota_id='${ota_id}';")"
-  if [[ "${existing}" -eq 0 ]]; then
-    echo "  INSERT ${ota_id}: \"${title}\" [${type_text}, ${status_text}]"
-    # Use single-quote safe substitution
-    safe_title="$(echo "${title}" | sed "s/'/''/g")"
-    safe_desc="$(echo "${description}" | sed "s/'/''/g")"
-    sqlite3 "${DB}" "INSERT INTO items (ota_id, type, status, title, description)
-      VALUES ('${ota_id}', '${type_text}', '${status_text}', '${safe_title}', '${safe_desc}');"
-    sqlite3 "${DB}" "INSERT INTO item_history (ota_id, by, event, reason)
-      VALUES ('${ota_id}', 'AI', 'Opened', 'Migrated from Issues.md');"
-  else
-    db_status="$(sqlite3 "${DB}" "SELECT status FROM items WHERE ota_id='${ota_id}';")"
-    if [[ "${db_status}" != "${status_text}" ]]; then
-      echo "  UPDATE ${ota_id}: status '${db_status}' -> '${status_text}'"
-      sqlite3 "${DB}" "UPDATE items SET status='${status_text}', modified_at=datetime('now') WHERE ota_id='${ota_id}';"
-      sqlite3 "${DB}" "INSERT INTO item_history (ota_id, by, event, reason)
-        VALUES ('${ota_id}', 'AI', 'Status Update', 'Status synced from Issues.md');"
-    else
-      echo "  OK    ${ota_id}: already in DB with status '${db_status}'"
-    fi
-  fi
-}
+    for line in lines:
+        if re.match(r'^## §\d+\.\s+\[OTA-\d+\]', line):
+            flush()
+            # Extract ID from heading
+            m = re.search(r'\[(OTA-\d+)\]', line)
+            if m:
+                current_id = m.group(1)
+            current_lines = [line]
+        elif current_id is not None:
+            current_lines.append(line)
+    flush()
+    return sections
 
-# ---- Helper: process a section from Fixed.md ----
-migrate_from_fixed() {
-  local section="$1"
-  local ota_id title fixed_status
+issues = parse_sections(issues_path)
+fixed = parse_sections(fixed_path)
 
-  ota_id="$(echo "${section}" | grep -oE '\[OTA-[0-9]+\]' | head -1 | tr -d '[]' || true)"
-  [[ -z "${ota_id}" ]] && return 0
+# Determine reused OTA numbers (appear in both)
+reused = set(issues.keys()) & set(fixed.keys())
+if reused:
+    print("\n  Reused OTA numbers (Issues.md takes precedence):")
+    for ota in sorted(reused):
+        print(f"    {ota}: Issues=\"{issues[ota]['title']}\"  Fixed=\"{fixed[ota]['title']}\"")
 
-  title="$(echo "${section}" | grep -oE '^## §[0-9]+\. \[OTA-[0-9]+\].*' | sed -E 's/^## §[0-9]+\. \[OTA-[0-9]+\] //' || true)"
+# ---- Step 1: Process Issues.md ----
+print("\n--- Step 1: Issues.md -> DB ---")
+for ota_id in sorted(issues.keys()):
+    info = issues[ota_id]
+    row = cur.execute("SELECT status FROM items WHERE ota_id=?", (ota_id,)).fetchone()
+    if row is None:
+        print(f"  INSERT {ota_id}: \"{info['title']}\" [{info['type']}, {info['status']}]")
+        cur.execute(
+            "INSERT INTO items (ota_id, type, status, title, description) VALUES (?, ?, ?, ?, ?)",
+            (ota_id, info['type'], info['status'], info['title'], info['description'])
+        )
+        cur.execute(
+            "INSERT INTO item_history (ota_id, by, event, reason) VALUES (?, 'AI', 'Opened', 'Migrated from Issues.md')",
+            (ota_id,)
+        )
+    else:
+        db_status = row[0]
+        if db_status != info['status']:
+            print(f"  UPDATE {ota_id}: status '{db_status}' -> '{info['status']}'")
+            cur.execute("UPDATE items SET status=?, modified_at=datetime('now') WHERE ota_id=?", (info['status'], ota_id))
+            cur.execute("INSERT INTO item_history (ota_id, by, event, reason) VALUES (?, 'AI', 'Status Update', 'Synced from Issues.md')", (ota_id,))
+        else:
+            print(f"  OK    {ota_id}: status '{db_status}'")
 
-  fixed_status="$(extract_field "${section}" "Status")"
-  [[ -z "${fixed_status}" ]] && fixed_status="Completed (-> Fixed.md)"
+# ---- Step 2: Process Fixed.md ----
+print("\n--- Step 2: Fixed.md -> DB ---")
+for ota_id in sorted(fixed.keys()):
+    info = fixed[ota_id]
 
-  # Skip if this OTA number is reused (appears in both Issues.md and Fixed.md)
-  if echo "${REUSED_OTAS}" | grep -wq "${ota_id}"; then
-    echo "  SKIP  ${ota_id}: reused OTA# (Issues.md entry takes precedence)"
-    return 0
-  fi
+    # Skip reused OTA numbers — Issues.md takes precedence
+    if ota_id in reused:
+        print(f"  SKIP  {ota_id}: reused OTA# (Issues.md entry takes precedence)")
+        continue
 
-  existing="$(sqlite3 "${DB}" "SELECT COUNT(*) FROM items WHERE ota_id='${ota_id}';")"
-  if [[ "${existing}" -eq 0 ]]; then
-    echo "  SKIP  ${ota_id}: not in DB (already migrated)"
-    return 0
-  fi
+    row = cur.execute("SELECT status FROM items WHERE ota_id=?", (ota_id,)).fetchone()
+    if row is None:
+        print(f"  SKIP  {ota_id}: not in DB (already migrated)")
+        continue
 
-  db_status="$(sqlite3 "${DB}" "SELECT status FROM items WHERE ota_id='${ota_id}';")"
-  if echo "${db_status}" | grep -q -E '-> Fixed\.md$'; then
-    echo "  OK    ${ota_id}: already has terminal status '${db_status}'"
-  else
-    echo "  CLOSE ${ota_id}: '${db_status}' -> '${fixed_status}'"
-    safe_title="$(echo "${title}" | sed "s/'/''/g")"
-    sqlite3 "${DB}" "UPDATE items SET status='${fixed_status}', modified_at=datetime('now') WHERE ota_id='${ota_id}';"
-    sqlite3 "${DB}" "INSERT INTO item_history (ota_id, by, event, reason)
-      VALUES ('${ota_id}', 'AI', '${fixed_status}', 'Migrated from Fixed.md');"
-  fi
-}
+    db_status = row[0]
+    # Check if already terminal
+    if any(term in db_status for term in ['-> Fixed.md', 'Fixed.md']):
+        print(f"  OK    {ota_id}: already terminal as '{db_status}'")
+        continue
 
-# ---- Main ----------------------------------------------------------------
+    # Close it
+    print(f"  CLOSE {ota_id}: '{db_status}' -> '{info['status']}'")
+    cur.execute("UPDATE items SET status=?, modified_at=datetime('now') WHERE ota_id=?", (info['status'], ota_id))
+    cur.execute("INSERT INTO item_history (ota_id, by, event, reason) VALUES (?, 'AI', ?, 'Migrated from Fixed.md')",
+                (ota_id, info['status']))
 
-echo ""
-echo "--- Step 1: Reading Issues.md (inserting/updating DB) ---"
-# Read Issues.md sections via awk
-awk '
-/^## §/ { if (buf != "") print buf; buf = $0 "\n"; next }
-      { buf = buf $0 "\n" }
-END   { if (buf != "") print buf }
-' "${ISSUES}" | while IFS= read -r block; do
-  migrate_from_issues "${block}"
-done
+db.commit()
+print()
 
-echo ""
-echo "--- Step 2: Reading Fixed.md (updating terminal statuses) ---"
-awk '
-/^## §/ { if (buf != "") print buf; buf = $0 "\n"; next }
-      { buf = buf $0 "\n" }
-END   { if (buf != "") print buf }
-' "${FIXED}" | while IFS= read -r block; do
-  migrate_from_fixed "${block}"
-done
-
-echo ""
-echo "=== Migration complete ==="
-sqlite3 "${DB}" "SELECT ota_id, type, status, title FROM items ORDER BY ota_id;" -column -header
+# ---- Summary ----
+rows = cur.execute("SELECT ota_id, type, status, title FROM items ORDER BY ota_id").fetchall()
+print("=== Migration complete ===")
+print(f"{'ota_id':<10} {'type':<6} {'status':<30} {'title'}")
+print("-" * 80)
+for r in rows:
+    print(f"{r[0]:<10} {r[1]:<6} {r[2]:<30} {r[3]}")
+PYEOF

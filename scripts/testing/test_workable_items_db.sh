@@ -163,7 +163,7 @@ fi
 for ota in ${FIXED_IDS}; do
   count="$(sqlite3 "${DB}" "SELECT COUNT(*) FROM items WHERE ota_id='${ota}';")"
   if [[ "$count" -ge 1 ]]; then
-    term_status="$(sqlite3 "${DB}" "SELECT status FROM items WHERE ota_id='${ota}' AND (status LIKE '%-> Fixed.md%' OR status LIKE '%Completed%' OR status LIKE '%Fixed%' OR status LIKE '%Implemented%' OR status LIKE '%Obsolete%');" || true)"
+    term_status="$(sqlite3 "${DB}" "SELECT status FROM items WHERE ota_id='${ota}' AND (status LIKE '%Fixed.md%' OR status LIKE '%Completed%' OR status LIKE '%Fixed%' OR status LIKE '%Implemented%' OR status LIKE '%Obsolete%');" || true)"
     if [[ -n "${term_status}" ]]; then
       pass "${ota} in Fixed.md DB status is terminal: '${term_status}'"
     else
@@ -206,7 +206,7 @@ fi
 # ------------------------------------------------------------------
 header "5. Items with terminal status documented in Fixed.md"
 
-TERMINAL_DB="$(sqlite3 "${DB}" "SELECT ota_id FROM items WHERE status LIKE '%-> Fixed.md%';")"
+TERMINAL_DB="$(sqlite3 "${DB}" "SELECT ota_id FROM items WHERE status LIKE '%Fixed.md%';")"
 for ota in ${TERMINAL_DB}; do
   if grep -qE "\[${ota}\]" "${FIXED}"; then
     pass "${ota} terminal in DB and documented in Fixed.md"
@@ -220,7 +220,7 @@ done
 # ------------------------------------------------------------------
 header "6. Non-terminal items should not appear in Fixed.md"
 
-NONTERMINAL_DB="$(sqlite3 "${DB}" "SELECT ota_id FROM items WHERE status NOT LIKE '%-> Fixed.md%';")"
+NONTERMINAL_DB="$(sqlite3 "${DB}" "SELECT ota_id FROM items WHERE status NOT LIKE '%Fixed.md%';")"
 for ota in ${NONTERMINAL_DB}; do
   if grep -qE "^## §[0-9]+\. \[${ota}\]" "${FIXED}"; then
     issues_title="$(grep -E "^## §[0-9]+\. \[${ota}\]" "${ISSUES}" | sed 's/.*] //' || true)"
