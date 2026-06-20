@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# =============================================================================
+# pre-commit — HelixTrack auto-sync hook (§11.4.148)
+# -----------------------------------------------------------------------------
+# Before every commit, try to sync all workable items to HelixTrack.
+# Skips gracefully if HelixTrack Core is not running.
+# =============================================================================
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SYNC_SCRIPT="$PROJECT_ROOT/scripts/sync_helixtrack_push.sh"
+
+# Only run if sync script exists and we have staged workable item changes
+STAGED_DB=$(git diff --cached --name-only -- 'docs/workable_items.db' 2>/dev/null || true)
+STAGED_ISSUES=$(git diff --cached --name-only -- 'docs/Issues.md' 'docs/Fixed.md' 2>/dev/null || true)
+
+if [ -z "$STAGED_DB" ] && [ -z "$STAGED_ISSUES" ]; then
+    exit 0
+fi
+
+if [ ! -f "$SYNC_SCRIPT" ]; then
+    exit 0
+fi
+
+# Check HelixTrack reachability
+if ! curl -sf -X POST "http://localhost:8080/do" \
+    -H "Content-Type: application/json" \
+    -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+    echo "[HELIXTRACK] Core not running — sync skipped (commit continues)"
+    exit 0
+fi
+
+# Get JWT
+JWT=$(curl -s -X POST "http://localhost:8080/do" \
+    -H "Content-Type: application/json" \
+    -d '{"action":"authenticate","jwt":"","object":"","data":{"username":"admin","password":"admin1234"}}' \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('token',''))" 2>/dev/null || true)
+
+if [ -z "$JWT" ]; then
+    echo "[HELIXTRACK] Auth failed — sync skipped"
+    exit 0
+fi
+
+echo "[HELIXTRACK] Syncing all workable items before commit..."
+HELIXTRACK_API="http://localhost:8080/do" HELIXTRACK_JWT="$JWT" bash "$SYNC_SCRIPT" 2>&1 | tail -2
+echo "[HELIXTRACK] Sync complete"
+exit 0

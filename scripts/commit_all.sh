@@ -460,6 +460,22 @@ main() {
     # Pre-build verification gate
     run_pre_build_gate
 
+    # §11.4.148 — HelixTrack auto-sync: push all workable items before commit
+    if curl -sf -X POST "http://localhost:8080/do" \
+        -H "Content-Type: application/json" \
+        -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+        JWT=$(curl -s -X POST http://localhost:8080/do -H "Content-Type: application/json" \
+            -d '{"action":"authenticate","jwt":"","object":"","data":{"username":"admin","password":"admin1234"}}' \
+            | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('token',''))" 2>/dev/null || true)
+        if [ -n "$JWT" ]; then
+            HELIXTRACK_API="http://localhost:8080/do" HELIXTRACK_JWT="$JWT" \
+                bash "$SCRIPT_DIR/sync_helixtrack_push.sh" 2>&1 | tail -3
+            log_ok "HelixTrack sync completed"
+        fi
+    else
+        log_info "HelixTrack Core not running — skipping sync (§11.4.148)"
+    fi
+
     # Validate + cascade submodules
     validate_submodules
     echo ""
