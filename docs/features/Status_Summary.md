@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 6
-**Last modified:** 2026-06-20T11:27:00Z
+**Revision:** 7
+**Last modified:** 2026-06-20T17:30:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 ---
@@ -38,6 +38,11 @@ and what state it is in.
   - **ApplyPort (PWU-AB-4) is implemented** — slot manager, ed25519 signature
     verifier, health marker, HTTP client, and CLI binary — 36 tests, 3 Go source
     files, 2 Kotlin files, all tested and passing.
+-   **HelixTrack integration (F108) has begun** — the multi-platform project
+    management system is being integrated as the workable-items engine.
+    Phase 0 complete: launcher scripts, helix-deps.yaml, space config.
+    Three parallel research agents working on Phases 1-3 (multi-space
+    data isolation, containers compose, docs_chain sync). DESIGN status.
 - **Security tests**, **e2e tests**, and **pre-build gates** all pass.
 - **Production deployment** is live on `nezha.local` — a full 3-container stack
   (server, PostgreSQL, SPA) orchestrated via docker-compose.
