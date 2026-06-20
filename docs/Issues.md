@@ -1,7 +1,7 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 3
-**Last modified:** 2026-06-19T08:30:00Z
+**Revision:** 4
+**Last modified:** 2026-06-20T18:40:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
