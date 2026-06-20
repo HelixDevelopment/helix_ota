@@ -157,7 +157,9 @@ func (r *PostgresRepository) scanDevice(row pgx.Row) (Device, error) {
 	if lastSeen != nil {
 		d.LastSeen = *lastSeen
 	}
-	_ = json.Unmarshal(meta, &d.Metadata)
+	if err := json.Unmarshal(meta, &d.Metadata); err != nil {
+		return d, fmt.Errorf("unmarshal device metadata: %w", err)
+	}
 	return d, nil
 }
 func (r *PostgresRepository) ListDevices(ctx context.Context, f DeviceFilter) ([]Device, string, error) {
@@ -232,7 +234,9 @@ FROM helix_ota.artifacts WHERE artifact_id=$1`
 		return Artifact{}, err
 	}
 	a.OSType = otaprotocol.OSType(osType)
-	_ = json.Unmarshal(props, &a.PayloadProperties)
+	if err := json.Unmarshal(props, &a.PayloadProperties); err != nil {
+		return a, fmt.Errorf("unmarshal artifact payload_properties: %w", err)
+	}
 	return a, nil
 }
 
@@ -698,7 +702,9 @@ ORDER BY seq OFFSET $3 LIMIT $4`
 			&e.ResourceID, &details, &e.IPAddress, &e.UserAgent, &e.CreatedAt); serr != nil {
 			return nil, "", serr
 		}
-		_ = json.Unmarshal(details, &e.Details)
+		if err := json.Unmarshal(details, &e.Details); err != nil {
+			return nil, "", fmt.Errorf("unmarshal audit details at row %d: %w", len(out)+1, err)
+		}
 		out = append(out, e)
 	}
 	if err := rows.Err(); err != nil {
@@ -799,7 +805,9 @@ FROM helix_ota.rollback_history WHERE deployment_id=$1 ORDER BY seq`
 			&details, &rec.CreatedAt); serr != nil {
 			return nil, serr
 		}
-		_ = json.Unmarshal(details, &rec.Details)
+		if err := json.Unmarshal(details, &rec.Details); err != nil {
+			return nil, fmt.Errorf("unmarshal rollback details at row %d: %w", len(out)+1, err)
+		}
 		out = append(out, rec)
 	}
 	return out, rows.Err()

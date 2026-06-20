@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -62,7 +63,9 @@ FROM helix_ota.fabric_nodes WHERE node_id=$1`
 		}
 		return FabricNode{}, err
 	}
-	_ = json.Unmarshal(labels, &n.Labels)
+	if err := json.Unmarshal(labels, &n.Labels); err != nil {
+		return n, fmt.Errorf("unmarshal fabric node labels: %w", err)
+	}
 	return n, nil
 }
 
