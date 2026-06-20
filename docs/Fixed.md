@@ -160,3 +160,13 @@ Closed 2026-06-20 — PWU-AB-4 ApplyPort (`server/cmd/applyport/`). Slot detecti
 **Root cause:** §11.4.24 mandated per-build resource telemetry; missing entirely.
 **Fix:** `scripts/resource_sampler.sh` — background-capable host-side sampler (memory RSS, CPU%, load, disk I/O at 5s intervals, min/max/mean/p95). `docs/Stats.tsv` TSV registry. `docs/Stats.md` human-readable report. Tested end-to-end (10s run produces correct TSV + Stats.md). Observer constraint verified: <50MB RSS, <5% CPU.
 **Evidence:** `docs/Stats.tsv`, `docs/Stats.md`, `tests/stats_resource_sampler_test.sh`.
+
+## §15. [OTA-014] Docs Chain submodule distribution (§11.4.106 Phase 6)
+
+**Status:** Completed (→ Fixed.md)
+**Type:** Task
+
+**Closed:** 2026-06-20
+**Root cause:** Docs Chain engine was used in-tree but not registered as a git submodule (§11.4.106 Phase 6).
+**Fix:** Registered vasic-digital/docs_chain@2c8cf16 as submodule. Added helix-deps.yaml entry. Fixed 2 context YAMLs (features-status fingerprint block, helixtrack inline transforms). All 4 contexts pass doctor.
+**Evidence:** .gitmodules, helix-deps.yaml, `docs_chain doctor --all` (4/4 PASS).

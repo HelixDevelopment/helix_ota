@@ -61,13 +61,6 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ---
 
-## §8. [OTA-014] Docs Chain submodule distribution (constitution §11.4.106 Phase 6) operator-gated
-
-**Status:** In progress
-**Type:** Task
-**Description:** Docs Chain engine exists at `/Volumes/T7/Projects/docs_chain` with Phases 1-4 done and tested. Phase 6 (git submodule distribution) is operator-gated — needs explicit go-ahead to wire as a registered submodule. Meanwhile, `.docs_chain/` YAML contexts + `scripts/sync_status_docs.sh` are wired and working.
-
----
 
 ## §1. [OTA-001] Database migration test
 
