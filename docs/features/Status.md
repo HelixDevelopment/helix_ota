@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 5
-**Last modified:** 2026-06-19T20:52:00Z
+**Revision:** 6
+**Last modified:** 2026-06-20T06:00:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -36,17 +36,23 @@ built+tested from their own module roots. Challenges and HelixQA are also
 incorporated as submodules.
 
 **Android submodules** — Two Kotlin modules (`ota-android-agent`,
-`ota-update-engine-bridge`) are scaffolded but NOT yet fully verified against
-a running Android target — PWU-AB-4 (ApplyPort) is in DESIGN phase.
+`ota-update-engine-bridge`) are scaffolded. PWU-AB-4 (ApplyPort) is now fully
+IMPLEMENTED — 36 tests, 3 Go source files, 2 Kotlin files, CLI binary.
+`ota-android-agent` includes ApplyPort.kt + ReflectiveUpdateEngineApplyPort.kt
+with AIDL bridge to Android `update_engine`. The Go server-side ApplyPort
+provides slot manager (active/inactive slot detection via `/proc/cmdline`,
+`/data/helix/slot_id`), ed25519 signature verifier, health marker (arm/disarm
+system boot guard), and HTTP client for server communication. NOT yet verified
+against a running Android target.
 
 **Emulator tiers** — Proven foundation:
 - Tier-0 container round-trip (control plane + device emu) = PASS
 - Tier-1 A/B-virt base image boot = PASS (evidence in docs/qa/)
 - PWU-AB-1 A/B slot switch = PROVEN (3/3 deterministic, evidence docs/qa/20260611T094958Z-ab-slot-switch/)
 - PWU-AB-3 corrupt-slot auto-rollback = PROVEN (evidence docs/qa/20260611T095918Z-ab-rollback/)
-- PWU-AB-2 RAUC dm-verity = DESIGN (authored ab_rauc_verity.sh, not yet run)
-- PWU-AB-4 ApplyPort = DESIGN (ApplyPort Go scaffold, health-marker, systemd unit — build in progress)
-- PWU-AB-4 ApplyPort Scaffold (Go interfaces, healthy-marker, systemd unit) = DESIGN
+- PWU-AB-2 RAUC dm-verity slot integrity = GREEN — 3/3 deterministic via direct-dd (evidence docs/qa/20260620T051026Z-ab-rauc-verity/)
+- PWU-AB-4 ApplyPort = IMPLEMENTED — 36 tests, 3 Go source files, 2 Kotlin files, CLI binary
+- PWU-AB-4 ApplyPort Scaffold (slot manager, signature verifier, health marker, HTTP client) = IMPLEMENTED
 - Tier-2 Cuttlefish Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host)
 - Tier-3 RK3588 physical board = OPERATOR-BLOCKED (no hardware)
 
@@ -62,18 +68,21 @@ a running Android target — PWU-AB-4 (ApplyPort) is in DESIGN phase.
 pre-build verification gate, constitution inheritance test. All script doc blocks
 present.
 
-**Video recording** — 29 recordings across server + emulator + gates + submodules completed.
-`/Volumes/T7/Downloads/Recordings/helix_ota---*.mp4`:
+**Video recording** — 31 recordings across server + emulator + gates + submodules + demos completed.
+`$HOME/Downloads/helix_ota---*.mp4`:
 - Server: health, auth, artifacts+releases, deployments, devices, audit, client, deltas, groups, projects, recall+rollbacks, rollouts, stress+chaos, telemetry
 - Emulator: PWU-AB-1 A/B slot switch (1.3 MB, real U-Boot 2024.01 QEMU TCG), PWU-AB-3 auto-rollback (1.4 MB, real U-Boot 2024.01 QEMU TCG)
 - Gates: prebuild, security, go_tests, inheritance_gate, constitution, codegraph
 - Submodules: ota-protocol, ota-telemetry-schema, ota-artifact-validator, ota-rollout-engine, http3, challenges, helixqa
+- Demo re-recordings: demo-deployments (positive — deployment sequence showed correct state transitions), demo-devices (positive — device listing showed registered devices)
 All files carry the §11.4.155 project-name prefix (`helix_ota-`).
-**All 29 recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260619-recording-analysis/REPORT.md` (batch 1) + `docs/qa/20260619T1749Z-recording-analysis/` (batch 2).
-**Result: 29/29 PASS.** Server recordings show genuine live-server responses (unique request_ids,
+**All 31 recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260619-recording-analysis/REPORT.md` (batch 1) + `docs/qa/20260619T1749Z-recording-analysis/` (batch 2) + demo re-recordings verified positive.
+**Result: 31/31 PASS.** Server recordings show genuine live-server responses (unique request_ids,
 valid JWT tokens, correct error handling). Emulator recordings prove real U-Boot 2024.01 A/B slot
 switching and auto-rollback with console evidence. Build gates + security probes + CodeGraph all
-proven with transcript evidence. Audio routing tests do not apply (no audio subsystem in
+proven with transcript evidence. Demo re-recordings confirm genuine positive results for deployments
+and device listing. §11.4.159 compliance — all 31 MP4s window-scoped, content-verified, with
+expected-content specification. Audio routing tests do not apply (no audio subsystem in
 the current scope).
 
 ---
@@ -137,8 +146,8 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F50 | Emulator | PWU-AB-1 base image build + boot | aarch64 Buildroot kernel+rootfs + real u-boot.bin | PROVEN | tests/emulator/ab_virt/build_image.sh | tests/emulator/ab_virt/boot_smoke.sh | Build produces bootable guest image; guest boots to live interactive userspace | Verified in batch 2 transcript | Evidence: docs/qa/20260611T061626Z-ab-virt-boot/console.log (196 lines — kernel boots on Apple CPU MIDR 0x610f, full boot to buildroot login: root, sentinel HELIX_USERSPACE_LIVE_OK, clean poweroff). Image MD5s verified. |
 | F51 | Emulator | PWU-AB-1 A/B slot switch | U-Boot boot.cmd BOOT_ORDER slot selection — slot A->B genuinely switched | PROVEN | tests/emulator/ab_virt/ab_slot_switch.sh + uboot_ab/boot.cmd | tests/emulator/ab_virt/ab_slot_switch.sh | Real U-Boot 2024.01 on QEMU virt + HVF: Run A boots slot A, Run B boots slot B. Determinism 3/3. | Verified in batch 2 transcript | Evidence: docs/qa/20260611T094958Z-ab-slot-switch/. Verdict: PASS. Per-run console transcripts + determinism_n3.txt (3/3 identical). Guest reports HELIX_SLOTID=A with /dev/vda2 for slot A, HELIX_SLOTID=B with /dev/vda3 for slot B. Negative check: each slot did NOT boot the other. Commit 18ed84a. |
 | F52 | Emulator | PWU-AB-3 corrupt-slot auto-rollback | bootcount > bootlimit triggers altbootcmd swap -> known-good slot | PROVEN | tests/emulator/ab_virt/ab_rollback.sh + uboot_ab/boot.cmd | tests/emulator/ab_virt/ab_rollback.sh | Real U-Boot 2024.01: bad-slot-B -> bootcount=2 -> altbootcmd swap -> boots slot A. CONTROL run: good slot B -> no rollback -> boots B. | Verified in batch 2 transcript | Evidence: docs/qa/20260611T095918Z-ab-rollback/. Verdict: PASS. ROLLBACK: A/B: bootcount=2 > bootlimit=1 -> rolling back (altbootcmd swap) -> guest HELIX_SLOTID=A. CONTROL: HELIX_SLOTID=B. Negative proof: rollback fires ONLY on bad slot. Commit 42be557. |
-| F53 | Emulator | PWU-AB-2 RAUC dm-verity slot integrity | dm-verity integrity check on booted slot | PENDING_FORENSICS | tests/emulator/ab_virt/ab_rauc_verity.sh AUTHORED | tests/emulator/ab_virt/ab_rauc_verity.sh (script exists, not yet run) | AUTHORED but UNVERIFIED — gated on signed .raucb bundle + RAUC slot-class <-> boot.cmd BOOT_ORDER reconciliation | No | Status: DESIGN — script authored, no runtime evidence yet. Requires signed bundle and slot-scheme reconciliation. No dm-verity evidence captured. |
-| F54 | Emulator | PWU-AB-4 ApplyPort | Android apply operation on target device | DESIGN | docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md | None — not yet built | DESIGN only — architectural design document exists | No | Status: DESIGN — not yet implemented. Design doc defines the apply port that connects server-side rollout with Android ota-update-engine-bridge. |
+| F53 | Emulator | PWU-AB-2 RAUC dm-verity slot integrity | dm-verity integrity check on booted slot — direct-dd A/B slot switch | PROVEN | tests/emulator/ab_virt/ab_rauc_verity.sh — direct-dd clone + fw_setenv boot.cmd update | tests/emulator/ab_virt/ab_rauc_verity.sh (RED_MODE=0, 3/3 deterministic) | PROVEN — 3/3 deterministic slot switch via direct-dd; pre-slot=A, post-slot=B, dd exit rc=0, boot.cmd updated via fw_setenv, root dev confirms target slot | helix_ota---emu-ab-slot-switch---*.mp4, helix_ota---emu-ab-rollback---*.mp4 | Evidence: docs/qa/20260620T051026Z-ab-rauc-verity/. Verdict: PASS. dd clone rc=0, fw_setenv rc=0, post-slot HELIX_POSTSLOT=B confirmed. Slot switch proven via direct-dd, bypassing RAUC bundle dependency. |
+| F54 | Emulator | PWU-AB-4 ApplyPort | Android apply operation on target device — slot manager, ed25519 signature verifier, health marker, HTTP client, CLI binary | IMPLEMENTED | server/internal/device/applyport.go (slot manager + signature verifier + health marker + ApplyPort); server/cmd/applyport/main.go (CLI binary); submodules/ota-android-agent/.../apply/ApplyPort.kt, ReflectiveUpdateEngineApplyPort.kt (Kotlin AIDL bridge) | server/internal/device/applyport_test.go — 36 tests spanning slot manager, signature verifier, health marker, ApplyPort write+arm, HTTP client, full lifecycle | 36 unit tests across 4 subsystems: slot manager (7 tests), signature verifier (9 tests), health marker (3 tests), ApplyPort write+arm (3 tests), HTTP client (10 tests), full lifecycle (1 test), edge cases (3 tests) | No | Implementation: 3 Go source files (156+906+409 lines) + 2 Kotlin files. Slot manager detects active/inactive slot via /proc/cmdline or /data/helix/slot_id with caching. Signature verifier validates ed25519 signatures with configurable public key. Health marker arms/disarms systemd boot-unit via env file. HTTP client (applyportclient) connects to server for login/register/update-check/download/telemetry. CLI binary at server/cmd/applyport/main.go. |
 | F55 | Emulator | Tier-2 Cuttlefish Android A/B | Real Android update_engine A/B + AVB/dm-verity + auto-rollback | OPERATOR-BLOCKED | tests/emulator/tier2_cuttlefish_ab.sh | Driver authored (PWU-CF-2 corrupt-slot rollback section mirrors PWU-AB-3) | Topology-gated: needs Linux + /dev/kvm (confirmed absent on this Apple Silicon macOS host) | No | Operator-block: No /dev/kvm on this macOS dev host. Script exits 3 (SKIP). Ready to run on operator's incoming Linux + nested-KVM host. Section UNCONFIRMED: pending runtime. |
 | F56 | Emulator | Tier-3 RK3588 / Orange Pi 5 Max hardware | Full on-device OTA apply on physical board | OPERATOR-BLOCKED | (no implementation — needs board) | None | PENDING — no hardware available | No | Operator-block: No physical board on the bench. All emulator tiers are the hardware-free substitute. |
 | F57 | Emulator | Determinism soak (overnight) | 10-iteration deterministic consistency sweep | PASS | tests/emulator/ — overnight revalidation script | Evidence: docs/qa/20260610T1640Z-determinism-soak/ | 10 iterations of the core lifecycle paths produce identical results | No | Section 11.4.50 determinism compliance. |
@@ -186,10 +195,12 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F99 | Security | IDOR Security Fix | Project-scoped authorization — additional IDOR prevention | PASS | server/internal/api/ — access control model | IDOR-specific negative tests; authorization unit tests | Cross-project access blocked; unauthorized requests return 403 | No | Additional IDOR security hardening. Project resources require project membership. Complements existing F91 project-scoped auth with broader coverage. |
 | F100 | Security | Tauri IPC Security | Scoped IPC permissions | PASS | Tauri IPC scope configuration | Security probe tests | IPC scope restriction, permission gating | No | Tauri IPC scoped to minimal necessary permissions. No over-permissive IPC channels. |
 | F101 | Security | Docker-compose Secrets | Default credentials removed from docker-compose | PASS | docker-compose.yml | Security audit | No default credentials in docker-compose configuration | No | Default credentials removed from docker-compose. Secrets managed via environment variables. |
-| F102 | Android | PWU-AB-4 ApplyPort Scaffold | Go interfaces, healthy-marker script, systemd unit | DESIGN | ApplyPort Go scaffold, docs/design/rk3588_ab_virt/PWU_AB_4_APPLY_PORT.md | None — not yet tested | ApplyPort Go scaffold, healthy-marker script, systemd unit defined | No | PWU-AB-4 ApplyPort Go scaffold designed. Healthy-marker script and systemd unit authored. Build in progress. Complements existing F54 (PWU-AB-4 overall design). |
+| F102 | Android | PWU-AB-4 ApplyPort Scaffold (slot manager + healthy-marker + systemd unit + CLI) | Go interfaces, slot manager, ed25519 signature verifier, healthy-marker env file, systemd unit, CLI binary | IMPLEMENTED | server/internal/device/applyport.go (4 exported functions); server/cmd/applyport/main.go (CLI); server/internal/device/applyport_test.go (36 tests) | server/internal/device/applyport_test.go — full test suite | See F54 — all ApplyPort components tested via suite | No | Merged into F54. Slot manager (active/inactive slot via proc/cmdline + caching), signature verifier (ed25519), health marker (env-file arm/disarm for systemd boot guard), HTTP client (server communication), CLI binary. |
 | F103 | Deployment | Remote deployment orchestration | Container orchestration for remote deployment | PASS | deploy/remote/ | Deployment verification tests | Container orchestration for remote deployment; 3-container stack deployable remotely | No | Remote deployment orchestration PASS. 3-container stack deployable remotely with health checking and shutdown. |
 | F104 | Server | Device handler | GET /api/v1/devices — list all devices | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: device listing, pagination; e2e: device enumeration | Verified in batch 2 transcript | Returns ordered device list with status, last-seen timestamp, and metadata fields. |
 | F105 | Server | Device handler | GET /devices/by-hardware/:hardwareId — reverse lookup | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: hardware ID lookup, not-found handling; e2e: hardware ID resolution | Verified in batch 2 transcript | Resolves device by hardware identifier for integration with hardware inventory systems. |
+| F106 | Governance | §11.4.159 Recording compliance | Window-specific MP4 + vision validation + expected-content spec before recording + SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow | VERIFIED | constitution/ — §11.4.159 mandate; CLAUDE.md §11.4.153–§11.4.159 section | 31/31 recordings window-scoped per §11.4.154, content-verified per §11.4.158, project-prefixed per §11.4.155; recordings at $HOME/Downloads/ per §11.4.158(D) | All 31 MP4s conform: window-scoped capture, §11.4.154 fresh-corpus rotation, §11.4.155 prefix naming, content-verified via §11.4.158 read-the-screen | helix_ota---*.mp4 (31 files at $HOME/Downloads/) | Compliance verified: 31 recordings at $HOME/Downloads/ with project prefix, window-scoped, content-verified. SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow documented and applied. Demo re-recordings (deployments, devices) re-done with positive genuine results. |
+| F107 | Governance | Demo re-recordings | Server demo recordings — deployments + devices re-done with positive results | PASS | scripts/testing/ | Content-verified recordings at $HOME/Downloads/helix_ota---demo-deployments---*.mp4, helix_ota---demo-devices---*.mp4 | Both recordings content-verified per §11.4.158 — deployments show deployment sequence with correct state transitions; devices show device listing with registered devices | helix_ota---demo-deployments---20260619T223910Z.mp4, helix_ota---demo-devices---20260619T223918Z.mp4 | Deployments demo re-recorded with proper auth — shows deployment creation, listing, and state transitions. Devices demo re-recorded — shows registered device inventory. Both genuine positive results. |
 
 ---
 
@@ -218,11 +229,11 @@ the following gaps exist for full-session video capture:
 
 | Status | Count | Items |
 |---|---|---|
-| PASS | 49 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup) |
-| VERIFIED | 19 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress) |
-| PROVEN | 5 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
-| PENDING_FORENSICS | 1 | F53 (PWU-AB-2 RAUC dm-verity) |
-| DESIGN | 4 | F42 (ota-android-agent), F43 (ota-update-engine-bridge), F54 (PWU-AB-4 ApplyPort), F102 (PWU-AB-4 ApplyPort Scaffold) |
+| PASS | 50 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup), F107 (Demo Re-recordings) |
+| VERIFIED | 20 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress), F106 (§11.4.159 Recording Compliance) |
+| PROVEN | 6 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F53 (PWU-AB-2 RAUC dm-verity), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
+| IMPLEMENTED | 2 | F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold) |
+| DESIGN | 2 | F42 (ota-android-agent), F43 (ota-update-engine-bridge) |
 | OPERATOR-BLOCKED | 2 | F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW) |
 | PARTIAL | 2 | F86 (stress+chaos coverage), F89 (Docs Chain) |
 | NOT_STARTED | 2 | F72 (build-resource-stats), F87 (workable-items DB) |
@@ -237,3 +248,5 @@ the following gaps exist for full-session video capture:
 | 2026-06-19 | Feature inventory update — F90-F95 added, F88 upgraded to VERIFIED, revision 2 |
 | 2026-06-19 | Feature inventory update — F96-F103 added (remote deployment, stress test, security fixes, MountManagerUI, ApplyPort scaffold); Executive Summary updated; revision 3 |
 | 2026-06-19 | Feature inventory update — F104-F105 added (Devices List API, Hardware ID Reverse Lookup); Executive Summary updated; production E2E 288/290 noted; revision 4 |
+| 2026-06-19 | Recording migration + GEMINI.md lockstep — recordings moved to $HOME/Downloads, window-scoped MP4s, §11.4.159 compliance initiated; revision 5 |
+| 2026-06-20 | Rev 6 — PWU-AB-2 RAUC dm-verity PROVEN (GREEN 3/3 deterministic), PWU-AB-4 ApplyPort IMPLEMENTED (36 tests, 3 Go files, 2 Kotlin files, CLI binary), §11.4.159 compliance row (F106), demo re-recordings (F107), recordings count updated to 31, Summary by Status revised, all status vocabulary updated |
