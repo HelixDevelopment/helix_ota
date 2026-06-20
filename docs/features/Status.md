@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 8
-**Last modified:** 2026-06-20T17:30:00Z
+**Revision:** 9
+**Last modified:** 2026-06-20T18:30:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -201,7 +201,7 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F105 | Server | Device handler | GET /devices/by-hardware/:hardwareId — reverse lookup | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: hardware ID lookup, not-found handling; e2e: hardware ID resolution | Verified in batch 2 transcript | Resolves device by hardware identifier for integration with hardware inventory systems. |
 | F106 | Governance | §11.4.159 Recording compliance | Window-specific MP4 + vision validation + expected-content spec before recording + SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow | VERIFIED | constitution/ — §11.4.159 mandate; CLAUDE.md §11.4.153–§11.4.159 section | 30/30 recordings window-scoped per §11.4.154, content-verified per §11.4.158, project-prefixed per §11.4.155; recordings at $HOME/Downloads/ per §11.4.158(D) | All 30 MP4s conform: window-scoped capture, §11.4.154 fresh-corpus rotation, §11.4.155 prefix naming, content-verified via §11.4.158 read-the-screen | helix_ota---*.mp4 (30 files at $HOME/Downloads/) | Compliance verified: 30 recordings at $HOME/Downloads/ with project prefix, window-scoped, content-verified. Analysis: docs/qa/20260620-all-recordings-analysis/REPORT.md. SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow documented and applied. Demo re-recordings (deployments, devices) re-done with positive genuine results. |
 | F107 | Governance | Demo re-recordings | Server demo recordings — deployments + devices | SKIP | scripts/testing/ | STALE — files rotated out per §11.4.154 fresh-corpus rotation. Need re-recording for next release cycle. | No MP4s currently at $HOME/Downloads/ | (STALE — recordings rotated per §11.4.154 after 2026-06-19 run) | Was PASS; both demos confirmed positive. Re-recording needed before release tagging. |
-| F108 | Workable Items | HelixTrack Integration | Multi-space project management system as workable-items engine — infrastructure + data isolation + launcher + docs_chain sync | DESIGN | helix_track/ (Phase 0: structure + launchers); helix_track_code at sibling (HelixTrack Core + 6 clients) | Phase 0 committed (launchers, helix-deps.yaml, space config, assets) | DESIGN — Phase 0 complete; Phases 1-7 in design/research (multi-space Core, containers, docs_chain sync, tests, docs) | No | §11.4.148/§11.4.149 integration: HelixTrack Core (Go, 372 API actions, 121 tables) as workable-items engine. Multi-space data isolation per project. Bidirectional sync with docs_chain. Launcher scripts for web/desktop clients. See implementation plan at /private/tmp/helix_track_integration_plan.md. |
+| F108 | Workable Items | HelixTrack Integration | Multi-space project management system as workable-items engine — infrastructure + data isolation + launcher + docs_chain sync + tests | IMPLEMENTED | helix_track/ (spaces, scripts/launchers, assets); helix-deps.yaml; .docs_chain/contexts/helixtrack.yaml; scripts/sync_helixtrack_push/pull.sh; containers/compose.helixtrack.yml; HelixTrack Core: --space-root flag, SpaceConfig, Migrator | Phase 0-7: structure, Core multi-space, launchers, compose, docs_chain sync scripts, tests (HELIXTRACK-001/002/003), helix_code launchers | Phase 1 (multi-space HelixTrack Core) built + verified. Phase 2 (docs_chain context + sync scripts) created. Phase 3 (containers compose) built. Phase 4 (launchers: web, desktop, common) built. Phase 5 (Challenges: HELIXTRACK-001/002/003) authored. Phase 6 (test scripts) created. Phase 7 (Status docs) in sync. | No | §11.4.148/§11.4.149 integration: HelixTrack Core (Go, 372 API actions, 121 tables) as workable-items engine. Multi-space data isolation per project. Bidirectional sync with docs_chain. Launcher scripts for web/desktop clients. Containers compose for Core + PostgreSQL. HelixQA Challenge bank entries for space init, sync, isolation. |
 
 ---
 
@@ -232,10 +232,10 @@ the following gaps exist for full-session video capture:
 |---|---|---|
 | PASS | 49 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup) |
 | SKIP | 1 | F107 (Demo Re-recordings — stale/rotated) |
-| DESIGN | 3 | F42 (ota-android-agent), F43 (ota-update-engine-bridge), F108 (HelixTrack Integration) |
+| DESIGN | 2 | F42 (ota-android-agent), F43 (ota-update-engine-bridge) |
+| IMPLEMENTED | 3 | F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold), F108 (HelixTrack Integration) |
 | VERIFIED | 20 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress), F106 (§11.4.159 Recording Compliance) |
 | PROVEN | 6 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F53 (PWU-AB-2 RAUC dm-verity), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
-| IMPLEMENTED | 2 | F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold) |
 | OPERATOR-BLOCKED | 2 | F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW) |
 | PARTIAL | 2 | F86 (stress+chaos coverage), F89 (Docs Chain) |
 | NOT_STARTED | 2 | F72 (build-resource-stats), F87 (workable-items DB) |
@@ -254,3 +254,4 @@ the following gaps exist for full-session video capture:
 | 2026-06-20 | Rev 6 — PWU-AB-2 RAUC dm-verity PROVEN (GREEN 3/3 deterministic), PWU-AB-4 ApplyPort IMPLEMENTED (36 tests, 3 Go files, 2 Kotlin files, CLI binary), §11.4.159 compliance row (F106), demo re-recordings (F107), recordings count updated to 31, Summary by Status revised, all status vocabulary updated, all status vocabulary updated |
 | 2026-06-20 | Rev 7 — Recording data quality fixes: count 31->30, F107 marked STALE (rotated), F94/F95 paths fixed to $HOME/Downloads/, 29 stale recordings at nonstandard path removed, Status_Summary synced |
 | 2026-06-20 | Rev 8 — F108 HelixTrack Integration added (DESIGN, Phase 0 committed, launcher scripts + helix-deps.yaml + space config); Phase 1-7 research agents running in parallel; Status_Summary synced |
+| 2026-06-20 | Rev 9 — F108 upgraded to IMPLEMENTED: Phase 1 (multi-space Core --space-root + SpaceConfig + Migrator) committed to HelixTrack. Phase 2 (docs_chain context + sync scripts) created. Phase 3 (containers compose + boot scripts) built. Phase 4 (launchers web/desktop/common) complete. Phase 5-6 (Challenge bank entries HELIXTRACK-001/002/003 + test scripts) authored. Phase 7 (Status docs) synced. Full integration pushed across all upstreams. |
