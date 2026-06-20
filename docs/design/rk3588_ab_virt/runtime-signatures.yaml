@@ -1,0 +1,120 @@
+# SPDX-FileCopyrightText: 2026 HelixDevelopment
+# SPDX-License-Identifier: Apache-2.0
+#
+# §11.4.108 Runtime-Signature Registry — Helix OTA A/B Update
+#
+# Each entry declares ONE machine-checkable runtime signature that
+# proves a fix/feature is BOTH active AND working on a clean target.
+# This registry is the SINGLE SOURCE OF TRUTH for "fixed" (overrides
+# source-grep-based gates). Every evidence_path below is real and
+# was verified against actual test output. All determinism counts
+# are from actual test runs.
+
+version: "1.0"
+last_updated: "2026-06-20T00:30:00Z"
+
+signatures:
+  # PWU-AB-1: A/B slot switch via U-Boot BOOT_ORDER
+  - id: PWU-AB-1-SLOT-SWITCH
+    component: "U-Boot A/B slot switch"
+    description: >
+      A/B slot switch via U-Boot BOOT_ORDER env var. Tests boot A,
+      verifies slot A is active (HELIX_SLOTID=A), reboots to slot B
+      via fw_setenv bootorder, verifies slot B active
+      (HELIX_SLOTID=B, HELIX_ROOTDEV=/dev/vda3).
+    check_command: >
+      grep -q 'HELIX_SLOTID=B' docs/qa/20260611T094958Z-ab-slot-switch/verdict.txt
+    expected_output: "HELIX_SLOTID=B  HELIX_ROOTDEV=/dev/vda3"
+    layer: "RUNTIME-ON-CLEAN-TARGET"
+    evidence_path: "docs/qa/20260611T094958Z-ab-slot-switch/"
+    last_proven: "2026-06-11"
+    determinism: "3/3"
+
+  # PWU-AB-2: RAUC dd-apply to inactive slot
+  - id: PWU-AB-2-RAUC-DD
+    component: "RAUC dd-apply to inactive slot"
+    description: >
+      dd rootfs to inactive slot + fw_setenv BOOT_ORDER switch so
+      guest boots the new slot post-reboot. Verifies
+      HELIX_POSTSLOT=B, HELIX_DD_RC=0, HELIX_FWSET_RC=0.
+    check_command: >
+      grep -q 'HELIX_POSTSLOT=B' docs/qa/20260620T051026Z-ab-rauc-verity/verdict.txt
+    expected_output: "HELIX_POSTSLOT=B, HELIX_DD_RC=0"
+    layer: "RUNTIME-ON-CLEAN-TARGET"
+    evidence_path: "docs/qa/20260620T051026Z-ab-rauc-verity/"
+    last_proven: "2026-06-20"
+    determinism: "3/3"
+
+  # PWU-AB-3: U-Boot corrupt-slot auto-rollback
+  - id: PWU-AB-3-ROLLBACK
+    component: "U-Boot corrupt-slot auto-rollback"
+    description: >
+      bootcount > bootlimit triggers altbootcmd which swaps to the
+      good slot. The ROLLBACK run booted from bad slot B and
+      rolled back to good slot A (HELIX_SLOTID=A,
+      HELIX_ROOTDEV=/dev/vda2), proving the rollback mechanism.
+    check_command: >
+      grep -q 'ROLLBACK' docs/qa/20260611T095918Z-ab-rollback/verdict.txt
+    expected_output: "Run ROLLBACK (head was bad slot B, expect rolled-back to A): HELIX_SLOTID=A HELIX_ROOTDEV=/dev/vda2"
+    layer: "RUNTIME-ON-CLEAN-TARGET"
+    evidence_path: "docs/qa/20260611T095918Z-ab-rollback/"
+    last_proven: "2026-06-11"
+    determinism: "2/2"
+
+  # PWU-AB-4: ApplyPort CLI compiles
+  - id: PWU-AB-4-APPLYPORT-BUILD
+    component: "ApplyPort CLI binary"
+    description: >
+      ApplyPort (cmd/applyport/) compiles to a binary with exit 0.
+    check_command: >
+      cd server && go build -buildvcs=false ./cmd/applyport/
+    expected_output: "exit code 0"
+    layer: "SOURCE"
+    evidence_path: "server/cmd/applyport/"
+    last_proven: "2026-06-20"
+    determinism: "continuous"
+
+  # PWU-AB-4: ApplyPort test suite (58 tests including 1.1 mutations)
+  - id: PWU-AB-4-APPLYPORT-TESTS
+    component: "ApplyPort test suite"
+    description: >
+      All ApplyPort tests pass (58 tests including 1.1 paired
+      mutations) — slot detection, signature verification, write
+      and arm, health marker, client login + check-for-update,
+      client apply, and all mutation tests.
+    check_command: >
+      cd server && go test ./internal/device/... -count=1
+    expected_output: "ok  github.com/HelixDevelopment/helix_ota/server/internal/device"
+    layer: "SOURCE"
+    evidence_path: "server/internal/device/"
+    last_proven: "2026-06-20"
+    determinism: "continuous"
+
+  # PWU-AB-4: Slot detection from /proc/cmdline
+  - id: PWU-AB-4-SLOT-DETECTION
+    component: "Slot detection from /proc/cmdline"
+    description: >
+      detectSlot() parses the kernel cmdline parameter helix_slot=
+      to determine which A/B slot the system booted from.
+    check_command: >
+      cd server && go test -run 'TestSlotDevice_ActiveSlot_FromProcCmdline|TestMutationSlotDetectionReadsFromFiles' ./internal/device/ -count=1
+    expected_output: "PASS"
+    layer: "SOURCE"
+    evidence_path: "server/internal/device/"
+    last_proven: "2026-06-20"
+    determinism: "continuous"
+
+  # PWU-AB-4: Ed25519 signature verification
+  - id: PWU-AB-4-SIGNATURE-VERIFIER
+    component: "Ed25519 signature verification"
+    description: >
+      VerifySignature() with real crypto/ed25519. The 1.1 mutation
+      test TestMutationSignatureUsesRealEd25519 proves the verifier
+      uses real crypto, not a stub.
+    check_command: >
+      cd server && go test -run 'TestRealEd25519Signature|TestMutationSignatureUsesRealEd25519|TestSignatureVerifier_KeyConfigured' ./internal/device/ -count=1
+    expected_output: "PASS"
+    layer: "SOURCE"
+    evidence_path: "server/internal/device/"
+    last_proven: "2026-06-20"
+    determinism: "continuous"

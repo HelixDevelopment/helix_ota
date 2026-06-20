@@ -2,16 +2,18 @@
 
 | Field | Value |
 |---|---|
-| Revision | 7 |
+| Revision | 8 |
 | Created | 2026-06-07 |
 | Last modified | 2026-06-20T00:15:00Z |
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all upstreams (GitHub, GitLab, GitVerse). |
 
-## ⤴ CURRENT STATE (2026-06-20) — HEAD `37f480f8` — read `docs/RESUMPTION.md` FIRST
+## ⤴ CURRENT STATE (2026-06-20) — HEAD 40c15997 — read `docs/RESUMPTION.md` FIRST
 
-**All three remaining parallel streams (M — code review PWU-AB-4, N — OpenCV vision
-validation, P — OTA Manager desktop recordings) merged into main (HEAD `37f480f8`).**
+
+**All four remaining parallel streams (M — code review PWU-AB-4, N — OpenCV vision
+
+validation, P — OTA Manager desktop recordings, U — 11.4.108 registry) merged into main (HEAD 40c15997).**
 
 **Stream M — Independent code review PWU-AB-4 ApplyPort — DONE:**
 - Code review agent analysed all PWU-AB-4 fixes (applyport, device client, slot manager)
@@ -35,7 +37,15 @@ validation, P — OTA Manager desktop recordings) merged into main (HEAD `37f480
   showing the full UI (device list, details, deployment, rollout, telemetry, logs, settings)
 - Final summary screenshot captured
 - Evidence at `docs/qa/20260620T064840Z-ota-manager/REPORT.md`
-- Merged as `37f480f8` (current HEAD)
+- Merged as `37f480f8`
+
+**Stream U — §11.4.108 runtime-signature registry for PWU-AB features — DONE:**
+- Created `docs/design/rk3588_ab_virt/runtime-signatures.yaml` with 7 entries covering all 4 PWU-AB tiers
+- Each entry declares ONE machine-checkable runtime signature with real evidence paths, check commands, and determinism counts
+- Updated Issues.md (no change needed — PWU-AB items were already closed), Fixed.md (new OTA-015–OTA-018), Fixed_Summary.md
+- Updated CONTINUATION.md to reflect Stream U completion
+- This satisfies the remaining code-review condition tracked from Stream M
+- Merged as current HEAD
 
 **Previously landed PWU-AB milestones (HEAD `42be557`):** On the emulator A/B ladder
 (T1 = QEMU `virt` + HVF on this macOS host, real U-Boot 2024.01): **PWU-AB-1 FULL A/B
