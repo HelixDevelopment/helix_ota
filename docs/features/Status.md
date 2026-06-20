@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 9
-**Last modified:** 2026-06-20T18:30:00Z
+**Revision:** 10
+**Last modified:** 2026-06-20T20:30:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -90,7 +90,7 @@ the current scope).
 ## Feature Inventory Table
 
 Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
-`NOT_STARTED` / `PROVEN` / `VERIFIED` / `DESIGN` / `PENDING_FORENSICS`.
+`NOT_STARTED` / `PROVEN` / `VERIFIED` / `DESIGN` / `PENDING_FORENSICS` / `SUBMODULE_ADDED`.
 
 | # | Category | Component | Feature | Status | Implementation | Tests | Coverage | Video Recorded | Analysis |
 |---|---|---|---|---|---|---|---|---|---|
@@ -201,8 +201,10 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F105 | Server | Device handler | GET /devices/by-hardware/:hardwareId — reverse lookup | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: hardware ID lookup, not-found handling; e2e: hardware ID resolution | Verified in batch 2 transcript | Resolves device by hardware identifier for integration with hardware inventory systems. |
 | F106 | Governance | §11.4.159 Recording compliance | Window-specific MP4 + vision validation + expected-content spec before recording + SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow | VERIFIED | constitution/ — §11.4.159 mandate; CLAUDE.md §11.4.153–§11.4.159 section | 30/30 recordings window-scoped per §11.4.154, content-verified per §11.4.158, project-prefixed per §11.4.155; recordings at $HOME/Downloads/ per §11.4.158(D) | All 30 MP4s conform: window-scoped capture, §11.4.154 fresh-corpus rotation, §11.4.155 prefix naming, content-verified via §11.4.158 read-the-screen | helix_ota---*.mp4 (30 files at $HOME/Downloads/) | Compliance verified: 30 recordings at $HOME/Downloads/ with project prefix, window-scoped, content-verified. Analysis: docs/qa/20260620-all-recordings-analysis/REPORT.md. SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow documented and applied. Demo re-recordings (deployments, devices) re-done with positive genuine results. |
 | F107 | Governance | Demo re-recordings | Server demo recordings — deployments + devices | SKIP | scripts/testing/ | STALE — files rotated out per §11.4.154 fresh-corpus rotation. Need re-recording for next release cycle. | No MP4s currently at $HOME/Downloads/ | (STALE — recordings rotated per §11.4.154 after 2026-06-19 run) | Was PASS; both demos confirmed positive. Re-recording needed before release tagging. |
-| F108 | Workable Items | HelixTrack Integration | Multi-space project management system as workable-items engine — infrastructure + data isolation + launcher + docs_chain sync + tests | VERIFIED | helix_track/ (spaces, scripts/launchers, assets); helix-deps.yaml; .docs_chain/contexts/helixtrack.yaml; scripts/sync_helixtrack_push/pull.sh; containers/compose.helixtrack.yml; HelixTrack Core: --space-root flag, SpaceConfig, Migrator | Phase 0-7: structure, Core multi-space, launchers, compose, docs_chain sync scripts, tests (HELIXTRACK-001/002/003), helix_code launchers | 3/3 workable items (OTA-001/002/003) synced to HelixTrack API on :8080. Sync pushed to all upstreams. OTA-001/002/003 verified in HelixTrack DB. | No | §11.4.148/§11.4.149 integration: HelixTrack Core (Go, 372 API actions, 121 tables) as workable-items engine. Multi-space data isolation per project. Bidirectional sync with docs_chain. Launcher scripts for web/desktop clients. Containers compose for Core + PostgreSQL. HelixQA Challenge bank entries for space init, sync, isolation. F108 upgraded to VERIFIED — sync operational on :8080. |
-| F109 | Build | Build resource stats tracker (§11.4.24) | Background resource sampler — memory, CPU, load, disk at 5s intervals, min/max/mean/p95 in TSV registry + Stats.md report | IMPLEMENTED | scripts/resource_sampler.sh; scripts/generate_stats_report.sh; docs/Stats.tsv; docs/Stats.md | tests/stats_resource_sampler_test.sh — end-to-end sampler verification | Sampler tested end-to-end: 10s run produces correct TSV + Stats.md. Observer constraint: <50MB RSS, <5% CPU. | No | §11.4.24 build-resource-stats tracker OTA-002 completed. Resource sampler works on macOS (diskutil) with fallbacks for load/disk. |
+| F108 | Workable Items | HelixTrack Integration | Multi-space project management system as workable-items engine — infrastructure + data isolation + launcher + docs_chain sync + tests | VERIFIED | helix_track/ (spaces, scripts/launchers, assets); helix-deps.yaml; .docs_chain/contexts/helixtrack.yaml; scripts/sync_helixtrack_push/pull.sh; containers/compose.helixtrack.yml; HelixTrack Core: --space-root flag, SpaceConfig, Migrator | Phase 0-7: structure, Core multi-space, launchers, compose, docs_chain sync scripts, tests (HELIXTRACK-001/002/003), helix_code launchers | 5/5 workable items synced to HelixTrack API on :8080 (OTA-001/002/003/004/014). Sync verified end-to-end. | No | §11.4.148/§11.4.149 integration: HelixTrack Core (Go, 372 API actions, 121 tables) as workable-items engine. Multi-space data isolation per project. End-to-end sync operational. F108 upgraded to VERIFIED. |
+| F109 | Build | Build resource stats tracker (§11.4.24) | Background resource sampler — memory, CPU, load, disk at 5s intervals, min/max/mean/p95 in TSV registry + Stats.md report | VERIFIED | scripts/resource_sampler.sh; scripts/generate_stats_report.sh; docs/Stats.tsv; docs/Stats.md | tests/stats_resource_sampler_test.sh — end-to-end sampler verification | Sampler tested end-to-end: 10s run produces correct TSV + Stats.md. Observer constraint: <50MB RSS, <5% CPU. | No | §11.4.24 build-resource-stats tracker OTA-002 completed. Tested end-to-end with captured evidence. Observer constraints satisfied. |
+| F110 | Submodule | Docs Chain submodule | vasic-digital/docs_chain registered as git submodule — engine distributed, doctor contexts all passing | SUBMODULE_ADDED | .gitmodules (docs_chain entry); helix-deps.yaml (dependency); .docs_chain/contexts/ (4 context YAMLs) | 4/4 doctor contexts PASS: issues-status, features-status, emulator-status, helixtrack. Build: go build exits 0. | 4/4 contexts registered, doctor PASS, verify shows expected STALE artifacts. | No | Docs Chain engine (§11.4.106) registered as project submodule at vasic-digital/docs_chain@2c8cf16. 4 contexts operational. |
+| F111 | Governance | DB Migration Test | Automated workable_items DB schema + sync test — validates DB ↔ Issues.md ↔ Fixed.md consistency | IMPLEMENTED | scripts/testing/test_workable_items_db.sh; scripts/testing/migrate_workable_items.sh | 47 tests: schema validation, Issues sync (4/4), Fixed sync (12/12), orphan detection (0 orphans), terminal status validation | 47/47 PASS with captured evidence at qa-results/workable_items/20260620T201912Z/. | No | Full migration test suite: 47 tests covering schema, Issues/Fixed sync, orphans, concurrent safety. All PASS. |
 
 ---
 
@@ -233,9 +235,10 @@ the following gaps exist for full-session video capture:
 |---|---|---|
 | PASS | 49 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup) |
 | SKIP | 1 | F107 (Demo Re-recordings — stale/rotated) |
+| SUBMODULE_ADDED | 1 | F110 (Docs Chain submodule) |
 | DESIGN | 2 | F42 (ota-android-agent), F43 (ota-update-engine-bridge) |
-| IMPLEMENTED | 3 | F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold), F108 (HelixTrack Integration) |
-| VERIFIED | 20 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress), F106 (§11.4.159 Recording Compliance) |
+| IMPLEMENTED | 3 | F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold), F111 (DB Migration Test) |
+| VERIFIED | 22 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress), F106 (§11.4.159 Recording Compliance), F108 (HelixTrack Integration), F109 (Build Resource Stats) |
 | PROVEN | 6 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F53 (PWU-AB-2 RAUC dm-verity), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
 | OPERATOR-BLOCKED | 2 | F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW) |
 | PARTIAL | 2 | F86 (stress+chaos coverage), F89 (Docs Chain) |
@@ -256,3 +259,4 @@ the following gaps exist for full-session video capture:
 | 2026-06-20 | Rev 7 — Recording data quality fixes: count 31->30, F107 marked STALE (rotated), F94/F95 paths fixed to $HOME/Downloads/, 29 stale recordings at nonstandard path removed, Status_Summary synced |
 | 2026-06-20 | Rev 8 — F108 HelixTrack Integration added (DESIGN, Phase 0 committed, launcher scripts + helix-deps.yaml + space config); Phase 1-7 research agents running in parallel; Status_Summary synced |
 | 2026-06-20 | Rev 9 — F108 upgraded to IMPLEMENTED: Phase 1 (multi-space Core --space-root + SpaceConfig + Migrator) committed to HelixTrack. Phase 2 (docs_chain context + sync scripts) created. Phase 3 (containers compose + boot scripts) built. Phase 4 (launchers web/desktop/common) complete. Phase 5-6 (Challenge bank entries HELIXTRACK-001/002/003 + test scripts) authored. Phase 7 (Status docs) synced. Full integration pushed across all upstreams. |
+| 2026-06-20 | Rev 10 — F108 HelixTrack Integration upgraded to VERIFIED (sync verified end-to-end, 5/5 items synced); F109 Build Resource Stats upgraded to VERIFIED (tested end-to-end with captured evidence); F110 Docs Chain submodule added (SUBMODULE_ADDED, 4/4 doctor contexts PASS); F111 DB Migration Test added (IMPLEMENTED, 47/47 PASS); SUBMODULE_ADDED added to status vocabulary; Summary by Status table updated (VERIFIED 20→22, SUBMODULE_ADDED row added). |
