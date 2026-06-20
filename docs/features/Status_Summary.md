@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 5
-**Last modified:** 2026-06-20T06:00:00Z
+**Revision:** 6
+**Last modified:** 2026-06-20T11:27:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 ---
@@ -79,7 +79,8 @@ open items before a release tag.
 
 | Status | Count | Key Items |
 |---|---|---|
-| PASS | 50 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List API (F104), Hardware ID Reverse Lookup (F105), Demo Re-recordings (F107) |
+| PASS | 49 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List API (F104), Hardware ID Reverse Lookup (F105) |
+| SKIP | 1 | Demo Re-recordings (F107) — stale/rotated per §11.4.154 |
 | VERIFIED | 20 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159 Recording Compliance (F106) |
 | PROVEN | 6 | PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52), PWU-AB-2 RAUC dm-verity (F53), slot switch video (F94), rollback video (F95) |
 | IMPLEMENTED | 2 | PWU-AB-4 ApplyPort (F54), ApplyPort Scaffold (F102) |

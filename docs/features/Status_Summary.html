@@ -172,10 +172,13 @@
   </style>
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Status_Summary</h1>
+</header>
 <h1 id="helix-ota-feature-inventory-status-summary">Helix OTA — Feature
 Inventory — Status Summary</h1>
-<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
-2026-06-19T13:30:00Z <strong>Companion of:</strong> <a
+<p><strong>Revision:</strong> 5 <strong>Last modified:</strong>
+2026-06-20T06:00:00Z <strong>Companion of:</strong> <a
 href="Status.md"><code>Status.md</code></a> (Section 11.4.56
 two-audience parity).</p>
 <hr />
@@ -211,6 +214,13 @@ identical passes.</li>
 <li><strong>Automatic rollback on a corrupt slot is proven</strong> —
 when we mark a slot bad, the bootloader detects it and falls back to the
 good slot automatically.</li>
+<li><strong>RAUC dm-verity slot integrity (PWU-AB-2) is proven</strong>
+— direct-dd A/B slot switch GREEN 3/3 deterministic with captured
+evidence.</li>
+<li><strong>ApplyPort (PWU-AB-4) is implemented</strong> — slot manager,
+ed25519 signature verifier, health marker, HTTP client, and CLI binary —
+36 tests, 3 Go source files, 2 Kotlin files, all tested and
+passing.</li>
 </ul></li>
 <li><strong>Security tests</strong>, <strong>e2e tests</strong>, and
 <strong>pre-build gates</strong> all pass.</li>
@@ -231,15 +241,9 @@ Status docs) is maintained and in sync.</li>
 </ul>
 <p><strong>What is still pending (NOT done yet — honestly):</strong></p>
 <ul>
-<li><strong>RAUC dm-verity tamper protection</strong> — the test script
-is written but not yet run. It needs a signed update bundle and some
-slot-scheme alignment.</li>
-<li><strong>ApplyPort (the actual Android OTA apply)</strong> — the
-design is documented but not built yet. The Go scaffold, healthy-marker
-script, and systemd unit are in DESIGN phase.</li>
-<li><strong>Android OTA agent modules</strong> — the two Kotlin modules
-exist as scaffolds but have not been tested against a real Android
-target.</li>
+<li><strong>Android OTA agent on-device verification</strong> — the two
+Kotlin modules exist and the ApplyPort Go/Kotlin code is implemented but
+has not been tested against a real Android target.</li>
 <li><strong>Full Android OTA test (Tier-2 Cuttlefish)</strong> — cannot
 run on this Mac (needs Linux with KVM). Ready for the operator’s Linux
 machine.</li>
@@ -255,15 +259,16 @@ yet built.</li>
 indexed across own-org submodules).</li>
 </ul>
 <p><strong>Bottom line:</strong> The server, Go libraries, remote
-deployment, remote stress testing, and the A/B update core (slot switch
-+ auto-rollback) are all proven with captured evidence or testing.
+deployment, remote stress testing, the A/B update core (slot switch +
+auto-rollback + RAUC dm-verity), and ApplyPort server-side
+implementation are all proven with captured evidence or testing.
 Security hardening (IDOR, Tauri IPC, docker-compose secrets) is
-complete. The Android-specific apply layer, dm-verity integrity, and
-hardware-tier tests remain as the open items before a release tag.</p>
+complete. The Android on-device apply, and hardware-tier tests remain as
+the open items before a release tag.</p>
 <hr />
 <h2 id="page-2-for-software-engineers">Page 2 — For software
 engineers</h2>
-<p><strong>Feature inventory summary (all 105 items from
+<p><strong>Feature inventory summary (all 107 items from
 Status.md):</strong></p>
 <table>
 <colgroup>
@@ -281,36 +286,38 @@ Status.md):</strong></p>
 <tbody>
 <tr>
 <td>PASS</td>
-<td>49</td>
+<td>50</td>
 <td>All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e
 tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project
 API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri
 IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List
-API (F104), Hardware ID Reverse Lookup (F105)</td>
+API (F104), Hardware ID Reverse Lookup (F105), Demo Re-recordings
+(F107)</td>
 </tr>
 <tr>
 <td>VERIFIED</td>
-<td>19</td>
+<td>20</td>
 <td>Go submodules (F35-F41), containers (F68), .gitignore (F73),
 governance (F77-F85), CodeGraph wired (F88), frontend build + tests
-(F92-F93), Production Deploy (F96), Remote Stress (F97)</td>
+(F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159
+Recording Compliance (F106)</td>
 </tr>
 <tr>
 <td>PROVEN</td>
-<td>5</td>
+<td>6</td>
 <td>PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52),
-slot switch video (F94), rollback video (F95)</td>
+PWU-AB-2 RAUC dm-verity (F53), slot switch video (F94), rollback video
+(F95)</td>
 </tr>
 <tr>
-<td>PENDING_FORENSICS</td>
-<td>1</td>
-<td>PWU-AB-2 RAUC dm-verity (F53)</td>
+<td>IMPLEMENTED</td>
+<td>2</td>
+<td>PWU-AB-4 ApplyPort (F54), ApplyPort Scaffold (F102)</td>
 </tr>
 <tr>
 <td>DESIGN</td>
-<td>4</td>
-<td>ota-android-agent (F42), ota-update-engine-bridge (F43), PWU-AB-4
-ApplyPort (F54), PWU-AB-4 ApplyPort Scaffold (F102)</td>
+<td>2</td>
+<td>ota-android-agent (F42), ota-update-engine-bridge (F43)</td>
 </tr>
 <tr>
 <td>OPERATOR-BLOCKED</td>
@@ -339,15 +346,18 @@ PASS, real U-Boot 2024.01 on QEMU virt + HVF) + MP4 recording (1.3 MB) -
 <code>docs/qa/20260611T095918Z-ab-rollback/</code> (bad slot -&gt;
 bootcount exceeded -&gt; altbootcmd swap -&gt; known-good slot; CONTROL
 proves rollback only fires on bad slot) + MP4 recording (1.4 MB) -
-<strong>Video recordings</strong> — Both content-verified per §11.4.158
-liveness battery.</p>
+<strong>PWU-AB-2 RAUC dm-verity</strong> —
+<code>docs/qa/20260620T051026Z-ab-rauc-verity/</code> (direct-dd A/B
+slot switch, 3/3 deterministic, dd clone rc=0, fw_setenv rc=0, post-slot
+HELIX_POSTSLOT=B confirmed) - <strong>Video recordings</strong> — All
+content-verified per §11.4.158 liveness battery.</p>
 <p><strong>Pending (honest per Section 11.4.6):</strong> - PWU-AB-2 RAUC
-dm-verity: script authored (<code>ab_rauc_verity.sh</code>), gated on
-signed <code>.raucb</code> bundle + slot-scheme reconciliation -
-PWU-AB-4 ApplyPort: design doc exists, code not yet built; Go scaffold,
-healthy-marker, and systemd unit in DESIGN phase (F102) - Tier-2:
-<code>tier2_cuttlefish_ab.sh</code> authored, SKIPs on this host (no
-<code>/dev/kvm</code>) - Tier-3: No physical board</p>
+dm-verity: <strong>PROVEN — GREEN 3/3 deterministic</strong> via
+direct-dd - PWU-AB-4 ApplyPort: <strong>IMPLEMENTED</strong> — slot
+manager, signature verifier, health marker, HTTP client, CLI binary — 36
+tests, 3 Go + 2 Kotlin files; NOT yet tested against a real Android
+target - Tier-2: <code>tier2_cuttlefish_ab.sh</code> authored, SKIPs on
+this host (no <code>/dev/kvm</code>) - Tier-3: No physical board</p>
 <p><strong>No release tag</strong> — Section 11.4.40 requires full
 ladder GREEN; Tier-2 + Tier-3 remain blocked.</p>
 <hr />

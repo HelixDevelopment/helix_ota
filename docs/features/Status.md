@@ -68,7 +68,7 @@ against a running Android target.
 pre-build verification gate, constitution inheritance test. All script doc blocks
 present.
 
-**Video recording** — 30 recordings across server + emulator + gates + submodules + demos completed.
+**Video recording** — 30 recordings across server + emulator + gates + submodules completed.
 `$HOME/Downloads/helix_ota---*.mp4`:
 - Server: health, auth, artifacts+releases, deployments, devices, audit, client, deltas, groups, projects, recall+rollbacks, rollouts, stress+chaos, telemetry
 - Emulator: PWU-AB-1 A/B slot switch (1.3 MB, real U-Boot 2024.01 QEMU TCG), PWU-AB-3 auto-rollback (1.4 MB, real U-Boot 2024.01 QEMU TCG)
@@ -76,12 +76,12 @@ present.
 - Submodules: ota-protocol, ota-telemetry-schema, ota-artifact-validator, ota-rollout-engine, http3, challenges, helixqa
 - Demo re-recordings (STALE — rotated per §11.4.154; need re-recording for next release cycle)
 All files carry the §11.4.155 project-name prefix (`helix_ota-`).
-**All 30 recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260620-all-recordings-analysis/REPORT.md` + `docs/qa/20260620-all-recordings-analysis.txt` (full raw output) + demo re-recordings verified positive.
+**All 30 recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260620-all-recordings-analysis/REPORT.md` + `docs/qa/20260620-all-recordings-analysis.txt` (full raw output)
 **Result: 30/30 PASS.** Server recordings show genuine live-server responses (unique request_ids,
 valid JWT tokens, correct error handling). Emulator recordings prove real U-Boot 2024.01 A/B slot
 switching and auto-rollback with console evidence. Build gates + security probes + CodeGraph all
-proven with transcript evidence. Demo re-recordings confirm genuine positive results for deployments
-and device listing. §11.4.159 compliance — all 30 MP4s window-scoped, content-verified, with
+proven with transcript evidence.
+§11.4.159 compliance — all 30 MP4s window-scoped, content-verified, with
 expected-content specification. Audio routing tests do not apply (no audio subsystem in
 the current scope).
 
@@ -187,8 +187,8 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F91 | Server | Project-scoped Authorization | IDOR protection on project resources | PASS | server/internal/api/ — access control model for project-scoped resources | Authorization unit tests; IDOR-specific negative tests | Direct object reference prevention; cross-project access blocked; unauthorized requests return 403 | Verified in batch 2 transcript | IDOR security fix: project resources require project membership. Authorization middleware enforces scope on every project-bound handler. |
 | F92 | Frontend | Production Build | Vite production build, 600 kB dist | VERIFIED | vitest.config.ts, frontend Vite config | Build produces optimised 600 kB dist bundle | Tree-shaken, minified production output; asset integrity verified | No | Vite production build verified at 600 kB (gzipped). All assets present and non-degenerate per §11.4.38. |
 | F93 | Frontend | Component Tests | 47 Vitest tests in 8 suites | VERIFIED | vitest.config.ts, component test files | 47 tests across 8 suites | Component rendering, state transitions, event handling, error boundaries; all GREEN | No | Full Vitest component test suite: 47 tests, 8 suites, all PASS. Coverage spans render, interaction, state, and error paths. |
-| F94 | Emulator | PWU-AB-1 A/B Slot Switch Video | MP4 recording of slot switch (1.3 MB) | PROVEN | /Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-slot-switch-*.mp4 | Recording content-verified per §11.4.158 | 1.3 MB MP4 capturing real U-Boot 2024.01 QEMU TCG A/B slot switch sequence | helix_ota-emu-ab-slot-switch-*.mp4 | Recording: 1.3 MB. Captures real U-Boot 2024.01 on QEMU TCG performing slot A→B switch. Content-verified per §11.4.158 liveness battery. Complements existing console-log evidence (F51). |
-| F95 | Emulator | PWU-AB-3 Auto-Rollback Video | MP4 recording of corrupt-slot rollback (1.4 MB) | PROVEN | /Volumes/T7/Downloads/Recordings/helix_ota-emu-ab-rollback-*.mp4 | Recording content-verified per §11.4.158 | 1.4 MB MP4 capturing real U-Boot 2024.01 QEMU TCG corrupt-slot auto-rollback sequence | helix_ota-emu-ab-rollback-*.mp4 | Recording: 1.4 MB. Captures real U-Boot 2024.01 on QEMU TCG detecting bad slot, bootcount exceeds limit, altbootcmd swap triggering, known-good slot boots. Content-verified per §11.4.158. Complements existing console-log evidence (F52). |
+| F94 | Emulator | PWU-AB-1 A/B Slot Switch Video | MP4 recording of slot switch (1.3 MB) | PROVEN | $HOME/Downloads/helix_ota---emu-ab-slot-switch---*.mp4 | Recording content-verified per §11.4.158 | 1.3 MB MP4 capturing real U-Boot 2024.01 QEMU TCG A/B slot switch sequence | helix_ota-emu-ab-slot-switch-*.mp4 | Recording: 1.3 MB. Captures real U-Boot 2024.01 on QEMU TCG performing slot A→B switch. Content-verified per §11.4.158 liveness battery. Complements existing console-log evidence (F51). |
+| F95 | Emulator | PWU-AB-3 Auto-Rollback Video | MP4 recording of corrupt-slot rollback (1.4 MB) | PROVEN | $HOME/Downloads/helix_ota---emu-ab-rollback---*.mp4 | Recording content-verified per §11.4.158 | 1.4 MB MP4 capturing real U-Boot 2024.01 QEMU TCG corrupt-slot auto-rollback sequence | helix_ota-emu-ab-rollback-*.mp4 | Recording: 1.4 MB. Captures real U-Boot 2024.01 on QEMU TCG detecting bad slot, bootcount exceeds limit, altbootcmd swap triggering, known-good slot boots. Content-verified per §11.4.158. Complements existing console-log evidence (F52). |
 | F96 | Deployment | Production deployment | 3-container stack (server + PG + SPA) on nezha.local | VERIFIED | docker-compose.yml, deploy/remote/ | Deployment verification, container health probes | 3-container deployment on nezha.local; server, PostgreSQL, and SPA all healthy and responding | No | Production deployment verified at nezha.local. 3-container stack (server + PostgreSQL + SPA) orchestrated via docker-compose. All containers respond correctly on configured ports. |
 | F97 | Deployment | Remote stress test | Sustained 291 req/s device registration, all stress/chaos PASS | VERIFIED | tests/stress/ | Stress/chaos test suite | 291 req/s sustained throughput, 100/100 virtual devices registered without failure | No | Sustained 291 req/s device registration throughput. 100/100 virtual devices registered without failure. All stress and chaos tests PASS. |
 | F98 | Server | MountManagerUI Embed | SPA served at /manager/ endpoint | PASS | server/internal/api/ (SPA handler) | MountManagerUI accessibility test | SPA correctly serves at /manager/ path | No | MountManagerUI bug fix resolved. SPA now serves correctly at /manager/. Previously broken routing. |
@@ -200,7 +200,7 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F104 | Server | Device handler | GET /api/v1/devices — list all devices | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: device listing, pagination; e2e: device enumeration | Verified in batch 2 transcript | Returns ordered device list with status, last-seen timestamp, and metadata fields. |
 | F105 | Server | Device handler | GET /devices/by-hardware/:hardwareId — reverse lookup | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: hardware ID lookup, not-found handling; e2e: hardware ID resolution | Verified in batch 2 transcript | Resolves device by hardware identifier for integration with hardware inventory systems. |
 | F106 | Governance | §11.4.159 Recording compliance | Window-specific MP4 + vision validation + expected-content spec before recording + SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow | VERIFIED | constitution/ — §11.4.159 mandate; CLAUDE.md §11.4.153–§11.4.159 section | 30/30 recordings window-scoped per §11.4.154, content-verified per §11.4.158, project-prefixed per §11.4.155; recordings at $HOME/Downloads/ per §11.4.158(D) | All 30 MP4s conform: window-scoped capture, §11.4.154 fresh-corpus rotation, §11.4.155 prefix naming, content-verified via §11.4.158 read-the-screen | helix_ota---*.mp4 (30 files at $HOME/Downloads/) | Compliance verified: 30 recordings at $HOME/Downloads/ with project prefix, window-scoped, content-verified. Analysis: docs/qa/20260620-all-recordings-analysis/REPORT.md. SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow documented and applied. Demo re-recordings (deployments, devices) re-done with positive genuine results. |
-| F107 | Governance | Demo re-recordings | Server demo recordings — deployments + devices re-done with positive results | PASS | scripts/testing/ | Content-verified recordings at $HOME/Downloads/helix_ota---demo-deployments---*.mp4, helix_ota---demo-devices---*.mp4 | Both recordings content-verified per §11.4.158 — deployments show deployment sequence with correct state transitions; devices show device listing with registered devices | helix_ota---demo-deployments---20260619T223910Z.mp4, helix_ota---demo-devices---20260619T223918Z.mp4 | Deployments demo re-recorded with proper auth — shows deployment creation, listing, and state transitions. Devices demo re-recorded — shows registered device inventory. Both genuine positive results. |
+| F107 | Governance | Demo re-recordings | Server demo recordings — deployments + devices | SKIP | scripts/testing/ | STALE — files rotated out per §11.4.154 fresh-corpus rotation. Need re-recording for next release cycle. | No MP4s currently at $HOME/Downloads/ | (STALE — recordings rotated per §11.4.154 after 2026-06-19 run) | Was PASS; both demos confirmed positive. Re-recording needed before release tagging. |
 
 ---
 
@@ -229,7 +229,8 @@ the following gaps exist for full-session video capture:
 
 | Status | Count | Items |
 |---|---|---|
-| PASS | 50 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup), F107 (Demo Re-recordings) |
+| PASS | 49 | F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware ID Reverse Lookup) |
+| SKIP | 1 | F107 (Demo Re-recordings — stale/rotated) |
 | VERIFIED | 20 | F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy), F97 (Remote Stress), F106 (§11.4.159 Recording Compliance) |
 | PROVEN | 6 | F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3 auto-rollback), F53 (PWU-AB-2 RAUC dm-verity), F94 (AB Slot Switch Video), F95 (AB Rollback Video) |
 | IMPLEMENTED | 2 | F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold) |
@@ -249,4 +250,5 @@ the following gaps exist for full-session video capture:
 | 2026-06-19 | Feature inventory update — F96-F103 added (remote deployment, stress test, security fixes, MountManagerUI, ApplyPort scaffold); Executive Summary updated; revision 3 |
 | 2026-06-19 | Feature inventory update — F104-F105 added (Devices List API, Hardware ID Reverse Lookup); Executive Summary updated; production E2E 288/290 noted; revision 4 |
 | 2026-06-19 | Recording migration + GEMINI.md lockstep — recordings moved to $HOME/Downloads, window-scoped MP4s, §11.4.159 compliance initiated; revision 5 |
-| 2026-06-20 | Rev 6 — PWU-AB-2 RAUC dm-verity PROVEN (GREEN 3/3 deterministic), PWU-AB-4 ApplyPort IMPLEMENTED (36 tests, 3 Go files, 2 Kotlin files, CLI binary), §11.4.159 compliance row (F106), demo re-recordings (F107), recordings count updated to 31, Summary by Status revised, all status vocabulary updated |
+| 2026-06-20 | Rev 6 — PWU-AB-2 RAUC dm-verity PROVEN (GREEN 3/3 deterministic), PWU-AB-4 ApplyPort IMPLEMENTED (36 tests, 3 Go files, 2 Kotlin files, CLI binary), §11.4.159 compliance row (F106), demo re-recordings (F107), recordings count updated to 31, Summary by Status revised, all status vocabulary updated, all status vocabulary updated |
+| 2026-06-20 | Rev 7 — Recording data quality fixes: count 31->30, F107 marked STALE (rotated), F94/F95 paths fixed to $HOME/Downloads/, 29 stale recordings at nonstandard path removed, Status_Summary synced |
