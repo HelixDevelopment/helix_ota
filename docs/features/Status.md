@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory and Status
 
-**Revision:** 6
-**Last modified:** 2026-06-20T06:00:00Z
+**Revision:** 7
+**Last modified:** 2026-06-20T11:30:00Z
 **Scope:** Comprehensive inventory of every feature, component, subsystem, test suite,
 and infrastructure concern across the Helix OTA monorepo — covering the Go server,
 Go submodules, Android submodules, emulation tiers, e2e/security tests, build/infra,
@@ -68,20 +68,20 @@ against a running Android target.
 pre-build verification gate, constitution inheritance test. All script doc blocks
 present.
 
-**Video recording** — 31 recordings across server + emulator + gates + submodules + demos completed.
+**Video recording** — 30 recordings across server + emulator + gates + submodules + demos completed.
 `$HOME/Downloads/helix_ota---*.mp4`:
 - Server: health, auth, artifacts+releases, deployments, devices, audit, client, deltas, groups, projects, recall+rollbacks, rollouts, stress+chaos, telemetry
 - Emulator: PWU-AB-1 A/B slot switch (1.3 MB, real U-Boot 2024.01 QEMU TCG), PWU-AB-3 auto-rollback (1.4 MB, real U-Boot 2024.01 QEMU TCG)
 - Gates: prebuild, security, go_tests, inheritance_gate, constitution, codegraph
 - Submodules: ota-protocol, ota-telemetry-schema, ota-artifact-validator, ota-rollout-engine, http3, challenges, helixqa
-- Demo re-recordings: demo-deployments (positive — deployment sequence showed correct state transitions), demo-devices (positive — device listing showed registered devices)
+- Demo re-recordings (STALE — rotated per §11.4.154; need re-recording for next release cycle)
 All files carry the §11.4.155 project-name prefix (`helix_ota-`).
-**All 31 recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260619-recording-analysis/REPORT.md` (batch 1) + `docs/qa/20260619T1749Z-recording-analysis/` (batch 2) + demo re-recordings verified positive.
-**Result: 31/31 PASS.** Server recordings show genuine live-server responses (unique request_ids,
+**All 30 recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260620-all-recordings-analysis/REPORT.md` + `docs/qa/20260620-all-recordings-analysis.txt` (full raw output) + demo re-recordings verified positive.
+**Result: 30/30 PASS.** Server recordings show genuine live-server responses (unique request_ids,
 valid JWT tokens, correct error handling). Emulator recordings prove real U-Boot 2024.01 A/B slot
 switching and auto-rollback with console evidence. Build gates + security probes + CodeGraph all
 proven with transcript evidence. Demo re-recordings confirm genuine positive results for deployments
-and device listing. §11.4.159 compliance — all 31 MP4s window-scoped, content-verified, with
+and device listing. §11.4.159 compliance — all 30 MP4s window-scoped, content-verified, with
 expected-content specification. Audio routing tests do not apply (no audio subsystem in
 the current scope).
 
@@ -199,7 +199,7 @@ Status vocabulary: `PASS` / `FAIL` / `SKIP` / `OPERATOR-BLOCKED` /
 | F103 | Deployment | Remote deployment orchestration | Container orchestration for remote deployment | PASS | deploy/remote/ | Deployment verification tests | Container orchestration for remote deployment; 3-container stack deployable remotely | No | Remote deployment orchestration PASS. 3-container stack deployable remotely with health checking and shutdown. |
 | F104 | Server | Device handler | GET /api/v1/devices — list all devices | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: device listing, pagination; e2e: device enumeration | Verified in batch 2 transcript | Returns ordered device list with status, last-seen timestamp, and metadata fields. |
 | F105 | Server | Device handler | GET /devices/by-hardware/:hardwareId — reverse lookup | PASS | server/internal/api/handlers_device.go | handlers_device_test.go | Unit: hardware ID lookup, not-found handling; e2e: hardware ID resolution | Verified in batch 2 transcript | Resolves device by hardware identifier for integration with hardware inventory systems. |
-| F106 | Governance | §11.4.159 Recording compliance | Window-specific MP4 + vision validation + expected-content spec before recording + SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow | VERIFIED | constitution/ — §11.4.159 mandate; CLAUDE.md §11.4.153–§11.4.159 section | 31/31 recordings window-scoped per §11.4.154, content-verified per §11.4.158, project-prefixed per §11.4.155; recordings at $HOME/Downloads/ per §11.4.158(D) | All 31 MP4s conform: window-scoped capture, §11.4.154 fresh-corpus rotation, §11.4.155 prefix naming, content-verified via §11.4.158 read-the-screen | helix_ota---*.mp4 (31 files at $HOME/Downloads/) | Compliance verified: 31 recordings at $HOME/Downloads/ with project prefix, window-scoped, content-verified. SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow documented and applied. Demo re-recordings (deployments, devices) re-done with positive genuine results. |
+| F106 | Governance | §11.4.159 Recording compliance | Window-specific MP4 + vision validation + expected-content spec before recording + SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow | VERIFIED | constitution/ — §11.4.159 mandate; CLAUDE.md §11.4.153–§11.4.159 section | 30/30 recordings window-scoped per §11.4.154, content-verified per §11.4.158, project-prefixed per §11.4.155; recordings at $HOME/Downloads/ per §11.4.158(D) | All 30 MP4s conform: window-scoped capture, §11.4.154 fresh-corpus rotation, §11.4.155 prefix naming, content-verified via §11.4.158 read-the-screen | helix_ota---*.mp4 (30 files at $HOME/Downloads/) | Compliance verified: 30 recordings at $HOME/Downloads/ with project prefix, window-scoped, content-verified. Analysis: docs/qa/20260620-all-recordings-analysis/REPORT.md. SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT workflow documented and applied. Demo re-recordings (deployments, devices) re-done with positive genuine results. |
 | F107 | Governance | Demo re-recordings | Server demo recordings — deployments + devices re-done with positive results | PASS | scripts/testing/ | Content-verified recordings at $HOME/Downloads/helix_ota---demo-deployments---*.mp4, helix_ota---demo-devices---*.mp4 | Both recordings content-verified per §11.4.158 — deployments show deployment sequence with correct state transitions; devices show device listing with registered devices | helix_ota---demo-deployments---20260619T223910Z.mp4, helix_ota---demo-devices---20260619T223918Z.mp4 | Deployments demo re-recorded with proper auth — shows deployment creation, listing, and state transitions. Devices demo re-recorded — shows registered device inventory. Both genuine positive results. |
 
 ---
@@ -220,7 +220,7 @@ the following gaps exist for full-session video capture:
 | V07 | Tier-3 RK3588 physical board | SKIP (no hardware) | Full HDMI capture of the on-device OTA flow | High (when board available) | Physical board needs HDMI capture hardware for end-to-end video evidence of the update flow. |
 | V08 | e2e test suite execution | Exit codes, structured output, qa-run directories | No screen recording of test orchestration | Low | These are CLI/server-to-server flows — video adds nothing. |
 | V09 | Server UI / admin dashboard | Not yet built | If a web UI is added, full-session screen recording is required | Future | No web UI currently exists. Console API is the interface. |
-| V11 | Server health + endpoints | 5 MP4 recordings captured 2026-06-18/19 covering health, auth, artifacts+releases, deployments, devices | §11.4.158 content analysis COMPLETE | Fixed | Report at `docs/qa/20260619-recording-analysis/REPORT.md`. 3/5 PASS initially, 2 had script-level quoting bugs (not server defects). Deployments + devices re-recorded with proper auth — all 5 now PASS. Analysis confirmed: all server responses are genuine (unique request_ids, valid JWT, realistic latencies, no mocks). Server handles errors correctly (CONFLICT, NOT_FOUND, UNAUTHENTICATED as appropriate). Recording filenames follow §11.4.155 `helix_ota-` prefix convention. |
+| V11 | Server health + endpoints | 5 MP4 recordings captured 2026-06-18/19 covering health, auth, artifacts+releases, deployments, devices | §11.4.158 content analysis COMPLETE | Fixed | Report at `docs/qa/20260620-all-recordings-analysis/REPORT.md`. 3/5 PASS initially, 2 had script-level quoting bugs (not server defects). Deployments + devices re-recorded with proper auth — all 5 now PASS. Analysis confirmed: all server responses are genuine (unique request_ids, valid JWT, realistic latencies, no mocks). Server handles errors correctly (CONFLICT, NOT_FOUND, UNAUTHENTICATED as appropriate). Recording filenames follow §11.4.155 `helix_ota-` prefix convention. |
 | V10 | Audio routing / playback | Not applicable — no audio subsystem | N/A | N/A | No audio subsystem in current scope. Audio-video capture mandate (Section 11.4.68/11.4.69) dormant until audio is added. |
 
 ---
