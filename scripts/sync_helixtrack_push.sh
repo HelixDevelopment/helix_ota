@@ -43,7 +43,7 @@ if [ ! -f "$WORKABLE_ITEMS_DB" ]; then
 fi
 
 # --- Check HelixTrack API reachability ---
-if ! curl -sf "$HELIXTRACK_API" -o /dev/null 2>/dev/null; then
+if ! curl -sf -X POST "$HELIXTRACK_API" -H "Content-Type: application/json" -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
     log_warn "HelixTrack API not reachable at ${HELIXTRACK_API} — SKIP"
     exit 2  # OPERATOR-BLOCKED signal
 fi
@@ -63,11 +63,12 @@ process_item() {
     local description="$5"
 
     # Map OTA item type to HelixTrack ticket type
+    # HelixTrack uses title-based lookup: values must match DB ticket_type.title
     case "$item_type" in
-        Bug)     HT_TYPE="bug" ;;
-        Feature) HT_TYPE="feature" ;;
-        Task)    HT_TYPE="task" ;;
-        *)       HT_TYPE="task" ;;
+        Bug)     HT_TYPE="Bug" ;;
+        Feature) HT_TYPE="Feature" ;;
+        Task)    HT_TYPE="Task" ;;
+        *)       HT_TYPE="Task" ;;
     esac
 
     # Map OTA status to HelixTrack status
@@ -99,10 +100,12 @@ process_item() {
             data: {
                 title: $title,
                 description: $description,
-                ticket_type: $type,
+                type: $type,
                 status: $status,
+                project_id: "ota-helix-001",
                 external_id: $ota_id,
-                external_system: "helix_ota"
+                external_system: "helix_ota",
+                assignee: "admin"
             }
         }'
     )
@@ -147,12 +150,10 @@ process_item() {
     fi
 }
 
-# Read items from SQLite and process each
-sqlite3 "$WORKABLE_ITEMS_DB" <<'SQL' | while IFS='|' read -r id type status title desc; do
+# Read items from SQLite and process each (process substitution avoids subshell)
+while IFS='|' read -r id type status title desc; do
     process_item "$id" "$type" "$status" "$title" "$desc" || true
-done
-SELECT ota_id, type, status, title, COALESCE(description, '') FROM items;
-SQL
+done < <(sqlite3 "$WORKABLE_ITEMS_DB" "SELECT ota_id, type, status, title, COALESCE(description, '') FROM items;")
 
 # --- Write sync state markdown ---
 cat > "$SYNC_STATE_MD" <<STATEMD

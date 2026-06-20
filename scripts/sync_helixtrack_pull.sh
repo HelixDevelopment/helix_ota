@@ -29,8 +29,8 @@ for cmd in curl jq; do
     fi
 done
 
-# Check API reachability
-if ! curl -sf "$HELIXTRACK_API" -o /dev/null 2>/dev/null; then
+# Check API reachability (HelixTrack responds only to POST /do)
+if ! curl -sf -X POST "$HELIXTRACK_API" -H "Content-Type: application/json" -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
     log_info "HelixTrack API not reachable — nothing to pull"
     exit 2
 fi
