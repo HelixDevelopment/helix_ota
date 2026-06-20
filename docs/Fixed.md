@@ -148,3 +148,15 @@ Closed 2026-06-11 — commit `42be557` `feat(AB): PWU-AB-3 corrupt-slot AUTO-ROL
 **Type:** Feature
 
 Closed 2026-06-20 — PWU-AB-4 ApplyPort (`server/cmd/applyport/`). Slot detection from `/proc/cmdline` (`helix_slot=A|B`), Ed25519 artifact signature verification via `crypto/ed25519` (proven real, not a stub — §1.1 mutation `TestMutationSignatureUsesRealEd25519`), write-and-arm with health marker, and device client (login, check-for-update, apply). 58/58 tests passing including §1.1 paired-mutation suite. Evidence: `server/internal/device/`. Runtime signatures: PWU-AB-4-APPLYPORT-BUILD, PWU-AB-4-APPLYPORT-TESTS, PWU-AB-4-SLOT-DETECTION, PWU-AB-4-SIGNATURE-VERIFIER.
+
+---
+
+## §9. [OTA-002] Build resource stats tracker
+
+**Status:** Completed (→ Fixed.md)
+**Type:** Task
+
+**Closed:** 2026-06-20 — commit `300351c6` `feat(stats): OTA-002 Build resource stats tracker`.
+**Root cause:** §11.4.24 mandated per-build resource telemetry; missing entirely.
+**Fix:** `scripts/resource_sampler.sh` — background-capable host-side sampler (memory RSS, CPU%, load, disk I/O at 5s intervals, min/max/mean/p95). `docs/Stats.tsv` TSV registry. `docs/Stats.md` human-readable report. Tested end-to-end (10s run produces correct TSV + Stats.md). Observer constraint verified: <50MB RSS, <5% CPU.
+**Evidence:** `docs/Stats.tsv`, `docs/Stats.md`, `tests/stats_resource_sampler_test.sh`.

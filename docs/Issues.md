@@ -78,9 +78,3 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ---
 
-## §2. [OTA-002] Build resource stats tracker
-
-**Status:** Queued
-**Type:** Task
-
-**Description:** Implement per-build host-side resource telemetry per §11.4.24 — a resource sampler (memory, CPU, load, disk) that computes min/max/mean/p95 and records results in a TSV registry with human-readable Stats.md report.
