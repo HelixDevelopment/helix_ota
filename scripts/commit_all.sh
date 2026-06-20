@@ -436,6 +436,76 @@ run_pre_build_gate() {
 }
 
 # =============================================================================
+# HelixTrack — auto-boot + sync helper (§11.4.148)
+# =============================================================================
+_helixtrack_ensure_running() {
+    # Check if already running
+    if curl -sf -X POST "http://localhost:8080/do" \
+        -H "Content-Type: application/json" \
+        -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+        _helixtrack_do_sync
+        return 0
+    fi
+
+    # Try to boot locally (must run from Core's Application dir for Configurations/)
+    local ht_core_dir="/Volumes/T7/Projects/helix_track/core/Application"
+    local ht_core="$ht_core_dir/htCore"
+    if [ ! -f "$ht_core" ]; then
+        ht_core_dir="$PROJECT_ROOT/helix_track/core/Application"
+        ht_core="$ht_core_dir/htCore"
+    fi
+    if [ -f "$ht_core" ]; then
+        log_info "Booting HelixTrack Core from $ht_core_dir..."
+        cd "$ht_core_dir"
+        nohup ./htCore --space-root="$PROJECT_ROOT/helix_track/spaces/helix_ota" \
+            > /tmp/helixtrack_core.log 2>&1 &
+        cd "$PROJECT_ROOT"
+        for i in $(seq 1 30); do
+            if curl -sf -X POST "http://localhost:8080/do" -H "Content-Type: application/json" \
+                -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+                log_ok "HelixTrack Core booted (${i}s)"
+                _helixtrack_do_sync
+                return 0
+            fi
+            sleep 1
+        done
+        log_warn "HelixTrack Core failed to boot in 30s"
+        return 0
+    fi
+
+    # Try distribution host (nezha.local per config)
+    local dist_host="${HELIXTRACK_REMOTE_HOST:-nezha.local}"
+    if ssh -o ConnectTimeout=5 -o BatchMode=yes "$dist_host" "echo ok" 2>/dev/null | grep -q ok; then
+        log_info "Deploying HelixTrack on $dist_host..."
+        local compose_file="$PROJECT_ROOT/containers/compose.helixtrack.yml"
+        if [ -f "$compose_file" ]; then
+            (cd "$PROJECT_ROOT/containers" && docker compose -f compose.helixtrack.yml up -d 2>/dev/null) && \
+                log_ok "HelixTrack deployed on $dist_host" || \
+                log_warn "Deploy to $dist_host failed"
+        fi
+    else
+        log_info "Host $dist_host offline — skipping HelixTrack boot. Sync skipped."
+    fi
+    return 0
+}
+
+_helixtrack_do_sync() {
+    local ht_user="${HELIXTRACK_USER:-admin}"
+    local ht_pass="${HELIXTRACK_PASS:-admin1234}"
+    local JWT
+    JWT=$(curl -s -X POST http://localhost:8080/do -H "Content-Type: application/json" \
+        -d "{\"action\":\"authenticate\",\"jwt\":\"\",\"object\":\"\",\"data\":{\"username\":\"${ht_user}\",\"password\":\"${ht_pass}\"}}" \
+        | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('token',''))" 2>/dev/null || true)
+    if [ -n "$JWT" ]; then
+        HELIXTRACK_API="http://localhost:8080/do" HELIXTRACK_JWT="$JWT" \
+            bash "$SCRIPT_DIR/sync_helixtrack_push.sh" 2>&1 | tail -3
+        log_ok "HelixTrack sync completed"
+    else
+        log_warn "HelixTrack auth failed — sync skipped"
+    fi
+}
+
+# =============================================================================
 # Main
 # =============================================================================
 main() {
@@ -461,22 +531,7 @@ main() {
     run_pre_build_gate
 
     # §11.4.148 — HelixTrack auto-sync: push all workable items before commit
-    if curl -sf -X POST "http://localhost:8080/do" \
-        -H "Content-Type: application/json" \
-        -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
-        local ht_user="${HELIXTRACK_USER:-admin}"
-        local ht_pass="${HELIXTRACK_PASS:-admin1234}"
-        JWT=$(curl -s -X POST http://localhost:8080/do -H "Content-Type: application/json" \
-            -d "{\"action\":\"authenticate\",\"jwt\":\"\",\"object\":\"\",\"data\":{\"username\":\"${ht_user}\",\"password\":\"${ht_pass}\"}}" \
-            | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('token',''))" 2>/dev/null || true)
-        if [ -n "$JWT" ]; then
-            HELIXTRACK_API="http://localhost:8080/do" HELIXTRACK_JWT="$JWT" \
-                bash "$SCRIPT_DIR/sync_helixtrack_push.sh" 2>&1 | tail -3
-            log_ok "HelixTrack sync completed"
-        fi
-    else
-        log_info "HelixTrack Core not running — skipping sync (§11.4.148)"
-    fi
+    _helixtrack_ensure_running
 
     # Validate + cascade submodules
     validate_submodules

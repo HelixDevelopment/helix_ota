@@ -22,12 +22,50 @@ if [ ! -f "$SYNC_SCRIPT" ]; then
     exit 0
 fi
 
-# Check HelixTrack reachability
+# Check HelixTrack reachability — boot if not running
 if ! curl -sf -X POST "http://localhost:8080/do" \
     -H "Content-Type: application/json" \
     -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
-    echo "[HELIXTRACK] Core not running — sync skipped (commit continues)"
-    exit 0
+    # Try local boot (must run from Core's Application dir for Configurations/ path)
+    # Prefer sibling path (has Configurations/)
+    HT_CORE_DIR="/Volumes/T7/Projects/helix_track/core/Application"
+    HT_CORE="$HT_CORE_DIR/htCore"
+    if [ ! -f "$HT_CORE" ]; then
+        HT_CORE_DIR="$PROJECT_ROOT/helix_track/core/Application"
+        HT_CORE="$HT_CORE_DIR/htCore"
+    fi
+    if [ -f "$HT_CORE" ]; then
+        echo "[HELIXTRACK] Booting Core locally from $HT_CORE_DIR..."
+        cd "$HT_CORE_DIR"
+        SPACE_ROOT="$PROJECT_ROOT/helix_track/spaces/helix_ota"
+        nohup ./htCore --space-root="$SPACE_ROOT" \
+            > /tmp/helixtrack_core.log 2>&1 &
+        cd "$PROJECT_ROOT"
+        for i in $(seq 1 30); do
+            if curl -sf -X POST "http://localhost:8080/do" -H "Content-Type: application/json" \
+                -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+                echo "[HELIXTRACK] Core online after ${i}s"
+                break
+            fi
+            sleep 1
+        done
+        if ! curl -sf -X POST "http://localhost:8080/do" -H "Content-Type: application/json" \
+            -d '{"action":"version"}' -o /dev/null 2>/dev/null; then
+            echo "[HELIXTRACK] Failed to boot — sync skipped"
+            exit 0
+        fi
+    else
+        DIST_HOST="${HELIXTRACK_REMOTE_HOST:-nezha.local}"
+        if ssh -o ConnectTimeout=3 -o BatchMode=yes "$DIST_HOST" "echo ok" 2>/dev/null | grep -q ok; then
+            echo "[HELIXTRACK] Deploying on $DIST_HOST..."
+            docker compose -f "$PROJECT_ROOT/containers/compose.helixtrack.yml" up -d 2>/dev/null && \
+                echo "[HELIXTRACK] Deployed on $DIST_HOST" || \
+                echo "[HELIXTRACK] Deploy failed"
+        else
+            echo "[HELIXTRACK] Core not running, $DIST_HOST offline — sync skipped"
+            exit 0
+        fi
+    fi
 fi
 
 # Get JWT
