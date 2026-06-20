@@ -77,14 +77,14 @@ func percentiles(durations []time.Duration) (p50, p95, p99 time.Duration) {
 func login(router *gin.Engine) string {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login",
-		strings.NewReader(`{"username":"admin@test","password":"s3cret"}`))
+		strings.NewReader(`{"username":"admin@helix.test","password":"s3cret"}`))
 	r.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
 		return ""
 	}
 	var resp struct {
-		Token string `json:"token"`
+		Token string `json:"access_token"`
 	}
 	_ = json.Unmarshal(w.Body.Bytes(), &resp)
 	return resp.Token
@@ -104,7 +104,7 @@ func testRouter(t testing.TB) *gin.Engine {
 		},
 		Repo: store.NewMemoryRepository(),
 		Users: api.NewStaticUserDirectory(api.StaticUser{
-			Username: "admin@test",
+			Username: "admin@helix.test",
 			Password: "s3cret",
 			Roles:    []string{api.RoleAdmin, api.RoleOperator, api.RoleViewer},
 		}),
@@ -203,7 +203,7 @@ func TestStressConcurrentAuth(t *testing.T) {
 			defer wg.Done()
 			start := time.Now()
 			codes[i] = doReq(router, http.MethodPost, "/api/v1/auth/login", "",
-				`{"username":"admin@test","password":"s3cret"}`)
+				`{"username":"admin@helix.test","password":"s3cret"}`)
 			durations[i] = time.Since(start)
 		}()
 	}
@@ -305,7 +305,7 @@ func TestStressBoundaryAuthPayloads(t *testing.T) {
 	}
 	cases := []bc{
 		{"empty-username", `{"username":"","password":"s3cret"}`},
-		{"empty-password", `{"username":"admin@test","password":""}`},
+		{"empty-password", `{"username":"admin@helix.test","password":""}`},
 		{"both-empty", `{"username":"","password":""}`},
 		{"huge-username", fmt.Sprintf(`{"username":"%s","password":"s3cret"}`, string(make([]byte, 10000)))},
 	}

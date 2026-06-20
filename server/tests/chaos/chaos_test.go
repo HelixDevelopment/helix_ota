@@ -67,7 +67,7 @@ func testRouter(t testing.TB, repo store.Repository) *gin.Engine {
 		},
 		Repo: repo,
 		Users: api.NewStaticUserDirectory(api.StaticUser{
-			Username: "admin@test",
+			Username: "admin@helix.test",
 			Password: "s3cret",
 			Roles:    []string{api.RoleAdmin, api.RoleOperator, api.RoleViewer},
 		}),
@@ -82,14 +82,14 @@ func testRouter(t testing.TB, repo store.Repository) *gin.Engine {
 func login(router *gin.Engine) string {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login",
-		strings.NewReader(`{"username":"admin@test","password":"s3cret"}`))
+		strings.NewReader(`{"username":"admin@helix.test","password":"s3cret"}`))
 	r.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
 		return ""
 	}
 	var resp struct {
-		Token string `json:"token"`
+		Token string `json:"access_token"`
 	}
 	_ = json.Unmarshal(w.Body.Bytes(), &resp)
 	return resp.Token
