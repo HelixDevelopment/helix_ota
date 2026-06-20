@@ -13,6 +13,7 @@ set -euo pipefail
 # --- Configuration ---
 HELIXTRACK_API="${HELIXTRACK_API:-http://localhost:8080/do}"
 HELIXTRACK_JWT="${HELIXTRACK_JWT:-}"
+HELIXTRACK_DB="${HELIXTRACK_DB:-helix_track/spaces/helix_ota/data/helixtrack.db}"
 WORKABLE_ITEMS_DB="docs/workable_items.db"
 SYNC_STATE_MD="docs/helixtrack_sync_state.md"
 LOG_PREFIX="[helixtrack-push]"
@@ -83,68 +84,72 @@ process_item() {
         *)                     HT_STATUS="open" ;;
     esac
 
-    # Build HelixTrack API request
-    PAYLOAD=$(jq -n \
-        --arg action "create" \
-        --arg object "ticket" \
-        --arg jwt "$HELIXTRACK_JWT" \
-        --arg ota_id "$ota_id" \
-        --arg type "$HT_TYPE" \
-        --arg status "$HT_STATUS" \
-        --arg title "$title" \
-        --arg description "$description" \
-        '{
-            action: $action,
-            jwt: $jwt,
-            object: $object,
-            data: {
-                title: $title,
-                description: $description,
-                type: $type,
-                status: $status,
-                project_id: "ota-helix-001",
-                external_id: $ota_id,
-                external_system: "helix_ota",
-                assignee: "admin"
-            }
-        }'
-    )
+    local existing_id=""
 
-    # Try create first
-    RESPONSE=$(curl -sf -X POST "$HELIXTRACK_API" \
-        -H "Content-Type: application/json" \
-        -d "$PAYLOAD" 2>/dev/null) || true
+    # Use OTA-prefixed title for cross-reference
+    local prefixed_title="[${ota_id}] ${title}"
 
-    if [ -z "$RESPONSE" ]; then
-        # Create may have failed if ticket already exists — try update
+    # Query HelixTrack DB to check if ticket with this OTA-ID exists
+    existing_id=$(sqlite3 "$HELIXTRACK_DB" "SELECT id FROM ticket WHERE INSTR(title, '${ota_id}') > 0 LIMIT 1;" 2>/dev/null | tr -d ' ' || echo "")
+
+    if [ -n "$existing_id" ]; then
+        # Ticket exists — modify it
+        log_info "${ota_id} found — modifying..."
         PAYLOAD=$(jq -n \
             --arg action "modify" \
             --arg object "ticket" \
             --arg jwt "$HELIXTRACK_JWT" \
-            --arg external_id "$ota_id" \
+            --arg id "$existing_id" \
+            --arg type "$HT_TYPE" \
             --arg status "$HT_STATUS" \
-            --arg title "$title" \
+            --arg title "$prefixed_title" \
+            --arg description "$description" \
+            --arg ota_id "$ota_id" \
             '{
-                action: $action,
-                jwt: $jwt,
-                object: $object,
+                action: $action, jwt: $jwt, object: $object,
                 data: {
-                    filter: { external_id: $external_id, external_system: "helix_ota" },
-                    update: { status: $status, title: $title }
+                    id: $id, title: $title, description: $description,
+                    type: $type, status: $status,
+                    project_id: "ota-helix-001",
+                    external_id: $ota_id, external_system: "helix_ota"
                 }
             }'
         )
-        RESPONSE=$(curl -sf -X POST "$HELIXTRACK_API" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" 2>/dev/null) || true
+    else
+        # Ticket doesn't exist — create
+        PAYLOAD=$(jq -n \
+            --arg action "create" \
+            --arg object "ticket" \
+            --arg jwt "$HELIXTRACK_JWT" \
+            --arg ota_id "$ota_id" \
+            --arg type "$HT_TYPE" \
+            --arg status "$HT_STATUS" \
+            --arg title "$prefixed_title" \
+            --arg description "$description" \
+            '{
+                action: $action, jwt: $jwt, object: $object,
+                data: {
+                    title: $title, description: $description,
+                    type: $type, status: $status,
+                    project_id: "ota-helix-001",
+                    external_id: $ota_id, external_system: "helix_ota",
+                    assignee: "admin"
+                }
+            }'
+        )
     fi
 
-    if [ -n "$RESPONSE" ]; then
+    RESPONSE=$(curl -s -X POST "$HELIXTRACK_API" \
+        -H "Content-Type: application/json" \
+        -d "$PAYLOAD" 2>/dev/null) || true
+
+    ERR=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('errorCode',''))" 2>/dev/null)
+    if [ "$ERR" = "-1" ]; then
         log_ok "Pushed [${ota_id}] ${title}"
         PUSHED=$((PUSHED + 1))
         return 0
     else
-        log_error "Failed to push [${ota_id}] ${title}"
+        log_error "Failed to push [${ota_id}] ${title} (errorCode=$ERR)"
         FAILED=$((FAILED + 1))
         return 1
     fi
