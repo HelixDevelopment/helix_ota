@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	otaprotocol "github.com/HelixDevelopment/ota-protocol"
@@ -149,7 +150,9 @@ func (s *Server) countTargets(ctx context.Context, deploymentID string, rel stor
 func (s *Server) assignTargetVersion(ctx context.Context, rel store.Release, group string) {
 	for _, d := range s.matchingDevices(ctx, rel, group) {
 		d.TargetVersion = rel.Version
-		_ = s.repo.UpdateDevice(ctx, d)
+		if err := s.repo.UpdateDevice(ctx, d); err != nil {
+			log.Printf("failed to set target version on device %s: %v", d.DeviceID, err)
+		}
 	}
 }
 

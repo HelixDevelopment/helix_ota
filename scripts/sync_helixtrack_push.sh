@@ -13,7 +13,7 @@ set -euo pipefail
 # --- Configuration ---
 HELIXTRACK_API="${HELIXTRACK_API:-http://localhost:8080/do}"
 HELIXTRACK_JWT="${HELIXTRACK_JWT:-}"
-HELIXTRACK_DB="${HELIXTRACK_DB:-helix_track/spaces/helix_ota/data/helixtrack.db}"
+HELIXTRACK_DB="${HELIXTRACK_DB:-/Volumes/T7/Projects/helix_track/core/Application/Database/Definition.sqlite}"
 WORKABLE_ITEMS_DB="docs/workable_items.db"
 SYNC_STATE_MD="docs/helixtrack_sync_state.md"
 LOG_PREFIX="[helixtrack-push]"
@@ -64,27 +64,27 @@ process_item() {
     local description="$5"
 
     # Map OTA item type to HelixTrack ticket type
-    # HelixTrack uses title-based lookup: values must match DB ticket_type.title
+    # HelixTrack uses title-based lookup: values must match DB ticket_type.title (lowercase)
     case "$item_type" in
-        Bug)     HT_TYPE="Bug" ;;
-        Feature) HT_TYPE="Feature" ;;
-        Task)    HT_TYPE="Task" ;;
-        *)       HT_TYPE="Task" ;;
+        Bug)     HT_TYPE="bug" ;;
+        Feature) HT_TYPE="feature" ;;
+        Task)    HT_TYPE="task" ;;
+        *)       HT_TYPE="task" ;;
     esac
 
-    # Map OTA status to HelixTrack status (ALL statuses covered)
-    # HelixTrack uses title-based lookup: values must match DB ticket_status.title
+    # Map OTA status to HelixTrack ticket status
+    # Statuses must match DB ticket_status.title (lowercase)
     case "$status" in
-        "In progress")                 HT_STATUS="In Progress" ;;
-        "Ready for testing")           HT_STATUS="In Progress" ;;
-        "In testing")                  HT_STATUS="In Progress" ;;
-        "Fixed (→ Fixed.md)")          HT_STATUS="Done" ;;
-        "Implemented (→ Fixed.md)")    HT_STATUS="Done" ;;
-        "Completed (→ Fixed.md)")      HT_STATUS="Done" ;;
-        "Obsolete (→ Fixed.md)")       HT_STATUS="Done" ;;
-        "Operator-blocked")            HT_STATUS="Blocked" ;;
+        "In progress")                 HT_STATUS="in_progress" ;;
+        "Ready for testing")           HT_STATUS="in_progress" ;;
+        "In testing")                  HT_STATUS="testing" ;;
+        "Fixed (→ Fixed.md)")          HT_STATUS="done" ;;
+        "Implemented (→ Fixed.md)")    HT_STATUS="done" ;;
+        "Completed (→ Fixed.md)")      HT_STATUS="done" ;;
+        "Obsolete (→ Fixed.md)")       HT_STATUS="closed" ;;
+        "Operator-blocked")            HT_STATUS="blocked" ;;
         Queued)                        HT_STATUS="open" ;;
-        Reopened)                      HT_STATUS="In Progress" ;;
+        Reopened)                      HT_STATUS="in_progress" ;;
         *)                             HT_STATUS="open" ;;
     esac
 
@@ -149,6 +149,16 @@ process_item() {
 
     ERR=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('errorCode',''))" 2>/dev/null)
     if [ "$ERR" = "-1" ]; then
+        # Success — now sync status into HelixTrack DB (the create handler hardcodes "open")
+        # NOTE: SQLite LIKE interprets [ as a character class — use INSTR instead
+        if [ -f "$HELIXTRACK_DB" ]; then
+            sqlite3 "$HELIXTRACK_DB" "
+                UPDATE ticket SET ticket_status_id = (SELECT id FROM ticket_status WHERE title = '${HT_STATUS}' LIMIT 1)
+                WHERE INSTR(title, '${ota_id}') > 0 AND deleted = 0;
+                UPDATE ticket SET ticket_type_id = (SELECT id FROM ticket_type WHERE title = '${HT_TYPE}' LIMIT 1)
+                WHERE INSTR(title, '${ota_id}') > 0 AND deleted = 0;
+            " 2>/dev/null || true
+        fi
         log_ok "Pushed [${ota_id}] ${title}"
         PUSHED=$((PUSHED + 1))
         return 0

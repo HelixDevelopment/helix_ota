@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	otavalidator "github.com/HelixDevelopment/ota-artifact-validator"
@@ -220,7 +221,9 @@ func (s *Server) applyDeviceRuntime(ctx context.Context, deviceID string, ev Tel
 	if h != nil && h.ActiveSlot != "" {
 		dev.ActiveSlot = h.ActiveSlot
 	}
-	_ = s.repo.UpdateDevice(ctx, dev)
+	if err := s.repo.UpdateDevice(ctx, dev); err != nil {
+		log.Printf("failed to update device %s after event %s: %v", deviceID, ev.Event, err)
+	}
 }
 
 // artifactURL builds the Range-served, identity-encoded artifact download
