@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>LINUX_OTA_RESEARCH</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">LINUX_OTA_RESEARCH</h1>
 </header>
 <h1 id="helix-ota-linux-ota-support-research-planning">Helix OTA — Linux
 OTA Support Research &amp; Planning</h1>
@@ -444,7 +448,7 @@ understanding what Linux OTA must achieve:</p>
 <col style="width: 30%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Aspect</th>
 <th>Android (A/B)</th>
 <th>Linux Package-Based</th>
@@ -452,49 +456,49 @@ understanding what Linux OTA must achieve:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Atomicity</strong></td>
 <td>Full: A/B partition swap</td>
 <td>None: partial update possible</td>
 <td>Full: OSTree/bootc deployment swap</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Rollback</strong></td>
 <td>Instant: boot old slot</td>
 <td>Difficult: <code>apt undo</code> unreliable</td>
 <td>Instant: boot previous deployment</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Granularity</strong></td>
 <td>Full image only</td>
 <td>Per-package</td>
 <td>Full image + optional package layering</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Delta efficiency</strong></td>
 <td>bsdiff between full images</td>
 <td>per-package deltas (debdelta, deltarpm)</td>
 <td>OSTree static deltas between commits</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Verification</strong></td>
 <td>RSA signature on payload</td>
 <td>GPG signature on repository metadata</td>
 <td>GPG signature on OSTree commits</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Bootloader</strong></td>
 <td>Android Boot Control HAL</td>
 <td>GRUB/U-Boot/systemd-boot</td>
 <td>GRUB/systemd-boot (OSTree-managed)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>State management</strong></td>
 <td>update_engine state machine</td>
 <td>No standard state machine</td>
 <td>rpm-ostree transaction state</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Server infrastructure</strong></td>
 <td>Custom OTA server</td>
 <td>APT/RPM repository</td>
@@ -912,29 +916,29 @@ updates, and (2) APT package mode for granular updates.</p>
 <col style="width: 43%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Phase</th>
 <th>Duration</th>
 <th>Deliverable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: A/B rootfs mode</td>
 <td>3 weeks</td>
 <td>Full Ubuntu A/B rootfs update with GRUB integration</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: APT package mode</td>
 <td>2 weeks</td>
 <td>APT repository management, package pinning, dry-run validation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 3: Delta support</td>
 <td>2 weeks</td>
 <td>bsdiff deltas for rootfs, debdelta for packages</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 4: Testing &amp; hardening</td>
 <td>2 weeks</td>
 <td>Mutation testing, chaos testing, E2E on real hardware</td>
@@ -1200,35 +1204,35 @@ container images to a registry.</p>
 <col style="width: 43%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Phase</th>
 <th>Duration</th>
 <th>Deliverable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: rpm-ostree adapter</td>
 <td>3 weeks</td>
 <td>rpm-ostree upgrade/rollback adapter with OSTree remote
 configuration</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: OSTree repository hosting</td>
 <td>2 weeks</td>
 <td>Server-side OSTree repository management with GPG signing</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 3: Static delta generation</td>
 <td>2 weeks</td>
 <td>Automatic delta generation on commit, serving via S3</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 4: bootc adapter</td>
 <td>2 weeks</td>
 <td>bootc-based adapter for Fedora 41+ devices</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 5: Testing</td>
 <td>2 weeks</td>
 <td>Full E2E on Fedora Silverblue VM, rpm-ostree rollback, layering
@@ -1476,29 +1480,29 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb
 <col style="width: 43%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Phase</th>
 <th>Duration</th>
 <th>Deliverable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: pacman adapter</td>
 <td>2 weeks</td>
 <td>pacman upgrade/rollback with Btrfs snapshots</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: Custom repository</td>
 <td>1 week</td>
 <td>Helix OTA pacman repository hosting with delta packages</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 3: .pacnew handling</td>
 <td>1 week</td>
 <td>Reporting and management of .pacnew configuration files</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 4: Testing</td>
 <td>1 week</td>
 <td>E2E on Arch Linux container with Btrfs, rollback verification</td>
@@ -1942,34 +1946,34 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb
 <col style="width: 43%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Phase</th>
 <th>Duration</th>
 <th>Deliverable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: Core ABRootfsManager</td>
 <td>2 weeks</td>
 <td>Generic A/B rootfs update with partition writing</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: GRUB integration</td>
 <td>1 week</td>
 <td>GRUB slot switching with fallback logic</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 3: U-Boot integration</td>
 <td>2 weeks</td>
 <td>U-Boot slot switching for RK3588 and other ARM platforms</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 4: systemd-boot integration</td>
 <td>1 week</td>
 <td>systemd-boot slot switching for modern x86_64 systems</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 5: Testing</td>
 <td>2 weeks</td>
 <td>E2E on Debian x86_64 (GRUB), Debian ARM64 (U-Boot), Fedora
@@ -2214,7 +2218,7 @@ Adapter Implementations</h3>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Adapter</th>
 <th>Package</th>
 <th>OSType</th>
@@ -2222,7 +2226,7 @@ Adapter Implementations</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Ubuntu APT</td>
 <td><code>helix-apt-adapter</code></td>
 <td><code>linux/ubuntu</code></td>
@@ -2230,35 +2234,35 @@ Adapter Implementations</h3>
 Rollback: yes (A/B mode); PackageLevel: yes (APT mode); FullImage: yes
 (A/B mode); RequiresReboot: yes (A/B mode), no (APT mode)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Fedora rpm-ostree</td>
 <td><code>helix-ostree-adapter</code></td>
 <td><code>linux/fedora</code></td>
 <td>AtomicUpdate: yes; DeltaUpdate: yes (static deltas); Rollback: yes;
 PackageLevel: yes (layering); FullImage: yes; RequiresReboot: yes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Fedora bootc</td>
 <td><code>helix-ostree-adapter</code></td>
 <td><code>linux/fedora-bootc</code></td>
 <td>AtomicUpdate: yes; DeltaUpdate: yes (OCI layer diffs); Rollback:
 yes; PackageLevel: no; FullImage: yes; RequiresReboot: yes</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Arch pacman</td>
 <td><code>helix-pacman-adapter</code></td>
 <td><code>linux/arch</code></td>
 <td>AtomicUpdate: yes (Btrfs); DeltaUpdate: yes (xdelta3); Rollback: yes
 (Btrfs); PackageLevel: yes; FullImage: no; RequiresReboot: no</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Generic A/B</td>
 <td><code>helix-linux-client</code></td>
 <td><code>linux/generic-ab</code></td>
 <td>AtomicUpdate: yes; DeltaUpdate: yes (bsdiff); Rollback: yes;
 PackageLevel: no; FullImage: yes; RequiresReboot: yes</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Android</td>
 <td>(existing)</td>
 <td><code>android</code></td>
@@ -2320,7 +2324,7 @@ Adapter</h3>
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Test Category</th>
 <th>Ubuntu</th>
 <th>Fedora (rpm-ostree)</th>
@@ -2329,56 +2333,56 @@ Adapter</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Unit: CheckForUpdate</strong></td>
 <td>APT dry-run parsing</td>
 <td>rpm-ostree status parsing</td>
 <td>pacman -Qu parsing</td>
 <td>Partition validation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Unit: ApplyUpdate</strong></td>
 <td>APT upgrade execution</td>
 <td>rpm-ostree upgrade execution</td>
 <td>pacman -Syu with Btrfs snapshot</td>
 <td>dd image to partition</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Unit: Rollback</strong></td>
 <td>A/B slot switch</td>
 <td>rpm-ostree rollback</td>
 <td>Btrfs snapshot boot</td>
 <td>Slot switch</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Unit: VerifyUpdate</strong></td>
 <td>dpkg audit</td>
 <td>rpm-ostree status</td>
 <td>pacman -Qk</td>
 <td>Boot verification</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Integration</strong></td>
 <td>Ubuntu 24.04 container</td>
 <td>Fedora Silverblue VM</td>
 <td>Arch container + Btrfs</td>
 <td>Debian x86_64 + GRUB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Mutation</strong></td>
 <td>85% score</td>
 <td>85% score</td>
 <td>85% score</td>
 <td>85% score</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>E2E</strong></td>
 <td>Full A/B cycle on RK3588 Debian</td>
 <td>Full upgrade on Silverblue VM</td>
 <td>Full upgrade + rollback on Arch</td>
 <td>Full cycle on RK3588 + U-Boot</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Chaos</strong></td>
 <td>Kill apt mid-upgrade</td>
 <td>Kill rpm-ostree mid-apply</td>
@@ -2393,29 +2397,29 @@ Adapter</h3>
 helix-linux-client: Linux OTA Client Daemon</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Repository</strong></td>
 <td><code>HelixDevelopment/helix-linux-client</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Go module</strong></td>
 <td><code>dev.helix.ota.linuxclient</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Language</strong></td>
 <td>Go 1.22+</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Target platforms</strong></td>
 <td>linux/amd64, linux/arm64</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>License</strong></td>
 <td>Apache 2.0</td>
 </tr>
@@ -2591,25 +2595,25 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb
 helix-ostree-adapter: OSTree Integration</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Repository</strong></td>
 <td><code>HelixDevelopment/helix-ostree-adapter</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Go module</strong></td>
 <td><code>dev.helix.ota.ostreeadapter</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Language</strong></td>
 <td>Go 1.22+</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>License</strong></td>
 <td>Apache 2.0</td>
 </tr>
@@ -2651,25 +2655,25 @@ serves content via S3.</p>
 helix-apt-adapter: APT Repository Management</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Repository</strong></td>
 <td><code>HelixDevelopment/helix-apt-adapter</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Go module</strong></td>
 <td><code>dev.helix.ota.aptadapter</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Language</strong></td>
 <td>Go 1.22+</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>License</strong></td>
 <td>Apache 2.0</td>
 </tr>
@@ -2709,25 +2713,25 @@ server side, it manages APT repositories with GPG signing.</p>
 helix-pacman-adapter: Arch Linux Support</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Repository</strong></td>
 <td><code>HelixDevelopment/helix-pacman-adapter</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Go module</strong></td>
 <td><code>dev.helix.ota.pacmanadapter</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Language</strong></td>
 <td>Go 1.22+</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>License</strong></td>
 <td>Apache 2.0</td>
 </tr>
@@ -2872,7 +2876,7 @@ existing endpoints remain backward-compatible:</p>
 <col style="width: 30%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Method</th>
 <th>Path</th>
 <th>New in v1.1.0</th>
@@ -2880,64 +2884,64 @@ existing endpoints remain backward-compatible:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>POST</td>
 <td><code>/api/v1/devices/register</code></td>
 <td>Extended</td>
 <td>Registration now accepts <code>os_type</code>,
 <code>os_version</code>, <code>kernel_version</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>GET</td>
 <td><code>/api/v1/devices/{id}/update-check</code></td>
 <td>Extended</td>
 <td>Response includes <code>artifact_type</code> and OS-specific
 metadata</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>POST</td>
 <td><code>/api/v1/artifacts/upload</code></td>
 <td>Extended</td>
 <td>Upload now accepts <code>os_type</code>, <code>architecture</code>,
 <code>artifact_type</code>, <code>repository_metadata</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>GET</td>
 <td><code>/api/v1/devices?os_type=linux</code></td>
 <td>New</td>
 <td>Filter devices by OS type</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>GET</td>
 <td><code>/api/v1/artifacts?os_type=linux</code></td>
 <td>New</td>
 <td>Filter artifacts by OS type</td>
 </tr>
-<tr class="even">
+<tr>
 <td>POST</td>
 <td><code>/api/v1/ostree/commits</code></td>
 <td>New</td>
 <td>Publish an OSTree commit</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>GET</td>
 <td><code>/api/v1/ostree/commits/{branch}</code></td>
 <td>New</td>
 <td>List commits on a branch</td>
 </tr>
-<tr class="even">
+<tr>
 <td>POST</td>
 <td><code>/api/v1/ostree/deltas</code></td>
 <td>New</td>
 <td>Generate a static delta</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>POST</td>
 <td><code>/api/v1/apt/publish</code></td>
 <td>New</td>
 <td>Publish packages to APT repository</td>
 </tr>
-<tr class="even">
+<tr>
 <td>POST</td>
 <td><code>/api/v1/pacman/publish</code></td>
 <td>New</td>
@@ -3040,7 +3044,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Client Version</th>
 <th>Server v1.0.0</th>
 <th>Server v1.1.0</th>
@@ -3048,19 +3052,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Android client v1.0.0</td>
 <td>✅ Full support</td>
 <td>✅ Full support</td>
 <td>✅ Full support</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Linux client v1.1.0</td>
 <td>❌ Not supported</td>
 <td>✅ Full support</td>
 <td>✅ Full support</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows client v1.2.0</td>
 <td>❌ Not supported</td>
 <td>❌ Not supported</td>
@@ -3076,61 +3080,61 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb
 <col style="width: 29%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Step</th>
 <th>Description</th>
 <th>Impact</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>1</td>
 <td>Run database migration V005</td>
 <td>Adds <code>os_type</code>, <code>os_version</code>,
 <code>kernel_version</code> columns with defaults</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2</td>
 <td>Deploy server v1.1.0</td>
 <td>Backward-compatible; Android devices continue to work</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3</td>
 <td>Enable Linux device registration</td>
 <td>Set <code>os_type</code> field on new device registrations</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4</td>
 <td>Create Linux device groups</td>
 <td>Separate groups for Ubuntu, Fedora, Arch, generic A/B</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>5</td>
 <td>Set up APT repository hosting</td>
 <td>Configure S3 bucket, GPG key, and repository structure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>6</td>
 <td>Set up OSTree repository hosting</td>
 <td>Configure S3 bucket, GPG key, and static delta generation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>7</td>
 <td>Deploy <code>helix-linux-client</code> to Linux devices</td>
 <td>Install daemon, configure adapter, start systemd service</td>
 </tr>
-<tr class="even">
+<tr>
 <td>8</td>
 <td>Create first Linux rollout</td>
 <td>Select Linux artifact, target Linux device group, start phased
 rollout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>9</td>
 <td>Monitor Linux fleet</td>
 <td>Use dashboard OS type filters, verify update success rates</td>
 </tr>
-<tr class="even">
+<tr>
 <td>10</td>
 <td>Validate rollback for Linux devices</td>
 <td>Trigger rollback, verify device returns to previous state</td>
@@ -3145,70 +3149,70 @@ rollout</td>
 <col style="width: 64%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Term</th>
 <th>Definition</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>A/B Rootfs</td>
 <td>A partition scheme with two root filesystem partitions, allowing
 atomic updates by writing to the inactive partition</td>
 </tr>
-<tr class="even">
+<tr>
 <td>bootc</td>
 <td>Bootable Container; a system that boots from OCI container images,
 the successor to rpm-ostree</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Btrfs</td>
 <td>B-tree File System; a copy-on-write filesystem supporting snapshots,
 used for Arch Linux rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td>debdelta</td>
 <td>A tool for generating binary diffs between consecutive .deb package
 versions</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>deltarpm</td>
 <td>RPM delta package format; natively supported by DNF</td>
 </tr>
-<tr class="even">
+<tr>
 <td>GRUB</td>
 <td>Grand Unified Bootloader; the standard bootloader for x86_64
 Linux</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>OSTree</td>
 <td>A content-addressed filesystem tree manager (“git for OS
 binaries”)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>pacman</td>
 <td>Arch Linux’s package manager</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>rpm-ostree</td>
 <td>A hybrid of RPM and OSTree providing atomic updates with package
 layering</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Static Delta</td>
 <td>A pre-computed binary diff between two OSTree commits for efficient
 download</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>U-Boot</td>
 <td>Universal Bootloader; the standard bootloader for ARM/embedded
 Linux</td>
 </tr>
-<tr class="even">
+<tr>
 <td>unattended-upgrades</td>
 <td>Ubuntu’s automatic security update daemon</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>xdelta3</td>
 <td>A binary diff algorithm used for pacman delta packages</td>
 </tr>

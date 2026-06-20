@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2026-06-19-ota-management-client-design</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">2026-06-19-ota-management-client-design</h1>
+</header>
+<h1 id="helix-ota-cross-platform-management-client-design">Helix OTA —
+Cross-Platform Management Client Design</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-19T01:00:00Z <strong>Status:</strong> APPROVED</p>
+<h2 id="architecture-overview">1. Architecture Overview</h2>
+<p><strong>Stack:</strong> Tauri v2 (Rust) + React 19 + TypeScript 5 +
+Shadcn UI + Tailwind CSS 4 + TanStack Query 5
+<strong>Deployment:</strong> Containerized via
+<code>vasic-digital/containers</code> submodule (Podman/Docker)
+<strong>Code sharing:</strong> ~95% across platforms</p>
+<h3 id="platform-strategy">Platform Strategy</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 17%" />
+<col style="width: 25%" />
+<col style="width: 20%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Shell</th>
+<th>UI Layer</th>
+<th>Binary</th>
+<th>RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web</td>
+<td>Browser (served by ota-server)</td>
+<td>React SPA</td>
+<td>~500KB JS</td>
+<td>~30MB</td>
+</tr>
+<tr>
+<td>Desktop (macOS/Win/Linux)</td>
+<td>Tauri v2 (Rust)</td>
+<td>React via WebView</td>
+<td>~5MB</td>
+<td>~30MB</td>
+</tr>
+<tr>
+<td>Mobile (iOS/Android)</td>
+<td>Tauri Mobile</td>
+<td>React via WebView</td>
+<td>~8MB</td>
+<td>~40MB</td>
+</tr>
+</tbody>
+</table>
+<p>The SAME React SPA runs everywhere. Tauri Rust layer provides native
+capabilities: - USB device flashing - Filesystem access for image files
+- System tray for background monitoring - Push notifications on
+deployments</p>
+<h2 id="technology-stack">2. Technology Stack</h2>
+<h3 id="frontend">Frontend</h3>
+<ul>
+<li><strong>React 19</strong> — Concurrent features, Server Components
+(web), Suspense</li>
+<li><strong>TypeScript 5</strong> — Strict mode, path aliases</li>
+<li><strong>Shadcn UI</strong> — Accessible, composable component
+library</li>
+<li><strong>Tailwind CSS 4</strong> — Utility-first CSS, CSS-first
+configuration</li>
+<li><strong>TanStack Query 5</strong> — Server state, caching,
+optimistic updates</li>
+<li><strong>TanStack Router</strong> — Type-safe routing, nested
+layouts</li>
+<li><strong>Zustand</strong> — Lightweight client state (preferences, UI
+state)</li>
+<li><strong>React Hook Form + Zod</strong> — Form validation</li>
+</ul>
+<h3 id="desktop-shell-tauri">Desktop Shell (Tauri)</h3>
+<ul>
+<li><strong>Rust</strong> — Native plugins for USB, tray, file
+dialogs</li>
+<li><strong>tauri-plugin-shell</strong> — Sidecar management</li>
+<li><strong>tauri-plugin-fs</strong> — File system access for
+images</li>
+<li><strong>tauri-plugin-notification</strong> — Deployment alerts</li>
+</ul>
+<h3 id="build-tooling">Build Tooling</h3>
+<ul>
+<li><strong>Vite</strong> — Dev server, bundling, HMR</li>
+<li><strong>pnpm</strong> — Fast, disk-efficient package management</li>
+<li><strong>Tauri CLI</strong> — Cross-platform build, code signing</li>
+</ul>
+<h2 id="multi-project-permissions-model">3. Multi-Project &amp;
+Permissions Model</h2>
+<h3 id="project-hierarchy">Project Hierarchy</h3>
+<pre><code>Helix OTA Root
+├── Project A (e.g. &quot;Automotive&quot;)
+│   ├── OS Targets: Android 14, Linux 6.1
+│   ├── Devices: 1500x RK3588, 500x J784S4
+│   └── Members: alice@ (Admin), bob@ (Operator)
+├── Project B (e.g. &quot;Smart Home&quot;)
+│   ├── OS Targets: Android 13, Linux 5.15
+│   ├── Devices: 8000x Amlogic S905
+│   └── Members: bob@ (Viewer), carol@ (Admin)
+└── System-wide Super-Admin
+    └── Can see everything, manage projects</code></pre>
+<h3 id="permission-dimensions">Permission Dimensions</h3>
+<pre><code>User Permissions {
+  super_admin: bool,                          // Bypasses all checks
+
+  projects: {
+    [project_id]: {
+      role: &quot;admin&quot; | &quot;operator&quot; | &quot;viewer&quot;,  // Project-level role
+      os_types: [&quot;android&quot;, &quot;linux&quot;],          // Which OS types
+      targets: [&quot;rk3588&quot;, &quot;s905&quot;],             // Which hardware targets
+    }
+  }
+}</code></pre>
+<h3 id="ui-behavior-by-role">UI Behavior by Role</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Viewer</th>
+<th>Operator</th>
+<th>Admin</th>
+<th>Super-Admin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>View dashboards</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>View device details</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>View audit log</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Create/update releases</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Create rollouts</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Manage projects</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Manage users</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>System settings</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Delete resources</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h2 id="application-routes">4. Application Routes</h2>
+<pre><code>/login                          — Auth (login/register)
+/dashboard                      — Project overview dashboard
+/projects                       — Project list
+/projects/:id                   — Single project detail
+/projects/:id/settings          — Project settings
+/devices                        — Fleet device list
+/devices/:id                    — Single device detail
+/devices/:id/telemetry          — Device telemetry history
+/images                         — Image/artifact repository
+/images/:id                     — Single image detail
+/releases                       — Release list
+/releases/:id                   — Release detail
+/deployments                    — Deployment list
+/deployments/:id                — Deployment detail
+/deployments/:id/rollout        — Rollout control
+/deployments/:id/recall         — Recall/rollback
+/groups                         — Device groups
+/groups/:id                     — Group detail
+/audit                          — Audit log
+/users                          — User management (admin)
+/settings                       — System settings</code></pre>
+<h2 id="data-flow">5. Data Flow</h2>
+<pre><code>┌──────────────┐    TanStack Query     ┌──────────────────┐
+│  React SPA   │ ◄──── QueryClient ─── │  ota-server API  │
+│  (WebView)   │ ───── mutations ───► │  (Go/Gin + HTTP/3)│
+└──────────────┘                       └──────────────────┘
+       │                                       │
+       │ Tauri Rust                             │ PostgreSQL
+       │ (USB, FS, Tray)                        │ (device state,
+       │                                        │  telemetry)
+  ┌──────────┐                        ┌──────────────────┐
+  │ USB Flash │                        │  ota-device-emu  │
+  │ .img files│                        │  (test/emulation) │
+  └──────────┘                        └──────────────────┘</code></pre>
+<h3 id="real-time-updates">Real-time Updates</h3>
+<ul>
+<li>TanStack Query <code>refetchInterval</code> for polling
+(configurable: 5s dashboard, 30s device list)</li>
+<li>Optional: Server-Sent Events (SSE) for push updates on deployment
+status changes</li>
+<li>Tauri notification plugin for deployment completion alerts</li>
+</ul>
+<h2 id="ui-component-tree-shadcn-based">6. UI Component Tree
+(Shadcn-based)</h2>
+<pre><code>App
+├── ThemeProvider (dark/light mode via next-themes pattern)
+├── AuthGuard
+│   └── LoginPage (form with validation)
+└── AuthenticatedLayout
+    ├── Sidebar (project-scoped, role-aware)
+    │   ├── ProjectSwitcher (multi-project dropdown)
+    │   ├── NavLinks (filtered by permissions)
+    │   └── UserMenu (profile, logout)
+    ├── TopBar
+    │   ├── Breadcrumbs
+    │   ├── GlobalSearch (Cmd+K)
+    │   └── NotificationBell
+    └── MainContent (Outlet)
+        ├── DashboardPage
+        │   ├── StatCards (devices, releases, deployments counts)
+        │   ├── RecentActivityFeed
+        │   └── DeploymentHealthChart
+        ├── DevicesPage
+        │   ├── DataTable (sortable, filterable, paginated)
+        │   ├── DeviceFilters (OS, target, status, group)
+        │   └── DeviceDetailSheet
+        ├── ReleasesPage
+        │   ├── ReleaseDataTable
+        │   ├── CreateReleaseDialog (multi-step wizard)
+        │   └── ReleaseDetail
+        ├── DeploymentsPage
+        │   ├── DeploymentTimeline
+        │   ├── RolloutControlPanel (percentage slider)
+        │   └── RecallDialog
+        ├── AuditPage
+        │   └── AuditLogTable (filtered by action, user, date)
+        └── UsersPage (Admin only)
+            ├── UserTable
+            └── PermissionEditor (multi-dimensional matrix)</code></pre>
+<h2 id="project-structure">7. Project Structure</h2>
+<pre><code>clients/ota-manager/
+├── src/
+│   ├── main.tsx                  — React entry
+│   ├── App.tsx                   — Router + providers
+│   ├── routes/                   — TanStack Router routes
+│   │   ├── __root.tsx
+│   │   ├── dashboard.tsx
+│   │   ├── devices.tsx
+│   │   └── ...
+│   ├── components/               — Shared UI components
+│   │   ├── ui/                   — Shadcn primitives
+│   │   ├── layout/               — Sidebar, TopBar, Shell
+│   │   ├── data-table/           — Reusable data table
+│   │   └── forms/                — Reusable form components
+│   ├── features/                 — Feature modules
+│   │   ├── auth/                 — Login, token management
+│   │   ├── projects/             — Project CRUD
+│   │   ├── devices/              — Device management
+│   │   ├── releases/             — Release lifecycle
+│   │   ├── deployments/          — Deployment + rollout
+│   │   ├── groups/               — Device groups
+│   │   └── audit/                — Audit log
+│   ├── lib/                      — Utilities
+│   │   ├── api-client.ts         — Axios/fetch wrapper
+│   │   ├── permissions.ts        — Permission helpers
+│   │   └── utils.ts              — shadcn cn() etc
+│   ├── hooks/                    — TanStack Query hooks
+│   │   ├── use-auth.ts
+│   │   ├── use-devices.ts
+│   │   ├── use-releases.ts
+│   │   └── ...
+│   └── types/                    — TypeScript types
+│       ├── api.ts                — API response types
+│       └── models.ts             — Domain models
+├── src-tauri/                    — Tauri Rust backend
+│   ├── src/
+│   │   ├── main.rs
+│   │   ├── lib.rs
+│   │   └── commands/             — Tauri commands (USB, FS)
+│   ├── Cargo.toml
+│   └── tauri.conf.json
+├── package.json
+├── tailwind.config.ts
+├── tsconfig.json
+├── vite.config.ts
+└── Dockerfile                    — Container build</code></pre>
+<h2 id="containerization">8. Containerization</h2>
+<p>All components run in containers via the <code>containers</code>
+submodule:</p>
+<pre><code>containers/ota-manager/
+├── Dockerfile                    — Multi-stage: node build → nginx + static
+├── docker-compose.yml            — ota-manager + ota-server + postgres
+└── podman-compose.yml            — Same for Podman</code></pre>
+<p>The web client is built as a static SPA and served by: -
+<strong>Development</strong>: Vite dev server (hot reload, proxied to
+ota-server) - <strong>Production</strong>: Nginx container serving built
+assets, reverse-proxied to ota-server - <strong>Desktop</strong>: Tauri
+embeds the same SPA in a WebView, connects directly to ota-server
+API</p>
+<h2 id="testing-strategy">9. Testing Strategy</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 31%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Tool</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit (components)</td>
+<td>Vitest + Testing Library</td>
+<td>Individual component behavior</td>
+</tr>
+<tr>
+<td>Unit (hooks)</td>
+<td>Vitest + MSW</td>
+<td>TanStack Query hook tests with mocked API</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td>Playwright</td>
+<td>Full page flows (login → dashboard → deploy)</td>
+</tr>
+<tr>
+<td>E2E</td>
+<td>Playwright + Tauri e2e</td>
+<td>Desktop-specific features (USB flash, tray)</td>
+</tr>
+<tr>
+<td>Visual</td>
+<td>Chromatic / Storybook</td>
+<td>Component visual regression</td>
+</tr>
+<tr>
+<td>API contract</td>
+<td>Zod schemas validated against server</td>
+<td>TypeScript types match API responses</td>
+</tr>
+</tbody>
+</table>
+<h2 id="build-release-pipeline">10. Build &amp; Release Pipeline</h2>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> clients/ota-manager</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> dev              <span class="co"># Vite dev server (web only)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> tauri dev        <span class="co"># Tauri desktop app</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build web</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> build            <span class="co"># Static output to dist/</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Build desktop</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> tauri build      <span class="co"># .dmg / .msi / .AppImage</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Container build</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> build <span class="at">-t</span> ota-manager:latest .</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> up     <span class="co"># Full stack: manager + server + db</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Mobile</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> tauri build android   <span class="co"># .apk / .aab</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> tauri build ios       <span class="co"># .ipa</span></span></code></pre></div>
+<h2 id="design-assets">11. Design Assets</h2>
+<ul>
+<li>Shadcn UI components: dialog, dropdown, data-table, form, sheet,
+tabs, toast, skeleton, badge, card, progress</li>
+<li>Icons: Lucide (consistent, MIT-licensed, bundled with Shadcn)</li>
+<li>Theme: Dark/light mode via CSS variables, persists in Zustand</li>
+<li>Layout: Sidebar navigation (collapsible), top breadcrumbs, content
+area</li>
+</ul>
+<hr />
+<h2 id="spec-self-review">Spec Self-Review</h2>
+<ul>
+<li>✅ No TBD/TODO placeholders</li>
+<li>✅ Architecture matches feature descriptions</li>
+<li>✅ Scope is focused on a single management client (not trying to
+build the whole platform)</li>
+<li>✅ Requirements are unambiguous and actionable</li>
+<li>✅ References existing server API (35+ endpoints) and containers
+submodule</li>
+<li>✅ Testing strategy covers all layers</li>
+<li>✅ Containerization plan is concrete</li>
+</ul>
+<p>Next: Implementation plan → parallel subagent execution.</p>
+</body>
+</html>

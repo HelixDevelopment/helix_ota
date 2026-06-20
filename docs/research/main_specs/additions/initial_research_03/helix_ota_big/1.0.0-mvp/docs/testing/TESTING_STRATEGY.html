@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>TESTING_STRATEGY</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">TESTING_STRATEGY</h1>
 </header>
 <h1 id="helix-ota-testing-strategy-document">Helix OTA — Testing
 Strategy Document</h1>
@@ -318,7 +322,7 @@ resolved:</p>
 <col style="width: 23%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Layer</th>
 <th>Name</th>
 <th>What It Proves</th>
@@ -326,25 +330,25 @@ resolved:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>L1</strong></td>
 <td>SOURCE</td>
 <td>The code change is correct in isolation</td>
 <td>Unit test for the patched function</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L2</strong></td>
 <td>ARTIFACT</td>
 <td>The compiled/built artifact incorporates the fix</td>
 <td>Integration test using the built binary</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>L3</strong></td>
 <td>RUNTIME-ON-CLEAN-TARGET</td>
 <td>The fix works on a freshly provisioned, clean system</td>
 <td>E2E test on a clean Docker environment</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L4</strong></td>
 <td>USER-VISIBLE</td>
 <td>The fix resolves the user-reported symptom</td>
@@ -368,34 +372,34 @@ each principle manifests in Helix OTA tests:</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Anti-Bluff Pillar</th>
 <th>Violation (Bluff)</th>
 <th>Compliance (Real)</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Real ACTION</strong></td>
 <td>Calling a mock that returns a fixed value</td>
 <td>Calling the actual <code>UpdateService.CheckForUpdate()</code> with
 a real database query</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>State DELTA</strong></td>
 <td>Asserting <code>err == nil</code> after a no-op</td>
 <td>Asserting that <code>device.Status</code> transitioned from
 <code>"idle"</code> to <code>"updating"</code> after an update was
 assigned</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>POSITIVE evidence</strong></td>
 <td>Asserting a function returned <code>true</code></td>
 <td>Asserting a row exists in <code>device_updates</code> with
 <code>status = "succeeded"</code> and verifying the
 <code>artifact_id</code> matches</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Unique evidence TOKEN</strong></td>
 <td>Using a static test device ID <code>"test-device"</code></td>
 <td>Generating
@@ -457,7 +461,7 @@ slower, more complex, and fewer in number.</p>
 <col style="width: 23%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Layer</th>
 <th>Percentage</th>
 <th>Estimated Count</th>
@@ -466,21 +470,21 @@ slower, more complex, and fewer in number.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Unit</td>
 <td>70%</td>
 <td>~700</td>
 <td>5ms</td>
 <td>~3.5s</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Integration</td>
 <td>20%</td>
 <td>~200</td>
 <td>500ms</td>
 <td>~100s</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>E2E / System</td>
 <td>10%</td>
 <td>~50</td>
@@ -498,57 +502,57 @@ Count Targets</h3>
 <col style="width: 28%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Service</th>
 <th>Target Unit Tests</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Update Service</td>
 <td>100</td>
 <td>Cohort assignment, version compatibility, caching logic</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Device Service</td>
 <td>80</td>
 <td>Registration, re-registration, group assignment, credential
 rotation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rollout Service</td>
 <td>120</td>
 <td>Stage progression, health checks, auto-advance,
 pause/resume/halt</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact Service</td>
 <td>100</td>
 <td>Validation chain, upload pipeline, signing, storage</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Telemetry Service</td>
 <td>80</td>
 <td>Event ingestion, aggregation, anomaly detection rules</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Auth Service</td>
 <td>100</td>
 <td>JWT validation, mTLS extraction, RBAC enforcement, TOTP</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Notification Service</td>
 <td>60</td>
 <td>WebSocket hub, event subscription, session management</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Client SDK</td>
 <td>60</td>
 <td>State machine transitions, download manager, verification
 engine</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Total</strong></td>
 <td><strong>700</strong></td>
 <td></td>
@@ -901,7 +905,7 @@ data.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Chaos Scenario</th>
 <th>Injection Method</th>
 <th>Expected Behavior</th>
@@ -909,43 +913,43 @@ data.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Database connection lost</td>
 <td>Kill PostgreSQL container mid-request</td>
 <td>API returns 503, no data corruption</td>
 <td>Integration</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Database query timeout</td>
 <td>Set <code>statement_timeout = '1ms'</code></td>
 <td>Context cancellation propagates, no goroutine leak</td>
 <td>Integration</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Object storage unavailable</td>
 <td>Block MinIO port via iptables</td>
 <td>Upload returns 503, existing artifacts still servable</td>
 <td>Integration</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Redis cache failure</td>
 <td>Flush all keys + set <code>maxmemory 1byte</code></td>
 <td>Cache miss fallback to DB, increased latency but no errors</td>
 <td>Integration</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Disk full</td>
 <td>Fill <code>/tmp</code> partition to 100%</td>
 <td>Artifact upload fails with clear error, server remains healthy</td>
 <td>Integration</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Network partition</td>
 <td>Use <code>tc netem</code> to add 5s latency + 20% packet loss</td>
 <td>Client retries with backoff, eventual consistency</td>
 <td>E2E</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>OOM kill</td>
 <td>Set container memory limit to 128MB</td>
 <td>Server restarts cleanly, in-flight requests fail gracefully</td>
@@ -1242,7 +1246,7 @@ combinations:</p>
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Test Case</th>
 <th>Hash</th>
 <th>Signature</th>
@@ -1252,7 +1256,7 @@ combinations:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>V1: All pass</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1260,7 +1264,7 @@ combinations:</p>
 <td>PASS</td>
 <td><code>VALID</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>V2: Hash fail</td>
 <td>FAIL</td>
 <td>—</td>
@@ -1268,7 +1272,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code> (short-circuit at stage 1)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V3: Hash pass, signature fail</td>
 <td>PASS</td>
 <td>FAIL</td>
@@ -1276,7 +1280,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code> (short-circuit at stage 2)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>V4: Hash+sig pass, structure fail</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1284,7 +1288,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code> (short-circuit at stage 3)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V5: First 3 pass, compat fail</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1292,7 +1296,7 @@ combinations:</p>
 <td>FAIL</td>
 <td><code>INVALID</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>V6: Empty file</td>
 <td>FAIL</td>
 <td>—</td>
@@ -1300,7 +1304,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V7: Non-ZIP file (renamed .zip)</td>
 <td>PASS</td>
 <td>—</td>
@@ -1308,7 +1312,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>V8: ZIP missing payload.bin</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1316,7 +1320,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V9: ZIP missing care_map.pb</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1324,7 +1328,7 @@ combinations:</p>
 <td>—</td>
 <td><code>INVALID</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>V10: Wrong target model</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1332,7 +1336,7 @@ combinations:</p>
 <td>FAIL</td>
 <td><code>INVALID</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V11: Downgrade version</td>
 <td>PASS</td>
 <td>PASS</td>
@@ -1416,42 +1420,42 @@ that catches a specific deliberate fault in the validator code.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Validator</th>
 <th>Mutation</th>
 <th>Catching Test</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>HashChecker</td>
 <td>Change <code>hash.Sum(nil)</code> to
 <code>hash.Sum([]byte{})</code></td>
 <td>Verify that empty-altered hash produces wrong digest</td>
 </tr>
-<tr class="even">
+<tr>
 <td>HashChecker</td>
 <td>Remove <code>io.Copy(hash, file)</code></td>
 <td>Hash of empty file should not match artifact hash</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>SignatureChecker</td>
 <td>Change <code>rsa.VerifyPSS</code> to always return
 <code>nil</code></td>
 <td>Tampered artifact should be rejected</td>
 </tr>
-<tr class="even">
+<tr>
 <td>SignatureChecker</td>
 <td>Use <code>crypto.SHA1</code> instead of
 <code>crypto.SHA256</code></td>
 <td>SHA-1 signatures must be rejected</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>StructureChecker</td>
 <td>Remove <code>"care_map.pb"</code> from required files list</td>
 <td>OTA without care_map.pb must fail validation</td>
 </tr>
-<tr class="even">
+<tr>
 <td>CompatChecker</td>
 <td>Change <code>&gt;</code> to <code>&gt;=</code> in version
 comparison</td>
@@ -1786,7 +1790,7 @@ complete update lifecycle on real hardware.</p>
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Test Case</th>
 <th>Update Type</th>
@@ -1795,7 +1799,7 @@ complete update lifecycle on real hardware.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>H1</td>
 <td>A/B update — full OTA</td>
 <td>Full A/B</td>
@@ -1803,21 +1807,21 @@ complete update lifecycle on real hardware.</p>
 <td>Device boots into new slot, <code>slot_suffix</code> changes from
 <code>_a</code> to <code>_b</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>H2</td>
 <td>Virtual A/B update</td>
 <td>Virtual A/B</td>
 <td>Apply update using Virtual A/B mechanism</td>
 <td>Merge completes, device boots into new version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>H3</td>
 <td>Recovery update</td>
 <td>Recovery</td>
 <td>Apply update from recovery partition</td>
 <td>Device boots from updated recovery image</td>
 </tr>
-<tr class="even">
+<tr>
 <td>H4</td>
 <td>Boot verification after update</td>
 <td>A/B</td>
@@ -1825,42 +1829,42 @@ complete update lifecycle on real hardware.</p>
 <td><code>adb shell dm-verity status</code> returns verified, no boot
 warnings</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>H5</td>
 <td>Power failure during download</td>
 <td>A/B</td>
 <td>Cut power at 50% download progress</td>
 <td>Device resumes download on reboot, no data corruption</td>
 </tr>
-<tr class="even">
+<tr>
 <td>H6</td>
 <td>Power failure during install</td>
 <td>A/B</td>
 <td>Cut power during <code>update_engine</code> apply</td>
 <td>Device boots from previous slot (automatic rollback)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>H7</td>
 <td>Power failure during reboot</td>
 <td>A/B</td>
 <td>Cut power during reboot into new slot</td>
 <td>Device falls back to old slot on next boot</td>
 </tr>
-<tr class="even">
+<tr>
 <td>H8</td>
 <td>Rollback verification</td>
 <td>A/B</td>
 <td>Trigger rollback via dashboard</td>
 <td>Device boots from previous slot, version reverts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>H9</td>
 <td>Download performance</td>
 <td>A/B</td>
 <td>Measure download speed on Gigabit Ethernet</td>
 <td>&gt;50 MB/s sustained throughput</td>
 </tr>
-<tr class="even">
+<tr>
 <td>H10</td>
 <td>Install time benchmark</td>
 <td>A/B</td>
@@ -2063,7 +2067,7 @@ Examples</h3>
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Operator</th>
 <th>Mutation</th>
 <th>Original Code</th>
@@ -2072,7 +2076,7 @@ Examples</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>statement/delete</code></td>
 <td>Delete line</td>
 <td><code>cohort := fnv32Hash(deviceID) % 100</code></td>
@@ -2080,42 +2084,42 @@ Examples</h3>
 <td>Cohort test: all devices get updates regardless of rollout
 percentage</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>expression/replace</code></td>
 <td>Replace with constant</td>
 <td><code>if healthMetrics.FailureRate &gt; 0.05</code></td>
 <td><code>if false</code></td>
 <td>Auto-rollback test: high failure rate does not trigger rollback</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>negate/condition</code></td>
 <td>Negate boolean</td>
 <td><code>if rollout.Status != "ACTIVE"</code></td>
 <td><code>if rollout.Status == "ACTIVE"</code></td>
 <td>Pause test: cannot advance paused rollout</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>return/value</code></td>
 <td>Change return value</td>
 <td><code>return result.Valid, nil</code></td>
 <td><code>return true, nil</code></td>
 <td>Validation test: invalid artifacts are reported as valid</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>boundary/change</code></td>
 <td>Change boundary</td>
 <td><code>if targetPercentage &gt; 100</code></td>
 <td><code>if targetPercentage &gt;= 100</code></td>
 <td>Rollout test: exactly 100% should be allowed</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>increment/change</code></td>
 <td>Swap operands</td>
 <td><code>currentPercentage + incrementStep</code></td>
 <td><code>incrementStep + currentPercentage</code></td>
 <td>No test catches this (commutative) — indicates test gap</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>return/early</code></td>
 <td>Return early</td>
 <td><code>func Verify() error { ... }</code></td>
@@ -2133,54 +2137,54 @@ Mutation Score Requirements</h3>
 <col style="width: 26%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Service</th>
 <th>Mutation Score Target</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Update Service</td>
 <td>90%</td>
 <td>Cohort logic is complex and easy to get wrong</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Device Service</td>
 <td>85%</td>
 <td>Standard CRUD with moderate logic</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rollout Service</td>
 <td>90%</td>
 <td>Stage progression and health checks are critical</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact Service</td>
 <td>90%</td>
 <td>Validation chain is security-critical</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Telemetry Service</td>
 <td>80%</td>
 <td>Mostly data ingestion with simple aggregation</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Auth Service</td>
 <td>95%</td>
 <td>Security-critical — every auth path must be tested</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Notification Service</td>
 <td>75%</td>
 <td>Non-critical path — WebSocket delivery is best-effort</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Verification Engine (client)</td>
 <td>95%</td>
 <td>Cryptographic verification is security-critical</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Overall</strong></td>
 <td><strong>85%</strong></td>
 <td>HelixConstitution §1.1 mandate</td>
@@ -2444,7 +2448,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Pipeline</th>
 <th>Trigger</th>
 <th>Jobs</th>
@@ -2453,21 +2457,21 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Pre-merge</td>
 <td>Every PR</td>
 <td>Unit + Lint + Integration + Mutation</td>
 <td>25 min</td>
 <td><strong>Yes</strong> — blocks merge</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Nightly</td>
 <td>02:00 UTC daily</td>
 <td>E2E + Load + Security + Full Mutation</td>
 <td>2 hrs</td>
 <td><strong>Yes</strong> — creates P0 issue on failure</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Weekly</td>
 <td>04:00 UTC Sunday</td>
 <td>HITL on Orange Pi 5 Max</td>
@@ -2690,32 +2694,32 @@ constitutional layers before it is considered complete:</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Layer</th>
 <th>Test Type</th>
 <th>Example: “Artifact Upload” Feature</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>L1 — SOURCE</strong></td>
 <td>Unit test for <code>ArtifactService.UploadArtifact()</code></td>
 <td>Verify hash computation, validation chain invocation, signature
 generation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L2 — ARTIFACT</strong></td>
 <td>Integration test using the compiled server binary</td>
 <td>Start server binary, send multipart upload via HTTP, verify
 response</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>L3 — RUNTIME-ON-CLEAN-TARGET</strong></td>
 <td>E2E test on fresh Docker environment</td>
 <td>Deploy server + PostgreSQL + MinIO from scratch, upload artifact,
 verify <code>upload_status = 'ready'</code> in database</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L4 — USER-VISIBLE</strong></td>
 <td>Acceptance test matching user story</td>
 <td>As an operator, I can upload an OTA zip file and see it appear as
@@ -2773,41 +2777,41 @@ target (fresh Docker deployment or factory-reset Orange Pi 5 Max).</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Feature</th>
 <th>Runtime Signature</th>
 <th>Verification Method</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Device registration</td>
 <td>Device appears in <code>devices</code> table with
 <code>status = 'online'</code> and correct
 <code>hardware_model</code></td>
 <td>SQL query on fresh PostgreSQL</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Update check</td>
 <td>Device receives <code>200 OK</code> with <code>UpdateInfo</code>
 JSON containing <code>artifact_id</code>, <code>download_url</code>,
 <code>sha256</code></td>
 <td>HTTP request to freshly deployed server</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Artifact upload</td>
 <td>Artifact row transitions to <code>upload_status = 'ready'</code>
 with 4 <code>artifact_validation_results</code> rows all showing
 <code>status = 'passed'</code></td>
 <td>Database query after upload to fresh server</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rollout advance</td>
 <td><code>rollouts.current_percentage</code> increases and devices in
 the new cohort receive updates on next check</td>
 <td>End-to-end flow on fresh deployment</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>A/B update (hardware)</td>
 <td>Device boots into new slot with <code>slot_suffix</code> changed and
 reports <code>commit</code> telemetry event</td>
@@ -2887,7 +2891,7 @@ requirements:</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Tag</th>
 <th>Purpose</th>
 <th>Infrastructure Required</th>
@@ -2895,43 +2899,43 @@ requirements:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><em>(none)</em></td>
 <td>Unit tests</td>
 <td>None (pure Go)</td>
 <td>5s</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>integration</code></td>
 <td>Integration tests</td>
 <td>Testcontainers (Docker)</td>
 <td>2min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>contract</code></td>
 <td>API contract tests</td>
 <td>Running server</td>
 <td>30s</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>security</code></td>
 <td>Security-focused tests</td>
 <td>Running server + test certs</td>
 <td>5min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>e2e</code></td>
 <td>End-to-end tests</td>
 <td>Staging environment</td>
 <td>30min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>hitl</code></td>
 <td>Hardware-in-the-loop</td>
 <td>Orange Pi 5 Max + ADB</td>
 <td>2hr</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>load</code></td>
 <td>Load/stress tests</td>
 <td>Staging environment + k6</td>

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>DATABASE_SCHEMA</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">DATABASE_SCHEMA</h1>
 </header>
 <h1 id="helix-ota-database-schema-specification">Helix OTA — Database
 Schema Specification</h1>
@@ -295,7 +299,7 @@ converting to local time for display purposes.</p>
 <col style="width: 38%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Column Pattern</th>
 <th>Type</th>
 <th>Default</th>
@@ -303,25 +307,25 @@ converting to local time for display purposes.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>created_at</code></td>
 <td><code>TIMESTAMPTZ</code></td>
 <td><code>NOW()</code></td>
 <td>Row creation time; never modified</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>updated_at</code></td>
 <td><code>TIMESTAMPTZ</code></td>
 <td><code>NOW()</code></td>
 <td>Last modification time; updated via trigger</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>deleted_at</code></td>
 <td><code>TIMESTAMPTZ</code></td>
 <td><code>NULL</code></td>
 <td>Soft-delete timestamp; NULL = not deleted</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>*_at</code> (domain)</td>
 <td><code>TIMESTAMPTZ</code></td>
 <td><code>NULL</code></td>
@@ -375,49 +379,49 @@ window.</p>
 <col style="width: 36%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Element</th>
 <th>Convention</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Table names</td>
 <td><code>snake_case</code>, plural</td>
 <td><code>device_groups</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Column names</td>
 <td><code>snake_case</code></td>
 <td><code>hardware_model</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Primary keys</td>
 <td><code>id</code> (UUID)</td>
 <td><code>id UUID PRIMARY KEY</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Foreign keys</td>
 <td><code>{referenced_table_singular}_id</code></td>
 <td><code>artifact_id UUID REFERENCES</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Index names</td>
 <td><code>idx_{table}_{columns}</code></td>
 <td><code>idx_devices_group_id</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Unique index names</td>
 <td><code>uidx_{table}_{columns}</code></td>
 <td><code>uidx_devices_device_id</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Enum types</td>
 <td><code>snake_case</code> with <code>_enum</code> suffix</td>
 <td><code>device_status_enum</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Check constraints</td>
 <td><code>chk_{table}_{description}</code></td>
 <td><code>chk_rollouts_target_pct</code></td>
@@ -429,34 +433,34 @@ window.</p>
 <code>jackc/pgx</code> driver with the following pool configuration:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Development</th>
 <th>Production</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>max_conns</code></td>
 <td>10</td>
 <td>50</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>min_conns</code></td>
 <td>2</td>
 <td>10</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>max_conn_idle</code></td>
 <td>30m</td>
 <td>15m</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>max_conn_lifetime</code></td>
 <td>1h</td>
 <td>30m</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>health_check_period</code></td>
 <td>30s</td>
 <td>15s</td>
@@ -947,54 +951,54 @@ degradation.</p>
 keys. No additional action required.</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Table</th>
 <th>Column</th>
 <th>Type</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>device_groups</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>devices</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>users</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>artifacts</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>artifact_validation_results</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollouts</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollout_stages</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>device_updates</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>audit_log</code></td>
 <td><code>id</code></td>
 <td>B-tree (auto)</td>
@@ -1211,7 +1215,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Index Name</th>
 <th>Table</th>
 <th>Type</th>
@@ -1221,7 +1225,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>uidx_devices_device_id</code></td>
 <td>devices</td>
 <td>Unique B-tree</td>
@@ -1229,7 +1233,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Business key uniqueness</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>uidx_users_username</code></td>
 <td>users</td>
 <td>Unique B-tree</td>
@@ -1237,7 +1241,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>Unique active usernames</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>uidx_users_email</code></td>
 <td>users</td>
 <td>Unique B-tree</td>
@@ -1245,7 +1249,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>Unique active emails</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>uidx_rollout_stages_rollout_stage</code></td>
 <td>rollout_stages</td>
 <td>Unique B-tree</td>
@@ -1253,7 +1257,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Sequential stage uniqueness</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_devices_group_id</code></td>
 <td>devices</td>
 <td>B-tree</td>
@@ -1261,7 +1265,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>FK join performance</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_devices_device_id_active</code></td>
 <td>devices</td>
 <td>B-tree</td>
@@ -1269,7 +1273,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>Update check query</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_devices_group_status</code></td>
 <td>devices</td>
 <td>B-tree</td>
@@ -1277,7 +1281,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>Fleet overview</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_devices_active</code></td>
 <td>devices</td>
 <td>B-tree</td>
@@ -1285,7 +1289,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>Active device queries</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_devices_updating</code></td>
 <td>devices</td>
 <td>B-tree</td>
@@ -1293,7 +1297,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status=‘updating’ AND deleted_at IS NULL</td>
 <td>In-flight update monitoring</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_devices_stale</code></td>
 <td>devices</td>
 <td>B-tree</td>
@@ -1301,7 +1305,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status=‘offline’ AND deleted_at IS NULL</td>
 <td>Stale device detection</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_artifacts_uploaded_by</code></td>
 <td>artifacts</td>
 <td>B-tree</td>
@@ -1309,7 +1313,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>FK join</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_artifacts_version_os</code></td>
 <td>artifacts</td>
 <td>B-tree</td>
@@ -1317,7 +1321,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL AND upload_status=‘ready’</td>
 <td>Version compatibility</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_artifacts_ready</code></td>
 <td>artifacts</td>
 <td>B-tree</td>
@@ -1325,7 +1329,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>upload_status=‘ready’ AND deleted_at IS NULL</td>
 <td>Ready artifact listing</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_artifacts_hw_compat</code></td>
 <td>artifacts</td>
 <td>GIN</td>
@@ -1333,7 +1337,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>JSONB containment queries</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_artifacts_payload_metadata</code></td>
 <td>artifacts</td>
 <td>GIN</td>
@@ -1341,7 +1345,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>deleted_at IS NULL</td>
 <td>JSONB metadata queries</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_artifact_validation_artifact_id</code></td>
 <td>artifact_validation_results</td>
 <td>B-tree</td>
@@ -1349,7 +1353,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>FK join</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_artifact_validation_artifact_step</code></td>
 <td>artifact_validation_results</td>
 <td>B-tree</td>
@@ -1357,7 +1361,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Validation audit</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_artifact_validation_failed</code></td>
 <td>artifact_validation_results</td>
 <td>B-tree</td>
@@ -1365,7 +1369,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status=‘failed’</td>
 <td>Failed validation lookup</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_artifact_validation_details</code></td>
 <td>artifact_validation_results</td>
 <td>GIN</td>
@@ -1373,7 +1377,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>JSONB failure detail search</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_rollouts_artifact_id</code></td>
 <td>rollouts</td>
 <td>B-tree</td>
@@ -1381,7 +1385,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>FK join</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_rollouts_active_group</code></td>
 <td>rollouts</td>
 <td>B-tree</td>
@@ -1389,7 +1393,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status IN (‘active’,‘paused’)</td>
 <td>Update check rollout lookup</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_rollouts_status</code></td>
 <td>rollouts</td>
 <td>B-tree</td>
@@ -1397,7 +1401,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status IN (‘active’,‘paused’)</td>
 <td>Rollout dashboard</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_rollouts_active</code></td>
 <td>rollouts</td>
 <td>B-tree</td>
@@ -1405,7 +1409,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status IN (‘active’,‘paused’)</td>
 <td>Active rollout listing</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_rollout_stages_rollout_id</code></td>
 <td>rollout_stages</td>
 <td>B-tree</td>
@@ -1413,7 +1417,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>FK join</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_rollout_stages_pending</code></td>
 <td>rollout_stages</td>
 <td>B-tree</td>
@@ -1421,7 +1425,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status IN (‘pending’,‘active’)</td>
 <td>Stage scheduler</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_device_updates_device_id</code></td>
 <td>device_updates</td>
 <td>B-tree</td>
@@ -1429,7 +1433,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>FK join</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_device_updates_device_created</code></td>
 <td>device_updates</td>
 <td>B-tree</td>
@@ -1437,7 +1441,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Device update history</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_device_updates_rollout_status</code></td>
 <td>device_updates</td>
 <td>B-tree</td>
@@ -1445,7 +1449,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>rollout_id IS NOT NULL</td>
 <td>Rollout health metrics</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_device_updates_in_progress</code></td>
 <td>device_updates</td>
 <td>B-tree</td>
@@ -1453,7 +1457,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status IN (active states)</td>
 <td>In-flight update monitoring</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_device_updates_failed</code></td>
 <td>device_updates</td>
 <td>B-tree</td>
@@ -1461,7 +1465,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>status=‘failed’</td>
 <td>Failure analysis</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_telemetry_events_device_time</code></td>
 <td>telemetry_events</td>
 <td>B-tree</td>
@@ -1469,7 +1473,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Device timeline queries</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_telemetry_events_type_time</code></td>
 <td>telemetry_events</td>
 <td>B-tree</td>
@@ -1477,7 +1481,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Event type filtering</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_telemetry_events_payload</code></td>
 <td>telemetry_events</td>
 <td>GIN</td>
@@ -1485,7 +1489,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>JSONB payload search</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_audit_log_resource</code></td>
 <td>audit_log</td>
 <td>B-tree</td>
@@ -1493,7 +1497,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>—</td>
 <td>Resource history</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>idx_audit_log_user_created</code></td>
 <td>audit_log</td>
 <td>B-tree</td>
@@ -1501,7 +1505,7 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#
 <td>user_id IS NOT NULL</td>
 <td>User activity audit</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>idx_audit_log_details</code></td>
 <td>audit_log</td>
 <td>GIN</td>
@@ -2074,39 +2078,39 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href=
 <col style="width: 32%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Operation Type</th>
 <th>Target</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Device check-in / update check</td>
 <td>Primary</td>
 <td>Low-latency write + read</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Telemetry ingestion (batch INSERT)</td>
 <td>Primary</td>
 <td>Write operation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rollout management</td>
 <td>Primary</td>
 <td>Write operation</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Dashboard analytics</td>
 <td>Replica</td>
 <td>Read-heavy, tolerates slight staleness</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Fleet overview</td>
 <td>Replica</td>
 <td>Read-heavy</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Audit log queries</td>
 <td>Replica</td>
 <td>Read-only historical queries</td>
@@ -2168,7 +2172,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href=
 <col style="width: 21%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Backup Type</th>
 <th>Retention</th>
 <th>Storage</th>
@@ -2176,25 +2180,25 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>WAL archives</td>
 <td>30 days</td>
 <td>S3 (Standard)</td>
 <td>Point-in-time recovery within 30 days</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Daily base backups</td>
 <td>90 days</td>
 <td>S3 (Standard)</td>
 <td>Full database restore</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Weekly base backups</td>
 <td>1 year</td>
 <td>S3 (Glacier)</td>
 <td>Compliance / disaster recovery</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Monthly base backups</td>
 <td>3 years</td>
 <td>S3 (Glacier Deep Archive)</td>
@@ -2344,7 +2348,7 @@ over <strong>1 year</strong> of operation:</p>
 <col style="width: 9%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Table</th>
 <th>Row Count (1 yr)</th>
 <th>Avg Row Size</th>
@@ -2354,7 +2358,7 @@ over <strong>1 year</strong> of operation:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>devices</code></td>
 <td>10,000</td>
 <td>500 B</td>
@@ -2362,7 +2366,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>8 MB</td>
 <td>13 MB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>device_groups</code></td>
 <td>5-20</td>
 <td>1 KB</td>
@@ -2370,7 +2374,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>32 KB</td>
 <td>52 KB</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>users</code></td>
 <td>10-50</td>
 <td>400 B</td>
@@ -2378,7 +2382,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>40 KB</td>
 <td>60 KB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>artifacts</code></td>
 <td>50-200</td>
 <td>1 KB</td>
@@ -2386,7 +2390,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>500 KB</td>
 <td>700 KB</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>artifact_validation_results</code></td>
 <td>200-800</td>
 <td>800 B</td>
@@ -2394,7 +2398,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>1 MB</td>
 <td>1.6 MB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollouts</code></td>
 <td>20-100</td>
 <td>600 B</td>
@@ -2402,7 +2406,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>200 KB</td>
 <td>260 KB</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollout_stages</code></td>
 <td>60-400</td>
 <td>200 B</td>
@@ -2410,7 +2414,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>200 KB</td>
 <td>280 KB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>device_updates</code></td>
 <td>10,000-50,000</td>
 <td>500 B</td>
@@ -2418,7 +2422,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>40 MB</td>
 <td>65 MB</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>telemetry_events</code></td>
 <td>5M-18M</td>
 <td>600 B</td>
@@ -2426,7 +2430,7 @@ over <strong>1 year</strong> of operation:</p>
 <td>2-6 GB</td>
 <td>5-17 GB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>audit_log</code></td>
 <td>5,000-20,000</td>
 <td>500 B</td>

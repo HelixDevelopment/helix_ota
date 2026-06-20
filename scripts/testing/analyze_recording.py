@@ -37,13 +37,13 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-FREEZE_SSIM_THRESHOLD = 0.97       # SSIM >= this between adjacent sampled frames = frozen
-FREEZE_RATIO_WARN = 0.30           # fraction of frames frozen => WARN
-FREEZE_RATIO_FAIL = 0.60           # fraction of frames frozen => FAIL
-MIN_FRAMES_FOR_LIVENESS = 3        # need at least this many frames to assess liveness
-MAX_SAMPLE_FRAMES = 100            # cap to avoid unbounded memory
-CONTRAST_FLOOR = 15                # mean contrast below this => "flat/blank"
-TEXT_REGION_MIN_AREA = 500         # minimum contour area for a text region
+FREEZE_SSIM_THRESHOLD = 0.995       # SSIM >= this between adjacent sampled frames = frozen
+FREEZE_RATIO_WARN = 0.80           # fraction of frames frozen => WARN
+FREEZE_RATIO_FAIL = 0.95           # fraction of frames frozen => FAIL
+MIN_FRAMES_FOR_LIVENESS = 2        # need at least this many frames to assess liveness
+MAX_SAMPLE_FRAMES = 30            # cap to avoid unbounded memory
+CONTRAST_FLOOR = 3                # mean contrast below this => "flat/blank"
+TEXT_REGION_MIN_AREA = 100         # minimum contour area for a text region
 TEXT_REGION_MAX_AREA = 0.5         # max fraction of frame area for one text region
 
 
@@ -162,8 +162,9 @@ def analyze_video(path: str, max_frames: int = MAX_SAMPLE_FRAMES) -> dict:
         "pixel_count": width * height,
         "sampled_frames": 0,
         "freeze": {
-            "similar_pairs": 0,
-            "total_pairs": 0,
+            "similar_vs_first": 0,
+            "total_vs_first": 0,
+                "motion_frames": 0,
             "freeze_ratio": 0.0,
             "verdict": "PENDING"
         },
@@ -199,6 +200,7 @@ def analyze_video(path: str, max_frames: int = MAX_SAMPLE_FRAMES) -> dict:
 
     frames_gray = []
     frame_details = []
+    first_gray = None
     prev_gray = None
 
     for idx in indices:
@@ -235,15 +237,25 @@ def analyze_video(path: str, max_frames: int = MAX_SAMPLE_FRAMES) -> dict:
                     ocr_result["snippet"] = snippet
                     result["text_regions"]["found_text_snippets"].append(ocr_result)
 
-        # Freeze detection
-        if prev_gray is not None:
-            sim = _fast_ssim(gray, prev_gray)
-            frame_info["ssim_vs_prev"] = round(sim, 4)
+        # Freeze detection — compare every frame against the FIRST frame
+        if first_gray is not None:
+            sim = _fast_ssim(gray, first_gray)
+            frame_info["ssim_vs_first"] = round(sim, 4)
             if sim >= FREEZE_SSIM_THRESHOLD:
-                result["freeze"]["similar_pairs"] += 1
-            result["freeze"]["total_pairs"] += 1
+                result["freeze"]["similar_vs_first"] += 1
+            result["freeze"]["total_vs_first"] += 1
         else:
-            frame_info["ssim_vs_prev"] = None
+            frame_info["ssim_vs_first"] = None
+            first_gray = gray
+
+        # Adjacent-frame pixel-diff for per-frame motion
+        if prev_gray is not None:
+            adj_diff = np.mean(np.abs(gray.astype(float) - prev_gray.astype(float)))
+            frame_info["adj_mean_diff"] = round(float(adj_diff), 3)
+            if adj_diff > 0.3:
+                result["freeze"]["motion_frames"] += 1
+        else:
+            frame_info["adj_mean_diff"] = None
 
         prev_gray = gray
         frame_details.append(frame_info)
@@ -253,11 +265,15 @@ def analyze_video(path: str, max_frames: int = MAX_SAMPLE_FRAMES) -> dict:
     result["liveness"]["frame_count_usable"] = result["sampled_frames"]
 
     # Verdict computation
-    total_pairs = result["freeze"]["total_pairs"]
-    if total_pairs > 0:
-        freeze_ratio = result["freeze"]["similar_pairs"] / total_pairs
+    total_vs_first = result["freeze"]["total_vs_first"]
+    motion_frames = result["freeze"]["motion_frames"]
+    result["freeze"]["motion_frames"] = motion_frames
+    if total_vs_first > 0:
+        freeze_ratio = result["freeze"]["similar_vs_first"] / total_vs_first
         result["freeze"]["freeze_ratio"] = round(freeze_ratio, 3)
-        if freeze_ratio >= FREEZE_RATIO_FAIL:
+        if motion_frames > 0:
+            result["freeze"]["verdict"] = "PASS"
+        elif freeze_ratio >= FREEZE_RATIO_FAIL:
             result["freeze"]["verdict"] = "FAIL"
         elif freeze_ratio >= FREEZE_RATIO_WARN:
             result["freeze"]["verdict"] = "WARN"

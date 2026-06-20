@@ -179,15 +179,15 @@
 id="pwu-ab-4-in-guest-ota-agent-applyport-closing-the-loop-to-the-helix-control-plane">PWU-AB-4
 — In-guest OTA agent ApplyPort: closing the loop to the Helix control
 plane</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-11T00:00:00Z <strong>Status (§11.4.6):</strong> DESIGN ONLY —
-nothing in this document is built or proven. Every “MUST build” / “to be
-added” / “does not exist yet” marker below is honest. No working
-ApplyPort, no in-guest agent, no healthy-marker, and no fw_setenv wiring
-exists in the A/B-virt emulator at the time of writing. The two proven
-pieces this builds on are PWU-AB-1 (slot switch) and PWU-AB-3
-(auto-rollback), both verified live on macOS under real U-Boot 2024.01 +
-QEMU virt + HVF.</p>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-19T00:00:00Z <strong>Status (§11.4.6):</strong> DESIGN +
+SCAFFOLD — the ApplyPort Go interfaces/struct (step 2 of §8) and the
+healthy-marker shell script + systemd unit (step 3) are authored and
+compile-clean, but the persistent-env gating dependency (§3 / PWU-AB-2
+§4.5) is UNVERIFIED and the full agent loop is NOT wired. See <a
+href="../../../docs/qa/20260619-pwu-ab4-scaffold/REPORT.md"><code>docs/qa/20260619-pwu-ab4-scaffold/REPORT.md</code></a>
+for the scaffold capture evidence. Every “does not exist yet” /
+“UNVERIFIED” / “NOT wired” marker below is honest.</p>
 <p>Authoritative parent design: <a
 href="../../research/rk3588_emulator/REPORT.md"><code>../../research/rk3588_emulator/REPORT.md</code></a>
 (PWU-AB-4 row, line 78; reuse decision lines 45/55/91). State machine
@@ -465,6 +465,50 @@ the class the constitution warns about). This is added in
 — a Buildroot package add (<code>BR2_PACKAGE_UBOOT_TOOLS</code> or
 equivalent) in <code>build_image.sh</code>.</li>
 </ol>
+<h3
+id="pwu-ab-2-research-findings-config_env_is_in_fat-vs-raw-env-region">PWU-AB-2
+research findings: CONFIG_ENV_IS_IN_FAT vs raw env region</h3>
+<p>The PWU-AB-2 design doc (<a
+href="PWU_AB_2_RAUC_VERITY.md"><code>PWU_AB_2_RAUC_VERITY.md</code></a>
+§4.5) documents the critical finding about the QEMU
+<code>qemu_arm64</code> U-Boot defconfig: it <strong>most commonly uses
+<code>CONFIG_ENV_IS_IN_FAT</code></strong> — the environment is stored
+as a <strong>file</strong> (<code>uboot.env</code>) on the FAT boot
+partition, NOT at a raw offset on the boot device. This has three
+consequences for the shared fw_env mechanism:</p>
+<ol type="1">
+<li><p><strong>Classic raw <code>fw_env.config</code> form does NOT
+directly address a FAT-file env.</strong> The
+<code>&lt;device&gt; &lt;offset&gt; &lt;size&gt;</code> raw form
+(<code>/dev/vda1 0x000000 0x4000 0x200</code>) works only for a raw env
+region at a fixed offset. For a FAT-file env, either (A) recent
+libubootenv supports a FAT-file entry format, or (B) the U-Boot config
+is changed to <code>CONFIG_ENV_IS_IN_*</code> raw — placing the env at a
+fixed offset on the boot device — which the raw
+<code>fw_env.config</code> line then matches.</p></li>
+<li><p><strong>The <code>build_image.sh</code> fw_env.config is
+COMMENTED OUT</strong> as of the proven 2026-06-19 build. The rootfs
+overlay at <code>build_image.sh:111-115</code> emits a commented
+<code>fw_env.config</code> with the explicit note:
+<code># UNVERIFIED — guest has no MTD subsystem (proven 2026-06-19). Commented out until the env mechanism is resolved.</code></p></li>
+<li><p><strong>Resolution path (RECOMMENDED by the PWU-AB-2
+doc):</strong> wire a <strong>raw env region</strong> on the boot device
+so that the classic <code>fw_env.config</code> raw form works — this is
+the simplest form for <code>fw_setenv</code>/<code>fw_printenv</code>
+and is platform-agnostic. The alternative (FAT-file env via libubootenv)
+depends on the build-time <code>u-boot.bin</code> configuration and may
+not be accessible from guest userspace without additional tooling. See
+PWU-AB-2 doc §4.5 for both candidate forms and the §11.4.108
+verification warning.</p></li>
+</ol>
+<p>The <code>/etc/fw_env.config</code> file is authored at
+<code>tests/emulator/ab_virt/rauc/fw_env.config</code> (and its
+rootfs-overlay sibling at
+<code>tests/emulator/ab_virt/rootfs-overlay/etc/fw_env.config</code>).
+Both carry the same UNVERIFIED annotation and the same two-path
+documentation. A future PWU step (the bundle-build PWU) uncomments and
+corrects the numbers after reading the built <code>u-boot.bin</code>
+config and round-trip-verifying against U-Boot’s actual env storage.</p>
 <h3 id="shared-with-pwu-ab-2-rauc-dm-verity">Shared with PWU-AB-2 (RAUC
 dm-verity)</h3>
 <p>RAUC’s U-Boot integration uses the <strong>same</strong>
@@ -476,8 +520,8 @@ prerequisite of PWU-AB-2 and PWU-AB-4 — build it once, both consume it.
 RAUC’s <code>rauc-mark-good</code>/bootchooser is in fact a candidate to
 BE the healthy-marker of §4 (reuse over hand-rolled).</p>
 <hr />
-<h2 id="the-healthy-marker-mechanism-new-does-not-exist-yet">4. The
-healthy-marker mechanism (NEW — does NOT exist yet)</h2>
+<h2 id="the-healthy-marker-mechanism-scaffolded">4. The healthy-marker
+mechanism (SCAFFOLDED)</h2>
 <p>The marker is the in-guest application code the U-Boot
 doc/README:76-80 require: on a confirmed-healthy boot it clears
 <code>upgrade_available</code>+<code>bootcount</code>, freezing the
@@ -777,22 +821,41 @@ dependency chain)</h2>
 U-Boot env blob + <code>/etc/fw_env.config</code> +
 <code>u-boot-tools</code> in the guest (§3). Until this lands, the agent
 CANNOT persist a slot arm and the marker CANNOT confirm. This is the
-gating piece.</li>
+gating piece. <strong>UNVERIFIED — see §3 CONFIG_ENV_IS_IN_FAT
+discussion.</strong></li>
 <li><code>UBootSlotApplyPort</code> (new in-guest ApplyPort impl, §5) +
-inactive-slot writer (RAUC or dd fallback).</li>
-<li>Healthy-marker unit/script (§4).</li>
+inactive-slot writer (RAUC or dd fallback). <strong>SCAFFOLDED</strong>
+— interfaces/struct in <code>server/internal/device/applyport.go</code>,
+<code>fw_setenv</code> backend in
+<code>server/internal/device/fwenv.go</code>; the
+<code>SlotWriter</code> interface is defined but has no concrete
+implementation wired yet.</li>
+<li>Healthy-marker unit/script (§4). <strong>SCAFFOLDED</strong> —
+<code>tests/emulator/ab_virt/in-guest/helix-ab-confirm.sh</code> (bash,
+<code>sh -n</code> clean) + <code>helix-ab-confirm.service</code>
+(systemd unit). Not yet deployed into the guest image.</li>
 <li>Guest agent driver tying poll→download→verify→apply→arm→reboot,
-reusing the <code>ota-protocol</code> client contract.</li>
-<li>The RED→GREEN apply-loop test (§7) against a live server.</li>
+reusing the <code>ota-protocol</code> client contract. <strong>DESIGN
+ONLY</strong> — no code exists for this step.</li>
+<li>The RED→GREEN apply-loop test (§7) against a live server.
+<strong>DESIGN ONLY</strong> — the test plan is written; no test script
+exists.</li>
 </ol>
 <p>Every step lands with four-layer coverage (§11.4.4(b)) + independent
 review (§11.4.125/§11.4.142) + §1.1 mutation, evidence under
 <code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83), per the REPORT’s
 per-PWU contract (line 81).</p>
 <hr />
-<h2 id="sources-verified-2026-06-11">Sources verified 2026-06-11</h2>
+<h2
+id="sources-verified-2026-06-11-scaffold-evidence-2026-06-19">Sources
+verified 2026-06-11; scaffold evidence 2026-06-19</h2>
 <ul>
-<li>In-repo code (cited file:line throughout):
+<li><p>Scaffold capture: <a
+href="../../../docs/qa/20260619-pwu-ab4-scaffold/REPORT.md"><code>docs/qa/20260619-pwu-ab4-scaffold/REPORT.md</code></a>
+(<code>go build ./server/internal/device/</code> clean,
+<code>sh -n</code> on the healthy-marker script clean, source lines
+counted).</p></li>
+<li><p>In-repo code (cited file:line throughout):
 <code>submodules/ota-protocol/types.go</code>, <code>enums.go</code>;
 <code>server/internal/api/handlers_client.go</code>,
 <code>wire.go</code>;
@@ -804,21 +867,22 @@ per-PWU contract (line 81).</p>
 <code>tests/emulator/ab_virt/uboot_ab/{README.md,boot.cmd}</code>,
 <code>ab_rollback.sh</code>, <code>assemble_ab_disk.sh</code>,
 <code>build_image.sh</code>;
-<code>docs/research/rk3588_emulator/REPORT.md</code>.</li>
-<li>U-Boot Boot Count Limit
+<code>docs/research/rk3588_emulator/REPORT.md</code>.</p></li>
+<li><p>U-Boot Boot Count Limit
 (bootcount/bootlimit/altbootcmd/upgrade_available; healthy-reset is
 application responsibility):
-https://docs.u-boot.org/en/latest/api/bootcount.html</li>
-<li>U-Boot environment tools
+https://docs.u-boot.org/en/latest/api/bootcount.html</p></li>
+<li><p>U-Boot environment tools
 <code>fw_setenv</code>/<code>fw_printenv</code> +
 <code>fw_env.config</code>:
 https://docs.u-boot.org/en/latest/develop/environment.html (libubootenv
-<code>u-boot-tools</code>).</li>
-<li>Mender/RAUC U-Boot integration (<code>BOOT_ORDER</code>,
+<code>u-boot-tools</code>).</p></li>
+<li><p>Mender/RAUC U-Boot integration (<code>BOOT_ORDER</code>,
 swap-the-rootfs altbootcmd, <code>fw_setenv</code>-driven slot state):
-https://docs.mender.io/operating-system-updates-yocto-project/board-integration/bootloader-support/u-boot/manual-u-boot-integration</li>
-<li>RAUC A/B + QEMU + <code>format=verity</code> + U-Boot bootchooser /
-mark-good: https://rauc.readthedocs.io/en/latest/examples.html</li>
+https://docs.mender.io/operating-system-updates-yocto-project/board-integration/bootloader-support/u-boot/manual-u-boot-integration</p></li>
+<li><p>RAUC A/B + QEMU + <code>format=verity</code> + U-Boot bootchooser
+/ mark-good:
+https://rauc.readthedocs.io/en/latest/examples.html</p></li>
 </ul>
 <p><strong>Negative finding (§11.4.99):</strong> RAUC’s official
 full-system QEMU example is x86+GRUB, not arm64+U-Boot; the arm64+U-Boot

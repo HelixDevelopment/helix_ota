@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>DEPLOYMENT_GUIDE</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">DEPLOYMENT_GUIDE</h1>
 </header>
 <h1 id="helix-ota-deployment-container-orchestration-guide">Helix OTA —
 Deployment &amp; Container Orchestration Guide</h1>
@@ -284,7 +288,7 @@ and observably instrumented through the
 <col style="width: 18%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Service</th>
 <th>Image</th>
@@ -295,7 +299,7 @@ and observably instrumented through the
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>1</td>
 <td><strong>helix-ota-server</strong></td>
 <td><code>helix-ota/server:1.0.0</code></td>
@@ -305,7 +309,7 @@ engine, telemetry ingestion, authentication</td>
 <td>512 Mi (burst 1 Gi)</td>
 <td>100 Mi (config + certs)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2</td>
 <td><strong>helix-ota-dashboard</strong></td>
 <td><code>helix-ota/dashboard:1.0.0</code></td>
@@ -315,7 +319,7 @@ management, fleet monitoring</td>
 <td>128 Mi</td>
 <td>50 Mi (static assets)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3</td>
 <td><strong>postgresql</strong></td>
 <td><code>postgres:16-alpine</code></td>
@@ -325,7 +329,7 @@ telemetry events, audit log</td>
 <td>2 Gi</td>
 <td>50 Gi (persistent volume)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4</td>
 <td><strong>redis</strong></td>
 <td><code>redis:7-alpine</code></td>
@@ -335,7 +339,7 @@ cache, session store, rate limit counters</td>
 <td>512 Mi</td>
 <td>1 Gi (AOF persistence)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>5</td>
 <td><strong>minio</strong></td>
 <td><code>minio/minio:latest</code></td>
@@ -345,7 +349,7 @@ payloads</td>
 <td>1 Gi</td>
 <td>500 Gi (artifact volume)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>6</td>
 <td><strong>vault</strong></td>
 <td><code>hashicorp/vault:1.15</code></td>
@@ -355,7 +359,7 @@ encryption key, database credentials</td>
 <td>256 Mi</td>
 <td>100 Mi (Raft storage)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>7</td>
 <td><strong>traefik</strong></td>
 <td><code>traefik:v3.0</code></td>
@@ -377,7 +381,7 @@ Requirements</h3>
 <col style="width: 17%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Resource</th>
 <th>Minimum</th>
 <th>Recommended</th>
@@ -385,33 +389,33 @@ Requirements</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>CPU Cores</strong></td>
 <td>4</td>
 <td>8</td>
 <td>Server + PostgreSQL are CPU-intensive during artifact
 validation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>RAM</strong></td>
 <td>8 Gi</td>
 <td>16 Gi</td>
 <td>PostgreSQL buffer pool, Redis cache, server goroutine pools</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Disk (SSD)</strong></td>
 <td>100 Gi</td>
 <td>500 Gi</td>
 <td>Artifact storage dominates; plan for OTA zips at 1–2 Gi each</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Network</strong></td>
 <td>1 Gbps</td>
 <td>10 Gbps</td>
 <td>Fleet downloads can saturate links; consider CDN for large
 fleets</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Nodes</strong></td>
 <td>1</td>
 <td>3</td>
@@ -428,30 +432,30 @@ dev/staging</td>
 <col style="width: 32%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Dependency</th>
 <th>Purpose</th>
 <th>Required</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>DNS</strong></td>
 <td>Service discovery within cluster; external domain resolution</td>
 <td>Yes</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>SMTP Server</strong></td>
 <td>Alert email delivery (security notifications, rollout alerts)</td>
 <td>Optional (1.0.0)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>CDN</strong></td>
 <td>Artifact download acceleration for geographically distributed
 fleets</td>
 <td>Optional (1.0.0)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>HSM</strong></td>
 <td>Hardware-backed signing key storage (production); Vault Transit for
 non-HSM</td>
@@ -511,7 +515,7 @@ internet except Traefik.</p>
 <col style="width: 14%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Source</th>
 <th>Destination</th>
 <th>Protocol</th>
@@ -521,7 +525,7 @@ internet except Traefik.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Traefik</td>
 <td>helix-ota-server</td>
 <td>HTTP</td>
@@ -529,7 +533,7 @@ internet except Traefik.</p>
 <td>None (internal)</td>
 <td>API request proxying</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Traefik</td>
 <td>helix-ota-dashboard</td>
 <td>HTTP</td>
@@ -537,7 +541,7 @@ internet except Traefik.</p>
 <td>None (internal)</td>
 <td>Dashboard static asset serving</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>helix-ota-server</td>
 <td>PostgreSQL</td>
 <td>TCP</td>
@@ -545,7 +549,7 @@ internet except Traefik.</p>
 <td>Password (<code>pgxpool</code>)</td>
 <td>Database queries</td>
 </tr>
-<tr class="even">
+<tr>
 <td>helix-ota-server</td>
 <td>Redis</td>
 <td>TCP</td>
@@ -553,7 +557,7 @@ internet except Traefik.</p>
 <td>Password (if configured)</td>
 <td>Cache read/write, rate limiting</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>helix-ota-server</td>
 <td>MinIO</td>
 <td>HTTP</td>
@@ -561,7 +565,7 @@ internet except Traefik.</p>
 <td>Access Key + Secret Key</td>
 <td>Artifact upload/download</td>
 </tr>
-<tr class="even">
+<tr>
 <td>helix-ota-server</td>
 <td>Vault</td>
 <td>HTTP</td>
@@ -569,7 +573,7 @@ internet except Traefik.</p>
 <td>Vault Token / AppRole</td>
 <td>Signing key access, secret retrieval</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Devices (ext)</td>
 <td>Traefik</td>
 <td>HTTPS</td>
@@ -577,7 +581,7 @@ internet except Traefik.</p>
 <td>mTLS (device certs)</td>
 <td>Update check, artifact download, telemetry</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Dashboard Users (ext)</td>
 <td>Traefik</td>
 <td>HTTPS</td>
@@ -585,7 +589,7 @@ internet except Traefik.</p>
 <td>JWT Bearer</td>
 <td>Dashboard access, API calls</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MinIO Console (ext)</td>
 <td>Traefik</td>
 <td>HTTPS</td>
@@ -606,47 +610,47 @@ Docker Benchmark and the security architecture defined in
 <col style="width: 45%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Hardening Measure</th>
 <th>Implementation</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Non-root user</strong></td>
 <td>All custom images run as UID 10001 (<code>helixota</code>);
 <code>USER helixota</code> in Dockerfile</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Read-only filesystem</strong></td>
 <td><code>read_only: true</code> in compose; tmpfs mounts for writable
 paths</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>No privileged mode</strong></td>
 <td><code>privileged: false</code> enforced; no
 <code>--cap-add ALL</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Seccomp profile</strong></td>
 <td>Custom seccomp profile restricting syscalls to minimum required
 set</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Resource limits</strong></td>
 <td>CPU and memory limits enforced on every container</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Image scanning</strong></td>
 <td>Trivy scans in CI pipeline; block deployment on CRITICAL/HIGH
 CVEs</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Distroless base</strong></td>
 <td>Server image uses <code>gcr.io/distroless/static-debian12</code> as
 final stage</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>No shell access</strong></td>
 <td>Distroless images contain no shell; prevents interactive container
 compromise</td>
@@ -1650,7 +1654,7 @@ collisions.</p>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -1659,35 +1663,35 @@ collisions.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_SERVER_PORT</code></td>
 <td>int</td>
 <td><code>8080</code></td>
 <td>No</td>
 <td>HTTP listen port</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_SERVER_READ_TIMEOUT</code></td>
 <td>duration</td>
 <td><code>30s</code></td>
 <td>No</td>
 <td>Maximum duration for reading the entire request</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_SERVER_WRITE_TIMEOUT</code></td>
 <td>duration</td>
 <td><code>60s</code></td>
 <td>No</td>
 <td>Maximum duration before timing out writes of the response</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_SERVER_IDLE_TIMEOUT</code></td>
 <td>duration</td>
 <td><code>120s</code></td>
 <td>No</td>
 <td>Maximum amount of time to wait for the next request</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT</code></td>
 <td>duration</td>
 <td><code>30s</code></td>
@@ -1706,7 +1710,7 @@ collisions.</p>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -1715,7 +1719,7 @@ collisions.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_DATABASE_URL</code></td>
 <td>string</td>
 <td>—</td>
@@ -1723,28 +1727,28 @@ collisions.</p>
 <td>PostgreSQL connection string (pgx format):
 <code>postgres://user:pass@host:port/db?sslmode=verify-full&amp;pool_max_conns=50&amp;pool_min_conns=10</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_DATABASE_MAX_OPEN_CONNS</code></td>
 <td>int</td>
 <td><code>50</code></td>
 <td>No</td>
 <td>Maximum pool connections (production: 50, dev: 10)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_DATABASE_MAX_IDLE_CONNS</code></td>
 <td>int</td>
 <td><code>10</code></td>
 <td>No</td>
 <td>Minimum pool connections</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_DATABASE_CONN_MAX_IDLE_TIME</code></td>
 <td>duration</td>
 <td><code>15m</code></td>
 <td>No</td>
 <td>Maximum idle time before connection回收</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_DATABASE_CONN_MAX_LIFETIME</code></td>
 <td>duration</td>
 <td><code>30m</code></td>
@@ -1763,7 +1767,7 @@ collisions.</p>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -1772,7 +1776,7 @@ collisions.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_REDIS_URL</code></td>
 <td>string</td>
 <td>—</td>
@@ -1780,21 +1784,21 @@ collisions.</p>
 <td>Redis connection URL:
 <code>redis://:password@host:port/db</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_REDIS_CACHE_TTL</code></td>
 <td>duration</td>
 <td><code>60s</code></td>
 <td>No</td>
 <td>Default TTL for cached data (device check-ins, rollout health)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_REDIS_RATE_LIMIT_PREFIX</code></td>
 <td>string</td>
 <td><code>helix:ratelimit:</code></td>
 <td>No</td>
 <td>Key prefix for rate limit counters</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_REDIS_SESSION_PREFIX</code></td>
 <td>string</td>
 <td><code>helix:session:</code></td>
@@ -1813,7 +1817,7 @@ collisions.</p>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -1822,7 +1826,7 @@ collisions.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_MINIO_ENDPOINT</code></td>
 <td>string</td>
 <td>—</td>
@@ -1830,35 +1834,35 @@ collisions.</p>
 <td>MinIO/S3 endpoint (e.g., <code>minio:9000</code> or
 <code>s3.amazonaws.com</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_MINIO_ACCESS_KEY</code></td>
 <td>string</td>
 <td>—</td>
 <td>Yes</td>
 <td>Access key for S3/MinIO authentication</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_MINIO_SECRET_KEY</code></td>
 <td>string</td>
 <td>—</td>
 <td>Yes</td>
 <td>Secret key for S3/MinIO authentication</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_MINIO_BUCKET</code></td>
 <td>string</td>
 <td><code>helix-ota-artifacts</code></td>
 <td>No</td>
 <td>Bucket name for artifact storage</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_MINIO_REGION</code></td>
 <td>string</td>
 <td><code>us-east-1</code></td>
 <td>No</td>
 <td>S3 region</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_MINIO_USE_SSL</code></td>
 <td>bool</td>
 <td><code>true</code></td>
@@ -1877,7 +1881,7 @@ collisions.</p>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -1886,42 +1890,42 @@ collisions.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_VAULT_ADDRESS</code></td>
 <td>string</td>
 <td>—</td>
 <td>Yes</td>
 <td>Vault server address (e.g., <code>http://vault:8200</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_VAULT_TOKEN</code></td>
 <td>string</td>
 <td>—</td>
 <td>Conditional</td>
 <td>Vault token (dev only; use AppRole in production)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_VAULT_ROLE_ID</code></td>
 <td>string</td>
 <td>—</td>
 <td>Conditional</td>
 <td>Vault AppRole Role ID (production)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_VAULT_SECRET_ID</code></td>
 <td>string</td>
 <td>—</td>
 <td>Conditional</td>
 <td>Vault AppRole Secret ID (production)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_VAULT_TRANSIT_KEY</code></td>
 <td>string</td>
 <td><code>artifact-signing-key</code></td>
 <td>No</td>
 <td>Transit engine key name for artifact signing</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_VAULT_TOTP_KEY_PATH</code></td>
 <td>string</td>
 <td><code>secret/helix-ota/totp-encryption-key</code></td>
@@ -1941,7 +1945,7 @@ Configuration</h4>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -1950,42 +1954,42 @@ Configuration</h4>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_JWT_SIGNING_KEY</code></td>
 <td>string</td>
 <td>—</td>
 <td>Yes</td>
 <td>RSA private key PEM for JWT signing (or reference to Vault)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_JWT_ACCESS_TTL</code></td>
 <td>duration</td>
 <td><code>15m</code></td>
 <td>No</td>
 <td>Access token time-to-live</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_JWT_REFRESH_TTL</code></td>
 <td>duration</td>
 <td><code>168h</code></td>
 <td>No</td>
 <td>Refresh token time-to-live (7 days)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_JWT_ISSUER</code></td>
 <td>string</td>
 <td><code>helix-ota</code></td>
 <td>No</td>
 <td>JWT issuer claim</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_MTLS_CA_CERT_PATH</code></td>
 <td>string</td>
 <td><code>/etc/helix-ota/tls/ca.crt</code></td>
 <td>No</td>
 <td>Path to device CA certificate for mTLS verification</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_MTLS_CRL_PATH</code></td>
 <td>string</td>
 <td><code>/etc/helix-ota/tls/ca.crl</code></td>
@@ -2004,7 +2008,7 @@ Configuration</h4>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -2013,28 +2017,28 @@ Configuration</h4>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_ROLLOUT_AUTO_ADVANCE_INTERVAL</code></td>
 <td>duration</td>
 <td><code>15m</code></td>
 <td>No</td>
 <td>Interval for auto-advance evaluation job</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_ROLLOUT_HEALTH_CHECK_INTERVAL</code></td>
 <td>duration</td>
 <td><code>5m</code></td>
 <td>No</td>
 <td>Interval for rollout health metric aggregation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_ROLLOUT_AUTO_ROLLBACK_THRESHOLD</code></td>
 <td>float</td>
 <td><code>0.05</code></td>
 <td>No</td>
 <td>Failure rate threshold (5%) that triggers auto-rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_ROLLOUT_DEFAULT_INCREMENT_STEP</code></td>
 <td>int</td>
 <td><code>10</code></td>
@@ -2053,7 +2057,7 @@ Configuration</h4>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -2062,21 +2066,21 @@ Configuration</h4>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_ARTIFACT_MAX_SIZE</code></td>
 <td>int64</td>
 <td><code>2147483648</code></td>
 <td>No</td>
 <td>Maximum artifact upload size in bytes (2 GiB)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_ARTIFACT_TEMP_DIR</code></td>
 <td>string</td>
 <td><code>/tmp</code></td>
 <td>No</td>
 <td>Temporary directory for upload staging</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_ARTIFACT_VALIDATION_WORKERS</code></td>
 <td>int</td>
 <td><code>4</code></td>
@@ -2095,7 +2099,7 @@ Configuration</h4>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -2104,28 +2108,28 @@ Configuration</h4>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_RATE_LIMIT_DEVICE_RPM</code></td>
 <td>int</td>
 <td><code>60</code></td>
 <td>No</td>
 <td>Requests per minute per device</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_RATE_LIMIT_DASHBOARD_RPM</code></td>
 <td>int</td>
 <td><code>120</code></td>
 <td>No</td>
 <td>Requests per minute per dashboard user</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_RATE_LIMIT_LOGIN_RPM</code></td>
 <td>int</td>
 <td><code>10</code></td>
 <td>No</td>
 <td>Login attempts per minute per IP</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_RATE_LIMIT_ARTIFACT_UPLOAD_RPH</code></td>
 <td>int</td>
 <td><code>10</code></td>
@@ -2144,7 +2148,7 @@ Configuration</h4>
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Type</th>
 <th>Default</th>
@@ -2153,49 +2157,49 @@ Configuration</h4>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_LOG_LEVEL</code></td>
 <td>string</td>
 <td><code>info</code></td>
 <td>No</td>
 <td>Log level: debug, info, warn, error</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_LOG_FORMAT</code></td>
 <td>string</td>
 <td><code>json</code></td>
 <td>No</td>
 <td>Log format: json, text</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_METRICS_ENABLED</code></td>
 <td>bool</td>
 <td><code>true</code></td>
 <td>No</td>
 <td>Enable Prometheus metrics endpoint</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_METRICS_PATH</code></td>
 <td>string</td>
 <td><code>/metrics</code></td>
 <td>No</td>
 <td>HTTP path for Prometheus metrics</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_TRACING_ENABLED</code></td>
 <td>bool</td>
 <td><code>false</code></td>
 <td>No</td>
 <td>Enable OpenTelemetry tracing</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_TRACING_ENDPOINT</code></td>
 <td>string</td>
 <td><code>http://otel-collector:4318</code></td>
 <td>No</td>
 <td>OTLP HTTP endpoint</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_TRACING_SAMPLE_RATE</code></td>
 <td>float</td>
 <td><code>0.1</code></td>
@@ -2246,7 +2250,7 @@ NetworkPolicies) to enforce the principle of least privilege:</p>
 <col style="width: 14%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Service</th>
 <th>Internal Port</th>
 <th>External Port (Dev)</th>
@@ -2255,70 +2259,70 @@ NetworkPolicies) to enforce the principle of least privilege:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Traefik</td>
 <td>80, 443</td>
 <td>80, 443</td>
 <td>HTTP(S)</td>
 <td>Public ingress</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Traefik Dashboard</td>
 <td>8080</td>
 <td>8080</td>
 <td>HTTP</td>
 <td>Admin dashboard (dev only)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>helix-ota-server</td>
 <td>8080</td>
 <td>9090</td>
 <td>HTTP</td>
 <td>REST API</td>
 </tr>
-<tr class="even">
+<tr>
 <td>helix-ota-server (Delve)</td>
 <td>2345</td>
 <td>2345</td>
 <td>TCP</td>
 <td>Go debugger (dev only)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>helix-ota-dashboard</td>
 <td>80</td>
 <td>3000</td>
 <td>HTTP</td>
 <td>Web UI</td>
 </tr>
-<tr class="even">
+<tr>
 <td>PostgreSQL</td>
 <td>5432</td>
 <td>5432</td>
 <td>TCP</td>
 <td>Database (dev only)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis</td>
 <td>6379</td>
 <td>6379</td>
 <td>TCP</td>
 <td>Cache (dev only)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>MinIO API</td>
 <td>9000</td>
 <td>9000</td>
 <td>HTTP</td>
 <td>S3-compatible API (dev only)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MinIO Console</td>
 <td>9001</td>
 <td>9001</td>
 <td>HTTP</td>
 <td>Admin console (dev only)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Vault</td>
 <td>8200</td>
 <td>8200</td>
@@ -2339,7 +2343,7 @@ internal networks.</p>
 <col style="width: 21%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Hostname</th>
 <th>Resolves To</th>
 <th>Used By</th>
@@ -2347,43 +2351,43 @@ internal networks.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>api.helix-ota.io</code></td>
 <td>Traefik → server</td>
 <td>Devices, Dashboard</td>
 <td>REST API endpoint</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>app.helix-ota.io</code></td>
 <td>Traefik → dashboard</td>
 <td>Dashboard users</td>
 <td>Web UI</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>s3.helix-ota.io</code></td>
 <td>Traefik → MinIO</td>
 <td>Devices (optional)</td>
 <td>Direct artifact download</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>postgresql</code></td>
 <td>PostgreSQL service</td>
 <td>Server</td>
 <td>Database queries</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>redis</code></td>
 <td>Redis service</td>
 <td>Server</td>
 <td>Cache operations</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>minio</code></td>
 <td>MinIO service</td>
 <td>Server</td>
 <td>Artifact storage</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vault</code></td>
 <td>Vault service</td>
 <td>Server</td>
@@ -2449,7 +2453,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href=
 <col style="width: 6%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Data Store</th>
 <th>Backup Method</th>
 <th>Frequency</th>
@@ -2460,7 +2464,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>PostgreSQL</strong></td>
 <td><code>pg_dump</code> + WAL archiving</td>
 <td>Continuous WAL + Daily full</td>
@@ -2469,7 +2473,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href=
 <td>1 hour</td>
 <td>0 (continuous)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Redis</strong></td>
 <td>AOF + RDB snapshots</td>
 <td>Every 60s (AOF) + Every 15min (RDB)</td>
@@ -2478,7 +2482,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href=
 <td>5 min</td>
 <td>60s</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>MinIO</strong></td>
 <td>MinIO replication + versioning</td>
 <td>Continuous</td>
@@ -2487,7 +2491,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href=
 <td>4 hours</td>
 <td>0 (replication)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Vault</strong></td>
 <td>Raft snapshots</td>
 <td>Daily</td>
@@ -2496,7 +2500,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href=
 <td>30 min</td>
 <td>24 hours</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Config/Certs</strong></td>
 <td>GitOps (declarative)</td>
 <td>On change</td>
@@ -2626,7 +2630,7 @@ primary scaling dimensions are:</p>
 <col style="width: 28%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Dimension</th>
 <th>Trigger</th>
 <th>Action</th>
@@ -2634,31 +2638,31 @@ primary scaling dimensions are:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>API Throughput</strong></td>
 <td>CPU &gt; 70% or latency p95 &gt; 500ms</td>
 <td>Add server replicas (HPA)</td>
 <td>helix-ota-server</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Database Load</strong></td>
 <td>Active connections &gt; 80% of pool</td>
 <td>Add read replicas; increase pool size</td>
 <td>PostgreSQL</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Cache Hit Rate</strong></td>
 <td>Hit rate &lt; 90%</td>
 <td>Increase Redis memory; extend TTL</td>
 <td>Redis</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Artifact I/O</strong></td>
 <td>Download latency &gt; 2s</td>
 <td>Add MinIO nodes; enable CDN</td>
 <td>MinIO / CDN</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>WebSocket Connections</strong></td>
 <td>&gt; 10K concurrent dashboard sessions</td>
 <td>Add server replicas; use sticky sessions</td>
@@ -2729,7 +2733,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <col style="width: 17%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Service</th>
 <th>CPU Request</th>
 <th>CPU Limit</th>
@@ -2739,7 +2743,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>helix-ota-server</td>
 <td>500m</td>
 <td>2</td>
@@ -2747,7 +2751,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>1Gi</td>
 <td>50</td>
 </tr>
-<tr class="even">
+<tr>
 <td>helix-ota-dashboard</td>
 <td>100m</td>
 <td>250m</td>
@@ -2755,7 +2759,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>128Mi</td>
 <td>4</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>PostgreSQL (primary)</td>
 <td>1</td>
 <td>4</td>
@@ -2763,7 +2767,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>8Gi</td>
 <td>1 (+ 2 replicas)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Redis (master)</td>
 <td>250m</td>
 <td>1</td>
@@ -2771,7 +2775,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>1Gi</td>
 <td>1 (+ 2 replicas)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MinIO</td>
 <td>500m</td>
 <td>2</td>
@@ -2779,7 +2783,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>2Gi</td>
 <td>4 (distributed)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Vault</td>
 <td>250m</td>
 <td>1</td>
@@ -2787,7 +2791,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>512Mi</td>
 <td>3 (HA)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Traefik</td>
 <td>250m</td>
 <td>1</td>
@@ -2808,7 +2812,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Fleet Size</th>
 <th>Server Replicas</th>
 <th>PG Cores</th>
@@ -2818,7 +2822,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>&lt; 1,000 devices</td>
 <td>2</td>
 <td>2</td>
@@ -2826,7 +2830,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>256 Mi</td>
 <td>1</td>
 </tr>
-<tr class="even">
+<tr>
 <td>1,000 – 10,000</td>
 <td>3–5</td>
 <td>4</td>
@@ -2834,7 +2838,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>512 Mi</td>
 <td>2</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>10,000 – 100,000</td>
 <td>5–15</td>
 <td>8</td>
@@ -2842,7 +2846,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <td>1 Gi</td>
 <td>4</td>
 </tr>
-<tr class="even">
+<tr>
 <td>100,000+</td>
 <td>15–50</td>
 <td>16</td>
@@ -2864,7 +2868,7 @@ Endpoints</h3>
 <col style="width: 26%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Service</th>
 <th>Endpoint</th>
 <th>Scrape Interval</th>
@@ -2872,7 +2876,7 @@ Endpoints</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>helix-ota-server</td>
 <td><code>:8080/metrics</code></td>
 <td>15s</td>
@@ -2882,7 +2886,7 @@ Endpoints</h3>
 <code>device_checkins_total</code>, <code>db_pool_connections</code>,
 <code>cache_hit_rate</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>PostgreSQL</td>
 <td><code>:9187/metrics</code> (pg_exporter)</td>
 <td>30s</td>
@@ -2891,7 +2895,7 @@ Endpoints</h3>
 <code>pg_stat_activity_count</code>,
 <code>pg_replication_lag_seconds</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis</td>
 <td><code>:9121/metrics</code> (redis_exporter)</td>
 <td>15s</td>
@@ -2900,7 +2904,7 @@ Endpoints</h3>
 <code>redis_commands_processed_total</code>,
 <code>redis_keyspace_hits_total</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>MinIO</td>
 <td><code>:9000/minio/v2/metrics/cluster</code></td>
 <td>30s</td>
@@ -2908,7 +2912,7 @@ Endpoints</h3>
 <code>minio_s3_requests_total</code>,
 <code>minio_s3_errors_total</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Vault</td>
 <td><code>:8200/v1/sys/metrics</code></td>
 <td>30s</td>
@@ -2916,7 +2920,7 @@ Endpoints</h3>
 <code>vault_raft_commit_time</code>,
 <code>vault_token_create_count</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Traefik</td>
 <td><code>:8080/metrics</code></td>
 <td>15s</td>
@@ -3007,7 +3011,7 @@ ConfigMap:</p>
 <col style="width: 19%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Dashboard</th>
 <th>Panels</th>
 <th>Refresh Interval</th>
@@ -3015,41 +3019,41 @@ ConfigMap:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Helix OTA Overview</strong></td>
 <td>Fleet size, active rollouts, update success rate, API latency
 p95</td>
 <td>30s</td>
 <td>Executive overview</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Device Fleet Health</strong></td>
 <td>Devices by status, check-in rate, stale devices, version
 distribution</td>
 <td>1m</td>
 <td>Fleet operations</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Rollout Progress</strong></td>
 <td>Active rollouts, percentage per rollout, failure rate, auto-advance
 events</td>
 <td>15s</td>
 <td>Rollout monitoring</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Artifact Pipeline</strong></td>
 <td>Upload rate, validation duration, storage usage by artifact</td>
 <td>1m</td>
 <td>Artifact management</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Infrastructure</strong></td>
 <td>PostgreSQL connections, query latency, Redis hit rate, MinIO
 I/O</td>
 <td>30s</td>
 <td>Infrastructure health</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Security</strong></td>
 <td>Auth failures, rate limit rejections, certificate renewal status,
 anomaly alerts</td>
@@ -3133,7 +3137,7 @@ Objectives</h3>
 <col style="width: 48%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Scenario</th>
 <th>RTO</th>
 <th>RPO</th>
@@ -3141,44 +3145,44 @@ Objectives</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Server pod crash</strong></td>
 <td>30s</td>
 <td>0</td>
 <td>Kubernetes auto-restarts pod; no data loss (stateless)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>PostgreSQL primary failure</strong></td>
 <td>5 min</td>
 <td>0 (synchronous replica)</td>
 <td>Promote read replica; update service DNS</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Redis master failure</strong></td>
 <td>1 min</td>
 <td>60s (AOF)</td>
 <td>Sentinel promotes replica; cold cache rebuilds from DB</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>MinIO node failure</strong></td>
 <td>0 (if distributed)</td>
 <td>0</td>
 <td>Distributed mode continues serving; replace failed node</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Vault seal/crash</strong></td>
 <td>5 min</td>
 <td>0</td>
 <td>Auto-unshard with Kubernetes secret; Raft log replay</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Complete cluster loss</strong></td>
 <td>4 hours</td>
 <td>24 hours</td>
 <td>Restore PostgreSQL from S3 backup; re-provision cluster from
 GitOps</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Ransomware / data corruption</strong></td>
 <td>8 hours</td>
 <td>24 hours</td>
@@ -3248,7 +3252,7 @@ Schedule</h3>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Check</th>
 <th>Frequency</th>
 <th>Automated</th>
@@ -3256,37 +3260,37 @@ Schedule</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>PostgreSQL backup exists in S3</td>
 <td>Daily</td>
 <td>Yes</td>
 <td>PagerDuty if missing</td>
 </tr>
-<tr class="even">
+<tr>
 <td>WAL archiving lag &lt; 60s</td>
 <td>Every 5 min</td>
 <td>Yes</td>
 <td>PagerDuty if lagging</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MinIO cross-region replication lag &lt; 5 min</td>
 <td>Every 15 min</td>
 <td>Yes</td>
 <td>Slack notification</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Vault Raft snapshot &lt; 24 hours old</td>
 <td>Daily</td>
 <td>Yes</td>
 <td>PagerDuty if stale</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Full restore test (staging)</td>
 <td>Weekly</td>
 <td>Yes</td>
 <td>Slack notification</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Full restore test (production)</td>
 <td>Monthly</td>
 <td>Manual</td>
@@ -3354,49 +3358,49 @@ repository through Docker Compose overrides and Helm value files.</p>
 <col style="width: 34%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Responsibility</th>
 <th>Submodule (<code>containers/</code>)</th>
 <th>Project (<code>helix-ota/</code>)</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Base Docker Compose structure</td>
 <td>Provides</td>
 <td>Customizes with environment variables</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Dockerfile templates</td>
 <td>Provides multi-stage patterns</td>
 <td>Customizes build args, base images</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Database init scripts</td>
 <td>Provides schema DDL</td>
 <td>Provides seed data specific to Helix OTA</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Vault configuration</td>
 <td>Provides HCL templates</td>
 <td>Customizes secrets paths, policies</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Helm chart structure</td>
 <td>Provides chart skeleton</td>
 <td>Customizes values.yaml for Helix OTA</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Backup/restore scripts</td>
 <td>Provides templates</td>
 <td>Customizes connection strings, S3 paths</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Network definitions</td>
 <td>Provides base networks</td>
 <td>Customizes subnets, labels</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Volume definitions</td>
 <td>Provides base volumes</td>
 <td>Customizes sizes, storage classes</td>
@@ -3415,69 +3419,69 @@ the Helix OTA server:</p>
 <col style="width: 18%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Submodule Library</th>
 <th>Container Integration</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>vasic-digital/auth</code></td>
 <td>Vault Transit for JWT signing</td>
 <td>JWT token creation, validation, rotation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>vasic-digital/database</code></td>
 <td>PostgreSQL connection via <code>HELIX_DATABASE_URL</code></td>
 <td>pgxpool connection management, migration runner</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vasic-digital/cache</code></td>
 <td>Redis connection via <code>HELIX_REDIS_URL</code></td>
 <td>L1/L2 caching with TTL, invalidation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>vasic-digital/observability</code></td>
 <td>Prometheus endpoint at <code>:8080/metrics</code></td>
 <td>Metrics, structured logging, tracing</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vasic-digital/storage</code></td>
 <td>MinIO connection via <code>HELIX_MINIO_*</code></td>
 <td>S3-compatible multipart upload/download</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>vasic-digital/security</code></td>
 <td>Vault + TLS cert mounts</td>
 <td>TLS configuration, certificate management</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vasic-digital/config</code></td>
 <td>Environment variable loading</td>
 <td>Config struct hydration from <code>HELIX_*</code> vars</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>vasic-digital/middleware</code></td>
 <td>Server middleware chain</td>
 <td>Request ID, CORS, auth, logging</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vasic-digital/ratelimiter</code></td>
 <td>Redis-backed token bucket</td>
 <td>Per-device, per-IP, per-user rate limiting</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>vasic-digital/EventBus</code></td>
 <td>In-process event dispatch</td>
 <td>Async event processing for telemetry, rollouts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vasic-digital/concurrency</code></td>
 <td>Worker pool for validation</td>
 <td>Goroutine pool with cancellation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>vasic-digital/recovery</code></td>
 <td>Panic recovery middleware</td>
 <td>Graceful degradation on unexpected errors</td>

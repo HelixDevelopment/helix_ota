@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>SECURITY_ARCHITECTURE</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">SECURITY_ARCHITECTURE</h1>
 </header>
 <h1 id="helix-ota-security-architecture-document">Helix OTA — Security
 Architecture Document</h1>
@@ -296,44 +300,44 @@ security breach.</p>
 <col style="width: 36%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Layer</th>
 <th>Control</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>L1 — Network</strong></td>
 <td>TLS 1.3, mTLS, firewall rules</td>
 <td>Encrypted channel prevents eavesdropping</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L2 — Identity</strong></td>
 <td>Device certificates, JWT, TOTP 2FA</td>
 <td>Verified identity before any operation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>L3 — Authorization</strong></td>
 <td>RBAC, API key scopes</td>
 <td>Least-privilege access to resources</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L4 — Payload Integrity</strong></td>
 <td>RSA-4096 signing, SHA-256 hashing</td>
 <td>Artifact tampering detected and rejected</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>L5 — Boot Chain</strong></td>
 <td>AVB, dm-verity, A/B partitions</td>
 <td>Compromised partition cannot boot</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>L6 — Runtime</strong></td>
 <td>Container hardening, input validation, rate limiting</td>
 <td>Server-side attack surface minimized</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>L7 — Audit &amp; Response</strong></td>
 <td>Immutable audit log, anomaly detection</td>
 <td>Breaches detected and traced</td>
@@ -384,7 +388,7 @@ impact and likelihood, and mapped to specific controls.</p>
 <col style="width: 24%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Threat</th>
 <th>Impact</th>
@@ -393,7 +397,7 @@ impact and likelihood, and mapped to specific controls.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>S1</td>
 <td><strong>Unauthorized device registers as legitimate device</strong>
 — Attacker provisions a rogue device with a forged device ID and
@@ -405,7 +409,7 @@ inject telemetry.</td>
 declared device_id; hardware fingerprint binding; device registration
 rate limiting (5 req/min per cert CN)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>S2</td>
 <td><strong>Forged update source</strong> — Attacker spoofs the OTA
 server URL and attempts to serve malicious payloads to devices.</td>
@@ -415,7 +419,7 @@ server URL and attempts to serve malicious payloads to devices.</td>
 CN validated against pinned <code>*.helix-ota.io</code>; RSA-4096
 artifact signature verified on device (independent of transport)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>S3</td>
 <td><strong>Dashboard session hijacking</strong> — Attacker steals a
 valid JWT and uses it to perform admin operations.</td>
@@ -425,7 +429,7 @@ valid JWT and uses it to perform admin operations.</td>
 IP binding on JWT claims; refresh token rotation with reuse detection;
 HTTP-only secure cookies</td>
 </tr>
-<tr class="even">
+<tr>
 <td>S4</td>
 <td><strong>API key theft</strong> — An automation API key is leaked and
 used to authenticate as a service.</td>
@@ -447,7 +451,7 @@ revoked</td>
 <col style="width: 24%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Threat</th>
 <th>Impact</th>
@@ -456,7 +460,7 @@ revoked</td>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>T1</td>
 <td><strong>Modified OTA payload in transit</strong> — MITM attacker
 intercepts and modifies the artifact binary during download.</td>
@@ -467,7 +471,7 @@ device against server-provided hash; RSA-4096 signature verified on
 device against embedded public key — even if TLS is broken, the
 signature check catches tampering</td>
 </tr>
-<tr class="even">
+<tr>
 <td>T2</td>
 <td><strong>Modified OTA payload at rest on storage</strong> — Attacker
 gains access to S3/MinIO and replaces an artifact with a malicious
@@ -479,7 +483,7 @@ verified on download; S3 bucket policies enforce write-once for
 validated artifacts; artifact hash in database is immutable after
 validation; S3 server-side encryption (SSE-S3)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>T3</td>
 <td><strong>Modified artifact metadata</strong> — Attacker alters the
 <code>target_version</code> or <code>hardware_compatibility</code>
@@ -492,7 +496,7 @@ with before/after values; <code>artifacts</code> table columns are
 immutable after <code>upload_status = 'ready'</code> (enforced by
 application layer)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>T4</td>
 <td><strong>Tampered build pipeline output</strong> — The CI/CD pipeline
 that produces OTA artifacts is compromised, producing signed but
@@ -516,7 +520,7 @@ containers; reproducible builds verified against independent build
 <col style="width: 24%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Threat</th>
 <th>Impact</th>
@@ -525,7 +529,7 @@ containers; reproducible builds verified against independent build
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>R1</td>
 <td><strong>Denying update installation</strong> — A device claims it
 never received or installed an update that was actually deployed.</td>
@@ -536,7 +540,7 @@ telemetry events (download_start, install_complete, commit) → device
 version update. All events are timestamped and signed with device
 certificate.</td>
 </tr>
-<tr class="even">
+<tr>
 <td>R2</td>
 <td><strong>Audit trail gaps</strong> — An attacker with database access
 deletes audit_log entries to cover their tracks.</td>
@@ -547,7 +551,7 @@ application role); database triggers prevent deletion; write-ahead log
 (WAL) archiving provides point-in-time recovery; periodic export to
 immutable object storage (S3 Object Lock)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>R3</td>
 <td><strong>Operator denies performing an action</strong> — An admin
 claims they did not pause a rollout or delete an artifact.</td>
@@ -569,7 +573,7 @@ session cannot be shared (concurrent session detection)</td>
 <col style="width: 24%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Threat</th>
 <th>Impact</th>
@@ -578,7 +582,7 @@ session cannot be shared (concurrent session detection)</td>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>I1</td>
 <td><strong>Leaked device credentials</strong> — A device’s mTLS private
 key is extracted from the filesystem.</td>
@@ -588,7 +592,7 @@ key is extracted from the filesystem.</td>
 keys are non-exportable; certificate revocation via CRL/OCSP; device
 deprovisioning invalidates the certificate</td>
 </tr>
-<tr class="even">
+<tr>
 <td>I2</td>
 <td><strong>Exposed device data via API</strong> — An attacker queries
 the device API and extracts the full device inventory including serial
@@ -600,7 +604,7 @@ self-registration only returns the registering device’s own data;
 field-level filtering (IP addresses only visible to admin); rate
 limiting prevents bulk enumeration</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>I3</td>
 <td><strong>Database breach</strong> — Attacker gains read access to
 PostgreSQL and extracts device records, user password hashes, and TOTP
@@ -613,7 +617,7 @@ connections; bcrypt with cost 12 for password hashes; TOTP secrets
 encrypted with AES-256-GCM before storage; database credentials rotated
 quarterly</td>
 </tr>
-<tr class="even">
+<tr>
 <td>I4</td>
 <td><strong>Leaked signing key</strong> — The RSA-4096 artifact signing
 private key is extracted from the server or HSM.</td>
@@ -636,7 +640,7 @@ HSM; key access requires dual-authentication; key rotation procedure
 <col style="width: 24%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Threat</th>
 <th>Impact</th>
@@ -645,7 +649,7 @@ HSM; key access requires dual-authentication; key rotation procedure
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>D1</td>
 <td><strong>Update server overwhelm</strong> — Attacker floods the OTA
 API with requests, preventing legitimate devices from checking for
@@ -656,7 +660,7 @@ updates.</td>
 Redis-backed token bucket with distributed coordination; auto-scaling of
 server replicas; circuit breaker on downstream dependencies</td>
 </tr>
-<tr class="even">
+<tr>
 <td>D2</td>
 <td><strong>Device bricking via bad update</strong> — A corrupted or
 incompatible OTA package is deployed, rendering devices unbootable.</td>
@@ -667,7 +671,7 @@ rollback; dm-verity and AVB boot verification; phased rollout with
 health-gated auto-advance (5% failure rate threshold); manual rollback
 capability</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>D3</td>
 <td><strong>Storage exhaustion</strong> — Attacker uploads large
 artifact files to exhaust S3 storage quota.</td>
@@ -678,7 +682,7 @@ layer; artifact upload rate limit (10/hour per user); upload requires
 admin/operator JWT; orphaned artifacts cleaned by scheduled maintenance
 job</td>
 </tr>
-<tr class="even">
+<tr>
 <td>D4</td>
 <td><strong>Database connection pool exhaustion</strong> — Sustained
 query load depletes the pgx connection pool.</td>
@@ -700,7 +704,7 @@ read replicas for dashboard queries; Redis cache for frequent queries
 <col style="width: 24%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Threat</th>
 <th>Impact</th>
@@ -709,7 +713,7 @@ read replicas for dashboard queries; Redis cache for frequent queries
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>E1</td>
 <td><strong>Compromised device gains server access</strong> — A rooted
 device uses its mTLS certificate to access admin-only endpoints.</td>
@@ -720,7 +724,7 @@ and routes to device-only API surface; device API has no admin
 operations; device tokens contain role=device claim; RBAC enforces
 device cannot assume admin/operator/viewer roles</td>
 </tr>
-<tr class="even">
+<tr>
 <td>E2</td>
 <td><strong>Rogue admin</strong> — A user with admin role creates a
 backdoor account or exfiltrates signing keys.</td>
@@ -732,7 +736,7 @@ admin role; signing key operations require separate HSM authentication
 creation) require re-authentication; break-glass procedures with
 incident ticket requirement</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>E3</td>
 <td><strong>SQL injection</strong> — Attacker crafts input that executes
 arbitrary SQL on the database.</td>
@@ -743,7 +747,7 @@ for SQL; input validation with allow-lists (not deny-lists); ORM-style
 repository layer abstracts all query construction; automated SQL
 injection testing in CI pipeline</td>
 </tr>
-<tr class="even">
+<tr>
 <td>E4</td>
 <td><strong>Container escape</strong> — Attacker exploits a container
 vulnerability to gain host access.</td>
@@ -773,7 +777,7 @@ obsolete cipher suites from the attack surface.</p>
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Cipher Suite</th>
 <th>Key Exchange</th>
 <th>Auth</th>
@@ -782,21 +786,21 @@ obsolete cipher suites from the attack surface.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>TLS_AES_256_GCM_SHA384</code></td>
 <td>ECDHE</td>
 <td>RSA/ECDSA</td>
 <td>AES-256-GCM</td>
 <td>SHA-384</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>TLS_CHACHA20_POLY1305_SHA256</code></td>
 <td>ECDHE</td>
 <td>RSA/ECDSA</td>
 <td>ChaCha20-Poly1305</td>
 <td>SHA-256</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>TLS_AES_128_GCM_SHA256</code></td>
 <td>ECDHE</td>
 <td>RSA/ECDSA</td>
@@ -990,7 +994,7 @@ Strategy</h3>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Certificate Type</th>
 <th>Validity</th>
 <th>Rotation Procedure</th>
@@ -998,14 +1002,14 @@ Strategy</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Server TLS Certificate</strong></td>
 <td>90 days</td>
 <td>Automated via ACME (Let’s Encrypt) or internal CA; zero-downtime via
 cert hot-reload</td>
 <td>30 days (new cert issued 30 days before expiry)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Device Client Certificate</strong></td>
 <td>1 year</td>
 <td>Server pushes renewal notification via check-in response; device
@@ -1013,7 +1017,7 @@ re-enrolls using existing valid cert; new cert issued with overlapping
 validity</td>
 <td>60 days (device can use old cert until expiry)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Device CA Certificate</strong></td>
 <td>10 years</td>
 <td>New CA cert distributed via firmware update; server trusts both old
@@ -1021,7 +1025,7 @@ and new CA during transition</td>
 <td>2 years (old CA remains in trust store until all devices have new
 CA)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Signing Key</strong></td>
 <td>2 years</td>
 <td>See §4.5 Key Rotation Procedure</td>
@@ -1386,7 +1390,7 @@ access tokens.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Token Type</th>
 <th>Lifetime</th>
 <th>Storage</th>
@@ -1394,13 +1398,13 @@ access tokens.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Access Token</strong></td>
 <td>15 minutes</td>
 <td>Memory (JavaScript variable)</td>
 <td>Automatic via refresh token</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Refresh Token</strong></td>
 <td>7 days</td>
 <td>HTTP-only, Secure, SameSite=Strict cookie</td>
@@ -1540,7 +1544,7 @@ certificate.</li>
 <h3 id="rbac-matrix">5.4 RBAC Matrix</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Resource / Operation</th>
 <th>Admin</th>
 <th>Operator</th>
@@ -1549,196 +1553,196 @@ certificate.</li>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Artifacts</strong></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Upload artifact</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>View artifact list</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Download artifact</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>✅</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Delete artifact</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Re-validate artifact</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Rollouts</strong></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Create rollout</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>View rollout</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Pause/resume rollout</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Advance rollout</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Halt/rollback rollout</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Devices</strong></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Register device (mTLS)</td>
 <td>—</td>
 <td>—</td>
 <td>—</td>
 <td>✅</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>View device list</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Update device metadata</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Decommission device</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Trigger rollback</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Check for updates</td>
 <td>—</td>
 <td>—</td>
 <td>—</td>
 <td>✅</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Report telemetry</td>
 <td>—</td>
 <td>—</td>
 <td>—</td>
 <td>✅</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Users</strong></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Create user</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Update user role</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Delete user</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>View user list</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Telemetry</strong></td>
 <td></td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>View telemetry</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Export telemetry</td>
 <td>✅</td>
 <td>✅</td>
@@ -1794,34 +1798,34 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Value</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Maximum concurrent sessions per user</td>
 <td>3</td>
 <td>Prevents credential sharing; oldest session evicted</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Session idle timeout</td>
 <td>30 minutes</td>
 <td>Dashboard auto-logout after inactivity</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Session absolute timeout</td>
 <td>8 hours</td>
 <td>Forces re-authentication even if active</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Session invalidation on password change</td>
 <td>All sessions</td>
 <td>Prevents continued access after credential rotation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Session invalidation on role change</td>
 <td>All sessions</td>
 <td>Ensures permission changes take effect immediately</td>
@@ -1992,34 +1996,34 @@ Partition Swap)</h3>
 RK3588. The device maintains two complete sets of boot partitions:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Partition</th>
 <th>Slot A</th>
 <th>Slot B</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Boot</td>
 <td><code>boot_a</code></td>
 <td><code>boot_b</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>System</td>
 <td><code>system_a</code></td>
 <td><code>system_b</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Vendor</td>
 <td><code>vendor_a</code></td>
 <td><code>vendor_b</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Product</td>
 <td><code>product_a</code></td>
 <td><code>product_b</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>ODM</td>
 <td><code>odm_a</code></td>
 <td><code>odm_b</code></td>
@@ -2095,33 +2099,33 @@ update lifecycle:</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Step</th>
 <th>Verification</th>
 <th>Implementation</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>1. Download complete</strong></td>
 <td>SHA-256 hash of downloaded file matches server-provided hash</td>
 <td>Client SDK <code>DownloadManager</code> computes hash during
 download</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>2. Pre-install</strong></td>
 <td>RSA-4096 signature of <code>payload.bin</code> verifies against
 embedded public key</td>
 <td>Client SDK <code>VerificationEngine</code> before invoking
 <code>update_engine</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>3. Post-install (pre-boot)</strong></td>
 <td><code>update_engine</code> verifies <code>payload.bin</code>
 internal integrity (delta hash tree)</td>
 <td>Android <code>update_engine</code> built-in verification</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>4. Post-boot</strong></td>
 <td>dm-verity verifies every block of system/vendor partitions on
 read</td>
@@ -2233,24 +2237,24 @@ methods (depending on deployment environment):</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Environment</th>
 <th>Encryption Method</th>
 <th>Key Management</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>AWS (RDS)</td>
 <td>AES-256 via AWS KMS</td>
 <td>Customer-managed CMK, auto-rotated annually</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Self-hosted (Kubernetes)</td>
 <td>LUKS2 full-disk encryption</td>
 <td>Key stored in Vault, injected via Kubernetes Secret</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Development</td>
 <td>PostgreSQL page-level encryption (pg_tde extension)</td>
 <td>Local key file</td>
@@ -2274,39 +2278,39 @@ configuration files, or container images.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Secret Type</th>
 <th>Vault Path</th>
 <th>Rotation</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Database credentials</td>
 <td><code>secret/data/helix-ota/database</code></td>
 <td>90 days (auto-rotated by Vault)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>JWT signing key</td>
 <td><code>secret/data/helix-ota/jwt</code></td>
 <td>180 days</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>TOTP encryption key</td>
 <td><code>secret/data/helix-ota/totp</code></td>
 <td>365 days</td>
 </tr>
-<tr class="even">
+<tr>
 <td>API key hashing pepper</td>
 <td><code>secret/data/helix-ota/apikey</code></td>
 <td>365 days</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Download URL HMAC key</td>
 <td><code>secret/data/helix-ota/download</code></td>
 <td>90 days</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact signing key</td>
 <td><code>transit/keys/artifact-signing</code></td>
 <td>Never extracted from HSM</td>
@@ -2356,7 +2360,7 @@ the application middleware (per-identity).</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Endpoint Category</th>
 <th>Limit</th>
 <th>Key</th>
@@ -2364,43 +2368,43 @@ the application middleware (per-identity).</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Login</td>
 <td>10 req/min</td>
 <td>IP address</td>
 <td>Global</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Device check-in</td>
 <td>60 req/min</td>
 <td>Device ID (mTLS CN)</td>
 <td>Per device</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Artifact download</td>
 <td>100 req/min</td>
 <td>Device ID or User ID</td>
 <td>Per identity</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact upload</td>
 <td>10 req/hour</td>
 <td>User ID</td>
 <td>Per user</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Telemetry ingestion</td>
 <td>120 req/min</td>
 <td>Device ID</td>
 <td>Per device</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Dashboard API (read)</td>
 <td>200 req/min</td>
 <td>User ID</td>
 <td>Per user</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Dashboard API (write)</td>
 <td>60 req/min</td>
 <td>User ID</td>
@@ -2631,42 +2635,42 @@ Trail for All Operations</h3>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Description</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>user_id</code></td>
 <td>The user who performed the action</td>
 <td><code>usr_01HXYZABCDEF</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>action</code></td>
 <td>The action verb</td>
 <td><code>create</code>, <code>update</code>, <code>delete</code>,
 <code>login</code>, <code>login_failed</code>, <code>pause</code>,
 <code>resume</code>, <code>halt</code>, <code>rollback</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>resource_type</code></td>
 <td>The type of resource affected</td>
 <td><code>artifact</code>, <code>rollout</code>, <code>device</code>,
 <code>user</code>, <code>device_group</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>resource_id</code></td>
 <td>The UUID of the affected resource</td>
 <td><code>art_01HART003</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>details</code></td>
 <td>JSONB with before/after values</td>
 <td><code>{"field": "status", "old_value": "active", "new_value": "paused"}</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ip_address</code></td>
 <td>The source IP of the request</td>
 <td><code>203.0.113.42</code></td>
@@ -2681,59 +2685,59 @@ Trail for All Operations</h3>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Event</th>
 <th>Trigger</th>
 <th>Details Captured</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>User login</td>
 <td><code>POST /api/v1/auth/login</code></td>
 <td>User ID, IP, success/failure, 2FA status</td>
 </tr>
-<tr class="even">
+<tr>
 <td>User login failure</td>
 <td>Failed authentication</td>
 <td>User ID (if identifiable), IP, failure reason</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Token reuse detected</td>
 <td>Previously-used refresh token</td>
 <td>User ID, session ID, token JTI</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact upload</td>
 <td><code>POST /api/v1/artifacts/upload</code></td>
 <td>User ID, artifact ID, validation results</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Artifact deletion</td>
 <td><code>DELETE /api/v1/artifacts/{id}</code></td>
 <td>User ID, artifact ID, reason</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rollout creation</td>
 <td><code>POST /api/v1/rollouts</code></td>
 <td>User ID, rollout ID, strategy, group</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rollout pause/resume</td>
 <td><code>PUT /api/v1/rollouts/{id}/pause</code></td>
 <td>User ID, rollout ID, old/new status</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Device decommission</td>
 <td><code>DELETE /api/v1/devices/{id}</code></td>
 <td>User ID, device ID, reason</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>User role change</td>
 <td><code>PUT /api/v1/users/{id}</code></td>
 <td>Admin ID, target user ID, old/new role</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Signing key operation</td>
 <td>HSM sign API call</td>
 <td>Operation ID, key version, artifact hash</td>
@@ -2810,44 +2814,44 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Data Category</th>
 <th>Retention Period</th>
 <th>Disposal Method</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Audit log</td>
 <td>7 years (regulatory)</td>
 <td>Archived to S3 Glacier after 1 year; deleted after 7 years</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Telemetry events</td>
 <td>13 months (rolling)</td>
 <td>Partition auto-detached and dropped after 13 months</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Device records</td>
 <td>Active + 90 days after decommission</td>
 <td>Hard-deleted after 90-day post-decommission retention</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact files</td>
 <td>Active + 30 days after deletion from system</td>
 <td>S3 lifecycle policy deletes storage objects</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>User records</td>
 <td>Active + 30 days after account deactivation</td>
 <td>Hard-deleted after 30-day retention</td>
 </tr>
-<tr class="even">
+<tr>
 <td>JWT refresh tokens</td>
 <td>7 days (token lifetime)</td>
 <td>Auto-cleaned by scheduled job</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Session records</td>
 <td>Until session expires + 24 hours</td>
 <td>Auto-cleaned by scheduled job</td>
@@ -2897,7 +2901,7 @@ framework:</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Level</th>
 <th>Definition</th>
 <th>Example</th>
@@ -2905,26 +2909,26 @@ framework:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>SEV-1 (Critical)</strong></td>
 <td>Active exploitation or confirmed data breach</td>
 <td>Signing key compromised; malicious artifact deployed to fleet</td>
 <td>15 minutes</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>SEV-2 (High)</strong></td>
 <td>Vulnerability with high exploitation potential</td>
 <td>Authenticated endpoint found without rate limiting; SQL injection
 discovered</td>
 <td>1 hour</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>SEV-3 (Medium)</strong></td>
 <td>Vulnerability with limited exploitation potential</td>
 <td>CORS misconfiguration; expired TLS certificate</td>
 <td>4 hours</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>SEV-4 (Low)</strong></td>
 <td>Security hardening opportunity</td>
 <td>Missing security header; verbose error message</td>
@@ -2986,39 +2990,39 @@ party and quarterly by the internal security team.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Target</th>
 <th>Test Type</th>
 <th>Frequency</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>OTA API (all endpoints)</td>
 <td>OWASP API Security Top 10</td>
 <td>Quarterly</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Dashboard (React SPA)</td>
 <td>OWASP Web Top 10</td>
 <td>Quarterly</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mTLS handshake</td>
 <td>Certificate validation bypass, protocol downgrade</td>
 <td>Annually</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Artifact signing pipeline</td>
 <td>Key extraction, signature forgery</td>
 <td>Annually</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Device client SDK</td>
 <td>Certificate pinning bypass, binary patching</td>
 <td>Annually</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Infrastructure (K8s, PostgreSQL, Redis, S3)</td>
 <td>Network penetration, privilege escalation</td>
 <td>Annually</td>
@@ -3100,7 +3104,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Component</th>
 <th>Fuzzer</th>
 <th>Time Budget</th>
@@ -3108,25 +3112,25 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>ZIP reader</td>
 <td>Go native fuzzer (<code>go test -fuzz</code>)</td>
 <td>4 hours per CI run</td>
 <td>90% line coverage</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>payload_properties.txt</code> parser</td>
 <td>Go native fuzzer</td>
 <td>2 hours per CI run</td>
 <td>95% line coverage</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>care_map.pb</code> protobuf parser</td>
 <td>Go native fuzzer</td>
 <td>2 hours per CI run</td>
 <td>95% line coverage</td>
 </tr>
-<tr class="even">
+<tr>
 <td>REST API input validation</td>
 <td>Go native fuzzer + custom corpus</td>
 <td>1 hour per CI run</td>
@@ -3144,36 +3148,36 @@ pipeline and runs on every pull request:</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Tool</th>
 <th>Purpose</th>
 <th>Configuration</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>gosec</strong></td>
 <td>Go-specific security anti-patterns</td>
 <td><code>gosec -severity medium -confidence medium ./...</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>golangci-lint</strong></td>
 <td>General linting with security-focused rules</td>
 <td>Enabled: <code>gosec</code>, <code>govet</code>,
 <code>staticcheck</code>, <code>unused</code>,
 <code>ineffassign</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Semgrep</strong></td>
 <td>Pattern-based security analysis</td>
 <td>Custom rules for SQL injection, crypto misuse, auth bypass</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Trivy</strong></td>
 <td>Container image vulnerability scanning</td>
 <td>Fails CI on HIGH or CRITICAL CVEs in base image</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>npm audit</strong></td>
 <td>Dashboard dependency vulnerabilities</td>
 <td>Fails CI on HIGH or CRITICAL advisories</td>
@@ -3218,31 +3222,31 @@ Scanning</h3>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Tool</th>
 <th>Frequency</th>
 <th>Action on Finding</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Go Vulnerability Database</strong>
 (<code>govulncheck</code>)</td>
 <td>Every PR + nightly</td>
 <td>Block merge on HIGH/CRITICAL; auto-create issue on MEDIUM</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Snyk</strong></td>
 <td>Nightly</td>
 <td>Auto-create Jira ticket; block deploy if fix available and not
 applied within 7 days</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Trivy</strong> (container)</td>
 <td>Every build</td>
 <td>Block deployment on CRITICAL; warn on HIGH</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Dependabot</strong></td>
 <td>Continuous</td>
 <td>Auto-create PR for dependency updates with CVE fixes</td>
@@ -3359,46 +3363,46 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Test Case</th>
 <th>Expected Result</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Valid device certificate (correct CN, OU, not expired, not
 revoked)</td>
 <td>ACCEPT</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Expired certificate</td>
 <td>REJECT</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Certificate with OU != “device”</td>
 <td>REJECT</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Certificate with CN that does not match device_id</td>
 <td>REJECT</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Certificate signed by untrusted CA</td>
 <td>REJECT</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Certificate in CRL (revoked)</td>
 <td>REJECT</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Certificate with future NotBefore (clock skew)</td>
 <td>REJECT</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Certificate with missing Key Usage</td>
 <td>REJECT</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Self-signed certificate</td>
 <td>REJECT</td>
 </tr>
@@ -3417,54 +3421,54 @@ Environment Variables (Injected via Vault, NOT set in shell)</h3>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Variable</th>
 <th>Purpose</th>
 <th>Vault Path</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_DB_DSN</code></td>
 <td>PostgreSQL connection string</td>
 <td><code>secret/data/helix-ota/database</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_JWT_SIGNING_KEY</code></td>
 <td>RSA private key for JWT signing</td>
 <td><code>secret/data/helix-ota/jwt</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_ARTIFACT_SIGNING_KEY_ID</code></td>
 <td>HSM key ID for artifact signing</td>
 <td><code>transit/keys/artifact-signing</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_VAULT_ADDR</code></td>
 <td>Vault server address</td>
 <td>Kubernetes ConfigMap</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_VAULT_ROLE</code></td>
 <td>Vault AppRole for authentication</td>
 <td>Kubernetes ConfigMap</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_TLS_CERT_PATH</code></td>
 <td>Server TLS certificate</td>
 <td>Kubernetes Secret</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_TLS_KEY_PATH</code></td>
 <td>Server TLS private key</td>
 <td>Kubernetes Secret</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_CA_CERT_PATH</code></td>
 <td>Device CA certificate for mTLS validation</td>
 <td>Kubernetes ConfigMap</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_CRL_PATH</code></td>
 <td>Certificate Revocation List</td>
 <td>S3 (refreshed every 5 minutes)</td>

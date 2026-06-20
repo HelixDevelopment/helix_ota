@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>WINDOWS_OTA_RESEARCH</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">WINDOWS_OTA_RESEARCH</h1>
 </header>
 <h1 id="helix-ota-windows-ota-support-research-planning">Helix OTA —
 Windows OTA Support Research &amp; Planning</h1>
@@ -311,34 +315,34 @@ programmatic interface for controlling Windows Update behavior.</p>
 <col style="width: 45%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Interface</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>IUpdateSession</code></td>
 <td>Entry point for creating update search, download, and installation
 operations</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IUpdateSearcher</code></td>
 <td>Searches for updates matching specified criteria</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>IUpdateDownloader</code></td>
 <td>Downloads update content for a set of updates</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IUpdateInstaller</code></td>
 <td>Installs downloaded updates</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>IAutomaticUpdates</code></td>
 <td>Controls the Automatic Updates configuration</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IUpdateServiceManager</code></td>
 <td>Manages update service registrations (Microsoft Update, WSUS,
 custom)</td>
@@ -384,39 +388,39 @@ class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb1-
 <p><strong>WUA result codes:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Code</th>
 <th>Value</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>orcNotStarted</code></td>
 <td>0</td>
 <td>Operation not started</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>orcInProgress</code></td>
 <td>1</td>
 <td>Operation in progress</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>orcSucceeded</code></td>
 <td>2</td>
 <td>Operation completed successfully</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>orcSucceededWithErrors</code></td>
 <td>3</td>
 <td>Operation succeeded with errors</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>orcFailed</code></td>
 <td>4</td>
 <td>Operation failed</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>orcAborted</code></td>
 <td>5</td>
 <td>Operation aborted</td>
@@ -460,8 +464,8 @@ updates through the same WSUS pipeline they use for Microsoft
 updates.</p>
 <p><strong>Third-party catalog format:</strong></p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode xml"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;?xml</span><span class="ot"> version=</span><span class="st">&quot;1.0&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;utf-8&quot;</span><span class="fu">?&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">catalog</span><span class="ot"> xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/msus/2005/12/UpdateCatalog&quot;</span>&gt;</span>
+class="sourceCode xml"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;?xml</span> <span class="ot">version=</span><span class="st">&quot;1.0&quot;</span> <span class="ot">encoding=</span><span class="st">&quot;utf-8&quot;</span><span class="fu">?&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">catalog</span> <span class="ot">xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/msus/2005/12/UpdateCatalog&quot;</span>&gt;</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">Properties</span>&gt;</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">PublisherName</span>&gt;Helix OTA Systems&lt;/<span class="kw">PublisherName</span>&gt;</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">PublisherId</span>&gt;helix-ota-systems&lt;/<span class="kw">PublisherId</span>&gt;</span>
@@ -501,7 +505,7 @@ Group Policy, MDM (Mobile Device Management) policies, or Intune.</p>
 OTA’s rollout group concept:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Ring</th>
 <th>Deferral</th>
 <th>Purpose</th>
@@ -509,25 +513,25 @@ OTA’s rollout group concept:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Preview</td>
 <td>0 days</td>
 <td>Early testing</td>
 <td><code>canary</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Early</td>
 <td>7 days</td>
 <td>Limited rollout</td>
 <td><code>early_adopter</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Broad</td>
 <td>14 days</td>
 <td>General availability</td>
 <td><code>stable</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Late</td>
 <td>30 days</td>
 <td>Conservative</td>
@@ -1123,29 +1127,29 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Priority</th>
 <th>Value</th>
 <th>Use Case</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>BG_JOB_PRIORITY_FOREGROUND</code></td>
 <td>0</td>
 <td>Interactive, user-initiated downloads</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>BG_JOB_PRIORITY_HIGH</code></td>
 <td>1</td>
 <td>Important updates that should download quickly</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>BG_JOB_PRIORITY_NORMAL</code></td>
 <td>2</td>
 <td>Standard update downloads (default for Helix OTA)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>BG_JOB_PRIORITY_LOW</code></td>
 <td>3</td>
 <td>Background pre-fetching of future updates</td>
@@ -1568,75 +1572,75 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb
 <span id="cb17-89"><a href="#cb17-89" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p><strong>WiX template fragment (helix-ota-agent.wxs):</strong></p>
 <div class="sourceCode" id="cb18"><pre
-class="sourceCode xml"><code class="sourceCode xml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;?xml</span><span class="ot"> version=</span><span class="st">&quot;1.0&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;UTF-8&quot;</span><span class="fu">?&gt;</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">Wix</span><span class="ot"> xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/wix/2006/wi&quot;</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ot">     xmlns:util=</span><span class="st">&quot;http://schemas.microsoft.com/wix/UtilExtension&quot;</span>&gt;</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">Product</span><span class="ot"> Id=</span><span class="st">&quot;*&quot;</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ot">           Name=</span><span class="st">&quot;Helix OTA Agent&quot;</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ot">           Language=</span><span class="st">&quot;1033&quot;</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ot">           Version=</span><span class="st">&quot;{{.Version}}&quot;</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="ot">           Manufacturer=</span><span class="st">&quot;Helix OTA Systems&quot;</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="ot">           UpgradeCode=</span><span class="st">&quot;{{.UpgradeCode}}&quot;</span>&gt;</span>
+class="sourceCode xml"><code class="sourceCode xml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;?xml</span> <span class="ot">version=</span><span class="st">&quot;1.0&quot;</span> <span class="ot">encoding=</span><span class="st">&quot;UTF-8&quot;</span><span class="fu">?&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">Wix</span> <span class="ot">xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/wix/2006/wi&quot;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>     <span class="ot">xmlns:util=</span><span class="st">&quot;http://schemas.microsoft.com/wix/UtilExtension&quot;</span>&gt;</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">Product</span> <span class="ot">Id=</span><span class="st">&quot;*&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>           <span class="ot">Name=</span><span class="st">&quot;Helix OTA Agent&quot;</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>           <span class="ot">Language=</span><span class="st">&quot;1033&quot;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>           <span class="ot">Version=</span><span class="st">&quot;{{.Version}}&quot;</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>           <span class="ot">Manufacturer=</span><span class="st">&quot;Helix OTA Systems&quot;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>           <span class="ot">UpgradeCode=</span><span class="st">&quot;{{.UpgradeCode}}&quot;</span>&gt;</span>
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">Package</span><span class="ot"> InstallerVersion=</span><span class="st">&quot;405&quot;</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="ot">             Compressed=</span><span class="st">&quot;yes&quot;</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="ot">             InstallScope=</span><span class="st">&quot;perMachine&quot;</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="ot">             Platform=</span><span class="st">&quot;{{.Arch}}&quot;</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="ot">             Description=</span><span class="st">&quot;Helix OTA Update Agent {{.Version}}&quot;</span> /&gt;</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">Package</span> <span class="ot">InstallerVersion=</span><span class="st">&quot;405&quot;</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>             <span class="ot">Compressed=</span><span class="st">&quot;yes&quot;</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>             <span class="ot">InstallScope=</span><span class="st">&quot;perMachine&quot;</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>             <span class="ot">Platform=</span><span class="st">&quot;{{.Arch}}&quot;</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>             <span class="ot">Description=</span><span class="st">&quot;Helix OTA Update Agent {{.Version}}&quot;</span> /&gt;</span>
 <span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Major upgrade: uninstall previous version before installing new --&gt;</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">MajorUpgrade</span><span class="ot"> Schedule=</span><span class="st">&quot;afterInstallInitialize&quot;</span></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="ot">                  DowngradeErrorMessage=</span><span class="st">&quot;A newer version of Helix OTA Agent is already installed.&quot;</span> /&gt;</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">MajorUpgrade</span> <span class="ot">Schedule=</span><span class="st">&quot;afterInstallInitialize&quot;</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>                  <span class="ot">DowngradeErrorMessage=</span><span class="st">&quot;A newer version of Helix OTA Agent is already installed.&quot;</span> /&gt;</span>
 <span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">MediaTemplate</span><span class="ot"> EmbedCab=</span><span class="st">&quot;yes&quot;</span> /&gt;</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">MediaTemplate</span> <span class="ot">EmbedCab=</span><span class="st">&quot;yes&quot;</span> /&gt;</span>
 <span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">Directory</span><span class="ot"> Id=</span><span class="st">&quot;TARGETDIR&quot;</span><span class="ot"> Name=</span><span class="st">&quot;SourceDir&quot;</span>&gt;</span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">Directory</span><span class="ot"> Id=</span><span class="st">&quot;ProgramFiles64Folder&quot;</span>&gt;</span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">Directory</span><span class="ot"> Id=</span><span class="st">&quot;HELIXFOLDER&quot;</span><span class="ot"> Name=</span><span class="st">&quot;Helix OTA&quot;</span>&gt;</span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>          &lt;<span class="kw">Directory</span><span class="ot"> Id=</span><span class="st">&quot;INSTALLDIR&quot;</span><span class="ot"> Name=</span><span class="st">&quot;Agent&quot;</span> /&gt;</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">Directory</span> <span class="ot">Id=</span><span class="st">&quot;TARGETDIR&quot;</span> <span class="ot">Name=</span><span class="st">&quot;SourceDir&quot;</span>&gt;</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">Directory</span> <span class="ot">Id=</span><span class="st">&quot;ProgramFiles64Folder&quot;</span>&gt;</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">Directory</span> <span class="ot">Id=</span><span class="st">&quot;HELIXFOLDER&quot;</span> <span class="ot">Name=</span><span class="st">&quot;Helix OTA&quot;</span>&gt;</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>          &lt;<span class="kw">Directory</span> <span class="ot">Id=</span><span class="st">&quot;INSTALLDIR&quot;</span> <span class="ot">Name=</span><span class="st">&quot;Agent&quot;</span> /&gt;</span>
 <span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>        &lt;/<span class="kw">Directory</span>&gt;</span>
 <span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">Directory</span>&gt;</span>
 <span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">Directory</span>&gt;</span>
 <span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">DirectoryRef</span><span class="ot"> Id=</span><span class="st">&quot;INSTALLDIR&quot;</span>&gt;</span>
-<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">Component</span><span class="ot"> Id=</span><span class="st">&quot;ServiceExecutable&quot;</span><span class="ot"> Guid=</span><span class="st">&quot;*&quot;</span>&gt;</span>
-<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">File</span><span class="ot"> Id=</span><span class="st">&quot;helixOtaAgentExe&quot;</span></span>
-<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="ot">              Source=</span><span class="st">&quot;$(var.BinDir)\helix-ota-agent.exe&quot;</span></span>
-<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a><span class="ot">              KeyPath=</span><span class="st">&quot;yes&quot;</span> /&gt;</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">DirectoryRef</span> <span class="ot">Id=</span><span class="st">&quot;INSTALLDIR&quot;</span>&gt;</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">Component</span> <span class="ot">Id=</span><span class="st">&quot;ServiceExecutable&quot;</span> <span class="ot">Guid=</span><span class="st">&quot;*&quot;</span>&gt;</span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">File</span> <span class="ot">Id=</span><span class="st">&quot;helixOtaAgentExe&quot;</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>              <span class="ot">Source=</span><span class="st">&quot;$(var.BinDir)\helix-ota-agent.exe&quot;</span></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>              <span class="ot">KeyPath=</span><span class="st">&quot;yes&quot;</span> /&gt;</span>
 <span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>        <span class="co">&lt;!-- Register as Windows Service --&gt;</span></span>
-<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">ServiceInstall</span><span class="ot"> Id=</span><span class="st">&quot;HelixOtaService&quot;</span></span>
-<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Name=</span><span class="st">&quot;HelixOtaAgent&quot;</span></span>
-<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a><span class="ot">                        DisplayName=</span><span class="st">&quot;Helix OTA Update Agent&quot;</span></span>
-<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Description=</span><span class="st">&quot;Manages over-the-air updates&quot;</span></span>
-<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Type=</span><span class="st">&quot;ownProcess&quot;</span></span>
-<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Start=</span><span class="st">&quot;auto&quot;</span></span>
-<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a><span class="ot">                        ErrorControl=</span><span class="st">&quot;normal&quot;</span></span>
-<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Account=</span><span class="st">&quot;LocalSystem&quot;</span> /&gt;</span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">ServiceInstall</span> <span class="ot">Id=</span><span class="st">&quot;HelixOtaService&quot;</span></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Name=</span><span class="st">&quot;HelixOtaAgent&quot;</span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">DisplayName=</span><span class="st">&quot;Helix OTA Update Agent&quot;</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Description=</span><span class="st">&quot;Manages over-the-air updates&quot;</span></span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Type=</span><span class="st">&quot;ownProcess&quot;</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Start=</span><span class="st">&quot;auto&quot;</span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">ErrorControl=</span><span class="st">&quot;normal&quot;</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Account=</span><span class="st">&quot;LocalSystem&quot;</span> /&gt;</span>
 <span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>        <span class="co">&lt;!-- Service failure actions: restart on failure --&gt;</span></span>
-<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">ServiceControl</span><span class="ot"> Id=</span><span class="st">&quot;HelixOtaServiceStart&quot;</span></span>
-<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Name=</span><span class="st">&quot;HelixOtaAgent&quot;</span></span>
-<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Start=</span><span class="st">&quot;install&quot;</span></span>
-<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Stop=</span><span class="st">&quot;both&quot;</span></span>
-<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Remove=</span><span class="st">&quot;uninstall&quot;</span></span>
-<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="ot">                        Wait=</span><span class="st">&quot;yes&quot;</span> /&gt;</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">ServiceControl</span> <span class="ot">Id=</span><span class="st">&quot;HelixOtaServiceStart&quot;</span></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Name=</span><span class="st">&quot;HelixOtaAgent&quot;</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Start=</span><span class="st">&quot;install&quot;</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Stop=</span><span class="st">&quot;both&quot;</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Remove=</span><span class="st">&quot;uninstall&quot;</span></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>                        <span class="ot">Wait=</span><span class="st">&quot;yes&quot;</span> /&gt;</span>
 <span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">Component</span>&gt;</span>
 <span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">Component</span><span class="ot"> Id=</span><span class="st">&quot;RegistryEntries&quot;</span><span class="ot"> Guid=</span><span class="st">&quot;*&quot;</span>&gt;</span>
-<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">RegistryKey</span><span class="ot"> Root=</span><span class="st">&quot;HKLM&quot;</span></span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a><span class="ot">                     Key=</span><span class="st">&quot;SOFTWARE\Helix OTA\Agent&quot;</span></span>
-<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a><span class="ot">                     ForceCreateOnInstall=</span><span class="st">&quot;yes&quot;</span></span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a><span class="ot">                     ForceDeleteOnUninstall=</span><span class="st">&quot;yes&quot;</span>&gt;</span>
-<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>          &lt;<span class="kw">RegistryValue</span><span class="ot"> Type=</span><span class="st">&quot;string&quot;</span><span class="ot"> Name=</span><span class="st">&quot;Version&quot;</span><span class="ot"> Value=</span><span class="st">&quot;{{.Version}}&quot;</span> /&gt;</span>
-<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>          &lt;<span class="kw">RegistryValue</span><span class="ot"> Type=</span><span class="st">&quot;string&quot;</span><span class="ot"> Name=</span><span class="st">&quot;InstallPath&quot;</span><span class="ot"> Value=</span><span class="st">&quot;[INSTALLDIR]&quot;</span> /&gt;</span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">Component</span> <span class="ot">Id=</span><span class="st">&quot;RegistryEntries&quot;</span> <span class="ot">Guid=</span><span class="st">&quot;*&quot;</span>&gt;</span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">RegistryKey</span> <span class="ot">Root=</span><span class="st">&quot;HKLM&quot;</span></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>                     <span class="ot">Key=</span><span class="st">&quot;SOFTWARE\Helix OTA\Agent&quot;</span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>                     <span class="ot">ForceCreateOnInstall=</span><span class="st">&quot;yes&quot;</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>                     <span class="ot">ForceDeleteOnUninstall=</span><span class="st">&quot;yes&quot;</span>&gt;</span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>          &lt;<span class="kw">RegistryValue</span> <span class="ot">Type=</span><span class="st">&quot;string&quot;</span> <span class="ot">Name=</span><span class="st">&quot;Version&quot;</span> <span class="ot">Value=</span><span class="st">&quot;{{.Version}}&quot;</span> /&gt;</span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>          &lt;<span class="kw">RegistryValue</span> <span class="ot">Type=</span><span class="st">&quot;string&quot;</span> <span class="ot">Name=</span><span class="st">&quot;InstallPath&quot;</span> <span class="ot">Value=</span><span class="st">&quot;[INSTALLDIR]&quot;</span> /&gt;</span>
 <span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>        &lt;/<span class="kw">RegistryKey</span>&gt;</span>
 <span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">Component</span>&gt;</span>
 <span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">DirectoryRef</span>&gt;</span>
 <span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">Feature</span><span class="ot"> Id=</span><span class="st">&quot;MainFeature&quot;</span><span class="ot"> Title=</span><span class="st">&quot;Helix OTA Agent&quot;</span><span class="ot"> Level=</span><span class="st">&quot;1&quot;</span>&gt;</span>
-<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">ComponentRef</span><span class="ot"> Id=</span><span class="st">&quot;ServiceExecutable&quot;</span> /&gt;</span>
-<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">ComponentRef</span><span class="ot"> Id=</span><span class="st">&quot;RegistryEntries&quot;</span> /&gt;</span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">Feature</span> <span class="ot">Id=</span><span class="st">&quot;MainFeature&quot;</span> <span class="ot">Title=</span><span class="st">&quot;Helix OTA Agent&quot;</span> <span class="ot">Level=</span><span class="st">&quot;1&quot;</span>&gt;</span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">ComponentRef</span> <span class="ot">Id=</span><span class="st">&quot;ServiceExecutable&quot;</span> /&gt;</span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">ComponentRef</span> <span class="ot">Id=</span><span class="st">&quot;RegistryEntries&quot;</span> /&gt;</span>
 <span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">Feature</span>&gt;</span>
 <span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">Product</span>&gt;</span>
 <span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">Wix</span>&gt;</span></code></pre></div>
@@ -2029,33 +2033,33 @@ configured to only install software signed by specific publishers.</li>
 <col style="width: 56%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Requirement</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Certificate type</td>
 <td>Extended Validation (EV) Code Signing Certificate</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Key length</td>
 <td>RSA 2048-bit minimum; RSA 4096-bit recommended</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Key storage</td>
 <td>Hardware security module (HSM) or USB token (required for EV)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Timestamp</td>
 <td>RFC 3161 timestamp from a trusted timestamp authority</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Digest algorithm</td>
 <td>SHA-256 minimum; SHA-384 recommended</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Chain</td>
 <td>Must chain to a trusted root CA in the Windows trust store</td>
 </tr>
@@ -2176,27 +2180,27 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co">// rsrc -manifest app.manifest -o rsrc.syso</span></span></code></pre></div>
 <p><strong>app.manifest:</strong></p>
 <div class="sourceCode" id="cb28"><pre
-class="sourceCode xml"><code class="sourceCode xml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;?xml</span><span class="ot"> version=</span><span class="st">&quot;1.0&quot;</span><span class="ot"> encoding=</span><span class="st">&quot;UTF-8&quot;</span><span class="ot"> standalone=</span><span class="st">&quot;yes&quot;</span><span class="fu">?&gt;</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">assembly</span><span class="ot"> xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span><span class="ot"> manifestVersion=</span><span class="st">&quot;1.0&quot;</span>&gt;</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">trustInfo</span><span class="ot"> xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:asm.v3&quot;</span>&gt;</span>
+class="sourceCode xml"><code class="sourceCode xml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;?xml</span> <span class="ot">version=</span><span class="st">&quot;1.0&quot;</span> <span class="ot">encoding=</span><span class="st">&quot;UTF-8&quot;</span> <span class="ot">standalone=</span><span class="st">&quot;yes&quot;</span><span class="fu">?&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">assembly</span> <span class="ot">xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span> <span class="ot">manifestVersion=</span><span class="st">&quot;1.0&quot;</span>&gt;</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">trustInfo</span> <span class="ot">xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:asm.v3&quot;</span>&gt;</span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">security</span>&gt;</span>
 <span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">requestedPrivileges</span>&gt;</span>
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">&lt;!-- asInvoker: run with the same privileges as the parent process --&gt;</span></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">requestedExecutionLevel</span><span class="ot"> level=</span><span class="st">&quot;asInvoker&quot;</span><span class="ot"> uiAccess=</span><span class="st">&quot;false&quot;</span> /&gt;</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        &lt;<span class="kw">requestedExecutionLevel</span> <span class="ot">level=</span><span class="st">&quot;asInvoker&quot;</span> <span class="ot">uiAccess=</span><span class="st">&quot;false&quot;</span> /&gt;</span>
 <span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>      &lt;/<span class="kw">requestedPrivileges</span>&gt;</span>
 <span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">security</span>&gt;</span>
 <span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">trustInfo</span>&gt;</span>
 <span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">&lt;!-- Declare DPI awareness for correct display scaling --&gt;</span></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">application</span><span class="ot"> xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:asm.v3&quot;</span>&gt;</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">application</span> <span class="ot">xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:asm.v3&quot;</span>&gt;</span>
 <span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">windowsSettings</span>&gt;</span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">dpiAware</span><span class="ot"> xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/SMI/2005/WindowsSettings&quot;</span>&gt;true&lt;/<span class="kw">dpiAware</span>&gt;</span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">dpiAwareness</span><span class="ot"> xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/SMI/2016/WindowsSettings&quot;</span>&gt;PerMonitorV2&lt;/<span class="kw">dpiAwareness</span>&gt;</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">dpiAware</span> <span class="ot">xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/SMI/2005/WindowsSettings&quot;</span>&gt;true&lt;/<span class="kw">dpiAware</span>&gt;</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">dpiAwareness</span> <span class="ot">xmlns=</span><span class="st">&quot;http://schemas.microsoft.com/SMI/2016/WindowsSettings&quot;</span>&gt;PerMonitorV2&lt;/<span class="kw">dpiAwareness</span>&gt;</span>
 <span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">windowsSettings</span>&gt;</span>
 <span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">application</span>&gt;</span>
 <span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">&lt;!-- Declare Windows 10/11 compatibility --&gt;</span></span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">compatibility</span><span class="ot"> xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:compatibility.v1&quot;</span>&gt;</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">compatibility</span> <span class="ot">xmlns=</span><span class="st">&quot;urn:schemas-microsoft-com:compatibility.v1&quot;</span>&gt;</span>
 <span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">application</span>&gt;</span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">supportedOS</span><span class="ot"> Id=</span><span class="st">&quot;{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}&quot;</span> /&gt; <span class="co">&lt;!-- Windows 10 --&gt;</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">supportedOS</span> <span class="ot">Id=</span><span class="st">&quot;{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}&quot;</span> /&gt; <span class="co">&lt;!-- Windows 10 --&gt;</span></span>
 <span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">application</span>&gt;</span>
 <span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">compatibility</span>&gt;</span>
 <span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">assembly</span>&gt;</span></code></pre></div>
@@ -3141,44 +3145,44 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb39-1"><a href="#cb
 <col style="width: 43%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Phase</th>
 <th>Duration</th>
 <th>Deliverable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: Service skeleton</td>
 <td>2 weeks</td>
 <td>Windows Service lifecycle, install/uninstall, auto-start</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: BITS download</td>
 <td>2 weeks</td>
 <td>BITS COM integration, priority management, progress reporting</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 3: Event Log &amp; IPC</td>
 <td>1 week</td>
 <td>Event Log integration, named pipe IPC, tray notifications</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 4: MSI installation</td>
 <td>2 weeks</td>
 <td>MSI install/uninstall via PowerShell, rollback support</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 5: Security</td>
 <td>2 weeks</td>
 <td>Certificate store, TPM attestation, Authenticode verification</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 6: WMI &amp; registry</td>
 <td>1 week</td>
 <td>System inventory, registry configuration, health checks</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 7: Testing</td>
 <td>3 weeks</td>
 <td>Integration tests, E2E on Windows 10/11 VMs, chaos testing</td>
@@ -3329,44 +3333,44 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb42-1"><a href="#cb
 <col style="width: 43%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Phase</th>
 <th>Duration</th>
 <th>Deliverable</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: MSI builder</td>
 <td>2 weeks</td>
 <td>WiX-based MSI generation with templates</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: Authenticode signing</td>
 <td>1 week</td>
 <td>signtool integration, SHA-256 signing, RFC 3161 timestamps</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 3: Delta generation</td>
 <td>2 weeks</td>
 <td>bsdiff delta generation between MSI versions</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 4: Catalog generation</td>
 <td>1 week</td>
 <td>Custom update catalog JSON, WSUS catalog XML</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 5: Winget integration</td>
 <td>1 week</td>
 <td>Winget manifest generation and submission</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 6: MSIX support</td>
 <td>2 weeks</td>
 <td>MSIX packaging for managed applications</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Phase 7: CI/CD</td>
 <td>1 week</td>
 <td>GitHub Actions pipeline for automated packaging</td>
@@ -3384,7 +3388,7 @@ Windows Version Compatibility Matrix</h2>
 <col style="width: 15%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Windows Version</th>
 <th>Build</th>
 <th>Support Level</th>
@@ -3392,91 +3396,91 @@ Windows Version Compatibility Matrix</h2>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Windows 10 2004</td>
 <td>19041</td>
 <td>Full</td>
 <td>Minimum supported version</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows 10 20H2</td>
 <td>19042</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows 10 21H1</td>
 <td>19043</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows 10 21H2</td>
 <td>19044</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows 10 22H2</td>
 <td>19045</td>
 <td>Full</td>
 <td>Last Windows 10 feature update</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows 11 21H2</td>
 <td>22000</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows 11 22H2</td>
 <td>22621</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows 11 23H2</td>
 <td>22631</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows 11 24H2</td>
 <td>26100</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows Server 2019</td>
 <td>17763</td>
 <td>Full</td>
 <td>Server Core and Desktop Experience</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows Server 2022</td>
 <td>20348</td>
 <td>Full</td>
 <td>Server Core and Desktop Experience</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows Server 2025</td>
 <td>26100</td>
 <td>Full</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows 10 LTSC 2019</td>
 <td>17763</td>
 <td>Full</td>
 <td>Long-term servicing</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Windows 10 LTSC 2021</td>
 <td>19044</td>
 <td>Full</td>
 <td>Long-term servicing</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Windows 7 / 8 / 8.1</td>
 <td>—</td>
 <td>None</td>
@@ -3495,7 +3499,7 @@ B: Comparison with Android and Linux OTA Approaches</h2>
 <col style="width: 31%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Aspect</th>
 <th>Android (A/B)</th>
 <th>Linux (OSTree/APT)</th>
@@ -3503,73 +3507,73 @@ B: Comparison with Android and Linux OTA Approaches</h2>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Update atomicity</strong></td>
 <td>Full partition swap</td>
 <td>Full (OSTree) / None (APT)</td>
 <td>MSI transaction with backup/restore</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Rollback</strong></td>
 <td>Instant: boot old slot</td>
 <td>Instant (OSTree) / Difficult (APT)</td>
 <td>Restore backup; restart service</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Download transport</strong></td>
 <td>Custom HTTP</td>
 <td>HTTP / OSTree pull</td>
 <td>BITS (idle-bandwidth-aware)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Delta support</strong></td>
 <td>bsdiff between images</td>
 <td>Static deltas (OSTree) / debdelta</td>
 <td>bsdiff between MSI packages</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Package format</strong></td>
 <td>Full OTA ZIP</td>
 <td>.deb / .rpm / OSTree commit</td>
 <td>MSI / MSIX</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Signing</strong></td>
 <td>RSA on payload</td>
 <td>GPG on repository metadata</td>
 <td>Authenticode (EV certificate)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Service architecture</strong></td>
 <td>update_engine daemon</td>
 <td>systemd service / cron</td>
 <td>Windows Service (SCM-managed)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>User notification</strong></td>
 <td>System notification</td>
 <td>Desktop notification</td>
 <td>System tray balloon + Event Log</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Enterprise management</strong></td>
 <td>EMM / MDM</td>
 <td>Landscape / Spacewalk</td>
 <td>Intune / MECM / GPO</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Distribution channel</strong></td>
 <td>OTA server</td>
 <td>APT/RPM repository</td>
 <td>Winget / MSI direct / Intune</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Configuration store</strong></td>
 <td>/system/build.prop</td>
 <td>/etc configuration files</td>
 <td>Windows Registry</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Telemetry</strong></td>
 <td>Checkin protocol</td>
 <td>Custom reporting</td>

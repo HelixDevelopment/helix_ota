@@ -1,0 +1,22 @@
+From: Helix OTA <dev@helixota.dev>
+Date: Fri, 19 Jun 2026 09:00:00 +0000
+Subject: [PATCH] Add FAT env CONFIG defines for A/B-virt emulator
+
+CONFIG_ENV_FAT_INTERFACE, CONFIG_ENV_FAT_DEVICE_AND_PART, and
+CONFIG_ENV_FAT_FILE are not Kconfig symbols in U-Boot 2024.01
+for qemu_arm64 -- they are legacy #defines in the board header.
+
+diff --git a/include/configs/qemu_arm64.h b/include/configs/qemu_arm64.h
+index abcdef1..1234567 100644
+--- a/include/configs/qemu_arm64.h
++++ b/include/configs/qemu_arm64.h
+@@ -1,3 +1,10 @@
++/*
++ * FAT env support for A/B-virt emulator (PWU-AB-2)
++ */
++#define CONFIG_ENV_FAT_INTERFACE         "virtio"
++#define CONFIG_ENV_FAT_DEVICE_AND_PART   "0:1"
++#define CONFIG_ENV_FAT_FILE              "uboot.env"
++
+ #ifndef __QEMU_ARM64_H
+ #define __QEMU_ARM64_H

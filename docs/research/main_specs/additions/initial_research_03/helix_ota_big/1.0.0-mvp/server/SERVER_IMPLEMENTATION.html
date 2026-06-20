@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>SERVER_IMPLEMENTATION</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">SERVER_IMPLEMENTATION</h1>
 </header>
 <h1 id="helix-ota-server-implementation-design">Helix OTA Server
 Implementation Design</h1>
@@ -4053,7 +4057,7 @@ fields use double underscores (e.g.,
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Environment Variable</th>
 <th>YAML Path</th>
 <th>Type</th>
@@ -4062,119 +4066,119 @@ fields use double underscores (e.g.,
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_SERVER__PORT</code></td>
 <td><code>server.port</code></td>
 <td>int</td>
 <td>8080</td>
 <td>HTTP listen port</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_SERVER__READ_TIMEOUT</code></td>
 <td><code>server.read_timeout</code></td>
 <td>duration</td>
 <td>15s</td>
 <td>HTTP read timeout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_SERVER__WRITE_TIMEOUT</code></td>
 <td><code>server.write_timeout</code></td>
 <td>duration</td>
 <td>60s</td>
 <td>HTTP write timeout</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_DATABASE__HOST</code></td>
 <td><code>database.host</code></td>
 <td>string</td>
 <td>localhost</td>
 <td>PostgreSQL host</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_DATABASE__PORT</code></td>
 <td><code>database.port</code></td>
 <td>int</td>
 <td>5432</td>
 <td>PostgreSQL port</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_DATABASE__NAME</code></td>
 <td><code>database.name</code></td>
 <td>string</td>
 <td>helix_ota</td>
 <td>Database name</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_DATABASE__MAX_CONNECTIONS</code></td>
 <td><code>database.max_connections</code></td>
 <td>int</td>
 <td>25</td>
 <td>Connection pool max</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_REDIS__HOST</code></td>
 <td><code>redis.host</code></td>
 <td>string</td>
 <td>localhost</td>
 <td>Redis host</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_REDIS__PORT</code></td>
 <td><code>redis.port</code></td>
 <td>int</td>
 <td>6379</td>
 <td>Redis port</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_AUTH__ACCESS_TOKEN_TTL</code></td>
 <td><code>auth.access_token_ttl</code></td>
 <td>duration</td>
 <td>15m</td>
 <td>JWT access token TTL</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_AUTH__REFRESH_TOKEN_TTL</code></td>
 <td><code>auth.refresh_token_ttl</code></td>
 <td>duration</td>
 <td>168h</td>
 <td>JWT refresh token TTL</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_RATE_LIMIT__RPS</code></td>
 <td><code>rate_limit.rps</code></td>
 <td>float</td>
 <td>100</td>
 <td>Requests per second</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_RATE_LIMIT__BURST</code></td>
 <td><code>rate_limit.burst</code></td>
 <td>int</td>
 <td>200</td>
 <td>Burst capacity</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_STORAGE__PROVIDER</code></td>
 <td><code>storage.provider</code></td>
 <td>string</td>
 <td>s3</td>
 <td>Storage backend</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_STORAGE__BUCKET</code></td>
 <td><code>storage.bucket</code></td>
 <td>string</td>
 <td>helix-ota-artifacts</td>
 <td>Bucket name</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HELIX_OTA_LOG_LEVEL</code></td>
 <td><code>log_level</code></td>
 <td>string</td>
 <td>info</td>
 <td>Log level</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>HELIX_OTA_RUN_MIGRATIONS</code></td>
 <td><code>run_migrations</code></td>
 <td>bool</td>

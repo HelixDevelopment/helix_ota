@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>DELTA_UPDATES_DESIGN</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">DELTA_UPDATES_DESIGN</h1>
 </header>
 <h1 id="helix-ota-delta-updates-design-document">Helix OTA — Delta
 Updates Design Document</h1>
@@ -328,54 +332,54 @@ design must account for several trade-offs:</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Full Update</th>
 <th>Delta Update</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Payload Size</strong></td>
 <td>Complete target image (1–3 GB)</td>
 <td>Binary differences only (100–800 MB)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Source Requirement</strong></td>
 <td>None — works from any state</td>
 <td>Requires exact source partition state</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Generation Complexity</strong></td>
 <td>Simple — package target image</td>
 <td>Complex — requires source + target diff</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Generation Time</strong></td>
 <td>Minutes</td>
 <td>Hours (2–8h for large partitions)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Apply Time</strong></td>
 <td>Linear in payload size</td>
 <td>Linear in changed blocks + source reads</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Failure Mode</strong></td>
 <td>Self-contained; no source dependency</td>
 <td>Source partition must match expected hash</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Storage Overhead</strong></td>
 <td>One artifact per version</td>
 <td>N×M delta artifacts for N source × M target</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Security Model</strong></td>
 <td>Single payload verification</td>
 <td>Source hash verification + delta verification</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Recovery</strong></td>
 <td>Re-download full package</td>
 <td>Fall back to full update on any failure</td>
@@ -704,7 +708,7 @@ allocations are required per generation job:</p>
 <col style="width: 17%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Resource</th>
 <th>Minimum</th>
 <th>Recommended</th>
@@ -712,26 +716,26 @@ allocations are required per generation job:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>CPU</strong></td>
 <td>4 cores</td>
 <td>8 cores</td>
 <td>bsdiff and puffdiff are CPU-intensive; parallelize by partition</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>RAM</strong></td>
 <td>16 GB</td>
 <td>32 GB</td>
 <td>bsdiff requires ~8× the partition size in RAM; puffdiff requires
 ~4×</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Disk</strong></td>
 <td>20 GB temp</td>
 <td>40 GB temp</td>
 <td>Source + target images + delta output + verification</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Time</strong></td>
 <td>2 hours</td>
 <td>4 hours</td>
@@ -954,7 +958,7 @@ versions have a delta available?”</p>
 <col style="width: 11%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Source Version</th>
 <th>Target Version</th>
 <th>Delta Size</th>
@@ -964,7 +968,7 @@ versions have a delta available?”</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>15.0.0</td>
 <td>15.0.1</td>
 <td>245 MB</td>
@@ -972,7 +976,7 @@ versions have a delta available?”</p>
 <td>88%</td>
 <td>GENERATED</td>
 </tr>
-<tr class="even">
+<tr>
 <td>15.0.0</td>
 <td>15.0.2</td>
 <td>310 MB</td>
@@ -980,7 +984,7 @@ versions have a delta available?”</p>
 <td>85%</td>
 <td>GENERATED</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>15.0.1</td>
 <td>15.0.2</td>
 <td>180 MB</td>
@@ -988,7 +992,7 @@ versions have a delta available?”</p>
 <td>91%</td>
 <td>GENERATED</td>
 </tr>
-<tr class="even">
+<tr>
 <td>15.0.2</td>
 <td>15.1.0</td>
 <td>620 MB</td>
@@ -996,7 +1000,7 @@ versions have a delta available?”</p>
 <td>73%</td>
 <td>GENERATED</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>14.9.0</td>
 <td>15.0.2</td>
 <td>—</td>
@@ -1177,33 +1181,33 @@ helix-delta-gen</h2>
 <h3 id="overview">7.1 Overview</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Repository (GitHub)</strong></td>
 <td><code>HelixDevelopment/helix-delta-gen</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Repository (GitLab)</strong></td>
 <td><code>HelixDevelopment/helix-delta-gen</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Go module</strong></td>
 <td><code>dev.helix.ota.deltagen</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Language</strong></td>
 <td>Go 1.22+</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>License</strong></td>
 <td>Apache 2.0</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Visibility</strong></td>
 <td>Public</td>
 </tr>
@@ -1717,7 +1721,7 @@ OTA deployments, the expected bandwidth savings for the Orange Pi 5 Max
 <col style="width: 11%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Update Type</th>
 <th>Full OTA Size</th>
 <th>Delta OTA Size</th>
@@ -1726,21 +1730,21 @@ OTA deployments, the expected bandwidth savings for the Orange Pi 5 Max
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Patch-level (15.0.0 → 15.0.1)</td>
 <td>2.1 GB</td>
 <td>150–300 MB</td>
 <td>85–93%</td>
 <td>Small changes; most blocks identical</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Minor version (15.0.x → 15.1.0)</td>
 <td>2.3 GB</td>
 <td>400–800 MB</td>
 <td>65–83%</td>
 <td>More changed blocks; framework updates</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Major version (14.x → 15.0.0)</td>
 <td>2.5 GB</td>
 <td>1.0–1.5 GB</td>
@@ -1764,7 +1768,7 @@ Estimates</h3>
 <col style="width: 10%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Source→Target</th>
 <th>Partition Data</th>
 <th>Generation Time</th>
@@ -1773,21 +1777,21 @@ Estimates</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Patch-level (15.0.0→15.0.1)</td>
 <td>4 GB/slot</td>
 <td>2–3 hours</td>
 <td>32 GB</td>
 <td>Mostly SOURCE_COPY; fast bsdiff</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Minor version (15.0.2→15.1.0)</td>
 <td>4 GB/slot</td>
 <td>3–5 hours</td>
 <td>32 GB</td>
 <td>More bsdiff/puffdiff operations</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Major version (14.x→15.0.0)</td>
 <td>4 GB/slot</td>
 <td>5–8 hours</td>
@@ -1812,7 +1816,7 @@ Time vs. Full Update</h3>
 <col style="width: 21%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Update Type</th>
 <th>Download Time (50 Mbps)</th>
 <th>Apply Time</th>
@@ -1821,21 +1825,21 @@ Time vs. Full Update</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Patch-level delta</td>
 <td>~30 sec</td>
 <td>3–5 min</td>
 <td>~5.5 min</td>
 <td>~10 min</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Minor version delta</td>
 <td>~2 min</td>
 <td>5–8 min</td>
 <td>~10 min</td>
 <td>~10 min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Full update</td>
 <td>~5.5 min</td>
 <td>5–8 min</td>
@@ -1863,7 +1867,7 @@ Delta Artifacts</h3>
 <col style="width: 21%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Scenario</th>
 <th>Full Artifacts</th>
 <th>Delta Artifacts</th>
@@ -1872,21 +1876,21 @@ Delta Artifacts</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>5 versions, 3 source deltas each</td>
 <td>5 × 2.1 GB = 10.5 GB</td>
 <td>15 × ~300 MB = 4.5 GB</td>
 <td>15.0 GB</td>
 <td>+43%</td>
 </tr>
-<tr class="even">
+<tr>
 <td>10 versions, 3 source deltas each</td>
 <td>10 × 2.1 GB = 21.0 GB</td>
 <td>30 × ~300 MB = 9.0 GB</td>
 <td>30.0 GB</td>
 <td>+43%</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>20 versions, 5 source deltas each</td>
 <td>20 × 2.1 GB = 42.0 GB</td>
 <td>100 × ~300 MB = 30.0 GB</td>
@@ -2637,29 +2641,29 @@ the following fields when a delta is available:</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>update_type</code></td>
 <td>string</td>
 <td><code>"FULL"</code> or <code>"DELTA"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>source_version</code></td>
 <td>string</td>
 <td>Source version for the delta (matches device’s current version)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>size_savings_percent</code></td>
 <td>integer</td>
 <td>Bandwidth savings percentage</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>full_update_fallback</code></td>
 <td>object</td>
 <td>Full update artifact info for fallback</td>
@@ -2748,7 +2752,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href=
 <col style="width: 31%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Risk</th>
 <th>Probability</th>
 <th>Impact</th>
@@ -2756,28 +2760,28 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Delta generation takes too long (&gt;8h for large partitions)</td>
 <td>Medium</td>
 <td>Medium</td>
 <td>Parallelize by partition; limit delta to consecutive versions; set
 hard timeout with retry</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Delta apply fails on device due to source partition drift</td>
 <td>Medium</td>
 <td>High</td>
 <td>Source partition hash verification before delta apply; automatic
 fallback to full update on mismatch</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Storage overhead: N×M delta combinations</td>
 <td>Medium</td>
 <td>Medium</td>
 <td>Only generate deltas for last N source versions; enforce
 max-per-target limit; automated cleanup</td>
 </tr>
-<tr class="even">
+<tr>
 <td>bsdiff memory usage during generation (&gt;16 GB RAM for 2 GB
 partition)</td>
 <td>Low</td>
@@ -2785,7 +2789,7 @@ partition)</td>
 <td>Use streaming bsdiff variant; run on dedicated high-memory builder
 node; cap memory at 32 GB per job</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Delta generation fails silently, no delta available for rollout</td>
 <td>Low</td>
 <td>High</td>
@@ -2793,7 +2797,7 @@ node; cap memory at 32 GB per job</td>
 delta exists for a target artifact within 6 hours of upload; manual
 trigger API</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Race condition: device checks for update while delta is being
 regenerated</td>
 <td>Low</td>
@@ -2801,14 +2805,14 @@ regenerated</td>
 <td>Delta selection only returns deltas with status GENERATED;
 in-progress deltas are not served</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Delta package signing key differs from full OTA signing key</td>
 <td>Low</td>
 <td>Critical</td>
 <td>Use the same signing key for delta and full OTAs; key rotation must
 generate new deltas</td>
 </tr>
-<tr class="even">
+<tr>
 <td>puffdiff not available on build server</td>
 <td>Medium</td>
 <td>Medium</td>
@@ -2826,50 +2830,50 @@ configuration flag to disable puffdiff</td>
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Test Category</th>
 <th>Specific Tests</th>
 <th>Tool</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Unit</strong></td>
 <td>Delta selection logic, source→target mapping, chain length
 computation, cleanup policy, fallback trigger</td>
 <td>Go <code>testing</code>, testify</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Mutation</strong></td>
 <td>85% mutation score on delta service, generator, and selection
 code</td>
 <td><code>go-mutesting</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Integration</strong></td>
 <td>Upload artifact → delta generated → device checks → receives delta →
 applies → reports; delta failure → full update fallback</td>
 <td><code>testcontainers-go</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>E2E</strong></td>
 <td>Full delta update cycle on real Orange Pi 5 Max hardware; measure
 actual bandwidth reduction vs. full update</td>
 <td>Custom hardware test harness</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Performance</strong></td>
 <td>Delta generation time benchmarked at ≤ 4h for 2 GB partition; delta
 apply time ≤ 1.2× full update apply time</td>
 <td>Custom benchmarks</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Security</strong></td>
 <td>Verify source partition hash check prevents tampered delta apply;
 verify delta signing; verify fallback on hash mismatch</td>
 <td>OWASP ZAP, custom pen-test scripts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Chaos</strong></td>
 <td>Kill delta generation job mid-computation; verify job retries; kill
 update_engine during delta apply; verify fallback</td>
@@ -2887,7 +2891,7 @@ Selection</h3>
 <col style="width: 28%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Source Version</th>
 <th>Target Version</th>
 <th>Delta Exists</th>
@@ -2895,49 +2899,49 @@ Selection</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>15.0.0</td>
 <td>15.0.1</td>
 <td>Yes (GENERATED)</td>
 <td>Return delta</td>
 </tr>
-<tr class="even">
+<tr>
 <td>15.0.0</td>
 <td>15.0.1</td>
 <td>Yes (GENERATING)</td>
 <td>Return full update</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>15.0.0</td>
 <td>15.0.1</td>
 <td>Yes (FAILED)</td>
 <td>Return full update</td>
 </tr>
-<tr class="even">
+<tr>
 <td>15.0.0</td>
 <td>15.0.1</td>
 <td>No</td>
 <td>Return full update</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>15.0.0</td>
 <td>15.0.2</td>
 <td>Direct delta exists</td>
 <td>Return direct delta</td>
 </tr>
-<tr class="even">
+<tr>
 <td>15.0.0</td>
 <td>15.0.3</td>
 <td>Chain 15.0.0→15.0.1→15.0.2→15.0.3 (length 3)</td>
 <td>Return chain info, serve first delta</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>15.0.0</td>
 <td>15.0.4</td>
 <td>Chain length 4</td>
 <td>Return full update</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Unknown</td>
 <td>15.0.1</td>
 <td>No source artifact</td>

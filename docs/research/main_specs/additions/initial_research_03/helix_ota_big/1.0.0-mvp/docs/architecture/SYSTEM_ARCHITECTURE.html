@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>SYSTEM_ARCHITECTURE</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">SYSTEM_ARCHITECTURE</h1>
 </header>
 <h1 id="helix-ota-system-architecture-document">Helix OTA — System
 Architecture Document</h1>
@@ -292,14 +296,14 @@ OTA fills this gap.</p>
 <col style="width: 55%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Principle</th>
 <th>Definition</th>
 <th>Architectural Manifestation</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Universal</strong></td>
 <td>The system must eventually support any OS target without
 architectural changes</td>
@@ -307,14 +311,14 @@ architectural changes</td>
 Android adapter is the first implementation of this interface, not a
 special case</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Generic</strong></td>
 <td>No device-specific or customer-specific logic in core services</td>
 <td>Device model, partition layout, and update mechanism are
 configuration-driven, not hard-coded; <code>rk3588_opi5max</code> is a
 device profile, not a code path</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Decoupled</strong></td>
 <td>Components communicate through well-defined interfaces and events,
 never through direct coupling</td>
@@ -322,7 +326,7 @@ never through direct coupling</td>
 repository interfaces for data access; no service directly imports
 another service’s implementation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Extensible</strong></td>
 <td>New capabilities are added by implementing interfaces, not by
 modifying existing code</td>
@@ -418,7 +422,7 @@ Google Omaha protocol compatibility</p>
 <col style="width: 46%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>#</th>
 <th>Subsystem</th>
 <th>Technology</th>
@@ -426,21 +430,21 @@ Google Omaha protocol compatibility</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>1</td>
 <td><strong>Helix OTA Server</strong></td>
 <td>Go 1.22+, Chi router, gRPC</td>
 <td>Central update management: artifact validation, device registry,
 rollout engine, telemetry ingestion, authentication</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2</td>
 <td><strong>Helix OTA Client SDK</strong></td>
 <td>Go library (cross-compiled for Android via gomobile)</td>
 <td>Reusable update client logic: check, download, verify, install
 orchestration, status reporting</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3</td>
 <td><strong>Helix OTA Android Client</strong></td>
 <td>Kotlin/Java (AOSP integration layer)</td>
@@ -448,14 +452,14 @@ orchestration, status reporting</td>
 <code>update_engine</code>, boot control HAL, WorkManager
 scheduling</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4</td>
 <td><strong>Helix OTA Dashboard</strong></td>
 <td>React 18+, TypeScript, Vite</td>
 <td>Administrative web UI: artifact upload, rollout management, fleet
 monitoring, telemetry visualization</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>5</td>
 <td><strong>Helix OTA Infrastructure</strong></td>
 <td>Docker Compose (dev), Kubernetes (prod), PostgreSQL 16, Redis 7,
@@ -884,7 +888,7 @@ storage of OTA artifacts.</p>
 <col style="width: 32%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Stage</th>
 <th>Check</th>
 <th>Failure Mode</th>
@@ -892,20 +896,20 @@ storage of OTA artifacts.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>1. Hash</td>
 <td>SHA-256 of uploaded file matches computed hash</td>
 <td>Tampering or corruption during upload</td>
 <td>O(n) in file size</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2. Signature</td>
 <td>RSA-4096 signature on <code>payload.bin</code> verifies against
 embedded public key</td>
 <td>Unsigned or forged artifact</td>
 <td>&lt; 5s</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3. Structure</td>
 <td>ZIP contains <code>payload.bin</code> +
 <code>payload_properties.txt</code> + <code>care_map.pb</code>;
@@ -913,7 +917,7 @@ embedded public key</td>
 <td>Non-conforming OTA package format</td>
 <td>&lt; 30s for 2GB</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4. Compatibility</td>
 <td><code>target_model</code> matches a known device profile;
 <code>target_version</code> &gt; <code>min_source_version</code>
@@ -1974,7 +1978,7 @@ Update Mechanisms</h3>
 <col style="width: 29%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Concern</th>
 <th>Standard Android</th>
 <th>RK3588/Rockchip</th>
@@ -1982,33 +1986,33 @@ Update Mechanisms</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Bootloader update</td>
 <td>Standard A/B bootloader</td>
 <td>Rockchip <code>upgrade_tool</code> for bootloader/firmware</td>
 <td>Bootloader updates handled separately via <code>upgrade_tool</code>;
 Helix manages system/ vendor/product OTA only</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Resource partition</td>
 <td>Not applicable</td>
 <td><code>resource_a/b</code> for kernel DTB and logo</td>
 <td>Included in OTA payload if resource partition changes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>TrustZone firmware</td>
 <td>Standard TEE</td>
 <td>Rockchip OP-TEE in <code>trust_a/b</code></td>
 <td>OP-TEE updates must be coordinated with system updates</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rockchip <code>rkboot</code></td>
 <td>Not applicable</td>
 <td>Rockchip-specific boot image format</td>
 <td><code>boot_a/b</code> uses Rockchip’s <code>mkbootimg</code>
 format</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>upgrade_tool</code></td>
 <td>Not used</td>
 <td>CLI tool for low-level flash operations</td>
@@ -2586,7 +2590,7 @@ request/response bodies.</p>
 <col style="width: 26%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Endpoint</th>
 <th>Method</th>
 <th>Purpose</th>
@@ -2595,84 +2599,84 @@ request/response bodies.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>/api/v1/devices</code></td>
 <td>POST</td>
 <td>Device registration</td>
 <td>mTLS/JWT</td>
 <td>5/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/api/v1/devices/{id}/update-check</code></td>
 <td>GET</td>
 <td>Check for available update</td>
 <td>mTLS/JWT</td>
 <td>1/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/api/v1/devices/{id}/status</code></td>
 <td>POST</td>
 <td>Report device status</td>
 <td>mTLS/JWT</td>
 <td>10/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/api/v1/artifacts</code></td>
 <td>POST</td>
 <td>Upload OTA artifact</td>
 <td>JWT (admin/operator)</td>
 <td>5/hour</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/api/v1/artifacts/{id}/download</code></td>
 <td>GET</td>
 <td>Download artifact</td>
 <td>mTLS/JWT</td>
 <td>10/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/api/v1/artifacts/{id}/signature</code></td>
 <td>GET</td>
 <td>Download artifact signature</td>
 <td>mTLS/JWT</td>
 <td>10/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/api/v1/rollouts</code></td>
 <td>POST</td>
 <td>Create rollout</td>
 <td>JWT (admin/operator)</td>
 <td>30/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/api/v1/rollouts/{id}</code></td>
 <td>GET</td>
 <td>Get rollout status</td>
 <td>JWT</td>
 <td>60/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/api/v1/rollouts/{id}</code></td>
 <td>PATCH</td>
 <td>Update rollout (%, pause/resume)</td>
 <td>JWT (admin/operator)</td>
 <td>30/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/api/v1/telemetry/rollout/{id}</code></td>
 <td>GET</td>
 <td>Get rollout health metrics</td>
 <td>JWT</td>
 <td>60/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/api/v1/auth/login</code></td>
 <td>POST</td>
 <td>Dashboard login</td>
 <td>None</td>
 <td>10/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/api/v1/auth/2fa</code></td>
 <td>POST</td>
 <td>TOTP 2FA verification</td>
@@ -2728,25 +2732,25 @@ Microservice Communication)</h3>
 interfaces for future decomposition:</p>
 <div class="sourceCode" id="cb42"><pre
 class="sourceCode protobuf"><code class="sourceCode protobuf"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">// proto/helix/ota/v1/telemetry.proto</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>service TelemetryService {</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    rpc IngestTelemetry(IngestTelemetryRequest) returns (IngestTelemetryResponse);</span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    rpc GetRolloutHealth(GetRolloutHealthRequest) returns (RolloutHealth);</span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    rpc StreamDeviceEvents(StreamDeviceEventsRequest) returns (stream DeviceEvent);</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">service</span> TelemetryService {</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">rpc</span> IngestTelemetry(IngestTelemetryRequest) <span class="kw">returns</span> (IngestTelemetryResponse);</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">rpc</span> GetRolloutHealth(GetRolloutHealthRequest) <span class="kw">returns</span> (RolloutHealth);</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">rpc</span> StreamDeviceEvents(StreamDeviceEventsRequest) <span class="kw">returns</span> (stream DeviceEvent);</span>
 <span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> IngestTelemetryRequest {</span>
-<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">repeated</span> TelemetryEvent events = <span class="dv">1</span>;</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">repeated</span> TelemetryEvent events <span class="op">=</span> <span class="dv">1</span>;</span>
 <span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="kw">message</span> TelemetryEvent {</span>
-<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> device_id = <span class="dv">1</span>;</span>
-<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> artifact_id = <span class="dv">2</span>;</span>
-<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> event_type = <span class="dv">3</span>;</span>
-<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> status = <span class="dv">4</span>;</span>
-<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int32</span> progress_percent = <span class="dv">5</span>;</span>
-<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">optional</span> <span class="dt">string</span> error_code = <span class="dv">6</span>;</span>
-<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">optional</span> <span class="dt">string</span> error_message = <span class="dv">7</span>;</span>
-<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>    google.protobuf.Timestamp timestamp = <span class="dv">8</span>;</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> device_id <span class="op">=</span> <span class="dv">1</span>;</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> artifact_id <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> event_type <span class="op">=</span> <span class="dv">3</span>;</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">string</span> status <span class="op">=</span> <span class="dv">4</span>;</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int32</span> progress_percent <span class="op">=</span> <span class="dv">5</span>;</span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">optional</span> <span class="dt">string</span> error_code <span class="op">=</span> <span class="dv">6</span>;</span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">optional</span> <span class="dt">string</span> error_message <span class="op">=</span> <span class="dv">7</span>;</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>    google.protobuf.Timestamp timestamp <span class="op">=</span> <span class="dv">8</span>;</span>
 <span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="binder-ipc-android-update_engine-communication">7.4 Binder IPC
 (Android update_engine Communication)</h3>
@@ -2760,54 +2764,54 @@ native Android layer:</p>
 <col style="width: 30%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Interface</th>
 <th>Direction</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>IUpdateEngine.applyPayload()</code></td>
 <td>Client → Engine</td>
 <td>Initiate update application</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IUpdateEngine.bind()</code></td>
 <td>Client → Engine</td>
 <td>Register status callback</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>IUpdateEngine.suspend()</code></td>
 <td>Client → Engine</td>
 <td>Pause update</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IUpdateEngine.resume()</code></td>
 <td>Client → Engine</td>
 <td>Resume paused update</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>IUpdateEngine.cancel()</code></td>
 <td>Client → Engine</td>
 <td>Cancel in-progress update</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IUpdateEngineCallback.onStatusUpdate()</code></td>
 <td>Engine → Client</td>
 <td>Progress notifications</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>IUpdateEngineCallback.onPayloadApplicationComplete()</code></td>
 <td>Engine → Client</td>
 <td>Completion/failure notification</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>IBootControl.setActiveBootSlot()</code></td>
 <td>Client → HAL</td>
 <td>Mark new slot as active</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>IBootControl.getCurrentSlot()</code></td>
 <td>Client → HAL</td>
 <td>Query current boot slot</td>
@@ -2860,7 +2864,7 @@ Communications</h3>
 <col style="width: 15%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Connection</th>
 <th>TLS Version</th>
 <th>Certificate</th>
@@ -2868,37 +2872,37 @@ Communications</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Device → Server</td>
 <td>TLS 1.3</td>
 <td>Server cert + device client cert (mTLS)</td>
 <td>Device cert CN = <code>helix-device-{id}</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Dashboard → Server</td>
 <td>TLS 1.3</td>
 <td>Server cert</td>
 <td>JWT in httpOnly cookie</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Server → PostgreSQL</td>
 <td>TLS 1.3</td>
 <td>Internal CA cert</td>
 <td>Database requires client cert</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Server → Redis</td>
 <td>TLS 1.3</td>
 <td>Internal CA cert</td>
 <td>Redis 7+ native TLS</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Server → MinIO/S3</td>
 <td>TLS 1.3</td>
 <td>S3 endpoint cert</td>
 <td>AWS or MinIO CA</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Server → Server (gRPC)</td>
 <td>TLS 1.3</td>
 <td>Internal CA cert</td>
@@ -3007,7 +3011,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb46-1"><a href="#cb
 <h3 id="rbac-with-three-roles">8.6 RBAC with Three Roles</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Permission</th>
 <th>Admin</th>
 <th>Operator</th>
@@ -3015,61 +3019,61 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb46-1"><a href="#cb
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Upload artifact</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Delete artifact</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Create rollout</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Update/pause rollout</td>
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Delete rollout</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>View devices</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Delete device</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>View telemetry</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Manage users</td>
 <td>✅</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
-<tr class="even">
+<tr>
 <td>View dashboard</td>
 <td>✅</td>
 <td>✅</td>
@@ -3191,34 +3195,34 @@ strategy applies:</p>
 <col style="width: 30%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Table</th>
 <th>Sharding Strategy</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>devices</code></td>
 <td>Hash-shard by <code>id</code> (e.g., 16 shards)</td>
 <td>Uniform distribution; most queries are by device ID</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>telemetry_events</code></td>
 <td>Range-partition by <code>timestamp</code> (monthly)</td>
 <td>Time-series data; old partitions can be archived/dropped</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>artifacts</code></td>
 <td>Single shard (small table, &lt;10K rows)</td>
 <td>Artifacts are few and frequently accessed</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollouts</code></td>
 <td>Single shard (small table, &lt;1K rows)</td>
 <td>Rollouts are few and rarely written</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>device_status</code></td>
 <td>Hash-shard by <code>device_id</code></td>
 <td>Co-located with devices shard for JOIN efficiency</td>
@@ -3267,29 +3271,29 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb50-1"><a href="#cb
 <p><strong>WebSocket Scaling at a Glance:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Metric</th>
 <th>Single Instance</th>
 <th>3-Instance Cluster</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Concurrent connections</td>
 <td>~10,000</td>
 <td>~30,000</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Messages per second</td>
 <td>~50,000</td>
 <td>~150,000</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Memory per connection</td>
 <td>~8 KB</td>
 <td>~8 KB</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Total memory (10K connections)</td>
 <td>~80 MB</td>
 <td>~80 MB per instance</td>

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>ROLLBACK_DESIGN</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">ROLLBACK_DESIGN</h1>
 </header>
 <h1 id="helix-ota-rollback-support-design-document">Helix OTA — Rollback
 Support Design Document</h1>
@@ -347,47 +351,47 @@ Helix OTA system, and conflating them leads to architectural errors:</p>
 <col style="width: 35%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Property</th>
 <th>Rollback</th>
 <th>Downgrade</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Definition</strong></td>
 <td>Reverting to the previously-installed version via A/B slot swap</td>
 <td>Installing an older version via a full OTA cycle</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Mechanism</strong></td>
 <td>Boot control HAL <code>setActiveBootSlot()</code> to the previous
 slot</td>
 <td>Download, verify, and apply a complete OTA package for the older
 version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Duration</strong></td>
 <td>Instant (single reboot)</td>
 <td>Full OTA cycle (download + verify + apply + reboot, typically 10–30
 min)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Data Safety</strong></td>
 <td>Zero data loss — user data partition is untouched</td>
 <td>Zero data loss — user data partition is untouched</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Semver Constraint</strong></td>
 <td>Only to the immediate previous version</td>
 <td>Any version with a compatible <code>MinSourceVersion</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Merge State</strong></td>
 <td>Only possible before Virtual A/B merge completes</td>
 <td>Always possible if a compatible artifact exists</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>App Data Compatibility</strong></td>
 <td>Guaranteed (was running this version moments ago)</td>
 <td>Not guaranteed (may require forward migration)</td>
@@ -756,47 +760,47 @@ decisions are made. The service executes the following checks:</p>
 <col style="width: 42%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Check</th>
 <th>Description</th>
 <th>Failure Action</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Boot Time</strong></td>
 <td>Measures time from bootloader to <code>BOOT_COMPLETED</code>
 broadcast. Compares against pre-update baseline (stored in shared
 prefs). Threshold: &gt;150% of baseline.</td>
 <td>Rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Critical Service Health</strong></td>
 <td>Checks that <code>system_server</code>, <code>surfaceflinger</code>,
 and <code>vold</code> are running and responsive. Uses
 <code>ServiceManager.getService()</code> + health check ping.</td>
 <td>Rollback</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Network Connectivity</strong></td>
 <td>Verifies that WiFi or Ethernet is functional (can reach the Helix
 OTA server). Retries 3 times with 5-second intervals.</td>
 <td>Warn only</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Storage Access</strong></td>
 <td>Verifies that <code>/data</code> and <code>/sdcard</code> are
 mounted and writable. Creates and deletes a test file.</td>
 <td>Rollback</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Peripheral Status</strong></td>
 <td>Checks that RK3588-specific peripherals (GPU, NPU, VPU) are
 initialized. Reads from <code>/sys/class/devfreq/</code> and
 <code>/dev/mali0</code>.</td>
 <td>Warn only</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>App Launch Test</strong></td>
 <td>Launches a test Activity from the Helix OTA app and verifies it
 renders within 5 seconds.</td>
@@ -912,39 +916,39 @@ slot’s partitions. On the RK3588 with a 16 GB eMMC, the typical
 allocation is:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Partition</th>
 <th>Size (per slot)</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>boot</code></td>
 <td>64 MB</td>
 <td>Kernel + ramdisk</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>system</code></td>
 <td>2.5 GB</td>
 <td>Android framework</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>vendor</code></td>
 <td>800 MB</td>
 <td>Vendor HALs</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>product</code></td>
 <td>400 MB</td>
 <td>Product-specific apps</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>odm</code></td>
 <td>200 MB</td>
 <td>ODM customizations</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Total per slot</strong></td>
 <td><strong>~4 GB</strong></td>
 <td></td>
@@ -1038,39 +1042,39 @@ must survive a rollback:</p>
 <col style="width: 53%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Path</th>
 <th>Purpose</th>
 <th>Rollback Impact</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>/data/data/</code></td>
 <td>App internal storage</td>
 <td>Preserved — mounted from <code>userdata</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/data/media/</code></td>
 <td>User media files</td>
 <td>Preserved — mounted from <code>userdata</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/data/system/</code></td>
 <td>System configuration</td>
 <td>Preserved, but version-specific files may cause warnings</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/data/dalvik-cache/</code></td>
 <td>Optimized DEX files</td>
 <td>Regenerated on first boot — old cache is discarded</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>/data/ota/</code></td>
 <td>OTA temporary files</td>
 <td>May contain COW files; cleaned up per Section 5.4</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/data/misc/bootctl/</code></td>
 <td>Boot control state</td>
 <td>Modified by rollback (slot change) — this is the intended
@@ -1159,7 +1163,7 @@ role)</p>
 <p><strong>Path Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1167,7 +1171,7 @@ role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1191,7 +1195,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1200,21 +1204,21 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>target_version</code></td>
 <td>string</td>
 <td>No</td>
 <td>Semver format</td>
 <td>Specific version to roll back to (defaults to previous version)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–512 chars</td>
 <td>Reason for rollback (audit log)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>strategy</code></td>
 <td>string</td>
 <td>No</td>
@@ -1251,45 +1255,45 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href=
 <col style="width: 48%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot trigger rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>NO_ROLLBACK_AVAILABLE</code></td>
 <td>Device has no previous version to roll back to (merge already
 completed)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ROLLBACK_ALREADY_IN_PROGRESS</code></td>
 <td>A rollback is already pending for this device</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>422</td>
 <td><code>TARGET_VERSION_MISMATCH</code></td>
 <td>The specified target_version does not match the inactive slot’s
@@ -1307,7 +1311,7 @@ role)</p>
 <p><strong>Path Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1315,7 +1319,7 @@ role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1342,7 +1346,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1351,21 +1355,21 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–512 chars</td>
 <td>Reason for fleet rollback (audit log)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>strategy</code></td>
 <td>string</td>
 <td>No</td>
 <td>One of: <code>instant</code>, <code>gradual</code></td>
 <td>Execution strategy (default: <code>gradual</code>)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>wave_percentage</code></td>
 <td>integer</td>
 <td>No</td>
@@ -1373,14 +1377,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 <td>Percentage of devices per wave (default: 25, only for
 <code>gradual</code> strategy)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>wave_interval_seconds</code></td>
 <td>integer</td>
 <td>No</td>
 <td>60–3600</td>
 <td>Seconds between waves (default: 300)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>include_post_merge</code></td>
 <td>boolean</td>
 <td>No</td>
@@ -1388,7 +1392,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 <td>Include devices where merge has completed (requires downgrade
 artifact, default: false)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>dry_run</code></td>
 <td>boolean</td>
 <td>No</td>
@@ -1437,39 +1441,39 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href=
 <col style="width: 48%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot trigger fleet rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>ROLLOUT_ALREADY_ROLLING_BACK</code></td>
 <td>A rollback is already in progress for this rollout</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>NO_ROLLBACK_AVAILABLE</code></td>
 <td>All devices in this rollout have completed merge</td>
@@ -1485,7 +1489,7 @@ viewer role)</p>
 <p><strong>Path Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1493,7 +1497,7 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1504,7 +1508,7 @@ viewer role)</p>
 <p><strong>Query Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1512,13 +1516,13 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
@@ -1581,19 +1585,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
@@ -1614,7 +1618,7 @@ combinations:</p>
 <col style="width: 35%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Test ID</th>
 <th>Rollback Type</th>
 <th>Scenario</th>
@@ -1622,49 +1626,49 @@ combinations:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>RB-001</td>
 <td>Automatic</td>
 <td>Boot failure (kernel panic in new slot)</td>
 <td>Bootloader falls back after 3 retries; client detects and reports
 rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td>RB-002</td>
 <td>Automatic</td>
 <td>Boot failure (init loop in new slot)</td>
 <td>Bootloader falls back; client detects rollback on successful
 boot</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RB-003</td>
 <td>Server</td>
 <td>Single device rollback via API</td>
 <td>Device receives rollback command on next check-in; slot is swapped;
 device reboots into previous version</td>
 </tr>
-<tr class="even">
+<tr>
 <td>RB-004</td>
 <td>Server</td>
 <td>Fleet-wide rollback via rollout API</td>
 <td>All targeted devices receive rollback in waves; telemetry tracks
 completion</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RB-005</td>
 <td>User</td>
 <td>User-initiated rollback from Settings</td>
 <td>Slot is swapped immediately; device reboots; rollback reported to
 server</td>
 </tr>
-<tr class="even">
+<tr>
 <td>RB-006</td>
 <td>User</td>
 <td>Rollback option disabled after merge</td>
 <td>Settings UI shows “Rollback not available”; no rollback action
 possible</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RB-007</td>
 <td>User</td>
 <td>Rollback option expired (7-day window)</td>
@@ -1729,37 +1733,37 @@ where a rollback command arrives while an update is in progress:</p>
 <col style="width: 45%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>State</th>
 <th>Rollback Action</th>
 <th>Expected Behavior</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Downloading</td>
 <td>Server triggers rollback</td>
 <td>Download is cancelled; slot is not swapped; device remains on
 current version</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Verifying</td>
 <td>Server triggers rollback</td>
 <td>Verification is cancelled; device remains on current version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Installing (update_engine running)</td>
 <td>Server triggers rollback</td>
 <td>update_engine is cancelled via <code>cancel()</code>; slot is not
 swapped; device remains on current version</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rebooting (slot already switched)</td>
 <td>Server triggers rollback</td>
 <td>Rollback proceeds normally — the new slot is the one being rolled
 back from</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Committing (merge in progress)</td>
 <td>Server triggers rollback</td>
 <td>Merge is suspended; device reverts to previous slot</td>
@@ -3069,65 +3073,65 @@ Reference</h2>
 <col style="width: 31%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Configuration Key</th>
 <th>Default</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>rollback.window_days</code></td>
 <td>7</td>
 <td>Days after update during which user-initiated rollback is
 available</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.boot_retry_count</code></td>
 <td>3</td>
 <td>Number of boot attempts before automatic fallback</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.health_check_timeout_ms</code></td>
 <td>60000</td>
 <td>Maximum time for post-update health checks</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.boot_time_threshold_ratio</code></td>
 <td>1.5</td>
 <td>Boot time ratio (vs baseline) that triggers rollback</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.auto_rollback_on_health_failure</code></td>
 <td>true</td>
 <td>Automatically rollback when health checks fail</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.server_trigger_enabled</code></td>
 <td>true</td>
 <td>Allow server-triggered rollbacks</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.gradual_wave_percentage</code></td>
 <td>25</td>
 <td>Default wave size for gradual fleet rollbacks</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.gradual_wave_interval_seconds</code></td>
 <td>300</td>
 <td>Default interval between gradual rollback waves</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.max_concurrent_fleet_rollbacks</code></td>
 <td>1</td>
 <td>Maximum number of concurrent fleet rollback operations</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.config_snapshot_enabled</code></td>
 <td>true</td>
 <td>Snapshot system config before update for rollback migration</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.audit_retention_days</code></td>
 <td>365</td>
 <td>Days to retain rollback audit records</td>
@@ -3142,34 +3146,34 @@ available</td>
 <col style="width: 34%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Event Type</th>
 <th>Payload</th>
 <th>Consumers</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>rollback.device.initiated</code></td>
 <td>RollbackRecord</td>
 <td>Notification service, telemetry aggregator</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.fleet.initiated</code></td>
 <td>FleetRollbackPayload</td>
 <td>Notification service, dashboard</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.completed</code></td>
 <td>RollbackRecord</td>
 <td>Device service (version update), telemetry, notification</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollback.failed</code></td>
 <td>RollbackRecord</td>
 <td>Notification service, alert dispatcher</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rollback.boot_detected</code></td>
 <td>BootRollbackPayload</td>
 <td>Telemetry, device service</td>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>ab_slot_switch.sh — user guide</title>
+  <title>ab_slot_switch</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -238,9 +238,9 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">ab_slot_switch.sh — user guide</h1>
+<h1 class="title">ab_slot_switch</h1>
 </header>
-<h1 id="ab_slot_switchsh--user-guide">ab_slot_switch.sh — user
+<h1 id="ab_slot_switch.sh-user-guide">ab_slot_switch.sh — user
 guide</h1>
 <p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
 2026-06-11T00:00:00Z</p>
@@ -315,6 +315,11 @@ image by <code>build_image.sh</code> (default
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AB_ROOT_PW</span><span class="op">=</span>helixota <span class="ex">tests/emulator/ab_virt/ab_slot_switch.sh</span></span></code></pre></div>
 <h2 id="inputs">Inputs</h2>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>Input</th>
@@ -346,6 +351,10 @@ image by <code>build_image.sh</code> (default
 <p>All under <code>docs/qa/&lt;run-id&gt;/</code> (the captured
 evidence, §11.4.83):</p>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Output</th>
@@ -364,7 +373,7 @@ evidence, §11.4.83):</p>
 <tr>
 <td><code>docs/qa/&lt;run-id&gt;/consoleA.log.driver</code>,
 <code>consoleB.log.driver</code></td>
-<td>the <code>expect</code> driver's own stdout/stderr per run</td>
+<td>the <code>expect</code> driver’s own stdout/stderr per run</td>
 </tr>
 <tr>
 <td><code>docs/qa/&lt;run-id&gt;/drive.exp</code></td>
@@ -373,7 +382,7 @@ level)</td>
 </tr>
 <tr>
 <td><code>docs/qa/&lt;run-id&gt;/verdict.txt</code></td>
-<td>distilled verdict: u-boot version, both rc's, the per-run slot_id +
+<td>distilled verdict: u-boot version, both rc’s, the per-run slot_id +
 rootdev, <code>Verdict: PASS</code>/<code>FAIL</code></td>
 </tr>
 <tr>
@@ -398,7 +407,7 @@ directory.</li>
 <li>Does <strong>not</strong> modify the disk artifact
 (<code>ab_disk.img</code> is attached read-write but both guests are
 powered off cleanly; <code>BOOT_ORDER</code> is set interactively and
-never <code>saveenv</code>'d, so the on-disk U-Boot env is not
+never <code>saveenv</code>’d, so the on-disk U-Boot env is not
 persisted).</li>
 </ul>
 <h2 id="internal-behaviour">Internal behaviour</h2>
@@ -423,7 +432,7 @@ script bug).</li>
 <code>-M virt -accel hvf -cpu host -smp 2 -m 512 -nographic -bios &lt;u-boot.bin&gt; -drive file=&lt;ab_disk.img&gt;, if=virtio,format=raw</code>;</li>
 <li>interrupts U-Boot autoboot, reaches the <code>=&gt;</code> U-Boot
 prompt;</li>
-<li><code>setenv BOOT_ORDER &lt;order&gt;</code> (the OTA agent's
+<li><code>setenv BOOT_ORDER &lt;order&gt;</code> (the OTA agent’s
 head-slot convention)
 <ul>
 <li><code>printenv BOOT_ORDER</code>;</li>
@@ -460,11 +469,11 @@ the proof is the contrast:
 <code>HELIX_DONE_B_MARK</code>, AND must NOT show
 <code>HELIX_SLOTID=A</code> (the switch is real, not a no-op).</li>
 </ul></li>
-<li>Write <code>verdict.txt</code> (u-boot version, both rc's, per-run
+<li>Write <code>verdict.txt</code> (u-boot version, both rc’s, per-run
 slot_id + rootdev, <code>Verdict: PASS</code>/<code>FAIL</code>). If
 every assertion holds, print <code>RESULT: PASS</code> + the evidence
 path and exit 0; otherwise print <code>RESULT: FAIL</code> (with the
-qemu/expect rc's) and exit 1.</li>
+qemu/expect rc’s) and exit 1.</li>
 </ol>
 <h2 id="edge-cases">Edge cases</h2>
 <ul>

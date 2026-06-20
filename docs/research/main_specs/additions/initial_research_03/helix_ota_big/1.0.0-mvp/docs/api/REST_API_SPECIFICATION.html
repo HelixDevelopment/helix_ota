@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA</title>
+  <title>REST_API_SPECIFICATION</title>
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     html {
       color: #1a1a1a;
       background-color: #fdfdfd;
@@ -88,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -107,8 +111,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -151,7 +155,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -167,8 +170,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -179,7 +183,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -234,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA</h1>
+<h1 class="title">REST_API_SPECIFICATION</h1>
 </header>
 <h1 id="helix-ota-rest-api-specification">Helix OTA — REST API
 Specification</h1>
@@ -270,21 +274,21 @@ Reference</a></li>
 <h3 id="base-url">1.1 Base URL</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Environment</th>
 <th>Base URL</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Production</td>
 <td><code>https://api.helix-ota.io</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Staging</td>
 <td><code>https://api.staging.helix-ota.io</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Development</td>
 <td><code>http://localhost:8080</code></td>
 </tr>
@@ -307,24 +311,24 @@ new endpoints) may be added within <code>v1</code> at any time.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Method</th>
 <th>Description</th>
 <th>Used By</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Bearer JWT</strong></td>
 <td><code>Authorization: Bearer &lt;access_token&gt;</code></td>
 <td>Admin console, operator tools</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>mTLS</strong></td>
 <td>Client certificate presented during TLS handshake</td>
 <td>Devices (self-registration, update check, telemetry)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>API Key</strong></td>
 <td><code>X-API-Key: &lt;key&gt;</code> header</td>
 <td>Internal service-to-service calls</td>
@@ -336,25 +340,25 @@ tokens expire after <strong>7 days</strong> and are single-use.</p>
 <h3 id="content-types">1.4 Content Types</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Direction</th>
 <th>Content Type</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Request (JSON)</td>
 <td><code>application/json</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Request (File Upload)</td>
 <td><code>multipart/form-data</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Response</td>
 <td><code>application/json; charset=utf-8</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>WebSocket</td>
 <td><code>application/json</code> (frames)</td>
 </tr>
@@ -397,7 +401,7 @@ pagination.</p>
 <p><strong>Request Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -405,19 +409,19 @@ pagination.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>50</td>
 <td>Number of items per page (1–500)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td><code>""</code></td>
 <td>Opaque cursor from previous response</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sort</code></td>
 <td>string</td>
 <td><code>"created_at:desc"</code></td>
@@ -451,69 +455,69 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="
 <h3 id="common-http-status-codes">1.7 Common HTTP Status Codes</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Code</th>
 <th>Meaning</th>
 <th>Usage</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>200</td>
 <td>OK</td>
 <td>Successful read / update</td>
 </tr>
-<tr class="even">
+<tr>
 <td>201</td>
 <td>Created</td>
 <td>Successful resource creation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>204</td>
 <td>No Content</td>
 <td>Successful deletion</td>
 </tr>
-<tr class="even">
+<tr>
 <td>400</td>
 <td>Bad Request</td>
 <td>Validation / syntax error</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td>Unauthorized</td>
 <td>Missing or invalid credentials</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td>Forbidden</td>
 <td>Insufficient permissions</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td>Not Found</td>
 <td>Resource does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td>Conflict</td>
 <td>Duplicate resource / state conflict</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>422</td>
 <td>Unprocessable Entity</td>
 <td>Semantic validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>429</td>
 <td>Too Many Requests</td>
 <td>Rate limit exceeded</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>500</td>
 <td>Internal Server Error</td>
 <td>Unexpected server error</td>
 </tr>
-<tr class="even">
+<tr>
 <td>503</td>
 <td>Service Unavailable</td>
 <td>Maintenance / overload</td>
@@ -530,14 +534,14 @@ Authorization APIs</h2>
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Content-Type</code></td>
 <td>Yes</td>
 <td><code>application/json</code></td>
@@ -560,7 +564,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -569,21 +573,21 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>username</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>3–254 chars, email format</td>
 <td>User email address</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>password</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>8–128 chars</td>
 <td>Account password</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>totp_code</code></td>
 <td>string</td>
 <td>Conditional</td>
@@ -635,39 +639,39 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Malformed request body or field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>INVALID_CREDENTIALS</code></td>
 <td>Username or password is incorrect</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>TOTP_REQUIRED</code></td>
 <td>Account has 2FA enabled but no TOTP code was provided</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>INVALID_TOTP_CODE</code></td>
 <td>The TOTP code is incorrect or expired</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>ACCOUNT_LOCKED</code></td>
 <td>Account is locked due to too many failed attempts</td>
 </tr>
-<tr class="even">
+<tr>
 <td>429</td>
 <td><code>RATE_LIMIT_EXCEEDED</code></td>
 <td>Too many login attempts from this IP</td>
@@ -706,7 +710,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -715,7 +719,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>refresh_token</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -745,24 +749,24 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Missing or empty refresh_token field</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>INVALID_REFRESH_TOKEN</code></td>
 <td>Token is expired, revoked, or malformed</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>TOKEN_REUSE_DETECTED</code></td>
 <td>A previously used refresh token was presented (potential theft)</td>
@@ -782,14 +786,14 @@ blacklisting the access token.</p>
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Authorization</code></td>
 <td>Yes</td>
 <td><code>Bearer &lt;access_token&gt;</code></td>
@@ -809,7 +813,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href=
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -817,7 +821,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>refresh_token</code></td>
 <td>string</td>
 <td>No</td>
@@ -833,14 +837,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid access token</td>
@@ -855,14 +859,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href=
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Authorization</code></td>
 <td>Yes</td>
 <td><code>Bearer &lt;access_token&gt;</code></td>
@@ -892,14 +896,14 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing, expired, or invalid access token</td>
@@ -947,19 +951,19 @@ verified via the confirm endpoint below.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Invalid or missing token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>TOTP_ALREADY_ENABLED</code></td>
 <td>TOTP is already fully enabled for this user</td>
@@ -980,7 +984,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href=
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -988,7 +992,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>totp_code</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1010,24 +1014,24 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Invalid TOTP code format</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>INVALID_TOTP_CODE</code></td>
 <td>Code does not match expected value</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>TOTP_SETUP_NOT_INITIATED</code></td>
 <td>No pending TOTP setup found for this user</td>
@@ -1049,7 +1053,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href=
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1057,13 +1061,13 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>password</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Current account password</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>totp_code</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1080,24 +1084,24 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb23-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>INVALID_CREDENTIALS</code></td>
 <td>Password is incorrect</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>INVALID_TOTP_CODE</code></td>
 <td>TOTP code is incorrect</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>TOTP_NOT_ENABLED</code></td>
 <td>TOTP is not currently enabled</td>
@@ -1118,14 +1122,14 @@ required)</p>
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Content-Type</code></td>
 <td>Yes</td>
 <td><code>application/json</code></td>
@@ -1154,7 +1158,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb24-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1163,28 +1167,28 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb24-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>device_id</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–128 chars, <code>^[a-zA-Z0-9_-]+$</code></td>
 <td>Unique device identifier (client-generated)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–64 chars</td>
 <td>Hardware model identifier</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>firmware_version</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Semver format (<code>^\d+\.\d+\.\d+</code>)</td>
 <td>Currently installed firmware version</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1192,14 +1196,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb24-1"><a href=
 <code>rtos-armv7</code></td>
 <td>Operating system type</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>serial_number</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–64 chars</td>
 <td>Physical serial number</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>metadata</code></td>
 <td>object</td>
 <td>No</td>
@@ -1261,29 +1265,29 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Request body validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>MTLS_REQUIRED</code></td>
 <td>No client certificate presented</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>DEVICE_ALREADY_EXISTS</code></td>
 <td>A device with this device_id is already registered</td>
 </tr>
-<tr class="even">
+<tr>
 <td>422</td>
 <td><code>CERT_MISMATCH</code></td>
 <td>Certificate CN does not match the declared device_id</td>
@@ -1299,14 +1303,14 @@ role)</p>
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Authorization</code></td>
 <td>Yes</td>
 <td><code>Bearer &lt;access_token&gt;</code></td>
@@ -1322,7 +1326,7 @@ role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1330,56 +1334,56 @@ role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
 <td>Pagination cursor</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sort</code></td>
 <td>string</td>
 <td>No</td>
 <td>Sort field:direction (default <code>created_at:desc</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>status</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by status: <code>registered</code>, <code>online</code>,
 <code>offline</code>, <code>decommissioned</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by hardware model</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by OS type</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>group_id</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by group assignment</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>firmware_version</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by installed firmware version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>search</code></td>
 <td>string</td>
 <td>No</td>
@@ -1415,24 +1419,24 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb29-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Invalid query parameter value</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot access this endpoint</td>
@@ -1449,7 +1453,7 @@ viewer role)</p>
 <p><strong>Path Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1457,7 +1461,7 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>device_id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1488,19 +1492,19 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb30-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>No device with the given device_id</td>
@@ -1535,7 +1539,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb31-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1544,14 +1548,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb31-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>metadata</code></td>
 <td>object</td>
 <td>No</td>
 <td>Max 20 keys, values max 256 chars</td>
 <td>Replace all metadata</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>status</code></td>
 <td>string</td>
 <td>No</td>
@@ -1582,29 +1586,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb33-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot update devices</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
@@ -1633,7 +1637,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb34-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1642,7 +1646,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb34-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1660,29 +1664,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb34-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Only admin role can decommission</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>DEVICE_IN_ACTIVE_ROLLOUT</code></td>
 <td>Device is currently part of an active rollout; halt the rollout
@@ -1706,7 +1710,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -1714,19 +1718,19 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
 <td>Pagination cursor</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>status</code></td>
 <td>string</td>
 <td>No</td>
@@ -1791,19 +1795,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb36-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
@@ -1833,7 +1837,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb37-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1842,14 +1846,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb37-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>target_version</code></td>
 <td>string</td>
 <td>No</td>
 <td>Semver format</td>
 <td>Specific version to roll back to (defaults to previous version)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1882,44 +1886,44 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb39-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot trigger rollback</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>NO_ROLLBACK_AVAILABLE</code></td>
 <td>Device has no previous version to roll back to</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ROLLBACK_ALREADY_IN_PROGRESS</code></td>
 <td>A rollback is already pending for this device</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>422</td>
 <td><code>TARGET_VERSION_NOT_FOUND</code></td>
 <td>The specified target_version artifact does not exist</td>
@@ -1948,7 +1952,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb40-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -1957,7 +1961,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb40-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>group_id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -1981,34 +1985,34 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb42-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Invalid group_id format</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot modify device groups</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>GROUP_NOT_FOUND</code></td>
 <td>The specified group_id does not exist</td>
@@ -2029,14 +2033,14 @@ role)</p>
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Content-Type</code></td>
 <td>Yes</td>
 <td><code>multipart/form-data</code></td>
@@ -2052,7 +2056,7 @@ role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -2060,43 +2064,43 @@ role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>file</code></td>
 <td>file</td>
 <td>Yes</td>
 <td>OTA zip archive (max 2 GB)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>version</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Semver version string for this artifact</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Target hardware model (comma-separated for multiple)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Target OS type</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>release_notes</code></td>
 <td>string</td>
 <td>No</td>
 <td>Markdown release notes (max 10,000 chars)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>metadata</code></td>
 <td>string</td>
 <td>No</td>
 <td>JSON string of additional metadata</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sha256_precomputed</code></td>
 <td>string</td>
 <td>No</td>
@@ -2155,50 +2159,50 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb45-1"><a href="#cb
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Missing required fields or invalid format</td>
 </tr>
-<tr class="even">
+<tr>
 <td>400</td>
 <td><code>ARTIFACT_TOO_LARGE</code></td>
 <td>File exceeds 2 GB maximum</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>ARTIFACT_INVALID_ARCHIVE</code></td>
 <td>Zip file is corrupt or cannot be extracted</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot upload artifacts</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ARTIFACT_VERSION_EXISTS</code></td>
 <td>An artifact with this version+hardware_model+os_type already
 exists</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>422</td>
 <td><code>HASH_MISMATCH</code></td>
 <td>Precomputed SHA-256 does not match server-computed hash</td>
 </tr>
-<tr class="even">
+<tr>
 <td>422</td>
 <td><code>ARTIFACT_SIGNATURE_INVALID</code></td>
 <td>Artifact digital signature verification failed</td>
@@ -2220,7 +2224,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -2228,37 +2232,37 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
 <td>Pagination cursor</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sort</code></td>
 <td>string</td>
 <td>No</td>
 <td>Sort (default <code>created_at:desc</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by hardware model</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by OS type</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>validation_status</code></td>
 <td>string</td>
 <td>No</td>
@@ -2292,14 +2296,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb46-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
@@ -2316,7 +2320,7 @@ viewer role)</p>
 <p><strong>Path Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -2324,7 +2328,7 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>artifact_id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -2361,19 +2365,19 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb47-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>Artifact does not exist</td>
@@ -2394,7 +2398,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb48-1"><a href=
 <span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -2402,7 +2406,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb48-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -2419,29 +2423,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb48-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Only admin role can delete artifacts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>Artifact does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ARTIFACT_IN_ACTIVE_ROLLOUT</code></td>
 <td>Artifact is referenced by an active or paused rollout</td>
@@ -2473,29 +2477,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb49-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot trigger validation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>Artifact does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>VALIDATION_ALREADY_IN_PROGRESS</code></td>
 <td>Validation is already running for this artifact</td>
@@ -2518,19 +2522,19 @@ artifact zip file.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Authorization</code> or mTLS</td>
 <td>Yes</td>
 <td>Authentication credential</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>Range</code></td>
 <td>No</td>
 <td>Byte range for resumable downloads (e.g.,
@@ -2541,29 +2545,29 @@ artifact zip file.</p>
 <p><strong>Success Response (200 or 206 for partial):</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Content-Type</code></td>
 <td><code>application/octet-stream</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>Content-Length</code></td>
 <td>Size of the response body</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>Content-Disposition</code></td>
 <td><code>attachment; filename="artifact_1.4.0.zip"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>X-Artifact-SHA256</code></td>
 <td>SHA-256 hash of the full artifact</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>Accept-Ranges</code></td>
 <td><code>bytes</code></td>
 </tr>
@@ -2577,24 +2581,24 @@ artifact zip file.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid credentials</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>Artifact does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>416</td>
 <td><code>RANGE_NOT_SATISFIABLE</code></td>
 <td>Requested byte range exceeds artifact size</td>
@@ -2615,14 +2619,14 @@ required)</p>
 <p><strong>Request Headers:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Required</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>Content-Type</code></td>
 <td>Yes</td>
 <td><code>application/json</code></td>
@@ -2648,7 +2652,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb50-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -2657,42 +2661,42 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb50-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>device_id</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–128 chars</td>
 <td>Device identifier (must match mTLS cert CN)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>current_version</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Semver</td>
 <td>Currently installed firmware version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–64 chars</td>
 <td>Device hardware model</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Valid OS type</td>
 <td>Operating system type</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>group_id</code></td>
 <td>string</td>
 <td>No</td>
 <td>1–64 chars</td>
 <td>Current group assignment (if any)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>last_check</code></td>
 <td>string</td>
 <td>No</td>
@@ -2776,14 +2780,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb54-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>next_check_hint_seconds</code></td>
 <td>integer</td>
 <td>Suggested interval before next check (respects server-side
@@ -2799,34 +2803,34 @@ backoff)</td>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Request body validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>MTLS_REQUIRED</code></td>
 <td>No client certificate presented</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>DEVICE_DECOMMISSIONED</code></td>
 <td>Device has been decommissioned</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_REGISTERED</code></td>
 <td>Device must register before checking for updates</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>422</td>
 <td><code>CERT_DEVICE_MISMATCH</code></td>
 <td>Certificate CN does not match the device_id in the request body</td>
@@ -2858,8 +2862,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb55-1"><a href=
 <span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_percentage&quot;</span><span class="fu">:</span> <span class="dv">10</span><span class="fu">,</span></span>
 <span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_interval_minutes&quot;</span><span class="fu">:</span> <span class="dv">60</span><span class="fu">,</span></span>
 <span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;auto_advance&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
-<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">95</span><span class="fu">,</span></span>
-<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.05</span></span>
+<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
+<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.05</span></span>
 <span id="cb55-18"><a href="#cb55-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb55-19"><a href="#cb55-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scheduled_start&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-05T08:00:00Z&quot;</span><span class="fu">,</span></span>
 <span id="cb55-20"><a href="#cb55-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;deadline&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-12T00:00:00Z&quot;</span><span class="fu">,</span></span>
@@ -2877,7 +2881,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb55-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -2886,126 +2890,126 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb55-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>name</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>1–256 chars</td>
 <td>Human-readable rollout name</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>artifact_id</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Valid artifact ID</td>
 <td>Artifact to deploy</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>target_selector</code></td>
 <td>object</td>
 <td>Yes</td>
 <td>See below</td>
 <td>Targeting criteria</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>target_selector.hardware_models</code></td>
 <td>string[]</td>
 <td>Yes</td>
 <td>Min 1 item</td>
 <td>Hardware models to target</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>target_selector.os_type</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Valid OS type</td>
 <td>OS type to target</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>target_selector.group_ids</code></td>
 <td>string[]</td>
 <td>No</td>
 <td></td>
 <td>Only include devices in these groups (empty = all)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>target_selector.exclude_device_ids</code></td>
 <td>string[]</td>
 <td>No</td>
 <td>Max 1000 items</td>
 <td>Devices to exclude</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>strategy</code></td>
 <td>object</td>
 <td>Yes</td>
 <td>See below</td>
 <td>Rollout strategy configuration</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>strategy.type</code></td>
 <td>string</td>
 <td>Yes</td>
 <td><code>instant</code>, <code>canary</code>, <code>gradual</code></td>
 <td>Rollout strategy type</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>strategy.initial_percentage</code></td>
 <td>number</td>
 <td>Conditional</td>
 <td>1–100</td>
 <td>Required for <code>canary</code> and <code>gradual</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>strategy.increment_percentage</code></td>
 <td>number</td>
 <td>Conditional</td>
 <td>1–100</td>
 <td>Required for <code>canary</code> and <code>gradual</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>strategy.increment_interval_minutes</code></td>
 <td>number</td>
 <td>Conditional</td>
 <td>5–10080</td>
 <td>Minutes between increments</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>strategy.auto_advance</code></td>
 <td>boolean</td>
 <td>No</td>
 <td>Default: <code>true</code></td>
 <td>Auto-advance if thresholds met</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>strategy.success_threshold</code></td>
 <td>number</td>
 <td>No</td>
 <td>0.0–1.0, default 0.95</td>
 <td>Fraction of devices that must succeed</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>strategy.failure_threshold</code></td>
 <td>number</td>
 <td>No</td>
 <td>0.0–1.0, default 0.05</td>
 <td>Fraction of failures that halts rollout</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>scheduled_start</code></td>
 <td>string</td>
 <td>No</td>
 <td>ISO 8601, must be in the future</td>
 <td>When to begin the rollout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>deadline</code></td>
 <td>string</td>
 <td>No</td>
 <td>ISO 8601, must be after scheduled_start</td>
 <td>Mandatory update deadline</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>metadata</code></td>
 <td>object</td>
 <td>No</td>
@@ -3063,8 +3067,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb57-1"><a href=
 <span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_interval_minutes&quot;</span><span class="fu">:</span> <span class="dv">60</span><span class="fu">,</span></span>
 <span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;auto_advance&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
 <span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;current_percentage&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
-<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">95</span><span class="fu">,</span></span>
-<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.05</span></span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.05</span></span>
 <span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scheduled_start&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-05T08:00:00Z&quot;</span><span class="fu">,</span></span>
 <span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;deadline&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-12T00:00:00Z&quot;</span><span class="fu">,</span></span>
@@ -3080,44 +3084,44 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb57-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot create rollouts</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>Referenced artifact_id does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>ARTIFACT_NOT_VALIDATED</code></td>
 <td>Artifact has not passed validation</td>
 </tr>
-<tr class="even">
+<tr>
 <td>422</td>
 <td><code>DEADLINE_BEFORE_START</code></td>
 <td>Deadline must be after scheduled_start</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>422</td>
 <td><code>NO_TARGET_DEVICES</code></td>
 <td>Target selector matches zero devices</td>
@@ -3139,7 +3143,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -3147,32 +3151,32 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
 <td>Pagination cursor</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sort</code></td>
 <td>string</td>
 <td>No</td>
 <td>Default <code>created_at:desc</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>status</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter: <code>scheduled</code>, <code>in_progress</code>,
 <code>paused</code>, <code>completed</code>, <code>halted</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>artifact_id</code></td>
 <td>string</td>
 <td>No</td>
@@ -3204,14 +3208,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb58-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
@@ -3228,7 +3232,7 @@ viewer role)</p>
 <p><strong>Path Parameters:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -3236,7 +3240,7 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>rollout_id</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -3265,8 +3269,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb59-1"><a href=
 <span id="cb59-17"><a href="#cb59-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_interval_minutes&quot;</span><span class="fu">:</span> <span class="dv">60</span><span class="fu">,</span></span>
 <span id="cb59-18"><a href="#cb59-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;auto_advance&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
 <span id="cb59-19"><a href="#cb59-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;current_percentage&quot;</span><span class="fu">:</span> <span class="dv">25</span><span class="fu">,</span></span>
-<span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">95</span><span class="fu">,</span></span>
-<span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.05</span></span>
+<span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
+<span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.05</span></span>
 <span id="cb59-22"><a href="#cb59-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;progress&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;total_devices&quot;</span><span class="fu">:</span> <span class="dv">312</span><span class="fu">,</span></span>
@@ -3275,8 +3279,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb59-1"><a href=
 <span id="cb59-27"><a href="#cb59-27" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_succeeded&quot;</span><span class="fu">:</span> <span class="dv">70</span><span class="fu">,</span></span>
 <span id="cb59-28"><a href="#cb59-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_failed&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
 <span id="cb59-29"><a href="#cb59-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_pending&quot;</span><span class="fu">:</span> <span class="dv">6</span><span class="fu">,</span></span>
-<span id="cb59-30"><a href="#cb59-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">972</span><span class="fu">,</span></span>
-<span id="cb59-31"><a href="#cb59-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.028</span></span>
+<span id="cb59-30"><a href="#cb59-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.972</span><span class="fu">,</span></span>
+<span id="cb59-31"><a href="#cb59-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="fl">0.028</span></span>
 <span id="cb59-32"><a href="#cb59-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb59-33"><a href="#cb59-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scheduled_start&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-05T08:00:00Z&quot;</span><span class="fu">,</span></span>
 <span id="cb59-34"><a href="#cb59-34" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;started_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-05T08:00:00Z&quot;</span><span class="fu">,</span></span>
@@ -3323,19 +3327,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb60-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
@@ -3357,7 +3361,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb61-1"><a href=
 <span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;strategy&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_percentage&quot;</span><span class="fu">:</span> <span class="dv">15</span><span class="fu">,</span></span>
 <span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_interval_minutes&quot;</span><span class="fu">:</span> <span class="dv">120</span><span class="fu">,</span></span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.03</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.03</span></span>
 <span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;deadline&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-15T00:00:00Z&quot;</span><span class="fu">,</span></span>
 <span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -3373,33 +3377,33 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb61-1"><a href=
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Rollout Status</th>
 <th>Mutable Fields</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>scheduled</code></td>
 <td>All fields</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>in_progress</code></td>
 <td><code>strategy.increment_percentage</code>,
 <code>strategy.increment_interval_minutes</code>,
 <code>strategy.failure_threshold</code>, <code>deadline</code>,
 <code>metadata</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>paused</code></td>
 <td>Same as <code>in_progress</code> +
 <code>strategy.initial_percentage</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>completed</code></td>
 <td><code>metadata</code> only</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>halted</code></td>
 <td>None</td>
 </tr>
@@ -3416,7 +3420,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb62-1"><a href=
 <span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;current_percentage&quot;</span><span class="fu">:</span> <span class="dv">25</span><span class="fu">,</span></span>
 <span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_percentage&quot;</span><span class="fu">:</span> <span class="dv">15</span><span class="fu">,</span></span>
 <span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;increment_interval_minutes&quot;</span><span class="fu">:</span> <span class="dv">120</span><span class="fu">,</span></span>
-<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.03</span></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_threshold&quot;</span><span class="fu">:</span> <span class="fl">0.03</span></span>
 <span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;updated_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-03-05T09:00:00Z&quot;</span></span>
 <span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
@@ -3428,34 +3432,34 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb62-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Field validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot update rollouts</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>FIELD_NOT_MUTABLE</code></td>
 <td>Attempted to modify a field that is not mutable in the current
@@ -3485,7 +3489,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb63-1"><a href=
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -3493,7 +3497,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb63-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -3519,29 +3523,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb64-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot pause rollouts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ROLLOUT_NOT_ACTIVE</code></td>
 <td>Rollout is not in <code>in_progress</code> status (already
@@ -3564,7 +3568,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb65-1"><a href=
 <span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -3572,7 +3576,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb65-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -3594,29 +3598,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb66-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot resume rollouts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ROLLOUT_NOT_PAUSED</code></td>
 <td>Rollout is not in <code>paused</code> status</td>
@@ -3645,7 +3649,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb67-1"><a href=
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -3653,13 +3657,13 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb67-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>reason</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Emergency reason (1–1024 chars, audit log)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>auto_rollback</code></td>
 <td>boolean</td>
 <td>No</td>
@@ -3689,34 +3693,34 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb69-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Only admin role can halt rollouts</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>409</td>
 <td><code>ROLLOUT_ALREADY_HALTED</code></td>
 <td>Rollout is already halted</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>409</td>
 <td><code>ROLLOUT_COMPLETED</code></td>
 <td>Cannot halt a completed rollout</td>
@@ -3740,7 +3744,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -3748,7 +3752,7 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>include_group_breakdown</code></td>
 <td>boolean</td>
 <td>No</td>
@@ -3772,8 +3776,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb70-1"><a href=
 <span id="cb70-12"><a href="#cb70-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_succeeded&quot;</span><span class="fu">:</span> <span class="dv">70</span><span class="fu">,</span></span>
 <span id="cb70-13"><a href="#cb70-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_failed&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
 <span id="cb70-14"><a href="#cb70-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_pending&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
-<span id="cb70-15"><a href="#cb70-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">972</span><span class="fu">,</span></span>
-<span id="cb70-16"><a href="#cb70-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.028</span></span>
+<span id="cb70-15"><a href="#cb70-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.972</span><span class="fu">,</span></span>
+<span id="cb70-16"><a href="#cb70-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="fl">0.028</span></span>
 <span id="cb70-17"><a href="#cb70-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb70-18"><a href="#cb70-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timeline&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb70-19"><a href="#cb70-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
@@ -3801,14 +3805,14 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb70-1"><a href=
 <span id="cb70-41"><a href="#cb70-41" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;total_devices&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">,</span></span>
 <span id="cb70-42"><a href="#cb70-42" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;devices_succeeded&quot;</span><span class="fu">:</span> <span class="dv">48</span><span class="fu">,</span></span>
 <span id="cb70-43"><a href="#cb70-43" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;devices_failed&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
-<span id="cb70-44"><a href="#cb70-44" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">979</span></span>
+<span id="cb70-44"><a href="#cb70-44" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.979</span></span>
 <span id="cb70-45"><a href="#cb70-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
 <span id="cb70-46"><a href="#cb70-46" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb70-47"><a href="#cb70-47" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;group_id&quot;</span><span class="fu">:</span> <span class="st">&quot;grp_factory_b&quot;</span><span class="fu">,</span></span>
 <span id="cb70-48"><a href="#cb70-48" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;total_devices&quot;</span><span class="fu">:</span> <span class="dv">112</span><span class="fu">,</span></span>
 <span id="cb70-49"><a href="#cb70-49" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;devices_succeeded&quot;</span><span class="fu">:</span> <span class="dv">22</span><span class="fu">,</span></span>
 <span id="cb70-50"><a href="#cb70-50" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;devices_failed&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
-<span id="cb70-51"><a href="#cb70-51" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">956</span></span>
+<span id="cb70-51"><a href="#cb70-51" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.956</span></span>
 <span id="cb70-52"><a href="#cb70-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb70-53"><a href="#cb70-53" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb70-54"><a href="#cb70-54" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
@@ -3839,19 +3843,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb71-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Rollout does not exist</td>
@@ -3896,7 +3900,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb72-1"><a href=
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Field</th>
 <th>Type</th>
 <th>Required</th>
@@ -3905,70 +3909,70 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb72-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>device_id</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Must match mTLS CN</td>
 <td>Reporting device</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollout_id</code></td>
 <td>string</td>
 <td>Yes</td>
 <td></td>
 <td>Associated rollout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>artifact_id</code></td>
 <td>string</td>
 <td>Yes</td>
 <td></td>
 <td>Artifact being applied</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>status</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>See below</td>
 <td>Current update status</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>progress_percentage</code></td>
 <td>integer</td>
 <td>No</td>
 <td>0–100</td>
 <td>Download/install progress</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>current_version</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Semver</td>
 <td>Version currently running</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>target_version</code></td>
 <td>string</td>
 <td>Yes</td>
 <td>Semver</td>
 <td>Version being updated to</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>error</code></td>
 <td>object</td>
 <td>No</td>
 <td></td>
 <td>Error details if status is <code>failed</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>diagnostics</code></td>
 <td>object</td>
 <td>No</td>
 <td></td>
 <td>Device diagnostic information</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>reported_at</code></td>
 <td>string</td>
 <td>Yes</td>
@@ -3980,45 +3984,45 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb72-1"><a href=
 <p><strong>Valid <code>status</code> values:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>notified</code></td>
 <td>Device has been notified of available update</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>downloading</code></td>
 <td>Device is downloading the artifact</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>downloaded</code></td>
 <td>Download complete, waiting to install</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>verifying</code></td>
 <td>Verifying artifact integrity (hash, signature)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>installing</code></td>
 <td>Applying the update</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>succeeded</code></td>
 <td>Update applied successfully</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>failed</code></td>
 <td>Update failed</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rolling_back</code></td>
 <td>Device is rolling back to previous version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rolled_back</code></td>
 <td>Rollback completed</td>
 </tr>
@@ -4067,39 +4071,39 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb74-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Request body validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td>401</td>
 <td><code>MTLS_REQUIRED</code></td>
 <td>No client certificate presented</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>403</td>
 <td><code>DEVICE_DECOMMISSIONED</code></td>
 <td>Device is decommissioned</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>Referenced rollout does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>404</td>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>Referenced artifact does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td>422</td>
 <td><code>STATUS_TRANSITION_INVALID</code></td>
 <td>The reported status is not a valid transition from the last known
@@ -4123,7 +4127,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -4131,26 +4135,26 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>period</code></td>
 <td>string</td>
 <td>No</td>
 <td>Time window: <code>1h</code>, <code>6h</code>, <code>24h</code>,
 <code>7d</code>, <code>30d</code> (default <code>24h</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by hardware model</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by OS type</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>group_id</code></td>
 <td>string</td>
 <td>No</td>
@@ -4177,7 +4181,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb75-1"><a href=
 <span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;updates_failed_24h&quot;</span><span class="fu">:</span> <span class="dv">8</span><span class="fu">,</span></span>
 <span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;updates_in_progress&quot;</span><span class="fu">:</span> <span class="dv">6</span><span class="fu">,</span></span>
 <span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rollbacks_24h&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
-<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate_24h&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">973</span></span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate_24h&quot;</span><span class="fu">:</span> <span class="fl">0.973</span></span>
 <span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;active_rollouts&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
 <span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;risk_indicators&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -4188,7 +4192,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb75-1"><a href=
 <span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;high_failure_rate_hardware&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb75-27"><a href="#cb75-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span></span>
 <span id="cb75-28"><a href="#cb75-28" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;hardware_model&quot;</span><span class="fu">:</span> <span class="st">&quot;HX-1000&quot;</span><span class="fu">,</span></span>
-<span id="cb75-29"><a href="#cb75-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">12</span><span class="fu">,</span></span>
+<span id="cb75-29"><a href="#cb75-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;failure_rate&quot;</span><span class="fu">:</span> <span class="fl">0.12</span><span class="fu">,</span></span>
 <span id="cb75-30"><a href="#cb75-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sample_size&quot;</span><span class="fu">:</span> <span class="dv">25</span></span>
 <span id="cb75-31"><a href="#cb75-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
 <span id="cb75-32"><a href="#cb75-32" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
@@ -4207,19 +4211,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb76-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Invalid period or filter value</td>
@@ -4242,7 +4246,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -4250,26 +4254,26 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
 <td>Pagination cursor</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>period</code></td>
 <td>string</td>
 <td>No</td>
 <td>Time window: <code>1h</code>, <code>6h</code>, <code>24h</code>,
 <code>7d</code> (default <code>24h</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>status</code></td>
 <td>string</td>
 <td>No</td>
@@ -4314,19 +4318,19 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb77-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>404</td>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>Device does not exist</td>
@@ -4349,7 +4353,7 @@ role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -4357,44 +4361,44 @@ role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>period</code></td>
 <td>string</td>
 <td>No</td>
 <td>Time window: <code>1h</code>, <code>6h</code>, <code>24h</code>,
 <code>7d</code>, <code>30d</code> (default <code>7d</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by hardware model</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by OS type</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rollout_id</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by rollout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>error_code</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by specific error code</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>limit</code></td>
 <td>integer</td>
 <td>No</td>
 <td>Items per page (1–500, default 50)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>cursor</code></td>
 <td>string</td>
 <td>No</td>
@@ -4465,19 +4469,19 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb78-1"><a href=
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>403</td>
 <td><code>FORBIDDEN</code></td>
 <td>Viewer role cannot access failure reports</td>
@@ -4500,7 +4504,7 @@ viewer role)</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Type</th>
 <th>Required</th>
@@ -4508,33 +4512,33 @@ viewer role)</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>period</code></td>
 <td>string</td>
 <td>No</td>
 <td>Time window: <code>7d</code>, <code>30d</code>, <code>90d</code>
 (default <code>30d</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>granularity</code></td>
 <td>string</td>
 <td>No</td>
 <td>Data point interval: <code>1h</code>, <code>6h</code>,
 <code>1d</code> (default <code>1d</code>)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>hardware_model</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by hardware model</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>os_type</code></td>
 <td>string</td>
 <td>No</td>
 <td>Filter by OS type</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>group_id</code></td>
 <td>string</td>
 <td>No</td>
@@ -4547,32 +4551,32 @@ viewer role)</p>
 class="sourceCode json"><code class="sourceCode json"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;period&quot;</span><span class="fu">:</span> <span class="st">&quot;30d&quot;</span><span class="fu">,</span></span>
 <span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;granularity&quot;</span><span class="fu">:</span> <span class="st">&quot;1d&quot;</span><span class="fu">,</span></span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;overall_success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">964</span><span class="fu">,</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;overall_success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.964</span><span class="fu">,</span></span>
 <span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data_points&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-02-03T00:00:00Z&quot;</span><span class="fu">,</span></span>
 <span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;total_updates&quot;</span><span class="fu">:</span> <span class="dv">45</span><span class="fu">,</span></span>
 <span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;succeeded&quot;</span><span class="fu">:</span> <span class="dv">44</span><span class="fu">,</span></span>
 <span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;failed&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
-<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">978</span></span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.978</span></span>
 <span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
 <span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-02-04T00:00:00Z&quot;</span><span class="fu">,</span></span>
 <span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;total_updates&quot;</span><span class="fu">:</span> <span class="dv">52</span><span class="fu">,</span></span>
 <span id="cb79-16"><a href="#cb79-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;succeeded&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span></span>
 <span id="cb79-17"><a href="#cb79-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;failed&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
-<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">962</span></span>
+<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.962</span></span>
 <span id="cb79-19"><a href="#cb79-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb79-20"><a href="#cb79-20" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
 <span id="cb79-21"><a href="#cb79-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;by_hardware_model&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb79-22"><a href="#cb79-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb79-23"><a href="#cb79-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;hardware_model&quot;</span><span class="fu">:</span> <span class="st">&quot;HX-2000&quot;</span><span class="fu">,</span></span>
-<span id="cb79-24"><a href="#cb79-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">971</span><span class="fu">,</span></span>
+<span id="cb79-24"><a href="#cb79-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.971</span><span class="fu">,</span></span>
 <span id="cb79-25"><a href="#cb79-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;sample_size&quot;</span><span class="fu">:</span> <span class="dv">380</span></span>
 <span id="cb79-26"><a href="#cb79-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
 <span id="cb79-27"><a href="#cb79-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb79-28"><a href="#cb79-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;hardware_model&quot;</span><span class="fu">:</span> <span class="st">&quot;HX-1000&quot;</span><span class="fu">,</span></span>
-<span id="cb79-29"><a href="#cb79-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">940</span><span class="fu">,</span></span>
+<span id="cb79-29"><a href="#cb79-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.940</span><span class="fu">,</span></span>
 <span id="cb79-30"><a href="#cb79-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;sample_size&quot;</span><span class="fu">:</span> <span class="dv">120</span></span>
 <span id="cb79-31"><a href="#cb79-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb79-32"><a href="#cb79-32" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
@@ -4597,19 +4601,19 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb80-1"><a href="#cb
 <p><strong>Error Responses:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Status</th>
 <th>Code</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>401</td>
 <td><code>UNAUTHORIZED</code></td>
 <td>Missing or invalid token</td>
 </tr>
-<tr class="even">
+<tr>
 <td>400</td>
 <td><code>VALIDATION_ERROR</code></td>
 <td>Invalid period or granularity value</td>
@@ -4817,7 +4821,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb95-1"><a href=
 <span id="cb95-9"><a href="#cb95-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;previous_percentage&quot;</span><span class="fu">:</span> <span class="dv">25</span><span class="fu">,</span></span>
 <span id="cb95-10"><a href="#cb95-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_succeeded&quot;</span><span class="fu">:</span> <span class="dv">98</span><span class="fu">,</span></span>
 <span id="cb95-11"><a href="#cb95-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;devices_failed&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
-<span id="cb95-12"><a href="#cb95-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">970</span><span class="fu">,</span></span>
+<span id="cb95-12"><a href="#cb95-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;success_rate&quot;</span><span class="fu">:</span> <span class="fl">0.970</span><span class="fu">,</span></span>
 <span id="cb95-13"><a href="#cb95-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;milestone&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
 <span id="cb95-14"><a href="#cb95-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb95-15"><a href="#cb95-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
@@ -4854,29 +4858,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb97-1"><a href=
 <p><strong>WebSocket Close Codes:</strong></p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Code</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>4001</td>
 <td>Authentication failure (invalid/expired token)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4002</td>
 <td>Rate limit exceeded (too many connections)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>4003</td>
 <td>Subscription limit exceeded</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4004</td>
 <td>Protocol violation (malformed message)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>4005</td>
 <td>Server shutting down</td>
 </tr>
@@ -5276,229 +5280,229 @@ Reference</h2>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Error Code</th>
 <th>HTTP Status</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>VALIDATION_ERROR</code></td>
 <td>400</td>
 <td>Request body or query parameter validation failure</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>INVALID_CREDENTIALS</code></td>
 <td>401</td>
 <td>Incorrect username or password</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>TOTP_REQUIRED</code></td>
 <td>401</td>
 <td>Account has 2FA enabled but no TOTP code provided</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>INVALID_TOTP_CODE</code></td>
 <td>401</td>
 <td>TOTP code is incorrect or expired</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ACCOUNT_LOCKED</code></td>
 <td>403</td>
 <td>Account locked due to excessive failed login attempts</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>UNAUTHORIZED</code></td>
 <td>401</td>
 <td>Missing, expired, or invalid authentication token</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>MTLS_REQUIRED</code></td>
 <td>401</td>
 <td>Client certificate not presented during TLS handshake</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>INVALID_REFRESH_TOKEN</code></td>
 <td>401</td>
 <td>Refresh token is expired, revoked, or malformed</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>TOKEN_REUSE_DETECTED</code></td>
 <td>401</td>
 <td>A previously used refresh token was presented</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>FORBIDDEN</code></td>
 <td>403</td>
 <td>Authenticated but lacks required role/permission</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DEVICE_NOT_FOUND</code></td>
 <td>404</td>
 <td>Device with specified ID does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ARTIFACT_NOT_FOUND</code></td>
 <td>404</td>
 <td>Artifact with specified ID does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ROLLOUT_NOT_FOUND</code></td>
 <td>404</td>
 <td>Rollout with specified ID does not exist</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GROUP_NOT_FOUND</code></td>
 <td>404</td>
 <td>Device group with specified ID does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DEVICE_ALREADY_EXISTS</code></td>
 <td>409</td>
 <td>Device with this ID is already registered</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>CERT_MISMATCH</code></td>
 <td>422</td>
 <td>Certificate CN does not match the declared device ID</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ARTIFACT_TOO_LARGE</code></td>
 <td>400</td>
 <td>Uploaded file exceeds maximum size (2 GB)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ARTIFACT_INVALID_ARCHIVE</code></td>
 <td>400</td>
 <td>Zip archive is corrupt or cannot be extracted</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ARTIFACT_VERSION_EXISTS</code></td>
 <td>409</td>
 <td>Artifact with same version+model+os already exists</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>HASH_MISMATCH</code></td>
 <td>422</td>
 <td>Client-provided SHA-256 does not match server-computed hash</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ARTIFACT_SIGNATURE_INVALID</code></td>
 <td>422</td>
 <td>Digital signature verification failed</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ARTIFACT_IN_ACTIVE_ROLLOUT</code></td>
 <td>409</td>
 <td>Cannot delete artifact referenced by active rollout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ARTIFACT_NOT_VALIDATED</code></td>
 <td>409</td>
 <td>Artifact has not passed validation checks</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DEVICE_IN_ACTIVE_ROLLOUT</code></td>
 <td>409</td>
 <td>Device is part of an active rollout</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DEVICE_DECOMMISSIONED</code></td>
 <td>403</td>
 <td>Device has been decommissioned</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DEVICE_NOT_REGISTERED</code></td>
 <td>404</td>
 <td>Device must register before checking for updates</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>CERT_DEVICE_MISMATCH</code></td>
 <td>422</td>
 <td>Certificate CN does not match device_id in request</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>NO_ROLLBACK_AVAILABLE</code></td>
 <td>409</td>
 <td>Device has no previous version to roll back to</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ROLLBACK_ALREADY_IN_PROGRESS</code></td>
 <td>409</td>
 <td>A rollback is already pending for this device</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>TARGET_VERSION_NOT_FOUND</code></td>
 <td>422</td>
 <td>Specified target version artifact does not exist</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ROLLOUT_NOT_ACTIVE</code></td>
 <td>409</td>
 <td>Rollout is not in a state that allows the requested action</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ROLLOUT_NOT_PAUSED</code></td>
 <td>409</td>
 <td>Rollout is not in <code>paused</code> status</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ROLLOUT_ALREADY_HALTED</code></td>
 <td>409</td>
 <td>Rollout is already halted</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ROLLOUT_COMPLETED</code></td>
 <td>409</td>
 <td>Rollout has completed and cannot be modified</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>FIELD_NOT_MUTABLE</code></td>
 <td>409</td>
 <td>Attempted to modify a non-mutable field</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DEADLINE_BEFORE_START</code></td>
 <td>422</td>
 <td>Deadline timestamp must be after scheduled start</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>NO_TARGET_DEVICES</code></td>
 <td>422</td>
 <td>Target selector matches zero devices</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>VALIDATION_ALREADY_IN_PROGRESS</code></td>
 <td>409</td>
 <td>Artifact validation is already running</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>TOTP_ALREADY_ENABLED</code></td>
 <td>409</td>
 <td>TOTP 2FA is already enabled</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>TOTP_SETUP_NOT_INITIATED</code></td>
 <td>409</td>
 <td>No pending TOTP setup exists</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>TOTP_NOT_ENABLED</code></td>
 <td>409</td>
 <td>TOTP is not currently enabled</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>STATUS_TRANSITION_INVALID</code></td>
 <td>422</td>
 <td>Reported status is not a valid transition from previous status</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>RATE_LIMIT_EXCEEDED</code></td>
 <td>429</td>
 <td>Too many requests; retry after indicated time</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>RANGE_NOT_SATISFIABLE</code></td>
 <td>416</td>
 <td>Requested byte range exceeds resource size</td>
@@ -5518,25 +5522,25 @@ headers:</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Header</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>X-RateLimit-Limit</code></td>
 <td>Maximum requests allowed in the current window</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>X-RateLimit-Remaining</code></td>
 <td>Requests remaining in the current window</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>X-RateLimit-Reset</code></td>
 <td>Unix timestamp when the rate limit window resets</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>Retry-After</code></td>
 <td>Seconds until the client should retry</td>
 </tr>
@@ -5556,179 +5560,179 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb99-1"><a href=
 <h3 id="rate-limit-summary-table">Rate Limit Summary Table</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Endpoint</th>
 <th>Scope</th>
 <th>Limit</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>POST /auth/login</code></td>
 <td>Per IP</td>
 <td>10 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /auth/refresh</code></td>
 <td>Per user</td>
 <td>30 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>POST /auth/logout</code></td>
 <td>Per user</td>
 <td>20 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /auth/me</code></td>
 <td>Per user</td>
 <td>60 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>POST /auth/totp/*</code></td>
 <td>Per user</td>
 <td>5–10 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /devices/register</code></td>
 <td>Per cert CN</td>
 <td>5 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /devices</code></td>
 <td>Per user</td>
 <td>120 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /devices/{id}</code></td>
 <td>Per user</td>
 <td>200 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>PUT /devices/{id}</code></td>
 <td>Per user</td>
 <td>60 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DELETE /devices/{id}</code></td>
 <td>Per user</td>
 <td>30 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /devices/{id}/history</code></td>
 <td>Per user</td>
 <td>120 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /devices/{id}/rollback</code></td>
 <td>Per device</td>
 <td>10 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>PUT /devices/{id}/group</code></td>
 <td>Per user</td>
 <td>60 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /artifacts/upload</code></td>
 <td>Per user</td>
 <td>10 req/hour</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /artifacts</code></td>
 <td>Per user</td>
 <td>120 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /artifacts/{id}</code></td>
 <td>Per user</td>
 <td>200 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DELETE /artifacts/{id}</code></td>
 <td>Per user</td>
 <td>30 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /artifacts/{id}/validate</code></td>
 <td>Per artifact</td>
 <td>5 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /artifacts/{id}/download</code></td>
 <td>Per identity</td>
 <td>100 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /updates/check</code></td>
 <td>Per device</td>
 <td>60 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>POST /rollouts</code></td>
 <td>Per user</td>
 <td>20 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /rollouts</code></td>
 <td>Per user</td>
 <td>120 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /rollouts/{id}</code></td>
 <td>Per user</td>
 <td>200 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>PUT /rollouts/{id}</code></td>
 <td>Per user</td>
 <td>30 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>POST /rollouts/{id}/pause</code></td>
 <td>Per user</td>
 <td>20 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>POST /rollouts/{id}/resume</code></td>
 <td>Per user</td>
 <td>20 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>POST /rollouts/{id}/halt</code></td>
 <td>Per user</td>
 <td>10 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /rollouts/{id}/progress</code></td>
 <td>Per user</td>
 <td>300 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>POST /telemetry/report</code></td>
 <td>Per device</td>
 <td>120 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /telemetry/overview</code></td>
 <td>Per user</td>
 <td>60 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /telemetry/devices/{id}</code></td>
 <td>Per user</td>
 <td>120 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>GET /telemetry/failures</code></td>
 <td>Per user</td>
 <td>30 req/min</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>GET /telemetry/success-rates</code></td>
 <td>Per user</td>
 <td>60 req/min</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>WS /ws/dashboard</code></td>
 <td>Per user</td>
 <td>5 concurrent</td>
