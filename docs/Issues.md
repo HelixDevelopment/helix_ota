@@ -1,7 +1,7 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 5
-**Last modified:** 2026-06-20T20:30:00Z
+**Revision:** 6
+**Last modified:** 2026-06-21T12:00:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
@@ -59,23 +59,13 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
   reachable over ADB/SSH (or physically attached) for flashing.
 - **WHO:** Operator — attach / provide remote access to the board.
 
----
-
-
-## §1. [OTA-001] Database migration test
-
-**Status:** Queued
-**Type:** Bug
-
-**Description:** Verify and validate SQLite database migration logic for workable_items schema changes. Test CREATE TABLE, INSERT, SELECT, UPDATE operations on the workable_items.db SSoT.
-
----
-
----
-
-## §5. [OTA-005] HelixTrack bidirectional sync verification
+## §5. [OTA-021] HelixTrack bidirectional sync verification
 
 **Status:** In progress
 **Type:** Task
 
 **Description:** Verify that changes to workable items docs/DB are immediately synced to HelixTrack tickets and vice versa. End-to-end sync test with recorded video evidence.
+
+---
+
+

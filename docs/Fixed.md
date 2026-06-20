@@ -1,7 +1,7 @@
 # Helix OTA — Fixed (closed workable items)
 
-**Revision:** 4
-**Last modified:** 2026-06-20T20:30:00Z
+**Revision:** 5
+**Last modified:** 2026-06-21T12:00:00Z
 
 This is the canonical closed-archive tracker (§11.4.19 column alignment,
 §11.4.33 type-aware closure vocabulary, §11.4.54 OTA-NNN). Open items
@@ -151,7 +151,7 @@ Closed 2026-06-20 — PWU-AB-4 ApplyPort (`server/cmd/applyport/`). Slot detecti
 
 ---
 
-## §9. [OTA-002] Build resource stats tracker
+## §9. [OTA-019] Build resource stats tracker
 
 **Status:** Completed (→ Fixed.md)
 **Type:** Task
@@ -170,3 +170,15 @@ Closed 2026-06-20 — PWU-AB-4 ApplyPort (`server/cmd/applyport/`). Slot detecti
 **Root cause:** Docs Chain engine was used in-tree but not registered as a git submodule (§11.4.106 Phase 6).
 **Fix:** Registered vasic-digital/docs_chain@2c8cf16 as submodule. Added helix-deps.yaml entry. Fixed 2 context YAMLs (features-status fingerprint block, helixtrack inline transforms). All 4 contexts pass doctor.
 **Evidence:** .gitmodules, helix-deps.yaml, `docs_chain doctor --all` (4/4 PASS).
+
+---
+
+## §16. [OTA-020] Database migration test
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+
+**Closed:** 2026-06-21
+**Root cause:** workable_items.db had no automated validation for schema (tables, columns, constraints) or sync consistency with Issues.md/Fixed.md.
+**Fix:** Created `scripts/testing/test_workable_items_db.sh` — 47 tests covering schema validation, Issues sync (4/4), Fixed sync (12/12), orphan detection, terminal status checks. All 47/47 PASS.
+**Evidence:** `qa-results/workable_items/20260620T201912Z/`, `scripts/testing/test_workable_items_db.sh`, `scripts/testing/migrate_workable_items.sh`.
