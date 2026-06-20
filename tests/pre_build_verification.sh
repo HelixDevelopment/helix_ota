@@ -40,6 +40,29 @@ run_gate "CM-COVENANT-114-156-PROPAGATION" grep -qF '11.4.156' "${SCRIPT_DIR}/..
 run_gate "CM-COVENANT-114-157-PROPAGATION" grep -qF '11.4.157' "${SCRIPT_DIR}/../CLAUDE.md"
 run_gate "CM-COVENANT-114-158-PROPAGATION" grep -qF '11.4.158' "${SCRIPT_DIR}/../CLAUDE.md"
 
+# ---- gate: CM-COVERAGE-MINIMUM ----
+# Enforce minimum test coverage for server/internal packages.
+echo ">>> gate: CM-COVERAGE-MINIMUM"
+COVER_MIN=60
+COVER_OUT=$(mktemp)
+if (cd "${SCRIPT_DIR}/../server" && go test -coverprofile="$COVER_OUT" -coverpkg=./internal/... ./internal/... 2>&1); then
+    COVER_PCT=$(cd "${SCRIPT_DIR}/../server" && go tool cover -func="$COVER_OUT" | grep '^total:' | awk '{print $3}' | sed 's/%//')
+    COVER_INT=$(printf "%.0f" "$COVER_PCT" 2>/dev/null || echo 0)
+    if [ "$COVER_INT" -lt "$COVER_MIN" ]; then
+        echo "  COVERAGE ${COVER_PCT}% < ${COVER_MIN}% minimum"
+        echo "<<< gate: CM-COVERAGE-MINIMUM FAIL"
+        rc=1
+    else
+        echo "  Coverage ${COVER_PCT}% >= ${COVER_MIN}% minimum"
+        echo "<<< gate: CM-COVERAGE-MINIMUM OK"
+    fi
+else
+    echo "  go test failed (exit code $?)"
+    echo "<<< gate: CM-COVERAGE-MINIMUM FAIL"
+    rc=1
+fi
+rm -f "$COVER_OUT"
+
 if [[ "${rc}" -ne 0 ]]; then
     echo "PRE-BUILD VERIFICATION: FAIL"
     exit 1
