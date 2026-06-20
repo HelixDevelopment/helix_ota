@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
 Inventory and Status</h1>
-<p><strong>Revision:</strong> 7 <strong>Last modified:</strong>
-2026-06-20T11:30:00Z <strong>Scope:</strong> Comprehensive inventory of
+<p><strong>Revision:</strong> 10 <strong>Last modified:</strong>
+2026-06-20T20:30:00Z <strong>Scope:</strong> Comprehensive inventory of
 every feature, component, subsystem, test suite, and infrastructure
 concern across the Helix OTA monorepo — covering the Go server, Go
 submodules, Android submodules, emulation tiers, e2e/security tests,
@@ -282,7 +282,8 @@ audio subsystem in the current scope).</p>
 <p>Status vocabulary: <code>PASS</code> / <code>FAIL</code> /
 <code>SKIP</code> / <code>OPERATOR-BLOCKED</code> /
 <code>NOT_STARTED</code> / <code>PROVEN</code> / <code>VERIFIED</code> /
-<code>DESIGN</code> / <code>PENDING_FORENSICS</code>.</p>
+<code>DESIGN</code> / <code>PENDING_FORENSICS</code> /
+<code>SUBMODULE_ADDED</code>.</p>
 <table style="width:100%;">
 <colgroup>
 <col style="width: 10%" />
@@ -1787,6 +1788,49 @@ re-recording for next release cycle.</td>
 <td>Was PASS; both demos confirmed positive. Re-recording needed before
 release tagging.</td>
 </tr>
+<tr>
+<td>F108</td>
+<td>Workable Items</td>
+<td>HelixTrack Integration</td>
+<td>Multi-space project management system as workable-items engine —
+infrastructure + data isolation + launcher + docs_chain sync +
+tests</td>
+<td>VERIFIED</td>
+<td>helix_track/ (spaces, scripts/launchers, assets); helix-deps.yaml;
+.docs_chain/contexts/helixtrack.yaml;
+scripts/sync_helixtrack_push/pull.sh; containers/compose.helixtrack.yml;
+HelixTrack Core: –space-root flag, SpaceConfig, Migrator</td>
+<td>Phase 0-7: structure, Core multi-space, launchers, compose,
+docs_chain sync scripts, tests (HELIXTRACK-001/002/003), helix_code
+launchers</td>
+<td>3/3 workable items (OTA-001/002/003) synced to HelixTrack API on
+:8080. Sync pushed to all upstreams. OTA-001/002/003 verified in
+HelixTrack DB.</td>
+<td>No</td>
+<td>§11.4.148/§11.4.149 integration: HelixTrack Core (Go, 372 API
+actions, 121 tables) as workable-items engine. Multi-space data
+isolation per project. Bidirectional sync with docs_chain. Launcher
+scripts for web/desktop clients. Containers compose for Core +
+PostgreSQL. HelixQA Challenge bank entries for space init, sync,
+isolation. F108 upgraded to VERIFIED — sync operational on :8080.</td>
+</tr>
+<tr>
+<td>F109</td>
+<td>Build</td>
+<td>Build resource stats tracker (§11.4.24)</td>
+<td>Background resource sampler — memory, CPU, load, disk at 5s
+intervals, min/max/mean/p95 in TSV registry + Stats.md report</td>
+<td>IMPLEMENTED</td>
+<td>scripts/resource_sampler.sh; scripts/generate_stats_report.sh;
+docs/Stats.tsv; docs/Stats.md</td>
+<td>tests/stats_resource_sampler_test.sh — end-to-end sampler
+verification</td>
+<td>Sampler tested end-to-end: 10s run produces correct TSV + Stats.md.
+Observer constraint: &lt;50MB RSS, &lt;5% CPU.</td>
+<td>No</td>
+<td>§11.4.24 build-resource-stats tracker OTA-002 completed. Resource
+sampler works on macOS (diskutil) with fallbacks for load/disk.</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -1954,6 +1998,17 @@ ID Reverse Lookup)</td>
 <td>F107 (Demo Re-recordings — stale/rotated)</td>
 </tr>
 <tr>
+<td>DESIGN</td>
+<td>2</td>
+<td>F42 (ota-android-agent), F43 (ota-update-engine-bridge)</td>
+</tr>
+<tr>
+<td>IMPLEMENTED</td>
+<td>3</td>
+<td>F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold), F108
+(HelixTrack Integration)</td>
+</tr>
+<tr>
 <td>VERIFIED</td>
 <td>20</td>
 <td>F35-F41, F68, F73, F77-F85, F88, F92-F93, F96 (Production Deploy),
@@ -1965,16 +2020,6 @@ F97 (Remote Stress), F106 (§11.4.159 Recording Compliance)</td>
 <td>F50 (PWU-AB-1 base+boot), F51 (PWU-AB-1 slot switch), F52 (PWU-AB-3
 auto-rollback), F53 (PWU-AB-2 RAUC dm-verity), F94 (AB Slot Switch
 Video), F95 (AB Rollback Video)</td>
-</tr>
-<tr>
-<td>IMPLEMENTED</td>
-<td>2</td>
-<td>F54 (PWU-AB-4 ApplyPort), F102 (ApplyPort Scaffold)</td>
-</tr>
-<tr>
-<td>DESIGN</td>
-<td>2</td>
-<td>F42 (ota-android-agent), F43 (ota-update-engine-bridge)</td>
 </tr>
 <tr>
 <td>OPERATOR-BLOCKED</td>
@@ -2040,7 +2085,29 @@ revision 5</td>
 PWU-AB-4 ApplyPort IMPLEMENTED (36 tests, 3 Go files, 2 Kotlin files,
 CLI binary), §11.4.159 compliance row (F106), demo re-recordings (F107),
 recordings count updated to 31, Summary by Status revised, all status
-vocabulary updated</td>
+vocabulary updated, all status vocabulary updated</td>
+</tr>
+<tr>
+<td>2026-06-20</td>
+<td>Rev 7 — Recording data quality fixes: count 31-&gt;30, F107 marked
+STALE (rotated), F94/F95 paths fixed to $HOME/Downloads/, 29 stale
+recordings at nonstandard path removed, Status_Summary synced</td>
+</tr>
+<tr>
+<td>2026-06-20</td>
+<td>Rev 8 — F108 HelixTrack Integration added (DESIGN, Phase 0
+committed, launcher scripts + helix-deps.yaml + space config); Phase 1-7
+research agents running in parallel; Status_Summary synced</td>
+</tr>
+<tr>
+<td>2026-06-20</td>
+<td>Rev 9 — F108 upgraded to IMPLEMENTED: Phase 1 (multi-space Core
+–space-root + SpaceConfig + Migrator) committed to HelixTrack. Phase 2
+(docs_chain context + sync scripts) created. Phase 3 (containers compose
++ boot scripts) built. Phase 4 (launchers web/desktop/common) complete.
+Phase 5-6 (Challenge bank entries HELIXTRACK-001/002/003 + test scripts)
+authored. Phase 7 (Status docs) synced. Full integration pushed across
+all upstreams.</td>
 </tr>
 </tbody>
 </table>

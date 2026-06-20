@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-fixed-closed-workable-items">Helix OTA — Fixed (closed
 workable items)</h1>
-<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
-2026-06-10T18:30:00Z</p>
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-06-20T20:30:00Z</p>
 <p>This is the canonical closed-archive tracker (§11.4.19 column
 alignment, §11.4.33 type-aware closure vocabulary, §11.4.54 OTA-NNN).
 Open items live in <a href="Issues.md"><code>Issues.md</code></a>; the
@@ -280,5 +280,76 @@ id="ota-010-autonomous-e2e-security-helixqa-for-telemetry-filters-pagination">§
 <code>test(qa): autonomous e2e + security + HelixQA for telemetry filters &amp; pagination</code>.
 Autonomous end-to-end + security suites + HelixQA bank covering the
 OTA-005/OTA-006 telemetry-filter and pagination work.</p>
+<hr />
+<h2 id="ota-015-ab-slot-switch-via-u-boot-boot_order">§11. [OTA-015] A/B
+slot switch via U-Boot BOOT_ORDER</h2>
+<p><strong>Status:</strong> Implemented (→ Fixed.md)
+<strong>Type:</strong> Feature</p>
+<p>Closed 2026-06-11 — commit <code>18ed84a</code>
+<code>feat(AB): PWU-AB-1 A/B slot switch proven</code>. Full A/B slot
+switch via U-Boot BOOT_ORDER env var against real U-Boot 2024.01 + QEMU
+<code>virt</code> + HVF on the emulator T1 ladder. Boots A → reboots to
+B via fw_setenv → verifies HELIX_SLOTID=B, HELIX_ROOTDEV=/dev/vda3.
+Proven 3/3 deterministic. Evidence:
+<code>docs/qa/20260611T094958Z-ab-slot-switch/</code>. Runtime signature
+registered in
+<code>docs/design/rk3588_ab_virt/runtime-signatures.yaml</code>
+(PWU-AB-1-SLOT-SWITCH).</p>
+<hr />
+<h2 id="ota-016-rauc-dd-apply-to-inactive-slot-with-dm-verity">§12.
+[OTA-016] RAUC dd-apply to inactive slot with dm-verity</h2>
+<p><strong>Status:</strong> Implemented (→ Fixed.md)
+<strong>Type:</strong> Feature</p>
+<p>Closed 2026-06-20 — PWU-AB-2 RAUC reconciliation: dd rootfs to
+inactive slot + fw_setenv BOOT_ORDER switch so guest boots the new slot.
+RAUC slot-class scheme reconciled with <code>uboot_ab/boot.cmd</code>
+BOOT_ORDER env scheme. Proven 3/3 deterministic. Evidence:
+<code>docs/qa/20260620T051026Z-ab-rauc-verity/</code>. Runtime
+signature: PWU-AB-2-RAUC-DD.</p>
+<hr />
+<h2 id="ota-017-u-boot-corrupt-slot-auto-rollback-via-bootcount">§13.
+[OTA-017] U-Boot corrupt-slot auto-rollback via bootcount</h2>
+<p><strong>Status:</strong> Implemented (→ Fixed.md)
+<strong>Type:</strong> Feature</p>
+<p>Closed 2026-06-11 — commit <code>42be557</code>
+<code>feat(AB): PWU-AB-3 corrupt-slot AUTO-ROLLBACK proven</code>.
+bootcount &gt; bootlimit triggers altbootcmd which swaps to the good
+slot. ROLLBACK run booted from bad slot B and rolled back to good slot A
+(HELIX_SLOTID=A, HELIX_ROOTDEV=/dev/vda2). Proven 2/2 deterministic.
+Evidence: <code>docs/qa/20260611T095918Z-ab-rollback/</code>. Runtime
+signature: PWU-AB-3-ROLLBACK.</p>
+<hr />
+<h2 id="ota-018-applyport-cli-slot-manager-ed25519-verifier">§14.
+[OTA-018] ApplyPort CLI + slot manager + Ed25519 verifier</h2>
+<p><strong>Status:</strong> Implemented (→ Fixed.md)
+<strong>Type:</strong> Feature</p>
+<p>Closed 2026-06-20 — PWU-AB-4 ApplyPort
+(<code>server/cmd/applyport/</code>). Slot detection from
+<code>/proc/cmdline</code> (<code>helix_slot=A|B</code>), Ed25519
+artifact signature verification via <code>crypto/ed25519</code> (proven
+real, not a stub — §1.1 mutation
+<code>TestMutationSignatureUsesRealEd25519</code>), write-and-arm with
+health marker, and device client (login, check-for-update, apply). 58/58
+tests passing including §1.1 paired-mutation suite. Evidence:
+<code>server/internal/device/</code>. Runtime signatures:
+PWU-AB-4-APPLYPORT-BUILD, PWU-AB-4-APPLYPORT-TESTS,
+PWU-AB-4-SLOT-DETECTION, PWU-AB-4-SIGNATURE-VERIFIER.</p>
+<hr />
+<h2 id="ota-002-build-resource-stats-tracker">§9. [OTA-002] Build
+resource stats tracker</h2>
+<p><strong>Status:</strong> Completed (→ Fixed.md)
+<strong>Type:</strong> Task</p>
+<p><strong>Closed:</strong> 2026-06-20 — commit <code>300351c6</code>
+<code>feat(stats): OTA-002 Build resource stats tracker</code>.
+<strong>Root cause:</strong> §11.4.24 mandated per-build resource
+telemetry; missing entirely. <strong>Fix:</strong>
+<code>scripts/resource_sampler.sh</code> — background-capable host-side
+sampler (memory RSS, CPU%, load, disk I/O at 5s intervals,
+min/max/mean/p95). <code>docs/Stats.tsv</code> TSV registry.
+<code>docs/Stats.md</code> human-readable report. Tested end-to-end (10s
+run produces correct TSV + Stats.md). Observer constraint verified:
+&lt;50MB RSS, &lt;5% CPU. <strong>Evidence:</strong>
+<code>docs/Stats.tsv</code>, <code>docs/Stats.md</code>,
+<code>tests/stats_resource_sampler_test.sh</code>.</p>
 </body>
 </html>

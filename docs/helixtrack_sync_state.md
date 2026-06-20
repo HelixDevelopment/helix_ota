@@ -1,13 +1,13 @@
 # HelixTrack Sync State
 
-**Last synced:** 2026-06-20T18:22:46Z
+**Last synced:** 2026-06-20T20:19:49Z
 **Direction:** push (workable_items.db → HelixTrack API)
-**Pushed:** 3
+**Pushed:** 5
 **Failed:** 0
 
 | Status | Count |
 |--------|-------|
-| Pushed | 3 |
+| Pushed | 5 |
 | Failed | 0 |
-| Total  | 3 |
+| Total  | 5 |
 
