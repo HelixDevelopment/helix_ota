@@ -2,37 +2,46 @@
 
 | Field | Value |
 |---|---|
-| Revision | 6 |
+| Revision | 7 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-19T23:30:00Z |
+| Last modified | 2026-06-20T00:15:00Z |
 | Status | active — resume with "continue" |
-| Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all 4 upstreams (GitHub, GitLab, GitFlic, GitVerse). |
+| Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all upstreams (GitHub, GitLab, GitVerse). |
 
-## ⤴ CURRENT STATE (2026-06-19) — HEAD `0d45e640` — read `docs/RESUMPTION.md` FIRST
+## ⤴ CURRENT STATE (2026-06-20) — HEAD `37f480f8` — read `docs/RESUMPTION.md` FIRST
 
-**Stream D (Docs sync + CodeGraph re-index) and Stream E (Recording migration + GEMINI.md
-lockstep + worktree cleanup) landed GREEN (HEAD `0d45e640`, all 4 upstreams).**
+**All three remaining parallel streams (M — code review PWU-AB-4, N — OpenCV vision
+validation, P — OTA Manager desktop recordings) merged into main (HEAD `37f480f8`).**
 
-**Stream D — Docs sync — DONE:**
-- All Status.md + Status_Summary.md exported to HTML+PDF+DOCX via docs_chain
-- CodeGraph re-indexed (own-org submodules included)
-- docs_chain verify passed — drift-proof fingerprints in sync
-- Committed as merge commit `0d45e640` (Stream D + Stream A RAUC reconciliation)
+**Stream M — Independent code review PWU-AB-4 ApplyPort — DONE:**
+- Code review agent analysed all PWU-AB-4 fixes (applyport, device client, slot manager)
+- Three findings fixed: `server/cmd/applyport/main.go` (6 insertions), `server/internal/device/client.go`
+  (20 insertions, 5 deletions), `server/internal/device/slot.go` (3 insertions)
+- All fixes verified, committed, and merged as `e210280c`
 
-**Stream E — Recording migration + GEMINI.md lockstep + worktree cleanup — DONE:**
-- 29 recordings migrated from `/Volumes/T7/Downloads/Recordings/` to `$HOME/Downloads/`
-  per §11.4.158(D); all 29 files verified with non-zero size
-- Project-root `GEMINI.md` created carrying §11.4.158 as highest rule, matching
-  CLAUDE.md (lockstep per §11.4.157)
-- Constitution submodule GEMINI.md already at §11.4.158 — no back-fill needed
-- CONTINUATION.md updated to HEAD `0d45e640` with Stream E state
-- Stale worktrees pruned
+**Stream N — OpenCV-based vision validation for recordings — DONE:**
+- Created `scripts/testing/analyze_recording.sh` + `analyze_recording.py` — automated OpenCV
+  analysis pipeline that detects frozen frames, checks frame-advance, validates window dimensions
+- Ran comprehensive analysis on 34 existing MP4 recordings across all feature areas (server API,
+  submodules, dashboard, emulator, deployments, stress-chaos, etc.)
+- Summary: 32 P / 0 F / 2 S (2 skipped — CLI interaction recordings where prompt-wait-out
+  produced terminal window)
+- Created evidence report at `docs/qa/20260620T063615Z-opencv-analysis/REPORT.md`
+- Created guide: `docs/guides/video_recording_and_analysis.md`
+- Merged as `63341246`
+
+**Stream P — OTA Manager desktop app recordings — DONE:**
+- Recorded OTA Manager desktop application with 8 window-scoped screenshots at 5s intervals
+  showing the full UI (device list, details, deployment, rollout, telemetry, logs, settings)
+- Final summary screenshot captured
+- Evidence at `docs/qa/20260620T064840Z-ota-manager/REPORT.md`
+- Merged as `37f480f8` (current HEAD)
 
 **Previously landed PWU-AB milestones (HEAD `42be557`):** On the emulator A/B ladder
 (T1 = QEMU `virt` + HVF on this macOS host, real U-Boot 2024.01): **PWU-AB-1 FULL A/B
 slot switch is PROVEN** (evidence `docs/qa/20260611T094958Z-ab-slot-switch/`) **AND
 PWU-AB-3 corrupt-slot AUTO-ROLLBACK is PROVEN** (evidence `docs/qa/20260611T095918Z-ab-rollback/`).
-PWU-AB-2 RAUC dm-verity currently being completed in Stream A worktree. **T2 Cuttlefish**
+PWU-AB-2 RAUC dm-verity successfully reached GREEN in Stream A (merged earlier). **T2 Cuttlefish**
 real-Android-A/B remains **SKIP-pending** the operator's incoming Linux + nested-KVM host
 (`/dev/kvm` absent on this Apple-Silicon host); **T3 RK3588** hardware PENDING (no board).
 **No release tag** — §11.4.40 needs the full ladder GREEN (T2 + T3 still SKIP/PENDING), so a
