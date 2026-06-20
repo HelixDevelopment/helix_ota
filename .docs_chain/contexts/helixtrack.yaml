@@ -1,0 +1,23 @@
+# docs_chain context: helixtrack
+# Bidirectional sync between workable_items.db (local SSoT) and HelixTrack API
+context: helixtrack
+description: HelixTrack workable items sync — bidirectional DB ↔ API
+nodes:
+  workable_items_db:   { kind: sqlite,   path: docs/workable_items.db }
+  helixtrack_state_md: { kind: markdown, path: docs/helixtrack_sync_state.md }
+  helixtrack_state_html: { kind: html,   path: docs/helixtrack_sync_state.html }
+  helixtrack_state_pdf:  { kind: pdf,    path: docs/helixtrack_sync_state.pdf }
+edges:
+  # Bidirectional sync: workable_items.db ↔ HelixTrack API (via exec transforms)
+  - type: sync
+    a: workable_items_db
+    b: helixtrack_state_md
+    authority: workable_items_db
+    transform_a_to_b: { exec: "scripts/sync_helixtrack_push.sh" }
+    transform_b_to_a: { exec: "scripts/sync_helixtrack_pull.sh" }
+  # Derived exports for the sync state doc
+  - { type: derive-from, from: helixtrack_state_md,   to: helixtrack_state_html, transform: md2html }
+  - { type: derive-from, from: helixtrack_state_html,  to: helixtrack_state_pdf,  transform: html2pdf }
+transforms:
+  md2html:  { builtin: pandoc-html }
+  html2pdf: { builtin: weasyprint-pdf }
