@@ -66,3 +66,21 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 **Status:** In progress
 **Type:** Task
 **Description:** Docs Chain engine exists at `/Volumes/T7/Projects/docs_chain` with Phases 1-4 done and tested. Phase 6 (git submodule distribution) is operator-gated — needs explicit go-ahead to wire as a registered submodule. Meanwhile, `.docs_chain/` YAML contexts + `scripts/sync_status_docs.sh` are wired and working.
+
+---
+
+## §1. [OTA-001] Database migration test
+
+**Status:** Queued
+**Type:** Bug
+
+**Description:** Verify and validate SQLite database migration logic for workable_items schema changes. Test CREATE TABLE, INSERT, SELECT, UPDATE operations on the workable_items.db SSoT.
+
+---
+
+## §2. [OTA-002] Build resource stats tracker
+
+**Status:** Queued
+**Type:** Task
+
+**Description:** Implement per-build host-side resource telemetry per §11.4.24 — a resource sampler (memory, CPU, load, disk) that computes min/max/mean/p95 and records results in a TSV registry with human-readable Stats.md report.
