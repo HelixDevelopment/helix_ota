@@ -53,7 +53,8 @@ against a running Android target.
 - PWU-AB-2 RAUC dm-verity slot integrity = GREEN — 3/3 deterministic via direct-dd (evidence docs/qa/20260620T051026Z-ab-rauc-verity/)
 - PWU-AB-4 ApplyPort = IMPLEMENTED — 36 tests, 3 Go source files, 2 Kotlin files, CLI binary
 - PWU-AB-4 ApplyPort Scaffold (slot manager, signature verifier, health marker, HTTP client) = IMPLEMENTED
-- Tier-2 Cuttlefish Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host)
+- Tier-2 Cuttlefish Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host — nezha (ALT Linux x86_64) has KVM but ARM64 container build is blocked by ALT Linux conmon/glib2 ABI bug; a Debian-based Linux host unblocks this)
+- **Cross-platform parity** — Go server 13/13 packages PASS identically on both macOS (Apple Silicon) and Linux (x86_64 ALT Linux, Go 1.26.2). Pre-build gates produce identical results. Go submodules (`http3`, `ota-protocol`, `challenges`) all build and test clean on Linux. Cross-platform parity for the Go codebase is CONFIRMED. The container-based build workflow (Buildroot + RAUC) requires a Debian/Ubuntu host with ARM64 container support for cross-architecture QEMU execution. See `docs/qa/stream-y-nezha-deployment-report.md`.
 - Tier-3 RK3588 physical board = OPERATOR-BLOCKED (no hardware)
 
 **Production deployment** — The full 3-container stack (server + PostgreSQL + SPA) is deployed and verified on `nezha.local`. Container orchestration handles boot, health-check, and shutdown. All containers respond correctly on their configured ports.
