@@ -1,7 +1,7 @@
 # Helix OTA — Fixed Summary (closed, short-form)
 
-**Revision:** 2
-**Last modified:** 2026-06-10T18:30:00Z
+**Revision:** 3
+**Last modified:** 2026-06-20T00:30:00Z
 
 Short-form companion of [`Fixed.md`](Fixed.md) (§11.4.53 parity). Closed
 items only; open items appear in [`Issues_Summary.md`](Issues_Summary.md).
@@ -17,3 +17,7 @@ Sorted closure-date DESC. All commit hashes read from `git log`.
 | OTA-008 | §8 | Implemented (→ Fixed.md) | Feature | Tier-1 Go OTA device-emulator `server/internal/deviceemu` + `cmd/ota-device-emu` (commit `7dc3334`) |
 | OTA-009 | §9 | Completed (→ Fixed.md) | Task | Comprehensive dashboard UI testing system for all panels (commit `fa571b8`) |
 | OTA-010 | §10 | Completed (→ Fixed.md) | Task | Autonomous e2e + security + HelixQA for telemetry filters & pagination (commit `a839220`) |
+| OTA-015 | §11 | Implemented (→ Fixed.md) | Feature | A/B slot switch via U-Boot BOOT_ORDER (commit `18ed84a`, evidence `docs/qa/20260611T094958Z-ab-slot-switch/`) |
+| OTA-016 | §12 | Implemented (→ Fixed.md) | Feature | RAUC dd-apply to inactive slot with dm-verity (evidence `docs/qa/20260620T051026Z-ab-rauc-verity/`) |
+| OTA-017 | §13 | Implemented (→ Fixed.md) | Feature | U-Boot corrupt-slot auto-rollback via bootcount (commit `42be557`, evidence `docs/qa/20260611T095918Z-ab-rollback/`) |
+| OTA-018 | §14 | Implemented (→ Fixed.md) | Feature | ApplyPort CLI + slot manager + Ed25519 verifier (58/58 tests, `server/internal/device/`) |

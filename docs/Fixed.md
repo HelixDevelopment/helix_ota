@@ -1,7 +1,7 @@
 # Helix OTA — Fixed (closed workable items)
 
-**Revision:** 2
-**Last modified:** 2026-06-10T18:30:00Z
+**Revision:** 3
+**Last modified:** 2026-06-20T00:30:00Z
 
 This is the canonical closed-archive tracker (§11.4.19 column alignment,
 §11.4.33 type-aware closure vocabulary, §11.4.54 OTA-NNN). Open items
@@ -112,3 +112,39 @@ Closed 2026-06-10 — commit `a839220` `test(qa): autonomous e2e +
 security + HelixQA for telemetry filters & pagination`. Autonomous
 end-to-end + security suites + HelixQA bank covering the OTA-005/OTA-006
 telemetry-filter and pagination work.
+
+---
+
+## §11. [OTA-015] A/B slot switch via U-Boot BOOT_ORDER
+
+**Status:** Implemented (→ Fixed.md)
+**Type:** Feature
+
+Closed 2026-06-11 — commit `18ed84a` `feat(AB): PWU-AB-1 A/B slot switch proven`. Full A/B slot switch via U-Boot BOOT_ORDER env var against real U-Boot 2024.01 + QEMU `virt` + HVF on the emulator T1 ladder. Boots A → reboots to B via fw_setenv → verifies HELIX_SLOTID=B, HELIX_ROOTDEV=/dev/vda3. Proven 3/3 deterministic. Evidence: `docs/qa/20260611T094958Z-ab-slot-switch/`. Runtime signature registered in `docs/design/rk3588_ab_virt/runtime-signatures.yaml` (PWU-AB-1-SLOT-SWITCH).
+
+---
+
+## §12. [OTA-016] RAUC dd-apply to inactive slot with dm-verity
+
+**Status:** Implemented (→ Fixed.md)
+**Type:** Feature
+
+Closed 2026-06-20 — PWU-AB-2 RAUC reconciliation: dd rootfs to inactive slot + fw_setenv BOOT_ORDER switch so guest boots the new slot. RAUC slot-class scheme reconciled with `uboot_ab/boot.cmd` BOOT_ORDER env scheme. Proven 3/3 deterministic. Evidence: `docs/qa/20260620T051026Z-ab-rauc-verity/`. Runtime signature: PWU-AB-2-RAUC-DD.
+
+---
+
+## §13. [OTA-017] U-Boot corrupt-slot auto-rollback via bootcount
+
+**Status:** Implemented (→ Fixed.md)
+**Type:** Feature
+
+Closed 2026-06-11 — commit `42be557` `feat(AB): PWU-AB-3 corrupt-slot AUTO-ROLLBACK proven`. bootcount > bootlimit triggers altbootcmd which swaps to the good slot. ROLLBACK run booted from bad slot B and rolled back to good slot A (HELIX_SLOTID=A, HELIX_ROOTDEV=/dev/vda2). Proven 2/2 deterministic. Evidence: `docs/qa/20260611T095918Z-ab-rollback/`. Runtime signature: PWU-AB-3-ROLLBACK.
+
+---
+
+## §14. [OTA-018] ApplyPort CLI + slot manager + Ed25519 verifier
+
+**Status:** Implemented (→ Fixed.md)
+**Type:** Feature
+
+Closed 2026-06-20 — PWU-AB-4 ApplyPort (`server/cmd/applyport/`). Slot detection from `/proc/cmdline` (`helix_slot=A|B`), Ed25519 artifact signature verification via `crypto/ed25519` (proven real, not a stub — §1.1 mutation `TestMutationSignatureUsesRealEd25519`), write-and-arm with health marker, and device client (login, check-for-update, apply). 58/58 tests passing including §1.1 paired-mutation suite. Evidence: `server/internal/device/`. Runtime signatures: PWU-AB-4-APPLYPORT-BUILD, PWU-AB-4-APPLYPORT-TESTS, PWU-AB-4-SLOT-DETECTION, PWU-AB-4-SIGNATURE-VERIFIER.
