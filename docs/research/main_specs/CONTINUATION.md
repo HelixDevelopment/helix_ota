@@ -2,13 +2,13 @@
 
 | Field | Value |
 |---|---|
-| Revision | 8 |
+| Revision | 9 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-20T00:15:00Z |
+| Last modified | 2026-06-20T07:47:00Z |
 | Status | active — resume with "continue" |
 | Status summary | Single source of truth for resuming work. Captures exactly what is DONE (verified), the git state, and the prioritized NEXT steps. Everything below is committed to `main` and pushed to all upstreams (GitHub, GitLab, GitVerse). |
 
-## ⤴ CURRENT STATE (2026-06-20) — HEAD 40c15997 — read `docs/RESUMPTION.md` FIRST
+## ⤴ CURRENT STATE (2026-06-20) — HEAD 5b885219 — read `docs/RESUMPTION.md` FIRST
 
 
 **All four remaining parallel streams (M — code review PWU-AB-4, N — OpenCV vision
