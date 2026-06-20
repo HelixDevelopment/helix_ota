@@ -13,11 +13,13 @@ edges:
     a: workable_items_db
     b: helixtrack_state_md
     authority: workable_items_db
-    transform_a_to_b: { exec: "scripts/sync_helixtrack_push.sh" }
-    transform_b_to_a: { exec: "scripts/sync_helixtrack_pull.sh" }
+    transform_a_to_b: sync_helixtrack_push
+    transform_b_to_a: sync_helixtrack_pull
   # Derived exports for the sync state doc
   - { type: derive-from, from: helixtrack_state_md,   to: helixtrack_state_html, transform: md2html }
   - { type: derive-from, from: helixtrack_state_html,  to: helixtrack_state_pdf,  transform: html2pdf }
 transforms:
   md2html:  { builtin: pandoc-html }
   html2pdf: { builtin: weasyprint-pdf }
+  sync_helixtrack_push: { exec: scripts/sync_helixtrack_push.sh }
+  sync_helixtrack_pull: { exec: scripts/sync_helixtrack_pull.sh }

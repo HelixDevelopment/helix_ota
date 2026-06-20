@@ -1,7 +1,7 @@
 # Helix OTA — Fixed (closed workable items)
 
-**Revision:** 3
-**Last modified:** 2026-06-20T00:30:00Z
+**Revision:** 4
+**Last modified:** 2026-06-20T20:30:00Z
 
 This is the canonical closed-archive tracker (§11.4.19 column alignment,
 §11.4.33 type-aware closure vocabulary, §11.4.54 OTA-NNN). Open items
