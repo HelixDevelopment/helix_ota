@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -162,6 +163,10 @@ type DeviceRegistrationResponse struct {
 // Register provisions the device and obtains a device-scoped bearer token.
 // Requires Login() to have been called first.
 func (c *ApplyPortClient) Register(ctx context.Context, req DeviceRegistrationRequest) (*DeviceRegistrationResponse, error) {
+	if c.operatorToken == "" {
+		return nil, fmt.Errorf("client: must call Login() before Register()")
+	}
+
 	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("client: marshal register: %w", err)
@@ -173,9 +178,7 @@ func (c *ApplyPortClient) Register(ctx context.Context, req DeviceRegistrationRe
 		return nil, fmt.Errorf("client: create register request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	if c.operatorToken != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+c.operatorToken)
-	}
+	httpReq.Header.Set("Authorization", "Bearer "+c.operatorToken)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -220,8 +223,15 @@ type UpdateCheckResult struct {
 // CheckForUpdate polls the server for an available update.
 // Returns (false, nil) when no update is available (HTTP 204).
 func (c *ApplyPortClient) CheckForUpdate(ctx context.Context, currentVersion string) (*UpdateCheckResult, error) {
-	u := fmt.Sprintf("%s/client/update?current_version=%s", c.baseURL, currentVersion)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	u, err := url.Parse(c.baseURL + "/client/update")
+	if err != nil {
+		return nil, fmt.Errorf("client: parse base URL: %w", err)
+	}
+	q := u.Query()
+	q.Set("current_version", currentVersion)
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("client: create check request: %w", err)
 	}

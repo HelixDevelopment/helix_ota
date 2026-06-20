@@ -394,8 +394,12 @@ func reboot() error {
 	log.Print("rebooting system...")
 	// Try systemctl first (systemd builds), fall back to reboot binary.
 	if err := runCmd("systemctl", "reboot"); err != nil {
+		// systemctl failed; try the plain reboot command.
+		var errs []string
+		errs = append(errs, fmt.Sprintf("systemctl: %v", err))
 		if err2 := runCmd("reboot"); err2 != nil {
-			return fmt.Errorf("reboot: systemctl: %v, reboot: %v", err, err2)
+			errs = append(errs, fmt.Sprintf("reboot: %v", err2))
+			return fmt.Errorf("reboot failed: %s", strings.Join(errs, "; "))
 		}
 	}
 	return nil
