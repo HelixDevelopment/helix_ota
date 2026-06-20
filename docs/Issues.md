@@ -71,3 +71,11 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ---
 
+---
+
+## §5. [OTA-005] HelixTrack bidirectional sync verification
+
+**Status:** In progress
+**Type:** Task
+
+**Description:** Verify that changes to workable items docs/DB are immediately synced to HelixTrack tickets and vice versa. End-to-end sync test with recorded video evidence.
