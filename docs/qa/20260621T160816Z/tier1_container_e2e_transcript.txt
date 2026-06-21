@@ -1,0 +1,121 @@
+[16:08:16Z] Tier-1 container E2E — run-id 20260621T160816Z
+[16:08:16Z] repo root: /Volumes/T7/Projects/helix_ota
+[16:08:16Z] evidence : /Volumes/T7/Projects/helix_ota/docs/qa/20260621T160816Z
+------------------------------------------------------------
+[16:08:16Z] PREFLIGHT: podman reachable + arch
+arm64 linux
+------------------------------------------------------------
+[16:08:16Z] BUILD (a): cross-compile static linux/arm64 binaries on host
+[16:08:27Z] built: 5767330 /Volumes/T7/Projects/helix_ota/bin/ota-device-emu
+21168290 /Volumes/T7/Projects/helix_ota/bin/ota-server
+------------------------------------------------------------
+[16:08:28Z] BUILD (b): podman build control-plane image (ota-control-plane:dev)
+STEP 1/9: FROM alpine:3.21
+STEP 2/9: RUN apk add --no-cache ca-certificates wget && update-ca-certificates
+--> Using cache e675ccaa0c8cdaf9f5d37f72d50bbb445cb11d677cb5df6b683fc571e11c17d2
+--> e675ccaa0c8c
+STEP 3/9: RUN addgroup -S helix && adduser -S -G helix helix
+--> Using cache 9470ceb995e40b5972801f9503fd043dde5ada67470d1769484b23ade1a3e618
+--> 9470ceb995e4
+STEP 4/9: COPY .docker-bin/ota-server /usr/local/bin/ota-server
+--> Using cache 26a864721f7a9de3adf0cf7dd982f16c63e50c22c33199634f396b5e4c9c11f8
+--> 26a864721f7a
+STEP 5/9: ENV HELIX_PORT=8080     HELIX_API_BASE_PATH=/api/v1
+--> Using cache bf5d2f5f0fe27a0b1ac7a4b73e41645c81bdf474bf830821809ebcb70dfb728e
+--> bf5d2f5f0fe2
+STEP 6/9: EXPOSE 8080
+--> Using cache 970c005f33fad0884d45e8835985ddb41423a2f5e857696fd4b69934ff3e3d5d
+--> 970c005f33fa
+STEP 7/9: HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=12     CMD wget -qO- "http://127.0.0.1:${HELIX_PORT}/healthz" >/dev/null 2>&1 || exit 1
+--> Using cache f03ed363c20ae28e38f6d9dad81137d30565e16e99ec27a0c26939d91a1b2f35
+--> f03ed363c20a
+STEP 8/9: USER helix:helix
+--> Using cache d85ab6cbcecab64b0fb0ce204e46732e6e04b244962bd37686dfefc66766d793
+--> d85ab6cbceca
+STEP 9/9: ENTRYPOINT ["/usr/local/bin/ota-server"]
+--> Using cache 774893a6b5a963f08826b3270bd64520aab7b20209c859e266c4db7a9688ba24
+COMMIT ota-control-plane:dev
+--> 774893a6b5a9
+Successfully tagged localhost/ota-control-plane:dev
+774893a6b5a963f08826b3270bd64520aab7b20209c859e266c4db7a9688ba24
+[16:08:28Z] BUILD (b): podman build base ota-device-emu image (ota-device-emu:dev) [containers submodule]
+STEP 1/8: FROM alpine:3.21
+STEP 2/8: RUN apk add --no-cache ca-certificates && update-ca-certificates
+--> Using cache f275e9eb59ee0e5d118fcd6e3143b4601c22854b97b69999d668d7fd94c34394
+--> f275e9eb59ee
+STEP 3/8: RUN addgroup -S ota && adduser -S -G ota ota
+--> Using cache 8e1288cd6e7987ee58fa7c53c7ba087e135b0d9bddc178ab86d2d56caa93ac89
+--> 8e1288cd6e79
+STEP 4/8: COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+--> Using cache 8f699d1a0b90ed8014aa7fc29106ec2714b1fc2f53a649526ded046ad1cf5854
+--> 8f699d1a0b90
+STEP 5/8: RUN chmod +x /usr/local/bin/entrypoint.sh
+--> Using cache 893c5ff96436ef0b6833a28f3b0c4b354eaae6948a45c13e1e888dc5c708f6f1
+--> 893c5ff96436
+STEP 6/8: ENV OTA_DEVICE_EMU_BIN=/usr/local/bin/ota-device-emu
+--> Using cache a23caf960a617728b0f25da01dd8fd71361b42becd94d2e752e6243205c32bbe
+--> a23caf960a61
+STEP 7/8: USER ota
+--> Using cache 3114c155d9d3811beb342897d5c82c562e4941e2098b4580808d7c559fa0013a
+--> 3114c155d9d3
+STEP 8/8: ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+--> Using cache 927800e323cfe8786e5d6c7e8055b311a6c1410c38b6756ec5a697324784ab73
+COMMIT ota-device-emu:dev
+--> 927800e323cf
+Successfully tagged localhost/ota-device-emu:dev
+927800e323cfe8786e5d6c7e8055b311a6c1410c38b6756ec5a697324784ab73
+[16:08:29Z] BUILD (b): podman build derived emulator image (ota-device-emu-tier1:dev)
+STEP 1/2: FROM ota-device-emu:dev
+STEP 2/2: COPY ota-device-emu /usr/local/bin/ota-device-emu
+--> Using cache 04844e61941eff406b70304bdc77a695f3a2657548f2ec7b384bf7bb6a2e3a12
+COMMIT ota-device-emu-tier1:dev
+--> 04844e61941e
+Successfully tagged localhost/ota-device-emu-tier1:dev
+04844e61941eff406b70304bdc77a695f3a2657548f2ec7b384bf7bb6a2e3a12
+[16:08:29Z] image ids:
+  localhost/ota-control-plane:dev 774893a6b5a9 33.7 MB
+  localhost/ota-device-emu:dev 927800e323cf 9.38 MB
+  localhost/ota-device-emu-tier1:dev 04844e61941e 15.1 MB
+------------------------------------------------------------
+[16:08:29Z] BOOT (c): create pod 'helix-tier1-e2e'
+5064eff2efd916463f64080c44e17882e16682b2970a83f600f0fd238bca7840
+[16:08:30Z] BOOT (c): start control-plane container 'helix-cp'
+6048b430ef53358c25ae8deaddd7fb644c022b011c1789c3ade27bfadc4b1a17
+------------------------------------------------------------
+[16:08:30Z] HEALTH (d): wait for control-plane /healthz to report healthy
+[16:08:30Z]   /healthz -> {"status":"ok"}  (attempt 1)
+[16:08:30Z] control-plane boot log captured -> /Volumes/T7/Projects/helix_ota/docs/qa/20260621T160816Z/control_plane.log
+------------------------------------------------------------
+[16:08:30Z] RUN (e): emulator register -> update-check -> telemetry cycle
+[16:08:30Z] emulator exit rc=0
+[16:08:30Z] emulator Outcome JSON:
+    {
+      "device_id": "3cb519e91dd6ec79475713782635ef24",
+      "on_target": true,
+      "applied": false,
+      "from_version": "1.0.0",
+      "delta_offered": false,
+      "telemetry_accepted": 0,
+      "telemetry_rejected": 0,
+      "healthy": true,
+      "note": "device on target — no update offered (204)"
+    }
+------------------------------------------------------------
+[16:08:30Z] ASSERT (f): verify the round-trip from captured emulator + control-plane evidence
+[16:08:30Z]   [1/3] REGISTER ok: device_id=3cb519e91dd6ec79475713782635ef24
+[16:08:30Z]   [2/3] UPDATE-CHECK ok: on_target=true, clean 204 (no deployment staged)
+[16:08:30Z]   [3/3] HEALTHY ok: device reports healthy=true after the cycle
+[16:08:30Z]   [server] note: control-plane runs in gin ReleaseMode (quiet logs); the
+[16:08:30Z]            device-side Outcome (device_id assigned by the server) is the
+[16:08:30Z]            authoritative proof the server handled register + update-check.
+------------------------------------------------------------
+[16:08:30Z] RESULT: PASS — Tier-1 emulated-device round-trip proven END-TO-END on podman.
+[16:08:30Z]   register      : device_id=3cb519e91dd6ec79475713782635ef24 assigned by the control plane
+[16:08:30Z]   update-check  : on_target=true (clean 204, no deployment staged)
+[16:08:30Z]   telemetry/health: healthy=true
+[16:08:30Z]   evidence      : /Volumes/T7/Projects/helix_ota/docs/qa/20260621T160816Z/ (emulator_outcome.json, control_plane*.log, transcript)
+------------------------------------------------------------
+[16:08:30Z] Captured evidence directory: /Volumes/T7/Projects/helix_ota/docs/qa/20260621T160816Z
+------------------------------------------------------------
+[16:08:30Z] TEARDOWN: removing pod 'helix-tier1-e2e' (and its containers).
+[16:08:30Z] TEARDOWN done (exit rc=0).
