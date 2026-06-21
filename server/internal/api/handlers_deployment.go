@@ -162,6 +162,7 @@ func (s *Server) assignTargetVersion(ctx context.Context, rel store.Release, gro
 func (s *Server) matchingDevices(ctx context.Context, rel store.Release, group string) []store.Device {
 	lister, ok := s.repo.(deviceLister)
 	if !ok {
+		log.Printf("matchingDevices: repo does not implement deviceLister — returning empty set")
 		return nil
 	}
 	var out []store.Device
