@@ -39,7 +39,7 @@ CONTAINERS_DIR="${REPO_ROOT}/containers"
 check_port()    { case "${1}" in ''|*[!0-9]*) return 1;; *) [ "$1" -ge 1024 ] && [ "$1" -le 65535 ];; esac; }
 check_avd()     { case "${1}" in ''|*[!a-zA-Z0-9_-]*) return 1;; *) return 0;; esac; }
 check_num()     { case "${1}" in ''|*[!0-9]*) return 1;; *) [ "$1" -gt 0 ];; esac; }
-check_path()    { case "${1}" in *[\"\$\`\\]*|*[\;\|]*) return 1;; *) return 0;; esac; }
+check_path()    { case "${1}" in *[\"\$\`\\]*|*[\;\|]*) return 1;; esac; case "${1}" in *\'*) return 1;; esac; return 0; }
 check_gpu()     { case "${1}" in ''|*[!a-zA-Z0-9_-]*) return 1;; *) return 0;; esac; }
 
 # ─── Configuration from env ────────────────────────────────────────────
@@ -117,29 +117,28 @@ log "Booting AVD '${AVD}' on ${SSH_HOST} (${RAM_MB}MB, ${CORES} cores, ${GPU_MOD
 CFLAGS=""
 [ "${COLD_BOOT}" = "true" ] && CFLAGS="-no-snapshot -no-cache -wipe-data"
 
-# Build the launch script content as a literal heredoc to the remote
-LAUNCHER='cat > /tmp/emu-ota-launch.sh << '\''WRAPPER'\''
+# Write the launch wrapper locally and SCP it to avoid heredoc-in-SSH quoting issues
+LAUNCHER_FILE="${QA_DIR}/emu-ota-launch.sh"
+cat > "${LAUNCHER_FILE}" << LAUNCHER
 #!/bin/bash
-export LD_LIBRARY_PATH='"${LD_PATH}"':$LD_LIBRARY_PATH
-export ANDROID_SDK_ROOT='"${SDK_REMOTE}"'
-export ANDROID_HOME='"${SDK_REMOTE}"'
-export PATH='"${SDK_REMOTE}"'/emulator:'"${SDK_REMOTE}"'/platform-tools:$PATH
+export LD_LIBRARY_PATH=${LD_PATH}:\$LD_LIBRARY_PATH
+export ANDROID_SDK_ROOT=${SDK_REMOTE}
+export ANDROID_HOME=${SDK_REMOTE}
+export PATH=${SDK_REMOTE}/emulator:${SDK_REMOTE}/platform-tools:\$PATH
 cd /tmp
-exec '"${EMU_BIN}"' \
-    -avd '"${AVD}"' \
-    -no-window -no-audio \
-    -gpu '"${GPU_MODE}"' \
-    -memory '"${RAM_MB}"' \
-    -cores '"${CORES}"' \
-    -port '"${PORT}"' \
-    '"${CFLAGS}"' \
+exec ${EMU_BIN} \\
+    -avd ${AVD} \\
+    -no-window -no-audio \\
+    -gpu ${GPU_MODE} \\
+    -memory ${RAM_MB} \\
+    -cores ${CORES} \\
+    -port ${PORT} \\
+    ${CFLAGS} \\
     -verbose
-WRAPPER
-chmod +x /tmp/emu-ota-launch.sh
-nohup /tmp/emu-ota-launch.sh > /tmp/emulator-ota.log 2>&1 &
-echo EMULATOR_PID=$!'
+LAUNCHER
 
-sshx "${LAUNCHER}" 2>&1 | tee -a "${QA_DIR}/launch.log"
+scp -q "${LAUNCHER_FILE}" "${SSH_DEST}:/tmp/emu-ota-launch.sh" 2>&1 | tee -a "${QA_DIR}/launch.log"
+sshx "chmod +x /tmp/emu-ota-launch.sh && nohup /tmp/emu-ota-launch.sh > /tmp/emulator-ota.log 2>&1 & echo EMULATOR_PID=\$!" 2>&1 | tee -a "${QA_DIR}/launch.log"
 
 EMU_PID=$(grep "EMULATOR_PID=" "${QA_DIR}/launch.log" | tail -1 | cut -d= -f2)
 [ -n "${EMU_PID}" ] || fail "Could not determine emulator PID"

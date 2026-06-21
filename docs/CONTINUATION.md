@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 1
-**Last modified:** 2026-06-21T14:43:25Z
+**Revision:** 2
+**Last modified:** 2026-06-21T15:23:00Z
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `4854512b` `test(coverage): requireProjectAccess 56%→100%, deriveProgress 52%→100%; add UI recording scripts` |
+| **HEAD** | `79acb1cd` `fix(security): add input validation + shell-escaping to boot_android_emulator.sh` |
 | **Phase** | Emulator Tier-2 validation — real Android A/B `update_engine` + AVB/dm-verity + auto-rollback |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets |
 

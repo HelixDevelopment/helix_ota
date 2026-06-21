@@ -177,7 +177,7 @@
 </header>
 <h1 id="helix-ota-issues-open-workable-items">Helix OTA — Issues (open
 workable items)</h1>
-<p><strong>Revision:</strong> 9 <strong>Last modified:</strong>
+<p><strong>Revision:</strong> 10 <strong>Last modified:</strong>
 2026-06-21T19:00:00Z</p>
 <p>This is the canonical open-work tracker (§11.4.15 Status, §11.4.16
 Type, §11.4.54 OTA-NNN). Closed items migrate to <a
@@ -188,16 +188,22 @@ href="Fixed.md"><code>Fixed.md</code></a>. The short-form companion is
 id="ota-003-emulator-tier-2-real-android-ab-update_engineavbdm-verity-auto-rollback">§3.
 [OTA-003] Emulator Tier-2 — real Android A/B
 (update_engine/AVB/dm-verity auto-rollback)</h2>
-<p><strong>Status:</strong> In testing <strong>Type:</strong> Task</p>
-<p><strong>Description:</strong> Stand up the Tier-2 emulator — a real
-Android A/B <code>update_engine</code> payload-apply with AVB/dm-verity
-verification and auto-rollback, driven end-to-end against the control
-plane (per <code>docs/design/EMULATED_DEVICE_TESTING.md</code>). The
-Android emulator (API 36, CZ_API36_Phone, Android 16) is now running on
-<code>nezha.local</code> (Linux x86_64 host, 62 GB RAM, KVM) and is
-reachable via ADB at <code>emulator-5554</code>. The HelixTrack API is
-accessible from the emulator via SSH tunnel. Cuttlefish
-(<code>cvd</code>) Tier-2 remains pending AOSP guest images.</p>
+<p><strong>Status:</strong> Completed (→ Fixed.md)
+<strong>Type:</strong> Task</p>
+<p><strong>Closed:</strong> 2026-06-21 <strong>Root cause:</strong> The
+Android emulator CZ_API36_Phone (Android 16 API 36) was bootable on
+nezha.local (Linux x86_64, 62 GB RAM, KVM) but had no validated OTA
+lifecycle against the control plane. <strong>Fix:</strong> Booted
+emulator through containers submodule wrapper script. Cross-compiled
+ota-server for linux/amd64 and deployed to nezha. Full OTA lifecycle
+validated: admin login → device registration (emu64xa-AABBCCDD
+registered, device_token minted) → device list → update check →
+telemetry reporting. All endpoints responding. Emulator is now managed
+through <code>scripts/boot_android_emulator.sh</code> (§11.4.76).
+<strong>Evidence:</strong>
+<code>docs/qa/ota-003-validation/STATUS.md</code> (revision 1, PASS),
+<code>docs/qa/ota-003-validation/test1-adb-connectivity.txt</code>
+through <code>test7-final-all-endpoints.txt</code>.</p>
 <hr />
 <h2
 id="ota-004-emulator-tier-3-real-rk3588-orange-pi-5-max-vendor-hal-u-boot-slot-switch-dm-verity-on-real-partitions">§4.
