@@ -93,7 +93,7 @@ func NewServer(opts Options) *Server {
 		pubKey:  pubKey,
 		target:  policy,
 		refresh: newRefreshStore(),
-		rollout: rollout.NewService(now),
+		rollout: rolloutSvc,
 		nowFn:   now,
 		newIDFn: newID,
 	}
