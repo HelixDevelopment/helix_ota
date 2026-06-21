@@ -1,7 +1,7 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 7
-**Last modified:** 2026-06-21T14:00:00Z
+**Revision:** 8
+**Last modified:** 2026-06-21T18:00:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
@@ -11,16 +11,18 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ## §3. [OTA-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback)
 
-**Status:** In progress
+**Status:** In testing
 **Type:** Task
 
 **Description:** Stand up the Tier-2 emulator — a real Android A/B
 `update_engine` payload-apply with AVB/dm-verity verification and
 auto-rollback, driven end-to-end against the control plane (per
-`docs/design/EMULATED_DEVICE_TESTING.md`). This was previously
-blocked on a Linux+KVM host; the Linux host `nezha.local` (x86_64,
-62 GB RAM, 8 vCPUs, KVM enabled) is now available, unblocking
-Cuttlefish (`cvd`) deployment for Tier-2 validation.
+`docs/design/EMULATED_DEVICE_TESTING.md`). The Android emulator
+(API 36, CZ_API36_Phone, Android 16) is now running on `nezha.local`
+(Linux x86_64 host, 62 GB RAM, KVM) and is reachable via ADB at
+`emulator-5554`. The HelixTrack API is accessible from the emulator
+via SSH tunnel. Cuttlefish (`cvd`) Tier-2 remains pending AOSP
+guest images.
 
 ---
 

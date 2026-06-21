@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
-| Last modified | 2026-06-21T14:00:00Z |
+| Revision | 4 |
+| Last modified | 2026-06-21T18:00:00Z |
 | Status | active — Tier-1 shipped; Tier-1.5 dev-host A/B-virt foundation built, slot mechanism in progress |
-| Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). **Tier-2** was host-gated; the Linux host `nezha.local` (x86_64, 62 GB RAM, 8 vCPUs, KVM enabled) is now available — Tier-2 is **unblocked and actionable**. |
+| Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). **Tier-2** now has a live Android emulator (API 36, CZ_API36_Phone, Android 16) running on `nezha.local` (Linux x86_64, 62 GB RAM, KVM), reachable via ADB at `emulator-5554`. Cuttlefish (`cvd`) Tier-2 remains pending AOSP guest images. |
 | Authority | Helix OTA control-plane / device-integration team |
 | Related | `docs/research/main_specs/CONTINUATION.md`; `docs/RESUMPTION.md`; `containers/` submodule (`vasic-digital/containers`, §11.4.76); `submodules/ota-protocol`, `submodules/ota-android-agent`, `submodules/ota-update-engine-bridge` |
 
@@ -81,24 +81,38 @@ boundary on what each environment can and cannot prove.
 - **Status:** **foundation shipped + proven; A/B slot mechanism in progress** (gated on
   `u-boot.bin`).
 
-### Tier-2 — Cuttlefish virtual Android device (previously host-gated, now unblocked)
+### Tier-2 — Android emulator + Cuttlefish virtual Android device
 
-- **What:** a Cuttlefish (`cvd`) virtual Android device running a real Android system
-  image, exercising the **real `update_engine` A/B flow + AVB/dm-verity + auto-rollback**
-  end-to-end, driven by the `ota-android-agent` + `ota-update-engine-bridge`.
+- **What:** a real Android system image exercising the **real `update_engine` A/B flow
+  + AVB/dm-verity + auto-rollback** end-to-end, driven by the `ota-android-agent` +
+  `ota-update-engine-bridge`.
 - **What it proves:** the device-side apply path the Tier-1 emulator stubs — real
   payload application to the inactive slot, post-reboot slot promotion, and
   corrupt-slot → auto-rollback.
-- **Gate (FACT):** Cuttlefish requires **Linux with nested KVM**. The Linux host
-  `nezha.local` (x86_64, 62 GB RAM, 8 vCPUs, KVM enabled) is now available —
-  Cuttlefish can run there.
-- **Honest §11.4.112 boundary:** Tier-2 was **host/hardware-gated, NOT structurally
-  impossible** — confirmed now that `nezha.local` is provisioned.
+
+#### Android emulator (API 36) — live
+
+- **Target:** Android emulator (API 36, CZ_API36_Phone, Android 16) running on
+  `nezha.local` (Linux x86_64, 62 GB RAM, 8 vCPUs, KVM enabled).
+- **Connectivity:** reachable via ADB at `emulator-5554`. HelixTrack API accessible
+  via SSH tunnel.
+- **Harness state:** `tests/emulator/tier2_android_emulator.sh` targeting the
+  `update_engine` A/B apply path. Initial emulator boot and ADB connectivity
+  verified.
+- **Status:** **in testing** — exercising the real `update_engine` payload apply
+  against the running emulator (see OTA-003, Issues.md §3).
+
+#### Cuttlefish (`cvd`) — pending AOSP guest images
+
+- **Target:** Cuttlefish (`cvd`) virtual Android device with nested KVM on
+  `nezha.local`.
+- **Gate (FACT):** requires AOSP guest images for Cuttlefish; these are not yet
+  downloaded/deployed on `nezha.local`.
 - **Harness state:** the Cuttlefish A/B harness is **authored**
   (`tests/emulator/tier2_cuttlefish_ab.sh`), including the **corrupt-slot → reboot →
-  auto-rollback** section (PWU-CF-2). It has not yet been run on `nezha.local`.
-- **Status:** **unblocked** — deploy the Cuttlefish A/B stack to `nezha.local` and
-  execute the authored harness (see OTA-003, Issues.md §3).
+  auto-rollback** section (PWU-CF-2). It has not yet been run.
+- **Status:** **pending** — once AOSP guest images are available, deploy the
+  Cuttlefish A/B stack and execute the authored harness.
 
 ### Tier-3 — real RK3588 / Orange Pi 5 Max hardware
 
@@ -116,7 +130,7 @@ boundary on what each environment can and cannot prove.
 
 Legend: **YES** = proven with captured evidence · *target* = the tier's intended scope, NOT yet proven · no = out of scope for that tier.
 
-| Capability | Tier-1 (podman emulator) | Tier-1.5 (A/B-virt, U-Boot+RAUC) | Tier-2 (Cuttlefish) | Tier-3 (RK3588) |
+| Capability | Tier-1 (podman emulator) | Tier-1.5 (A/B-virt, U-Boot+RAUC) | Tier-2 (Android Emulator / Cuttlefish) | Tier-3 (RK3588) |
 |---|---|---|---|---|
 | `ota-protocol` wire conformance | YES | (host plumbing) | YES | YES |
 | Server flow: register/update-check/telemetry/delta/rollout/recall | YES | (host plumbing) | YES | YES |
@@ -124,9 +138,9 @@ Legend: **YES** = proven with captured evidence · *target* = the tier's intende
 | Boots to live userspace on QEMU+HVF | n/a | **YES** (PWU-AB-1 foundation) | n/a | n/a |
 | Real U-Boot bootcount A/B slot-switch | no | *target — in progress (authored, gated on `u-boot.bin`)* | no | YES |
 | RAUC dm-verity verification | no | *target — in progress* | no (AVB instead) | YES |
-| Auto-rollback on corrupt slot | no | *target — in progress* | *target (host-gated SKIP on macOS)* | YES |
-| Real Android `update_engine` A/B apply | no | no (U-Boot/RAUC, not `update_engine`) | *target (host-gated)* | YES |
-| AVB verification | no | no (RAUC dm-verity instead) | *target (virtual, host-gated)* | YES (real partitions) |
+| Auto-rollback on corrupt slot | no | *target — in progress* | *in testing (Android emulator API 36 on nezha.local)* | YES |
+| Real Android `update_engine` A/B apply | no | no (U-Boot/RAUC, not `update_engine`) | *in testing (Android emulator API 36)* | YES |
+| AVB verification | no | no (RAUC dm-verity instead) | *in testing (Android emulator API 36)* | YES (real partitions) |
 | Vendor HAL / RK3588 SoC bootloader | no | no | no | YES |
 | Runnable on this macOS host now | **YES** | **YES (foundation booted; slot disk pending `u-boot.bin`)** | no (Linux+KVM) | no (hardware) |
 
