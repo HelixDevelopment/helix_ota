@@ -648,23 +648,26 @@ main() {
     fi
 
     # Push — §11.4.88 background-push mandate
+    # Buffered push via dedicated push_all.sh (per-remote locking, retry, backoff)
     if [[ "$SYNC_PUSH" == "true" ]]; then
         do_push
     elif [[ "$DRY_RUN" == "true" ]]; then
         log_info "§11.4.88: dry-run — skipping push"
     else
-        log_info "§11.4.88: releasing lock + spawning detached push"
+        log_info "§11.4.88: releasing lock + spawning buffered detached push"
         local push_log="$PROJECT_ROOT/qa-results/push_failures/$(date -u +%Y%m%dT%H%M%SZ)_push.log"
         mkdir -p "$(dirname "$push_log")" 2>/dev/null || true
         rm -rf "$LOCK_DIR" 2>/dev/null || true
-        nohup bash -c "
-            for r in github gitlab gitflic gitverse; do
-                git push \"\$r\" main 2>&1 || echo \"FAILED: \$r\"
-            done
-        " > "$push_log" 2>&1 < /dev/null &
+        nohup bash "$SCRIPT_DIR/push_all.sh" \
+            --branch "$(get_current_branch)" \
+            --retries 3 \
+            --delay 5 \
+            --log "$push_log" \
+            --quiet \
+            > /dev/null 2>&1 < /dev/null &
         local ppid=$!
         disown "$ppid" 2>/dev/null || true
-        log_ok "Detached push spawned (PID $ppid, log: $push_log)"
+        log_ok "Buffered push spawned (PID $ppid, log: $push_log)"
     fi
 
     show_summary
