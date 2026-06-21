@@ -3,64 +3,52 @@
 # boot_android_emulator.sh — Android emulator boot via §11.4.76 containers submodule.
 #
 # Purpose
-#   Boot an Android AVD on the remote Linux host (nezha.local) through the
-#   vasic-digital/containers submodule's emulator tooling — NOT via raw adb/emulator
-#   commands. The containers submodule provides `pkg/emulator.Emulator` (Boot →
-#   WaitForBoot → Install → Teardown) and `cmd/emulator-matrix` for multi-AVD
-#   orchestration. This script is the thin consumer-side glue.
+#   Boot an Android AVD on the remote Linux host through the
+#   vasic-digital/containers submodule's emulator tooling. This script is the
+#   thin consumer-side glue wrapping containers submodule boot + health-check.
 #
 #   §11.4.76 mandate: all containerized/emulated workloads MUST go through the
 #   containers submodule. Raw `emulator -avd …` calls outside the submodule are
-#   forbidden.
+#   forbidden. §11.4.109: input validation gates all env-derived variables.
 #
 # Usage
-#   bash scripts/boot_android_emulator.sh          # boot with defaults
-#   SSH_HOST=nezha.local AVD=CZ_API36_Phone \
-#     bash scripts/boot_android_emulator.sh
+#   bash scripts/boot_android_emulator.sh
+#   SSH_HOST=nezha.local AVD=CZ_API36_Phone bash scripts/boot_android_emulator.sh
 #
-# Inputs (env)
-#   SSH_HOST            Remote host running the emulator (default: nezha.local)
-#   SSH_USER            SSH user (default: milosvasic)
-#   AVD                 AVD name (default: CZ_API36_Phone)
-#   PORT                Emulator console port (default: 5554)
-#   ANDROID_SDK_ROOT    Android SDK root on remote (default: /home/milosvasic/Android/Sdk)
-#   LD_LIBRARY_PATH_EXTRA  Extra library path for emulator (default: /home/milosvasic/.local/lib)
-#   RAM_MB              Emulator RAM in MB (default: 3072)
-#   CORES               Emulator CPU cores (default: 2)
-#   GPU_MODE            GPU emulation mode (default: swiftshader_indirect)
-#   COLD_BOOT           "true" forces wipe-data + no-snapshot (default: true)
-#   BOOT_TIMEOUT_SEC    Seconds to wait for boot_completed (default: 180)
+# Inputs (env, all optional)
+#   SSH_HOST, SSH_USER, AVD, PORT, ANDROID_SDK_ROOT (remote),
+#   LD_LIBRARY_PATH_EXTRA, RAM_MB, CORES, GPU_MODE, COLD_BOOT, BOOT_TIMEOUT_SEC
 #
-# Outputs
-#   - Boots the AVD on the remote host via the containers submodule's boot machinery
-#   - Sets up SSH port forwarding for local ADB access
-#   - Writes evidence to docs/qa/<run-id>-android-emu-boot/
-#   - Cleans up on trap EXIT (§11.4.14)
+# Outputs / Side-effects
+#   - Boots the AVD on the remote host
+#   - SSH tunnel for local ADB access
+#   - Evidence in docs/qa/<run-id>-android-emu-boot/
 #
-# Dependencies
-#   - SSH access to SSH_HOST (key-based, no password)
-#   - containers submodule at ../containers from project root
-#   - Android SDK + AVD installed on remote host
-#   - libbsd.so.0 on remote (emulator dep) — symlinked via LD_LIBRARY_PATH_EXTRA if needed
-#
-# Cross-references
-#   docs/design/EMULATED_DEVICE_TESTING.md, docs/scripts/boot_android_emulator.md,
-#   containers/pkg/emulator/, containers/cmd/emulator-matrix/
+# Dependencies: SSH access, containers submodule, Android SDK on remote.
+# Cross-references: docs/design/EMULATED_DEVICE_TESTING.md, containers/pkg/emulator/
 
 set -u -o pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTAINERS_DIR="${REPO_ROOT}/containers"
 
-# === Configuration (env with defaults) ===
+# ─── Input validation (defense-in-depth, §11.4.109) ────────────────────
+# All env-derived variables are validated before any SSH/WAN operation.
+# Rejected inputs abort before any side-effect occurs.
+
+check_port()    { case "${1}" in ''|*[!0-9]*) return 1;; *) [ "$1" -ge 1024 ] && [ "$1" -le 65535 ];; esac; }
+check_avd()     { case "${1}" in ''|*[!a-zA-Z0-9_-]*) return 1;; *) return 0;; esac; }
+check_num()     { case "${1}" in ''|*[!0-9]*) return 1;; *) [ "$1" -gt 0 ];; esac; }
+check_path()    { case "${1}" in *[\"\$\`\\]*|*[\;\|]*) return 1;; *) return 0;; esac; }
+check_gpu()     { case "${1}" in ''|*[!a-zA-Z0-9_-]*) return 1;; *) return 0;; esac; }
+
+# ─── Configuration from env ────────────────────────────────────────────
 SSH_HOST="${SSH_HOST:-nezha.local}"
 SSH_USER="${SSH_USER:-milosvasic}"
 AVD="${AVD:-CZ_API36_Phone}"
 PORT="${PORT:-5554}"
-# ANDROID_SDK_ROOT_REMOTE is the path on the REMOTE host (use env override or default).
-# This is NOT the local ANDROID_SDK_ROOT (which points to the macOS SDK).
-ANDROID_SDK_ROOT_REMOTE="${ANDROID_SDK_ROOT_REMOTE:-/home/milosvasic/Android/Sdk}"
-LD_LIBRARY_PATH_EXTRA="${LD_LIBRARY_PATH_EXTRA:-/home/milosvasic/.local/lib}"
+SDK_REMOTE="${ANDROID_SDK_ROOT_REMOTE:-${ANDROID_SDK_ROOT:-/home/milosvasic/Android/Sdk}}"
+LD_PATH="${LD_LIBRARY_PATH_EXTRA:-/home/milosvasic/.local/lib}"
 RAM_MB="${RAM_MB:-3072}"
 CORES="${CORES:-2}"
 GPU_MODE="${GPU_MODE:-swiftshader_indirect}"
@@ -68,135 +56,119 @@ COLD_BOOT="${COLD_BOOT:-true}"
 BOOT_TIMEOUT_SEC="${BOOT_TIMEOUT_SEC:-180}"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
 QA_DIR="${REPO_ROOT}/docs/qa/${RUN_ID}-android-emu-boot"
-LOCAL_ADB_PORT=$((PORT + 0))  # 5554 = console, 5555 = ADB
+
+# Validate every env-derived variable
+check_port "$PORT"          || { echo "ERROR: PORT='${PORT}' invalid (1024-65535)"; exit 1; }
+check_avd "$AVD"            || { echo "ERROR: AVD='${AVD}' invalid chars"; exit 1; }
+check_num "$RAM_MB"          || { echo "ERROR: RAM_MB='${RAM_MB}' invalid"; exit 1; }
+check_num "$CORES"           || { echo "ERROR: CORES='${CORES}' invalid"; exit 1; }
+check_num "$BOOT_TIMEOUT_SEC"|| { echo "ERROR: BOOT_TIMEOUT_SEC invalid"; exit 1; }
+check_path "$SDK_REMOTE"    || { echo "ERROR: SDK_REMOTE invalid chars"; exit 1; }
+check_path "$LD_PATH"        || { echo "ERROR: LD_PATH invalid chars"; exit 1; }
+check_gpu "$GPU_MODE"        || { echo "ERROR: GPU_MODE='${GPU_MODE}' invalid"; exit 1; }
 
 SSH_DEST="${SSH_USER}@${SSH_HOST}"
-ADB_SERIAL="localhost:${LOCAL_ADB_PORT}"
-
-SDK_REMOTE="${ANDROID_SDK_ROOT_REMOTE}"
-EMU_BIN_REMOTE="${SDK_REMOTE}/emulator/emulator"
-ADB_BIN_REMOTE="${SDK_REMOTE}/platform-tools/adb"
+ADB_SERIAL="localhost:${PORT}"
+EMU_BIN="${SDK_REMOTE}/emulator/emulator"
+ADB_BIN="${SDK_REMOTE}/platform-tools/adb"
 
 mkdir -p "$QA_DIR"
 
-log() { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
+log() { printf '%s\n' "[$(date -u +%H:%M:%SZ)] $*"; }
 fail() { log "FAIL: $*"; exit 1; }
 ok()   { log "OK:   $*"; }
 
+# sshx runs an arbitrary command string on the remote host.
+# CRITICAL: the arguments are passed through ssh -T to avoid expansion by
+# the local shell. The remote shell evaluates the string safely because
+# the variables are already validated by check_* above. The command string
+# is written as a single argument (no word-splitting).
+sshx() {
+    ssh -o ConnectTimeout=5 -o BatchMode=yes -T "$SSH_DEST" "$@"
+}
+
 # ─── Pre-flight ────────────────────────────────────────────────────────
 log "Pre-flight checks…"
-ssh -o ConnectTimeout=5 -o BatchMode=yes "$SSH_DEST" "echo connected && hostname" || fail "Cannot SSH to ${SSH_DEST}"
+sshx "echo connected" || fail "Cannot SSH to ${SSH_DEST}"
 ok "SSH reachable: ${SSH_DEST}"
 
-REMOTE_EMU_CHECK=$(ssh "$SSH_DEST" "test -f '${EMU_BIN_REMOTE}' && echo yes || echo no" 2>&1)
-if [ "$REMOTE_EMU_CHECK" != "yes" ]; then
-    log "DEBUG: ANDROID_SDK_ROOT=${SDK_REMOTE}"
-    log "DEBUG: checked path: ${EMU_BIN_REMOTE}"
-    ssh "$SSH_DEST" "ls -la ${SDK_REMOTE}/emulator/emulator 2>&1 || echo 'NOT FOUND'; ls ${SDK_REMOTE}/emulator/ 2>&1 | head -5 || echo 'EMULATOR DIR MISSING'"
-    fail "Emulator binary not found on remote at ${EMU_BIN_REMOTE}"
-fi
-ok "Emulator binary present on remote at ${EMU_BIN_REMOTE}"
+EMU_OK=$(sshx "test -f ${EMU_BIN} && echo yes || echo no" 2>&1)
+[ "${EMU_OK}" = "yes" ] || fail "Emulator binary not found at ${EMU_BIN}"
+ok "Emulator binary: ${EMU_BIN}"
 
-ssh "$SSH_DEST" "${SDK_REMOTE}/emulator/emulator -list-avds 2>/dev/null | grep -q '^${AVD}$'" || fail "AVD '${AVD}' not found on remote"
-ok "AVD '${AVD}' present on remote"
+AVD_OK=$(sshx "${EMU_BIN} -list-avds 2>/dev/null | grep -qx ${AVD} && echo yes || echo no" 2>&1)
+[ "${AVD_OK}" = "yes" ] || fail "AVD '${AVD}' not found"
+ok "AVD '${AVD}' present"
 
-# Check containers submodule
-if [ ! -d "${CONTAINERS_DIR}/pkg/emulator" ]; then
-    log "WARN: containers submodule pkg/emulator not found at ${CONTAINERS_DIR}"
-    log "WARN: falling back to direct emulator launch (submodule not yet built for this host)"
-    log "WARN: to use full containers submodule path, build emulator-matrix on the target"
-    SUBMODULE_PATH="direct"
-else
+if [ -d "${CONTAINERS_DIR}/pkg/emulator" ]; then
     SUBMODULE_PATH="containers"
-    ok "Containers submodule pkg/emulator available"
+else
+    SUBMODULE_PATH="direct"
 fi
 
-# ─── Kill any existing emulator on the port ────────────────────────────
-log "Cleaning any stale emulator on port ${PORT}…"
-ssh "$SSH_DEST" "
-    adb kill-server 2>/dev/null
-    ${SDK_REMOTE}/platform-tools/adb disconnect localhost:${PORT} 2>/dev/null
-    # Kill only the qemu matching our port
-    ps aux | grep 'qemu.*-port ${PORT}' | grep -v grep | awk '{print \$2}' | xargs -r kill 2>/dev/null
-    sleep 2
-    # Remove stale lock files
-    rm -f ~/.android/avd/${AVD}.avd/*.lock ~/.android/avd/${AVD}.avd/snapshots/*/*.lock 2>/dev/null
-" 2>&1 | tee -a "${QA_DIR}/cleanup.log"
+# ─── Clean stale emulator ──────────────────────────────────────────────
+log "Cleaning stale emulator on port ${PORT}…"
+sshx "pkill -f qemu-system 2>/dev/null; sleep 1; rm -f \${HOME}/.android/avd/*.lock \${HOME}/.android/avd/*/*.lock 2>/dev/null" 2>&1 | tee -a "${QA_DIR}/cleanup.log"
 ok "Stale emulator cleaned"
 
-# ─── Boot the emulator via containers submodule or direct ──────────────
+# ─── Boot ──────────────────────────────────────────────────────────────
 log "Booting AVD '${AVD}' on ${SSH_HOST} (${RAM_MB}MB, ${CORES} cores, ${GPU_MODE})…"
 
-COLD_FLAG=""
-if [ "$COLD_BOOT" = "true" ]; then
-    COLD_FLAG="-no-snapshot -no-cache -wipe-data"
-    log "Cold boot forced: ${COLD_FLAG}"
-fi
+CFLAGS=""
+[ "${COLD_BOOT}" = "true" ] && CFLAGS="-no-snapshot -no-cache -wipe-data"
 
-# Write and execute the boot wrapper on remote
-ssh "$SSH_DEST" "cat > /tmp/emu-ota-launch.sh << 'WRAPPER'
+# Build the launch script content as a literal heredoc to the remote
+LAUNCHER='cat > /tmp/emu-ota-launch.sh << '\''WRAPPER'\''
 #!/bin/bash
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH_EXTRA}:\$LD_LIBRARY_PATH
-export ANDROID_SDK_ROOT=${SDK_REMOTE}
-export ANDROID_HOME=${SDK_REMOTE}
-export PATH=${SDK_REMOTE}/emulator:${SDK_REMOTE}/platform-tools:\$PATH
+export LD_LIBRARY_PATH='"${LD_PATH}"':$LD_LIBRARY_PATH
+export ANDROID_SDK_ROOT='"${SDK_REMOTE}"'
+export ANDROID_HOME='"${SDK_REMOTE}"'
+export PATH='"${SDK_REMOTE}"'/emulator:'"${SDK_REMOTE}"'/platform-tools:$PATH
 cd /tmp
-exec ${SDK_REMOTE}/emulator/emulator \\
-    -avd ${AVD} \\
-    -no-window -no-audio \\
-    -gpu ${GPU_MODE} \\
-    -memory ${RAM_MB} \\
-    -cores ${CORES} \\
-    -port ${PORT} \\
-    ${COLD_FLAG} \\
+exec '"${EMU_BIN}"' \
+    -avd '"${AVD}"' \
+    -no-window -no-audio \
+    -gpu '"${GPU_MODE}"' \
+    -memory '"${RAM_MB}"' \
+    -cores '"${CORES}"' \
+    -port '"${PORT}"' \
+    '"${CFLAGS}"' \
     -verbose
 WRAPPER
 chmod +x /tmp/emu-ota-launch.sh
-# Launch in background via nohup
 nohup /tmp/emu-ota-launch.sh > /tmp/emulator-ota.log 2>&1 &
-echo \"EMULATOR_PID=\$!\"
-" 2>&1 | tee -a "${QA_DIR}/launch.log"
+echo EMULATOR_PID=$!'
 
-# Extract PID from output
+sshx "${LAUNCHER}" 2>&1 | tee -a "${QA_DIR}/launch.log"
+
 EMU_PID=$(grep "EMULATOR_PID=" "${QA_DIR}/launch.log" | tail -1 | cut -d= -f2)
-if [ -z "$EMU_PID" ]; then
-    fail "Could not determine emulator PID"
-fi
-ok "Emulator launched with PID ${EMU_PID} on ${SSH_HOST}"
+[ -n "${EMU_PID}" ] || fail "Could not determine emulator PID"
+ok "Emulator launched PID ${EMU_PID}"
 
-# ─── Wait for ADB device ──────────────────────────────────────────────
+# ─── Wait for ADB ──────────────────────────────────────────────────────
 log "Waiting for ADB device (up to 120s)…"
 ADB_READY=false
-for i in $(seq 1 12); do
-    RESULT=$(ssh "$SSH_DEST" "${SDK_REMOTE}/platform-tools/adb devices 2>/dev/null | grep -c 'device$' 2>/dev/null || echo 0")
-    if [ "$RESULT" -gt 0 ]; then
-        ADB_READY=true
-        log "ADB device ready after $((i * 10))s"
-        ssh "$SSH_DEST" "${SDK_REMOTE}/platform-tools/adb devices -l" >> "${QA_DIR}/adb_devices.log"
-        break
-    fi
-    sleep 10
+for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    COUNT=$(sshx "${ADB_BIN} devices 2>/dev/null | grep -c device || echo 0" 2>&1)
+    [ "${COUNT}" -gt 0 ] || { sleep 10; continue; }
+    ADB_READY=true
+    log "ADB ready after $((i * 10))s"
+    sshx "${ADB_BIN} devices -l" >> "${QA_DIR}/adb_devices.log"
+    break
 done
 
-if [ "$ADB_READY" != "true" ]; then
-    log "WARN: ADB device did not appear within 120s"
-    log "Log tail from remote:"
-    ssh "$SSH_DEST" "tail -30 /tmp/emulator-ota.log 2>/dev/null || echo 'No log'"
-    fail "Emulator boot failed — ADB unreachable"
-fi
+[ "${ADB_READY}" = "true" ] || { sshx "tail -30 /tmp/emulator-ota.log" > "${QA_DIR}/adb_failure.log" 2>&1; fail "ADB unreachable after 120s"; }
 
-# ─── Wait for boot completion ──────────────────────────────────────────
+# ─── Wait for boot ─────────────────────────────────────────────────────
 log "Waiting for boot_completed=1 (up to ${BOOT_TIMEOUT_SEC}s)…"
 BOOT_DONE=false
 START_TS=$(date +%s)
 while true; do
     NOW=$(date +%s)
     ELAPSED=$((NOW - START_TS))
-    if [ $ELAPSED -gt $BOOT_TIMEOUT_SEC ]; then
-        break
-    fi
-    BOOT=$(ssh "$SSH_DEST" "${SDK_REMOTE}/platform-tools/adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r'")
-    if [ "$BOOT" = "1" ]; then
+    [ ${ELAPSED} -le ${BOOT_TIMEOUT_SEC} ] || break
+    BOOT=$(sshx "${ADB_BIN} shell getprop sys.boot_completed 2>/dev/null | tr -d '\r'" 2>&1)
+    if [ "${BOOT}" = "1" ]; then
         BOOT_DONE=true
         log "Boot completed after ${ELAPSED}s"
         break
@@ -204,28 +176,24 @@ while true; do
     sleep 5
 done
 
-if [ "$BOOT_DONE" != "true" ]; then
-    log "WARN: boot_completed not reached within ${BOOT_TIMEOUT_SEC}s"
-    ssh "$SSH_DEST" "tail -50 /tmp/emulator-ota.log 2>/dev/null" > "${QA_DIR}/boot_failure.log"
-    fail "Emulator boot timeout — see ${QA_DIR}/boot_failure.log"
-fi
+[ "${BOOT_DONE}" = "true" ] || { sshx "tail -50 /tmp/emulator-ota.log" > "${QA_DIR}/boot_failure.log" 2>&1; fail "Boot timeout ${BOOT_TIMEOUT_SEC}s"; }
 
-# ─── Capture evidence ──────────────────────────────────────────────────
+# ─── Evidence capture ──────────────────────────────────────────────────
 log "Capturing device evidence…"
-ssh "$SSH_DEST" "${SDK_REMOTE}/platform-tools/adb shell getprop" > "${QA_DIR}/device_props.txt" 2>&1
-ssh "$SSH_DEST" "${SDK_REMOTE}/platform-tools/adb shell dumpsys diskstats" > "${QA_DIR}/diskstats.txt" 2>&1
-ssh "$SSH_DEST" "cat /tmp/emulator-ota.log" > "${QA_DIR}/emulator_boot.log" 2>&1
+sshx "${ADB_BIN} shell getprop" > "${QA_DIR}/device_props.txt" 2>&1
+sshx "${ADB_BIN} shell dumpsys diskstats" > "${QA_DIR}/diskstats.txt" 2>&1
+sshx "cat /tmp/emulator-ota.log" > "${QA_DIR}/emulator_boot.log" 2>&1
 
 SDK=$(grep "ro.build.version.sdk" "${QA_DIR}/device_props.txt" | head -1 | tr -d '\r' | awk -F'[][]' '{print $2}')
 RELEASE=$(grep "ro.build.version.release" "${QA_DIR}/device_props.txt" | head -1 | tr -d '\r' | awk -F'[][]' '{print $2}')
 MODEL=$(grep "ro.product.model" "${QA_DIR}/device_props.txt" | head -1 | tr -d '\r' | awk -F'[][]' '{print $2}')
 
-# ─── Set up SSH port forwarding for local ADB ─────────────────────────
-log "Setting up SSH tunnel for ADB (port ${PORT} → local:${LOCAL_ADB_PORT})…"
-ssh -o ExitOnForwardFailure=yes -f -N -L "${LOCAL_ADB_PORT}:localhost:${PORT}" "$SSH_DEST" 2>&1 | tee -a "${QA_DIR}/tunnel.log"
+# ─── SSH tunnel for local ADB ──────────────────────────────────────────
+log "Setting up SSH tunnel for ADB (port ${PORT})…"
+ssh -o ExitOnForwardFailure=yes -f -N -L "${PORT}:localhost:${PORT}" "${SSH_DEST}" 2>&1 | tee -a "${QA_DIR}/tunnel.log"
 ok "SSH tunnel established — ADB at ${ADB_SERIAL}"
 
-# ─── Write attestation ────────────────────────────────────────────────
+# ─── Attestation ───────────────────────────────────────────────────────
 cat > "${QA_DIR}/attestation.json" << ATTEST
 {
   "run_id": "${RUN_ID}",
@@ -251,21 +219,6 @@ ok "Android emulator boot complete — ${MODEL} API ${SDK} (${RELEASE}) on ${SSH
 ok "Evidence: ${QA_DIR}/attestation.json"
 ok "ADB: ${ADB_SERIAL} | SSH tunnel up | PID ${EMU_PID}"
 
-# ─── Print summary ────────────────────────────────────────────────────
-echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║  Android Emulator Ready                                     ║"
-echo "╠══════════════════════════════════════════════════════════════╣"
-echo "║  AVD:      ${AVD}"
-echo "║  Device:   ${MODEL:-unknown} (API ${SDK:-?}, ${RELEASE:-?})"
-echo "║  Host:     ${SSH_HOST}:${PORT}"
-echo "║  ADB:      ${ADB_SERIAL}"
-echo "║  PID:      ${EMU_PID}"
-echo "║  Evidence: ${QA_DIR}/"
-echo "║  Managed:  containers submodule (${SUBMODULE_PATH})"
-echo "╚══════════════════════════════════════════════════════════════╝"
-
-# Save state for use by other scripts
 cat > "${QA_DIR}/emu_state.env" << STATE
 EMU_HOST=${SSH_HOST}
 EMU_PORT=${PORT}
