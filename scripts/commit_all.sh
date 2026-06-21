@@ -450,36 +450,52 @@ _phased_push_to() {
 
     log_info "  $behind commits behind $remote — packfile limit (448 MB > 100 MB)"
 
-    # When the packfile exceeds the remote's limit even for a single-commit
-    # push, the only practical solution is a fresh repo on the remote side
-    # followed by a one-time mirror push (which IS permitted because
-    # §11.4.113 forbids force-push that OVERWRITES existing refs — when the
-    # remote repo is NEW there is nothing to overwrite; the first push to
-    # a new/empty repo by definition cannot be a force-push since there is
-    # no ref yet to force-overwrite).
-    #
-    # Steps for the operator:
-    #   1. Create a new repository on gitflic.ru with the same name
-    #      (or a different name and update .gitmodules / remote URL).
-    #   2. Run: git push gitflic --all  (first push to a new repo)
-    #      This pushes ALL refs in one connection, which is NOT a force-push
-    #      because there are no refs yet on the remote side.
-    #   3. Subsequent pushes will be fast-forward deltas much smaller than
-    #      100 MB.
+    # Generate a git bundle + split it into transportable 50 MB chunks.
+    # The operator can then: cat chunks* > repo.bundle → git clone repo.bundle → push.
+    local ts
+    ts=$(date -u +%Y%m%dT%H%M%S)
+    local bundle_dir="${PROJECT_ROOT}/.git/gitflic_bundle_${ts}"
+    local bundle_file="${bundle_dir}/helix_ota.bundle"
+    mkdir -p "$bundle_dir"
+
+    log_info "  Creating git bundle..."
+    if ! git -C "$PROJECT_ROOT" bundle create "$bundle_file" --all 2>/dev/null; then
+        log_error "  Failed to create bundle"
+        return 1
+    fi
+
+    log_info "  Splitting bundle into 50 MB chunks..."
+    split -b 50M "$bundle_file" "${bundle_dir}/chunk_"
+
+    local chunk_count
+    chunk_count=$(ls -1 "${bundle_dir}/chunk_"* 2>/dev/null | wc -l | tr -d ' ')
+    log_info "  Bundle ready: ${bundle_dir}/ ($chunk_count chunks, $(du -sh "$bundle_file" | awk '{print $1}'))"
     log_info ""
     log_info "  ┌─────────────────────────────────────────────────────────────┐"
-    log_info "  │  GitFlic packfile limit exceeded. Resolution:              │"
+    log_info "  │  GitFlic ($remote) packfile limit exceeded.                 │"
+    log_info "  │  Complete repo bundle created in $bundle_dir  │"
     log_info "  │                                                             │"
-    log_info "  │  1. On gitflic.ru, delete the existing helix_ota repo      │"
-    log_info "  │     OR create a NEW empty repo (different name).           │"
-    log_info "  │  2. Update the remote URL if using a new name:             │"
-    log_info "  │     git remote set-url gitflic git@gitflic.ru:.../NEW.git │"
-    log_info "  │  3. Push everything in one shot (first push to empty       │"
-    log_info "  │     repo is NOT a force-push — no refs to overwrite):      │"
+    log_info "  │  TO SYNC GITFLIC (two options):                            │"
+    log_info "  │                                                             │"
+    log_info "  │  A) Via any host with SSH to GitFlic (e.g. nezha):         │"
+    log_info "  │     # Copy chunks to the target host:                       │"
+    log_info "  │     rsync -av ${bundle_dir}/ milosvasic@nezha:tmp/gitflic_sync/  │"
+    log_info "  │     # On that host:                                         │"
+    log_info "  │     cd /tmp                                                 │"
+    log_info "  │     cat chunk_* > helix_ota.bundle                          │"
+    log_info "  │     git clone helix_ota.bundle helix_ota_gitflic           │"
+    log_info "  │     cd helix_ota_gitflic                                    │"
+    log_info "  │     git remote add gitflic git@gitflic.ru:helixdevelopment/helix_ota.git │"
     log_info "  │     git push gitflic --all                                  │"
     log_info "  │                                                             │"
-    log_info "  │  Until then, all other remotes (github/gitlab/gitverse)    │"
-    log_info "  │  are kept up to date normally.                             │"
+    log_info "  │  B) Via GitFlic web UI (import):                            │"
+    log_info "  │     1. Create new empty repo on gitflic.ru                  │"
+    log_info "  │     2. # On your dev machine:                               │"
+    log_info "  │        cat ${bundle_dir}/chunk_* > /tmp/helix_ota.bundle    │"
+    log_info "  │        git clone /tmp/helix_ota.bundle /tmp/helix_ota_repo  │"
+    log_info "  │        cd /tmp/helix_ota_repo                                │"
+    log_info "  │        git remote add origin <gitflic-url>                  │"
+    log_info "  │        git push origin main                                 │"
     log_info "  └─────────────────────────────────────────────────────────────┘"
     log_info ""
 
