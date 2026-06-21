@@ -386,7 +386,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>" 2>&1 | tai
 }
 
 # =============================================================================
-# Push to all upstreams
+# Push to all upstreams (with phased retry for remotes with packfile limits)
 # =============================================================================
 do_push() {
     [[ "$NO_PUSH" == "true" ]] && { log_info "Push skipped (--no-push)"; return 0; }
@@ -399,13 +399,72 @@ do_push() {
     local failures=0
 
     for remote in "${remotes[@]}"; do
-        if ! git -C "$PROJECT_ROOT" push "$remote" "$branch" 2>&1 | tail -1; then
-            log_warn "Push to $remote had issues (may be behind)"
+        local push_out push_rc
+        push_out=$(git -C "$PROJECT_ROOT" push "$remote" "$branch" 2>&1)
+        push_rc=$?
+        if [[ $push_rc -ne 0 ]]; then
+            # Check for packfile-size-limit rejection (GitFlic 100 MB limit)
+            if echo "$push_out" | grep -qE 'Pack exceeds the limit|pack exceeds|packfile.*limit|unpacker error'; then
+                log_warn "Push to $remote failed: packfile too large — retrying in phases..."
+                _phased_push_to "$remote" "$branch" && continue
+            fi
+            log_warn "Push to $remote had issues: $(echo "$push_out" | tail -1)"
             failures=$((failures+1))
         fi
     done
 
     [[ $failures -eq 0 ]] && log_ok "All upstreams pushed" || log_warn "$failures upstream(s) had issues"
+}
+
+# -----------------------------------------------------------------------------
+# Phased push: advance a remote branch commit-by-commit so each packfile
+# stays well under the 100 MB GitFlic limit.  Each push sends only the
+# delta for one commit (plus its tree/blob objects), which is orders of
+# magnitude smaller than pushing all N at once.
+#
+# How it works:
+#   git push <remote> <commit-SHA>:refs/heads/<branch>
+# sends only the objects the remote does not yet have for that commit.
+# By pushing one SHA at a time from oldest to newest the remote advances
+# incrementally and each packfile carries at most one commit's worth of
+# data — never a 100 MB+ multi-commit pack.
+# -----------------------------------------------------------------------------
+_phased_push_to() {
+    local remote="$1" branch="$2"
+
+    # Ensure we know the remote's current state.
+    git -C "$PROJECT_ROOT" fetch "$remote" "$branch" 2>/dev/null || true
+
+    local behind
+    behind=$(git -C "$PROJECT_ROOT" rev-list --count "$remote/$branch..$branch" 2>/dev/null || echo "0")
+    if [[ "$behind" -eq 0 ]]; then
+        log_info "  $remote/$branch is already current — nothing to push"
+        return 0
+    fi
+
+    log_info "  $behind commits behind $remote — pushing one commit at a time..."
+
+    # Build a list of commit SHAs from oldest (remote tip) to newest (HEAD).
+    # rev-list --reverse emits oldest-first.
+    local commits
+    commits=$(git -C "$PROJECT_ROOT" rev-list --reverse "$remote/$branch..$branch" 2>/dev/null) || true
+    if [[ -z "$commits" ]]; then
+        log_error "  Could not enumerate commits between $remote/$branch..$branch"
+        return 1
+    fi
+
+    local count=0
+    while IFS= read -r sha; do
+        count=$((count + 1))
+        if ! git -C "$PROJECT_ROOT" push "$remote" "${sha}:refs/heads/${branch}" 2>/dev/null; then
+            log_warn "  Commit $count/$behind ($sha) FAILED — aborting phased push"
+            return 1
+        fi
+        log_info "  Commit $count/$behind pushed ($(echo "$sha" | cut -c1-8))"
+    done <<< "$commits"
+
+    log_ok "  Phased push to $remote complete ($count commits)"
+    return 0
 }
 
 # =============================================================================
