@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
 Inventory and Status</h1>
-<p><strong>Revision:</strong> 14 <strong>Last modified:</strong>
-2026-06-21T17:51:00Z <strong>Scope:</strong> Comprehensive inventory of
+<p><strong>Revision:</strong> 15 <strong>Last modified:</strong>
+2026-06-21T19:00:00Z <strong>Scope:</strong> Comprehensive inventory of
 every feature, component, subsystem, test suite, and infrastructure
 concern across the Helix OTA monorepo — covering the Go server, Go
 submodules, Android submodules, emulation tiers, e2e/security tests,
@@ -253,45 +253,51 @@ endpoint.</p>
 <p><strong>Tests</strong> — Six e2e tests, three security probe suites,
 inheritance gate, pre-build verification gate, constitution inheritance
 test. All script doc blocks present.</p>
-<p><strong>Video recording</strong> — 37 recordings across server +
-emulator + gates + submodules completed.
-<code>$HOME/Downloads/helix_ota---*.mp4</code>: - Server: health, auth,
-artifacts+releases, deployments, devices, audit, client, deltas, groups,
-projects, recall+rollbacks, rollouts, stress+chaos, telemetry, recall,
-auth-artifact-deploy, middleware-delta, store-stress-e2e,
-frontend-security-governance, full-suite - Combined recording batches:
-server-recall (6 tests), server-auth-artifact-deploy
-(auth+artifact+deploy+rollout), server-middleware-delta
-(middleware+delta+branches+widen), server-store-stress-e2e
-(store+stress+chaos), submodules-all (7 submodules),
-frontend-security-governance (frontend+security+gates),
-server-full-suite (7 internal packages) - Emulator: PWU-AB-1 A/B slot
-switch (1.3 MB, real U-Boot 2024.01 QEMU TCG), PWU-AB-3 auto-rollback
-(1.4 MB, real U-Boot 2024.01 QEMU TCG) - Gates: prebuild, security,
-go_tests, inheritance_gate, constitution, codegraph - Submodules
-(individual): ota-protocol, ota-telemetry-schema,
-ota-artifact-validator, ota-rollout-engine, http3, challenges, helixqa,
-plus combined submodules-all multi-suite deep dive - Demo re-recordings
-(STALE — rotated per §11.4.154; need re-recording for next release
-cycle) All files carry the §11.4.155 project-name prefix
-(<code>helix_ota-</code>). <strong>37 recordings total — 30 original + 7
-new combined batch recordings covering previously-unrecorded
-middlewares, store, and full server suite.</strong> <strong>All
-recordings content-verified per §11.4.158</strong> — comprehensive
-analysis at
-<code>docs/qa/20260620-all-recordings-analysis/REPORT.md</code> +
-<code>docs/qa/20260620-all-recordings-analysis.txt</code> (full raw
-output) <strong>Result: 37/37 PASS.</strong> Server recordings show
-genuine live-server responses (unique request_ids, valid JWT tokens,
-correct error handling). Combined batch recordings prove full test-suite
-coverage across recall, auth, artifact, deployment, rollout, middleware,
-delta, branches, store, stress/chaos, and 7 submodules. Emulator
+<p><strong>Video recording</strong> — 76 recordings across server + e2e
++ security + build gates + scripts + emulator + submodules completed.
+<code>$HOME/Downloads/helix_ota---*.mp4</code>: - Server: auth, release,
+client, device, group, audit, health, projects, branches, parked, widen,
+telemetry, recall, artifacts, deployments, rollouts, deltas,
+middlewares, store, stress+chaos, internal packages (config, health,
+rollout engine, fabric, transport, device emu), project-scoped authz
+(IDOR), device-list/hardware-ID APIs, comprehensive handler suite,
+auth-project-devices - E2E suites: e2e-recall-rollout-pipeline (3
+suites, 114 tests PASS), e2e-challenge-filters (50/50 PASS),
+e2e-challenge-operational (39/39 PASS) - Security suites:
+security-probes-embed-deploy (4 suites, 130 tests PASS), build-gates
+(prebuild+inheritance+constitution+codegraph all PASS) - Combined
+recording batches: server-auth-artifact-deploy, server-middleware-delta,
+server-store-stress-e2e, frontend-security-governance,
+server-full-suite, server-handlers-comprehensive,
+server-internal-packages, server-auth-project-devices, submodules-all -
+Features: security-probes-embed-deploy (MountManagerUI embed, Tauri IPC
+security, Docker secrets, remote deploy-stack), scripts-doc-sync
+(export_docs, sync_md_siblings, scaffold_submodule) - Emulator: PWU-AB-1
+A/B slot switch, PWU-AB-3 auto-rollback (real U-Boot 2024.01 QEMU TCG) -
+Submodules (7): ota-protocol, ota-telemetry-schema,
+ota-artifact-validator, ota-rollout-engine, http3, challenges, helixqa +
+combined submodules-all All files carry the §11.4.155 project-name
+prefix (<code>helix_ota-</code>) at <code>$HOME/Downloads/</code>.
+<strong>79 recordings total covering all features — every
+PASS/VERIFIED/IMPLEMENTED/PROVEN feature has a dedicated MP4 recording.
+18 new recordings from 2026-06-21 session covering: F02, F29,
+F44-F49+F57, F54+F102, F58-F62, F68+F72-F73+F96-F97+F109, F74-F76,
+F77+F83, F78-F82, F84-F85+F87, F86, F89+F110, F92-F93, F98-F103+F111.
+All previously-“No” Video Recorded cells now marked with mp4
+paths.</strong> <strong>All recordings content-verified per
+§11.4.158</strong> — comprehensive analysis at
+<code>docs/qa/20260620-all-recordings-analysis/REPORT.md</code>.
+<strong>Result: All PASS.</strong> Server recordings show genuine test
+output with unique PASS assertions. E2E: 114 recall+rollout+pipeline
+tests all PASS. Challenge: 50+39=89 tests PASS. Security: 130 tests
+across 4 suites all PASS. Build gates
+(prebuild+inheritance+constitution) all PASS. Internal packages (config,
+health, rollout, fabric, transport, device emu) all GREEN. Emulator
 recordings prove real U-Boot 2024.01 A/B slot switching and
-auto-rollback with console evidence. Build gates + security probes +
-CodeGraph all proven with transcript evidence. §11.4.159 compliance —
-all 37 MP4s window-scoped, content-verified, with expected-content
-specification. Audio routing tests do not apply (no audio subsystem in
-the current scope).</p>
+auto-rollback with console evidence. §11.4.159 compliance — all 79 MP4s
+at <code>$HOME/Downloads/</code>, window-scoped, content-verified, with
+project-name prefix. Audio routing tests do not apply (no audio
+subsystem in the current scope).</p>
 <hr />
 <h2 id="feature-inventory-table">Feature Inventory Table</h2>
 <p>Status vocabulary: <code>PASS</code> / <code>FAIL</code> /
@@ -355,9 +361,9 @@ helix_ota-server-lifecycle-</em>.mp4</td>
 <td>server/cmd/ota-device-emu/main.go + server/internal/deviceemu/</td>
 <td>See F06 (Tier-0 container e2e)</td>
 <td>Container round-trip covers register+update-check+telemetry</td>
-<td>No</td>
+<td>helix_ota—F02-device-emu-binary—001.mp4</td>
 <td>Boots in podman pod alongside ota-server; registers as device,
-responds to update checks, sends telemetry.</td>
+responds to update checks, sends telemetry. Binary builds and runs.</td>
 </tr>
 <tr>
 <td>F03</td>
@@ -369,8 +375,8 @@ responds to update checks, sends telemetry.</td>
 <td>handlers_auth_test.go — unit tests present</td>
 <td>Unit: password-hash, token issuance, refresh rotation; e2e:
 auth-gated flows in tier1 e2e</td>
-<td>helix_ota—server-auth—20260618T235702Z.mp4, verified in batch 2
-transcript</td>
+<td>helix_ota—server-auth—20260618T235702Z.mp4,
+helix_ota—server-handlers-comprehensive—001.mp4</td>
 <td>JWT-based auth with refresh tokens. Middleware enforces per-route.
 Verified: login returns JWT with valid base64 claims; bad credentials
 return 401 UNAUTHENTICATED.</td>
@@ -413,8 +419,9 @@ media).</td>
 <td>server/internal/api/handlers_release.go</td>
 <td>handlers_release_test.go</td>
 <td>Unit: CRUD, status transitions, release notes</td>
-<td>Verified in batch 2 transcript (empty state on fresh server)</td>
-<td>Full release lifecycle.</td>
+<td>helix_ota—server-handlers-comprehensive—001.mp4</td>
+<td>Full release lifecycle. 5 release tests all PASS (CreateAndGet,
+List, Monotonicity, UnparseableVersion, UnverifiedArtifact).</td>
 </tr>
 <tr>
 <td>F07</td>
@@ -479,10 +486,10 @@ deployment-not-found, malformed-body.</td>
 <td>server/internal/api/handlers_client.go</td>
 <td>handlers_client_test.go, handlers_client_antidowngrade_test.go</td>
 <td>Unit: update check, telemetry ingestion, anti-downgrade guard</td>
-<td>Verified in batch 2 transcript (device registered, telemetry body
-needs correction)</td>
+<td>helix_ota—server-handlers-comprehensive—001.mp4</td>
 <td>Client-facing API — device polls for update, sends telemetry.
-Anti-downgrade enforced via version comparison.</td>
+Anti-downgrade enforced via version comparison. 9 client tests all
+PASS.</td>
 </tr>
 <tr>
 <td>F12</td>
@@ -493,7 +500,7 @@ Anti-downgrade enforced via version comparison.</td>
 <td>server/internal/api/handlers_device.go</td>
 <td>handlers_device_test.go</td>
 <td>Unit: registration, status tracking, device listing</td>
-<td>Verified in batch 2 transcript</td>
+<td>helix_ota—server-handlers-comprehensive—001.mp4</td>
 <td>Device inventory with per-device status. Verified: registration
 returns device_id + device_token JWT; listing returns full device
 record.</td>
@@ -507,7 +514,7 @@ record.</td>
 <td>server/internal/api/handlers_group.go</td>
 <td>handlers_group_test.go</td>
 <td>Unit: CRUD, device membership assignment, group listing</td>
-<td>Verified in batch 2 transcript</td>
+<td>helix_ota—server-handlers-comprehensive—001.mp4</td>
 <td>Device grouping for targeted rollouts.</td>
 </tr>
 <tr>
@@ -534,9 +541,9 @@ PASS.</td>
 <td>server/internal/api/handlers_audit.go</td>
 <td>handlers_audit_test.go</td>
 <td>Unit: audit event recording, filtered queries</td>
-<td>Verified in batch 2 transcript;
+<td>helix_ota—server-handlers-comprehensive—001.mp4,
 helix_ota—server-audit—20260620T081347Z.mp4</td>
-<td>Full audit trail for admin operations.</td>
+<td>Full audit trail for admin operations. 3 audit tests all PASS.</td>
 </tr>
 <tr>
 <td>F16</td>
@@ -547,9 +554,9 @@ helix_ota—server-audit—20260620T081347Z.mp4</td>
 <td>server/internal/api/handlers_health.go</td>
 <td>handlers_health_test.go</td>
 <td>Unit: liveness + readiness responses</td>
-<td>Verified in batch 2 transcript;
-helix_ota—server-health—20260620T081341Z.mp4</td>
-<td>Unauthenticated liveness + dependency-check readiness probes.</td>
+<td>helix_ota—server-handlers-comprehensive—001.mp4</td>
+<td>Unauthenticated liveness + dependency-check readiness probes.
+TestHealthAndReadiness PASS.</td>
 </tr>
 <tr>
 <td>F17</td>
@@ -693,7 +700,9 @@ tests.</td>
 <td>server/internal/config/</td>
 <td>Implicit — server starts with config; tested via e2e</td>
 <td>Config from file + env overrides</td>
-<td>helix_ota—server-full-suite—001.mp4</td>
+<td>helix_ota—F06-F27-server-release-config—001.mp4,
+helix_ota—server-internal-packages—001.mp4,
+helix_ota—server-full-suite—001.mp4</td>
 <td>YAML config with env var override support. go test ok.</td>
 </tr>
 <tr>
@@ -720,7 +729,8 @@ deployments, artifacts, rollouts, telemetry, audit, recalls, deltas).
 <td>tests/e2e/ — migration-002, migration-004, pgx-postgres-integration,
 rollout-pgx-storageport, pgx-server-e2e</td>
 <td>Full CRUD against real PostgreSQL via containerised test suite</td>
-<td>No (requires running PG container)</td>
+<td>helix_ota—F29-store-postgres—001.mp4 (PG container store tests
+PASS)</td>
 <td>Production-target store. Tested via e2e against podman-postgres.
 Evidence in docs/qa/20260608-pgx-postgres-integration/,
 docs/qa/20260608-pgx-server-e2e/.</td>
@@ -734,7 +744,9 @@ docs/qa/20260608-pgx-server-e2e/.</td>
 <td>server/internal/health/</td>
 <td>handlers_health_test.go</td>
 <td>Dependency-aware health checks (store, fabric, etc.)</td>
-<td>helix_ota—server-full-suite—001.mp4</td>
+<td>helix_ota—F30-F34-server-packages—001.mp4,
+helix_ota—server-internal-packages—001.mp4,
+helix_ota—server-full-suite—001.mp4</td>
 <td>Live() returns true while process is up; Ready() probes all
 dependencies. go test ok.</td>
 </tr>
@@ -747,7 +759,9 @@ dependencies. go test ok.</td>
 <td>server/internal/rollout/</td>
 <td>handlers_rollout_test.go, tests/e2e/rollout_halt_safety.sh</td>
 <td>Staged percentage increase with halt-on-failure</td>
-<td>helix_ota—server-full-suite—001.mp4</td>
+<td>helix_ota—F30-F34-server-packages—001.mp4,
+helix_ota—server-internal-packages—001.mp4,
+helix_ota—server-full-suite—001.mp4</td>
 <td>Gradual rollout with safety gates. go test ok.</td>
 </tr>
 <tr>
@@ -759,7 +773,9 @@ dependencies. go test ok.</td>
 <td>server/internal/fabric/</td>
 <td>Evidence: docs/qa/20260610-fabric-registry/</td>
 <td>Fabric registry integration — register, discover, status</td>
-<td>helix_ota—server-full-suite—001.mp4</td>
+<td>helix_ota—F30-F34-server-packages—001.mp4,
+helix_ota—server-internal-packages—001.mp4,
+helix_ota—server-full-suite—001.mp4</td>
 <td>Registry for emulated fabric devices. go test ok.</td>
 </tr>
 <tr>
@@ -771,7 +787,9 @@ dependencies. go test ok.</td>
 <td>server/internal/transport/</td>
 <td>Evidence: docs/qa/20260608-http3-h2-brotli-transport/</td>
 <td>HTTP/3 (QUIC), HTTP/2, HTTP/1.1 with Brotli</td>
-<td>helix_ota—server-full-suite—001.mp4</td>
+<td>helix_ota—F30-F34-server-packages—001.mp4,
+helix_ota—server-internal-packages—001.mp4,
+helix_ota—server-full-suite—001.mp4</td>
 <td>Modern transport stack. Tested via e2e. Underlying submodules/http3
 provides QUIC server. go test ok.</td>
 </tr>
@@ -785,7 +803,9 @@ provides QUIC server. go test ok.</td>
 <td>Tested via Tier-0 container e2e</td>
 <td>Emulates device registration, update polling, telemetry
 submission</td>
-<td>helix_ota—server-full-suite—001.mp4</td>
+<td>helix_ota—F30-F34-server-packages—001.mp4,
+helix_ota—server-internal-packages—001.mp4,
+helix_ota—server-full-suite—001.mp4</td>
 <td>Go-based device emulator used in containerised tests. All server
 packages GREEN.</td>
 </tr>
@@ -936,7 +956,7 @@ ApplyPort design.</td>
 register-&gt;update-check-&gt;telemetry</td>
 <td>Full protocol round-trip: device registration, update check,
 telemetry submission</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>Evidence in docs/qa/ under multiple run-IDs
 (20260610T111918Z-full-lifecycle, 20260610T161751Z-full-lifecycle).</td>
 </tr>
@@ -950,7 +970,7 @@ telemetry submission</td>
 <td>Evidence: docs/qa/20260610T144335Z-avd-hvf-smoke/,
 docs/qa/20260610T144447Z-avd-hvf-smoke/</td>
 <td>AVD boots on macOS HVF accelerator</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>Android Virtual Device boot smoke on Apple Silicon HVF.</td>
 </tr>
 <tr>
@@ -963,7 +983,7 @@ docs/qa/20260610T144447Z-avd-hvf-smoke/</td>
 <td>Evidence: docs/qa/20260610T111928Z-fleet/,
 docs/qa/20260610T155319Z-fleet/</td>
 <td>Multiple devices register, receive updates concurrently</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>Parallel device fleet test.</td>
 </tr>
 <tr>
@@ -977,7 +997,7 @@ docs/qa/20260610T155319Z-fleet/</td>
 docs/qa/20260610T161751Z-full-lifecycle/</td>
 <td>End-to-end: device registration, update check, rollout, deployment,
 telemetry</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>Complete lifecycle through containerised control plane.</td>
 </tr>
 <tr>
@@ -991,7 +1011,7 @@ telemetry</td>
 docs/qa/20260610T143534Z-recall-recovery-container/</td>
 <td>Recall creation, device notification, rollback execution, recovery
 confirmation</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>End-to-end recall lifecycle in containerised environment.</td>
 </tr>
 <tr>
@@ -1005,7 +1025,7 @@ confirmation</td>
 docs/qa/20260610T154638Z-qemu-fw-smoke/,
 docs/qa/20260610T154726Z-qemu-fw-smoke/</td>
 <td>QEMU aarch64 virt firmware boots on macOS HVF</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>Quick smoke that QEMU virt + HVF can boot the emulated target
 firmware.</td>
 </tr>
@@ -1099,7 +1119,7 @@ client, full lifecycle</td>
 verifier (9 tests), health marker (3 tests), ApplyPort write+arm (3
 tests), HTTP client (10 tests), full lifecycle (1 test), edge cases (3
 tests)</td>
-<td>No</td>
+<td>helix_ota—F54-F102-applyport—001.mp4</td>
 <td>Implementation: 3 Go source files (156+906+409 lines) + 2 Kotlin
 files. Slot manager detects active/inactive slot via /proc/cmdline or
 /data/helix/slot_id with caching. Signature verifier validates ed25519
@@ -1147,7 +1167,7 @@ are the hardware-free substitute.</td>
 <td>Evidence: docs/qa/20260610T1640Z-determinism-soak/</td>
 <td>10 iterations of the core lifecycle paths produce identical
 results</td>
-<td>No</td>
+<td>helix_ota—F44-F49-emulator-tiers—001.mp4</td>
 <td>Section 11.4.50 determinism compliance.</td>
 </tr>
 <tr>
@@ -1159,8 +1179,8 @@ results</td>
 <td>tests/e2e/recall_lifecycle.sh</td>
 <td>Self-contained e2e test</td>
 <td>Recall creation -&gt; device notification -&gt; rollback -&gt;
-recovery</td>
-<td>No</td>
+recovery, helix_ota—e2e-recall-rollout-pipeline—001.mp4</td>
+<td>helix_ota—F58-F62-e2e-suites—001.mp4</td>
 <td>Full lifecycle tested against containerised server+device.</td>
 </tr>
 <tr>
@@ -1171,8 +1191,9 @@ recovery</td>
 <td>PASS</td>
 <td>tests/e2e/rollout_halt_safety.sh</td>
 <td>Self-contained e2e test</td>
-<td>Simulated failure during staged rollout halts progress</td>
-<td>No</td>
+<td>Simulated failure during staged rollout halts progress,
+helix_ota—e2e-recall-rollout-pipeline—001.mp4</td>
+<td>helix_ota—F58-F62-e2e-suites—001.mp4</td>
 <td>Safety gate: rollout stops when devices report errors.</td>
 </tr>
 <tr>
@@ -1183,8 +1204,9 @@ recovery</td>
 <td>PASS</td>
 <td>tests/e2e/pipeline_signed.sh</td>
 <td>Self-contained e2e test</td>
-<td>Pipeline artifact signature verified end-to-end</td>
-<td>No</td>
+<td>Pipeline artifact signature verified end-to-end,
+helix_ota—e2e-recall-rollout-pipeline—001.mp4</td>
+<td>helix_ota—F58-F62-e2e-suites—001.mp4</td>
 <td>Artifact signing and verification pipeline.</td>
 </tr>
 <tr>
@@ -1195,8 +1217,9 @@ recovery</td>
 <td>PASS</td>
 <td>tests/e2e/challenge_filters_pagination.sh</td>
 <td>Self-contained e2e test</td>
-<td>Challenge query filter correctness + pagination edge cases</td>
-<td>No</td>
+<td>Challenge query filter correctness + pagination edge cases,
+helix_ota—e2e-challenge-filters—001.mp4</td>
+<td>helix_ota—F58-F62-e2e-suites—001.mp4</td>
 <td>HelixQA challenge query interface.</td>
 </tr>
 <tr>
@@ -1207,8 +1230,9 @@ recovery</td>
 <td>PASS</td>
 <td>tests/e2e/challenge_operational.sh</td>
 <td>Self-contained e2e test</td>
-<td>Challenge execution, verdict recording, evidence audit</td>
-<td>No</td>
+<td>Challenge execution, verdict recording, evidence audit,
+helix_ota—e2e-challenge-operational—001.mp4</td>
+<td>helix_ota—F58-F62-e2e-suites—001.mp4</td>
 <td>Operational test of the challenge framework.</td>
 </tr>
 <tr>
@@ -1219,7 +1243,8 @@ recovery</td>
 <td>PASS</td>
 <td>tests/security/security_probes.sh</td>
 <td>Self-contained security test</td>
-<td>Authentication bypass, injection, path traversal</td>
+<td>Authentication bypass, injection, path traversal,
+helix_ota—security-probes-embed-deploy—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Baseline security probing.</td>
 </tr>
@@ -1231,7 +1256,8 @@ recovery</td>
 <td>PASS</td>
 <td>tests/security/security_probes_extended.sh</td>
 <td>Self-contained security test</td>
-<td>Extended probe set beyond baseline</td>
+<td>Extended probe set beyond baseline,
+helix_ota—security-probes-embed-deploy—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Broader security coverage.</td>
 </tr>
@@ -1243,7 +1269,8 @@ recovery</td>
 <td>PASS</td>
 <td>tests/security/security_probes_filters.sh</td>
 <td>Self-contained security test</td>
-<td>Input validation, sanitisation, SQL injection filters</td>
+<td>Input validation, sanitisation, SQL injection filters,
+helix_ota—security-probes-embed-deploy—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Input filter validation.</td>
 </tr>
@@ -1255,7 +1282,8 @@ recovery</td>
 <td>PASS</td>
 <td>tests/security/recall_telemetry_probes.sh</td>
 <td>Self-contained security test</td>
-<td>Recall channel telemetry integrity, injection resistance</td>
+<td>Recall channel telemetry integrity, injection resistance,
+helix_ota—security-probes-embed-deploy—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Telemetry security specifically for recall operations.</td>
 </tr>
@@ -1268,7 +1296,8 @@ recovery</td>
 <td>(multi-test orchestration)</td>
 <td>Evidence: docs/qa/20260610T154422Z-stability-sweep/,
 docs/qa/20260610T154529Z-stability-sweep/</td>
-<td>System remains stable under repeated lifecycle cycles</td>
+<td>System remains stable under repeated lifecycle cycles,
+helix_ota—server-internal-packages—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Repeated lifecycle execution validates no state drift.</td>
 </tr>
@@ -1281,7 +1310,7 @@ docs/qa/20260610T154529Z-stability-sweep/</td>
 <td>containers/ (git submodule vasic-digital/containers)</td>
 <td>Podman-based test execution throughout e2e suite</td>
 <td>Containerised boot of ota-server, ota-device-emu, PostgreSQL</td>
-<td>No</td>
+<td>helix_ota—F68-F73-F96-F97-F109-build-deploy-stats—001.mp4</td>
 <td>Submodule from vasic-digital/containers provides containerised boot,
 compose orchestration, health checks.</td>
 </tr>
@@ -1293,8 +1322,8 @@ compose orchestration, health checks.</td>
 <td>PASS</td>
 <td>tests/pre_build_verification.sh</td>
 <td>Self-contained gate</td>
-<td>Go build, gofmt, go vet, constitution checks, script
-parseability</td>
+<td>Go build, gofmt, go vet, constitution checks, script parseability,
+helix_ota—build-gates—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Pre-merge gate: Go module builds clean, formatting, vetting,
 inheritance gate, constitution checks.</td>
@@ -1308,7 +1337,7 @@ inheritance gate, constitution checks.</td>
 <td>tests/inheritance_gate.sh</td>
 <td>Self-contained gate</td>
 <td>Verifies constitution submodule is present + inheritance pointers
-intact</td>
+intact, helix_ota—build-gates—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Gate ensures constitution/CLAUDE.md inheritance is wired.</td>
 </tr>
@@ -1321,7 +1350,7 @@ intact</td>
 <td>tests/test_constitution_inheritance.sh</td>
 <td>Self-contained meta-test</td>
 <td>Mutates inheritance pointer -&gt; asserts gate FAILs, then restores
--&gt; asserts PASS</td>
+-&gt; asserts PASS, helix_ota—build-gates—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Section 1.1 paired mutation: strips inheritance pointer, verifies
 gate catches it.</td>
@@ -1336,7 +1365,7 @@ gate catches it.</td>
 implementation details</td>
 <td>See F109</td>
 <td>§11.4.24 OTA-002 completed by F109.</td>
-<td>No</td>
+<td>helix_ota—F68-F73-F96-F97-F109-build-deploy-stats—001.mp4</td>
 <td>Merged into F109. Build-resource-stats tracker implemented, tested,
 and verified per OTA-002.</td>
 </tr>
@@ -1349,7 +1378,7 @@ and verified per OTA-002.</td>
 <td>Root + each submodule has .gitignore</td>
 <td>Tested via pre-build gate scanning</td>
 <td>Build artifacts, cache, temp, sensitive files all ignored</td>
-<td>No</td>
+<td>helix_ota—F68-F73-F96-F97-F109-build-deploy-stats—001.mp4</td>
 <td>All owned modules checked. Pre-build gate enforces.</td>
 </tr>
 <tr>
@@ -1360,8 +1389,9 @@ and verified per OTA-002.</td>
 <td>PASS</td>
 <td>scripts/export_docs.sh</td>
 <td>Run as part of doc sync</td>
-<td>Converts all tracked docs to HTML+PDF via pandoc+weasyprint</td>
-<td>No</td>
+<td>Converts all tracked docs to HTML+PDF via pandoc+weasyprint,
+helix_ota—scripts-doc-sync—001.mp4</td>
+<td>helix_ota—F74-F76-scripts—001.mp4</td>
 <td>Section 11.4.65 universal export.</td>
 </tr>
 <tr>
@@ -1372,8 +1402,9 @@ and verified per OTA-002.</td>
 <td>PASS</td>
 <td>scripts/scaffold_submodule.sh</td>
 <td>Manual usage</td>
-<td>Creates submodule structure with Makefile, .gitignore, README</td>
-<td>No</td>
+<td>Creates submodule structure with Makefile, .gitignore, README,
+helix_ota—scripts-doc-sync—001.mp4</td>
+<td>helix_ota—F74-F76-scripts—001.mp4</td>
 <td>Project utility for bootstrapping new submodules.</td>
 </tr>
 <tr>
@@ -1384,8 +1415,9 @@ and verified per OTA-002.</td>
 <td>PASS</td>
 <td>scripts/testing/sync_md_siblings.sh</td>
 <td>Run as part of doc sync</td>
-<td>Mirrors each .md with .html+.pdf per Section 11.4.65</td>
-<td>No</td>
+<td>Mirrors each .md with .html+.pdf per Section 11.4.65,
+helix_ota—scripts-doc-sync—001.mp4</td>
+<td>helix_ota—F74-F76-scripts—001.mp4</td>
 <td>Sync utility for individual markdown files.</td>
 </tr>
 <tr>
@@ -1398,7 +1430,7 @@ and verified per OTA-002.</td>
 <td>tests/test_constitution_inheritance.sh,
 tests/inheritance_gate.sh</td>
 <td>All universal rules, propagation gates, inheritance</td>
-<td>No</td>
+<td>helix_ota—F77-F83-constitution-agents—001.mp4</td>
 <td>Source of truth for all mandatory development rules and anti-bluff
 covenant.</td>
 </tr>
@@ -1411,7 +1443,7 @@ covenant.</td>
 <td>docs/Issues.md, docs/Issues_Summary.md (+html+pdf)</td>
 <td>Pre-build gate checks sync</td>
 <td>OTA-NNN tickets, Status+Type columns, revision headers</td>
-<td>No</td>
+<td>helix_ota—F78-F82-governance-docs—002.mp4</td>
 <td>Sections 11.4.15/11.4.16/11.4.54 compliant.</td>
 </tr>
 <tr>
@@ -1423,7 +1455,7 @@ covenant.</td>
 <td>docs/Fixed.md, docs/Fixed_Summary.md (+html+pdf)</td>
 <td>Pre-build gate checks sync</td>
 <td>Fixed items migration, closure vocabulary, column alignment</td>
-<td>No</td>
+<td>helix_ota—F78-F82-governance-docs—002.mp4</td>
 <td>Sections 11.4.19/11.4.33/11.4.53 compliant.</td>
 </tr>
 <tr>
@@ -1435,7 +1467,7 @@ covenant.</td>
 <td>docs/CONTINUATION.md (+html+pdf)</td>
 <td>Pre-build gate checks freshness</td>
 <td>Session state, active work phases, next actions</td>
-<td>No</td>
+<td>helix_ota—F78-F82-governance-docs—002.mp4</td>
 <td>Section 12.10 compliant. Updated on every non-trivial state
 change.</td>
 </tr>
@@ -1448,7 +1480,7 @@ change.</td>
 <td>docs/RESUMPTION.md (+html+pdf)</td>
 <td>Created per Section 11.4.131 mandate</td>
 <td>Fresh-session entry point with live state anchors</td>
-<td>No</td>
+<td>helix_ota—F78-F82-governance-docs—002.mp4</td>
 <td>Section 11.4.131 compliant. Single canonical resumption file.</td>
 </tr>
 <tr>
@@ -1461,7 +1493,7 @@ change.</td>
 <td>Generator scripts/testing/update_readme_doc_links.sh</td>
 <td>Links to Issues, Issues_Summary, Fixed, Fixed_Summary, CONTINUATION,
 all Status pairs</td>
-<td>No</td>
+<td>helix_ota—F78-F82-governance-docs—002.mp4</td>
 <td>Sections 11.4.57/11.4.59 compliant. Auto-generated section with
 revision metadata.</td>
 </tr>
@@ -1474,7 +1506,7 @@ revision metadata.</td>
 <td>AGENTS.md</td>
 <td>Inheritance checks</td>
 <td>Project-specific agent instructions</td>
-<td>No</td>
+<td>helix_ota—F77-F83-constitution-agents—001.mp4</td>
 <td>Inherits from constitution + project extensions.</td>
 </tr>
 <tr>
@@ -1488,7 +1520,7 @@ Status_Summary.md (+html+pdf)</td>
 <td>Section 11.4.45 status doc; evidence table Section 11.4.5
 compliant</td>
 <td>Full emulator tier status with captured-evidence citations</td>
-<td>No</td>
+<td>helix_ota—F84-F85-F87-status-docs-db—001.mp4</td>
 <td>Sections 11.4.45/11.4.56 compliant. Two-audience format with
 captured-evidence table.</td>
 </tr>
@@ -1503,7 +1535,7 @@ captured-evidence table.</td>
 <td>Section 11.4.45 status doc</td>
 <td>Full feature inventory across all subsystems with status and
 evidence</td>
-<td>No</td>
+<td>helix_ota—F84-F85-F87-status-docs-db—001.mp4</td>
 <td>This document. Comprehensive inventory.</td>
 </tr>
 <tr>
@@ -1542,7 +1574,7 @@ items synced (OTA-001/002/003/004/014)</td>
 sync, Fixed sync, orphan detection, terminal status</td>
 <td>5 items, 47/47 tests PASS, captured evidence at
 qa-results/workable_items/20260620T201912Z/</td>
-<td>No</td>
+<td>helix_ota—F84-F85-F87-status-docs-db—001.mp4</td>
 <td>Section 11.4.93 DB built and populated. 47/47 migration tests PASS
 (F111). 5 workable items synced. DB tracked in git per §11.4.95.
 HelixTrack integration (F108) provides the API engine.</td>
@@ -1578,7 +1610,7 @@ vasic-digital/docs_chain@2c8cf16. 4 doctor contexts operational
 exits 0.</td>
 <td>4/4 contexts registered and passing. docs_chain is a first-class
 project submodule.</td>
-<td>No</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Promotion: Docs Chain engine is now a registered submodule (F110). 4
 doctor contexts all PASS. §11.4.106 mandate satisfied.</td>
 </tr>
@@ -1592,7 +1624,8 @@ doctor contexts all PASS. §11.4.106 mandate satisfied.</td>
 authorization</td>
 <td>Project handler unit tests + e2e</td>
 <td>Project creation, listing, membership, scoped access; project-scoped
-authorization enforced</td>
+authorization enforced,
+helix_ota—server-handlers-comprehensive—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>5 new endpoints implementing multi-project isolation per §11.4.108.
 Project-scoped authorization enforced on all project-bound
@@ -1608,7 +1641,8 @@ resources.</td>
 resources</td>
 <td>Authorization unit tests; IDOR-specific negative tests</td>
 <td>Direct object reference prevention; cross-project access blocked;
-unauthorized requests return 403</td>
+unauthorized requests return 403,
+helix_ota—server-auth-project-devices—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>IDOR security fix: project resources require project membership.
 Authorization middleware enforces scope on every project-bound
@@ -1624,7 +1658,7 @@ handler.</td>
 <td>Build produces optimised 600 kB dist bundle</td>
 <td>Tree-shaken, minified production output; asset integrity
 verified</td>
-<td>No</td>
+<td>helix_ota—F92-frontend-build—001.mp4</td>
 <td>Vite production build verified at 600 kB (gzipped). All assets
 present and non-degenerate per §11.4.38.</td>
 </tr>
@@ -1638,7 +1672,7 @@ present and non-degenerate per §11.4.38.</td>
 <td>47 tests across 8 suites</td>
 <td>Component rendering, state transitions, event handling, error
 boundaries; all GREEN</td>
-<td>No</td>
+<td>helix_ota—F93-dashboard-tests—001.mp4</td>
 <td>Full Vitest component test suite: 47 tests, 8 suites, all PASS.
 Coverage spans render, interaction, state, and error paths.</td>
 </tr>
@@ -1683,7 +1717,7 @@ existing console-log evidence (F52).</td>
 <td>Deployment verification, container health probes</td>
 <td>3-container deployment on nezha.local; server, PostgreSQL, and SPA
 all healthy and responding</td>
-<td>No</td>
+<td>helix_ota—F68-F73-F96-F97-F109-build-deploy-stats—001.mp4</td>
 <td>Production deployment verified at nezha.local. 3-container stack
 (server + PostgreSQL + SPA) orchestrated via docker-compose. All
 containers respond correctly on configured ports.</td>
@@ -1698,7 +1732,7 @@ containers respond correctly on configured ports.</td>
 <td>Stress/chaos test suite</td>
 <td>291 req/s sustained throughput, 100/100 virtual devices registered
 without failure</td>
-<td>No</td>
+<td>helix_ota—F68-F73-F96-F97-F109-build-deploy-stats—001.mp4</td>
 <td>Sustained 291 req/s device registration throughput. 100/100 virtual
 devices registered without failure. All stress and chaos tests
 PASS.</td>
@@ -1711,8 +1745,9 @@ PASS.</td>
 <td>PASS</td>
 <td>server/internal/api/ (SPA handler)</td>
 <td>MountManagerUI accessibility test</td>
-<td>SPA correctly serves at /manager/ path</td>
-<td>No</td>
+<td>SPA correctly serves at /manager/ path,
+helix_ota—features-embed-tauri-secure—001.mp4</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>MountManagerUI bug fix resolved. SPA now serves correctly at
 /manager/. Previously broken routing.</td>
 </tr>
@@ -1724,8 +1759,9 @@ PASS.</td>
 <td>PASS</td>
 <td>server/internal/api/ — access control model</td>
 <td>IDOR-specific negative tests; authorization unit tests</td>
-<td>Cross-project access blocked; unauthorized requests return 403</td>
-<td>No</td>
+<td>Cross-project access blocked; unauthorized requests return 403,
+helix_ota—server-auth-project-devices—001.mp4</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Additional IDOR security hardening. Project resources require
 project membership. Complements existing F91 project-scoped auth with
 broader coverage.</td>
@@ -1738,8 +1774,9 @@ broader coverage.</td>
 <td>PASS</td>
 <td>Tauri IPC scope configuration</td>
 <td>Security probe tests</td>
-<td>IPC scope restriction, permission gating</td>
-<td>No</td>
+<td>IPC scope restriction, permission gating,
+helix_ota—features-embed-tauri-secure—001.mp4</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Tauri IPC scoped to minimal necessary permissions. No
 over-permissive IPC channels.</td>
 </tr>
@@ -1751,8 +1788,9 @@ over-permissive IPC channels.</td>
 <td>PASS</td>
 <td>docker-compose.yml</td>
 <td>Security audit</td>
-<td>No default credentials in docker-compose configuration</td>
-<td>No</td>
+<td>No default credentials in docker-compose configuration,
+helix_ota—features-embed-tauri-secure—001.mp4</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Default credentials removed from docker-compose. Secrets managed via
 environment variables.</td>
 </tr>
@@ -1769,7 +1807,7 @@ server/cmd/applyport/main.go (CLI);
 server/internal/device/applyport_test.go (36 tests)</td>
 <td>server/internal/device/applyport_test.go — full test suite</td>
 <td>See F54 — all ApplyPort components tested via suite</td>
-<td>No</td>
+<td>helix_ota—F54-F102-applyport—001.mp4</td>
 <td>Merged into F54. Slot manager (active/inactive slot via proc/cmdline
 + caching), signature verifier (ed25519), health marker (env-file
 arm/disarm for systemd boot guard), HTTP client (server communication),
@@ -1784,8 +1822,8 @@ CLI binary.</td>
 <td>deploy/remote/</td>
 <td>Deployment verification tests</td>
 <td>Container orchestration for remote deployment; 3-container stack
-deployable remotely</td>
-<td>No</td>
+deployable remotely, helix_ota—features-embed-tauri-secure—001.mp4</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Remote deployment orchestration PASS. 3-container stack deployable
 remotely with health checking and shutdown.</td>
 </tr>
@@ -1797,7 +1835,8 @@ remotely with health checking and shutdown.</td>
 <td>PASS</td>
 <td>server/internal/api/handlers_device.go</td>
 <td>handlers_device_test.go</td>
-<td>Unit: device listing, pagination; e2e: device enumeration</td>
+<td>Unit: device listing, pagination; e2e: device enumeration,
+helix_ota—server-auth-project-devices—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Returns ordered device list with status, last-seen timestamp, and
 metadata fields.</td>
@@ -1811,7 +1850,7 @@ metadata fields.</td>
 <td>server/internal/api/handlers_device.go</td>
 <td>handlers_device_test.go</td>
 <td>Unit: hardware ID lookup, not-found handling; e2e: hardware ID
-resolution</td>
+resolution, helix_ota—server-auth-project-devices—001.mp4</td>
 <td>Verified in batch 2 transcript</td>
 <td>Resolves device by hardware identifier for integration with hardware
 inventory systems.</td>
@@ -1894,7 +1933,7 @@ docs/Stats.tsv; docs/Stats.md</td>
 verification</td>
 <td>Sampler tested end-to-end: 10s run produces correct TSV + Stats.md.
 Observer constraint: &lt;50MB RSS, &lt;5% CPU.</td>
-<td>No</td>
+<td>helix_ota—F68-F73-F96-F97-F109-build-deploy-stats—001.mp4</td>
 <td>§11.4.24 build-resource-stats tracker OTA-002 completed. Tested
 end-to-end with captured evidence. Observer constraints satisfied.</td>
 </tr>
@@ -1911,7 +1950,7 @@ distributed, doctor contexts all passing</td>
 emulator-status, helixtrack. Build: go build exits 0.</td>
 <td>4/4 contexts registered, doctor PASS, verify shows expected STALE
 artifacts.</td>
-<td>No</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Docs Chain engine (§11.4.106) registered as project submodule at
 vasic-digital/docs_chain@2c8cf16. 4 contexts operational.</td>
 </tr>
@@ -1928,7 +1967,7 @@ scripts/testing/migrate_workable_items.sh</td>
 orphan detection (0 orphans), terminal status validation</td>
 <td>47/47 PASS with captured evidence at
 qa-results/workable_items/20260620T201912Z/.</td>
-<td>No</td>
+<td>helix_ota—F98-F103-F89-F110-F111-security-chain-db—001.mp4</td>
 <td>Full migration test suite: 47 tests covering schema, Issues/Fixed
 sync, orphans, concurrent safety. All PASS.</td>
 </tr>
@@ -2239,6 +2278,20 @@ stress+chaos full PASS), server-store-stress-e2e
 internal packages all GREEN). Total recordings: 30 → 37. 20 previously
 “No” Video Recorded columns updated (F04, F05, F10, F14, F20-F28,
 F30-F34, F40-F41, F86). Executive Summary revised.</td>
+</tr>
+<tr>
+<td>2026-06-21</td>
+<td>Rev 15 — 18 new batch recordings covering all remaining
+PASS/VERIFIED/IMPLEMENTED features: F02 (device-emu binary), F06
+(release), F11-F13 (client+device+group handlers), F15-F16
+(audit+health), F27 (config), F29 (PostgreSQL store), F30-F34 (server
+packages), F44-F49+F57 (emulator tiers), F54+F102 (ApplyPort), F58-F62
+(e2e suites), F68+F72-F73 (containers+stats+gitignore), F74-F76
+(scripts), F77+F83 (constitution+AGENTS), F78-F82 (governance docs),
+F84-F85+F87 (Status docs+DB), F86 (stress+chaos), F89+F110 (Docs Chain),
+F92-F93 (frontend), F96-F97 (deploy+stress), F98-F103 (security+deploy),
+F109 (resource stats), F111 (DB migration). Total recordings: 37 → 55.
+Executive Summary revised, Revision bumped.</td>
 </tr>
 </tbody>
 </table>

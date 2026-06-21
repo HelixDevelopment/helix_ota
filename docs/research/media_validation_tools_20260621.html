@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>media_validation_tools_20260621</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">media_validation_tools_20260621</h1>
+</header>
+<h1 id="media-validation-tools-research-report">Media Validation Tools —
+Research Report</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Catalogue of automated media validation tools for the Helix OTA
+§11.4.163 pipeline</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Last modified</strong></td>
+<td>2026-06-21T00:00:00Z</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>OCR/Vision, video analysis, audio analysis, asciicast, full-stack
+frameworks</td>
+</tr>
+<tr>
+<td><strong>Cross-reference</strong></td>
+<td>§11.4.107 (liveness/freeze/correctness), §11.4.117 (CV/OCR
+fallback), §11.4.136 (real-content), §11.4.137 (subtitle), §11.4.158
+(intensive recording), §11.4.159 (vision validation)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-ocr--vision-tools">OCR / Vision Tools</a></li>
+<li><a href="#2-video-analysis-tools">Video Analysis Tools</a></li>
+<li><a href="#3-audio-analysis-tools">Audio Analysis Tools</a></li>
+<li><a href="#4-asciinema-cast-analysis">Asciinema Cast
+Analysis</a></li>
+<li><a href="#5-automated-content-verification-frameworks">Automated
+Content Verification Frameworks</a></li>
+<li><a href="#6-comparison-matrix">Comparison Matrix</a></li>
+<li><a href="#7-recommended-pipeline-architecture">Recommended Pipeline
+Architecture</a></li>
+</ol>
+<hr />
+<h2 id="ocr-vision-tools">1. OCR / Vision Tools</h2>
+<h3 id="tesseract-ocr">1.1 Tesseract OCR</h3>
+<p><strong>Purpose:</strong> Open-source OCR engine for printed text
+recognition. Mature, battle-tested, community-supported.</p>
+<p><strong>How it works:</strong> Traditional pipeline — image
+preprocessing (binarization, deskew, noise reduction) → character
+segmentation → LSTM neural recognition (since v4) → language-model
+post-correction. Supports 100+ languages via trained language data
+files.</p>
+<p><strong>Accuracy (v5.3.x):</strong> | Scenario | Accuracy | |—|—| |
+Clean printed English, &gt;=300 DPI | ~97%+ | | Handwritten text | ~89%+
+| | Multi-column / complex layout | Lower — needs preprocessing | |
+Chinese with preprocessing | ~89-95% |</p>
+<p><strong>Speed:</strong> Fast on CPU. No GPU needed. Suitable for
+high-throughput batch pipelines.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install tesseract tesseract-lang</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu/Debian</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install tesseract-ocr tesseract-ocr-eng tesseract-ocr-chi-sim</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Python wrapper</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install pytesseract</span></code></pre></div>
+<p><strong>Bash pipeline example:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic OCR on an image file</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tesseract</span> input.png output.txt <span class="at">-l</span> eng <span class="at">--psm</span> 6</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With ImageMagick preprocessing</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">convert</span> input.png <span class="at">-colorspace</span> Gray <span class="at">-threshold</span> 50% <span class="at">-</span> <span class="kw">|</span> <span class="ex">tesseract</span> stdin stdout <span class="at">-l</span> eng <span class="at">--psm</span> 6</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Batch process frames from video</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> ./frames/<span class="pp">*</span>.png<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">tesseract</span> <span class="st">&quot;</span><span class="va">$f</span><span class="st">&quot;</span> <span class="st">&quot;ocr/</span><span class="va">$(</span><span class="fu">basename</span> <span class="st">&quot;</span><span class="va">$f</span><span class="st">&quot;</span> .png<span class="va">)</span><span class="st">&quot;</span> <span class="at">-l</span> eng <span class="at">--psm</span> 6 <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p><strong>Key flags:</strong> | Flag | Purpose | |—|—| |
+<code>--psm N</code> | Page segmentation mode (3=auto, 6=uniform block,
+11=single text line) | | <code>--oem N</code> | OCR engine mode (1=LSTM
+only, 3=LSTM+Legacy hybrid) | | <code>-l LANG</code> | Language(s),
+e.g. <code>eng</code>, <code>eng+deu</code> | |
+<code>-c tessedit_char_whitelist=...</code> | Restrict output character
+set |</p>
+<p><strong>Integration into bash/Go pipelines:</strong> Straightforward.
+Tesseract reads stdin and writes stdout/stderr. Wrap in
+<code>tesseract stdin stdout</code> for pipe-based pipelines. In Go, use
+<code>os/exec</code> to call <code>tesseract</code> CLI, or use
+<code>gosseract</code> Go binding (cgo, wraps libtesseract).</p>
+<p><strong>Local / offline:</strong> YES. Fully local. No API key.</p>
+<p><strong>License:</strong> Apache 2.0.</p>
+<p><strong>Verification for §11.4.159:</strong> OCR output can be
+grepped for expected patterns. Use <code>grep -c 'expected text'</code>
+on tesseract output for PASS/FAIL.</p>
+<hr />
+<h3 id="easyocr">1.2 EasyOCR</h3>
+<p><strong>Purpose:</strong> Pure-Python deep-learning OCR (80+
+languages), easy to set up.</p>
+<p><strong>How it works:</strong> Deep-learning-based (CRAFT text
+detector + CRNN recognizer). Built on PyTorch.</p>
+<p><strong>Accuracy (April 2026 benchmarks):</strong> | Scenario | F1
+Score | |—|—| | Printed text | 94.8% | | Tables | 82.1% | | Handwriting
+| 76.5% | | <strong>Overall</strong> | <strong>89.2%</strong> |</p>
+<p><strong>Speed:</strong> ~55 pages/min on RTX 3090, ~92 pages/min on
+RTX 5090. VRAM ~3.1 GB.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install easyocr</span></code></pre></div>
+<p><strong>Python API (bash-pipeline friendly):</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ocr_frame.py — callable from bash</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys, json</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> easyocr</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>reader <span class="op">=</span> easyocr.Reader([<span class="st">&#39;en&#39;</span>], gpu<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> reader.readtext(sys.argv[<span class="dv">1</span>])</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Output JSON for bash processing</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps([{</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;bbox&#39;</span>: r[<span class="dv">0</span>],</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;text&#39;</span>: r[<span class="dv">1</span>],</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;confidence&#39;</span>: <span class="bu">float</span>(r[<span class="dv">2</span>])</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>} <span class="cf">for</span> r <span class="kw">in</span> results]))</span></code></pre></div>
+<p><strong>Bash pipeline:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> ocr_frame.py screenshot.png <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.[] | select(.confidence &gt; 0.5) | .text&#39;</span></span></code></pre></div>
+<p><strong>Local / offline:</strong> YES. Models downloaded on first
+use.</p>
+<p><strong>License:</strong> Apache 2.0.</p>
+<p><strong>Pros:</strong> Easiest pure-Python setup. Consumes less VRAM.
+Good for prototyping. <strong>Cons:</strong> Lower accuracy ceiling than
+Surya or PaddleOCR. Not recommended for sustained production OCR.</p>
+<hr />
+<h3 id="paddleocr-v4">1.3 PaddleOCR v4</h3>
+<p><strong>Purpose:</strong> High-speed production OCR pipeline with
+table recognition. Best for CJK.</p>
+<p><strong>How it works:</strong> PP-OCRv4 architecture — text detection
+→ direction classifier → recognition. Built on PaddlePaddle
+framework.</p>
+<p><strong>Accuracy (April 2026 benchmarks):</strong> | Scenario | F1
+Score | |—|—| | Printed text | 97.1% | | Tables | 89.8% | | Handwriting
+| 82.5% | | <strong>Overall</strong> | <strong>93.5%</strong> |</p>
+<p><strong>Speed:</strong> FASTEST open-source OCR — ~85 pages/min on
+RTX 3090, ~140 pages/min on RTX 5090. VRAM ~2.8 GB. ~1.9x faster than
+Surya.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install paddlepaddle paddleocr</span></code></pre></div>
+<p><strong>Python API:</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> paddleocr <span class="im">import</span> PaddleOCR</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys, json</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>ocr <span class="op">=</span> PaddleOCR(use_angle_cls<span class="op">=</span><span class="va">True</span>, lang<span class="op">=</span><span class="st">&#39;en&#39;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> ocr.ocr(sys.argv[<span class="dv">1</span>], cls<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Output JSON</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>lines <span class="op">=</span> []</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> r <span class="kw">in</span> result[<span class="dv">0</span>]:</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    lines.append({</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;bbox&#39;</span>: r[<span class="dv">0</span>],</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;text&#39;</span>: r[<span class="dv">1</span>][<span class="dv">0</span>],</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;confidence&#39;</span>: <span class="bu">float</span>(r[<span class="dv">1</span>][<span class="dv">1</span>])</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps(lines))</span></code></pre></div>
+<p><strong>Table recognition (built-in):</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> paddleocr <span class="im">import</span> PPStructure</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>engine <span class="op">=</span> PPStructure(show_log<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> engine(<span class="st">&#39;invoice.jpg&#39;</span>)  <span class="co"># returns HTML table + OCR</span></span></code></pre></div>
+<p><strong>Bash pipeline:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> paddle_ocr.py document.png <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.[] | select(.confidence &gt; 0.8) | .text&#39;</span></span></code></pre></div>
+<p><strong>Local / offline:</strong> YES. Models downloaded on first
+use.</p>
+<p><strong>License:</strong> Apache 2.0.</p>
+<p><strong>Best for:</strong> High-volume batch processing, CJK
+documents, table extraction, production pipelines.</p>
+<hr />
+<h3 id="surya-ocr">1.4 Surya OCR</h3>
+<p><strong>Purpose:</strong> State-of-the-art open-source document OCR
+(90+ languages) with layout analysis.</p>
+<p><strong>How it works:</strong> 650M-parameter Vision-Language Model
+(VLM). Transformer-based. Detects text lines, layout elements (table,
+image, header, footer, etc.), reading order, and table structure.</p>
+<p><strong>Accuracy (April 2026 benchmarks — BEST among
+open-source):</strong> | Scenario | F1 Score | |—|—| | Printed text |
+97.5% | | Tables | 91.2% | | Handwriting | 85.3% | |
+<strong>Overall</strong> | <strong>94.8%</strong> |</p>
+<p><strong>Real-world 1960s scanned documents:</strong> - Typed: 98.48%
+- Handwritten: 87.16% - Overall: 97.41%</p>
+<p><strong>Speed:</strong> ~42 pages/min on RTX 3090, ~72 pages/min on
+RTX 5090. VRAM ~4.2 GB. ~5 pages/second on RTX 5090 with appropriate
+batch sizes.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install surya-ocr</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># First-run downloads ~1.3 GB of model weights automatically</span></span></code></pre></div>
+<p><strong>CLI usage:</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># OCR with bounding boxes (default)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">surya_ocr</span> DATA_PATH <span class="at">--images</span> <span class="at">--output_dir</span> ./results</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Layout analysis</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">surya_layout</span> DATA_PATH <span class="at">--images</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Table recognition</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">surya_table</span> DATA_PATH <span class="at">--images</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading order detection</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="ex">surya_order</span> DATA_PATH</span></code></pre></div>
+<p><strong>Python API:</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> PIL <span class="im">import</span> Image</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> surya.recognition <span class="im">import</span> RecognitionPredictor</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> surya.detection <span class="im">import</span> DetectionPredictor</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> surya.ocr <span class="im">import</span> run_ocr</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys, json</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> Image.<span class="bu">open</span>(sys.argv[<span class="dv">1</span>]).convert(<span class="st">&quot;RGB&quot;</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>recognition <span class="op">=</span> RecognitionPredictor()</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>detection <span class="op">=</span> DetectionPredictor()</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> run_ocr([image], [image], detection, recognition)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Outputs text_lines with bboxes, confidence, text</span></span></code></pre></div>
+<p><strong>Bash pipeline:</strong></p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">surya_ocr</span> screenshot.png <span class="at">--images</span> <span class="at">--output_dir</span> ./ocr_output <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Read from ocr_output/results.json</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ocr_output/results.json <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.[].text_lines[] | select(.confidence &gt; 0.5) | .text&#39;</span></span></code></pre></div>
+<p><strong>Layout analysis output labels:</strong> <code>Caption</code>,
+<code>Footnote</code>, <code>Formula</code>, <code>List-item</code>,
+<code>Page-footer</code>, <code>Page-header</code>,
+<code>Picture</code>, <code>Figure</code>, <code>Section-header</code>,
+<code>Table</code>, <code>Form</code>, <code>Table-of-contents</code>,
+<code>Handwriting</code>, <code>Text</code>,
+<code>Text-inline-math</code>.</p>
+<p><strong>Local / offline:</strong> YES. Models cached locally after
+first download.</p>
+<p><strong>License:</strong> GPL 3.0 (revenue-based exception: free for
+&lt;$5M revenue or &lt;$5M VC funding).</p>
+<p><strong>Best for:</strong> Complex layouts, maximum accuracy,
+document OCR, reading order, table recognition. Handwriting accuracy is
+far ahead of alternatives.</p>
+<hr />
+<h2 id="video-analysis-tools">2. Video Analysis Tools</h2>
+<h3 id="ffmpeg-ffprobe">2.1 ffmpeg / ffprobe</h3>
+<p><strong>Purpose:</strong> The foundational Swiss Army knife for
+video/audio analysis. Every other tool depends on ffmpeg.</p>
+<p><strong>How it works:</strong> Multi-format media library.
+<code>ffprobe</code> extracts metadata; <code>ffmpeg</code> transforms
+streams and applies filters.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install ffmpeg</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu/Debian</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install ffmpeg</span></code></pre></div>
+<h4 id="codec-detection-h.264-av1-hevc">2.1.1 Codec Detection (H.264 /
+AV1 / HEVC)</h4>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get video codec name</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> v:0 <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=codec_name <span class="dt">\</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 input.mp4</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Output: h264  (or hevc, vp9, av1...)</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Get ALL stream details as JSON</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ffprobe</span> <span class="at">-v</span> quiet <span class="at">-print_format</span> json <span class="at">-show_streams</span> input.mp4</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Get codec + resolution + bitrate</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> v:0 <span class="dt">\</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=codec_name,width,height,bit_rate,r_frame_rate <span class="dt">\</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 input.mp4</span></code></pre></div>
+<p><strong>Bash conditional for codec check:</strong></p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="va">codec</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> v:0 <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=codec_name <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span><span class="va">)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$codec</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;h264&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;PASS: Video is H.264&quot;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="cf">elif</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$codec</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;hevc&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Expected H.264, got HEVC&quot;</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="cf">elif</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$codec</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;av1&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Expected H.264, got AV1&quot;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Unknown codec: </span><span class="va">$codec</span><span class="st">&quot;</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<h4 id="frame-extraction">2.1.2 Frame Extraction</h4>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract one frame per second</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;fps=1&quot;</span> frames/out_%04d.png</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract every Nth frame</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;select=not(mod(n\,30))&quot;</span> frames/out_%04d.png</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract a single frame at 10 seconds</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-ss</span> 10 <span class="at">-i</span> input.mp4 <span class="at">-vframes</span> 1 frame.png</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract frames only during a specific segment</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-ss</span> 00:01:00 <span class="at">-to</span> 00:02:00 <span class="at">-vf</span> <span class="st">&quot;fps=1&quot;</span> segment_frames/%04d.png</span></code></pre></div>
+<h4 id="freeze-detection-freezedetect-filter">2.1.3 Freeze Detection
+(freezedetect filter)</h4>
+<p><strong>Purpose:</strong> Detect frozen/unmoving frames in a video —
+the §11.4.107 liveness oracle.</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic freeze detection (2-second minimum freeze, -60dB noise tolerance)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;freezedetect=n=-60dB:d=2&quot;</span> <span class="at">-an</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With metadata output to file</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="dt">\</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-vf</span> <span class="st">&quot;freezedetect=n=0.003,metadata=mode=print:file=freeze_log.txt&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-map</span> 0:v:0 <span class="at">-f</span> null <span class="at">-</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse freeze start/end/duration</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="at">-vf</span> <span class="st">&quot;freezedetect=n=-60dB:d=2,metadata=mode=print&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">-an</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-oP</span> <span class="st">&#39;lavfi\.freezedetect\.(freeze_start|freeze_end|freeze_duration)=\K[0-9.]+&#39;</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>n</code>: noise tolerance in dB
+(default -60dB). Lower = more sensitive. - <code>d</code>: minimum
+freeze duration in seconds (default 2).</p>
+<p><strong>Bash PASS/FAIL pipeline:</strong></p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Returns PASS if no freeze &gt;= 2 seconds found, FAIL otherwise</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="va">input</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$input</span><span class="st">&quot;</span> <span class="at">-vf</span> <span class="st">&quot;freezedetect=n=-60dB:d=2&quot;</span> <span class="at">-an</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-q</span> <span class="st">&quot;freeze_duration&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Freeze detected in </span><span class="va">$input</span><span class="st">&quot;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;PASS: No freeze detected in </span><span class="va">$input</span><span class="st">&quot;</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<h4 id="black-frame-detection-blackdetect-filter">2.1.4 Black Frame
+Detection (blackdetect filter)</h4>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Detect near-black video intervals</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;blackdetect=d=1:pix_th=0.1&quot;</span> <span class="at">-an</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse black_start/black_end</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;blackdetect=d=1&quot;</span> <span class="at">-an</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-oP</span> <span class="st">&#39;(black_start|black_end|black_duration):\K[0-9.]+&#39;</span></span></code></pre></div>
+<h4 id="scene-detection-splitting">2.1.5 Scene Detection /
+Splitting</h4>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Detect scene changes using ffmpeg&#39;s select filter</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;select=&#39;gt(scene,0.3)&#39;,showinfo&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-oP</span> <span class="st">&#39;pts_time:\K[0-9.]+&#39;</span></span></code></pre></div>
+<h4 id="video-quality-metrics">2.1.6 Video Quality Metrics</h4>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SSIM comparison between two videos</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> reference.mp4 <span class="at">-i</span> distorted.mp4 <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-filter_complex</span> <span class="st">&quot;ssim&quot;</span> <span class="at">-f</span> null <span class="at">-</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># PSNR comparison</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> reference.mp4 <span class="at">-i</span> distorted.mp4 <span class="dt">\</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-filter_complex</span> <span class="st">&quot;psnr&quot;</span> <span class="at">-f</span> null <span class="at">-</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Histogram / waveform per channel</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vf</span> <span class="st">&quot;histogram&quot;</span> histogram.mp4</span></code></pre></div>
+<hr />
+<h3 id="pyscenedetect">2.2 PySceneDetect</h3>
+<p><strong>Purpose:</strong> Python/OpenCV library for scene
+cut/transition detection and video splitting.</p>
+<p><strong>How it works:</strong> Content-aware scene detection
+(histogram-based, threshold-based, adaptive). Splits video at scene
+boundaries.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install scenedetect <span class="at">--upgrade</span></span></code></pre></div>
+<p><strong>CLI usage:</strong></p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic scene detection + split</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scenedetect</span> <span class="at">-i</span> video.mp4 split-video</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract keyframes from each scene</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="ex">scenedetect</span> <span class="at">-i</span> video.mp4 save-images</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Custom threshold</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="ex">scenedetect</span> <span class="at">-i</span> video.mp4 detect-content <span class="at">--threshold</span> 27 split-video</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Time range</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="ex">scenedetect</span> <span class="at">-i</span> video.mp4 time <span class="at">-s</span> 10 <span class="at">-e</span> 60 detect-content split-video</span></code></pre></div>
+<p><strong>Python API:</strong></p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scenedetect <span class="im">import</span> detect, ContentDetector, split_video_ffmpeg</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>scene_list <span class="op">=</span> detect(<span class="st">&#39;video.mp4&#39;</span>, ContentDetector())</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co"># scene_list is a list of (start_time, end_time) tuples</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Export for bash processing</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">&#39;scenes.json&#39;</span>, <span class="st">&#39;w&#39;</span>) <span class="im">as</span> f:</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    json.dump([{</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;start&#39;</span>: s[<span class="dv">0</span>].get_seconds(),</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;end&#39;</span>: s[<span class="dv">1</span>].get_seconds(),</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;duration&#39;</span>: s[<span class="dv">1</span>].get_seconds() <span class="op">-</span> s[<span class="dv">0</span>].get_seconds()</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">for</span> s <span class="kw">in</span> scene_list], f)</span></code></pre></div>
+<p><strong>Bash pipeline:</strong></p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scenedetect</span> <span class="at">-i</span> recording.mp4 detect-content <span class="at">--threshold</span> 27 split-video <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span></code></pre></div>
+<p><strong>Integration into media validation:</strong> Use before OCR —
+OCR only the I-frame (keyframe) of each detected scene, reducing OCR
+work and ensuring the OCRed frame is representative of that scene
+segment.</p>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> BSD 3-Clause.</p>
+<hr />
+<h3 id="opencv-cv2">2.3 OpenCV (cv2)</h3>
+<p><strong>Purpose:</strong> Computer vision library for frame-level
+analysis — motion detection, frame differencing, optical flow, content
+verification.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install opencv-python numpy scikit-image</span></code></pre></div>
+<h4 id="frame-differencing-motion-detection">2.3.1 Frame Differencing /
+Motion Detection</h4>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;motion_check.py — Detect if video has advancing (live) content.&quot;&quot;&quot;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>cap <span class="op">=</span> cv2.VideoCapture(sys.argv[<span class="dv">1</span>])</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>_, prev <span class="op">=</span> cap.read()</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>_, curr <span class="op">=</span> cap.read()</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>frame_count <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>motion_count <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>total_frames <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FRAME_COUNT))</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample every 30th frame</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> curr <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    diff <span class="op">=</span> cv2.absdiff(cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY),</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>                       cv2.cvtColor(curr, cv2.COLOR_BGR2GRAY))</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    motion <span class="op">=</span> cv2.countNonZero(diff) <span class="op">&gt;</span> <span class="dv">500</span>  <span class="co"># threshold</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> motion:</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>        motion_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    prev <span class="op">=</span> curr</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">30</span>):</span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>        ret, curr <span class="op">=</span> cap.read()</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> ret:</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>            curr <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>    frame_count <span class="op">+=</span> <span class="dv">30</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> {</span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;live&quot;</span>: motion_count <span class="op">&gt;</span> <span class="dv">0</span>,</span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;motion_frames&quot;</span>: motion_count,</span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;total_frames_sampled&quot;</span>: frame_count,</span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;pass&quot;</span>: motion_count <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps(result))</span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>cap.release()</span></code></pre></div>
+<p><strong>Bash pipeline:</strong></p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> motion_check.py recording.mp4 <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.pass&#39;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co"># true = video has motion (live content)</span></span></code></pre></div>
+<h4 id="perceptual-frame-hashing-not-stale-check">2.3.2 Perceptual Frame
+Hashing (Not-stale Check)</h4>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;not_stale.py — Verify consecutive frames are not duplicates (stale decoder).&quot;&quot;&quot;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2, sys, json</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> skimage.metrics <span class="im">import</span> structural_similarity <span class="im">as</span> ssim</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>cap <span class="op">=</span> cv2.VideoCapture(sys.argv[<span class="dv">1</span>])</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>_, f1 <span class="op">=</span> cap.read()</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>_, f2 <span class="op">=</span> cap.read()</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>g1 <span class="op">=</span> cv2.cvtColor(f1, cv2.COLOR_BGR2GRAY)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>g2 <span class="op">=</span> cv2.cvtColor(f2, cv2.COLOR_BGR2GRAY)</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>score <span class="op">=</span> ssim(g1, g2)</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps({</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;ssim_score&quot;</span>: <span class="bu">float</span>(score),</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;is_live&quot;</span>: score <span class="op">&lt;</span> <span class="fl">0.95</span>,   <span class="co"># SSIM &lt; 0.95 means frame is advancing</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;pass&quot;</span>: score <span class="op">&lt;</span> <span class="fl">0.95</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>}))</span></code></pre></div>
+<h4 id="ocr-on-video-frames-opencv-tesseract">2.3.3 OCR on Video Frames
+(OpenCV + Tesseract)</h4>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;ocr_video.py — Extract text from a video at specific timestamps.&quot;&quot;&quot;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2, sys, json</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pytesseract</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> PIL <span class="im">import</span> Image</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>cap <span class="op">=</span> cv2.VideoCapture(sys.argv[<span class="dv">1</span>])</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>timestamps <span class="op">=</span> [<span class="bu">float</span>(t) <span class="cf">for</span> t <span class="kw">in</span> sys.argv[<span class="dv">2</span>:]]  <span class="co"># seconds</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> []</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ts <span class="kw">in</span> timestamps:</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    cap.<span class="bu">set</span>(cv2.CAP_PROP_POS_FRAMES, <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FPS) <span class="op">*</span> ts))</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    ret, frame <span class="op">=</span> cap.read()</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> ret:</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>    gray <span class="op">=</span> cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    _, thresh <span class="op">=</span> cv2.threshold(gray, <span class="dv">0</span>, <span class="dv">255</span>, cv2.THRESH_BINARY <span class="op">+</span> cv2.THRESH_OTSU)</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> pytesseract.image_to_string(thresh, config<span class="op">=</span><span class="st">&#39;--psm 6&#39;</span>)</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    results.append({<span class="st">&quot;ts&quot;</span>: ts, <span class="st">&quot;text&quot;</span>: text.strip()})</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps(results))</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>cap.release()</span></code></pre></div>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> Apache 2.0.</p>
+<hr />
+<h2 id="audio-analysis-tools">3. Audio Analysis Tools</h2>
+<h3 id="ffmpeg-audio-analysis">3.1 ffmpeg Audio Analysis</h3>
+<p><strong>Purpose:</strong> Audio stream extraction, format conversion,
+silence detection, channel analysis.</p>
+<p><strong>Installation:</strong> Via ffmpeg (see §2.1).</p>
+<h4 id="audio-stream-detection">3.1.1 Audio Stream Detection</h4>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List audio streams</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffprobe</span> <span class="at">-v</span> quiet <span class="at">-print_format</span> json <span class="at">-show_entries</span> stream=index,codec_name,channels,sample_rate input.mp4 <span class="dt">\</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">jq</span> <span class="st">&#39;.streams[] | select(.codec_type == &quot;audio&quot;)&#39;</span></span></code></pre></div>
+<h4 id="audio-extraction">3.1.2 Audio Extraction</h4>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract audio to WAV (16kHz mono, for speech recognition)</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vn</span> <span class="at">-acodec</span> pcm_s16le <span class="at">-ar</span> 16000 <span class="at">-ac</span> 1 output.wav</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract with original quality</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp4 <span class="at">-vn</span> <span class="at">-acodec</span> copy output.aac</span></code></pre></div>
+<h4 id="silence-detection-silencedetect-filter">3.1.3 Silence Detection
+(silencedetect filter)</h4>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Detect silence in audio</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.wav <span class="at">-af</span> <span class="st">&quot;silencedetect=n=-30dB:d=0.5&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-oP</span> <span class="st">&#39;(silence_start|silence_end|silence_duration):\K[0-9.]+&#39;</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>n</code>: noise threshold in dB
+(default -30dB). Lower = more sensitive. - <code>d</code>: minimum
+silence duration in seconds (default 0.5).</p>
+<h4 id="rms-loudness-analysis">3.1.4 RMS / Loudness Analysis</h4>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Per-frame RMS</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.wav <span class="at">-af</span> <span class="st">&quot;volumedetect&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co"># EBU R128 loudness (LUFS)</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.wav <span class="at">-af</span> <span class="st">&quot;ebur128&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract RMS values as CSV-like lines</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.wav <span class="at">-af</span> <span class="st">&quot;astats=metadata=1&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&quot;RMS_level&quot;</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code></pre></div>
+<h4 id="audio-quality-checks-in-bash">3.1.5 Audio Quality Checks in
+Bash</h4>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co"># verify_audio.sh — Check audio presence and basic quality</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if audio stream exists</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="va">STATUS</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> a:0 <span class="dt">\</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=codec_name <span class="dt">\</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span><span class="va">)</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-z</span> <span class="st">&quot;</span><span class="va">$STATUS</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: No audio stream found&quot;</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Check channels</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="va">CHANNELS</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> a:0 <span class="dt">\</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=channels <span class="dt">\</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span><span class="va">)</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Channels: </span><span class="va">$CHANNELS</span><span class="st">&quot;</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Check sample rate</span></span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a><span class="va">RATE</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> a:0 <span class="dt">\</span></span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=sample_rate <span class="dt">\</span></span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span><span class="va">)</span></span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Sample rate: </span><span class="va">$RATE</span><span class="st"> Hz&quot;</span></span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for silence (if silent, fail)</span></span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="at">-af</span> <span class="st">&quot;silencedetect=n=-50dB:d=2&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-q</span> <span class="st">&quot;silence_end:  inf&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb36-31"><a href="#cb36-31" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Audio is entirely silent&quot;</span></span>
+<span id="cb36-32"><a href="#cb36-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb36-33"><a href="#cb36-33" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb36-34"><a href="#cb36-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-35"><a href="#cb36-35" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PASS: Audio stream present and non-silent&quot;</span></span></code></pre></div>
+<hr />
+<h3 id="openai-whisper-local">3.2 OpenAI Whisper (Local)</h3>
+<p><strong>Purpose:</strong> State-of-the-art speech-to-text
+transcription, fully local. No API key needed.</p>
+<p><strong>How it works:</strong> Encoder-decoder Transformer trained on
+680k hours of multilingual data. Predicts text directly from 30-second
+audio windows.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install openai-whisper</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or faster backends:</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install faster-whisper     <span class="co"># CTranslate2 — 4x faster</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install whisply              <span class="co"># auto-selects fastest backend</span></span></code></pre></div>
+<p><strong>Model selection (2025-2026 recommended):</strong> | Model |
+Size | RAM | Speed | Best for | |—|—|—|—|—| | <code>tiny</code> | 75 MB
+| ~1 GB | Fastest | Real-time, quick check | | <code>base</code> | 145
+MB | ~2 GB | Fast | General use | | <code>small</code> | 465 MB | ~4 GB
+| Medium | Balanced | | <code>medium</code> | 1.5 GB | ~8 GB | Slow |
+Good accuracy | | <code>large-v3-turbo</code> | ~1.5 GB | ~6 GB |
+Medium-fast | <strong>Best 2025-2026 choice</strong> | |
+<code>large</code> | 2.9 GB | ~10 GB | Slow | Maximum accuracy |</p>
+<p><strong>Bash pipeline — transcribe video to text:</strong></p>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># transcribe.sh — Extract audio and transcribe with Whisper</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="va">MODEL</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${2</span><span class="op">:-</span>large-v3-turbo<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="va">OUTDIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${3</span><span class="op">:-</span>./transcript<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$OUTDIR</span><span class="st">&quot;</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Extract audio at 16kHz mono</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="at">-vn</span> <span class="at">-acodec</span> pcm_s16le <span class="at">-ar</span> 16000 <span class="at">-ac</span> 1 <span class="st">&quot;</span><span class="va">$OUTDIR</span><span class="st">/audio.wav&quot;</span> <span class="at">-y</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Transcribe (fully offline)</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a><span class="ex">whisper</span> <span class="st">&quot;</span><span class="va">$OUTDIR</span><span class="st">/audio.wav&quot;</span> <span class="dt">\</span></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--model</span> <span class="st">&quot;</span><span class="va">$MODEL</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output_dir</span> <span class="st">&quot;</span><span class="va">$OUTDIR</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output_format</span> srt txt <span class="dt">\</span></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">--language</span> en</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Transcript: </span><span class="va">$OUTDIR</span><span class="st">/audio.txt&quot;</span></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Subtitles: </span><span class="va">$OUTDIR</span><span class="st">/audio.srt&quot;</span></span></code></pre></div>
+<p><strong>Pattern matching in transcripts for
+verification:</strong></p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if transcript contains expected text</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="fu">grep</span> <span class="at">-qi</span> <span class="st">&quot;expected output&quot;</span> transcript/audio.txt<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;PASS: Expected text found in audio&quot;</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Expected text NOT found in audio&quot;</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<p><strong>Device auto-detection for pipeline:</strong></p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="va">DEVICE</span><span class="op">=</span><span class="st">&quot;cpu&quot;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">command</span> <span class="at">-v</span> nvidia-smi <span class="op">&amp;&gt;</span> /dev/null<span class="kw">;</span> <span class="cf">then</span> <span class="va">DEVICE</span><span class="op">=</span><span class="st">&quot;cuda&quot;</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="cf">elif</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">uname</span><span class="va">)</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;Darwin&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">uname</span> <span class="at">-m</span><span class="va">)</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;arm64&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span> <span class="va">DEVICE</span><span class="op">=</span><span class="st">&quot;mps&quot;</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="ex">whisper</span> audio.wav <span class="at">--model</span> large-v3-turbo <span class="at">--device</span> <span class="st">&quot;</span><span class="va">$DEVICE</span><span class="st">&quot;</span> <span class="at">--output_format</span> txt</span></code></pre></div>
+<p><strong>Local / offline:</strong> YES after initial model download.
+No API key.</p>
+<p><strong>License:</strong> MIT.</p>
+<p><strong>Use for §11.4.159:</strong> Transcribe audio tracks from
+feature recordings to verify the correct audio output, captions, or
+spoken content is present.</p>
+<hr />
+<h3 id="librosa">3.3 librosa</h3>
+<p><strong>Purpose:</strong> Python library for music and audio
+analysis. Feature extraction (MFCC, spectral), beat tracking, onset
+detection.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install librosa numpy</span></code></pre></div>
+<p><strong>Key capabilities for media validation:</strong></p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> librosa</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load audio</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>y, sr <span class="op">=</span> librosa.load(<span class="st">&#39;audio.wav&#39;</span>, sr<span class="op">=</span><span class="dv">16000</span>)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="co"># RMS energy (loudness) — detect silent/dead channels</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>rms <span class="op">=</span> librosa.feature.rms(y<span class="op">=</span>y)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>mean_rms <span class="op">=</span> <span class="bu">float</span>(rms.mean())</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps({<span class="st">&quot;mean_rms&quot;</span>: mean_rms, <span class="st">&quot;has_audio&quot;</span>: mean_rms <span class="op">&gt;</span> <span class="fl">0.01</span>}))</span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Spectral centroid (brightness)</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>centroid <span class="op">=</span> librosa.feature.spectral_centroid(y<span class="op">=</span>y, sr<span class="op">=</span>sr)</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Zero-crossing rate (noise detection)</span></span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>zcr <span class="op">=</span> librosa.feature.zero_crossing_rate(y)</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Detect if file is silent</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> mean_rms <span class="op">&lt;</span> <span class="fl">0.001</span>:</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;FAIL: Audio is silent&quot;</span>)</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;PASS: Audio has content&quot;</span>)</span></code></pre></div>
+<p><strong>Bash integration:</strong></p>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-c</span> <span class="st">&quot;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="st">import librosa, json</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="st">y, sr = librosa.load(&#39;audio.wav&#39;, sr=16000)</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="st">rms = librosa.feature.rms(y=y)</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="st">print(json.dumps({&#39;mean_rms&#39;: float(rms.mean()), &#39;channels&#39;: y.ndim}))</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span></code></pre></div>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> ISC.</p>
+<hr />
+<h2 id="asciinema-cast-analysis">4. Asciinema Cast Analysis</h2>
+<h3 id="agg-asciinema-gif-generator">4.1 agg (asciinema GIF
+generator)</h3>
+<p><strong>Purpose:</strong> Convert <code>.cast</code> (asciinema
+terminal recording) files to GIF for visual review. Successor to
+<code>asciicast2gif</code>.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Via Rust (cargo)</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> install <span class="at">--git</span> https://github.com/asciinema/agg</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Via Homebrew</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install agg</span></code></pre></div>
+<p><strong>Usage:</strong></p>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert cast to GIF</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="ex">agg</span> recording.cast recording.gif</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With theme and speed options</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="ex">agg</span> <span class="at">--theme</span> monokai <span class="at">--speed</span> 2.0 <span class="at">--font-size</span> 14 recording.cast recording.gif</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to MP4 (via ffmpeg)</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="ex">agg</span> recording.cast recording.gif</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> recording.gif <span class="at">-c:v</span> libx264 <span class="at">-pix_fmt</span> yuv420p <span class="at">-movflags</span> +faststart recording.mp4</span></code></pre></div>
+<p><strong>Bash pipeline for automated verification:</strong></p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="co"># cast_to_mp4.sh — Convert asciicast to viewable MP4 then run OCR</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="va">BASE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${INPUT</span><span class="op">%</span>.cast<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Convert cast -&gt; GIF -&gt; MP4</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="ex">agg</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">.gif&quot;</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-y</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">.gif&quot;</span> <span class="at">-c:v</span> libx264 <span class="at">-pix_fmt</span> yuv420p <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">.mp4&quot;</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Extract frames from MP4 for OCR</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">_frames&quot;</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">.mp4&quot;</span> <span class="at">-vf</span> <span class="st">&quot;fps=1&quot;</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">_frames/frame_%04d.png&quot;</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: OCR each frame</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">_frames&quot;</span>/<span class="pp">*</span>.png<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">tesseract</span> <span class="st">&quot;</span><span class="va">$f</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">${f</span><span class="op">%</span>.png<span class="va">}</span><span class="st">&quot;</span> <span class="at">-l</span> eng <span class="at">--psm</span> 6 <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">_frames&quot;</span>/<span class="pp">*</span>.txt <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">${BASE}</span><span class="st">_transcript.txt&quot;</span></span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Transcript: </span><span class="va">${BASE}</span><span class="st">_transcript.txt&quot;</span></span></code></pre></div>
+<p><strong>Debugging tip:</strong> <code>agg --debug</code> prints
+timing, render info, and error diagnostics.</p>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> GPL 3.0.</p>
+<hr />
+<h3 id="asciinema-rewind-community">4.2 asciinema-rewind
+(community)</h3>
+<p><strong>Purpose:</strong> Extract metadata and timing information
+from <code>.cast</code> files.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install asciinema-rewind</span></code></pre></div>
+<p><strong>Usage:</strong></p>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract timing and event counts</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="ex">asciinema-rewind</span> recording.cast</span></code></pre></div>
+<p><strong>Local / offline:</strong> YES.</p>
+<hr />
+<h3 id="direct-.cast-json-parsing">4.3 Direct <code>.cast</code> JSON
+Parsing</h3>
+<p><strong>Purpose:</strong> Asciinema <code>.cast</code> files are
+JSONL — each line is a timestamped event. Parse directly without
+conversion.</p>
+<p><strong>Format of a <code>.cast</code> file (v2):</strong></p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">80</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">24</span><span class="fu">,</span> <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="dv">1712345678</span><span class="fu">}</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fl">0.1</span><span class="ot">,</span> <span class="st">&quot;o&quot;</span><span class="ot">,</span> <span class="st">&quot;$ &quot;</span><span class="ot">]</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fl">0.2</span><span class="ot">,</span> <span class="st">&quot;o&quot;</span><span class="ot">,</span> <span class="st">&quot;ls -la&quot;</span><span class="ot">]</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fl">0.05</span><span class="ot">,</span> <span class="st">&quot;o&quot;</span><span class="ot">,</span> <span class="st">&quot;</span><span class="ch">\r\n</span><span class="st">&quot;</span><span class="ot">]</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fl">0.3</span><span class="ot">,</span> <span class="st">&quot;o&quot;</span><span class="ot">,</span> <span class="st">&quot;total 42</span><span class="ch">\r\n</span><span class="st">&quot;</span><span class="ot">]</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fl">1.0</span><span class="ot">,</span> <span class="st">&quot;o&quot;</span><span class="ot">,</span> <span class="st">&quot;PASS: All tests completed successfully</span><span class="ch">\r\n</span><span class="st">&quot;</span><span class="ot">]</span></span></code></pre></div>
+<p><strong>Bash — grep for expected output in cast:</strong></p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co"># verify_cast.sh — Check if asciicast contains expected output patterns</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="va">PATTERN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${2</span><span class="op">:-</span>PASS<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract text output (lines with type &quot;o&quot;) and grep for pattern</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&#39;^\[&#39;</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&#39;&quot;o&quot;,&#39;</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-qi</span> <span class="st">&quot;</span><span class="va">$PATTERN</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;PASS: Pattern &#39;</span><span class="va">$PATTERN</span><span class="st">&#39; found in cast&quot;</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 0</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;FAIL: Pattern &#39;</span><span class="va">$PATTERN</span><span class="st">&#39; NOT found in cast&quot;</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<p><strong>Python — structured cast verification:</strong></p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;verify_cast.py — Structured verification of asciicast output.&quot;&quot;&quot;</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys, json</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>cast_file <span class="op">=</span> sys.argv[<span class="dv">1</span>]</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>expected_patterns <span class="op">=</span> sys.argv[<span class="dv">2</span>:]</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>output_text <span class="op">=</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(cast_file) <span class="im">as</span> f:</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> line <span class="kw">in</span> f:</span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>        line <span class="op">=</span> line.strip()</span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> line.startswith(<span class="st">&#39;[&#39;</span>):</span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">try</span>:</span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>                event <span class="op">=</span> json.loads(line)</span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="bu">len</span>(event) <span class="op">&gt;=</span> <span class="dv">3</span> <span class="kw">and</span> event[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;o&#39;</span>:</span>
+<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a>                    output_text <span class="op">+=</span> event[<span class="dv">2</span>]</span>
+<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span> json.JSONDecodeError:</span>
+<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a>                <span class="cf">pass</span></span>
+<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a>found_all <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> pattern <span class="kw">in</span> expected_patterns:</span>
+<span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pattern.lower() <span class="kw">in</span> output_text.lower():</span>
+<span id="cb51-23"><a href="#cb51-23" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;PASS: &#39;</span><span class="sc">{</span>pattern<span class="sc">}</span><span class="ss">&#39; FOUND&quot;</span>)</span>
+<span id="cb51-24"><a href="#cb51-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb51-25"><a href="#cb51-25" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;FAIL: &#39;</span><span class="sc">{</span>pattern<span class="sc">}</span><span class="ss">&#39; NOT FOUND&quot;</span>)</span>
+<span id="cb51-26"><a href="#cb51-26" aria-hidden="true" tabindex="-1"></a>        found_all <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb51-27"><a href="#cb51-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-28"><a href="#cb51-28" aria-hidden="true" tabindex="-1"></a>sys.exit(<span class="dv">0</span> <span class="cf">if</span> found_all <span class="cf">else</span> <span class="dv">1</span>)</span></code></pre></div>
+<p><strong>Bash usage:</strong></p>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> verify_cast.py session.cast <span class="st">&quot;PASS&quot;</span> <span class="st">&quot;completed successfully&quot;</span></span></code></pre></div>
+<p><strong>Local / offline:</strong> YES. Zero dependencies for JSON
+parsing.</p>
+<hr />
+<h2 id="automated-content-verification-frameworks">5. Automated Content
+Verification Frameworks</h2>
+<h3 id="helixqa-existing-submodule">5.1 HelixQA (Existing
+Submodule)</h3>
+<p><strong>Purpose:</strong> The project’s own automated QA framework.
+Drives end-to-end validation with HelixQA Challenge banks.</p>
+<p><strong>Repository:</strong> <code>HelixDevelopment/HelixQA</code>
+(git submodule).</p>
+<p><strong>How it works:</strong> Challenge-driven QA sessions. Each
+challenge defines an expected behaviour, drives the system under test,
+captures evidence, and scores PASS/FAIL. Uses subagent-driven execution
+per §11.4.70.</p>
+<p><strong>Verification via
+<code>docs/qa/&lt;run-id&gt;/</code></strong> (§11.4.83): - Full
+bidirectional transcript - Evidence artefacts (recordings, screenshots,
+logs) - Verdict with evidence path</p>
+<p><strong>Pipeline integration:</strong></p>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a HelixQA session from scripts/testing/</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/testing/run_qa_session.sh <span class="at">--bank</span> atmosphere <span class="at">--challenge</span> CME-MEDIA-001</span></code></pre></div>
+<p><strong>Key features for media validation:</strong> - Subagent-driven
+parallel execution - Captured evidence output under
+<code>qa-results/&lt;run-id&gt;/</code> - Challenge bank under
+<code>tools/helixqa/banks/</code> - <code>ab_pass_with_evidence</code> /
+<code>ab_skip_with_reason</code> helpers per §11.4.69 -
+<code>ab_run_n_times</code> for §11.4.50 deterministic consistency</p>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> Proprietary (owned submodule).</p>
+<hr />
+<h3 id="playwright-axe-core">5.2 Playwright + axe-core</h3>
+<p><strong>Purpose:</strong> Browser automation framework with
+accessibility testing. Useful for web/UI-based media validation.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> init playwright</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install @axe-core/playwright <span class="at">--save-dev</span></span></code></pre></div>
+<p><strong>Video recording built-in:</strong></p>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co">// playwright.config.js</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> <span class="fu">defineConfig</span>({</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">use</span><span class="op">:</span> {</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">video</span><span class="op">:</span> <span class="st">&#39;on&#39;</span><span class="op">,</span>           <span class="co">// Record video for all tests</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">screenshot</span><span class="op">:</span> <span class="st">&#39;on&#39;</span><span class="op">,</span>      <span class="co">// Capture screenshots</span></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p><strong>Accessibility audit:</strong></p>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { test<span class="op">,</span> expect } <span class="im">from</span> <span class="st">&#39;@playwright/test&#39;</span><span class="op">;</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> AxeBuilder <span class="im">from</span> <span class="st">&#39;@axe-core/playwright&#39;</span><span class="op">;</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test</span>(<span class="st">&#39;page has no accessibility violations&#39;</span><span class="op">,</span> <span class="kw">async</span> ({ page }) <span class="kw">=&gt;</span> {</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> page<span class="op">.</span><span class="fu">goto</span>(<span class="st">&#39;https://example.com&#39;</span>)<span class="op">;</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> results <span class="op">=</span> <span class="cf">await</span> <span class="kw">new</span> <span class="fu">AxeBuilder</span>({ page })<span class="op">.</span><span class="fu">analyze</span>()<span class="op">;</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect</span>(results<span class="op">.</span><span class="at">violations</span>)<span class="op">.</span><span class="fu">toEqual</span>([])<span class="op">;</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p><strong>Bash CI pipeline:</strong></p>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> playwright test <span class="at">--headless</span> <span class="at">--reporter</span> html</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Videos in test-results/ directory</span></span></code></pre></div>
+<p><strong>Pros:</strong> Rich assertions, auto-waiting, video
+recording, cross-browser, extensive ecosystem. <strong>Cons:</strong>
+Only for web/browser-based UI. Not for terminal or device-native
+media.</p>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> Apache 2.0.</p>
+<hr />
+<h3 id="cypress">5.3 Cypress</h3>
+<p><strong>Purpose:</strong> End-to-end testing framework with built-in
+video recording and time-travel debugging.</p>
+<p><strong>Installation:</strong></p>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install cypress <span class="at">--save-dev</span></span></code></pre></div>
+<p><strong>Video recording configuration:</strong></p>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">// cypress.config.js</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> <span class="fu">defineConfig</span>({</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">e2e</span><span class="op">:</span> {</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">video</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">videoCompression</span><span class="op">:</span> <span class="dv">32</span><span class="op">,</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">videoUploadOnPasses</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span>  <span class="co">// upload only on failure</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">videosFolder</span><span class="op">:</span> <span class="st">&#39;cypress/videos&#39;</span><span class="op">,</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p><strong>CI pipeline:</strong></p>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> cypress run <span class="at">--headless</span> <span class="at">--browser</span> chrome</span></code></pre></div>
+<p><strong>Pros:</strong> Built-in video recording on every test run,
+time-travel debugging, extensive plugin ecosystem.
+<strong>Cons:</strong> Only for web/browser-based UI. Heavier than
+Playwright.</p>
+<p><strong>Local / offline:</strong> YES.</p>
+<p><strong>License:</strong> MIT.</p>
+<hr />
+<h3 id="custom-python-pipeline">5.4 Custom Python Pipeline</h3>
+<p><strong>Purpose:</strong> Fully custom bash/Python pipeline combining
+ffmpeg + OCR + Whisper + OpenCV. Most flexible for media validation.</p>
+<p><strong>Architecture:</strong></p>
+<pre><code>Input video/recording
+  │
+  ├─ ffprobe → codec check (H.264/AV1/HEVC)
+  │
+  ├─ ffmpeg freezedetect → liveness assertion
+  │
+  ├─ ffmpeg blackdetect → content presence assertion
+  │
+  ├─ ffmpeg frame extraction → frames/
+  │     │
+  │     ├─ OpenCV frame diff → motion/liveness
+  │     ├─ Tesseract/EasyOCR/PaddleOCR → text from frames
+  │     └─ Perceptual hash → not-stale check (SSIM &lt; 0.95)
+  │
+  ├─ ffmpeg audio extraction → audio.wav
+  │     │
+  │     ├─ librms/volumedetect → audio presence
+  │     ├─ silencedetect → dead channel check
+  │     └─ Whisper → transcription → pattern matching
+  │
+  └─ Verify results → PASS/FAIL verdict with evidence paths</code></pre>
+<p><strong>Template pipeline script:</strong></p>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="co"># media_validate.sh — Comprehensive media recording validation</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="va">TOOL</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${2</span><span class="op">:-</span>standard<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;=== Media Validation Report ===&quot;</span></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Input: </span><span class="va">$INPUT</span><span class="st">&quot;</span></span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Tool: </span><span class="va">$TOOL</span><span class="st">&quot;</span></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;================================&quot;</span></span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Phase 1: Codec check ---</span></span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a><span class="va">CODEC</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> v:0 <span class="dt">\</span></span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=codec_name <span class="dt">\</span></span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="va">)</span></span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Video codec: </span><span class="va">${CODEC</span><span class="op">:-</span>N/A<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$CODEC</span><span class="st">&quot;</span> <span class="ot">=</span> <span class="st">&quot;h264&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;  [PASS] Codec is H.264&quot;</span></span>
+<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;  [WARN] Expected H.264, got </span><span class="va">$CODEC</span><span class="st">&quot;</span></span>
+<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb62-23"><a href="#cb62-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-24"><a href="#cb62-24" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Phase 2: Freeze detection (liveness) ---</span></span>
+<span id="cb62-25"><a href="#cb62-25" aria-hidden="true" tabindex="-1"></a><span class="va">FREEZE</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="at">-vf</span> <span class="st">&quot;freezedetect=n=-60dB:d=2&quot;</span> <span class="dt">\</span></span>
+<span id="cb62-26"><a href="#cb62-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">-an</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">&quot;freeze_duration&quot;</span><span class="va">)</span></span>
+<span id="cb62-27"><a href="#cb62-27" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$FREEZE</span><span class="st">&quot;</span> <span class="ot">-eq</span> 0 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb62-28"><a href="#cb62-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;  [PASS] No freeze detected (video is live)&quot;</span></span>
+<span id="cb62-29"><a href="#cb62-29" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb62-30"><a href="#cb62-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;  [FAIL] </span><span class="va">$FREEZE</span><span class="st"> freeze event(s) detected&quot;</span></span>
+<span id="cb62-31"><a href="#cb62-31" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb62-32"><a href="#cb62-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-33"><a href="#cb62-33" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Phase 3: Audio presence ---</span></span>
+<span id="cb62-34"><a href="#cb62-34" aria-hidden="true" tabindex="-1"></a><span class="va">AUDIO</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-select_streams</span> a:0 <span class="dt">\</span></span>
+<span id="cb62-35"><a href="#cb62-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">-show_entries</span> stream=codec_name <span class="dt">\</span></span>
+<span id="cb62-36"><a href="#cb62-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="va">)</span></span>
+<span id="cb62-37"><a href="#cb62-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-38"><a href="#cb62-38" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$AUDIO</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb62-39"><a href="#cb62-39" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;Audio codec: </span><span class="va">$AUDIO</span><span class="st">&quot;</span></span>
+<span id="cb62-40"><a href="#cb62-40" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Check for silence</span></span>
+<span id="cb62-41"><a href="#cb62-41" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="at">-af</span> <span class="st">&quot;volumedetect&quot;</span> <span class="at">-f</span> null <span class="at">-</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb62-42"><a href="#cb62-42" aria-hidden="true" tabindex="-1"></a>      <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&quot;mean_volume&quot;</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb62-43"><a href="#cb62-43" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;  [PASS] Audio stream present&quot;</span></span>
+<span id="cb62-44"><a href="#cb62-44" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb62-45"><a href="#cb62-45" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;  [WARN] No audio stream&quot;</span></span>
+<span id="cb62-46"><a href="#cb62-46" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb62-47"><a href="#cb62-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-48"><a href="#cb62-48" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Phase 4: Frame extraction + OCR ---</span></span>
+<span id="cb62-49"><a href="#cb62-49" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /tmp/media_val_frames</span>
+<span id="cb62-50"><a href="#cb62-50" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-y</span> <span class="at">-i</span> <span class="st">&quot;</span><span class="va">$INPUT</span><span class="st">&quot;</span> <span class="at">-vf</span> <span class="st">&quot;fps=1/5&quot;</span> /tmp/media_val_frames/frame_%04d.png <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb62-51"><a href="#cb62-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-52"><a href="#cb62-52" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;--- Phase 4: OCR verification ---&quot;</span></span>
+<span id="cb62-53"><a href="#cb62-53" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> /tmp/media_val_frames/<span class="pp">*</span>.png<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb62-54"><a href="#cb62-54" aria-hidden="true" tabindex="-1"></a>    <span class="va">text</span><span class="op">=</span><span class="va">$(</span><span class="ex">tesseract</span> <span class="st">&quot;</span><span class="va">$f</span><span class="st">&quot;</span> stdout <span class="at">-l</span> eng <span class="at">--psm</span> 6 <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span><span class="va">)</span></span>
+<span id="cb62-55"><a href="#cb62-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$text</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb62-56"><a href="#cb62-56" aria-hidden="true" tabindex="-1"></a>        <span class="bu">echo</span> <span class="st">&quot;  [OCR] </span><span class="va">$(</span><span class="fu">basename</span> <span class="st">&quot;</span><span class="va">$f</span><span class="st">&quot;</span><span class="va">)</span><span class="st">: </span><span class="va">${text</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">80</span><span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb62-57"><a href="#cb62-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb62-58"><a href="#cb62-58" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb62-59"><a href="#cb62-59" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> /tmp/media_val_frames</span>
+<span id="cb62-60"><a href="#cb62-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-61"><a href="#cb62-61" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;=== End of Media Validation Report ===&quot;</span></span></code></pre></div>
+<p><strong>Python orchestrator equivalent:</strong></p>
+<div class="sourceCode" id="cb63"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;media_validate.py — Orchestrated media validation pipeline.&quot;&quot;&quot;</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> subprocess, json, sys</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> check_codec(video_path: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> subprocess.run([</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;ffprobe&#39;</span>, <span class="st">&#39;-v&#39;</span>, <span class="st">&#39;error&#39;</span>, <span class="st">&#39;-select_streams&#39;</span>, <span class="st">&#39;v:0&#39;</span>,</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;-show_entries&#39;</span>, <span class="st">&#39;stream=codec_name&#39;</span>,</span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;-of&#39;</span>, <span class="st">&#39;default=noprint_wrappers=1:nokey=1&#39;</span>, video_path</span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>    ], capture_output<span class="op">=</span><span class="va">True</span>, text<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a>    codec <span class="op">=</span> result.stdout.strip()</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">&#39;codec&#39;</span>: codec, <span class="st">&#39;is_h264&#39;</span>: codec <span class="op">==</span> <span class="st">&#39;h264&#39;</span>,</span>
+<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;pass&#39;</span>: codec <span class="op">==</span> <span class="st">&#39;h264&#39;</span>}</span>
+<span id="cb63-15"><a href="#cb63-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-16"><a href="#cb63-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> check_freezes(video_path: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb63-17"><a href="#cb63-17" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> subprocess.run([</span>
+<span id="cb63-18"><a href="#cb63-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;ffmpeg&#39;</span>, <span class="st">&#39;-i&#39;</span>, video_path,</span>
+<span id="cb63-19"><a href="#cb63-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;-vf&#39;</span>, <span class="st">&#39;freezedetect=n=-60dB:d=2&#39;</span>,</span>
+<span id="cb63-20"><a href="#cb63-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;-an&#39;</span>, <span class="st">&#39;-f&#39;</span>, <span class="st">&#39;null&#39;</span>, <span class="st">&#39;-&#39;</span></span>
+<span id="cb63-21"><a href="#cb63-21" aria-hidden="true" tabindex="-1"></a>    ], capture_output<span class="op">=</span><span class="va">True</span>, text<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb63-22"><a href="#cb63-22" aria-hidden="true" tabindex="-1"></a>    freeze_count <span class="op">=</span> result.stderr.count(<span class="st">&#39;freeze_duration&#39;</span>)</span>
+<span id="cb63-23"><a href="#cb63-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">&#39;freeze_count&#39;</span>: freeze_count,</span>
+<span id="cb63-24"><a href="#cb63-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;pass&#39;</span>: freeze_count <span class="op">==</span> <span class="dv">0</span>}</span>
+<span id="cb63-25"><a href="#cb63-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-26"><a href="#cb63-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> check_audio(video_path: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb63-27"><a href="#cb63-27" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> subprocess.run([</span>
+<span id="cb63-28"><a href="#cb63-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;ffprobe&#39;</span>, <span class="st">&#39;-v&#39;</span>, <span class="st">&#39;error&#39;</span>, <span class="st">&#39;-select_streams&#39;</span>, <span class="st">&#39;a:0&#39;</span>,</span>
+<span id="cb63-29"><a href="#cb63-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;-show_entries&#39;</span>, <span class="st">&#39;stream=codec_name,channels,sample_rate&#39;</span>,</span>
+<span id="cb63-30"><a href="#cb63-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;-of&#39;</span>, <span class="st">&#39;json&#39;</span>, video_path</span>
+<span id="cb63-31"><a href="#cb63-31" aria-hidden="true" tabindex="-1"></a>    ], capture_output<span class="op">=</span><span class="va">True</span>, text<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb63-32"><a href="#cb63-32" aria-hidden="true" tabindex="-1"></a>    streams <span class="op">=</span> json.loads(result.stdout).get(<span class="st">&#39;streams&#39;</span>, [])</span>
+<span id="cb63-33"><a href="#cb63-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">&#39;has_audio&#39;</span>: <span class="bu">len</span>(streams) <span class="op">&gt;</span> <span class="dv">0</span>,</span>
+<span id="cb63-34"><a href="#cb63-34" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;details&#39;</span>: streams[<span class="dv">0</span>] <span class="cf">if</span> streams <span class="cf">else</span> <span class="va">None</span>,</span>
+<span id="cb63-35"><a href="#cb63-35" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;pass&#39;</span>: <span class="bu">len</span>(streams) <span class="op">&gt;</span> <span class="dv">0</span>}</span>
+<span id="cb63-36"><a href="#cb63-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-37"><a href="#cb63-37" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb63-38"><a href="#cb63-38" aria-hidden="true" tabindex="-1"></a>    path <span class="op">=</span> sys.argv[<span class="dv">1</span>]</span>
+<span id="cb63-39"><a href="#cb63-39" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> {</span>
+<span id="cb63-40"><a href="#cb63-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;codec&#39;</span>: check_codec(path),</span>
+<span id="cb63-41"><a href="#cb63-41" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;freeze&#39;</span>: check_freezes(path),</span>
+<span id="cb63-42"><a href="#cb63-42" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;audio&#39;</span>: check_audio(path),</span>
+<span id="cb63-43"><a href="#cb63-43" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;overall_pass&#39;</span>: <span class="bu">all</span>([</span>
+<span id="cb63-44"><a href="#cb63-44" aria-hidden="true" tabindex="-1"></a>            check_codec(path)[<span class="st">&#39;pass&#39;</span>],</span>
+<span id="cb63-45"><a href="#cb63-45" aria-hidden="true" tabindex="-1"></a>            check_freezes(path)[<span class="st">&#39;pass&#39;</span>],</span>
+<span id="cb63-46"><a href="#cb63-46" aria-hidden="true" tabindex="-1"></a>            check_audio(path)[<span class="st">&#39;pass&#39;</span>],</span>
+<span id="cb63-47"><a href="#cb63-47" aria-hidden="true" tabindex="-1"></a>        ])</span>
+<span id="cb63-48"><a href="#cb63-48" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb63-49"><a href="#cb63-49" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(json.dumps(results, indent<span class="op">=</span><span class="dv">2</span>))</span>
+<span id="cb63-50"><a href="#cb63-50" aria-hidden="true" tabindex="-1"></a>    sys.exit(<span class="dv">0</span> <span class="cf">if</span> results[<span class="st">&#39;overall_pass&#39;</span>] <span class="cf">else</span> <span class="dv">1</span>)</span></code></pre></div>
+<p><strong>Local / offline:</strong> YES (every component runs
+locally).</p>
+<hr />
+<h2 id="comparison-matrix">6. Comparison Matrix</h2>
+<h3 id="ocr-vision-tools-1">OCR / Vision Tools</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Tesseract</th>
+<th>EasyOCR</th>
+<th>PaddleOCR v4</th>
+<th>Surya</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy (overall)</td>
+<td>~88-92%</td>
+<td>~89%</td>
+<td>~93.5%</td>
+<td>~94.8%</td>
+</tr>
+<tr>
+<td>Table recognition</td>
+<td>No</td>
+<td>No</td>
+<td>Yes (built-in)</td>
+<td>Yes (built-in)</td>
+</tr>
+<tr>
+<td>Layout analysis</td>
+<td>No</td>
+<td>No</td>
+<td>Yes (PP-Structure)</td>
+<td>Yes (comprehensive)</td>
+</tr>
+<tr>
+<td>Reading order</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Handwriting</td>
+<td>Poor (~60%)</td>
+<td>Poor (~76%)</td>
+<td>Fair (~82%)</td>
+<td>Good (~85%)</td>
+</tr>
+<tr>
+<td>CJK support</td>
+<td>Good</td>
+<td>Good</td>
+<td>Best</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Speed (CPU)</td>
+<td>Fastest</td>
+<td>Slow</td>
+<td>Medium</td>
+<td>Slow (needs GPU)</td>
+</tr>
+<tr>
+<td>GPU required</td>
+<td>No</td>
+<td>Optional</td>
+<td>Optional</td>
+<td>Recommended</td>
+</tr>
+<tr>
+<td>VRAM usage</td>
+<td>N/A</td>
+<td>~3.1 GB</td>
+<td>~2.8 GB</td>
+<td>~4.2 GB</td>
+</tr>
+<tr>
+<td>Installation</td>
+<td><code>apt</code>/<code>brew</code> simple</td>
+<td><code>pip</code> simple</td>
+<td><code>pip</code> (PaddlePaddle)</td>
+<td><code>pip</code> (models 1.3 GB)</td>
+</tr>
+<tr>
+<td>Local / offline</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>License</td>
+<td>Apache 2.0</td>
+<td>Apache 2.0</td>
+<td>Apache 2.0</td>
+<td>GPL 3.0</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>Quick/lightweight</td>
+<td>Prototyping</td>
+<td>Production/CJK</td>
+<td>Max accuracy</td>
+</tr>
+</tbody>
+</table>
+<h3 id="video-analysis-tools-1">Video Analysis Tools</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>ffmpeg/ffprobe</th>
+<th>PySceneDetect</th>
+<th>OpenCV custom</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Codec detection</td>
+<td>YES (built-in)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Freeze detection</td>
+<td>YES (freezedetect)</td>
+<td>No</td>
+<td>YES (frame diff)</td>
+</tr>
+<tr>
+<td>Black frame detection</td>
+<td>YES (blackdetect)</td>
+<td>No</td>
+<td>YES (cv2)</td>
+</tr>
+<tr>
+<td>Scene detection</td>
+<td>YES (select filter)</td>
+<td>YES (primary function)</td>
+<td>YES (cv2 diff)</td>
+</tr>
+<tr>
+<td>Frame extraction</td>
+<td>YES</td>
+<td>YES (save-images)</td>
+<td>YES (cv2)</td>
+</tr>
+<tr>
+<td>Motion detection</td>
+<td>No</td>
+<td>No</td>
+<td>YES (cv2)</td>
+</tr>
+<tr>
+<td>Perceptual hash</td>
+<td>No</td>
+<td>No</td>
+<td>YES (imagehash)</td>
+</tr>
+<tr>
+<td>OCR on frames</td>
+<td>No</td>
+<td>No</td>
+<td>YES (+tesseract)</td>
+</tr>
+<tr>
+<td>SSIM/PSNR metrics</td>
+<td>YES</td>
+<td>No</td>
+<td>YES (skimage)</td>
+</tr>
+<tr>
+<td>Local / offline</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>License</td>
+<td>LGPL/GPL</td>
+<td>BSD 3-Clause</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>Foundation swiss-army-knife</td>
+<td>Scene detection &amp; splitting</td>
+<td>Custom frame-level analysis</td>
+</tr>
+</tbody>
+</table>
+<h3 id="audio-analysis-tools-1">Audio Analysis Tools</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>ffmpeg (built-in)</th>
+<th>Whisper</th>
+<th>librosa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Audio extraction</td>
+<td>YES</td>
+<td>Needs ffmpeg</td>
+<td>Needs ffmpeg</td>
+</tr>
+<tr>
+<td>Silence detection</td>
+<td>YES (silencedetect)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Loudness/RMS</td>
+<td>YES (volumedetect)</td>
+<td>No</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>EBU R128 LUFS</td>
+<td>YES (ebur128)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Speech transcription</td>
+<td>No</td>
+<td>YES (core function)</td>
+<td>No</td>
+</tr>
+<tr>
+<td>MFCC/spectral features</td>
+<td>No</td>
+<td>No</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Format conversion</td>
+<td>YES</td>
+<td>Needs ffmpeg</td>
+<td>Needs ffmpeg</td>
+</tr>
+<tr>
+<td>Local / offline</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>License</td>
+<td>LGPL/GPL</td>
+<td>MIT</td>
+<td>ISC</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>Audio presence + quality</td>
+<td>Speech → text</td>
+<td>Feature extraction</td>
+</tr>
+</tbody>
+</table>
+<h3 id="asciicast-tools">Asciicast Tools</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>agg</th>
+<th>asciinema-rewind</th>
+<th>Direct JSON parse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cast → GIF/MP4</td>
+<td>YES</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Timing extraction</td>
+<td>No</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Text extraction</td>
+<td>No</td>
+<td>No</td>
+<td>YES (type “o” events)</td>
+</tr>
+<tr>
+<td>Pattern matching</td>
+<td>No</td>
+<td>No</td>
+<td>YES (grep/jq)</td>
+</tr>
+<tr>
+<td>Local / offline</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES (zero deps)</td>
+</tr>
+<tr>
+<td>License</td>
+<td>GPL 3.0</td>
+<td>MIT</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<h3 id="full-stack-frameworks">Full-Stack Frameworks</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>HelixQA</th>
+<th>Playwright</th>
+<th>Cypress</th>
+<th>Custom Python</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Media validation</td>
+<td>YES (extensible)</td>
+<td>Web-only</td>
+<td>Web-only</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Challenge banks</td>
+<td>YES (built-in)</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>On-device testing</td>
+<td>YES</td>
+<td>No</td>
+<td>No</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Subagent support</td>
+<td>YES (§11.4.70)</td>
+<td>No</td>
+<td>No</td>
+<td>Via bash</td>
+</tr>
+<tr>
+<td>Video recording</td>
+<td>Via §11.4.128</td>
+<td>Built-in</td>
+<td>Built-in</td>
+<td>Via ffmpeg</td>
+</tr>
+<tr>
+<td>OCR integration</td>
+<td>Via tools</td>
+<td>Via axe-core</td>
+<td>Screenshot-based</td>
+<td>YES (all)</td>
+</tr>
+<tr>
+<td>Audio validation</td>
+<td>Via tools</td>
+<td>No</td>
+<td>No</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>License</td>
+<td>Proprietary</td>
+<td>Apache 2.0</td>
+<td>MIT</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>Full-system QA</td>
+<td>Web UI testing</td>
+<td>Web E2E</td>
+<td>Maximum flexibility</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="recommended-pipeline-architecture">7. Recommended Pipeline
+Architecture</h2>
+<p>Based on the research, the recommended media validation pipeline for
+Helix OTA §11.4.163 composes:</p>
+<pre><code>Media Recording
+  │
+  ├─ [LEVEL 1: FORMAT VALIDATION]
+  │     ffprobe → codec == h264?  (PASS/FAIL)
+  │     ffprobe → audio stream present? (PASS/WARN)
+  │     ffprobe → resolution, bitrate, framerate
+  │
+  ├─ [LEVEL 2: LIVENESS DETECTION]
+  │     ffmpeg freezedetect → freeze_count == 0? (PASS/FAIL)
+  │     OpenCV frame diff → SSIM &lt; 0.95 between consecutive frames
+  │     ffmpeg blackdetect → no extended black segments
+  │
+  ├─ [LEVEL 3: CONTENT VERIFICATION]
+  │     ├─ For terminal recordings (.cast):
+  │     │     JSON parse → grep for expected PASS/PATTERNS
+  │     │     agg → GIF → ffmpeg → MP4 → tesseract → text grep
+  │     │
+  │     ├─ For GUI/display recordings (.mp4):
+  │     │     ffmpeg frame extraction → tesseract/EasyOCR
+  │     │       → grep for expected UI labels/status text
+  │     │     OpenCV ROI crop → OCR on specific regions
+  │     │
+  │     └─ For audio content:
+  │           Whisper → transcription → grep for expected phrases
+  │           ffmpeg volumedetect → RMS &gt; threshold
+  │
+  ├─ [LEVEL 4: SUBTITLE/OVERLAY VALIDATION per §11.4.137]
+  │     Surya layout analysis → subtitle region detection
+  │     ROI OCR at subtitle safe zone (CEA-708 9-anchor)
+  │     Content-class → CHROME vs DIALOGUE classification
+  │
+  └─ [LEVEL 5: REPORT + EVIDENCE]
+        JSON verdict → docs/qa/&lt;run-id&gt;/evidence.json
+        Captured evidence paths per §11.4.69
+        Overall PASS/FAIL for HelixQA challenge scoring</code></pre>
+<h3 id="tool-selection-by-use-case">Tool Selection by Use Case</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Recommended Tool Chain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quick format + codec check</td>
+<td><code>ffprobe</code></td>
+</tr>
+<tr>
+<td>Terminal feature recording validation</td>
+<td>JSON parse <code>.cast</code> + <code>agg</code> →
+<code>tesseract</code></td>
+</tr>
+<tr>
+<td>GUI/display live content</td>
+<td><code>ffmpeg freezedetect</code> + <code>OpenCV</code> frame diff +
+<code>tesseract</code></td>
+</tr>
+<tr>
+<td>Audio content verification</td>
+<td><code>ffmpeg</code> extraction + <code>Whisper</code> transcription
++ <code>grep</code></td>
+</tr>
+<tr>
+<td>Document/overlay OCR</td>
+<td><code>Surya</code> for layout + <code>tesseract</code> for
+content</td>
+</tr>
+<tr>
+<td>High-volume batch OCR</td>
+<td><code>PaddleOCR</code></td>
+</tr>
+<tr>
+<td>Simple screen text capture</td>
+<td><code>tesseract</code> + ImageMagick preprocessing</td>
+</tr>
+<tr>
+<td>Full HelixQA challenge session</td>
+<td>HelixQA suite + custom validator script</td>
+</tr>
+</tbody>
+</table>
+<h3 id="implementation-priority-recommended">Implementation Priority
+(recommended)</h3>
+<ol type="1">
+<li><strong>Phase 1</strong> — ffprobe format checks + ffmpeg
+freezedetect (quick wins, zero Python deps)</li>
+<li><strong>Phase 2</strong> — tesseract OCR on extracted frames + .cast
+JSON parsing (bash-only)</li>
+<li><strong>Phase 3</strong> — OpenCV frame diff + motion detection +
+perceptual hashing</li>
+<li><strong>Phase 4</strong> — Whisper transcription + pattern
+matching</li>
+<li><strong>Phase 5</strong> — Surya/PaddleOCR for higher-accuracy OCR +
+layout analysis</li>
+</ol>
+<hr />
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://tesseract-ocr.github.io/">Tesseract OCR — official
+docs</a></li>
+<li><a href="https://github.com/JaidedAI/EasyOCR">EasyOCR —
+GitHub</a></li>
+<li><a href="https://github.com/PaddlePaddle/PaddleOCR">PaddleOCR —
+GitHub</a></li>
+<li><a href="https://github.com/VikParuchuri/surya">Surya OCR —
+GitHub</a></li>
+<li><a href="https://gigagpu.com/best-ocr-models-2026/">GigaGPU OCR
+Model Rankings (2026)</a></li>
+<li><a href="https://ffmpeg.org/documentation.html">ffmpeg official
+documentation</a></li>
+<li><a href="https://ffmpeg.org/ffmpeg-filters.html#freezedetect">ffmpeg
+freezedetect filter docs</a></li>
+<li><a
+href="https://github.com/Breakthrough/PySceneDetect">PySceneDetect —
+GitHub</a></li>
+<li><a href="https://docs.opencv.org/">OpenCV — official docs</a></li>
+<li><a href="https://github.com/openai/whisper">OpenAI Whisper —
+GitHub</a></li>
+<li><a href="https://github.com/SYSTRAN/faster-whisper">faster-whisper —
+GitHub</a></li>
+<li><a href="https://librosa.org/">librosa — official docs</a></li>
+<li><a href="https://github.com/asciinema/agg">agg — asciinema GIF
+generator</a></li>
+<li><a href="https://docs.asciinema.org/manual/cli/options/">asciinema
+JSON format specification</a></li>
+<li><a href="https://playwright.dev/">Playwright — official
+docs</a></li>
+<li><a href="https://docs.cypress.io/">Cypress — official docs</a></li>
+<li><a href="https://github.com/HelixDevelopment/HelixQA">HelixQA —
+internal submodule</a></li>
+<li><a href="https://github.com/tsmdt/whisply">whisply — batch Whisper
+CLI</a></li>
+<li><a
+href="https://ffmpeg.org/ffmpeg-filters.html#silencedetect">ffmpeg
+silence detection docs</a></li>
+</ul>
+</body>
+</html>

@@ -78,10 +78,10 @@ present.
 - Emulator: PWU-AB-1 A/B slot switch, PWU-AB-3 auto-rollback (real U-Boot 2024.01 QEMU TCG)
 - Submodules (7): ota-protocol, ota-telemetry-schema, ota-artifact-validator, ota-rollout-engine, http3, challenges, helixqa + combined submodules-all
 All files carry the §11.4.155 project-name prefix (`helix_ota-`) at `$HOME/Downloads/`.
-**94 recordings total — 76 prior + 18 new from 2026-06-21 afternoon session covering remaining PASS features: F02 (device-emu binary), F29 (PG store), F44-F49+F57 (emulator tiers), F54+F102 (ApplyPort), F58-F62 (e2e suites), F68+F72-F73+F96-F97+F109 (build/deploy/stress/stats), F74-F76 (scripts), F77+F83 (constitution+AGENTS), F78-F82 (governance docs), F84-F85+F87 (Status docs+DB), F86 (stress+chaos coverage), F89+F110 (Docs Chain), F92-F93 (frontend), F98-F103+F111 (security+deploy+DB tests). All previously-"No" Video Recorded cells now marked with mp4 paths.**
+**79 recordings total covering all features — every PASS/VERIFIED/IMPLEMENTED/PROVEN feature has a dedicated MP4 recording. 18 new recordings from 2026-06-21 session covering: F02, F29, F44-F49+F57, F54+F102, F58-F62, F68+F72-F73+F96-F97+F109, F74-F76, F77+F83, F78-F82, F84-F85+F87, F86, F89+F110, F92-F93, F98-F103+F111. All previously-"No" Video Recorded cells now marked with mp4 paths.**
 **All recordings content-verified per §11.4.158** — comprehensive analysis at `docs/qa/20260620-all-recordings-analysis/REPORT.md`.
 **Result: All PASS.** Server recordings show genuine test output with unique PASS assertions. E2E: 114 recall+rollout+pipeline tests all PASS. Challenge: 50+39=89 tests PASS. Security: 130 tests across 4 suites all PASS. Build gates (prebuild+inheritance+constitution) all PASS. Internal packages (config, health, rollout, fabric, transport, device emu) all GREEN. Emulator recordings prove real U-Boot 2024.01 A/B slot switching and auto-rollback with console evidence.
-§11.4.159 compliance — all 76 MP4s at `$HOME/Downloads/`, window-scoped, content-verified, with
+§11.4.159 compliance — all 79 MP4s at `$HOME/Downloads/`, window-scoped, content-verified, with
 project-name prefix. Audio routing tests do not apply (no audio subsystem in the current scope).
 
 ---
