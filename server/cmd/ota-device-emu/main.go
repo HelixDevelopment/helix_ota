@@ -74,7 +74,11 @@ func main() {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		err := dev.RunLoop(ctx, *interval,
-			func(o deviceemu.Outcome) { _ = enc.Encode(o) },
+			func(o deviceemu.Outcome) {
+				if encodeErr := enc.Encode(o); encodeErr != nil {
+					fmt.Fprintf(os.Stderr, "ota-device-emu: encode outcome: %v\n", encodeErr)
+				}
+			},
 			func(e error) { fmt.Fprintf(os.Stderr, "ota-device-emu: cycle error: %v\n", e) },
 		)
 		if err != nil && ctx.Err() == nil {
@@ -90,7 +94,9 @@ func main() {
 	out, runErr := dev.RunOnce(ctx)
 	if runErr != nil {
 		// Still emit whatever partial outcome we have for diagnosis, then fail.
-		_ = enc.Encode(out)
+		if encodeErr := enc.Encode(out); encodeErr != nil {
+			fmt.Fprintf(os.Stderr, "ota-device-emu: encode partial outcome: %v\n", encodeErr)
+		}
 		fatal(runErr)
 	}
 	if err := enc.Encode(out); err != nil {

@@ -70,8 +70,11 @@ func main() {
 	// Readiness consults the repository as a liveness stand-in for the real
 	// PostgreSQL/MinIO probes used in production.
 	checker := health.New(func(ctx context.Context) bool {
-		_, getErr := repo.GetIdempotent(ctx, "__readyz__")
-		_ = getErr
+		// GetIdempotent returns (string, bool) — the bool signals presence.
+		// A "not found" on startup is expected (no requests yet).
+		if _, ok := repo.GetIdempotent(ctx, "__readyz__"); !ok {
+			log.Println("ota-server: readiness probe: idempotent store (expected before any idempotent requests)")
+		}
 		return true
 	})
 

@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -145,7 +146,12 @@ func (s *Server) handleEvaluateRollout(c *gin.Context) {
 		respondValidation(c, "could not evaluate rollout", ErrorDetail{Issue: err.Error()})
 		return
 	}
-	st, _ := s.rollout.Get(c.Request.Context(), deploymentID)
+	st, getErr := s.rollout.Get(c.Request.Context(), deploymentID)
+	if getErr != nil {
+		// Non-critical: evaluation already succeeded; state lookup is best-effort.
+		// Return the decision with a zero-valued state instead of blocking the response.
+		log.Printf("evaluate: state lookup after %s: %v", deploymentID, getErr)
+	}
 	c.JSON(http.StatusOK, RolloutDecision{
 		Action: string(dec.Action),
 		Reason: string(dec.Reason),
