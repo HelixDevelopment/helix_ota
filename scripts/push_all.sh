@@ -118,8 +118,12 @@ log_info "Remotes: ${REMOTE_LIST[*]}"
 log_info "Log: $LOG_PATH"
 
 # Pre-push: fetch all remotes (§11.4.71)
-log_info "Fetching all remotes..."
-git -C "$PROJECT_ROOT" fetch --all --prune 2>&1 | tail -1 >> "$LOG_PATH" || true
+# Use timeout per-remote to avoid hanging on unreachable hosts
+log_info "Fetching all remotes (with 15s timeout per remote)..."
+for _remote in "${REMOTE_LIST[@]}"; do
+    timeout 15 git -C "$PROJECT_ROOT" fetch "$_remote" --prune 2>&1 >> "$LOG_PATH" || \
+        log_warn "Fetch from $_remote timed out or failed (continuing)"
+done
 
 # Per-remote push with locking + retry + exponential backoff
 TOTAL_FAILURES=0
