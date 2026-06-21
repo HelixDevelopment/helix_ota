@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
-| Last modified | 2026-06-11T10:30:00Z |
+| Revision | 3 |
+| Last modified | 2026-06-21T14:00:00Z |
 | Status | active — Tier-1 shipped; Tier-1.5 dev-host A/B-virt foundation built, slot mechanism in progress |
-| Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). Tier-2 Cuttlefish stays host-gated (no KVM on macOS). |
+| Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). **Tier-2** was host-gated; the Linux host `nezha.local` (x86_64, 62 GB RAM, 8 vCPUs, KVM enabled) is now available — Tier-2 is **unblocked and actionable**. |
 | Authority | Helix OTA control-plane / device-integration team |
 | Related | `docs/research/main_specs/CONTINUATION.md`; `docs/RESUMPTION.md`; `containers/` submodule (`vasic-digital/containers`, §11.4.76); `submodules/ota-protocol`, `submodules/ota-android-agent`, `submodules/ota-update-engine-bridge` |
 
@@ -81,7 +81,7 @@ boundary on what each environment can and cannot prove.
 - **Status:** **foundation shipped + proven; A/B slot mechanism in progress** (gated on
   `u-boot.bin`).
 
-### Tier-2 — Cuttlefish virtual Android device (host/hardware-gated)
+### Tier-2 — Cuttlefish virtual Android device (previously host-gated, now unblocked)
 
 - **What:** a Cuttlefish (`cvd`) virtual Android device running a real Android system
   image, exercising the **real `update_engine` A/B flow + AVB/dm-verity + auto-rollback**
@@ -89,19 +89,16 @@ boundary on what each environment can and cannot prove.
 - **What it proves:** the device-side apply path the Tier-1 emulator stubs — real
   payload application to the inactive slot, post-reboot slot promotion, and
   corrupt-slot → auto-rollback.
-- **Gate (FACT):** Cuttlefish requires **Linux with nested KVM**. The current
-  development host is Apple-Silicon using the `applehv` hypervisor, which **cannot** run
-  Cuttlefish. Tier-2 therefore requires a Linux CI runner / Linux box with nested KVM.
-- **Honest §11.4.112 boundary:** Tier-2 is **host/hardware-gated, NOT structurally
-  impossible.** It runs the moment a Linux + nested-KVM environment is available; the
-  blocker is environment provisioning, not a platform/protocol impossibility.
+- **Gate (FACT):** Cuttlefish requires **Linux with nested KVM**. The Linux host
+  `nezha.local` (x86_64, 62 GB RAM, 8 vCPUs, KVM enabled) is now available —
+  Cuttlefish can run there.
+- **Honest §11.4.112 boundary:** Tier-2 was **host/hardware-gated, NOT structurally
+  impossible** — confirmed now that `nezha.local` is provisioned.
 - **Harness state:** the Cuttlefish A/B harness is **authored**
   (`tests/emulator/tier2_cuttlefish_ab.sh`), including the **corrupt-slot → reboot →
-  auto-rollback** section (PWU-CF-2). On this macOS dev host the whole script
-  **SKIPs-with-reason at the topology gate** (no `/dev/kvm`) — it is NOT run and NOT
-  proven here.
-- **Status:** harness authored; **host-gated SKIP on macOS** — unproven until run on a
-  Linux + nested-KVM host.
+  auto-rollback** section (PWU-CF-2). It has not yet been run on `nezha.local`.
+- **Status:** **unblocked** — deploy the Cuttlefish A/B stack to `nezha.local` and
+  execute the authored harness (see OTA-003, Issues.md §3).
 
 ### Tier-3 — real RK3588 / Orange Pi 5 Max hardware
 

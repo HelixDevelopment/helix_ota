@@ -1,7 +1,7 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 6
-**Last modified:** 2026-06-21T12:00:00Z
+**Revision:** 7
+**Last modified:** 2026-06-21T14:00:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
@@ -9,31 +9,18 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
 
 ---
 
-## §3. [OTA-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback) is host-gated
+## §3. [OTA-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback)
 
-**Status:** Operator-blocked
+**Status:** In progress
 **Type:** Task
 
-**Operator-Block-Details:**
-- **WHAT:** Stand up the Tier-2 emulator — a real Android A/B
-  `update_engine` payload-apply with AVB/dm-verity verification and
-  auto-rollback, driven end-to-end against the control plane (per
-  `docs/design/EMULATED_DEVICE_TESTING.md`).
-- **WHY:** Tier-2 requires Cuttlefish (`cvd`) on a Linux host with
-  nested KVM. Self-resolution exhausted (§11.4.21): (a) no host
-  CLI/virtualisation path — the current host is Apple-Silicon with
-  `applehv`, which cannot run Cuttlefish or nested KVM; (b) subagent
-  delegation cannot conjure the missing kernel virtualisation;
-  (c) the `containers` submodule (podman/`applehv`) cannot host a
-  KVM-backed Cuttlefish guest on this hardware; (d) no captured
-  fallback substitutes for real `update_engine` partition behaviour;
-  (e) external research confirms Cuttlefish's Linux+KVM requirement —
-  not a tooling gap. NOT structurally impossible (§11.4.112) —
-  host/hardware-gated only.
-- **UNBLOCK CONDITION:** Access to a Linux host (or CI runner) with
-  nested-KVM enabled where Cuttlefish (`cvd`) boots.
-- **WHO:** Operator — provision the Linux+KVM host / CI runner; see
-  `docs/design/EMULATED_DEVICE_TESTING.md` Tier-2.
+**Description:** Stand up the Tier-2 emulator — a real Android A/B
+`update_engine` payload-apply with AVB/dm-verity verification and
+auto-rollback, driven end-to-end against the control plane (per
+`docs/design/EMULATED_DEVICE_TESTING.md`). This was previously
+blocked on a Linux+KVM host; the Linux host `nezha.local` (x86_64,
+62 GB RAM, 8 vCPUs, KVM enabled) is now available, unblocking
+Cuttlefish (`cvd`) deployment for Tier-2 validation.
 
 ---
 
