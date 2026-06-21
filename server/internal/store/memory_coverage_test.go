@@ -387,6 +387,238 @@ func TestListReleasesStatusFilterAndOversizedCursor(t *testing.T) {
 	}
 }
 
+// TestListDevicesFiltersAndPagination covers ListDevices filtering by OSType,
+// TargetModel, Status, default limit, cursor pagination, and oversized-cursor clamp.
+func TestListDevicesFiltersAndPagination(t *testing.T) {
+	ctx := context.Background()
+	r := NewMemoryRepository()
+
+	// Empty repo.
+	devs, next, err := r.ListDevices(ctx, DeviceFilter{})
+	if err != nil || len(devs) != 0 || next != "" {
+		t.Fatalf("empty repo: want 0 + no cursor, got %d next=%q err=%v", len(devs), next, err)
+	}
+
+	for _, d := range []Device{
+		{DeviceID: "d1", HardwareID: "hw1", Model: "M1", OSType: otaprotocol.OSAndroid, UpdateState: "active"},
+		{DeviceID: "d2", HardwareID: "hw2", Model: "M1", OSType: otaprotocol.OSAndroid, UpdateState: "inactive"},
+		{DeviceID: "d3", HardwareID: "hw3", Model: "M2", OSType: otaprotocol.OSAndroid, UpdateState: "active"},
+		{DeviceID: "d4", HardwareID: "hw4", Model: "M1", OSType: otaprotocol.OSLinux, UpdateState: "active"},
+		{DeviceID: "d5", HardwareID: "hw5", Model: "M1", OSType: otaprotocol.OSAndroid, UpdateState: "active"},
+	} {
+		if err := r.CreateDevice(ctx, d); err != nil {
+			t.Fatalf("create %s: %v", d.DeviceID, err)
+		}
+	}
+
+	// Filter by OSType.
+	got, _, err := r.ListDevices(ctx, DeviceFilter{OSType: otaprotocol.OSLinux})
+	if err != nil || len(got) != 1 || got[0].DeviceID != "d4" {
+		t.Fatalf("os filter: want 1 (d4), got %d err=%v", len(got), err)
+	}
+
+	// Filter by TargetModel.
+	got, _, _ = r.ListDevices(ctx, DeviceFilter{TargetModel: "M2"})
+	if len(got) != 1 || got[0].DeviceID != "d3" {
+		t.Fatalf("model filter: want 1 (d3), got %d", len(got))
+	}
+
+	// Filter by Status.
+	got, _, _ = r.ListDevices(ctx, DeviceFilter{Status: "inactive"})
+	if len(got) != 1 || got[0].DeviceID != "d2" {
+		t.Fatalf("status filter: want 1 (d2), got %d", len(got))
+	}
+
+	// Combined filter.
+	got, _, _ = r.ListDevices(ctx, DeviceFilter{OSType: otaprotocol.OSAndroid, Status: "active"})
+	if len(got) != 3 {
+		t.Fatalf("combined filter: want 3, got %d", len(got))
+	}
+
+	// Pagination: limit=2, 3 matched -> page1=2 + cursor, page2=1 + empty cursor.
+	page1, next, err := r.ListDevices(ctx, DeviceFilter{OSType: otaprotocol.OSAndroid, Status: "active", Limit: 2})
+	if err != nil || len(page1) != 2 || next == "" {
+		t.Fatalf("page1: want 2 + cursor, got %d next=%q err=%v", len(page1), next, err)
+	}
+	page2, next2, _ := r.ListDevices(ctx, DeviceFilter{OSType: otaprotocol.OSAndroid, Status: "active", Limit: 2, Cursor: next})
+	if len(page2) != 1 || next2 != "" {
+		t.Fatalf("page2: want 1 + empty cursor, got %d next=%q", len(page2), next2)
+	}
+
+	// Oversized cursor clamps to empty page.
+	beyond := encodeCursor(999)
+	got, next, err = r.ListDevices(ctx, DeviceFilter{Cursor: beyond})
+	if len(got) != 0 || next != "" || err != nil {
+		t.Fatalf("oversized cursor: want 0 + no cursor, got %d next=%q err=%v", len(got), next, err)
+	}
+}
+
+// TestProjectLifecycle covers CreateProject, GetProject, ListProjects,
+// UpdateProject, and DeleteProject hit/miss/conflict branches.
+func TestProjectLifecycle(t *testing.T) {
+	ctx := context.Background()
+	r := NewMemoryRepository()
+
+	// ListProjects on empty repo.
+	projects, err := r.ListProjects(ctx)
+	if err != nil || len(projects) != 0 {
+		t.Fatalf("empty list: want 0, got %d err=%v", len(projects), err)
+	}
+
+	// GetProject miss.
+	if _, err := r.GetProject(ctx, "absent"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("GetProject miss: want ErrNotFound, got %v", err)
+	}
+
+	// CreateProject.
+	if err := r.CreateProject(ctx, Project{ProjectID: "p1", Name: "alpha", Description: "first"}); err != nil {
+		t.Fatalf("create p1: %v", err)
+	}
+	// Same name, different id -> conflict.
+	if err := r.CreateProject(ctx, Project{ProjectID: "p2", Name: "alpha"}); !errors.Is(err, ErrConflict) {
+		t.Fatalf("duplicate name: want ErrConflict, got %v", err)
+	}
+	// Re-creating the same id+name is an upsert (no conflict).
+	if err := r.CreateProject(ctx, Project{ProjectID: "p1", Name: "alpha", Description: "updated"}); err != nil {
+		t.Fatalf("upsert p1: %v", err)
+	}
+
+	// Create a second project.
+	if err := r.CreateProject(ctx, Project{ProjectID: "p2", Name: "beta"}); err != nil {
+		t.Fatalf("create p2: %v", err)
+	}
+
+	// GetProject hit.
+	got, err := r.GetProject(ctx, "p1")
+	if err != nil || got.ProjectID != "p1" || got.Name != "alpha" {
+		t.Fatalf("GetProject hit: %+v err=%v", got, err)
+	}
+
+	// ListProjects returns in insertion order.
+	projects, _ = r.ListProjects(ctx)
+	if len(projects) != 2 || projects[0].ProjectID != "p1" || projects[1].ProjectID != "p2" {
+		t.Fatalf("list order: want [p1, p2], got %+v", projects)
+	}
+
+	// UpdateProject miss.
+	if err := r.UpdateProject(ctx, Project{ProjectID: "ghost"}); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("update unknown: want ErrNotFound, got %v", err)
+	}
+
+	// Rename p1 -> "gamma": rekey in prjByName.
+	if err := r.UpdateProject(ctx, Project{ProjectID: "p1", Name: "gamma"}); err != nil {
+		t.Fatalf("rename p1: %v", err)
+	}
+	// The old name "alpha" is now free; a new project may claim it.
+	if err := r.CreateProject(ctx, Project{ProjectID: "p3", Name: "alpha"}); err != nil {
+		t.Fatalf("reuse freed name: %v", err)
+	}
+
+	// Rename p1 onto a name another project holds -> conflict.
+	if err := r.UpdateProject(ctx, Project{ProjectID: "p1", Name: "beta"}); !errors.Is(err, ErrConflict) {
+		t.Fatalf("rename collision: want ErrConflict, got %v", err)
+	}
+
+	// UpdateProject success (no rename).
+	p1, _ := r.GetProject(ctx, "p1")
+	p1.Description = "desc"
+	if err := r.UpdateProject(ctx, p1); err != nil {
+		t.Fatalf("update p1 desc: %v", err)
+	}
+
+	// DeleteProject miss.
+	if err := r.DeleteProject(ctx, "ghost"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("delete unknown: want ErrNotFound, got %v", err)
+	}
+
+	// DeleteProject success.
+	if err := r.DeleteProject(ctx, "p1"); err != nil {
+		t.Fatalf("delete p1: %v", err)
+	}
+	if _, err := r.GetProject(ctx, "p1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("p1 still present after delete: %v", err)
+	}
+	// ListProjects should not include the deleted project.
+	projects, _ = r.ListProjects(ctx)
+	for _, p := range projects {
+		if p.ProjectID == "p1" {
+			t.Fatalf("ListProjects still returns deleted p1: %+v", projects)
+		}
+	}
+}
+
+// TestProjectAccessManagement covers GetProjectAccess, SetProjectAccess,
+// ListProjectMembers, and RemoveProjectAccess hit/miss branches.
+func TestProjectAccessManagement(t *testing.T) {
+	ctx := context.Background()
+	r := NewMemoryRepository()
+
+	// Operations against a non-existent project all return ErrNotFound.
+	if _, err := r.GetProjectAccess(ctx, "caller1", "absent"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("GetProjectAccess absent project: want ErrNotFound, got %v", err)
+	}
+	if err := r.SetProjectAccess(ctx, ProjectAccess{ProjectID: "absent", CallerID: "caller1", Role: ProjectRoleViewer}); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("SetProjectAccess absent project: want ErrNotFound, got %v", err)
+	}
+	if _, err := r.ListProjectMembers(ctx, "absent"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("ListProjectMembers absent project: want ErrNotFound, got %v", err)
+	}
+	if err := r.RemoveProjectAccess(ctx, "caller1", "absent"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("RemoveProjectAccess absent project: want ErrNotFound, got %v", err)
+	}
+
+	// Create a project.
+	if err := r.CreateProject(ctx, Project{ProjectID: "p1", Name: "test-proj"}); err != nil {
+		t.Fatalf("create project: %v", err)
+	}
+
+	// GetProjectAccess: caller has no access.
+	if _, err := r.GetProjectAccess(ctx, "caller1", "p1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("GetProjectAccess no access: want ErrNotFound, got %v", err)
+	}
+
+	// SetProjectAccess: grant viewer access.
+	if err := r.SetProjectAccess(ctx, ProjectAccess{ProjectID: "p1", CallerID: "caller1", Role: ProjectRoleViewer}); err != nil {
+		t.Fatalf("grant viewer: %v", err)
+	}
+	// SetProjectAccess: grant operator access (update existing).
+	if err := r.SetProjectAccess(ctx, ProjectAccess{ProjectID: "p1", CallerID: "caller1", Role: ProjectRoleOperator}); err != nil {
+		t.Fatalf("upgrade to operator: %v", err)
+	}
+	// Grant admin to a second caller.
+	if err := r.SetProjectAccess(ctx, ProjectAccess{ProjectID: "p1", CallerID: "caller2", Role: ProjectRoleAdmin}); err != nil {
+		t.Fatalf("grant admin: %v", err)
+	}
+
+	// GetProjectAccess hit.
+	access, err := r.GetProjectAccess(ctx, "caller1", "p1")
+	if err != nil || access.CallerID != "caller1" || access.Role != ProjectRoleOperator {
+		t.Fatalf("GetProjectAccess hit: %+v err=%v", access, err)
+	}
+
+	// ListProjectMembers.
+	members, err := r.ListProjectMembers(ctx, "p1")
+	if err != nil || len(members) != 2 {
+		t.Fatalf("members want 2, got %d err=%v", len(members), err)
+	}
+
+	// RemoveProjectAccess: caller has no access entry (entirely unknown caller).
+	if err := r.RemoveProjectAccess(ctx, "stranger", "p1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("RemoveProjectAccess unknown caller: want ErrNotFound, got %v", err)
+	}
+	// RemoveProjectAccess: caller known but lacks access to this project.
+	if err := r.SetProjectAccess(ctx, ProjectAccess{ProjectID: "p1", CallerID: "caller3", Role: ProjectRoleViewer}); err != nil {
+		t.Fatalf("grant viewer to caller3: %v", err)
+	}
+	if err := r.RemoveProjectAccess(ctx, "caller3", "p1"); err != nil {
+		t.Fatalf("RemoveProjectAccess caller3: %v", err)
+	}
+	// After removal, caller3 should no longer have access.
+	if _, err := r.GetProjectAccess(ctx, "caller3", "p1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("caller3 still has access after removal: %v", err)
+	}
+}
+
 // TestDecodeCursorMalformedInputs covers the malformed/negative decode branches
 // that fall back to offset 0.
 func TestDecodeCursorMalformedInputs(t *testing.T) {
