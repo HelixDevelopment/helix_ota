@@ -1,6 +1,6 @@
 # Helix OTA — Fixed (closed workable items)
 
-**Revision:** 6
+**Revision:** 7
 **Last modified:** 2026-06-21T19:00:00Z
 
 This is the canonical closed-archive tracker (§11.4.19 column alignment,
@@ -8,6 +8,18 @@ This is the canonical closed-archive tracker (§11.4.19 column alignment,
 live in [`Issues.md`](Issues.md); the short-form companion is
 [`Fixed_Summary.md`](Fixed_Summary.md). Sorted closure-date DESC. All
 commit hashes below were read from `git log`, not invented.
+
+---
+
+## §3. [OTA-003] Emulator Tier-2 — Android emulator OTA lifecycle validation
+
+**Status:** Completed (→ Fixed.md)
+**Type:** Task
+
+**Closed:** 2026-06-21
+**Root cause:** Android emulator CZ_API36_Phone (Android 16 API 36) was running on nezha.local but had no validated OTA lifecycle against the control plane — the register → update-check → telemetry flow was unproven.
+**Fix:** Booted emulator through containers submodule wrapper (`scripts/boot_android_emulator.sh`). Cross-compiled and deployed ota-server for linux/amd64. Full OTA lifecycle validated: admin login, device registration (emu64xa-AABBCCDD), device listing, client update check, telemetry reporting. All 7/7 tests PASS.
+**Evidence:** `docs/qa/ota-003-validation/STATUS.md`, `docs/qa/ota-003-validation/test5-ota-api-cycle.txt`.
 
 ---
 

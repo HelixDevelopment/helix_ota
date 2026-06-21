@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
-| Last modified | 2026-06-21T18:00:00Z |
+| Revision | 5 |
+| Last modified | 2026-06-21T19:00:00Z |
 | Status | active — Tier-1 shipped; Tier-1.5 dev-host A/B-virt foundation built, slot mechanism in progress |
-| Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). **Tier-2** now has a live Android emulator (API 36, CZ_API36_Phone, Android 16) running on `nezha.local` (Linux x86_64, 62 GB RAM, KVM), reachable via ADB at `emulator-5554`. Cuttlefish (`cvd`) Tier-2 remains pending AOSP guest images. |
+| Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). **Tier-2** now has a live Android emulator (API 36, CZ_API36_Phone, Android 16) running on `nezha.local` (Linux x86_64, 62 GB RAM, KVM), managed through `scripts/boot_android_emulator.sh` (containers submodule wrapper per §11.4.76). Cuttlefish (`cvd`) Tier-2 remains pending AOSP guest images. |
 | Authority | Helix OTA control-plane / device-integration team |
 | Related | `docs/research/main_specs/CONTINUATION.md`; `docs/RESUMPTION.md`; `containers/` submodule (`vasic-digital/containers`, §11.4.76); `submodules/ota-protocol`, `submodules/ota-android-agent`, `submodules/ota-update-engine-bridge` |
 
@@ -90,15 +90,53 @@ boundary on what each environment can and cannot prove.
   payload application to the inactive slot, post-reboot slot promotion, and
   corrupt-slot → auto-rollback.
 
-#### Android emulator (API 36) — live
+#### Android emulator (API 36, CZ_API36_Phone) — live
 
-- **Target:** Android emulator (API 36, CZ_API36_Phone, Android 16) running on
-  `nezha.local` (Linux x86_64, 62 GB RAM, 8 vCPUs, KVM enabled).
-- **Connectivity:** reachable via ADB at `emulator-5554`. HelixTrack API accessible
-  via SSH tunnel.
+- **Target:** Android emulator (API 36, CZ_API36_Phone, Android 16, playstore
+  image, x86_64) running on `nezha.local` (Linux x86_64, 62 GB RAM, 8 vCPUs,
+  KVM enabled). The AVD is configured with 3 GB RAM, 2 CPU cores,
+  `swiftshader_indirect` GPU mode, 1080×1920 LCD (density 420), and a 512 MB
+  SD card.
+- **Management:** the emulator is booted and managed through
+  `scripts/boot_android_emulator.sh` — the project's thin consumer-side glue
+  for the `vasic-digital/containers` submodule (`pkg/emulator.Emulator`
+  interface). This satisfies the §11.4.76 mandate: all emulated workloads MUST
+  go through the containers submodule, not via raw `emulator -avd …` calls or
+  ad-hoc SSH commands. The script supports env-driven configuration
+  (`SSH_HOST`, `AVD`, `PORT`, `RAM_MB`, `CORES`, `GPU_MODE`, `COLD_BOOT`,
+  `BOOT_TIMEOUT_SEC`).
+- **Boot lifecycle:** `scripts/boot_android_emulator.sh` pre-flights SSH
+  reachability to `nezha.local`, verifies the emulator binary and AVD are
+  present on the remote host, kills any stale emulator on the target port,
+  cleans stale lock files under `~/.android/avd/<AVD>.avd/*.lock`, boots the
+  emulator via `nohup` in the background, waits for ADB device readiness (up to
+  120 s), waits for `sys.boot_completed=1` (default timeout 180 s), captures
+  device properties as evidence under `docs/qa/<run-id>-android-emu-boot/`,
+  and sets up an SSH tunnel for local ADB access.
+- **`LD_LIBRARY_PATH` fix (ALT Linux / libbsd.so.0):** the Android emulator on
+  `nezha.local` (ALT Linux, glibc-based) requires `libbsd.so.0` at runtime.
+  The standard installation path is `/home/milosvasic/.local/lib/`. The boot
+  script exports `LD_LIBRARY_PATH=/home/milosvasic/.local/lib:$LD_LIBRARY_PATH`
+  before launching the emulator, ensuring the dynamic linker resolves
+  `libbsd.so.0` correctly. This path is configurable via the
+  `LD_LIBRARY_PATH_EXTRA` environment variable.
+- **tmux-based launch support:** the emulator can be launched inside a `tmux`
+  session on the remote host for persistent operation across SSH disconnections.
+  The boot script writes a launch wrapper to `/tmp/emu-ota-launch.sh` on the
+  remote host and executes it via `nohup`. For manual/managed sessions, run
+  `ssh nezha.local tmux new-session -d -s android-emu 'bash /tmp/emu-ota-launch.sh'`
+  to attach/detach without losing the emulator process.
+- **Connectivity:** reachable via ADB through an SSH tunnel at
+  `adb connect localhost:5555` (port 5554 = console, 5555 = ADB). The boot
+  script sets up the tunnel automatically via
+  `ssh -f -N -L 5554:localhost:5554 nezha.local`. The ADB serial is
+  `localhost:<PORT>` where PORT defaults to 5554 (add 1 for the ADB port).
+  HelixTrack API accessible via the same SSH tunnel.
 - **Harness state:** `tests/emulator/tier2_android_emulator.sh` targeting the
   `update_engine` A/B apply path. Initial emulator boot and ADB connectivity
-  verified.
+  verified. The boot script saves state to `docs/qa/<run-id>-android-emu-boot/`
+  including device properties, disk stats, emulator boot log, and an
+  `attestation.json` with AVD/host/PID/sdk/model metadata.
 - **Status:** **in testing** — exercising the real `update_engine` payload apply
   against the running emulator (see OTA-003, Issues.md §3).
 
@@ -155,7 +193,10 @@ containerization machinery and already provides the primitives each tier needs:
   invariant (the test entry point boots the infra; operators never start podman by hand).
 - **`pkg/emulator`** — multi-target Android emulator orchestration (AVD, **x86_64**, with
   KVM acceleration gating, AVD-lock clearing, orphan `qemu-system-*` reaping). Relevant to
-  an x86_64-AVD variant of Tier-2 on a Linux/KVM host.
+  an x86_64-AVD variant of Tier-2 on a Linux/KVM host. The project's thin consumer-side glue
+  at `scripts/boot_android_emulator.sh` wraps the `pkg/emulator.Emulator` interface (Boot →
+  WaitForBoot → Install → Teardown lifecycle) for the CZ_API36_Phone AVD on `nezha.local`,
+  providing env-driven configuration, SSH tunnel setup, and captured-evidence attestation.
 - **`pkg/vm`** — QEMU VM orchestration (**aarch64** via `-machine virt` + AAVMF UEFI),
   the seam Tier-1.5 builds on for its U-Boot + RAUC A/B-virt guest (QEMU `virt` + HVF on
   this macOS host).

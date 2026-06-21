@@ -1,6 +1,6 @@
 # Helix OTA — Fixed Summary (closed, short-form)
 
-**Revision:** 6
+**Revision:** 7
 **Last modified:** 2026-06-21T19:00:00Z
 
 Short-form companion of [`Fixed.md`](Fixed.md) (§11.4.53 parity). Closed
@@ -8,6 +8,7 @@ items only; open items appear in [`Issues_Summary.md`](Issues_Summary.md).
 Sorted closure-date DESC. All commit hashes read from `git log`.
 
 | OTA ID | # | Status | Type | One-line description |
+| OTA-003 | §3 | Completed (→ Fixed.md) | Task | Emulator Tier-2 Android A/B — CZ_API36_Phone OTA lifecycle validated 7/7 PASS (register→update→telemetry) on nezha.local |
 | OTA-021 | §5 | Completed (→ Fixed.md) | Task | HelixTrack bidirectional sync — E2E push/pull test 11/11 PASS, scripts committed and verified |
 | OTA-014 | §15 | Completed (→ Fixed.md) | Task | Docs Chain submodule distribution (Phase 6) — registered docs_chain@2c8cf16 as submodule, helix-deps.yaml entry, 4/4 doctor PASS |
 |---|---|---|---|---|
