@@ -1,39 +1,25 @@
 <h1 id="helix-ota-issues-open-workable-items">Helix OTA — Issues (open
 workable items)</h1>
-<p><strong>Revision:</strong> 6 <strong>Last modified:</strong>
-2026-06-21T12:00:00Z</p>
+<p><strong>Revision:</strong> 7 <strong>Last modified:</strong>
+2026-06-21T14:00:00Z</p>
 <p>This is the canonical open-work tracker (§11.4.15 Status, §11.4.16
 Type, §11.4.54 OTA-NNN). Closed items migrate to <a
 href="Fixed.md"><code>Fixed.md</code></a>. The short-form companion is
 <a href="Issues_Summary.md"><code>Issues_Summary.md</code></a>.</p>
 <hr />
 <h2
-id="ota-003-emulator-tier-2-real-android-ab-update_engineavbdm-verity-auto-rollback-is-host-gated">§3.
+id="ota-003-emulator-tier-2-real-android-ab-update_engineavbdm-verity-auto-rollback">§3.
 [OTA-003] Emulator Tier-2 — real Android A/B
-(update_engine/AVB/dm-verity auto-rollback) is host-gated</h2>
-<p><strong>Status:</strong> Operator-blocked <strong>Type:</strong>
-Task</p>
-<p><strong>Operator-Block-Details:</strong> - <strong>WHAT:</strong>
-Stand up the Tier-2 emulator — a real Android A/B
-<code>update_engine</code> payload-apply with AVB/dm-verity verification
-and auto-rollback, driven end-to-end against the control plane (per
-<code>docs/design/EMULATED_DEVICE_TESTING.md</code>). -
-<strong>WHY:</strong> Tier-2 requires Cuttlefish (<code>cvd</code>) on a
-Linux host with nested KVM. Self-resolution exhausted (§11.4.21): (a) no
-host CLI/virtualisation path — the current host is Apple-Silicon with
-<code>applehv</code>, which cannot run Cuttlefish or nested KVM; (b)
-subagent delegation cannot conjure the missing kernel virtualisation;
-(c) the <code>containers</code> submodule (podman/<code>applehv</code>)
-cannot host a KVM-backed Cuttlefish guest on this hardware; (d) no
-captured fallback substitutes for real <code>update_engine</code>
-partition behaviour; (e) external research confirms Cuttlefish’s
-Linux+KVM requirement — not a tooling gap. NOT structurally impossible
-(§11.4.112) — host/hardware-gated only. - <strong>UNBLOCK
-CONDITION:</strong> Access to a Linux host (or CI runner) with
-nested-KVM enabled where Cuttlefish (<code>cvd</code>) boots. -
-<strong>WHO:</strong> Operator — provision the Linux+KVM host / CI
-runner; see <code>docs/design/EMULATED_DEVICE_TESTING.md</code>
-Tier-2.</p>
+(update_engine/AVB/dm-verity auto-rollback)</h2>
+<p><strong>Status:</strong> In progress <strong>Type:</strong> Task</p>
+<p><strong>Description:</strong> Stand up the Tier-2 emulator — a real
+Android A/B <code>update_engine</code> payload-apply with AVB/dm-verity
+verification and auto-rollback, driven end-to-end against the control
+plane (per <code>docs/design/EMULATED_DEVICE_TESTING.md</code>). This
+was previously blocked on a Linux+KVM host; the Linux host
+<code>nezha.local</code> (x86_64, 62 GB RAM, 8 vCPUs, KVM enabled) is
+now available, unblocking Cuttlefish (<code>cvd</code>) deployment for
+Tier-2 validation.</p>
 <hr />
 <h2
 id="ota-004-emulator-tier-3-real-rk3588-orange-pi-5-max-vendor-hal-u-boot-slot-switch-dm-verity-on-real-partitions">§4.
