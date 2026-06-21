@@ -1,13 +1,25 @@
 # Helix OTA — Fixed (closed workable items)
 
-**Revision:** 5
-**Last modified:** 2026-06-21T12:00:00Z
+**Revision:** 6
+**Last modified:** 2026-06-21T19:00:00Z
 
 This is the canonical closed-archive tracker (§11.4.19 column alignment,
 §11.4.33 type-aware closure vocabulary, §11.4.54 OTA-NNN). Open items
 live in [`Issues.md`](Issues.md); the short-form companion is
 [`Fixed_Summary.md`](Fixed_Summary.md). Sorted closure-date DESC. All
 commit hashes below were read from `git log`, not invented.
+
+---
+
+## §5. [OTA-021] HelixTrack bidirectional sync verification
+
+**Status:** Completed (→ Fixed.md)
+**Type:** Task
+
+**Closed:** 2026-06-21
+**Root cause:** HelixTrack push and pull scripts had no formal end-to-end verification — sync worked but was unproven with captured evidence.
+**Fix:** Created and executed end-to-end sync test (11/11 PASS) covering both directions: push 5 items from workable_items.db to HelixTrack API with correct status/type mapping, pull tickets from API and idempotently update-or-create in the local DB. Push/pull scripts (`scripts/sync_helixtrack_push.sh`, `scripts/sync_helixtrack_pull.sh`) committed and verified. GitFlic 100 MB packfile-limit recovery documented via `scripts/reassemble_gitflic_bundle.sh`.
+**Evidence:** `qa-results/helixtrack/20260620T201949Z/sync_output.txt`, `scripts/sync_helixtrack_push.sh`, `scripts/sync_helixtrack_pull.sh`, `docs/helixtrack_sync_state.md`.
 
 ---
 

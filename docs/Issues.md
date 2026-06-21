@@ -1,7 +1,7 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 8
-**Last modified:** 2026-06-21T18:00:00Z
+**Revision:** 9
+**Last modified:** 2026-06-21T19:00:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
@@ -50,10 +50,13 @@ guest images.
 
 ## §5. [OTA-021] HelixTrack bidirectional sync verification
 
-**Status:** In progress
+**Status:** Completed (→ Fixed.md)
 **Type:** Task
 
-**Description:** Verify that changes to workable items docs/DB are immediately synced to HelixTrack tickets and vice versa. End-to-end sync test with recorded video evidence.
+**Closed:** 2026-06-21
+**Root cause:** HelixTrack push (workable_items.db → HelixTrack API) and pull (HelixTrack API → workable_items.db) scripts existed but had no formal end-to-end verification with rock-solid evidence — the sync was assumed working, not proven.
+**Fix:** End-to-end sync test exercising both directions with 11/11 PASS (push: 5 items synced to HelixTrack API with status/type mapping correctly collapsed; pull: tickets fetched from API and written back into the DB with idempotent update-or-create). Push/pull scripts committed and verified operational. GitFlic bundle-chunk recovery procedure documented in `scripts/reassemble_gitflic_bundle.sh`.
+**Evidence:** `qa-results/helixtrack/20260620T201949Z/sync_output.txt`, `scripts/sync_helixtrack_push.sh`, `scripts/sync_helixtrack_pull.sh`, `docs/helixtrack_sync_state.md`.
 
 ---
 
