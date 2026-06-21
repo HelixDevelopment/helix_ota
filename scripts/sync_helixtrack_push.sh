@@ -13,7 +13,10 @@ set -euo pipefail
 # --- Configuration ---
 HELIXTRACK_API="${HELIXTRACK_API:-http://localhost:8080/do}"
 HELIXTRACK_JWT="${HELIXTRACK_JWT:-}"
-HELIXTRACK_DB="${HELIXTRACK_DB:-/Volumes/T7/Projects/helix_track/core/Application/Database/Definition.sqlite}"
+# Per helix-deps.yaml (§11.4.31), the helixtrack submodule has layout: flat,
+# so it lives at <project_root>/helixtrack/.  Fall back to empty when the
+# submodule is not checked out (API-only create will be used instead).
+HELIXTRACK_DB="${HELIXTRACK_DB:-helixtrack/core/Application/Database/Definition.sqlite}"
 WORKABLE_ITEMS_DB="docs/workable_items.db"
 SYNC_STATE_MD="docs/helixtrack_sync_state.md"
 LOG_PREFIX="[helixtrack-push]"
@@ -147,7 +150,7 @@ process_item() {
         -H "Content-Type: application/json" \
         -d "$PAYLOAD" 2>/dev/null) || true
 
-    ERR=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('errorCode',''))" 2>/dev/null)
+    ERR=$(echo "$RESPONSE" | jq -r '.errorCode // ""' 2>/dev/null || echo "")
     if [ "$ERR" = "-1" ]; then
         # Success — now sync status into HelixTrack DB (the create handler hardcodes "open")
         # NOTE: SQLite LIKE interprets [ as a character class — use INSTR instead
