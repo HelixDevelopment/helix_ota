@@ -237,9 +237,12 @@
   </style>
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">CONTINUATION</h1>
+</header>
 <h1 id="helix-ota--continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 7 <strong>Last modified:</strong>
-2026-06-22T22:45:00Z</p>
+<p><strong>Revision:</strong> 8 <strong>Last modified:</strong>
+2026-06-23T00:00:00Z</p>
 <hr />
 <h2 id="1-current-state">1. Current state</h2>
 <table>
@@ -252,15 +255,18 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>54a5e684</code> (distribution path now fully VERIFIED
-end-to-end on thinker — F114; conductor will commit this Status
-promotion on top)</td>
+<td><code>659c2326</code> (parent pointer to containers
+<code>54aa9b2</code> — slim Cuttlefish image built+committed; conductor
+commits this Cuttlefish launch-verified docs/evidence update on
+top)</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
 <td>Stable / release-readiness — control plane proven on real RK3588
-hardware; native A/B fidelity now routed through the new Cuttlefish
-containerized path (integration-pending on Linux+KVM)</td>
+hardware; native A/B fidelity routed through the Cuttlefish
+containerized path. Cuttlefish launch command now VERIFIED (asset-feed +
+<code>launch_cvd</code> proven §4.5); WAITING ON operator's privileged
+<code>sudo</code> launch, then agent drives A/B.</td>
 </tr>
 <tr>
 <td><strong>Terminal goal</strong></td>
@@ -271,7 +277,66 @@ rollback) on emulated + physical targets</td>
 </tbody>
 </table>
 <h3
-id="latest-session-2026-06-22-late--distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Latest
+id="latest-session-2026-06-23--cuttlefish-slim-image-built--launch-command-verified-asset-feed--launch_cvd-proven">Latest
+session (2026-06-23) — Cuttlefish slim image built + launch command
+VERIFIED (asset-feed + <code>launch_cvd</code> proven)</h3>
+<p>Cuttlefish moved from runbook-ready to
+<strong>launch-command-VERIFIED</strong> (honest §11.4.6 — still NOT a
+real-A/B PASS):</p>
+<ol type="1">
+<li><strong>Slim image built + committed</strong> —
+<code>helix-cuttlefish:slim</code> built rootless on <code>nezha</code>
+at <strong>1.11 GB</strong> (vs 27.6 GB single-stage from-source) via
+the upstream runner-prod <strong>prebuilt-<code>.deb</code></strong>
+path (<code>cuttlefish-base</code>/<code>cuttlefish-user</code>
+<strong>1.54.1</strong> from
+<code>us-apt.pkg.dev/projects/android-cuttlefish-artifacts android-cuttlefish main</code>,
+NO Bazel/cargo). <code>cvd version 1.54.1</code> executes. containers
+submodule <code>54aa9b2</code>; parent pointer
+<strong><code>659c2326</code></strong>. Saved to
+<code>/tmp/cf-slim.tar</code> (1.03 GiB) for rootless→rootful
+<code>load</code>.</li>
+<li><strong>Assets staged + integrity-verified</strong> — nezha
+<code>~/cf-staging/</code>, build <strong>15660610</strong>
+<code>aosp_cf_x86_64_only_phone-userdebug</code>:
+<code>cvd-host_package.tar.gz</code> (898828370 B, gzip-valid) +
+<code>img.zip</code> (1163637538 B, unzip-valid; original curl
+truncation recovered via resumable <code>wget -c</code>).</li>
+<li><strong>Runtime model FACT (§11.4.28)</strong> — image ships modern
+<code>cvd</code>; <code>launch_cvd</code> is extracted at RUNTIME by the
+entrypoint from the host package
+(<code>CF_HOST_PKG_URL</code>/<code>CF_IMG_URL</code> via
+<code>file://</code> over the mounted <code>/staging</code>), NOT
+baked.</li>
+<li><strong>PRE-VERIFY PROOF (§4.5)</strong> — a rootless build-matched
+fetch-test ran the entrypoint <code>file://</code> asset-feed
+end-to-end: <code>fetching device image</code> (super.img +
+boot/init_boot/vbmeta extracted) → <code>fetching host package</code>
+(<code>./bin/launch_cvd</code> present) →
+<code>launching cvd via ./bin/launch_cvd</code> → <strong>launch_cvd
+RAN</strong>, assembled the cvd-1 config,
+<code>Launcher Build ID: 15660610</code>; then EXPECTED rootless
+<code>VIRTUAL_DEVICE_BOOT_FAILED run_cvd returned 10</code> (no
+/dev/kvm/bridge). Asset-feed + <code>launch_cvd</code> discovery +
+config assembly <strong>PROVEN</strong>; only the privileged boot
+remains. Evidence:
+<code>docs/qa/20260623-cuttlefish-launch-verified/REPORT.md</code>.</li>
+<li><strong>VERIFIED operator privileged launch</strong> (runbook §2.3):
+<code>sudo modprobe vhost_vsock</code> →
+<code>sudo podman load -i /tmp/cf-slim.tar</code> →
+<code>sudo podman run -d --name cuttlefish --privileged --network host --device /dev/kvm …vhost-vsock …vhost-net …vsock …net/tun -v /home/milosvasic/cf-staging:/staging:ro -e CF_HOST_PKG_URL=file:///staging/cvd-host_package.tar.gz -e CF_IMG_URL=file:///staging/img.zip helix-cuttlefish:slim</code>
+→ <code>sudo podman logs -f cuttlefish</code>. Rootless→rootful gap
+closed by the <code>save|load</code> step (§11.4.161 exception —
+privileged run is rootful).</li>
+</ol>
+<p><strong>HONEST BOUNDARY:</strong> F112 / OTA-003 stays
+integration-pending — NOT a real-A/B PASS — until the operator runs the
+§2.3 privileged launch and the agent drives
+<code>tier2_cuttlefish_ab.sh</code> capturing slot-flip + auto-rollback
+evidence. <code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code> rev 2
+carries the verified command.</p>
+<h3
+id="prior-session-2026-06-22-late--distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Prior
 session (2026-06-22, late) — distribution mechanism, infra fixes, amber
 onboarded, Cuttlefish runbook-ready</h3>
 <p><strong>LATE UPDATE (2026-06-22, distribution path now fully VERIFIED
@@ -355,9 +420,13 @@ Rev 18 + Status_Summary.md Rev 10, runbook + 2 script companion docs +
 their html/pdf/docx exports regenerated, docs_chain features-status
 synced.</p>
 <p><strong>Operator action items (carried + new):</strong> (1)
-<strong>Cuttlefish on nezha</strong> — execute
-<code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code> §2 privileged steps
-(no passwordless sudo) to unblock the real Android A/B run; (2)
+<strong>Cuttlefish on nezha</strong> — run the VERIFIED privileged
+launch block in <code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code>
+§2.3 (the slim image + assets are ready; only the operator's
+<code>sudo modprobe vhost_vsock</code> +
+<code>sudo podman load -i /tmp/cf-slim.tar</code> +
+<code>sudo podman run --privileged …</code> remains) to unblock the real
+Android A/B run — the agent then drives the A/B validation; (2)
 <strong>amber</strong> — install rootless podman to retire the §11.4.161
 docker-fallback exception (preferred over the fallback); (3) Cuttlefish
 on-target persistence verification is operator-attended; (4) physical

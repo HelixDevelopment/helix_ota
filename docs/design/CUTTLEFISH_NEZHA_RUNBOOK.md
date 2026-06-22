@@ -2,12 +2,12 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
-| Last modified | 2026-06-22T20:30:00Z |
-| Status | runbook-ready — EXECUTE this to perform the real Cuttlefish A/B + auto-rollback run on `nezha`; integration-pending until run with captured slot-flip/rollback evidence |
-| Status summary | The exact, ordered, operator-vs-agent step split for the real Cuttlefish (`cvd`) Tier-2 OTA run on `nezha`. `nezha` has **no passwordless sudo**, so every privileged step is fenced as an **OPERATOR PRIVILEGED STEP** the operator runs by hand; the agent drives every rootless/unprivileged step. This is a recipe to EXECUTE — every device-mount, the Virtual-A/B-vs-legacy variant, and the exact corrupt-slot mechanism are still `UNCONFIRMED:` per §11.4.6 and are established-as-FACT **at run time**, never guessed here. **HONEST BOUNDARY: this runbook does NOT claim a real-A/B PASS.** A real-A/B PASS is earned only by running the steps below and capturing slot-flip + auto-rollback evidence (§11.4.107/§11.4.108/§11.4.69). |
+| Revision | 2 |
+| Last modified | 2026-06-23T00:00:00Z |
+| Status | launch-command VERIFIED — the slim image is built+committed, the assets are staged+integrity-verified, and a rootless build-matched fetch-test PROVED `launch_cvd` runs and assembles the cvd config; WAITING ON the operator's one privileged `sudo` launch, then the agent drives A/B. Integration-pending until the privileged run + captured slot-flip/rollback evidence. |
+| Status summary | The exact, ordered, operator-vs-agent step split for the real Cuttlefish (`cvd`) Tier-2 OTA run on `nezha`. `nezha` has **no passwordless sudo**, so every privileged step is fenced as an **OPERATOR PRIVILEGED STEP** the operator runs by hand; the agent drives every rootless/unprivileged step. The runtime model (`file://` asset-feed via the mounted `/staging`, host-package-extracted-at-runtime `launch_cvd`) is now **PROVEN** by a rootless build-matched fetch-test (§4.5). **HONEST BOUNDARY: this runbook still does NOT claim a real-A/B PASS.** The asset-feed + `launch_cvd` discovery + config assembly are proven; only the privileged boot (which needs `/dev/kvm` + bridge, impossible rootless) remains. A real-A/B PASS is earned only by running §2.3 privileged + capturing slot-flip + auto-rollback evidence (§11.4.107/§11.4.108/§11.4.69). |
 | Authority | Helix OTA control-plane / device-integration team |
-| Related | `docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md` (the §11.4.161 documented exception this runbook executes under); `docs/design/CUTTLEFISH_TIER2.md` (the Tier-2 recipe + sources); `tests/emulator/tier2_cuttlefish_ab.sh` (the A/B + auto-rollback validation the agent drives); `containers/pkg/cuttlefish/` (cvd-lifecycle wrapper + `Containerfile` + `entrypoint.sh`) |
+| Related | `docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md` (the §11.4.161 documented exception this runbook executes under); `docs/design/CUTTLEFISH_TIER2.md` (the Tier-2 recipe + sources); `docs/qa/20260623-cuttlefish-launch-verified/REPORT.md` (the §4.5 pre-verify proof evidence); `tests/emulator/tier2_cuttlefish_ab.sh` (the A/B + auto-rollback validation the agent drives); `containers/pkg/cuttlefish/` (cvd-lifecycle wrapper + `Containerfile` + `entrypoint.sh`) |
 
 ---
 
@@ -24,7 +24,15 @@ privilege) and `docs/design/CUTTLEFISH_TIER2.md` (which holds the cited research
 - **What it is NOT:** a claim that Tier-2 ran. No PASS is asserted here. Real-A/B
   fidelity is earned only by executing §§4–6 below and capturing the slot-flip +
   auto-rollback evidence. Until then this path is
-  `runbook-ready + operator-privileged-launch-pending` — not a green.
+  `launch-command-verified + operator-privileged-launch-pending` — not a green.
+- **What is now PROVEN (FACT, §4.5):** a rootless, build-matched fetch-test ran the
+  `entrypoint.sh` `file://` asset-feed end-to-end — it fetched the device image
+  (`super.img` + boot/init_boot/vbmeta extracted), fetched the host package
+  (`./bin/launch_cvd` present), and `launch_cvd` **RAN**, assembling the `cvd-1`
+  config with `Launcher Build ID: 15660610`, before the EXPECTED rootless
+  `VIRTUAL_DEVICE_BOOT_FAILED run_cvd returned 10` (no `/dev/kvm`/bridge under
+  rootless). The asset-feed + `launch_cvd` discovery + config assembly are
+  **proven**; only the privileged boot remains.
 
 Every step is marked **[OPERATOR]** (privileged, run by hand) or **[AGENT]**
 (rootless, the agent drives). The **only** privileged surface is module-load +
@@ -50,43 +58,64 @@ device-node creation + the `--privileged` container run (§5 scope-narrowing in
 Cuttlefish target `aosp_cf_x86_64_only_phone-userdebug` (no credentials,
 public `ci.android.com`) [see `CUTTLEFISH_TIER2.md` Sources].
 
-### 1.2 Staged assets (FACT — `~/cf-staging/` on `nezha`)
+### 1.2 Staged assets (FACT — `~/cf-staging/` on `nezha`, integrity-verified)
 
-| Asset | Size | Role |
-|---|---|---|
-| `~/cf-staging/cvd-host_package.tar.gz` | ~898 MB | the `cvd` host package — extracts to `./bin/launch_cvd`, `./bin/adb`, `./bin/stop_cvd`, `./bin/update_device.py` |
-| `~/cf-staging/img.zip` | ~1.16 GB | the device-image zip (`super.img` / `system.img` etc.) for the matching build |
+Build **15660610** `aosp_cf_x86_64_only_phone-userdebug` (no credentials, public
+`ci.android.com`). Both assets are staged + integrity-verified on nezha. The
+original `curl` download truncated `img.zip` mid-stream; it was recovered via a
+resumable `wget -c` and re-verified.
 
-Both come from the **SAME** `aosp_cf_x86_64_only_phone-userdebug` build (the
-host package + device image MUST be from one build or `launch_cvd` mismatches).
-`UNCONFIRMED:` the exact build id of the staged pair — confirm at §3 by reading
-the extracted `bin/cvd_host_bugreport` / manifest, never assume.
+| Asset | Size (bytes) | Integrity | Role |
+|---|---|---|---|
+| `~/cf-staging/cvd-host_package.tar.gz` | 898828370 | gzip-valid | the `cvd` host package — extracts to `./bin/launch_cvd`, `./bin/adb`, `./bin/stop_cvd`, `./bin/update_device.py` |
+| `~/cf-staging/img.zip` | 1163637538 | `unzip` / `unzip -l`-valid (boot/init_boot/vendor_boot/super.img) | the device-image zip for the matching build |
 
-### 1.3 Container image build — **[AGENT]**, rootless
+Both come from the **SAME** build 15660610 (the host package + device image MUST be
+from one build or `launch_cvd` mismatches) — this is the build the §4.5 fetch-test
+matched and proved against.
+
+### 1.3 Container image build — **[AGENT]**, rootless — DONE (slim image, committed)
 
 Building the Cuttlefish container image needs **no privilege** (ordinary rootless
-`podman build`) per `CUTTLEFISH_ROOTFUL_EXCEPTION.md` §5(1) + the `Containerfile`
-header. The agent runs this on `nezha` when it is free:
+`podman build`) per `CUTTLEFISH_ROOTFUL_EXCEPTION.md` §5(1). This is **DONE**: the
+**slim** image was built rootless on `nezha` at **1.11 GB** (vs 27.6 GB for the
+single-stage from-source build), via the upstream runner-prod **prebuilt-`.deb`**
+path — `cuttlefish-base` / `cuttlefish-user` **1.54.1** pulled from
+`https://us-apt.pkg.dev/projects/android-cuttlefish-artifacts android-cuttlefish main`
+(NO Bazel / cargo / from-source compile). `cvd version 1.54.1` executes inside the
+image. Committed to the `containers` submodule at **`54aa9b2`**; parent pointer
+**`659c2326`**.
 
 ```bash
-# [AGENT] rootless — on nezha, from the containers submodule root
+# [AGENT] rootless — on nezha, from the containers submodule root (the proven path)
 cd ~/helix_ota/containers   # or wherever the checkout lives on nezha
 podman build \
-    --build-arg BASE_IMAGE=debian:12 \
     -f pkg/cuttlefish/Containerfile \
-    -t cuttlefish:latest .
+    -t helix-cuttlefish:slim .
+podman run --rm helix-cuttlefish:slim cvd version    # => 1.54.1 (FACT)
 ```
 
-`UNCONFIRMED:` whether the staged `~/cf-staging` assets are baked into the image
-(via `BUILD_ID`/`CF_IMG_URL` build args) or mounted at run time (§4). This runbook
-uses the **mount-at-run-time** path (§4) — simpler, lets the agent re-stage without
-rebuilding. The image therefore only carries the cuttlefish host packages; the
-guest images come from the bind-mounted `~/cf-staging`.
+> **Runtime model (FACT — §11.4.28 decoupled).** The image ships the modern `cvd`
+> launcher (1.54.1). It does **NOT** bake the guest images or `launch_cvd` —
+> `launch_cvd` comes from the **host package extracted at RUNTIME by the
+> `entrypoint.sh`**, which reads `CF_HOST_PKG_URL` / `CF_IMG_URL` (here `file://`
+> URLs pointing at the bind-mounted `/staging`). This keeps the image
+> project-agnostic and lets the agent re-stage assets without rebuilding. The §4.5
+> fetch-test proved exactly this asset-feed path.
 
-> **Note (mount vs entrypoint-fetch):** the `entrypoint.sh` can fetch assets from
-> `CF_IMG_URL`/`CF_HOST_PKG_URL` at run time, but since the assets are **already
-> staged locally** at `~/cf-staging`, this runbook bind-mounts them (`-v
-> ~/cf-staging:/staging`) and extracts in-container — no re-download.
+### 1.4 Rootless→rootful image transfer — `save | load` (FACT)
+
+The image was **built rootless** but the privileged launch (§2.3) runs **rootful**
+(the §11.4.161 documented exception — privileged containers need root on `nezha`). A
+rootless-built image is not visible to the rootful `podman` store, so the operator
+transfers it via `save` → `load` before the run:
+
+```bash
+# [AGENT, rootless] save the built image to a tar (1.03 GiB on disk)
+podman save -o /tmp/cf-slim.tar helix-cuttlefish:slim
+# [OPERATOR, rootful — needs sudo on nezha] load it into the rootful store
+sudo podman load -i /tmp/cf-slim.tar
+```
 
 ---
 
@@ -164,79 +193,92 @@ may be absent). VERIFY with `getent group cvdnetwork render kvm`; if a group is
 missing, the `--group-add <name>` in §2.3 simply has no host group to map — drop
 the missing ones from the run line rather than fail (§11.4.6).
 
-### 2.3 [OPERATOR] The privileged container run
+### 2.3 [OPERATOR] The privileged container run — **THE VERIFIED COMMAND**
 
-This is **the** §11.4.161 documented exception. Run it by hand (it needs `sudo` on
-`nezha`). The agent drives the *inside* of the container (§4) once it is up. Build
-the device-list from what §2.1 verified present:
+This is **the** §11.4.161 documented exception. Run the exact block below by hand on
+`nezha` (each line needs `sudo` — `nezha` has no passwordless sudo). It loads the
+rootless-built slim image into the rootful store (§1.4), then runs the privileged
+container with the `entrypoint.sh` `file://` asset-feed (§4.5-proven). The agent
+then watches `podman logs` and drives the A/B run (§4).
 
 ```bash
-# [OPERATOR] THE privileged launch on nezha (sudo — nezha has no passwordless sudo).
-#   - Drop  --device /dev/vsock      if /dev/vsock is ABSENT (see §1.1 / §2.1).
-#   - Drop  --group-add <name>       for any group getent showed missing (§2.2).
-#   - -v ~/cf-staging:/staging       bind-mounts the staged assets (read at §4).
-#   - --name cf-helix                stable container name the agent execs into.
-sudo podman run -d \
-    --name cf-helix \
-    --privileged \
-    --network host \
-    --device /dev/kvm \
-    --device /dev/vhost-vsock \
-    --device /dev/vhost-net \
-    --device /dev/vsock \
-    --device /dev/net/tun \
-    --group-add kvm \
-    --group-add cvdnetwork \
-    --group-add render \
-    -v ~/cf-staging:/staging:ro \
-    cuttlefish:latest \
-    sleep infinity
+# [OPERATOR] THE verified privileged launch on nezha (sudo throughout).
+#   - sudo modprobe vhost_vsock      creates /dev/vsock (absent by default, §1.1/§2.1).
+#   - sudo podman load               brings the rootless-built slim image into the rootful store (§1.4).
+#   - --privileged --network host    the §11.4.161 documented exception.
+#   - -v .../cf-staging:/staging:ro  bind-mounts the staged build-15660610 assets read-only.
+#   - CF_HOST_PKG_URL / CF_IMG_URL   file:// URLs => entrypoint extracts launch_cvd + super.img at runtime (§4.5-proven).
+sudo modprobe vhost_vsock
+sudo podman load -i /tmp/cf-slim.tar
+sudo podman run -d --name cuttlefish --privileged --network host \
+  --device /dev/kvm --device /dev/vhost-vsock --device /dev/vhost-net \
+  --device /dev/vsock --device /dev/net/tun \
+  -v /home/milosvasic/cf-staging:/staging:ro \
+  -e CF_HOST_PKG_URL=file:///staging/cvd-host_package.tar.gz \
+  -e CF_IMG_URL=file:///staging/img.zip \
+  helix-cuttlefish:slim
+sudo podman logs -f cuttlefish
 ```
 
-> **Why `sleep infinity` (not the entrypoint launch)?** Running the container with
-> `sleep infinity` as PID 1 keeps it **up and idle** so the **agent** can drive the
-> asset-extract + `launch_cvd` + the full A/B/rollback validation **inside** it via
-> `podman exec` (§4) — keeping the operator's privileged surface to the single
-> `podman run` and handing the multi-step, evidence-capturing flow to the agent.
-> (The `entrypoint.sh` foreground-launch path is the alternative when no agent
-> drives the inside; here the agent does.)
+> **Why the entrypoint launch (not `sleep infinity`)?** The §4.5 fetch-test proved
+> the `entrypoint.sh` asset-feed path works end-to-end (fetch image → fetch host
+> package → run `launch_cvd` → assemble cvd config). Under privilege the same
+> entrypoint reaches the boot stage instead of the EXPECTED rootless
+> `run_cvd returned 10`. The operator watches `sudo podman logs -f cuttlefish` and
+> hands off to the agent once the cvd is up (`adb` reachable). The `--device`
+> set is exactly the §1.1-verified node set; `/dev/vsock` is created by the
+> `modprobe vhost_vsock` on the first line.
 
 **Confirm it is up (operator can eyeball, agent re-checks):**
 
 ```bash
-sudo podman ps --filter name=cf-helix     # STATUS "Up"
+sudo podman ps --filter name=cuttlefish     # STATUS "Up"
 ```
 
-When `cf-helix` shows **Up**, hand back to the agent — the privileged surface is
-done.
+When the `cuttlefish` container is **Up** and `podman logs` shows the cvd booting,
+hand back to the agent — the privileged surface is done.
 
 ---
 
 ## 3. Handoff marker
 
 After §2.3, the operator signals the agent (e.g. drops a marker the agent polls,
-or simply tells the agent "cf-helix is up"). The agent's §4 steps run `podman exec`
-into `cf-helix`; if `sudo podman exec` is required (rootful container owned by root),
-that single `exec` invocation is the one place the agent needs the operator to have
-granted it (or the operator runs the agent's §4 driver script under `sudo` once).
-`UNCONFIRMED:` whether the agent can `podman exec` into a root-owned container
-without sudo on `nezha` — establish at handoff (try `podman exec cf-helix true`;
-if it fails with a permission error, the operator runs the §4 driver under sudo).
+or simply tells the agent "cuttlefish is up"). With the entrypoint-launch path the
+cvd boots inside the container automatically; the agent then watches
+`sudo podman logs -f cuttlefish` for the cvd to come up and `adb`-connects to it
+(the cvd exposes adb on the host via `--network host`). If the agent needs to drive
+steps **inside** the container (`podman exec`) and the rootful container is
+root-owned, that single `exec` invocation is the one place the agent needs the
+operator to have granted it (or the operator runs the agent's §4 driver under sudo
+once). `UNCONFIRMED:` whether the agent can `podman exec` into the root-owned
+container without sudo on `nezha` — establish at handoff (try
+`podman exec cuttlefish true`; if it fails with a permission error, the operator
+runs the §4 driver under sudo).
 
 ---
 
 ## 4. AGENT STEPS — drive the run inside the container (rootless where possible)
 
-> **[AGENT]** Everything in this section the agent drives, via `podman exec` into the
-> already-privileged `cf-helix` container (or, if exec needs root on `nezha`, the
-> operator runs the agent's §4 driver script once under sudo). No NEW privilege is
+> **[AGENT]** Everything in this section the agent drives. With the entrypoint-launch
+> path (§2.3) the cvd boots automatically; the agent watches `podman logs`,
+> `adb`-connects, and runs the validation harness against the running cvd. Where a
+> step must run **inside** the container, the agent uses `podman exec` into the
+> already-privileged `cuttlefish` container (or, if exec needs root on `nezha`, the
+> operator runs the agent's §4 driver once under sudo). No NEW privilege is
 > requested — the container is already privileged from §2.3.
+>
+> **Note (entrypoint vs manual extract):** because §2.3 runs the entrypoint with the
+> `file://` asset-feed (§4.5-proven), the extract + `launch_cvd` of §4.1/§4.2 happen
+> **automatically inside the container at boot** — the agent normally just watches
+> `podman logs` and proceeds to §4.3. The explicit §4.1/§4.2 commands below are the
+> manual fallback (e.g. if the entrypoint launch is skipped in favour of a
+> `sleep infinity` PID-1 for step-by-step driving).
 
-### 4.1 [AGENT] Extract the staged assets inside the container
+### 4.1 [AGENT] Extract the staged assets inside the container (manual fallback)
 
 ```bash
-# [AGENT] inside cf-helix — extract host package + device image from /staging.
-podman exec cf-helix bash -lc '
+# [AGENT] inside cuttlefish — extract host package + device image from /staging.
+podman exec cuttlefish bash -lc '
   set -euo pipefail
   cd "${HOME:-/cuttlefish}"
   tar -xzf /staging/cvd-host_package.tar.gz
@@ -253,8 +295,8 @@ A/B** — read `getprop ro.virtual_ab.enabled` after boot (§4.3), never assume 
 ### 4.2 [AGENT] Launch the cvd (daemon)
 
 ```bash
-# [AGENT] inside cf-helix — daemonised launch (privileged container already up).
-podman exec cf-helix bash -lc '
+# [AGENT] inside cuttlefish — daemonised launch (privileged container already up).
+podman exec cuttlefish bash -lc '
   cd "${HOME:-/cuttlefish}"
   HOME="$PWD" ./bin/launch_cvd --daemon
   ./bin/adb wait-for-device
@@ -264,7 +306,7 @@ podman exec cf-helix bash -lc '
 
 A non-zero exit / no `cvd-ebr` bridge here means the privileged flags from §2.3 did
 not take (most often a missing device or group) — that is a real FAIL surfaced in
-`podman logs cf-helix`, never fake-passed (§11.4.6).
+`podman logs cuttlefish`, never fake-passed (§11.4.6).
 
 ### 4.3 [AGENT] Drive the A/B + auto-rollback validation
 
@@ -276,10 +318,10 @@ corrupt-slot **auto-rollback** — all with captured evidence + honest FAIL on a
 unconfirmed step):
 
 ```bash
-# [AGENT] inside cf-helix (or against the cvd from nezha host adb), point the
+# [AGENT] inside cuttlefish (or against the cvd from nezha host adb), point the
 # harness at the running cvd. The harness lives in the checkout; run it where it
 # can reach ./bin/adb of the cvd. Evidence lands under docs/qa/<run-id>/cuttlefish_ab/.
-podman exec cf-helix bash -lc '
+podman exec cuttlefish bash -lc '
   cd "${HOME:-/cuttlefish}"
   # The cvd host package already provides bin/adb + bin/update_device.py;
   # the harness uses ro.boot.slot_suffix + update_engine_client + bootctl.
@@ -297,7 +339,7 @@ A/B (`ro.virtual_ab.enabled`), **ATTEMPTS** the documented OTA-apply
 this host — never a fake PASS.
 
 **Path B (manual, if the harness needs host-specific adaptation)** — the agent
-drives the same sequence by hand inside `cf-helix`, capturing each artifact:
+drives the same sequence by hand inside `cuttlefish`, capturing each artifact:
 
 1. baseline `ro.boot.slot_suffix` (→ `getprop_before.txt`)
 2. build/fetch a signed OTA for `aosp_cf_x86_64_only_phone-userdebug`, apply via
@@ -325,7 +367,7 @@ committed path:
 # [AGENT] pull evidence out of the container to a durable docs/qa path.
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-cuttlefish-ab"
 mkdir -p ~/helix_ota/docs/qa/${RUN_ID}
-podman cp cf-helix:/cuttlefish/evidence/. ~/helix_ota/docs/qa/${RUN_ID}/
+podman cp cuttlefish:/cuttlefish/evidence/. ~/helix_ota/docs/qa/${RUN_ID}/
 # curated REPORT.md cites: slot_before, slot_after (FLIPPED), verity, slot_after_rollback
 # (AUTO-ROLLBACK to known-good), rollback_trace — §11.4.107/§11.4.108/§11.4.69.
 ```
@@ -359,10 +401,10 @@ recordings; the curated `REPORT.md` under `docs/qa/<run-id>/` is the committed p
 
 ```bash
 # [AGENT] stop the cvd cleanly inside the container (§11.4.14 quiescence).
-podman exec cf-helix bash -lc 'cd "${HOME:-/cuttlefish}" && HOME="$PWD" ./bin/stop_cvd || true'
+podman exec cuttlefish bash -lc 'cd "${HOME:-/cuttlefish}" && HOME="$PWD" ./bin/stop_cvd || true'
 
 # [OPERATOR] remove the privileged container (it was started under sudo on nezha).
-sudo podman rm -f cf-helix
+sudo podman rm -f cuttlefish
 ```
 
 Reversibility (FACT, from `CUTTLEFISH_ROOTFUL_EXCEPTION.md` §6): no persistent host
@@ -382,13 +424,13 @@ corrupt-slot rollback happen **inside** the virtual device, never on `nezha` its
 | §2.1 Verify/load `vhost_vsock`/`vhost_net`; create `/dev/vsock` if absent | **OPERATOR** | yes (sudo) |
 | §2.2 One-time group membership (`usermod -aG kvm,cvdnetwork,render`) | **OPERATOR** | yes (sudo) |
 | §2.3 The `--privileged --network host` container run | **OPERATOR** | yes (sudo) |
-| §3 Handoff (confirm `cf-helix` Up) | OPERATOR → AGENT | — |
+| §3 Handoff (confirm `cuttlefish` Up) | OPERATOR → AGENT | — |
 | §4.1 Extract staged assets inside the container | **AGENT** | no (inside already-privileged container) |
 | §4.2 `launch_cvd --daemon` | **AGENT** | no (inside already-privileged container) |
 | §4.3 A/B apply + slot-flip + auto-rollback validation | **AGENT** | no |
 | §4.4 Evidence capture to `docs/qa/<run-id>/` | **AGENT** | no |
 | §6 `stop_cvd` | **AGENT** | no |
-| §6 `podman rm -f cf-helix` | **OPERATOR** | yes (sudo) |
+| §6 `podman rm -f cuttlefish` | **OPERATOR** | yes (sudo) |
 
 The privileged surface is **exactly three operator commands** (§2.1 conditional,
 §2.2 one-time, §2.3 the run) + the one teardown remove — everything else is agent-driven.
