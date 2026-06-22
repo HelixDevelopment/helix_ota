@@ -282,11 +282,23 @@ _cascade_one_submodule() {
 (cascaded by parent commit_all.sh --auto-cascade depth=$depth)"
     git commit -q -m "$sub_msg" 2>&1 || log_warn "    git commit had no changes (continuing)"
 
+    # Resolve the destination branch: the current branch if attached, else the
+    # submodule's default branch. `git push <remote> HEAD` FAILS on a DETACHED HEAD
+    # (the common cascade case — submodules are checked out detached at the pinned
+    # commit) because there is no branch name to map the push to; map HEAD:<branch>
+    # explicitly instead. Still fast-forward-only, never force (§11.4.113).
+    local dest_branch
+    dest_branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+    if [[ -z "$dest_branch" ]]; then
+        dest_branch=$(git remote show "$(git remote | head -1)" 2>/dev/null | sed -n 's/.*HEAD branch: //p')
+        [[ -z "$dest_branch" ]] && dest_branch=main
+    fi
+
     local push_ok=true
     for remote in $(git remote); do
-        git pull --no-rebase --no-edit "$remote" "$(git symbolic-ref --short HEAD 2>/dev/null || echo main)" 2>&1 | tail -1 || log_warn "    pull from $remote continued"
-        if git push "$remote" HEAD 2>&1 | tail -1; then
-            log_ok "    pushed to $remote"
+        git pull --no-rebase --no-edit "$remote" "$dest_branch" 2>&1 | tail -1 || log_warn "    pull from $remote continued"
+        if git push "$remote" "HEAD:$dest_branch" 2>&1 | tail -1; then
+            log_ok "    pushed to $remote ($dest_branch)"
         else
             log_error "    push to $remote FAILED"
             push_ok=false
