@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| **Revision** | 1 |
-| **Last modified** | 2026-06-21T17:50:00Z |
+| **Revision** | 2 |
+| **Last modified** | 2026-06-22T20:30:00Z |
 | **Status** | active |
 | **§11.4.18** | In-source doc block present in `scripts/boot_android_emulator.sh` |
 
@@ -56,6 +56,29 @@ PORT=5556 RAM_MB=4096 CORES=4 bash scripts/boot_android_emulator.sh
 - **State file:** `emu_state.env` for consumption by other scripts
 - **SSH tunnel:** ADB available at `localhost:<PORT>`
 
+## Remote-process full-detachment hardening (§11.4.144)
+
+The remote emulator launch on `nezha` is wrapped in **`setsid nohup … </dev/null
+>log 2>&1 &`** for **true full detachment** from the launching SSH session. The
+plain `nohup &` used previously left the remote `qemu`/AVD process tied to the SSH
+session's process group: if that SSH session ended mid-boot-wait (operator
+interrupt, connection drop), the remote emulator exited gracefully and the final
+SSH-tunnel / attestation step was never reached — a §11.4.144
+tracked-device-availability gap (the launched device silently went away with the
+session rather than being followed independently).
+
+`setsid` puts the remote launch in its **own session + process group** so it
+survives the launching SSH session ending; `</dev/null` detaches stdin and
+`>log 2>&1` redirects all output to a remote log file the next reconnect can read.
+The boot itself was already PROVEN (`emulator-5554`, API 36, `boot_completed=1`);
+this hardening ensures the boot SURVIVES an interrupted launch session so the
+attestation step is reachable on reconnect.
+
+Honest boundary (§11.4.6): on-target *persistence-after-reboot* verification
+(re-boot + mid-boot interrupt test, which leaves remote state) is operator-attended
+and not asserted here — the `setsid` change addresses the SSH-session-detachment
+class; full persistence proof is a separate operator-attended item.
+
 ## Cleanup
 
 The script does NOT auto-kill the emulator (to allow multiple sessions to
@@ -79,4 +102,5 @@ Or use the containers submodule's `emulator-cleanup` command when built.
 
 ## Last verified
 
-2026-06-21 — boot on nezha.local (Linux x86_64, KVM, Android API 36).
+2026-06-22 — boot on nezha.local (Linux x86_64, KVM, Android API 36); §11.4.144
+`setsid` full-detachment hardening added to the remote launch.

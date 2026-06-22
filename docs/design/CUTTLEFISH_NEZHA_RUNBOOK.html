@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CUTTLEFISH_NEZHA_RUNBOOK</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="helix-ota-cuttlefish-real-ab-bring-up-runbook-on-nezha-operator-driven-privileged-steps">Helix
+OTA — Cuttlefish real-A/B bring-up RUNBOOK on <code>nezha</code>
+(operator-driven privileged steps)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-22T20:30:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>runbook-ready — EXECUTE this to perform the real Cuttlefish A/B +
+auto-rollback run on <code>nezha</code>; integration-pending until run
+with captured slot-flip/rollback evidence</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The exact, ordered, operator-vs-agent step split for the real
+Cuttlefish (<code>cvd</code>) Tier-2 OTA run on <code>nezha</code>.
+<code>nezha</code> has <strong>no passwordless sudo</strong>, so every
+privileged step is fenced as an <strong>OPERATOR PRIVILEGED
+STEP</strong> the operator runs by hand; the agent drives every
+rootless/unprivileged step. This is a recipe to EXECUTE — every
+device-mount, the Virtual-A/B-vs-legacy variant, and the exact
+corrupt-slot mechanism are still <code>UNCONFIRMED:</code> per §11.4.6
+and are established-as-FACT <strong>at run time</strong>, never guessed
+here. <strong>HONEST BOUNDARY: this runbook does NOT claim a real-A/B
+PASS.</strong> A real-A/B PASS is earned only by running the steps below
+and capturing slot-flip + auto-rollback evidence
+(§11.4.107/§11.4.108/§11.4.69).</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Helix OTA control-plane / device-integration team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> (the
+§11.4.161 documented exception this runbook executes under);
+<code>docs/design/CUTTLEFISH_TIER2.md</code> (the Tier-2 recipe +
+sources); <code>tests/emulator/tier2_cuttlefish_ab.sh</code> (the A/B +
+auto-rollback validation the agent drives);
+<code>containers/pkg/cuttlefish/</code> (cvd-lifecycle wrapper +
+<code>Containerfile</code> + <code>entrypoint.sh</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="what-this-runbook-is-and-is-not">0. What this runbook is (and is
+NOT)</h2>
+<p>This is the <strong>decision-A deliverable</strong>: the EXACT
+step-by-step for the real Cuttlefish A/B run on <code>nezha</code>. It
+is the operational complement to
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> (which
+<em>authorises</em> the container privilege) and
+<code>docs/design/CUTTLEFISH_TIER2.md</code> (which holds the cited
+research).</p>
+<ul>
+<li><strong>What it is:</strong> an ordered checklist where the
+<strong>operator</strong> runs the few privileged steps
+(<code>nezha</code> has no passwordless sudo) and the
+<strong>agent</strong> drives everything rootless/unprivileged around
+them.</li>
+<li><strong>What it is NOT:</strong> a claim that Tier-2 ran. No PASS is
+asserted here. Real-A/B fidelity is earned only by executing §§4–6 below
+and capturing the slot-flip + auto-rollback evidence. Until then this
+path is <code>runbook-ready + operator-privileged-launch-pending</code>
+— not a green.</li>
+</ul>
+<p>Every step is marked <strong>[OPERATOR]</strong> (privileged, run by
+hand) or <strong>[AGENT]</strong> (rootless, the agent drives). The
+<strong>only</strong> privileged surface is module-load + device-node
+creation + the <code>--privileged</code> container run (§5
+scope-narrowing in <code>CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>).</p>
+<hr />
+<h2 id="prereqs-assets-staged-image-built">1. Prereqs (assets staged +
+image built)</h2>
+<h3 id="verified-nezha-device-state-fact-host-probe-2026-06-22">1.1
+Verified <code>nezha</code> device state (FACT — host probe
+2026-06-22)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Node / module</th>
+<th>State on <code>nezha</code></th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/dev/kvm</code></td>
+<td>present, world-rw</td>
+<td>KVM available — passthrough OK</td>
+</tr>
+<tr>
+<td><code>/dev/vhost-vsock</code></td>
+<td>present, world-rw</td>
+<td>vsock VMM path OK</td>
+</tr>
+<tr>
+<td><code>/dev/vhost-net</code></td>
+<td>present, world-rw</td>
+<td>guest-net VMM path OK</td>
+</tr>
+<tr>
+<td><code>/dev/net/tun</code></td>
+<td>present, world-rw</td>
+<td>tap-device backing OK</td>
+</tr>
+<tr>
+<td><code>/dev/vsock</code></td>
+<td><strong>ABSENT</strong></td>
+<td>the <code>--device /dev/vsock</code> line is
+<strong>conditional</strong> (§2.1)</td>
+</tr>
+<tr>
+<td><code>vhost_vsock</code> / <code>vhost_net</code> kernel
+modules</td>
+<td><strong>not in <code>lsmod</code></strong> — consistent with
+<strong>built-in</strong> to the Linux 6.12 kernel</td>
+<td><code>UNCONFIRMED:</code> built-in vs unloaded — VERIFY at §2.1
+before the first launch (do not guess)</td>
+</tr>
+</tbody>
+</table>
+<p><code>nezha</code> is a Linux x86_64 host with KVM (62 GB RAM). Host
+arch <code>x86_64</code> → Cuttlefish target
+<code>aosp_cf_x86_64_only_phone-userdebug</code> (no credentials, public
+<code>ci.android.com</code>) [see <code>CUTTLEFISH_TIER2.md</code>
+Sources].</p>
+<h3 id="staged-assets-fact-cf-staging-on-nezha">1.2 Staged assets (FACT
+— <code>~/cf-staging/</code> on <code>nezha</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Size</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>~/cf-staging/cvd-host_package.tar.gz</code></td>
+<td>~898 MB</td>
+<td>the <code>cvd</code> host package — extracts to
+<code>./bin/launch_cvd</code>, <code>./bin/adb</code>,
+<code>./bin/stop_cvd</code>, <code>./bin/update_device.py</code></td>
+</tr>
+<tr>
+<td><code>~/cf-staging/img.zip</code></td>
+<td>~1.16 GB</td>
+<td>the device-image zip (<code>super.img</code> /
+<code>system.img</code> etc.) for the matching build</td>
+</tr>
+</tbody>
+</table>
+<p>Both come from the <strong>SAME</strong>
+<code>aosp_cf_x86_64_only_phone-userdebug</code> build (the host package
++ device image MUST be from one build or <code>launch_cvd</code>
+mismatches). <code>UNCONFIRMED:</code> the exact build id of the staged
+pair — confirm at §3 by reading the extracted
+<code>bin/cvd_host_bugreport</code> / manifest, never assume.</p>
+<h3 id="container-image-build-agent-rootless">1.3 Container image build
+— <strong>[AGENT]</strong>, rootless</h3>
+<p>Building the Cuttlefish container image needs <strong>no
+privilege</strong> (ordinary rootless <code>podman build</code>) per
+<code>CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> §5(1) + the
+<code>Containerfile</code> header. The agent runs this on
+<code>nezha</code> when it is free:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [AGENT] rootless — on nezha, from the containers submodule root</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/helix_ota/containers   <span class="co"># or wherever the checkout lives on nezha</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> build <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--build-arg</span> BASE_IMAGE=debian:12 <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">-f</span> pkg/cuttlefish/Containerfile <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">-t</span> cuttlefish:latest .</span></code></pre></div>
+<p><code>UNCONFIRMED:</code> whether the staged
+<code>~/cf-staging</code> assets are baked into the image (via
+<code>BUILD_ID</code>/<code>CF_IMG_URL</code> build args) or mounted at
+run time (§4). This runbook uses the <strong>mount-at-run-time</strong>
+path (§4) — simpler, lets the agent re-stage without rebuilding. The
+image therefore only carries the cuttlefish host packages; the guest
+images come from the bind-mounted <code>~/cf-staging</code>.</p>
+<blockquote>
+<p><strong>Note (mount vs entrypoint-fetch):</strong> the
+<code>entrypoint.sh</code> can fetch assets from
+<code>CF_IMG_URL</code>/<code>CF_HOST_PKG_URL</code> at run time, but
+since the assets are <strong>already staged locally</strong> at
+<code>~/cf-staging</code>, this runbook bind-mounts them
+(<code>-v ~/cf-staging:/staging</code>) and extracts in-container — no
+re-download.</p>
+</blockquote>
+<hr />
+<h2 id="operator-privileged-steps-run-by-hand-on-nezha">2. OPERATOR
+PRIVILEGED STEPS — run by hand on <code>nezha</code></h2>
+<blockquote>
+<p>════════════════════════════════════════════════════════════════════════════
+<strong>OPERATOR PRIVILEGED STEPS — <code>nezha</code> has NO
+passwordless sudo.</strong> The operator runs the commands in this
+section by hand (each needs <code>sudo</code>). The agent CANNOT run
+these and will WAIT (honest §11.4.21 block) until they are done. These
+are the <strong>only</strong> privileged steps; everything else is
+rootless. Authorised by
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> (§11.4.161
+documented exception); high-blast-radius → operator-gated for first use
+(§11.4.101/§11.4.21).
+════════════════════════════════════════════════════════════════════════════</p>
+</blockquote>
+<h3
+id="operator-verify-load-vhost-modules-create-devvsock-if-absent">2.1
+[OPERATOR] Verify / load vhost modules + create <code>/dev/vsock</code>
+if absent</h3>
+<p>First <strong>verify</strong> whether the vhost modules are built-in
+(so <code>modprobe</code> is a no-op) vs loadable — do not guess
+(§11.4.6):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [OPERATOR] verify-before-load (FACT-gathering, no change if built-in)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /sys/module/vhost_vsock /sys/module/vhost_net <span class="dv">2</span><span class="op">&gt;</span>/dev/null   <span class="co"># present =&gt; built-in or loaded</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">modinfo</span> vhost_vsock <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span>                          <span class="co"># &#39;name:&#39; line =&gt; loadable module</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">lsmod</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&#39;vhost_vsock|vhost_net&#39;</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;not listed (built-in OR unloaded)&quot;</span></span></code></pre></div>
+<ul>
+<li>If <code>/sys/module/vhost_vsock</code> AND
+<code>/sys/module/vhost_net</code> <strong>exist</strong> → built-in or
+already loaded → <strong>nothing to load</strong>, skip the
+modprobe.</li>
+<li>If they do <strong>not</strong> exist and <code>modinfo</code> shows
+a module → load them:</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [OPERATOR] load only if NOT already present (verified above)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> modprobe vhost_vsock</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> modprobe vhost_net</span></code></pre></div>
+<p>Then handle the <strong>absent <code>/dev/vsock</code></strong>
+client node. <code>UNCONFIRMED:</code> whether Cuttlefish on this kernel
+needs <code>/dev/vsock</code> in addition to
+<code>/dev/vhost-vsock</code> — the conservative move is to create it so
+the <code>--device /dev/vsock</code> line works; if the node still does
+not appear after <code>modprobe vhost_vsock</code> (the
+<code>vsock</code> core usually auto-creates it), create it
+manually:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [OPERATOR] create /dev/vsock ONLY if still absent after vhost_vsock load.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The vsock misc device is char major 10, minor 53 on mainline Linux —</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># CONFIRM with `cat /sys/class/misc/vsock/dev` (prints &quot;MAJOR:MINOR&quot;) BEFORE</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the mknod, never hardcode-guess the minor (§11.4.6/§11.4.111 resolve-by-name).</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /dev/vsock <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;already present — no mknod needed&quot;</span> <span class="kw">||</span> <span class="kw">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">DEV</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">cat</span> /sys/class/misc/vsock/dev <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="va">)</span><span class="st">&quot;</span>   <span class="co"># e.g. 10:53</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;vsock misc dev = </span><span class="va">${DEV</span><span class="op">:-</span>&lt;unknown — investigate before mknod&gt;<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Only if DEV resolved:  sudo mknod /dev/vsock c ${DEV%%:*} ${DEV##*:} &amp;&amp; sudo chmod 666 /dev/vsock</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>Honest boundary (§11.4.6):</strong> prefer letting the
+<code>vsock</code> module auto-create <code>/dev/vsock</code> (load
+<code>vsock</code> if <code>/dev/vsock</code> is genuinely needed and
+absent: <code>sudo modprobe vsock</code>). Manual <code>mknod</code> is
+the fallback only when the kernel does not auto-create it; the
+major:minor MUST be read from <code>/sys/class/misc/vsock/dev</code>,
+never assumed.</p>
+</blockquote>
+<h3 id="operator-one-time-host-group-membership">2.2 [OPERATOR]
+(one-time) host group membership</h3>
+<p>If not already done (the Cuttlefish host packages add these via udev
+rules on a Debian host, but <code>nezha</code> runs the container path,
+so grant the launching user the groups the privileged container’s
+<code>--group-add</code> mirror):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [OPERATOR] one-time, then re-login (or reboot). Reversible via gpasswd -d.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> kvm,cvdnetwork,render <span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span></span></code></pre></div>
+<p><code>UNCONFIRMED:</code> whether
+<code>cvdnetwork</code>/<code>render</code> groups even exist on
+<code>nezha</code> (they are created by the cuttlefish-base deb on a
+native install — on the container path they may be absent). VERIFY with
+<code>getent group cvdnetwork render kvm</code>; if a group is missing,
+the <code>--group-add &lt;name&gt;</code> in §2.3 simply has no host
+group to map — drop the missing ones from the run line rather than fail
+(§11.4.6).</p>
+<h3 id="operator-the-privileged-container-run">2.3 [OPERATOR] The
+privileged container run</h3>
+<p>This is <strong>the</strong> §11.4.161 documented exception. Run it
+by hand (it needs <code>sudo</code> on <code>nezha</code>). The agent
+drives the <em>inside</em> of the container (§4) once it is up. Build
+the device-list from what §2.1 verified present:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [OPERATOR] THE privileged launch on nezha (sudo — nezha has no passwordless sudo).</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   - Drop  --device /dev/vsock      if /dev/vsock is ABSENT (see §1.1 / §2.1).</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   - Drop  --group-add &lt;name&gt;       for any group getent showed missing (§2.2).</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   - -v ~/cf-staging:/staging       bind-mounts the staged assets (read at §4).</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   - --name cf-helix                stable container name the agent execs into.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> podman run <span class="at">-d</span> <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--name</span> cf-helix <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--privileged</span> <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--network</span> host <span class="dt">\</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--device</span> /dev/kvm <span class="dt">\</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--device</span> /dev/vhost-vsock <span class="dt">\</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--device</span> /dev/vhost-net <span class="dt">\</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--device</span> /dev/vsock <span class="dt">\</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">--device</span> /dev/net/tun <span class="dt">\</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">--group-add</span> kvm <span class="dt">\</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">--group-add</span> cvdnetwork <span class="dt">\</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">--group-add</span> render <span class="dt">\</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">-v</span> ~/cf-staging:/staging:ro <span class="dt">\</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    cuttlefish:latest <span class="dt">\</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    sleep infinity</span></code></pre></div>
+<blockquote>
+<p><strong>Why <code>sleep infinity</code> (not the entrypoint
+launch)?</strong> Running the container with <code>sleep infinity</code>
+as PID 1 keeps it <strong>up and idle</strong> so the
+<strong>agent</strong> can drive the asset-extract +
+<code>launch_cvd</code> + the full A/B/rollback validation
+<strong>inside</strong> it via <code>podman exec</code> (§4) — keeping
+the operator’s privileged surface to the single <code>podman run</code>
+and handing the multi-step, evidence-capturing flow to the agent. (The
+<code>entrypoint.sh</code> foreground-launch path is the alternative
+when no agent drives the inside; here the agent does.)</p>
+</blockquote>
+<p><strong>Confirm it is up (operator can eyeball, agent
+re-checks):</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> podman ps <span class="at">--filter</span> name=cf-helix     <span class="co"># STATUS &quot;Up&quot;</span></span></code></pre></div>
+<p>When <code>cf-helix</code> shows <strong>Up</strong>, hand back to
+the agent — the privileged surface is done.</p>
+<hr />
+<h2 id="handoff-marker">3. Handoff marker</h2>
+<p>After §2.3, the operator signals the agent (e.g. drops a marker the
+agent polls, or simply tells the agent “cf-helix is up”). The agent’s §4
+steps run <code>podman exec</code> into <code>cf-helix</code>; if
+<code>sudo podman exec</code> is required (rootful container owned by
+root), that single <code>exec</code> invocation is the one place the
+agent needs the operator to have granted it (or the operator runs the
+agent’s §4 driver script under <code>sudo</code> once).
+<code>UNCONFIRMED:</code> whether the agent can <code>podman exec</code>
+into a root-owned container without sudo on <code>nezha</code> —
+establish at handoff (try <code>podman exec cf-helix true</code>; if it
+fails with a permission error, the operator runs the §4 driver under
+sudo).</p>
+<hr />
+<h2
+id="agent-steps-drive-the-run-inside-the-container-rootless-where-possible">4.
+AGENT STEPS — drive the run inside the container (rootless where
+possible)</h2>
+<blockquote>
+<p><strong>[AGENT]</strong> Everything in this section the agent drives,
+via <code>podman exec</code> into the already-privileged
+<code>cf-helix</code> container (or, if exec needs root on
+<code>nezha</code>, the operator runs the agent’s §4 driver script once
+under sudo). No NEW privilege is requested — the container is already
+privileged from §2.3.</p>
+</blockquote>
+<h3 id="agent-extract-the-staged-assets-inside-the-container">4.1
+[AGENT] Extract the staged assets inside the container</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [AGENT] inside cf-helix — extract host package + device image from /staging.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> exec cf-helix bash <span class="at">-lc</span> <span class="st">&#39;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">  set -euo pipefail</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">  cd &quot;${HOME:-/cuttlefish}&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">  tar -xzf /staging/cvd-host_package.tar.gz</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">  ( cd &quot;$PWD&quot; &amp;&amp; unzip -o /staging/img.zip )</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="st">  test -x ./bin/launch_cvd || { echo &quot;ERROR: launch_cvd missing after extract&quot; &gt;&amp;2; exit 1; }</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="st">  echo &quot;extracted: $(./bin/launch_cvd --help &gt;/dev/null 2&gt;&amp;1 &amp;&amp; echo launch_cvd-OK)&quot;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;</span></span></code></pre></div>
+<p><code>UNCONFIRMED:</code> the exact device-image filenames inside
+<code>img.zip</code> (<code>super.img</code> vs
+<code>system.img</code>+<code>vbmeta.img</code> etc.) and whether the
+build is <strong>Virtual-A/B</strong> or <strong>legacy A/B</strong> —
+read <code>getprop ro.virtual_ab.enabled</code> after boot (§4.3), never
+assume here.</p>
+<h3 id="agent-launch-the-cvd-daemon">4.2 [AGENT] Launch the cvd
+(daemon)</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [AGENT] inside cf-helix — daemonised launch (privileged container already up).</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> exec cf-helix bash <span class="at">-lc</span> <span class="st">&#39;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">  cd &quot;${HOME:-/cuttlefish}&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">  HOME=&quot;$PWD&quot; ./bin/launch_cvd --daemon</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">  ./bin/adb wait-for-device</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">  ./bin/adb shell getprop sys.boot_completed</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;</span></span></code></pre></div>
+<p>A non-zero exit / no <code>cvd-ebr</code> bridge here means the
+privileged flags from §2.3 did not take (most often a missing device or
+group) — that is a real FAIL surfaced in
+<code>podman logs cf-helix</code>, never fake-passed (§11.4.6).</p>
+<h3 id="agent-drive-the-ab-auto-rollback-validation">4.3 [AGENT] Drive
+the A/B + auto-rollback validation</h3>
+<p>The agent points the existing validation harness at the running cvd.
+Two paths:</p>
+<p><strong>Path A (preferred) — run the project’s
+<code>tier2_cuttlefish_ab.sh</code> harness</strong> (it detects A/B
+variant, applies the OTA, asserts the slot flip, then does the headline
+corrupt-slot <strong>auto-rollback</strong> — all with captured evidence
++ honest FAIL on any unconfirmed step):</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [AGENT] inside cf-helix (or against the cvd from nezha host adb), point the</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># harness at the running cvd. The harness lives in the checkout; run it where it</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># can reach ./bin/adb of the cvd. Evidence lands under docs/qa/&lt;run-id&gt;/cuttlefish_ab/.</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> exec cf-helix bash <span class="at">-lc</span> <span class="st">&#39;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="st">  cd &quot;${HOME:-/cuttlefish}&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="st">  # The cvd host package already provides bin/adb + bin/update_device.py;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="st">  # the harness uses ro.boot.slot_suffix + update_engine_client + bootctl.</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="st">  HELIX_CF_DIR=&quot;$PWD/..&quot; HELIX_CF_EVIDENCE=&quot;$PWD/evidence&quot; \</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="st">    /path/to/helix_ota/tests/emulator/tier2_cuttlefish_ab.sh</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;</span></span></code></pre></div>
+<p>The harness (<code>tests/emulator/tier2_cuttlefish_ab.sh</code>)
+already encodes the <code>UNCONFIRMED:</code> discipline
+(§11.4.6/§11.4.123): it <strong>DETECTS</strong> Virtual-A/B vs legacy
+A/B (<code>ro.virtual_ab.enabled</code>), <strong>ATTEMPTS</strong> the
+documented OTA-apply (<code>update_device.py</code> on an
+<code>ota.zip</code>) and the documented corrupt-slot mechanism
+(<code>bootctl set-slot-as-unbootable</code> → fallback bounded
+<code>dd</code> to the inactive <code>system&lt;slot&gt;</code>
+partition), and <strong>FAILS HONESTLY</strong> if any step does not
+reproduce on this host — never a fake PASS.</p>
+<p><strong>Path B (manual, if the harness needs host-specific
+adaptation)</strong> — the agent drives the same sequence by hand inside
+<code>cf-helix</code>, capturing each artifact:</p>
+<ol type="1">
+<li>baseline <code>ro.boot.slot_suffix</code> (→
+<code>getprop_before.txt</code>)</li>
+<li>build/fetch a signed OTA for
+<code>aosp_cf_x86_64_only_phone-userdebug</code>, apply via
+<code>update_device.py</code> (→ <code>apply.log</code>), confirm
+<code>update_engine_client --follow</code> reaches
+<code>UPDATED_NEED_REBOOT</code> (→ <code>update_engine.txt</code>)</li>
+<li><code>adb reboot</code>, assert <code>ro.boot.slot_suffix</code>
+<strong>FLIPPED</strong> (→ <code>slot_after.txt</code>) + dm-verity
+present (<code>dmesg | grep -i verity</code> →
+<code>verity.txt</code>)</li>
+<li>corrupt the now-inactive slot (variant-correct:
+<code>bootctl set-slot-as-unbootable</code> or bounded <code>dd</code>),
+set it active, <code>adb reboot</code>, assert
+<strong>AUTO-ROLLBACK</strong> to the known-good slot (→
+<code>slot_after_rollback.txt</code> +
+<code>rollback_trace.txt</code>)</li>
+</ol>
+<p><code>UNCONFIRMED:</code> (carried from
+<code>CUTTLEFISH_TIER2.md</code>, established at run time) — the exact
+OTA-apply invocation (<code>update_device.py</code> vs a
+<code>cvd</code> subcommand), the Virtual-A/B COW/snapuserd corrupt path
+vs the legacy direct-partition write, and <code>bootctl</code> shell
+availability. The harness attempts each and FAILs honestly; do not
+hardcode a guess.</p>
+<h3 id="agent-evidence-capture">4.4 [AGENT] Evidence capture</h3>
+<p>Every PASS cites a captured artifact (§11.4.69
+<code>ab_pass_with_evidence</code> shape). The agent collects the
+harness’s evidence dir out of the container to a durable, committed
+path:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [AGENT] pull evidence out of the container to a durable docs/qa path.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y%m%dT%H%M%SZ<span class="va">)</span><span class="st">-cuttlefish-ab&quot;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/helix_ota/docs/qa/<span class="va">${RUN_ID}</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> cp cf-helix:/cuttlefish/evidence/. ~/helix_ota/docs/qa/<span class="va">${RUN_ID}</span>/</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># curated REPORT.md cites: slot_before, slot_after (FLIPPED), verity, slot_after_rollback</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (AUTO-ROLLBACK to known-good), rollback_trace — §11.4.107/§11.4.108/§11.4.69.</span></span></code></pre></div>
+<p>The durable evidence files carry the §11.4.155 project-name prefix
+where they are recordings; the curated <code>REPORT.md</code> under
+<code>docs/qa/&lt;run-id&gt;/</code> is the committed proof (§11.4.83).
+Raw cvd logs stay gitignored (§11.4.128).</p>
+<hr />
+<h2
+id="honest-boundary-11.4.6-what-a-green-here-does-and-does-not-mean">5.
+Honest boundary (§11.4.6) — what a green here does and does NOT
+mean</h2>
+<ul>
+<li>A PASS from §4 means: on <code>nezha</code>, the real Android
+<code>update_engine</code> applied an OTA to the inactive slot, the
+active slot <strong>FLIPPED</strong> on reboot, dm-verity was present,
+and a deliberately-corrupted slot <strong>AUTO-ROLLED-BACK</strong> to
+the known-good slot — all with captured evidence. THAT is the real-A/B
+fidelity the QEMU A/B-virt tier and the NON-A/B RK3588 boards cannot
+reach.</li>
+<li>A PASS here does <strong>NOT</strong> prove the RK3588 / Orange Pi 5
+Max vendor HAL / U-Boot slot-switch / real-partition dm-verity (Tier-3 /
+OTA-004 — different boot stack); Cuttlefish is the closest hardware-free
+proxy, not the physical board.</li>
+<li><strong>Until §§4–6 actually run with captured slot-flip + rollback
+evidence, F112 / OTA-003 stays <code>integration-pending</code> — NOT a
+real-A/B PASS.</strong> This runbook being ready is not the run being
+done (§11.4.6 — “ready to run” ≠ “ran”).</li>
+<li>Every <code>UNCONFIRMED:</code> above is a
+<strong>verify-at-run-time</strong> item, established as FACT on first
+bring-up (the device mounts, Virtual-A/B-vs-legacy, the corrupt-slot
+mechanism), never asserted from this document.</li>
+</ul>
+<hr />
+<h2 id="teardown">6. Teardown</h2>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># [AGENT] stop the cvd cleanly inside the container (§11.4.14 quiescence).</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> exec cf-helix bash <span class="at">-lc</span> <span class="st">&#39;cd &quot;${HOME:-/cuttlefish}&quot; &amp;&amp; HOME=&quot;$PWD&quot; ./bin/stop_cvd || true&#39;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># [OPERATOR] remove the privileged container (it was started under sudo on nezha).</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> podman rm <span class="at">-f</span> cf-helix</span></code></pre></div>
+<p>Reversibility (FACT, from
+<code>CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> §6): no persistent host
+mutation beyond reversible config — the privileged window is the
+container’s lifetime only; the only host-state changes are the
+(transient) loaded kernel modules and the (reversible
+<code>gpasswd -d</code>) group membership. The A/B slot-switch +
+corrupt-slot rollback happen <strong>inside</strong> the virtual device,
+never on <code>nezha</code> itself (§11.4.133 — the “target” is the cvd
+guest, not the host).</p>
+<hr />
+<h2 id="operator-vs-agent-step-split-at-a-glance">Operator-vs-agent step
+split (at a glance)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Who</th>
+<th>Privileged?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1.3 Build the Cuttlefish container image
+(<code>podman build</code>)</td>
+<td><strong>AGENT</strong></td>
+<td>no (rootless)</td>
+</tr>
+<tr>
+<td>§2.1 Verify/load <code>vhost_vsock</code>/<code>vhost_net</code>;
+create <code>/dev/vsock</code> if absent</td>
+<td><strong>OPERATOR</strong></td>
+<td>yes (sudo)</td>
+</tr>
+<tr>
+<td>§2.2 One-time group membership
+(<code>usermod -aG kvm,cvdnetwork,render</code>)</td>
+<td><strong>OPERATOR</strong></td>
+<td>yes (sudo)</td>
+</tr>
+<tr>
+<td>§2.3 The <code>--privileged --network host</code> container run</td>
+<td><strong>OPERATOR</strong></td>
+<td>yes (sudo)</td>
+</tr>
+<tr>
+<td>§3 Handoff (confirm <code>cf-helix</code> Up)</td>
+<td>OPERATOR → AGENT</td>
+<td>—</td>
+</tr>
+<tr>
+<td>§4.1 Extract staged assets inside the container</td>
+<td><strong>AGENT</strong></td>
+<td>no (inside already-privileged container)</td>
+</tr>
+<tr>
+<td>§4.2 <code>launch_cvd --daemon</code></td>
+<td><strong>AGENT</strong></td>
+<td>no (inside already-privileged container)</td>
+</tr>
+<tr>
+<td>§4.3 A/B apply + slot-flip + auto-rollback validation</td>
+<td><strong>AGENT</strong></td>
+<td>no</td>
+</tr>
+<tr>
+<td>§4.4 Evidence capture to <code>docs/qa/&lt;run-id&gt;/</code></td>
+<td><strong>AGENT</strong></td>
+<td>no</td>
+</tr>
+<tr>
+<td>§6 <code>stop_cvd</code></td>
+<td><strong>AGENT</strong></td>
+<td>no</td>
+</tr>
+<tr>
+<td>§6 <code>podman rm -f cf-helix</code></td>
+<td><strong>OPERATOR</strong></td>
+<td>yes (sudo)</td>
+</tr>
+</tbody>
+</table>
+<p>The privileged surface is <strong>exactly three operator
+commands</strong> (§2.1 conditional, §2.2 one-time, §2.3 the run) + the
+one teardown remove — everything else is agent-driven.</p>
+</body>
+</html>

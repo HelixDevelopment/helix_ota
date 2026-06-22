@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 9
-**Last modified:** 2026-06-22T19:30:00Z
+**Revision:** 11
+**Last modified:** 2026-06-22T22:30:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 > **Video-evidence reconciliation (2026-06-22, §11.4.6 no-bluff).** Earlier revisions
@@ -70,6 +70,10 @@ and what state it is in.
   a Helix problem. Important honesty note: **these boards are single-slot, so this
   proves the control plane on real hardware, NOT the actual A/B firmware swap** —
   that is the Cuttlefish path's job (below). No changes were made to the boards.
+- **Commit/push cascade fixed (F117)** — the commit wrapper now reliably fans out
+  every commit to all four upstream mirrors with an honest exit on failure. This
+  is genuinely real: multiple real commits were pushed to all four mirrors this
+  session through the fix.
 - **Governance** (Issues, Fixed, CONTINUATION, README, Status docs) is
   maintained and in sync.
 
@@ -86,6 +90,36 @@ and what state it is in.
   So this is **built and unit-tested, NOT a real-A/B pass** — integration-pending.
   Rootless containers cannot host Cuttlefish, so a narrow rootful-privileged
   exception is documented (`docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md`).
+  **The bring-up is now runbook-ready** — `docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md`
+  gives the exact step-by-step for the real nezha run: the operator runs the three
+  privileged steps (nezha has no passwordless sudo), and the agent drives the rest
+  (extract assets, launch the virtual device, run the A/B + auto-rollback check).
+  It stays NOT-a-real-A/B-pass until that runbook is actually executed with the
+  slot-flip + rollback evidence captured.
+- **Container stack distribution (F114) — NOT a real-deploy pass yet.** The
+  `distribute_stack.sh` mechanism (probe host → rsync → remote rootless
+  `podman-compose` → health-check) is verified in **dry-run** only. A **REAL**
+  (non-dry-run) deploy to `thinker.local` was attempted and **FAILED**
+  (evidence `docs/qa/20260622-211644-distribute-thinker/`): two script bugs were
+  found and **FIXED** (an rsync nested-mkdir gap, and a wrong compose provider —
+  it had picked the broken `podman compose` plugin instead of `podman-compose`,
+  now corrected), but the deploy is still blocked on a **HelixTrack sibling-repo
+  defect**: that repo's Dockerfile pins Go 1.22 while its `go.mod` needs Go 1.24,
+  so the helixtrack-core image build fails. No successful end-to-end deploy has
+  happened. `thinker.local` is the intended live target; `nezha` is read/import-only.
+- **Docker fallback for amber (F115) — gate logic verified, real deploy NOT run.**
+  `amber` has docker but no rootless podman, so it gets an **operator-authorized
+  docker fallback** (explicit opt-in `HELIX_ALLOW_DOCKER_FALLBACK=1`, never the
+  default — rootless-podman is always preferred). The default-OFF gate + host
+  selection are verified in **dry-run** (amber selected via docker only with the
+  flag, honestly skipped without it), but **no real docker deploy to amber has
+  executed**. amber was onboarded (SSH key + docker present) on 2026-06-22.
+- **Remote emulator launch hardening (F116) — source done, persistence NOT
+  verified.** The Android emulator launch on nezha was hardened with `setsid`
+  full SSH-session detachment (applied + code-reviewed), and the earlier AVD boot
+  was proven. BUT the actual on-target behaviour the fix targets — the emulator
+  surviving the launching SSH session ending — is **operator-attended and NOT yet
+  run-verified**.
 - **Full Android OTA test (Tier-2 Cuttlefish)** — cannot run on this Mac
   (needs Linux with KVM). Ready for the operator's Linux machine.
 - **Real hardware testing (Tier-3 RK3588 board)** — no board on the bench yet.
@@ -112,12 +146,12 @@ open items before a release tag.
 |---|---|---|
 | PASS | 50 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List API (F104), Hardware ID Reverse Lookup (F105), **RK3588 control-plane validation — Device B (F113)** |
 | SKIP | 1 | Demo Re-recordings (F107) — stale/rotated per §11.4.154 |
-| VERIFIED | 20 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159 Recording Compliance (F106) |
+| VERIFIED | 24 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159 Recording Compliance (F106), HelixTrack Integration (F108), Build Resource Stats (F109), **commit_all cascade-push (F117 — real commits pushed to all four mirrors this session)** |
 | PROVEN | 6 | PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52), PWU-AB-2 RAUC dm-verity (F53), slot switch video (F94), rollback video (F95) |
 | IMPLEMENTED | 2 | PWU-AB-4 ApplyPort (F54), ApplyPort Scaffold (F102) |
 | DESIGN | 2 | ota-android-agent (F42), ota-update-engine-bridge (F43) |
 | OPERATOR-BLOCKED | 2 | Tier-2 Cuttlefish driver (F55 — needs Linux+KVM), Tier-3 HW (F56 — needs board) |
-| PARTIAL | 3 | Stress+chaos coverage (F86 — partial submodule set), Docs Chain (F89 — engine built, then submoduled F110), **Cuttlefish `pkg/cuttlefish` (F112) — container path built + 30 `-race` unit tests PASS + 1 honest topology SKIP; real-A/B run integration-pending on nezha Linux+KVM, NOT a real-A/B PASS** |
+| PARTIAL | 5 | Stress+chaos coverage (F86 — partial submodule set), Cuttlefish `pkg/cuttlefish` (F112 — container path built + 30 `-race` unit tests PASS + 1 honest topology SKIP; real-A/B run integration-pending, NOT a real-A/B PASS), **Container stack distribution (F114 — mechanism dry-run-verified + 2 script bugs fixed, real deploy to thinker.local FAILED on HelixTrack sibling Dockerfile go-version defect, NOT a real-deploy PASS)**, **Docker-fallback distribution §11.4.161 (F115 — gate logic dry-run-verified, real docker deploy to amber NOT run)**, **Remote-emulator full-detachment §11.4.144 (F116 — `setsid` source hardening applied + reviewed, on-target persistence NOT run-proven)** |
 | NOT_STARTED | 2 | Build-resource-stats (F72), workable-items DB (F87) |
 
 **F113 (RK3588 control-plane validation) — PASS, honest boundary.** Device B (Ethernet,
@@ -131,8 +165,39 @@ root cause, NOT a Helix defect). **Both boards are NON-A/B** (single-slot, no `u
 this validates the control plane on real hardware, NOT native A/B apply (F112's job). ZERO device
 state changes (§11.4.122/§11.4.133). Evidence: `docs/qa/20260622-rk3588-controlplane/REPORT.md`.
 
-**Distribution repoint (containers).** Container distribution targets now `thinker.local` (live)
-+ `amber.local` (SSH-key-pending — operator: `ssh-copy-id`); `nezha.local` is read/import-only.
+**Distribution mechanism (F114/F115) — PARTIAL, NOT a real-deploy PASS (§11.4.1/§11.4.6).**
+`distribute_stack.sh` (helix layer, §11.4.28) is designed to deploy the HelixTrack stack over SSH +
+remote rootless `podman-compose`. A **REAL (non-dry-run) deploy to `thinker.local` was run and
+FAILED** (evidence `docs/qa/20260622-211644-distribute-thinker/`) with 3 defects: (1) rsync
+nested-mkdir gap — **FIXED** in the script; (2) wrong compose provider — it had selected the broken
+`podman compose` plugin instead of `podman-compose` — **FIXED** (now prefers `podman-compose`;
+dry-run confirms selection); (3) the **HelixTrack sibling Dockerfile pins `golang:1.22` but its
+`go.mod` requires `go 1.24`** → helixtrack-core image build fails (`rootcause.log`/`go_mod_bug.log`;
+`final_state.log` = "NO helixtrack image built", :8080 unhealthy) — **NOT fixed (sibling-repo
+blocker)**. So the mechanism (probe→rsync→remote compose→health-check) + the 2 script bugs are
+proven/fixed by dry-run + the real-deploy transcript, but **no successful end-to-end deploy has
+happened**. For F115, the §11.4.161 operator-authorized docker fallback (`HELIX_ALLOW_DOCKER_FALLBACK=1`,
+default-OFF rootless-or-nothing, §11.4.112 documented constraint = no rootless podman on amber yet)
+has its **gate logic + host-selection dry-run-verified only** — no real docker deploy to amber has run.
+`thinker.local` is the intended LIVE rootless-podman target; `amber.local` onboarded 2026-06-22
+(SSH key + docker); `nezha.local` is read/import-only (NOT a distribution target).
+
+**Infra fixes (F116/F117).** F116 (PARTIAL): the remote AVD launch on nezha was wrapped in `setsid`
+for full SSH-session detachment (§11.4.144) and **code-reviewed** — boot PROVEN
+(`qa-results/20260622T071848Z-nezha-android-ab/`), but on-target **persistence-after-session-end
+verification is operator-attended / NOT run-proven**, so the runtime persistence claim is not
+asserted here; only the source-level detachment hardening is done. F117 (VERIFIED — genuinely real):
+`commit_all.sh`/`push_all.sh` cascade-push fixed (portable mkdir lock + honest exit + per-remote fetch
+timeout; four-upstream fan-out per §2.1/§11.4.88) — multiple **real commits** (e.g. `17cbd47a`,
+`74af4684`) pushed to all four mirrors this session through the fix.
+
+**Cuttlefish bring-up RUNBOOK-READY (F112).** `docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md` gives the
+exact operator-vs-agent step split for the real nezha run — operator runs the 3 privileged steps
+(modprobe/`/dev/vsock` if absent; group membership; the `--privileged --network host --device …`
+container run, since nezha has no passwordless sudo); agent drives extract/`launch_cvd`/
+A-B-slot-flip/auto-rollback validation (`tier2_cuttlefish_ab.sh`) + evidence capture. **F112 stays
+PARTIAL / integration-pending — NOT a real-A/B PASS** until the runbook executes with captured
+slot-flip + rollback evidence (§11.4.107/§11.4.108/§11.4.69).
 
 **Proven A/B core (captured evidence):**
 - **PWU-AB-1 slot switch** — `docs/qa/20260611T094958Z-ab-slot-switch/` (3/3
@@ -162,7 +227,7 @@ remain blocked.
 
 | Priority | Gap | Depends On |
 |---|---|---|
-| High | Tier-2 Cuttlefish Android OTA apply screen recording | Linux+KVM host |
+| High | Tier-2 Cuttlefish Android OTA apply screen recording | nezha Linux+KVM — RUNBOOK-READY (`docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md`); operator runs 3 privileged steps, agent drives the rest |
 | High | Tier-3 RK3588 HDMI capture of on-device OTA | Physical board |
 | Medium | Tier-1 AVD + HVF screen recording | Existing qa evidence may be partial |
 | Low | Tier-0 container round-trip | Console logs suffice |

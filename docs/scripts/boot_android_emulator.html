@@ -237,9 +237,6 @@
   </style>
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">boot_android_emulator</h1>
-</header>
 <h1 id="boot_android_emulator.sh">boot_android_emulator.sh</h1>
 <table>
 <colgroup>
@@ -255,11 +252,11 @@
 <tbody>
 <tr>
 <td><strong>Revision</strong></td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td><strong>Last modified</strong></td>
-<td>2026-06-21T17:50:00Z</td>
+<td>2026-06-22T20:30:00Z</td>
 </tr>
 <tr>
 <td><strong>Status</strong></td>
@@ -381,6 +378,33 @@ consumption by other scripts</li>
 <li><strong>SSH tunnel:</strong> ADB available at
 <code>localhost:&lt;PORT&gt;</code></li>
 </ul>
+<h2
+id="remote-process-full-detachment-hardening-11.4.144">Remote-process
+full-detachment hardening (§11.4.144)</h2>
+<p>The remote emulator launch on <code>nezha</code> is wrapped in
+<strong><code>setsid nohup … &lt;/dev/null &gt;log 2&gt;&amp;1 &amp;</code></strong>
+for <strong>true full detachment</strong> from the launching SSH
+session. The plain <code>nohup &amp;</code> used previously left the
+remote <code>qemu</code>/AVD process tied to the SSH session’s process
+group: if that SSH session ended mid-boot-wait (operator interrupt,
+connection drop), the remote emulator exited gracefully and the final
+SSH-tunnel / attestation step was never reached — a §11.4.144
+tracked-device-availability gap (the launched device silently went away
+with the session rather than being followed independently).</p>
+<p><code>setsid</code> puts the remote launch in its <strong>own session
++ process group</strong> so it survives the launching SSH session
+ending; <code>&lt;/dev/null</code> detaches stdin and
+<code>&gt;log 2&gt;&amp;1</code> redirects all output to a remote log
+file the next reconnect can read. The boot itself was already PROVEN
+(<code>emulator-5554</code>, API 36, <code>boot_completed=1</code>);
+this hardening ensures the boot SURVIVES an interrupted launch session
+so the attestation step is reachable on reconnect.</p>
+<p>Honest boundary (§11.4.6): on-target
+<em>persistence-after-reboot</em> verification (re-boot + mid-boot
+interrupt test, which leaves remote state) is operator-attended and not
+asserted here — the <code>setsid</code> change addresses the
+SSH-session-detachment class; full persistence proof is a separate
+operator-attended item.</p>
 <h2 id="cleanup">Cleanup</h2>
 <p>The script does NOT auto-kill the emulator (to allow multiple
 sessions to use the running instance). To stop:</p>
@@ -404,7 +428,8 @@ href="../scripts/boot_android_emulator.sh"><code>scripts/boot_android_emulator.s
 <li><strong>§11.4.161</strong> Rootless container runtime mandate</li>
 </ul>
 <h2 id="last-verified">Last verified</h2>
-<p>2026-06-21 — boot on nezha.local (Linux x86_64, KVM, Android API
-36).</p>
+<p>2026-06-22 — boot on nezha.local (Linux x86_64, KVM, Android API 36);
+§11.4.144 <code>setsid</code> full-detachment hardening added to the
+remote launch.</p>
 </body>
 </html>

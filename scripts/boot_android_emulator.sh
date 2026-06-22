@@ -143,11 +143,24 @@ scp -q "${LAUNCHER_FILE}" "${SSH_DEST}:/tmp/emu-ota-launch.sh" 2>&1 | tee -a "${
 # SURVIVES the launching SSH session ending (the prior `nohup … &` alone got
 # SIGHUP'd when the session closed mid-boot-wait). Same fix proven on the
 # detached asset-download path.
+#
+# NOTE on the captured PID: `setsid` forks the launcher into a NEW SESSION and
+# the original setsid wrapper exits, so `$!` here is the launcher SESSION-LEADER
+# pid — NOT the emulator/qemu pid (qemu-system-* runs as a descendant with a
+# different pid). The persisted EMU_PID is therefore the launcher session-leader
+# handle, kept for reference only. The AUTHORITATIVE stop is
+# `pkill -f qemu-system` (or `pkill -s <session-id>`), NOT `kill $EMU_PID`.
 sshx "chmod +x /tmp/emu-ota-launch.sh && setsid nohup /tmp/emu-ota-launch.sh </dev/null > /tmp/emulator-ota.log 2>&1 & echo EMULATOR_PID=\$!" 2>&1 | tee -a "${QA_DIR}/launch.log"
 
+# EMU_PID = launcher session-leader pid (see NOTE above), not the qemu pid.
 EMU_PID=$(grep "EMULATOR_PID=" "${QA_DIR}/launch.log" | tail -1 | cut -d= -f2)
 [ -n "${EMU_PID}" ] || fail "Could not determine emulator PID"
-ok "Emulator launched PID ${EMU_PID}"
+# Numeric guard: a non-numeric token must never land as invalid JSON in
+# attestation.json (the pid field is emitted unquoted).
+case "${EMU_PID}" in
+    ''|*[!0-9]*) fail "Emulator PID '${EMU_PID}' is not numeric (refusing to persist invalid JSON)" ;;
+esac
+ok "Emulator launched (launcher session-leader PID ${EMU_PID}; stop via pkill -f qemu-system)"
 
 # ─── Wait for ADB ──────────────────────────────────────────────────────
 log "Waiting for ADB device (up to 120s)…"
@@ -227,7 +240,11 @@ cat > "${QA_DIR}/emu_state.env" << STATE
 EMU_HOST=${SSH_HOST}
 EMU_PORT=${PORT}
 EMU_ADB=${ADB_SERIAL}
+# EMU_PID = launcher SESSION-LEADER pid (setsid detaches qemu into its own
+# session with a different pid). Authoritative stop: 'pkill -f qemu-system' on
+# EMU_HOST, NOT 'kill ${EMU_PID}'.
 EMU_PID=${EMU_PID}
+EMU_STOP_CMD=pkill -f qemu-system
 EMU_AVD=${AVD}
 EMU_EVIDENCE=${QA_DIR}
 EMU_MANAGED_BY=${SUBMODULE_PATH}

@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| **Revision** | 1 |
-| **Last modified** | 2026-06-22T00:00:00Z |
+| **Revision** | 2 |
+| **Last modified** | 2026-06-22T20:30:00Z |
 | **Status** | active |
 | **§11.4.18** | In-source doc block present in `scripts/distribute_stack.sh` |
 
@@ -24,7 +24,44 @@ no sudo, no rootful docker on the remote). The mechanism is:
 
 The first reachable host **with rootless podman** wins. A host that is SSH-
 reachable but has no rootless podman is **skipped honestly** (exit 0, no bluff
-per §11.4.6) — never a fake success.
+per §11.4.6) — never a fake success **unless** the operator has explicitly
+authorised the docker fallback for that host (see below).
+
+### §11.4.161 operator-authorized docker fallback (hosts without rootless podman)
+
+§11.4.161 mandates **rootless podman** for all containerized workloads; Docker in
+rootful mode / sudo / root escalation is FORBIDDEN **unless the target platform has
+no rootless option AND that constraint is documented per §11.4.112**. Some
+distribution hosts (e.g. `amber`) have **no rootless podman installed** — only
+`docker`. For those hosts the script supports an **operator-authorized docker
+fallback**, gated so it is NEVER silent and NEVER the default:
+
+- The fallback runs `docker compose` (or `docker-compose`) on the remote **only**
+  when the operator explicitly opts in via **`HELIX_ALLOW_DOCKER_FALLBACK=1`** AND
+  the host has been confirmed to have no rootless-podman option.
+- Without that flag a podman-less host is **SKIPPED honestly** (the §11.4.161
+  default — rootless-or-nothing); the docker path is an authorized exception, not a
+  convenience.
+- The authorization + the "no rootless option on this host" justification are the
+  §11.4.112 documented-constraint requirement — the operator records *why* the host
+  cannot run rootless podman (e.g. "amber: docker-only, rootless podman not yet
+  installed; tracked operator action item to install it"), so the exception is
+  documented, narrow, and reversible (install rootless podman → drop the flag).
+- Preferred remediation stays **install rootless podman on the host** (then the
+  fallback is unnecessary); the docker fallback is the bridge until that is done,
+  not the destination.
+
+```bash
+# §11.4.161 docker fallback — operator-authorized, explicit opt-in ONLY.
+# Use when the target host (e.g. amber) has docker but no rootless podman,
+# and the operator accepts the documented §11.4.112 constraint.
+HELIX_ALLOW_DOCKER_FALLBACK=1 \
+  bash scripts/distribute_stack.sh --host amber.local --user milosvasic
+```
+
+Honest boundary (§11.4.6): the docker fallback is a documented exception for a
+host with no rootless option — it does NOT relax §11.4.161 for hosts that COULD run
+rootless podman; on such a host the only correct path is rootless podman.
 
 This lives in the **helix layer**, NOT inside the generic `vasic-digital/containers`
 submodule (§11.4.28 — no project hostnames or project-specific deploy mechanism
@@ -73,11 +110,11 @@ bash scripts/distribute_stack.sh --down
 
 ## Distribution-host status (operator decision 2026-06-22)
 
-| Host | SSH | Rootless podman | Status |
-|---|---|---|---|
-| `thinker.local` | key works (milosvasic) | podman 4.9.3 + podman-compose 1.0.6 + `podman compose` plugin | **LIVE** distribution target |
-| `amber.local` | key works | **NOT installed** | SKIPPED honestly until operator installs rootless podman |
-| `nezha.local` | — | — | **NOT** a distribution target (read/import + emulator host only) |
+| Host | SSH | Rootless podman | Docker | Status |
+|---|---|---|---|---|
+| `thinker.local` | key works (milosvasic) | podman 4.9.3 + podman-compose 1.0.6 + `podman compose` plugin | — | **LIVE** distribution target (rootless podman — preferred path) |
+| `amber.local` | key works (onboarded 2026-06-22) | **NOT installed** | present | **DOCKER-FALLBACK target** — `HELIX_ALLOW_DOCKER_FALLBACK=1` (§11.4.161 operator-authorized exception, §11.4.112 documented constraint: rootless podman not yet installed; tracked operator action item to install it). Without the flag → SKIPPED honestly. |
+| `nezha.local` | — | — | — | **NOT** a distribution target (read/import + emulator host only) |
 
 ## Integration with the per-commit flow
 
@@ -117,4 +154,6 @@ rootless compose and polls the health endpoint.
 - `containers/compose.helixtrack.yml` — the compose stack deployed.
 
 **Last verified:** 2026-06-22 (dry-run probe against thinker.local: SSH OK,
-`podman compose` selected; amber.local honestly skipped — no podman).
+`podman compose` selected; amber.local onboarded — SSH key installed + docker
+present, §11.4.161 operator-authorized docker fallback available via
+`HELIX_ALLOW_DOCKER_FALLBACK=1`, honestly skipped without the flag).

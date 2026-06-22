@@ -89,6 +89,15 @@ else
 fi
 REMOTE_DIR="${HELIX_DIST_REMOTE_DIR:-~/helix-dist}"
 
+# Blast-radius guard: rsync --delete into a dangerous remote dir (empty, root,
+# bare $HOME, or bare ~) could wipe an entire home directory. Refuse honestly.
+case "$REMOTE_DIR" in
+    ""|"/"|"~"|'$HOME'|"$HOME")
+        echo "[DIST] FATAL: REMOTE_DIR='$REMOTE_DIR' is unsafe (empty, /, ~, or \$HOME)." >&2
+        echo "[DIST]        A --delete rsync into it would destroy the home directory. Aborting (§11.4.6/§9)." >&2
+        exit 1 ;;
+esac
+
 COMPOSE_FILE="$PROJECT_ROOT/containers/compose.helixtrack.yml"
 
 # Build context (the compose `helixtrack-core` service builds from
@@ -112,10 +121,15 @@ log() { echo "[DIST] $*"; }
 probe_remote_compose() {
     local host="$1"
     ssh -o ConnectTimeout=6 -o BatchMode=yes "${DIST_USER}@${host}" '
-        # Prefer rootless podman (§11.4.161).
+        # Prefer rootless podman (§11.4.161). Within podman, PREFER the
+        # standalone `podman-compose` over the `podman compose` plugin: on some
+        # hosts (e.g. thinker) `podman compose version` exits 0 but DELEGATES to
+        # a broken docker-compose shim that needs a Docker daemon (none under
+        # rootless), failing the deploy with "http+docker ... Not supported URL
+        # scheme". The standalone podman-compose is the reliable rootless tool.
         if command -v podman >/dev/null 2>&1; then
-            if podman compose version >/dev/null 2>&1; then echo "podman compose"
-            elif command -v podman-compose >/dev/null 2>&1; then echo "podman-compose"
+            if command -v podman-compose >/dev/null 2>&1; then echo "podman-compose"
+            elif podman compose version >/dev/null 2>&1; then echo "podman compose"
             else echo NO_COMPOSE; fi
             exit 0
         fi
@@ -183,6 +197,9 @@ fi
 #   $REMOTE_DIR/helix_track/core/Application/   (build context)
 #   $REMOTE_DIR/helix_track/spaces/             (volume data)
 RSYNC_OPTS="-az --delete --exclude='.git' --exclude='node_modules' --exclude='out/'"
+# ADDITIVE opts for the spaces/ (per-project VOLUME DATA) sync: NO --delete, so
+# an empty/partial local spaces/ never destroys remote volume data (§11.4.6/§9).
+RSYNC_OPTS_NODELETE="${RSYNC_OPTS/--delete /}"
 
 build_compose_remote_cmd() {
     if [ "$COMPOSE_ACTION" = "down" ]; then
@@ -197,7 +214,7 @@ print_plan() {
     echo "  Remote compose  : $COMPOSE_CMD (rootless, §11.4.161)"
     echo "  Remote dir      : $REMOTE_DIR"
     echo "  --- rsync steps (would run) ---"
-    echo "  ssh ${DIST_USER}@${DIST_HOST} 'mkdir -p $REMOTE_DIR/containers $REMOTE_DIR/helix_track'"
+    echo "  ssh ${DIST_USER}@${DIST_HOST} 'mkdir -p $REMOTE_DIR/containers $REMOTE_DIR/helix_track/core/Application $REMOTE_DIR/helix_track/spaces'"
     echo "  rsync $RSYNC_OPTS $COMPOSE_FILE  ${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/containers/"
     if [ "$SKIP_BUILD_CTX" -eq 0 ]; then
         echo "  rsync $RSYNC_OPTS $HT_SRC/core/Application/  ${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/helix_track/core/Application/"
@@ -205,7 +222,7 @@ print_plan() {
         echo "  (build context rsync skipped: --no-build-context)"
     fi
     if [ -d "$SPACES_SRC" ]; then
-        echo "  rsync $RSYNC_OPTS $SPACES_SRC/  ${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/helix_track/spaces/"
+        echo "  rsync $RSYNC_OPTS_NODELETE $SPACES_SRC/  ${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/helix_track/spaces/  (additive — no --delete on volume data)"
     else
         echo "  (spaces dir absent: $SPACES_SRC — skipped)"
     fi
@@ -224,7 +241,10 @@ fi
 
 # ---- real deploy ------------------------------------------------------------
 log "Deploying to ${DIST_USER}@${DIST_HOST} (rootless $COMPOSE_CMD)..."
-ssh -o BatchMode=yes "${DIST_USER}@${DIST_HOST}" "mkdir -p $REMOTE_DIR/containers $REMOTE_DIR/helix_track"
+# Pre-create the FULL nested dest paths — rsync does not auto-create deep dest
+# dirs, so without these the core/Application + spaces rsyncs fail with
+# `mkdir "..." failed: No such file or directory`.
+ssh -o BatchMode=yes "${DIST_USER}@${DIST_HOST}" "mkdir -p $REMOTE_DIR/containers $REMOTE_DIR/helix_track/core/Application $REMOTE_DIR/helix_track/spaces"
 
 # shellcheck disable=SC2086
 eval rsync $RSYNC_OPTS "\"$COMPOSE_FILE\"" "\"${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/containers/\""
@@ -233,8 +253,10 @@ if [ "$SKIP_BUILD_CTX" -eq 0 ]; then
     eval rsync $RSYNC_OPTS "\"$HT_SRC/core/Application/\"" "\"${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/helix_track/core/Application/\""
 fi
 if [ -d "$SPACES_SRC" ]; then
+    # ADDITIVE sync (RSYNC_OPTS_NODELETE — NO --delete): spaces/ is per-project
+    # VOLUME DATA; an empty/partial local spaces/ must NEVER wipe remote data.
     # shellcheck disable=SC2086
-    eval rsync $RSYNC_OPTS "\"$SPACES_SRC/\"" "\"${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/helix_track/spaces/\""
+    eval rsync $RSYNC_OPTS_NODELETE "\"$SPACES_SRC/\"" "\"${DIST_USER}@${DIST_HOST}:$REMOTE_DIR/helix_track/spaces/\""
 fi
 
 log "Running remote rootless compose..."

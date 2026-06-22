@@ -238,8 +238,8 @@
 </head>
 <body>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 5 <strong>Last modified:</strong>
-2026-06-22T19:30:00Z</p>
+<p><strong>Revision:</strong> 6 <strong>Last modified:</strong>
+2026-06-22T20:30:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -256,7 +256,7 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>e1abfe6c</code></td>
+<td><code>8e5db50b</code></td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
@@ -273,7 +273,76 @@ rollback) on emulated + physical targets</td>
 </tbody>
 </table>
 <h3
-id="latest-session-2026-06-22-evening-cuttlefish-tier-2-container-path-real-rk3588-control-plane-validation">Latest
+id="latest-session-2026-06-22-late-distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Latest
+session (2026-06-22, late) — distribution mechanism, infra fixes, amber
+onboarded, Cuttlefish runbook-ready</h3>
+<p>Docs + infra consolidation (honest §11.4.6 — no new PASS
+claimed):</p>
+<ol type="1">
+<li><strong>Cuttlefish bring-up RUNBOOK-READY (F112 / OTA-003)</strong>
+— new <code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code>: the exact
+operator-vs-agent step split for the real Cuttlefish A/B run on nezha
+(which has NO passwordless sudo). <strong>Operator</strong> runs the 3
+privileged steps — (§2.1) verify/load
+<code>vhost_vsock</code>/<code>vhost_net</code> + create
+<code>/dev/vsock</code> if absent, (§2.2) one-time group membership,
+(§2.3) the
+<code>sudo podman run --privileged --network host --device /dev/kvm …vhost-vsock …vhost-net …vsock …net/tun -v ~/cf-staging:/staging cuttlefish:latest</code>.
+<strong>Agent</strong> drives the rest — build the image (rootless),
+extract the staged assets
+(<code>~/cf-staging/cvd-host_package.tar.gz</code> 898 MB +
+<code>img.zip</code> 1.16 GB), <code>launch_cvd --daemon</code>, the
+<code>tier2_cuttlefish_ab.sh</code> A/B-slot-flip + auto-rollback
+validation, evidence capture to <code>docs/qa/&lt;run-id&gt;/</code>.
+Every still-<code>UNCONFIRMED:</code> item (exact device mounts,
+Virtual-A/B-vs-legacy, the corrupt-slot mechanism) is verified at run
+time, never guessed. <strong>HONEST BOUNDARY: this is a runbook to
+EXECUTE — NOT a real-A/B PASS.</strong> F112 stays PARTIAL /
+integration-pending until the runbook runs with captured slot-flip +
+rollback evidence. Built under the §11.4.161 documented exception
+(<code>CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>).</li>
+<li><strong>Distribution mechanism + amber onboarded
+(F114/F115)</strong> — <code>distribute_stack.sh</code> (helix layer,
+§11.4.28 — NOT inside the generic containers submodule) deploys the
+HelixTrack stack over SSH + remote rootless <code>podman compose</code>.
+<code>thinker.local</code> = LIVE rootless-podman target;
+<code>amber.local</code> onboarded 2026-06-22 (SSH key installed +
+docker present) with a <strong>§11.4.161 operator-authorized docker
+fallback</strong> (<code>HELIX_ALLOW_DOCKER_FALLBACK=1</code>,
+default-OFF rootless-or-nothing, §11.4.112 documented constraint = no
+rootless podman on amber yet); <code>nezha.local</code> is
+read/import-only. Companion doc
+<code>docs/scripts/distribute_stack.md</code> updated (Rev 2) with the
+docker-fallback section.</li>
+<li><strong>Remote-emulator full-detachment fix (F116,
+§11.4.144)</strong> — <code>scripts/boot_android_emulator.sh</code>
+remote launch wrapped in
+<code>setsid nohup … &lt;/dev/null &gt;log 2&gt;&amp;1 &amp;</code> (own
+session + process group) so an interrupted launching SSH session no
+longer kills the remote emulator (closes the known robustness gap noted
+in Rev 5). Companion doc
+<code>docs/scripts/boot_android_emulator.md</code> Rev 2. Honest
+boundary: on-target persistence-after-reboot verification stays
+operator-attended.</li>
+<li><strong>commit_all cascade-push fix (F117)</strong> —
+<code>commit_all.sh</code>/<code>push_all.sh</code> portable mkdir lock
++ honest exit + per-remote fetch timeout; four-upstream fan-out per
+§2.1/§11.4.88.</li>
+</ol>
+<p>Docs: 4 new Status feature rows (F114–F117, all VERIFIED), Status.md
+Rev 18 + Status_Summary.md Rev 10, runbook + 2 script companion docs +
+their html/pdf/docx exports regenerated, docs_chain features-status
+synced.</p>
+<p><strong>Operator action items (carried + new):</strong> (1)
+<strong>Cuttlefish on nezha</strong> — execute
+<code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code> §2 privileged steps
+(no passwordless sudo) to unblock the real Android A/B run; (2)
+<strong>amber</strong> — install rootless podman to retire the §11.4.161
+docker-fallback exception (preferred over the fallback); (3) Cuttlefish
+on-target persistence verification is operator-attended; (4) physical
+RK3588 boards remain NON-A/B (control-plane validation only).</p>
+<h3
+id="prior-session-2026-06-22-evening-cuttlefish-tier-2-container-path-real-rk3588-control-plane-validation">Prior
 session (2026-06-22, evening) — Cuttlefish Tier-2 container path + real
 RK3588 control-plane validation</h3>
 <p>Three new real capabilities landed (honest §11.4.6 — boundaries
@@ -594,7 +663,7 @@ DISABLED. Enforcement is through local git hooks +
 <hr />
 <h2 id="feature-tracking">7. Feature tracking</h2>
 <p>Feature inventory and per-row status:
-<code>docs/features/Status.md</code> (Rev 11, 2026-06-21). Summary
+<code>docs/features/Status.md</code> (Rev 18, 2026-06-22). Summary
 companion: <code>docs/features/Status_Summary.md</code>.</p>
 <hr />
 <h2 id="fresh-session-start">8. Fresh session start</h2>

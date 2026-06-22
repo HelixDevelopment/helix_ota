@@ -252,11 +252,11 @@
 <tbody>
 <tr>
 <td><strong>Revision</strong></td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td><strong>Last modified</strong></td>
-<td>2026-06-22T00:00:00Z</td>
+<td>2026-06-22T20:30:00Z</td>
 </tr>
 <tr>
 <td><strong>Status</strong></td>
@@ -292,7 +292,49 @@ output.</li>
 <p>The first reachable host <strong>with rootless podman</strong> wins.
 A host that is SSH- reachable but has no rootless podman is
 <strong>skipped honestly</strong> (exit 0, no bluff per §11.4.6) — never
-a fake success.</p>
+a fake success <strong>unless</strong> the operator has explicitly
+authorised the docker fallback for that host (see below).</p>
+<h3
+id="operator-authorized-docker-fallback-hosts-without-rootless-podman">§11.4.161
+operator-authorized docker fallback (hosts without rootless podman)</h3>
+<p>§11.4.161 mandates <strong>rootless podman</strong> for all
+containerized workloads; Docker in rootful mode / sudo / root escalation
+is FORBIDDEN <strong>unless the target platform has no rootless option
+AND that constraint is documented per §11.4.112</strong>. Some
+distribution hosts (e.g. <code>amber</code>) have <strong>no rootless
+podman installed</strong> — only <code>docker</code>. For those hosts
+the script supports an <strong>operator-authorized docker
+fallback</strong>, gated so it is NEVER silent and NEVER the
+default:</p>
+<ul>
+<li>The fallback runs <code>docker compose</code> (or
+<code>docker-compose</code>) on the remote <strong>only</strong> when
+the operator explicitly opts in via
+<strong><code>HELIX_ALLOW_DOCKER_FALLBACK=1</code></strong> AND the host
+has been confirmed to have no rootless-podman option.</li>
+<li>Without that flag a podman-less host is <strong>SKIPPED
+honestly</strong> (the §11.4.161 default — rootless-or-nothing); the
+docker path is an authorized exception, not a convenience.</li>
+<li>The authorization + the “no rootless option on this host”
+justification are the §11.4.112 documented-constraint requirement — the
+operator records <em>why</em> the host cannot run rootless podman
+(e.g. “amber: docker-only, rootless podman not yet installed; tracked
+operator action item to install it”), so the exception is documented,
+narrow, and reversible (install rootless podman → drop the flag).</li>
+<li>Preferred remediation stays <strong>install rootless podman on the
+host</strong> (then the fallback is unnecessary); the docker fallback is
+the bridge until that is done, not the destination.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.161 docker fallback — operator-authorized, explicit opt-in ONLY.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Use when the target host (e.g. amber) has docker but no rootless podman,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># and the operator accepts the documented §11.4.112 constraint.</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_ALLOW_DOCKER_FALLBACK</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--host</span> amber.local <span class="at">--user</span> milosvasic</span></code></pre></div>
+<p>Honest boundary (§11.4.6): the docker fallback is a documented
+exception for a host with no rootless option — it does NOT relax
+§11.4.161 for hosts that COULD run rootless podman; on such a host the
+only correct path is rootless podman.</p>
 <p>This lives in the <strong>helix layer</strong>, NOT inside the
 generic <code>vasic-digital/containers</code> submodule (§11.4.28 — no
 project hostnames or project-specific deploy mechanism inside the
@@ -316,21 +358,21 @@ a <code>Dockerfile</code>. In this checkout it is resolved from the
 the remote already has the context / a prebuilt image.</li>
 </ul>
 <h2 id="usage">Usage</h2>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Probe + print the exact rsync/compose commands that WOULD run — no deploy:</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--dry-run</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Real deploy to the first reachable podman-ready host:</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Target a single host explicitly:</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--host</span> thinker.local <span class="at">--user</span> milosvasic</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Skip rsyncing the build context (remote already has it / a prebuilt image):</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--no-build-context</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Tear the stack down on the remote:</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--down</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Probe + print the exact rsync/compose commands that WOULD run — no deploy:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--dry-run</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Real deploy to the first reachable podman-ready host:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Target a single host explicitly:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--host</span> thinker.local <span class="at">--user</span> milosvasic</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Skip rsyncing the build context (remote already has it / a prebuilt image):</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--no-build-context</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Tear the stack down on the remote:</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/distribute_stack.sh <span class="at">--down</span></span></code></pre></div>
 <h3 id="environment-overrides">Environment overrides</h3>
 <table>
 <colgroup>
@@ -373,16 +415,18 @@ id="distribution-host-status-operator-decision-2026-06-22">Distribution-host
 status (operator decision 2026-06-22)</h2>
 <table>
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
 </colgroup>
 <thead>
 <tr>
 <th>Host</th>
 <th>SSH</th>
 <th>Rootless podman</th>
+<th>Docker</th>
 <th>Status</th>
 </tr>
 </thead>
@@ -392,16 +436,24 @@ status (operator decision 2026-06-22)</h2>
 <td>key works (milosvasic)</td>
 <td>podman 4.9.3 + podman-compose 1.0.6 + <code>podman compose</code>
 plugin</td>
-<td><strong>LIVE</strong> distribution target</td>
+<td>—</td>
+<td><strong>LIVE</strong> distribution target (rootless podman —
+preferred path)</td>
 </tr>
 <tr>
 <td><code>amber.local</code></td>
-<td>key works</td>
+<td>key works (onboarded 2026-06-22)</td>
 <td><strong>NOT installed</strong></td>
-<td>SKIPPED honestly until operator installs rootless podman</td>
+<td>present</td>
+<td><strong>DOCKER-FALLBACK target</strong> —
+<code>HELIX_ALLOW_DOCKER_FALLBACK=1</code> (§11.4.161
+operator-authorized exception, §11.4.112 documented constraint: rootless
+podman not yet installed; tracked operator action item to install it).
+Without the flag → SKIPPED honestly.</td>
 </tr>
 <tr>
 <td><code>nezha.local</code></td>
+<td>—</td>
 <td>—</td>
 <td>—</td>
 <td><strong>NOT</strong> a distribution target (read/import + emulator
@@ -455,6 +507,9 @@ deployed.</li>
 </ul>
 <p><strong>Last verified:</strong> 2026-06-22 (dry-run probe against
 thinker.local: SSH OK, <code>podman compose</code> selected; amber.local
-honestly skipped — no podman).</p>
+onboarded — SSH key installed + docker present, §11.4.161
+operator-authorized docker fallback available via
+<code>HELIX_ALLOW_DOCKER_FALLBACK=1</code>, honestly skipped without the
+flag).</p>
 </body>
 </html>
