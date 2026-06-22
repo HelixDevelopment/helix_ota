@@ -238,8 +238,8 @@
 </head>
 <body>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
-2026-06-22T08:10:00Z</p>
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-06-22T08:25:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -256,8 +256,8 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>998c6af2</code>
-<code>chore(workable-now): full verification sweep — gofmt, §11.4.166 semgrep, A/B re-proof, recordings, Status reconcile</code></td>
+<td><code>17cbd47a</code>
+<code>fix(push): portable mkdir lock + honest exit in push_all.sh (§11.4.67/§11.4.1)</code></td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
@@ -302,6 +302,22 @@ needs sudo+reboot+fetch_cvd).</p>
 (<code>semgrep login</code>) to silence the MCP hook (optional;
 tokenless gate already compliant); (2) provision Cuttlefish on nezha to
 unblock real Android A/B; (3) RK3588 board for OTA-004/F55/F56.</p>
+<p><strong>Known robustness gap (tracked, NOT yet fixed —
+§11.4.6/§11.4.123):</strong>
+<code>scripts/boot_android_emulator.sh</code> — the remote qemu/AVD on
+nezha stays tied to the launching SSH session and exits gracefully if
+that session ends mid-boot-wait (the nohup does not fully detach the
+remote process; the final SSH-tunnel/attestation step isn’t reached on
+interrupt). Boot itself is PROVEN (<code>emulator-5554</code>, API 36,
+<code>boot_completed=1</code>, evidence
+<code>qa-results/20260622T071848Z-nezha-android-ab/</code>). Fix
+candidate: wrap the remote launch in
+<code>setsid nohup … &lt;/dev/null &gt;log 2&gt;&amp;1 &amp;</code> (or
+a <code>systemd-run --user --scope</code> on nezha) for true detachment
+— deferred because on-target persistence verification (re-boot +
+interrupt test, leaves remote state) is operator-attended; a blind
+change to the working boot path is forbidden per §11.4.1 without
+rock-solid proof.</p>
 <h3 id="active-items">Active items</h3>
 <table>
 <colgroup>

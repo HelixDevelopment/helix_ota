@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 3
-**Last modified:** 2026-06-22T08:10:00Z
+**Revision:** 4
+**Last modified:** 2026-06-22T08:25:00Z
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `998c6af2` `chore(workable-now): full verification sweep — gofmt, §11.4.166 semgrep, A/B re-proof, recordings, Status reconcile` |
+| **HEAD** | `17cbd47a` `fix(push): portable mkdir lock + honest exit in push_all.sh (§11.4.67/§11.4.1)` |
 | **Phase** | Stable / release-readiness — all autonomous work GREEN; remaining items hardware/operator-gated |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets |
 
@@ -24,6 +24,8 @@ All autonomous items GREEN with real captured evidence (no bluffs):
 - nezha AVD boot proven; real Android A/B = honest **operator-attended SKIP** (Cuttlefish unprovisioned — needs sudo+reboot+fetch_cvd).
 
 **Operator action items:** (1) Semgrep `SEMGREP_APP_TOKEN` — follow `constitution/docs/semgrep/TOKEN_SETUP.md` (`semgrep login`) to silence the MCP hook (optional; tokenless gate already compliant); (2) provision Cuttlefish on nezha to unblock real Android A/B; (3) RK3588 board for OTA-004/F55/F56.
+
+**Known robustness gap (tracked, NOT yet fixed — §11.4.6/§11.4.123):** `scripts/boot_android_emulator.sh` — the remote qemu/AVD on nezha stays tied to the launching SSH session and exits gracefully if that session ends mid-boot-wait (the nohup does not fully detach the remote process; the final SSH-tunnel/attestation step isn't reached on interrupt). Boot itself is PROVEN (`emulator-5554`, API 36, `boot_completed=1`, evidence `qa-results/20260622T071848Z-nezha-android-ab/`). Fix candidate: wrap the remote launch in `setsid nohup … </dev/null >log 2>&1 &` (or a `systemd-run --user --scope` on nezha) for true detachment — deferred because on-target persistence verification (re-boot + interrupt test, leaves remote state) is operator-attended; a blind change to the working boot path is forbidden per §11.4.1 without rock-solid proof.
 
 ### Active items
 
