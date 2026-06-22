@@ -237,9 +237,6 @@
   </style>
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">CUTTLEFISH_TIER2</h1>
-</header>
 <h1
 id="helix-ota-tier-2-cuttlefish-virtual-android-ota-validation">Helix
 OTA — Tier-2 Cuttlefish Virtual-Android OTA Validation</h1>
@@ -257,16 +254,17 @@ OTA — Tier-2 Cuttlefish Virtual-Android OTA Validation</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-10T00:00:00Z</td>
+<td>2026-06-22T00:00:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
-<td>designed — host-gated, not yet runnable (no Linux + nested-KVM host
-attached)</td>
+<td>containerized rootful-privileged path designed; <code>nezha</code>
+host is Linux + KVM — runnable pending operator privileged-launch
+authorization</td>
 </tr>
 <tr>
 <td>Status summary</td>
@@ -274,12 +272,24 @@ attached)</td>
 emulated-device testing strategy: a Cuttlefish (<code>cvd</code>)
 virtual Android device on a Linux + nested-KVM host, used to exercise
 the <strong>real Android A/B <code>update_engine</code> + AVB/dm-verity
-+ auto-rollback</strong> flow the Tier-1 podman emulator cannot. Per
-§11.4.8 (deep-web-research-before-implementation) + §11.4.99
-(latest-source cross-reference) — every load-bearing claim is sourced
-from the latest official Android docs (verified 2026-06-10, see
-<code>## Sources verified</code>); uncertain claims are explicitly
-marked <code>UNCONFIRMED:</code> per §11.4.6 (no-guessing).</td>
++ auto-rollback</strong> flow the Tier-1 podman emulator cannot.
+<strong>Rev-2 update (2026-06-22):</strong> deep research (§11.4.150)
+resolved several §8 open items into FACT — the containerized path is
+<strong>rootful-privileged</strong> (rootless Podman cannot host
+Cuttlefish; see
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>, the §11.4.161
+/ §11.4.112 documented exception), the device passthrough list is fixed,
+the public no-credentials fetch target is
+<strong><code>aosp_cf_x86_64_only_phone-userdebug</code></strong> from
+<code>ci.android.com</code>, and the real
+<code>update_engine</code>-on-Cuttlefish apply is confirmed. The
+candidate host <code>nezha</code> is Linux 6.12 x86_64 with KVM present
+(FACT, host probe 2026-06-22), so Tier-2 is runnable pending operator
+authorisation to run a <code>--privileged</code> container. Per §11.4.8
++ §11.4.99 every load-bearing claim is sourced (verified 2026-06-10 and
+2026-06-22, see the two <code>## Sources verified</code> blocks);
+genuinely-unresolved claims stay marked <code>UNCONFIRMED:</code> per
+§11.4.6 (no-guessing).</td>
 </tr>
 <tr>
 <td>Authority</td>
@@ -288,8 +298,11 @@ marked <code>UNCONFIRMED:</code> per §11.4.6 (no-guessing).</td>
 <tr>
 <td>Related</td>
 <td><code>docs/design/EMULATED_DEVICE_TESTING.md</code> (the Tier-1/2/3
-overview this doc details for Tier-2); <code>containers/</code>
-submodule (<code>vasic-digital/containers</code>, §11.4.76);
+overview this doc details for Tier-2);
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> (the §11.4.161
+rootful-privileged documented exception this path requires);
+<code>containers/</code> submodule
+(<code>vasic-digital/containers</code>, §11.4.76);
 <code>submodules/ota-protocol</code>,
 <code>submodules/ota-android-agent</code>,
 <code>submodules/ota-update-engine-bridge</code>;
@@ -461,6 +474,17 @@ the ARM64 variant) [SRC-CF-USE]</li>
 </ul></li>
 </ol>
 <blockquote>
+<p><strong>FACT (Rev-2, 2026-06-22):</strong> the concrete Tier-2 fetch
+target is
+<strong><code>aosp_cf_x86_64_only_phone-userdebug</code></strong> pulled
+from the <strong>public</strong> <code>ci.android.com</code> —
+<strong>no credentials required</strong> [SRC-CF-GET-STARTED-26]. This
+resolves the prior “which target” ambiguity for the x86_64 host. The
+<code>update_engine</code> README confirms “Cuttlefish works as well”
+for the real A/B <code>update_engine</code> apply on this target
+[SRC-UE-SEARCH].</p>
+</blockquote>
+<blockquote>
 <p><code>UNCONFIRMED:</code> whether the default <code>aosp_cf_*</code>
 targets ship <strong>Virtual A/B</strong> vs legacy A/B by default for
 the chosen release. Virtual A/B writes new data to a COW device and
@@ -473,8 +497,27 @@ via <code>getprop ro.virtual_ab.enabled</code> on the booted device
 before authoring the rollback assertions.</p>
 </blockquote>
 <h3 id="launch-the-virtual-device">4.3 Launch the virtual device</h3>
+<p><strong>Containerized launch is rootful-<code>--privileged</code>
+(FACT, Rev-2).</strong> Cuttlefish inside a container is run
+<code>--privileged --network host</code> with <code>/dev/kvm</code>,
+<code>/dev/vhost-vsock</code>, <code>/dev/vhost-net</code>,
+<code>/dev/vsock</code>, <code>/dev/net/tun</code> passed through
+[SRC-CF-CONTAINER-26]; a <strong>rootless</strong> Podman container
+<strong>cannot</strong> create the <code>cvd-ebr</code> bridge /
+<code>cvd-wtap</code>/<code>cvd-mtap</code> tap devices nor write the
+<code>/proc/sys/net</code> knobs Cuttlefish needs (those require
+<code>CAP_NET_ADMIN</code> in a root netns; rootless uses
+<code>slirp4netns</code>/<code>pasta</code>) [SRC-CF-ONPREM-26]
+[SRC-ROOTLESS-NET-26]. This privileged launch is the <strong>§11.4.161
+documented exception</strong> recorded in
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> — only the
+<code>launch_cvd</code> step is privileged; the image build + the AOSP
+fetch (§4.2) stay rootless. The privileged run is driven through the
+<code>vasic-digital/containers</code> submodule’s proposed
+<code>pkg/cuttlefish</code> lifecycle wrapper (§7), never an ad-hoc
+<code>podman run</code>.</p>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In a clean directory, extract both archives, then:</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In a clean directory, extract both archives, then (inside the privileged container):</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">HOME</span><span class="op">=</span><span class="va">$PWD</span> <span class="ex">./bin/launch_cvd</span> <span class="at">--daemon</span>          <span class="co"># [SRC-CF-USE]</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/adb</span> devices                            <span class="co"># [SRC-CF-USE] — device should appear</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Web UI (operator inspection): https://localhost:8443   [SRC-CF-USE]</span></span></code></pre></div>
@@ -690,26 +733,81 @@ dev host included), the job SKIPs with the host-gated reason — it is
 green.</li>
 </ol></li>
 </ul>
-<h2 id="open-items-to-verify-at-bring-up-no-guessing-register-11.4.6">8.
-Open items to verify at bring-up (no-guessing register, §11.4.6)</h2>
-<p>Each <code>UNCONFIRMED:</code> above is a verify-before-run item.
-Consolidated:</p>
+<h2 id="open-items-register-no-guessing-11.4.6-rev-2-reconciliation">8.
+Open items register (no-guessing, §11.4.6) — Rev-2 reconciliation</h2>
+<p>The Rev-1 register listed five verify-before-run items. Deep research
+(§11.4.150, accessed 2026-06-22) resolved several into FACT; the
+genuinely-unresolved ones stay <code>UNCONFIRMED:</code> — they are NOT
+fabricated as resolved (§11.4.6).</p>
+<h3 id="a.-resolved-into-fact-rev-2-2026-06-22">8a. Resolved into FACT
+(Rev-2, 2026-06-22)</h3>
+<ul>
+<li><strong>Containerization model =
+rootful-<code>--privileged</code>.</strong> Rootless Podman cannot host
+Cuttlefish (bridge/tap/<code>/proc/sys/net</code> need
+<code>CAP_NET_ADMIN</code> in a root netns); the upstream-mandated path
+is <code>--privileged --network host</code> with the
+<code>/dev/kvm</code> + <code>/dev/vhost-vsock</code> +
+<code>/dev/vhost-net</code> + <code>/dev/vsock</code> +
+<code>/dev/net/tun</code> device passthrough [SRC-CF-CONTAINER-26]
+[SRC-CF-ONPREM-26] [SRC-ROOTLESS-NET-26]. Recorded as the §11.4.161 /
+§11.4.112 documented exception in
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>.</li>
+<li><strong>Fetch target =
+<code>aosp_cf_x86_64_only_phone-userdebug</code> from public
+<code>ci.android.com</code>, no credentials</strong>
+[SRC-CF-GET-STARTED-26].</li>
+<li><strong>Real <code>update_engine</code> apply on Cuttlefish is
+confirmed</strong> — “Cuttlefish works as well” for testing
+<code>update_engine</code> [SRC-UE-SEARCH].</li>
+<li><strong>Host viability = FACT for <code>nezha</code></strong> (host
+probe 2026-06-22): Linux 6.12 x86_64, <code>/dev/kvm</code> +
+<code>/dev/vhost-vsock</code> + <code>/dev/vhost-net</code> +
+<code>/dev/net/tun</code> present world-rw, 8 cores, 288 GB free — KVM
+is present, so Tier-2 is runnable pending the operator’s authorisation
+to run a <code>--privileged</code> container.</li>
+</ul>
+<h3
+id="b.-still-unconfirmed-verify-before-first-pass-do-not-assume-resolved">8b.
+Still <code>UNCONFIRMED:</code> — verify-before-first-PASS (do NOT
+assume resolved)</h3>
 <ol type="1">
-<li>Exact apt build-dep list (<code>equivs</code> spelling) — verify
-against [SRC-CF-USE].</li>
-<li>Whether the chosen <code>aosp_cf_*</code> release defaults to
-Virtual A/B vs legacy A/B — <code>getprop ro.virtual_ab.enabled</code>
-on the booted device.</li>
-<li>Current CLI surface — <code>launch_cvd</code>/<code>stop_cvd</code>
-(documented) vs the unified <code>cvd</code> front-end (unconfirmed in
-fetched pages).</li>
-<li>Slot-state read command on the chosen image — <code>bootctl</code>
-availability vs <code>getprop ro.boot.slot_suffix</code> only.</li>
-<li>The safe, exact corrupt-the-inactive-slot mechanism for the chosen
-A/B variant (legacy direct-write vs Virtual A/B COW path) — from
-[SRC-VAB] / [SRC-VAB-PATCHES].</li>
+<li><strong><code>/dev/vsock</code> client node + vhost modules on
+<code>nezha</code></strong> — <code>/dev/vsock</code> is
+<strong>ABSENT</strong> on <code>nezha</code> and <code>lsmod</code>
+does not list <code>vhost_vsock</code>/<code>vhost_net</code> (likely
+built-in to the 6.12 kernel, <code>UNCONFIRMED:</code>). Verify whether
+Cuttlefish needs the <code>/dev/vsock</code> client node in addition to
+<code>/dev/vhost-vsock</code>, and whether the vhost modules are
+built-in vs unloaded, before the first privileged launch. (Rev-2 new
+item from the host probe.)</li>
+<li><strong>Virtual A/B vs legacy A/B on the chosen image</strong> —
+<code>getprop ro.virtual_ab.enabled</code> on the booted device. The §5
+<code>update_engine</code>-level apply mechanics are identical either
+way; only the corrupt-slot mechanism (item 4) differs. Still
+<code>UNCONFIRMED:</code>.</li>
+<li><strong>CLI surface</strong> —
+<code>launch_cvd</code>/<code>stop_cvd</code> (documented) vs the
+unified <code>cvd</code> front-end (still unconfirmed in fetched pages).
+Use the documented <code>launch_cvd</code>/<code>stop_cvd</code>; prefer
+<code>cvd</code> only if the host packages expose it. Still
+<code>UNCONFIRMED:</code>.</li>
+<li><strong>Exact, safe corrupt-the-inactive-slot mechanism</strong> for
+the chosen A/B variant (legacy direct-write vs Virtual A/B
+COW/<code>snapuserd</code> path) — from [SRC-VAB] / [SRC-VAB-PATCHES].
+This is the headline corrupt-slot → rollback proof; <strong>still
+<code>UNCONFIRMED:</code></strong> and must be established as FACT
+(never a guessed destructive write, §11.4.133) before the first
+run.</li>
+<li><strong>Slot-state read command</strong> — <code>bootctl</code>
+availability vs <code>getprop ro.boot.slot_suffix</code> only, on the
+chosen image. Still <code>UNCONFIRMED:</code>; verify on the booted
+device.</li>
+<li><strong>Exact apt build-dep list</strong> (<code>equivs</code>
+spelling) — verify against [SRC-CF-USE]. Minor, still a
+verify-at-bring-up item.</li>
 </ol>
-<p>None of these block the <em>design</em>; all five are
+<p>None of the 8b items block the <em>design</em>; they are
 FACT-establishment steps the runner must complete (and capture as
 evidence) before the first Tier-2 PASS is claimed.</p>
 <h2 id="sources-verified-2026-06-10">Sources verified 2026-06-10</h2>
@@ -776,8 +874,44 @@ not contradiction.</li>
 (<code>cvd start</code>/<code>cvd stop</code>) was <strong>not</strong>
 confirmed in the fetched pages;
 <code>launch_cvd</code>/<code>stop_cvd</code> is the documented surface
-used here. Tracked as open item §8.3 — do not assume <code>cvd</code>
+used here. Tracked as open item §8b.3 — do not assume <code>cvd</code>
 subcommands.</li>
 </ul>
+<h2 id="sources-verified-2026-06-22-rev-2-addendum">Sources verified
+2026-06-22 (Rev-2 addendum)</h2>
+<p>Deep research (§11.4.150) for the containerized rootful-privileged
+path + host-viability reconciliation. Each load-bearing Rev-2 claim
+carries one of these tags.</p>
+<ul>
+<li>[SRC-CF-CONTAINER-26] <code>google/android-cuttlefish</code> —
+<code>container/README.md</code>, GitHub —
+https://github.com/google/android-cuttlefish (Cuttlefish-in-a-container
+runs <code>--privileged</code> with host <code>/dev/kvm</code>,
+<code>/dev/vhost-vsock</code>, <code>/dev/vhost-net</code>,
+<code>/dev/vsock</code>, <code>/dev/net/tun</code> passthrough + host
+networking) — accessed 2026-06-22.</li>
+<li>[SRC-CF-GET-STARTED-26] Get started — Cuttlefish, AOSP —
+https://source.android.com/docs/devices/cuttlefish/get-started (public
+<code>ci.android.com</code> fetch, no credentials;
+<code>aosp_cf_x86_64_only_phone-userdebug</code> target; host KVM +
+group membership
+<code>kvm</code>/<code>cvdnetwork</code>/<code>render</code>) — accessed
+2026-06-22.</li>
+<li>[SRC-CF-ONPREM-26] On-premises Cuttlefish, AOSP —
+https://source.android.com/docs/devices/cuttlefish/on-premises
+(<code>cvd-ebr</code> bridge +
+<code>cvd-wtap</code>/<code>cvd-mtap</code> tap-device host-networking
+requirements) — accessed 2026-06-22.</li>
+<li>[SRC-ROOTLESS-NET-26] Rootless container networking (Podman
+<code>run --privileged</code> docs + rootless
+<code>slirp4netns</code>/<code>pasta</code> networking writeup +
+non-privileged-Cuttlefish-pod community writeup) — rootless cannot
+create host bridges/tap devices nor perform <code>CAP_NET_ADMIN</code>
+host-namespace operations, so it cannot host Cuttlefish networking —
+accessed 2026-06-22.</li>
+</ul>
+<p>The <code>aosp_cf_x86_64_only_phone-userdebug</code> no-creds claim
+and the “Cuttlefish works as well” <code>update_engine</code> claim also
+rest on the Rev-1 [SRC-CF-USE] and [SRC-UE-SEARCH] entries above.</p>
 </body>
 </html>

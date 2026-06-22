@@ -524,9 +524,9 @@ _phased_push_to() {
     log_info "  │                                                             │"
     log_info "  │  TO SYNC GITFLIC (two options):                            │"
     log_info "  │                                                             │"
-    log_info "  │  A) Via any host with SSH to GitFlic (e.g. nezha):         │"
+    log_info "  │  A) Via any host with SSH to GitFlic (e.g. thinker):       │"
     log_info "  │     # Copy chunks to the target host:                       │"
-    log_info "  │     rsync -av ${bundle_dir}/ milosvasic@nezha:tmp/gitflic_sync/  │"
+    log_info "  │     rsync -av ${bundle_dir}/ milosvasic@thinker:tmp/gitflic_sync/ │"
     log_info "  │     # On that host:                                         │"
     log_info "  │     cd /tmp                                                 │"
     log_info "  │     cat chunk_* > helix_ota.bundle                          │"
@@ -614,10 +614,26 @@ _helixtrack_ensure_running() {
         return 0
     fi
 
-    # Try distribution host (nezha.local per config)
-    local dist_host="${HELIXTRACK_REMOTE_HOST:-nezha.local}"
-    if ssh -o ConnectTimeout=5 -o BatchMode=yes "$dist_host" "echo ok" 2>/dev/null | grep -q ok; then
-        log_info "Deploying HelixTrack on $dist_host..."
+    # Container distribution targets (operator mandate 2026-06-22).
+    #   thinker.local — LIVE: passwordless SSH key (milosvasic) works, rootless podman.
+    #   amber.local   — configured but PENDING SSH KEY: the key is not yet authorized
+    #                   there (ssh returns "Permission denied (publickey,password)").
+    #                   Operator must run `ssh-copy-id milosvasic@amber.local` once;
+    #                   until then amber is unreachable and is skipped honestly.
+    # nezha.local is NO LONGER a distribution target (read/import-from-nezha is still
+    # allowed — e.g. the emulator host in scripts/boot_android_emulator.sh).
+    # First reachable candidate (in order) wins; HELIXTRACK_REMOTE_HOST overrides.
+    local dist_user="${HELIXTRACK_REMOTE_USER:-milosvasic}"
+    local dist_candidates="${HELIXTRACK_REMOTE_HOST:-thinker.local amber.local}"
+    local dist_host="" cand
+    for cand in $dist_candidates; do
+        if ssh -o ConnectTimeout=5 -o BatchMode=yes "${dist_user}@${cand}" "echo ok" 2>/dev/null | grep -q ok; then
+            dist_host="$cand"
+            break
+        fi
+    done
+    if [ -n "$dist_host" ]; then
+        log_info "Deploying HelixTrack on $dist_host (user=$dist_user)..."
         local compose_file="$PROJECT_ROOT/containers/compose.helixtrack.yml"
         if [ -f "$compose_file" ]; then
             (cd "$PROJECT_ROOT/containers" && docker compose -f compose.helixtrack.yml up -d 2>/dev/null) && \
@@ -625,7 +641,7 @@ _helixtrack_ensure_running() {
                 log_warn "Deploy to $dist_host failed"
         fi
     else
-        log_info "Host $dist_host offline — skipping HelixTrack boot. Sync skipped."
+        log_info "No distribution host reachable ($dist_candidates) — skipping HelixTrack boot. Sync skipped. (amber.local pending SSH key per config.)"
     fi
     return 0
 }

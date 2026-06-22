@@ -55,14 +55,26 @@ if ! curl -sf -X POST "http://localhost:8080/do" \
             exit 0
         fi
     else
-        DIST_HOST="${HELIXTRACK_REMOTE_HOST:-nezha.local}"
-        if ssh -o ConnectTimeout=3 -o BatchMode=yes "$DIST_HOST" "echo ok" 2>/dev/null | grep -q ok; then
-            echo "[HELIXTRACK] Deploying on $DIST_HOST..."
+        # Container distribution targets (operator mandate 2026-06-22):
+        # thinker.local (live, milosvasic key) + amber.local (PENDING SSH key —
+        # operator must `ssh-copy-id milosvasic@amber.local`; skipped until then).
+        # nezha.local is NO LONGER a distribution target (read/import still allowed).
+        DIST_USER="${HELIXTRACK_REMOTE_USER:-milosvasic}"
+        DIST_CANDIDATES="${HELIXTRACK_REMOTE_HOST:-thinker.local amber.local}"
+        DIST_HOST=""
+        for cand in $DIST_CANDIDATES; do
+            if ssh -o ConnectTimeout=3 -o BatchMode=yes "${DIST_USER}@${cand}" "echo ok" 2>/dev/null | grep -q ok; then
+                DIST_HOST="$cand"
+                break
+            fi
+        done
+        if [ -n "$DIST_HOST" ]; then
+            echo "[HELIXTRACK] Deploying on $DIST_HOST (user=$DIST_USER)..."
             docker compose -f "$PROJECT_ROOT/containers/compose.helixtrack.yml" up -d 2>/dev/null && \
                 echo "[HELIXTRACK] Deployed on $DIST_HOST" || \
                 echo "[HELIXTRACK] Deploy failed"
         else
-            echo "[HELIXTRACK] Core not running, $DIST_HOST offline — sync skipped"
+            echo "[HELIXTRACK] Core not running, no distribution host reachable ($DIST_CANDIDATES) — sync skipped (amber.local pending SSH key)"
             exit 0
         fi
     fi

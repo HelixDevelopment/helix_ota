@@ -172,9 +172,6 @@
   </style>
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">EMULATED_DEVICE_TESTING</h1>
-</header>
 <h1 id="helix-ota-emulated-virtual-device-testing-strategy">Helix OTA —
 Emulated / Virtual Device Testing Strategy</h1>
 <table>
@@ -191,11 +188,11 @@ Emulated / Virtual Device Testing Strategy</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>5</td>
+<td>6</td>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-06-21T19:00:00Z</td>
+<td>2026-06-22T00:00:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -433,6 +430,26 @@ Cuttlefish; these are not yet downloaded/deployed on
 images are available, deploy the Cuttlefish A/B stack and execute the
 authored harness.</li>
 </ul>
+<blockquote>
+<p><strong>Containerization note (Rev-6, 2026-06-22).</strong> Tier-2
+Cuttlefish is now run as a <strong>containerized</strong> workload
+through the <code>vasic-digital/containers</code> submodule’s proposed
+<strong><code>pkg/cuttlefish</code></strong> lifecycle extension
+(boot/health/teardown over <code>launch_cvd</code>/<code>stop_cvd</code>
++ <code>adb devices</code> readiness), per §11.4.76 / §11.4.74. Deep
+research (§11.4.150, 2026-06-22) established as FACT that this launch
+<strong>must be rootful-<code>--privileged</code></strong> — rootless
+Podman cannot create the <code>cvd-ebr</code> bridge / tap devices nor
+write the <code>/proc/sys/net</code> knobs Cuttlefish needs — recorded
+as the §11.4.161 / §11.4.112 <strong>documented exception</strong> in <a
+href="CUTTLEFISH_ROOTFUL_EXCEPTION.md"><code>CUTTLEFISH_ROOTFUL_EXCEPTION.md</code></a>
+(only the launch is privileged; the image build + AOSP fetch stay
+rootless). The candidate host <code>nezha</code> is Linux 6.12 x86_64
+with KVM (FACT, host probe 2026-06-22), so Cuttlefish Tier-2 is runnable
+pending operator privileged-launch authorisation; see <a
+href="CUTTLEFISH_TIER2.md"><code>CUTTLEFISH_TIER2.md</code></a>
+Rev-2.</p>
+</blockquote>
 <h3 id="tier-3-real-rk3588-orange-pi-5-max-hardware">Tier-3 — real
 RK3588 / Orange Pi 5 Max hardware</h3>
 <ul>
@@ -451,6 +468,21 @@ structurally impossible.</li>
 <li><strong>Status:</strong> pending hardware availability (the
 CONTINUATION NEXT-wave items 1–2 land here).</li>
 </ul>
+<blockquote>
+<p><strong>Hardware-reality note (Rev-6, 2026-06-22).</strong> The
+<strong>physical RK3588 / Orange Pi 5 Max boards currently on hand are
+NON-A/B</strong> — they validate the <strong>control plane only</strong>
+(the <code>ota-protocol</code> register → update-check → telemetry →
+delta → rollout → recall wire flow against a real board), NOT the real
+Android <code>update_engine</code> A/B slot-switch + AVB +
+auto-rollback. The full A/B-apply fidelity Tier-3 is <em>designed</em>
+for therefore lands on <strong>Tier-2 (Cuttlefish, containerized
+rootful-privileged)</strong> for now; an A/B-capable physical Tier-3
+remains hardware-gated. The “real U-Boot slot-switch / dm-verity on real
+partitions / real <code>update_engine</code>” rows above are the
+<em>design target</em> of an A/B-capable board, not a claim about the
+non-A/B boards presently available (§11.4.6).</p>
+</blockquote>
 <h2 id="tier-coverage-matrix">3. Tier coverage matrix</h2>
 <p>Legend: <strong>YES</strong> = proven with captured evidence ·
 <em>target</em> = the tier’s intended scope, NOT yet proven · no = out

@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
-| Last modified | 2026-06-21T19:00:00Z |
+| Revision | 6 |
+| Last modified | 2026-06-22T00:00:00Z |
 | Status | active — Tier-1 shipped; Tier-1.5 dev-host A/B-virt foundation built, slot mechanism in progress |
 | Status summary | The tiered plan for exercising the OTA stack against device-shaped targets without (Tier-1) and with (Tier-1.5 / Tier-2 / Tier-3) real A/B slot-switch + dm-verity + hardware. Tier boundaries are FACT, established from the host's available runtimes and the `containers` submodule's capabilities — not guesses. **Now built:** Tier-1 (T0 protocol emulator, shipped) plus a new **Tier-1.5 dev-host A/B-virt tier** (QEMU virt+HVF + U-Boot bootcount/altbootcmd + RAUC dm-verity) whose FOUNDATION boots to live userspace on this Apple-Silicon host (PROVEN); its real A/B slot switch / dm-verity / auto-rollback is **in progress**, gated on the in-flight `u-boot.bin` build — NOT proven (§11.4.6). **Tier-2** now has a live Android emulator (API 36, CZ_API36_Phone, Android 16) running on `nezha.local` (Linux x86_64, 62 GB RAM, KVM), managed through `scripts/boot_android_emulator.sh` (containers submodule wrapper per §11.4.76). Cuttlefish (`cvd`) Tier-2 remains pending AOSP guest images. |
 | Authority | Helix OTA control-plane / device-integration team |
@@ -152,6 +152,20 @@ boundary on what each environment can and cannot prove.
 - **Status:** **pending** — once AOSP guest images are available, deploy the
   Cuttlefish A/B stack and execute the authored harness.
 
+> **Containerization note (Rev-6, 2026-06-22).** Tier-2 Cuttlefish is now run as a
+> **containerized** workload through the `vasic-digital/containers` submodule's proposed
+> **`pkg/cuttlefish`** lifecycle extension (boot/health/teardown over
+> `launch_cvd`/`stop_cvd` + `adb devices` readiness), per §11.4.76 / §11.4.74. Deep
+> research (§11.4.150, 2026-06-22) established as FACT that this launch **must be
+> rootful-`--privileged`** — rootless Podman cannot create the `cvd-ebr` bridge / tap
+> devices nor write the `/proc/sys/net` knobs Cuttlefish needs — recorded as the
+> §11.4.161 / §11.4.112 **documented exception** in
+> [`CUTTLEFISH_ROOTFUL_EXCEPTION.md`](CUTTLEFISH_ROOTFUL_EXCEPTION.md) (only the launch is
+> privileged; the image build + AOSP fetch stay rootless). The candidate host `nezha` is
+> Linux 6.12 x86_64 with KVM (FACT, host probe 2026-06-22), so Cuttlefish Tier-2 is
+> runnable pending operator privileged-launch authorisation; see
+> [`CUTTLEFISH_TIER2.md`](CUTTLEFISH_TIER2.md) Rev-2.
+
 ### Tier-3 — real RK3588 / Orange Pi 5 Max hardware
 
 - **What:** the real target board(s) — full vendor HAL, real **U-Boot slot-switch**,
@@ -163,6 +177,16 @@ boundary on what each environment can and cannot prove.
   hardware), per §11.4.133 target-hardware-safety discipline for any flash.
 - **Honest §11.4.112 boundary:** hardware-gated, NOT structurally impossible.
 - **Status:** pending hardware availability (the CONTINUATION NEXT-wave items 1–2 land here).
+
+> **Hardware-reality note (Rev-6, 2026-06-22).** The **physical RK3588 / Orange Pi 5 Max
+> boards currently on hand are NON-A/B** — they validate the **control plane only** (the
+> `ota-protocol` register → update-check → telemetry → delta → rollout → recall wire flow
+> against a real board), NOT the real Android `update_engine` A/B slot-switch + AVB +
+> auto-rollback. The full A/B-apply fidelity Tier-3 is *designed* for therefore lands on
+> **Tier-2 (Cuttlefish, containerized rootful-privileged)** for now; an A/B-capable
+> physical Tier-3 remains hardware-gated. The "real U-Boot slot-switch / dm-verity on real
+> partitions / real `update_engine`" rows above are the *design target* of an A/B-capable
+> board, not a claim about the non-A/B boards presently available (§11.4.6).
 
 ## 3. Tier coverage matrix
 

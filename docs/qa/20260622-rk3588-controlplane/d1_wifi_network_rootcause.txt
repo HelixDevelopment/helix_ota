@@ -1,0 +1,19 @@
+D1 (19bbb528a1dbbc4d, Wi-Fi 192.168.0.169) device-originated request root-cause
+================================================================================
+All three device-originated nc requests from D1 to nezha (192.168.0.213:18080)
+returned "nc: timed out". Read-only isolation probes (server-independent):
+
+  D1 interfaces:  wlan0 192.168.0.169/24 ; tun1 10.157.103.104/32 (VPN present)
+  D1 route table: 192.168.0.0/24 dev wlan0 (on-link)  [no default via wlan0]
+  D1 -> ping 192.168.0.213 (on-link nezha): 3 transmitted, 0 received, 100% loss
+  D1 -> busybox nc 192.168.0.213 22 (nezha sshd, definitely listening): nc: timed out
+
+CONCLUSION (FACT, not guess): the failure is D1's NETWORK PATH to nezha, NOT the
+helix control-plane server. nc to an unrelated, known-listening port (sshd:22)
+also times out and on-link ICMP is 100% lost, which exonerates the OTA server.
+Consistent with VPN full-tunnel capture (tun1) and/or Wi-Fi AP client-isolation
+blocking wlan-client -> wired-LAN-host traffic. D2 (Ethernet) on the same server
+reached every endpoint. Remediation (toggling VPN / Wi-Fi isolation) requires a
+device state change, which is FORBIDDEN here (§11.4.122/§11.4.133); D1's
+device-originated leg is therefore OPERATOR-BLOCKED (topology, §11.4.3), with the
+server-side registration leg confirmed working.

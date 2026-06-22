@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CUTTLEFISH_ROOTFUL_EXCEPTION</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="helix-ota-cuttlefish-rootful-privileged-container-11.4.161-documented-exception">Helix
+OTA — Cuttlefish Rootful-Privileged Container: §11.4.161 Documented
+Exception</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-06-22T00:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>documented-exception recorded — narrowest-scope rootful-privileged
+Cuttlefish launch; image build + artifact fetch remain rootless</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>The §11.4.161 (rootless-container-runtime mandate)
+<strong>documented exception</strong> for the Cuttlefish
+(<code>cvd</code>) virtual-Android Tier-2 OTA validation path. Rootless
+Podman is <strong>NOT viable</strong> for Cuttlefish: the official
+<code>google/android-cuttlefish</code> container README mandates
+<code>--privileged</code> (kvm + vsock + network), and a rootless
+container <strong>cannot</strong> create the <code>cvd-ebr</code> bridge
+/ <code>cvd-wtap</code>/<code>cvd-mtap</code> tap devices nor write the
+<code>/proc/sys/net</code> knobs Cuttlefish needs (these require
+<code>CAP_NET_ADMIN</code> in a root network namespace; rootless uses
+<code>slirp4netns</code>/<code>pasta</code>). This is classified per
+§11.4.112 as a <strong>host-gated documented exception, NOT a structural
+impossibility</strong> — Cuttlefish IS possible, it merely needs
+container privilege. Every load-bearing claim is sourced (see
+<code>## Sources verified 2026-06-22</code>); uncertain claims are
+marked <code>UNCONFIRMED:</code> per §11.4.6.</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Helix OTA control-plane / device-integration team</td>
+</tr>
+<tr>
+<td>Related</td>
+<td><code>docs/design/CUTTLEFISH_TIER2.md</code> (the Tier-2 bring-up
+recipe this exception authorises);
+<code>docs/design/EMULATED_DEVICE_TESTING.md</code> (Tier-1/2/3
+overview); <code>containers/</code> submodule
+(<code>vasic-digital/containers</code>, §11.4.76 / §11.4.161) — proposed
+<code>pkg/cuttlefish</code> extension</td>
+</tr>
+</tbody>
+</table>
+<h2 id="purpose-scope-of-this-exception">1. Purpose + scope of this
+exception</h2>
+<p>§11.4.161 (rootless container runtime mandate) requires every
+containerized workload to run under <strong>Podman in rootless
+mode</strong>; Docker-rootful, <code>sudo</code>, or any escalation to
+root for container management is <strong>FORBIDDEN unless the target
+platform has no rootless option AND that constraint is documented per
+§11.4.112.</strong></p>
+<p>This document IS that documented constraint, for exactly one
+workload: the <strong>launch of the Cuttlefish (<code>cvd</code>)
+virtual Android device inside a container</strong> for Tier-2 OTA
+validation (real <code>update_engine</code> + AVB/dm-verity +
+auto-rollback — the path <code>docs/design/CUTTLEFISH_TIER2.md</code>
+details). It establishes as cited FACT that rootless Podman cannot host
+Cuttlefish, records the minimal-privilege rootful recipe actually used,
+the residual risk + reversibility, and the strict scope-narrowing (only
+the <code>launch_cvd</code> run is privileged; the container-image build
+and the AOSP artifact fetch stay rootless).</p>
+<h2
+id="classification-11.4.112-documented-exception-not-structural-impossibility">2.
+Classification (§11.4.112): documented exception, NOT
+structural-impossibility</h2>
+<p>Per §11.4.112 the correct classification is a <strong>host-gated /
+documented exception</strong>, NOT <code>structurally-impossible</code>
+won’t-fix:</p>
+<ul>
+<li><strong>Cuttlefish IS possible</strong> — it boots and applies real
+OTAs on a Linux + KVM host. The only requirement that conflicts with
+§11.4.161 is <strong>container privilege</strong>
+(<code>--privileged</code>
+<ul>
+<li>the device passthrough + host networking). This is a <em>capability
+requirement</em>, not a platform/protocol impossibility.</li>
+</ul></li>
+<li>Contrast with a true §11.4.112 structural-impossibility case
+(e.g. relocating a <code>FLAG_SECURE</code> secure surface to a second
+display, which the platform blanks by design): there the goal cannot be
+achieved on the platform at all. Here the goal IS achievable — it simply
+requires the privilege the rootless mandate normally forbids, so it is
+recorded as a <strong>§11.4.161 documented exception</strong> rather
+than a won’t-fix.</li>
+<li>A future change MAY narrow or remove the exception (see §6) — the
+classification is durable but not eternal; a reopen needs NEW evidence
+rootless Cuttlefish became viable (§11.4.7 / §11.4.34), never a
+re-derivation of the same constraint.</li>
+</ul>
+<h2 id="why-rootless-podman-cannot-host-cuttlefish-cited-fact">3. Why
+rootless Podman cannot host Cuttlefish (cited FACT)</h2>
+<p>The official Cuttlefish container path is privileged BY DESIGN:</p>
+<ul>
+<li>The <code>google/android-cuttlefish</code>
+<code>container/README.md</code> documents the canonical run as a
+<strong><code>--privileged</code></strong> container with KVM, vsock,
+and host networking — Cuttlefish inside a container is run with
+<code>--privileged</code> and the host’s <code>/dev/kvm</code>,
+<code>/dev/vhost-vsock</code>, <code>/dev/vhost-net</code>,
+<code>/dev/vsock</code>, and <code>/dev/net/tun</code> passed through
+[SRC-CF-CONTAINER].</li>
+<li><strong>Networking needs a root network namespace.</strong>
+Cuttlefish creates a bridge (<code>cvd-ebr</code>) and per-instance tap
+devices (<code>cvd-wtap-NN</code> / <code>cvd-mtap-NN</code>) and writes
+<code>/proc/sys/net/*</code> knobs to wire guest networking; these
+operations require <strong><code>CAP_NET_ADMIN</code> in a root
+(initial) network namespace</strong> [SRC-CF-GET-STARTED]
+[SRC-CF-ONPREM]. A <strong>rootless</strong> container has no such
+namespace — rootless Podman provides userspace networking via
+<code>slirp4netns</code>/<code>pasta</code>, which
+<strong>cannot</strong> create host bridges/tap devices nor write the
+<code>/proc/sys/net</code> knobs [SRC-PODMAN-PRIV] [SRC-ROOTLESS-NET]
+[SRC-NONPRIV-POD]. The bridge/tap creation therefore fails under
+rootless, and Cuttlefish guest networking does not come up.</li>
+<li><strong>Device + KVM access.</strong> <code>/dev/kvm</code> + the
+<code>vhost_vsock</code>/<code>vhost_net</code> device nodes must be
+accessible to the guest VMM; the documented path grants this via
+<code>--privileged</code> device passthrough rather than ad-hoc
+per-device rootless mapping [SRC-CF-CONTAINER].</li>
+</ul>
+<p>Net FACT: the project’s deep research (§11.4.150, accessed
+2026-06-22) found <strong>no</strong> rootless Podman recipe that brings
+up Cuttlefish networking — the upstream-mandated
+<code>--privileged</code> path is the only documented, working one. Per
+§11.4.161 this is the “no rootless option” condition, and this document
+is the required §11.4.112 record.</p>
+<h2 id="the-minimal-privilege-rootful-recipe-actually-used-fact">4. The
+minimal-privilege rootful recipe actually used (FACT)</h2>
+<p>Only the <strong>launch step</strong> is privileged; everything
+narrower is preferred where it works.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rootful Podman, narrowest device + network grant that Cuttlefish requires.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (run as the privileged launch step ONLY — see §5 scope narrowing)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> run <span class="at">--rm</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--privileged</span> <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--network</span> host <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> /dev/kvm <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> /dev/vhost-vsock <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> /dev/vhost-net <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> /dev/vsock <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> /dev/net/tun <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>cuttlefish-image<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  /bin/bash <span class="at">-lc</span> <span class="st">&#39;HOME=$PWD ./bin/launch_cvd --daemon &amp;&amp; ./bin/adb devices&#39;</span></span></code></pre></div>
+<p>Host preconditions (FACT):</p>
+<ul>
+<li><strong>Kernel modules</strong> <code>vhost_vsock</code> +
+<code>vhost_net</code> loaded on the host (or built-in). On the current
+candidate host <code>nezha</code>, <code>lsmod</code> does
+<strong>not</strong> list them, which is consistent with them being
+<strong>built-in</strong> to the host’s Linux 6.12 kernel —
+<code>UNCONFIRMED:</code> whether built-in vs not-yet-loaded; verify at
+bring-up with <code>modinfo vhost_vsock</code> / checking
+<code>/sys/module/vhost_vsock</code> before the first privileged launch
+(do not guess).</li>
+<li><strong>Host groups</strong> <code>kvm</code>,
+<code>cvdnetwork</code>, <code>render</code> for the launching user
+[SRC-CF-GET-STARTED].</li>
+<li><strong>Device nodes.</strong> On <code>nezha</code> (FACT, host
+probe 2026-06-22): <code>/dev/kvm</code>, <code>/dev/vhost-vsock</code>,
+<code>/dev/vhost-net</code>, <code>/dev/net/tun</code> are present and
+world-rw; <strong><code>/dev/vsock</code> is ABSENT</strong>. The
+<code>--device /dev/vsock</code> line above is therefore conditional —
+include it only if the node exists at launch time;
+<code>UNCONFIRMED:</code> whether Cuttlefish on this kernel needs the
+<code>/dev/vsock</code> client node in addition to
+<code>/dev/vhost-vsock</code>, verify on first bring-up rather than
+assume.</li>
+<li><strong>Guest target.</strong> Tier-2 fetches the public-CI target
+<strong><code>aosp_cf_x86_64_only_phone-userdebug</code></strong> from
+<code>ci.android.com</code> — <strong>no credentials required</strong>
+[SRC-CF-GET-STARTED]. The <code>update_engine</code> README confirms
+“Cuttlefish works as well” for the real A/B <code>update_engine</code>
+apply [SRC-UE-SEARCH].</li>
+</ul>
+<h2 id="scope-narrowing-only-the-launch-is-privileged">5. Scope
+narrowing — only the launch is privileged</h2>
+<p>The exception is the <strong>narrowest</strong> possible. The Tier-2
+pipeline has three phases; only the third is privileged:</p>
+<ol type="1">
+<li><strong>Container-image build — ROOTLESS.</strong> Building the
+Cuttlefish container image (Debian host packages per
+<code>docs/design/CUTTLEFISH_TIER2.md</code> §4.1) is an ordinary
+rootless Podman build — no privilege, no exception.</li>
+<li><strong>AOSP artifact fetch — ROOTLESS, no credentials.</strong>
+Downloading the device-image zip + <code>cvd-host_package.tar.gz</code>
+for <code>aosp_cf_x86_64_only_phone-userdebug</code> from the public
+<code>ci.android.com</code> is a plain rootless network fetch — no
+privilege, no secrets [SRC-CF-GET-STARTED].</li>
+<li><strong><code>launch_cvd</code> run — ROOTFUL
+<code>--privileged</code> (THIS exception).</strong> Only the actual
+boot of the virtual device (which creates the <code>cvd-ebr</code>
+bridge + tap devices and opens <code>/dev/kvm</code> + vhost nodes)
+requires the privileged rootful container of §4.</li>
+</ol>
+<p>Everything that CAN be rootless STAYS rootless; the privileged
+surface is confined to the single
+<code>launch_cvd</code>/<code>stop_cvd</code> lifecycle. This is the
+§11.4.161 “documented + narrowest” posture.</p>
+<h2 id="residual-risk-reversibility">6. Residual risk +
+reversibility</h2>
+<ul>
+<li><strong>Residual risk.</strong> A
+<code>--privileged --network host</code> container has broad host access
+for the duration of the launch (device nodes + host network namespace).
+Mitigations: it runs <strong>only</strong> the
+<code>launch_cvd</code>/<code>stop_cvd</code> lifecycle on a dedicated
+Linux test host (<code>nezha</code>), not on the operator’s primary
+workstation; it carries no project secrets (§11.4.10 — the AOSP fetch is
+credential-free); and the privileged window is the launch only (§5),
+torn down with <code>stop_cvd</code> + container removal.</li>
+<li><strong>Reversibility (FACT).</strong> The exception leaves
+<strong>no persistent host mutation beyond reversible config</strong>:
+the Cuttlefish host packages are <code>apt</code>-installed (removable
+via <code>apt remove cuttlefish-base cuttlefish-user</code>), the only
+host-state changes are the loaded kernel modules
+(<code>vhost_vsock</code>/<code>vhost_net</code>, transient) and the
+user’s group membership
+(<code>kvm</code>/<code>cvdnetwork</code>/<code>render</code>,
+reversible via <code>gpasswd -d</code>). No bootloader, partition, or
+firmware change occurs on the host — the A/B slot-switch +
+corrupt-slot-rollback happen <strong>inside the virtual device</strong>,
+never on the host (composes §11.4.133 target-safety: the “target” is the
+Cuttlefish guest, not the host).</li>
+<li><strong>Containers-submodule routing (§11.4.76 /
+§11.4.161).</strong> The privileged launch MUST be driven through the
+<code>vasic-digital/containers</code> submodule’s lifecycle primitives —
+the proposed <code>pkg/cuttlefish</code> extension wrapping
+<code>launch_cvd</code>/<code>stop_cvd</code> + <code>adb devices</code>
+readiness — NOT ad-hoc <code>podman run</code> outside
+<code>pkg/boot</code>/<code>pkg/compose</code>/<code>pkg/health</code>.
+The <code>--privileged</code> flag is requested through the submodule’s
+run options, keeping the exception inside the sanctioned orchestration
+layer; a missing capability is extended upstream per §11.4.74, never
+worked around in-project.</li>
+</ul>
+<h2 id="honest-boundary-11.4.6">7. Honest boundary (§11.4.6)</h2>
+<ul>
+<li>This document authorises the <strong>container privilege</strong>
+Cuttlefish needs; it does NOT claim Tier-2 has run. The Tier-2 bring-up
++ apply recipe and its still-open <code>UNCONFIRMED:</code> items (exact
+Virtual-A/B-vs-legacy on the chosen image; the exact corrupt-slot
+mechanism) live in <code>docs/design/CUTTLEFISH_TIER2.md</code> and
+remain open there.</li>
+<li>The exception is <strong>operator-gated for first use</strong>: the
+first privileged <code>launch_cvd</code> requires operator authorisation
+to run a rootful <code>--privileged</code> container on the test host
+(high-blast-radius capability grant, §11.4.101 / §11.4.21). Until then
+the path is
+<code>designed + authorised-in-doc, pending operator privileged-launch authorization</code>
+— not a green, not <code>Operator-blocked</code> beyond that one
+authorisation.</li>
+</ul>
+<h2 id="sources-verified-2026-06-22">Sources verified 2026-06-22</h2>
+<ul>
+<li>[SRC-CF-CONTAINER] <code>google/android-cuttlefish</code> —
+<code>container/README.md</code>, GitHub —
+https://github.com/google/android-cuttlefish (Cuttlefish-in-a-container
+run uses <code>--privileged</code> with host <code>/dev/kvm</code>,
+<code>/dev/vhost-vsock</code>, <code>/dev/vhost-net</code>,
+<code>/dev/vsock</code>, <code>/dev/net/tun</code> passthrough + host
+networking) — accessed 2026-06-22.</li>
+<li>[SRC-CF-GET-STARTED] Get started — Cuttlefish, Android Open Source
+Project — https://source.android.com/docs/devices/cuttlefish/get-started
+(host KVM + group membership
+<code>kvm</code>/<code>cvdnetwork</code>/<code>render</code>;
+<code>ci.android.com</code> image fetch; public
+<code>aosp_cf_x86_64_only_phone-userdebug</code> target, no credentials)
+— accessed 2026-06-22.</li>
+<li>[SRC-CF-ONPREM] On-premises Cuttlefish, AOSP —
+https://source.android.com/docs/devices/cuttlefish/on-premises (host
+networking / <code>cvd-ebr</code> bridge + tap-device requirements for
+multi-instance Cuttlefish networking) — accessed 2026-06-22.</li>
+<li>[SRC-PODMAN-PRIV] Podman <code>run --privileged</code> docs —
+privileged containers grant the device + capability access that rootless
+containers lack; rootless cannot create host bridges/tap devices —
+accessed 2026-06-22.</li>
+<li>[SRC-ROOTLESS-NET] Rootless container networking (oneuptime / Podman
+rootless networking writeup) — rootless uses
+<code>slirp4netns</code>/<code>pasta</code> userspace networking and
+cannot perform <code>CAP_NET_ADMIN</code> host-namespace operations
+(bridge/tap creation, <code>/proc/sys/net</code> writes) — accessed
+2026-06-22.</li>
+<li>[SRC-NONPRIV-POD] Non-privileged Cuttlefish-pod community writeup
+(Medium) — documents why a non-privileged pod cannot create the
+Cuttlefish bridge/tap network and the privileged path it required
+instead — accessed 2026-06-22.</li>
+<li>[SRC-UE-SEARCH] <code>platform/system/update_engine</code> README /
+testing notes, Git at Google — “Cuttlefish works as well” for testing
+the real <code>update_engine</code> A/B apply — accessed
+2026-06-22.</li>
+</ul>
+<h3 id="negative-findings-gaps-11.4.99b">Negative findings / gaps
+(§11.4.99(B))</h3>
+<ul>
+<li>Deep research (§11.4.150) surfaced <strong>no</strong> working
+rootless-Podman Cuttlefish recipe; every documented, working path is
+<code>--privileged</code>. Absence of a rootless recipe across the
+official container README + AOSP on-premises docs + community writeups
+is the cited basis for “no rootless option” under §11.4.161 — not an
+assumption.</li>
+<li><code>UNCONFIRMED:</code> whether <code>nezha</code>’s
+<code>vhost_vsock</code>/<code>vhost_net</code> are built-in vs
+unloaded, and whether the <code>/dev/vsock</code> client node is
+required in addition to <code>/dev/vhost-vsock</code> on this kernel —
+both are verify-before-first-launch items (§4), not blockers to
+recording this exception.</li>
+</ul>
+</body>
+</html>
