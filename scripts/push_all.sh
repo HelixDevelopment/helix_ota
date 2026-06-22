@@ -131,15 +131,37 @@ declare -A REMOTE_STATUS
 
 push_one_remote() {
     local remote="$1"
-    local lock_file="$PROJECT_ROOT/.git/.push.${remote}.lock"
+    local lock_dir="$PROJECT_ROOT/.git/.push.${remote}.lock.d"
 
-    # Per-remote flock — serializes concurrent pushes to same remote,
-    # allows different-remote pushes in parallel (§11.4.88)
-    exec 9>"$lock_file"
-    if ! flock -n 9; then
-        log_warn "Remote $remote: another push is running — skipping"
-        REMOTE_STATUS["$remote"]="SKIPPED_LOCKED"
-        return 0
+    # Per-remote lock (§11.4.88) — serializes concurrent pushes to the SAME
+    # remote, allows different-remote pushes in parallel. flock(1) is Linux-only
+    # and ABSENT on macOS/BSD (§11.4.67/§11.4.81 — `flock: command not found`
+    # silently skipped every remote, then the summary falsely reported success),
+    # so use an atomic mkdir lock that works on every POSIX host; prefer flock
+    # when it is actually present.
+    if command -v flock >/dev/null 2>&1; then
+        exec 9>"$PROJECT_ROOT/.git/.push.${remote}.lock"
+        if ! flock -n 9; then
+            log_warn "Remote $remote: another push is running — skipping"
+            REMOTE_STATUS["$remote"]="SKIPPED_LOCKED"
+            return 0
+        fi
+        trap 'exec 9>&-' RETURN
+    else
+        if ! mkdir "$lock_dir" 2>/dev/null; then
+            # stale-lock break: is the recorded holder PID gone?
+            local _holder; _holder=$(cat "$lock_dir/pid" 2>/dev/null || echo "")
+            if [[ -n "$_holder" ]] && ! kill -0 "$_holder" 2>/dev/null; then
+                rm -rf "$lock_dir" 2>/dev/null
+            fi
+            if ! mkdir "$lock_dir" 2>/dev/null; then
+                log_warn "Remote $remote: another push holds the lock — skipping"
+                REMOTE_STATUS["$remote"]="SKIPPED_LOCKED"
+                return 0
+            fi
+        fi
+        echo $$ > "$lock_dir/pid" 2>/dev/null || true
+        trap 'rm -rf "$lock_dir" 2>/dev/null' RETURN
     fi
 
     local attempt=0
@@ -227,8 +249,20 @@ for remote in "${REMOTE_LIST[@]}"; do
     esac
 done
 
-if [[ $TOTAL_FAILURES -gt 0 ]]; then
-    log_error "$TOTAL_FAILURES remote(s) FAILED — see $LOG_PATH"
+# Honest accounting (§11.4.1): a remote is "pushed" ONLY if OK or PHASED.
+# SKIPPED_LOCKED / FAILED / UNKNOWN are NOT confirmed pushes — NEVER report
+# success on them (the prior code exited 0 + "All upstreams pushed" even when
+# every remote was skipped — a §11.4.1 false-success bluff at the push layer).
+NOT_CONFIRMED=0
+for remote in "${REMOTE_LIST[@]}"; do
+    case "${REMOTE_STATUS[$remote]:-UNKNOWN}" in
+        OK|PHASED) : ;;
+        *)         NOT_CONFIRMED=$((NOT_CONFIRMED + 1)) ;;
+    esac
+done
+
+if [[ $TOTAL_FAILURES -gt 0 || $NOT_CONFIRMED -gt 0 ]]; then
+    log_error "$NOT_CONFIRMED remote(s) NOT confirmed pushed (${TOTAL_FAILURES} hard-failed) — see $LOG_PATH"
     exit 1
 fi
 

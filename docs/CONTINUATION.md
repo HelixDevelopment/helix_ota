@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 2
-**Last modified:** 2026-06-21T15:23:00Z
+**Revision:** 3
+**Last modified:** 2026-06-22T08:10:00Z
 
 ---
 
@@ -9,9 +9,21 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `79acb1cd` `fix(security): add input validation + shell-escaping to boot_android_emulator.sh` |
-| **Phase** | Emulator Tier-2 validation — real Android A/B `update_engine` + AVB/dm-verity + auto-rollback |
+| **HEAD** | `998c6af2` `chore(workable-now): full verification sweep — gofmt, §11.4.166 semgrep, A/B re-proof, recordings, Status reconcile` |
+| **Phase** | Stable / release-readiness — all autonomous work GREEN; remaining items hardware/operator-gated |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets |
+
+### Latest session (2026-06-22) — "do everything workable" sweep
+
+All autonomous items GREEN with real captured evidence (no bluffs):
+- Test sweep GREEN (server 11/11 + 4 Go submodules 3/3, `-race` 0); **gofmt fixed** (13 files); pre-build gates PASS; docs_chain in-sync.
+- **Local QEMU A/B OTA 6/6 GREEN** (smoke/boot/slot-switch/rollback/OTA-apply) — evidence `docs/qa/20260622T07*`. Fixed a real §11.4.115 RED-mode polarity isolation bug in `ab_rauc_verity.sh` (RED×2+GREEN×2 deterministic).
+- **10 server-feature recordings regenerated**, vision-verified (203 HTTP assertions) — `docs/qa/20260622-server-recordings-regen/`; Status.md §11.4.153 reconciled to durable paths.
+- **§11.4.166 Semgrep**: propagated §11.4.160-166 into CLAUDE/AGENTS/GEMINI; tokenless local scan wired into `commit_all.sh`; constitution pin → `09d8940` (adds `docs/semgrep/TOKEN_SETUP.md`); 7 findings triaged → **0 remaining** (TLS MinVersion fix + cited suppressions).
+- Submodule push parity closed (`ota-update-engine-bridge`, `ota-android-agent`); GitFlic "blocker" disproven; §11.4.30 transient `qa-results/` untracked+ignored (232 files).
+- nezha AVD boot proven; real Android A/B = honest **operator-attended SKIP** (Cuttlefish unprovisioned — needs sudo+reboot+fetch_cvd).
+
+**Operator action items:** (1) Semgrep `SEMGREP_APP_TOKEN` — follow `constitution/docs/semgrep/TOKEN_SETUP.md` (`semgrep login`) to silence the MCP hook (optional; tokenless gate already compliant); (2) provision Cuttlefish on nezha to unblock real Android A/B; (3) RK3588 board for OTA-004/F55/F56.
 
 ### Active items
 
