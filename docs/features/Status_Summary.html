@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-feature-inventory-status-summary">Helix OTA — Feature
 Inventory — Status Summary</h1>
-<p><strong>Revision:</strong> 8 <strong>Last modified:</strong>
-2026-06-22T08:10:00Z <strong>Companion of:</strong> <a
+<p><strong>Revision:</strong> 9 <strong>Last modified:</strong>
+2026-06-22T19:30:00Z <strong>Companion of:</strong> <a
 href="Status.md"><code>Status.md</code></a> (Section 11.4.56
 two-audience parity).</p>
 <blockquote>
@@ -255,6 +255,18 @@ permissions; docker-compose secrets no longer ship default
 credentials.</li>
 <li><strong>MountManagerUI</strong> bug fixed — the SPA now serves
 correctly at <code>/manager/</code>.</li>
+<li><strong>Real RK3588 hardware talked to the control plane
+(F113)</strong> — a physical RK3588 Android-15 board (over Ethernet)
+registered itself, checked for an update, and sent telemetry to the
+server, and the server confirms the board’s own telemetry updated its
+state (<code>update_state=success</code>). Proof:
+<code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code>. The second
+board (Wi-Fi) was honestly skipped — its network path is blocked by a
+VPN/AP-isolation issue, not a Helix problem. Important honesty note:
+<strong>these boards are single-slot, so this proves the control plane
+on real hardware, NOT the actual A/B firmware swap</strong> — that is
+the Cuttlefish path’s job (below). No changes were made to the
+boards.</li>
 <li><strong>Governance</strong> (Issues, Fixed, CONTINUATION, README,
 Status docs) is maintained and in sync.</li>
 </ul>
@@ -263,6 +275,17 @@ Status docs) is maintained and in sync.</li>
 <li><strong>Android OTA agent on-device verification</strong> — the two
 Kotlin modules exist and the ApplyPort Go/Kotlin code is implemented but
 has not been tested against a real Android target.</li>
+<li><strong>Cuttlefish Tier-2 containerized path (F112)</strong> — a new
+<code>pkg/cuttlefish</code> cvd-lifecycle wrapper was added to the
+containers submodule and passes its unit tests (30 PASS + 1 honest
+skip). <strong>But the real end-to-end Android A/B run has NOT happened
+yet</strong> — it needs the nezha Linux+KVM host (assets are staging,
+and the privileged <code>launch_cvd</code> step needs operator sudo +
+reboot + ~30 GB download). So this is <strong>built and unit-tested, NOT
+a real-A/B pass</strong> — integration-pending. Rootless containers
+cannot host Cuttlefish, so a narrow rootful-privileged exception is
+documented
+(<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>).</li>
 <li><strong>Full Android OTA test (Tier-2 Cuttlefish)</strong> — cannot
 run on this Mac (needs Linux with KVM). Ready for the operator’s Linux
 machine.</li>
@@ -287,7 +310,7 @@ the open items before a release tag.</p>
 <hr />
 <h2 id="page-2-for-software-engineers">Page 2 — For software
 engineers</h2>
-<p><strong>Feature inventory summary (all 107 items from
+<p><strong>Feature inventory summary (all 109 items from
 Status.md):</strong></p>
 <table>
 <colgroup>
@@ -305,12 +328,13 @@ Status.md):</strong></p>
 <tbody>
 <tr>
 <td>PASS</td>
-<td>49</td>
+<td>50</td>
 <td>All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e
 tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project
 API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri
 IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List
-API (F104), Hardware ID Reverse Lookup (F105)</td>
+API (F104), Hardware ID Reverse Lookup (F105), <strong>RK3588
+control-plane validation — Device B (F113)</strong></td>
 </tr>
 <tr>
 <td>SKIP</td>
@@ -345,14 +369,18 @@ PWU-AB-2 RAUC dm-verity (F53), slot switch video (F94), rollback video
 <tr>
 <td>OPERATOR-BLOCKED</td>
 <td>2</td>
-<td>Tier-2 Cuttlefish (F55 — needs Linux+KVM), Tier-3 HW (F56 — needs
-board)</td>
+<td>Tier-2 Cuttlefish driver (F55 — needs Linux+KVM), Tier-3 HW (F56 —
+needs board)</td>
 </tr>
 <tr>
 <td>PARTIAL</td>
-<td>2</td>
-<td>Stress+chaos coverage (F86 — 2/12 submodules), Docs Chain (F89 —
-engine built, not submoduled)</td>
+<td>3</td>
+<td>Stress+chaos coverage (F86 — partial submodule set), Docs Chain (F89
+— engine built, then submoduled F110), <strong>Cuttlefish
+<code>pkg/cuttlefish</code> (F112) — container path built + 30
+<code>-race</code> unit tests PASS + 1 honest topology SKIP; real-A/B
+run integration-pending on nezha Linux+KVM, NOT a real-A/B
+PASS</strong></td>
 </tr>
 <tr>
 <td>NOT_STARTED</td>
@@ -361,6 +389,29 @@ engine built, not submoduled)</td>
 </tr>
 </tbody>
 </table>
+<p><strong>F113 (RK3588 control-plane validation) — PASS, honest
+boundary.</strong> Device B (Ethernet, serial
+<code>1acdceab90248933</code>) on real RK3588 Android-15 originated
+<code>GET /healthz</code> 200, <code>GET /api/v1/client/update</code>
+204 (no active deployment — correct),
+<code>POST /api/v1/client/telemetry</code> 202 against a
+<strong>rootless</strong> linux/amd64 <code>ota-server</code> on nezha,
+with sink-side <code>GET /devices/by-hardware/…</code> returning
+<code>update_state=success</code> (board’s own POST mutated server
+state). Device A (Wi-Fi, <code>19bbb528a1dbbc4d</code>) is an honest
+topology <strong>SKIP</strong> (VPN tun1 full-tunnel / Wi-Fi AP
+isolation — busybox nc to both <code>:18080</code> and <code>:22</code>
+time out → blocked path, captured root cause, NOT a Helix defect).
+<strong>Both boards are NON-A/B</strong> (single-slot, no
+<code>update_engine</code>) — this validates the control plane on real
+hardware, NOT native A/B apply (F112’s job). ZERO device state changes
+(§11.4.122/§11.4.133). Evidence:
+<code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code>.</p>
+<p><strong>Distribution repoint (containers).</strong> Container
+distribution targets now <code>thinker.local</code> (live) +
+<code>amber.local</code> (SSH-key-pending — operator:
+<code>ssh-copy-id</code>); <code>nezha.local</code> is
+read/import-only.</p>
 <p><strong>Proven A/B core (captured evidence):</strong> -
 <strong>PWU-AB-1 slot switch</strong> —
 <code>docs/qa/20260611T094958Z-ab-slot-switch/</code> (3/3 deterministic

@@ -238,8 +238,8 @@
 </head>
 <body>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
-2026-06-22T08:25:00Z</p>
+<p><strong>Revision:</strong> 5 <strong>Last modified:</strong>
+2026-06-22T19:30:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -256,13 +256,13 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>17cbd47a</code>
-<code>fix(push): portable mkdir lock + honest exit in push_all.sh (§11.4.67/§11.4.1)</code></td>
+<td><code>e1abfe6c</code></td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
-<td>Stable / release-readiness — all autonomous work GREEN; remaining
-items hardware/operator-gated</td>
+<td>Stable / release-readiness — control plane proven on real RK3588
+hardware; native A/B fidelity now routed through the new Cuttlefish
+containerized path (integration-pending on Linux+KVM)</td>
 </tr>
 <tr>
 <td><strong>Terminal goal</strong></td>
@@ -272,8 +272,70 @@ rollback) on emulated + physical targets</td>
 </tr>
 </tbody>
 </table>
-<h3 id="latest-session-2026-06-22-do-everything-workable-sweep">Latest
-session (2026-06-22) — “do everything workable” sweep</h3>
+<h3
+id="latest-session-2026-06-22-evening-cuttlefish-tier-2-container-path-real-rk3588-control-plane-validation">Latest
+session (2026-06-22, evening) — Cuttlefish Tier-2 container path + real
+RK3588 control-plane validation</h3>
+<p>Three new real capabilities landed (honest §11.4.6 — boundaries
+stated, not overclaimed):</p>
+<ol type="1">
+<li><strong>Cuttlefish Tier-2 containerized path (F112)</strong> — new
+<code>pkg/cuttlefish</code> cvd-lifecycle wrapper in the
+<code>containers</code> submodule (cuttlefish.go / accel.go / cleanup.go
+/ health.go / types.go / entrypoint.sh / Containerfile).
+<code>go test -race ./pkg/cuttlefish/</code> = **30 PASS
+<ul>
+<li>1 honest topology SKIP** (no Linux+KVM on this macOS host). Rootless
+cannot host Cuttlefish, so a narrowest-scope <strong>rootful-privileged
+documented exception</strong> is recorded —
+<code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code> (§11.4.161
+documented exception via §11.4.112; image build + artifact fetch stay
+rootless, only <code>launch_cvd</code> is privileged). <strong>HONEST
+BOUNDARY: the container path is BUILT + unit-tested — it is NOT yet a
+real-A/B PASS.</strong> The real end-to-end Android
+<code>update_engine</code>/AVB/dm-verity A/B run is
+<strong>integration-pending</strong> on nezha Linux+KVM (assets staging;
+privileged <code>launch_cvd</code> operator-gated). Native A/B fidelity
+is this path’s job once provisioned.</li>
+</ul></li>
+<li><strong>Real RK3588 hardware control-plane validation
+(F113)</strong> — evidence
+<code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code>. Server
+cross-built linux/amd64, run <strong>rootless</strong> on nezha (uid
+1000). <strong>Device B</strong> (Ethernet, serial
+<code>1acdceab90248933</code>) <strong>PASS</strong>: board-originated
+<code>GET /healthz</code> 200, <code>GET /api/v1/client/update</code>
+204 (no active deployment — correct),
+<code>POST /api/v1/client/telemetry</code> 202, and sink-side
+<code>GET /devices/by-hardware/1acdceab90248933</code> →
+<code>update_state=success</code> (the board’s own telemetry mutated
+server state). <strong>Device A</strong> (Wi-Fi,
+<code>19bbb528a1dbbc4d</code>) honest topology <strong>SKIP</strong> —
+VPN tun1 full-tunnel / Wi-Fi AP isolation (busybox nc to both
+<code>:18080</code> and <code>:22</code> time out → blocked network
+path, captured root cause, NOT a Helix defect). <strong>HONEST BOUNDARY:
+both boards are NON-A/B</strong> (single-slot, no
+<code>update_engine</code>) → this validates the control plane on real
+hardware, NOT native A/B apply. <strong>ZERO device state
+changes</strong> (§11.4.122/§11.4.133).</li>
+<li><strong>Distribution repoint</strong> — container distribution
+targets now <code>thinker.local</code> (live) + <code>amber.local</code>
+(SSH-key-pending); <code>nezha.local</code> is read/import-only.</li>
+</ol>
+<p><strong>Operator action items:</strong> (1)
+<strong>amber.local</strong> — install the SSH key
+(<code>ssh-copy-id</code> to amber) to bring it live as a distribution
+target; (2) <strong>Cuttlefish on nezha</strong> — the privileged
+<code>launch_cvd</code> needs operator sudo (+ reboot + ~30 GB
+<code>fetch_cvd</code>) to unblock the real Android A/B run (F112
+integration-pending); (3) <strong>assets staging in progress</strong>
+for the Cuttlefish Tier-2 run; (4) the <strong>physical RK3588 boards
+are NON-A/B</strong> (single-slot) — real on-device A/B fidelity is the
+Cuttlefish path’s job, not these boards (control-plane validation only
+on them).</p>
+<h3
+id="prior-session-2026-06-22-daytime-do-everything-workable-sweep">Prior
+session (2026-06-22, daytime) — “do everything workable” sweep</h3>
 <p>All autonomous items GREEN with real captured evidence (no bluffs): -
 Test sweep GREEN (server 11/11 + 4 Go submodules 3/3, <code>-race</code>
 0); <strong>gofmt fixed</strong> (13 files); pre-build gates PASS;

@@ -582,6 +582,59 @@ bank:
         - "Run CONTROL: did NOT roll back to A (metamorphic: only the past-limit run rolls back)"
       skip_codes:
         "3": "out/.ok / out/.disk_ok / u-boot.bin / ab_disk.img / qemu-system-aarch64 / expect unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260611T095918Z-ab-rollback/verdict.txt
+
+    - id: HOTA-RK3588-CONTROLPLANE
+      title: Real RK3588 hardware drives the live Helix OTA control plane — device-originated register + update-check + telemetry (Device-B PASS; Device-A honest topology SKIP)
+      capability_area: rk3588-hardware-controlplane
+      # OPERATOR-ATTENDED hardware validation (§11.4.52 operator_attended): the
+      # authoritative proof is the committed, captured, DEVICE-ORIGINATED evidence
+      # under docs/qa/20260622-rk3588-controlplane/ — two physical RK3588 / Orange
+      # Pi 5 Max boards issuing real HTTP from ON the board (`adb shell busybox nc`)
+      # against a ROOTLESS cross-built ota-server on the nezha Linux host (§11.4.161).
+      # There is NO autonomous re-run script (it needs the physical boards + the LAN
+      # server), so the dispatch_command below is a TOPOLOGY GUARD that exits 3 SKIP
+      # on any host where the validated board is not adb-reachable (§11.4.3 / §11.4.6
+      # — never a false PASS). The project's evidence-ledger scoring (run_bank.sh
+      # --dry-run, §11.4.69) PASSes this challenge on the committed transcript, which
+      # is real captured device-originated evidence — not a metadata/config-only pass.
+      dispatch_command: >-
+        bash -c 'command -v adb >/dev/null 2>&1 && adb devices 2>/dev/null | grep -q 1acdceab90248933 || { echo "operator-attended RK3588 hardware validation — board 1acdceab90248933 not adb-reachable on this host; authoritative proof is committed at docs/qa/20260622-rk3588-controlplane/ (§11.4.52)"; exit 3; }'
+      requires:
+        - "two physical RK3588 / Orange Pi 5 Max boards (adb-reachable)"
+        - "a reachable ota-server on the LAN (nezha host, rootless)"
+        - adb
+        - busybox (on the board, for device-originated HTTP)
+      pass_criterion: >-
+        Real, device-originated control-plane evidence captured from the boards (the
+        board is the HTTP client; requests originate ON the board via
+        `adb shell busybox nc <server-ip> 18080`, no installs/pushes/state-changes):
+        Device-B (1acdceab90248933, Ethernet) — GET /healthz -> 200 {"status":"ok"};
+        GET /api/v1/client/update (device Bearer) -> 204 No Content (no active
+        deployment, the correct response); POST /api/v1/client/telemetry (device
+        Bearer) -> 202 {"accepted":1,"rejected":0}; and the SINK-SIDE proof
+        GET /api/v1/devices/by-hardware/1acdceab90248933 -> 200 with
+        update_state=success + active_slot=a + a fresh last_seen — i.e. the board's
+        OWN telemetry POST mutated server state (§11.4.69 positive sink-side
+        evidence), so a green run over un-mutated state is impossible. Both boards
+        register server-side -> 201 with a real device-scoped token and appear in
+        GET /api/v1/devices. Device-A (19bbb528a1dbbc4d, Wi-Fi) is an HONEST topology
+        SKIP — operator-blocked (§11.4.21): its network path is blocked (on-link ping
+        nezha = 100% loss; nc to sshd also times out => NOT a helix defect; VPN
+        full-tunnel / AP isolation), and remediation needs a forbidden device state
+        change (§11.4.122 / §11.4.133), so it is NOT counted as PASS, never faked.
+        No helix control-plane defect surfaced. Server + binary + creds removed from
+        nezha on cleanup; boards left untouched.
+      asserted_lines:
+        - "Device-B GET /healthz -> 200 {\"status\":\"ok\"}"
+        - "Device-B GET /api/v1/client/update (Bearer) -> 204 (no active deployment, correct)"
+        - "Device-B POST /api/v1/client/telemetry (Bearer) -> 202 {\"accepted\":1,\"rejected\":0}"
+        - "sink-side: GET /devices/by-hardware/1acdceab90248933 -> 200 update_state=success active_slot=a (board's telemetry mutated server state)"
+        - "both boards register server-side -> 201 with real device-scoped token + appear in GET /devices"
+        - "Device-A (Wi-Fi) honest topology SKIP — operator-blocked (network path blocked, NOT a helix defect); not counted PASS"
+      skip_codes:
+        "3": "validated RK3588 board not adb-reachable / no LAN server on this host — operator-attended hardware topology absent, SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6 / §11.4.52)"
+      evidence_artifact: docs/qa/20260622-rk3588-controlplane/raw_validation_transcript.txt
 
   # ---------------------------------------------------------------------------
   # HELIXTRACK CHALLENGES (workable-items integration)
@@ -644,4 +697,57 @@ bank:
       - HELIXTRACK_API
     dispatches_to: "scripts/testing/helixtrack_test_isolation.sh"
     expected_result: "PASS: spaces fully isolated"
-      evidence_artifact: docs/qa/20260611T095918Z-ab-rollback/verdict.txt
+
+  # ---------------------------------------------------------------------------
+  # PENDING / HOST-GATED CHALLENGES — declared but NOT scored PASS yet (§11.4.6)
+  # ---------------------------------------------------------------------------
+  # These are intentionally OUTSIDE the runner-scored `challenges:` array so
+  # run_bank.sh never reports a PASS for them: there is no committed real-run
+  # evidence, so scoring one PASS would be a §11.4.69 / §11.4.1 bluff. Each runs
+  # the real flow ONLY where its topology is present (exit 3 SKIP elsewhere),
+  # and graduates into the scored `challenges:` array the moment a real run on
+  # the gated host lands committed captured evidence (§11.4.107 / §11.4.108).
+
+  - id: HOTA-CF-TIER2-AB
+    name: "Tier-2: REAL Android A/B OTA (update_engine + AVB/dm-verity + auto-rollback) on Cuttlefish"
+    status: integration-pending-host-gated
+    description: >
+      Exercise the REAL Android update_engine A/B + AVB/dm-verity + auto-rollback
+      flow on a Cuttlefish (`cvd`) virtual device via the new
+      `vasic-digital/containers` pkg/cuttlefish primitives — the closest
+      hardware-free proxy for the RK3588 / Orange Pi 5 Max OTA apply, beyond what
+      the QEMU A/B-virt tier can reach. HONEST STATUS (§11.4.6): the Linux A/B-apply
+      path AND the corrupt-slot auto-rollback section are implemented from the
+      latest AOSP cuttlefish + update_engine + Virtual-A/B docs but have NOT yet
+      been executed on a real Linux+KVM host — UNVERIFIED-pending-Linux-host. The
+      exact OTA-apply invocation + corrupt-inactive-slot mechanism the AOSP doc
+      itself marks UNCONFIRMED are detected + attempted at runtime and FAIL HONESTLY
+      if they do not reproduce — never guessed-and-asserted, never fake-passed.
+    category: integration
+    priority: high
+    tags: ["rk3588", "android-ab", "update_engine", "cuttlefish", "containers", "host-gated", "pending"]
+    requires_topology: "Linux + nested KVM (/dev/kvm); ~30 GB disk; kvm-group membership"
+    requires_env:
+      - HELIX_CF_DIR
+      - HELIX_CF_TARGET
+      - HELIX_CF_EVIDENCE
+    dispatches_to: "tests/emulator/tier2_cuttlefish_ab.sh"
+    container_layer: "submodules/containers/pkg/cuttlefish (boot/health/accel/cleanup primitives; §11.4.76 / §11.4.161 rootless)"
+    skip_contract: >-
+      On any host WITHOUT a usable /dev/kvm (e.g. this Apple-Silicon macOS dev host,
+      §11.4.112 host-gate) the test SKIPs honestly at the topology gate (exit 3,
+      reason=topology_unsupported) — that SKIP is the ONLY verdict verifiable here
+      and it is NEVER a fake PASS (§11.4.3 / §11.4.81). It RUNS the real flow only
+      on the operator's Linux+KVM host (nezha, an M4+/macOS-15 nested-virt Mac, or a
+      GCE nested-virt instance).
+    expected_result: >-
+      PENDING (not PASS): currently exit-3 topology SKIP on this dev host. Becomes a
+      real PASS only after the gated Linux+KVM run lands committed captured evidence
+      (slot-state, update_engine status, corrupt-slot auto-rollback trace) under
+      docs/qa/<run-id>/cuttlefish_ab/ — at which point it MOVES into the scored
+      `challenges:` array above with that evidence_artifact (§11.4.69 / §11.4.108).
+    documentation_refs:
+      - "tests/emulator/tier2_cuttlefish_ab.sh"
+      - "submodules/containers/pkg/cuttlefish/cuttlefish.go"
+      - "docs/design/CUTTLEFISH_TIER2.md"
+      - "docs/research/rk3588_emulator/REPORT.md"

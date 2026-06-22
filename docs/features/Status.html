@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
 Inventory and Status</h1>
-<p><strong>Revision:</strong> 16 <strong>Last modified:</strong>
-2026-06-22T08:10:00Z <strong>Scope:</strong> Comprehensive inventory of
+<p><strong>Revision:</strong> 17 <strong>Last modified:</strong>
+2026-06-22T19:30:00Z <strong>Scope:</strong> Comprehensive inventory of
 every feature, component, subsystem, test suite, and infrastructure
 concern across the Helix OTA monorepo — covering the Go server, Go
 submodules, Android submodules, emulation tiers, e2e/security tests,
@@ -2025,6 +2025,81 @@ qa-results/workable_items/20260620T201912Z/.</td>
 <td>Full migration test suite: 47 tests covering schema, Issues/Fixed
 sync, orphans, concurrent safety. All PASS.</td>
 </tr>
+<tr>
+<td>F112</td>
+<td>Containers</td>
+<td>containers pkg/cuttlefish</td>
+<td>Cuttlefish <code>cvd</code> lifecycle wrapper — Tier-2 containerized
+Android A/B path</td>
+<td>PARTIAL</td>
+<td>containers/pkg/cuttlefish/ — cuttlefish.go, accel.go, cleanup.go,
+health.go, types.go, entrypoint.sh, Containerfile (cvd
+launch/health/cleanup lifecycle); rootful-privileged documented
+exception <code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>
+(§11.4.161 documented exception via §11.4.112 — rootless infeasible: cvd
+needs <code>--privileged</code> + <code>cvd-ebr</code> bridge + tap
+devices, cited)</td>
+<td><code>go test -race ./pkg/cuttlefish/</code> — 30 PASS + 1 honest
+topology SKIP (no Linux+KVM on this macOS host)</td>
+<td>Unit-level cvd-lifecycle wrapper BUILT + race-tested. Real
+end-to-end A/B apply NOT yet exercised.</td>
+<td>integration-pending — NO real-A/B recording on this host: end-to-end
+run is gated on nezha Linux+KVM (assets staging in progress; privileged
+<code>launch_cvd</code> operator-gated, needs sudo+reboot+~30 GB
+fetch_cvd).</td>
+<td><strong>Container path BUILT + unit-tested — NOT yet a real-A/B PASS
+(honest §11.4.6).</strong> The <code>pkg/cuttlefish</code> cvd-lifecycle
+wrapper compiles and passes 30 <code>-race</code> unit tests + 1 honest
+topology SKIP. Rootful-privileged launch is a §11.4.161 documented
+exception (rootless cannot host Cuttlefish — cited in the exception
+doc). Real Android <code>update_engine</code>/AVB/dm-verity A/B apply
+through this path is <strong>integration-pending</strong> (OTA-003;
+complements the operator-blocked Tier-2 driver F55). Native A/B fidelity
+is this path’s job once provisioned.</td>
+</tr>
+<tr>
+<td>F113</td>
+<td>Hardware</td>
+<td>RK3588 control-plane validation</td>
+<td>Device-originated register / update-check / telemetry on real RK3588
+Android-15 boards</td>
+<td>PASS</td>
+<td>Evidence:
+<code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code> (+
+raw_validation_transcript.txt, d1_wifi_network_rootcause.txt,
+server_log_and_cleanup.txt). Server: <code>server/cmd/ota-server</code>
+cross-built linux/amd64, run <strong>rootless</strong> on nezha (uid
+1000, in-memory). Device HTTP via <code>busybox nc</code> originating ON
+the board.</td>
+<td>Device B (Ethernet, serial <code>1acdceab90248933</code>): GET
+/healthz → 200 <code>{"status":"ok"}</code>; GET /api/v1/client/update
+(Bearer) → 204 No Content (no active deployment — correct); POST
+/api/v1/client/telemetry (Bearer) → 202
+<code>{"accepted":1,"rejected":0}</code>; sink-side GET
+/devices/by-hardware/1acdceab90248933 → 200
+<code>update_state=success, active_slot=a</code> (board’s own POST
+mutated server state).</td>
+<td>Device-originated control-plane round-trip + sink-side
+state-mutation proof on <strong>real RK3588 Android-15
+hardware</strong>. ZERO device state changes (§11.4.122/§11.4.133).</td>
+<td>PASS proof = curated
+<code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code> —
+device-originated 204/202 + sink-side <code>update_state=success</code>.
+Device A (Wi-Fi, serial <code>19bbb528a1dbbc4d</code>) honest topology
+<strong>SKIP</strong> (VPN tun1 full-tunnel / Wi-Fi AP-isolated —
+busybox nc to nezha:18080 AND nezha:22 both time out → network path
+blocked, NOT a helix defect; root-cause captured).</td>
+<td><strong>Device B PASS — control-plane validation ONLY (honest
+boundary §11.4.6).</strong> A real RK3588 Android-15 board originated
+register/update-check/telemetry against the rootless ota-server, and the
+server’s by-hardware endpoint confirms the board’s own telemetry mutated
+server state (<code>update_state=success</code>). <strong>Both boards
+are NON-A/B</strong> (single-slot, no <code>update_engine</code>) → this
+validates the control plane, NOT native A/B apply; A/B fidelity is
+Cuttlefish’s job (F112). Device A is an honest topology SKIP (VPN/AP
+isolation, captured root cause), NOT a faked PASS. No on-device A/B, no
+state changes.</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -2182,11 +2257,12 @@ unit/stress/chaos all GREEN. Recording filenames follow §11.4.155
 <tbody>
 <tr>
 <td>PASS</td>
-<td>49</td>
+<td>50</td>
 <td>F01-F34, F44-F49, F57-F67, F69-F71, F74-F76, F90-F91, F98
 (MountManagerUI), F99 (IDOR Security), F100 (Tauri IPC), F101 (Docker
 Secrets), F103 (Remote Deploy), F104 (Devices List API), F105 (Hardware
-ID Reverse Lookup)</td>
+ID Reverse Lookup), F113 (RK3588 control-plane validation — Device
+B)</td>
 </tr>
 <tr>
 <td>SKIP</td>
@@ -2227,12 +2303,13 @@ Video), F95 (AB Rollback Video)</td>
 <tr>
 <td>OPERATOR-BLOCKED</td>
 <td>2</td>
-<td>F55 (Tier-2 Cuttlefish), F56 (Tier-3 HW)</td>
+<td>F55 (Tier-2 Cuttlefish driver), F56 (Tier-3 HW)</td>
 </tr>
 <tr>
 <td>PARTIAL</td>
-<td>1</td>
-<td>F86 (stress+chaos coverage)</td>
+<td>2</td>
+<td>F86 (stress+chaos coverage), F112 (Cuttlefish pkg/cuttlefish —
+container path built + unit-tested, real-A/B integration-pending)</td>
 </tr>
 <tr>
 <td>NOT_STARTED</td>
@@ -2241,6 +2318,12 @@ Video), F95 (AB Rollback Video)</td>
 </tr>
 </tbody>
 </table>
+<p>F113 (RK3588 control-plane validation) is a <strong>PASS</strong> for
+the Device-B control-plane round-trip on real RK3588 Android-15 hardware
+(sink-side <code>update_state=success</code>), with Device-A an honest
+topology SKIP — counted under PASS above. Both boards are NON-A/B
+(control-plane validation only; native A/B fidelity is F112’s Cuttlefish
+path).</p>
 <hr />
 <h2 id="provenance">Provenance</h2>
 <table>
@@ -2323,8 +2406,15 @@ internal packages all GREEN). Total recordings: 30 → 37. 20 previously
 F30-F34, F40-F41, F86). Executive Summary revised. |
 | 2026-06-22 | Rev 16 — Durable-evidence reconciliation
 (§11.4.153/§11.4.158, no-bluff §11.4.6): the cleared ephemeral
-`$</span>HOME/Downloads<code>raw corpus (§11.4.128) left ~103 video confirmations unbacked. Re-pointed the 10 autonomously-recordable server/e2e control-plane rows (F03 auth, F10/F58 recall, F12 device, F13 groups, F14 telemetry, F15 audit, F16 health, F59 rollout-halt, F60 signed-pipeline, F61 challenge-filters, F62 challenge-operational) to durable committed MP4s under</code>docs/qa/20260622-server-recordings-regen/mp4/<code>(vision-verified, REPORT.md). Re-pointed the local QEMU A/B firmware rows (F50 boot, F51/F94 slot-switch, F52/F95 rollback, F53 RAUC dm-verity) to the re-proven GREEN console evidence under</code>docs/qa/20260622T07*<code>(citing the PASS runs: slot-switch 071946Z, rollback 072030Z, rauc-verity 072224Z RED_MODE=0). Honestly re-marked the hardware/operator-gated rows (F42, F43 Android agent/bridge; F55 Tier-2 Cuttlefish; F56 Tier-3 RK3588) as OPERATOR-BLOCKED — no on-host recording — citing OTA-004 + the nezha operator-attended AVD-boot evidence (qa-results/20260622T071848Z-nezha-android-ab/). No feature rows deleted (§11.4.122); only Video-confirmation cells corrected. Remaining</code>$HOME/Downloads/…mp4`
-citations flagged non-durable via the Executive Summary banner.</td>
+`$</span>HOME/Downloads<code>raw corpus (§11.4.128) left ~103 video confirmations unbacked. Re-pointed the 10 autonomously-recordable server/e2e control-plane rows (F03 auth, F10/F58 recall, F12 device, F13 groups, F14 telemetry, F15 audit, F16 health, F59 rollout-halt, F60 signed-pipeline, F61 challenge-filters, F62 challenge-operational) to durable committed MP4s under</code>docs/qa/20260622-server-recordings-regen/mp4/<code>(vision-verified, REPORT.md). Re-pointed the local QEMU A/B firmware rows (F50 boot, F51/F94 slot-switch, F52/F95 rollback, F53 RAUC dm-verity) to the re-proven GREEN console evidence under</code>docs/qa/20260622T07*<code>(citing the PASS runs: slot-switch 071946Z, rollback 072030Z, rauc-verity 072224Z RED_MODE=0). Honestly re-marked the hardware/operator-gated rows (F42, F43 Android agent/bridge; F55 Tier-2 Cuttlefish; F56 Tier-3 RK3588) as OPERATOR-BLOCKED — no on-host recording — citing OTA-004 + the nezha operator-attended AVD-boot evidence (qa-results/20260622T071848Z-nezha-android-ab/). No feature rows deleted (§11.4.122); only Video-confirmation cells corrected. Remaining</code>$HOME/Downloads/…mp4<code>citations flagged non-durable via the Executive Summary banner. | | 2026-06-22 | Rev 17 — Three new real capabilities (honest §11.4.6): **F112** Cuttlefish Tier-2 containerized</code>pkg/cuttlefish<code>cvd-lifecycle wrapper (containers submodule) —</code>go
+test
+-race<code>30 PASS + 1 honest topology SKIP; rootful-privileged documented exception (</code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md<code>, §11.4.161/§11.4.112). **PARTIAL / integration-pending — container path BUILT + unit-tested, NOT yet a real-A/B PASS** (nezha Linux+KVM, assets staging, privileged launch_cvd operator-gated). **F113** real RK3588 hardware control-plane validation — evidence</code>docs/qa/20260622-rk3588-controlplane/REPORT.md<code>: Device B (Ethernet, serial 1acdceab90248933) PASS — device-originated register/update-check 204/telemetry 202 + sink-side</code>update_state=success`
+on real RK3588 Android-15 hardware; Device A (Wi-Fi) honest topology
+SKIP (VPN/AP-isolated). Both boards NON-A/B (single-slot, no
+update_engine) → control-plane validation only; ZERO device state
+changes. Summary-by-Status: PASS 49→50, PARTIAL 1→2. Distribution
+repoint (containers) now targets thinker.local (live) + amber.local
+(SSH-key-pending); nezha read/import-only.</td>
 </tr>
 <tr>
 <td>2026-06-21</td>

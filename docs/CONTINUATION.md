@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 4
-**Last modified:** 2026-06-22T08:25:00Z
+**Revision:** 5
+**Last modified:** 2026-06-22T19:30:00Z
 
 ---
 
@@ -9,11 +9,47 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `17cbd47a` `fix(push): portable mkdir lock + honest exit in push_all.sh (§11.4.67/§11.4.1)` |
-| **Phase** | Stable / release-readiness — all autonomous work GREEN; remaining items hardware/operator-gated |
+| **HEAD** | `e1abfe6c` |
+| **Phase** | Stable / release-readiness — control plane proven on real RK3588 hardware; native A/B fidelity now routed through the new Cuttlefish containerized path (integration-pending on Linux+KVM) |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets |
 
-### Latest session (2026-06-22) — "do everything workable" sweep
+### Latest session (2026-06-22, evening) — Cuttlefish Tier-2 container path + real RK3588 control-plane validation
+
+Three new real capabilities landed (honest §11.4.6 — boundaries stated, not overclaimed):
+
+1. **Cuttlefish Tier-2 containerized path (F112)** — new `pkg/cuttlefish` cvd-lifecycle
+   wrapper in the `containers` submodule (cuttlefish.go / accel.go / cleanup.go / health.go
+   / types.go / entrypoint.sh / Containerfile). `go test -race ./pkg/cuttlefish/` = **30 PASS
+   + 1 honest topology SKIP** (no Linux+KVM on this macOS host). Rootless cannot host Cuttlefish,
+   so a narrowest-scope **rootful-privileged documented exception** is recorded —
+   `docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md` (§11.4.161 documented exception via §11.4.112;
+   image build + artifact fetch stay rootless, only `launch_cvd` is privileged).
+   **HONEST BOUNDARY: the container path is BUILT + unit-tested — it is NOT yet a real-A/B PASS.**
+   The real end-to-end Android `update_engine`/AVB/dm-verity A/B run is **integration-pending**
+   on nezha Linux+KVM (assets staging; privileged `launch_cvd` operator-gated). Native A/B
+   fidelity is this path's job once provisioned.
+2. **Real RK3588 hardware control-plane validation (F113)** — evidence
+   `docs/qa/20260622-rk3588-controlplane/REPORT.md`. Server cross-built linux/amd64, run
+   **rootless** on nezha (uid 1000). **Device B** (Ethernet, serial `1acdceab90248933`) **PASS**:
+   board-originated `GET /healthz` 200, `GET /api/v1/client/update` 204 (no active deployment —
+   correct), `POST /api/v1/client/telemetry` 202, and sink-side
+   `GET /devices/by-hardware/1acdceab90248933` → `update_state=success` (the board's own
+   telemetry mutated server state). **Device A** (Wi-Fi, `19bbb528a1dbbc4d`) honest topology
+   **SKIP** — VPN tun1 full-tunnel / Wi-Fi AP isolation (busybox nc to both `:18080` and `:22`
+   time out → blocked network path, captured root cause, NOT a Helix defect). **HONEST BOUNDARY:
+   both boards are NON-A/B** (single-slot, no `update_engine`) → this validates the control plane
+   on real hardware, NOT native A/B apply. **ZERO device state changes** (§11.4.122/§11.4.133).
+3. **Distribution repoint** — container distribution targets now `thinker.local` (live) +
+   `amber.local` (SSH-key-pending); `nezha.local` is read/import-only.
+
+**Operator action items:** (1) **amber.local** — install the SSH key (`ssh-copy-id` to amber) to
+bring it live as a distribution target; (2) **Cuttlefish on nezha** — the privileged `launch_cvd`
+needs operator sudo (+ reboot + ~30 GB `fetch_cvd`) to unblock the real Android A/B run (F112
+integration-pending); (3) **assets staging in progress** for the Cuttlefish Tier-2 run; (4) the
+**physical RK3588 boards are NON-A/B** (single-slot) — real on-device A/B fidelity is the
+Cuttlefish path's job, not these boards (control-plane validation only on them).
+
+### Prior session (2026-06-22, daytime) — "do everything workable" sweep
 
 All autonomous items GREEN with real captured evidence (no bluffs):
 - Test sweep GREEN (server 11/11 + 4 Go submodules 3/3, `-race` 0); **gofmt fixed** (13 files); pre-build gates PASS; docs_chain in-sync.
