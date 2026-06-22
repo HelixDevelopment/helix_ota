@@ -205,7 +205,11 @@ build_compose_remote_cmd() {
     if [ "$COMPOSE_ACTION" = "down" ]; then
         printf 'cd %s/containers && %s -f compose.helixtrack.yml down' "$REMOTE_DIR" "$COMPOSE_CMD"
     else
-        printf 'cd %s/containers && %s -f compose.helixtrack.yml up -d' "$REMOTE_DIR" "$COMPOSE_CMD"
+        # build BEFORE up: podman-compose 1.0.6 does NOT auto-build on `up`, so
+        # without an explicit build it tries to PULL the locally-built image and
+        # fails (real deploy 2026-06-22). docker compose auto-builds, but the
+        # explicit build is harmless there and correct for podman-compose.
+        printf 'cd %s/containers && %s -f compose.helixtrack.yml build && %s -f compose.helixtrack.yml up -d' "$REMOTE_DIR" "$COMPOSE_CMD" "$COMPOSE_CMD"
     fi
 }
 
