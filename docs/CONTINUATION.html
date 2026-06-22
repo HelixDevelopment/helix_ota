@@ -237,16 +237,12 @@
   </style>
 </head>
 <body>
-<h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 6 <strong>Last modified:</strong>
-2026-06-22T20:30:00Z</p>
+<h1 id="helix-ota--continuation">Helix OTA — Continuation</h1>
+<p><strong>Revision:</strong> 7 <strong>Last modified:</strong>
+2026-06-22T22:45:00Z</p>
 <hr />
-<h2 id="current-state">1. Current state</h2>
+<h2 id="1-current-state">1. Current state</h2>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -256,7 +252,9 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>8e5db50b</code></td>
+<td><code>54a5e684</code> (distribution path now fully VERIFIED
+end-to-end on thinker — F114; conductor will commit this Status
+promotion on top)</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
@@ -273,9 +271,32 @@ rollback) on emulated + physical targets</td>
 </tbody>
 </table>
 <h3
-id="latest-session-2026-06-22-late-distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Latest
+id="latest-session-2026-06-22-late--distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Latest
 session (2026-06-22, late) — distribution mechanism, infra fixes, amber
 onboarded, Cuttlefish runbook-ready</h3>
+<p><strong>LATE UPDATE (2026-06-22, distribution path now fully VERIFIED
+end-to-end on thinker — F114):</strong> A fully-automated, non-dry-run
+<code>HELIXTRACK_REMOTE_HOST=thinker.local bash scripts/distribute_stack.sh</code>
+is now <strong>PROVEN GREEN</strong>: it BUILT the helixtrack-core image
+on <code>thinker</code> (rootless podman-compose) from the Go 1.24
+Dockerfile, brought the stack up, and a fresh container reported
+<code>podman ps</code>: <code>helixtrack-core Up (healthy)</code> +
+<code>helixtrack-postgres Up (healthy)</code>, with
+<code>curl -sf http://localhost:8080/health</code> → 200
+<code>{"status":"ok"}</code> (FailingStreak=0). Evidence
+<code>docs/qa/20260622-222645-distribute-thinker-FULLY-GREEN/</code>.
+The fix chain that closed the Rev-19 blockers: distribute_stack.sh
+(provider-preference for <code>podman-compose</code> + nested-mkdir +
+build-before-up + down-before-up idempotency);
+<code>containers/compose.helixtrack.yml</code> <code>/health</code>
+healthcheck (submodule <code>dcef56d</code>); HelixTrack Core Dockerfile
+<code>golang:1.24</code> + restored gutted source
+(<code>3c62217</code>/<code>3483699</code>) + <code>curl</code> in the
+runtime image (<code>d0f4bfb</code>). <strong>F114 is now
+VERIFIED</strong> (Status.md rev 20, Status_Summary rev 12; VERIFIED
+24→25, PARTIAL 5→4). <strong>F115 (amber docker-fallback) and F116
+(setsid persistence) stay PARTIAL</strong> — neither
+real-deploy/persistence run has been executed yet.</p>
 <p>Docs + infra consolidation (honest §11.4.6 — no new PASS
 claimed):</p>
 <ol type="1">
@@ -342,7 +363,7 @@ docker-fallback exception (preferred over the fallback); (3) Cuttlefish
 on-target persistence verification is operator-attended; (4) physical
 RK3588 boards remain NON-A/B (control-plane validation only).</p>
 <h3
-id="prior-session-2026-06-22-evening-cuttlefish-tier-2-container-path-real-rk3588-control-plane-validation">Prior
+id="prior-session-2026-06-22-evening--cuttlefish-tier-2-container-path--real-rk3588-control-plane-validation">Prior
 session (2026-06-22, evening) — Cuttlefish Tier-2 container path + real
 RK3588 control-plane validation</h3>
 <p>Three new real capabilities landed (honest §11.4.6 — boundaries
@@ -365,7 +386,7 @@ real-A/B PASS.</strong> The real end-to-end Android
 <code>update_engine</code>/AVB/dm-verity A/B run is
 <strong>integration-pending</strong> on nezha Linux+KVM (assets staging;
 privileged <code>launch_cvd</code> operator-gated). Native A/B fidelity
-is this path’s job once provisioned.</li>
+is this path's job once provisioned.</li>
 </ul></li>
 <li><strong>Real RK3588 hardware control-plane validation
 (F113)</strong> — evidence
@@ -377,7 +398,7 @@ cross-built linux/amd64, run <strong>rootless</strong> on nezha (uid
 204 (no active deployment — correct),
 <code>POST /api/v1/client/telemetry</code> 202, and sink-side
 <code>GET /devices/by-hardware/1acdceab90248933</code> →
-<code>update_state=success</code> (the board’s own telemetry mutated
+<code>update_state=success</code> (the board's own telemetry mutated
 server state). <strong>Device A</strong> (Wi-Fi,
 <code>19bbb528a1dbbc4d</code>) honest topology <strong>SKIP</strong> —
 VPN tun1 full-tunnel / Wi-Fi AP isolation (busybox nc to both
@@ -400,33 +421,39 @@ target; (2) <strong>Cuttlefish on nezha</strong> — the privileged
 integration-pending); (3) <strong>assets staging in progress</strong>
 for the Cuttlefish Tier-2 run; (4) the <strong>physical RK3588 boards
 are NON-A/B</strong> (single-slot) — real on-device A/B fidelity is the
-Cuttlefish path’s job, not these boards (control-plane validation only
+Cuttlefish path's job, not these boards (control-plane validation only
 on them).</p>
 <h3
-id="prior-session-2026-06-22-daytime-do-everything-workable-sweep">Prior
-session (2026-06-22, daytime) — “do everything workable” sweep</h3>
-<p>All autonomous items GREEN with real captured evidence (no bluffs): -
-Test sweep GREEN (server 11/11 + 4 Go submodules 3/3, <code>-race</code>
-0); <strong>gofmt fixed</strong> (13 files); pre-build gates PASS;
-docs_chain in-sync. - <strong>Local QEMU A/B OTA 6/6 GREEN</strong>
+id="prior-session-2026-06-22-daytime--do-everything-workable-sweep">Prior
+session (2026-06-22, daytime) — "do everything workable" sweep</h3>
+<p>All autonomous items GREEN with real captured evidence (no
+bluffs):</p>
+<ul>
+<li>Test sweep GREEN (server 11/11 + 4 Go submodules 3/3,
+<code>-race</code> 0); <strong>gofmt fixed</strong> (13 files);
+pre-build gates PASS; docs_chain in-sync.</li>
+<li><strong>Local QEMU A/B OTA 6/6 GREEN</strong>
 (smoke/boot/slot-switch/rollback/OTA-apply) — evidence
 <code>docs/qa/20260622T07*</code>. Fixed a real §11.4.115 RED-mode
 polarity isolation bug in <code>ab_rauc_verity.sh</code> (RED×2+GREEN×2
-deterministic). - <strong>10 server-feature recordings
-regenerated</strong>, vision-verified (203 HTTP assertions) —
+deterministic).</li>
+<li><strong>10 server-feature recordings regenerated</strong>,
+vision-verified (203 HTTP assertions) —
 <code>docs/qa/20260622-server-recordings-regen/</code>; Status.md
-§11.4.153 reconciled to durable paths. - <strong>§11.4.166
-Semgrep</strong>: propagated §11.4.160-166 into CLAUDE/AGENTS/GEMINI;
-tokenless local scan wired into <code>commit_all.sh</code>; constitution
-pin → <code>09d8940</code> (adds
-<code>docs/semgrep/TOKEN_SETUP.md</code>); 7 findings triaged →
-<strong>0 remaining</strong> (TLS MinVersion fix + cited suppressions).
-- Submodule push parity closed (<code>ota-update-engine-bridge</code>,
-<code>ota-android-agent</code>); GitFlic “blocker” disproven; §11.4.30
-transient <code>qa-results/</code> untracked+ignored (232 files). -
-nezha AVD boot proven; real Android A/B = honest
+§11.4.153 reconciled to durable paths.</li>
+<li><strong>§11.4.166 Semgrep</strong>: propagated §11.4.160-166 into
+CLAUDE/AGENTS/GEMINI; tokenless local scan wired into
+<code>commit_all.sh</code>; constitution pin → <code>09d8940</code>
+(adds <code>docs/semgrep/TOKEN_SETUP.md</code>); 7 findings triaged →
+<strong>0 remaining</strong> (TLS MinVersion fix + cited
+suppressions).</li>
+<li>Submodule push parity closed (<code>ota-update-engine-bridge</code>,
+<code>ota-android-agent</code>); GitFlic "blocker" disproven; §11.4.30
+transient <code>qa-results/</code> untracked+ignored (232 files).</li>
+<li>nezha AVD boot proven; real Android A/B = honest
 <strong>operator-attended SKIP</strong> (Cuttlefish unprovisioned —
-needs sudo+reboot+fetch_cvd).</p>
+needs sudo+reboot+fetch_cvd).</li>
+</ul>
 <p><strong>Operator action items:</strong> (1) Semgrep
 <code>SEMGREP_APP_TOKEN</code> — follow
 <code>constitution/docs/semgrep/TOKEN_SETUP.md</code>
@@ -438,7 +465,7 @@ unblock real Android A/B; (3) RK3588 board for OTA-004/F55/F56.</p>
 <code>scripts/boot_android_emulator.sh</code> — the remote qemu/AVD on
 nezha stays tied to the launching SSH session and exits gracefully if
 that session ends mid-boot-wait (the nohup does not fully detach the
-remote process; the final SSH-tunnel/attestation step isn’t reached on
+remote process; the final SSH-tunnel/attestation step isn't reached on
 interrupt). Boot itself is PROVEN (<code>emulator-5554</code>, API 36,
 <code>boot_completed=1</code>, evidence
 <code>qa-results/20260622T071848Z-nezha-android-ab/</code>). Fix
@@ -451,12 +478,6 @@ change to the working boot path is forbidden per §11.4.1 without
 rock-solid proof.</p>
 <h3 id="active-items">Active items</h3>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -484,11 +505,6 @@ slot-switch, dm-verity on real partitions</td>
 </table>
 <h3 id="recently-closed-items">Recently closed items</h3>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -538,7 +554,7 @@ slot-switch, dm-verity on real partitions</td>
 <code>docs/Fixed.md</code> · <code>docs/Issues_Summary.md</code> ·
 <code>docs/Fixed_Summary.md</code>.</p>
 <hr />
-<h2 id="server-tests-all-green">2. Server tests — all GREEN</h2>
+<h2 id="2-server-tests--all-green">2. Server tests — all GREEN</h2>
 <p>All 13 testable packages pass (11 internal packages + chaos + stress
 suites):</p>
 <pre><code>ok  internal/api
@@ -556,12 +572,8 @@ ok  tests/stress</code></pre>
 <code>cmd/ota-device-emu</code>, <code>cmd/ota-server</code>,
 <code>tools/loadtest</code>.</p>
 <hr />
-<h2 id="emulator-status">3. Emulator status</h2>
+<h2 id="3-emulator-status">3. Emulator status</h2>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Property</th>
@@ -601,7 +613,7 @@ tunnel)</td>
 The CZ_API36_Phone image provides the standard Android 16 AOSP stack on
 an x86_64 KVM host.</p>
 <hr />
-<h2 id="whats-running">4. What’s running</h2>
+<h2 id="4-whats-running">4. What's running</h2>
 <ul>
 <li><strong>Main stream:</strong> Emulator Tier-2 validation (remote on
 nezha.local)</li>
@@ -610,7 +622,7 @@ nezha.local)</li>
 per §11.4.158(D) (default; no project-level override)</li>
 </ul>
 <hr />
-<h2 id="next-actions-priority-ordered">5. Next actions
+<h2 id="5-next-actions-priority-ordered">5. Next actions
 (priority-ordered)</h2>
 <ol type="1">
 <li><strong>OTA-003 — Emulator Tier-2 inline testing.</strong> Verify
@@ -631,7 +643,7 @@ every closed OTA-NNN item has its §11.4.115 polarity-switch regression
 test registered in the suite.</li>
 </ol>
 <hr />
-<h2 id="binding-constraints">6. Binding constraints</h2>
+<h2 id="6-binding-constraints">6. Binding constraints</h2>
 <ul>
 <li><strong>Anti-bluff (§11.4 / §107):</strong> Every PASS carries
 captured physical evidence per §11.4.5 / §11.4.69 / §11.4.107.
@@ -642,7 +654,7 @@ PASS are all forbidden.</li>
 <code>+&lt;ref&gt;</code> are STRICTLY FORBIDDEN. Always merge onto
 latest <code>main</code> and push fast-forward-only.</li>
 <li><strong>Commit via <code>commit_all.sh</code>:</strong> All changes
-use the project’s canonical commit wrapper. Direct
+use the project's canonical commit wrapper. Direct
 <code>git add</code>/<code>git commit</code>/<code>git push</code> are
 never used.</li>
 <li><strong>Four-layer fix-verification (§11.4.108):</strong> SOURCE →
@@ -661,12 +673,12 @@ DISABLED. Enforcement is through local git hooks +
 <code>pre_build_verification.sh</code>.</li>
 </ul>
 <hr />
-<h2 id="feature-tracking">7. Feature tracking</h2>
+<h2 id="7-feature-tracking">7. Feature tracking</h2>
 <p>Feature inventory and per-row status:
 <code>docs/features/Status.md</code> (Rev 18, 2026-06-22). Summary
 companion: <code>docs/features/Status_Summary.md</code>.</p>
 <hr />
-<h2 id="fresh-session-start">8. Fresh session start</h2>
+<h2 id="8-fresh-session-start">8. Fresh session start</h2>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> fetch <span class="at">--all</span> <span class="at">--prune</span> <span class="at">--tags</span></span></code></pre></div>
 <p>Then read this file (<code>docs/CONTINUATION.md</code>) and

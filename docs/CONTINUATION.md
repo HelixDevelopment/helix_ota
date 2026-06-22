@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 6
-**Last modified:** 2026-06-22T20:30:00Z
+**Revision:** 7
+**Last modified:** 2026-06-22T22:45:00Z
 
 ---
 
@@ -9,11 +9,25 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `8e5db50b` |
+| **HEAD** | `54a5e684` (distribution path now fully VERIFIED end-to-end on thinker — F114; conductor will commit this Status promotion on top) |
 | **Phase** | Stable / release-readiness — control plane proven on real RK3588 hardware; native A/B fidelity now routed through the new Cuttlefish containerized path (integration-pending on Linux+KVM) |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets |
 
 ### Latest session (2026-06-22, late) — distribution mechanism, infra fixes, amber onboarded, Cuttlefish runbook-ready
+
+**LATE UPDATE (2026-06-22, distribution path now fully VERIFIED end-to-end on thinker — F114):**
+A fully-automated, non-dry-run `HELIXTRACK_REMOTE_HOST=thinker.local bash scripts/distribute_stack.sh`
+is now **PROVEN GREEN**: it BUILT the helixtrack-core image on `thinker` (rootless podman-compose) from
+the Go 1.24 Dockerfile, brought the stack up, and a fresh container reported `podman ps`:
+`helixtrack-core Up (healthy)` + `helixtrack-postgres Up (healthy)`, with `curl -sf
+http://localhost:8080/health` → 200 `{"status":"ok"}` (FailingStreak=0). Evidence
+`docs/qa/20260622-222645-distribute-thinker-FULLY-GREEN/`. The fix chain that closed the Rev-19 blockers:
+distribute_stack.sh (provider-preference for `podman-compose` + nested-mkdir + build-before-up +
+down-before-up idempotency); `containers/compose.helixtrack.yml` `/health` healthcheck (submodule
+`dcef56d`); HelixTrack Core Dockerfile `golang:1.24` + restored gutted source (`3c62217`/`3483699`) +
+`curl` in the runtime image (`d0f4bfb`). **F114 is now VERIFIED** (Status.md rev 20, Status_Summary rev
+12; VERIFIED 24→25, PARTIAL 5→4). **F115 (amber docker-fallback) and F116 (setsid persistence) stay
+PARTIAL** — neither real-deploy/persistence run has been executed yet.
 
 Docs + infra consolidation (honest §11.4.6 — no new PASS claimed):
 

@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-feature-inventory-status-summary">Helix OTA — Feature
 Inventory — Status Summary</h1>
-<p><strong>Revision:</strong> 11 <strong>Last modified:</strong>
-2026-06-22T22:30:00Z <strong>Companion of:</strong> <a
+<p><strong>Revision:</strong> 12 <strong>Last modified:</strong>
+2026-06-22T22:45:00Z <strong>Companion of:</strong> <a
 href="Status.md"><code>Status.md</code></a> (Section 11.4.56
 two-audience parity).</p>
 <blockquote>
@@ -297,22 +297,28 @@ privileged steps (nezha has no passwordless sudo), and the agent drives
 the rest (extract assets, launch the virtual device, run the A/B +
 auto-rollback check). It stays NOT-a-real-A/B-pass until that runbook is
 actually executed with the slot-flip + rollback evidence captured.</li>
-<li><strong>Container stack distribution (F114) — NOT a real-deploy pass
-yet.</strong> The <code>distribute_stack.sh</code> mechanism (probe host
-→ rsync → remote rootless <code>podman-compose</code> → health-check) is
-verified in <strong>dry-run</strong> only. A <strong>REAL</strong>
-(non-dry-run) deploy to <code>thinker.local</code> was attempted and
-<strong>FAILED</strong> (evidence
-<code>docs/qa/20260622-211644-distribute-thinker/</code>): two script
-bugs were found and <strong>FIXED</strong> (an rsync nested-mkdir gap,
-and a wrong compose provider — it had picked the broken
-<code>podman compose</code> plugin instead of
-<code>podman-compose</code>, now corrected), but the deploy is still
-blocked on a <strong>HelixTrack sibling-repo defect</strong>: that
-repo’s Dockerfile pins Go 1.22 while its <code>go.mod</code> needs Go
-1.24, so the helixtrack-core image build fails. No successful end-to-end
-deploy has happened. <code>thinker.local</code> is the intended live
-target; <code>nezha</code> is read/import-only.</li>
+<li><strong>Container stack distribution (F114) — REAL deploy to thinker
+is GREEN (VERIFIED).</strong> A fully-automated, non-dry-run
+<code>HELIXTRACK_REMOTE_HOST=thinker.local bash scripts/distribute_stack.sh</code>
+ran end-to-end: it <strong>built</strong> the helixtrack-core image on
+<code>thinker</code> (rootless podman-compose) from the Go 1.24
+Dockerfile, brought the stack up, and a fresh container reported
+<code>podman ps</code>: <code>helixtrack-core Up (healthy)</code> +
+<code>helixtrack-postgres Up (healthy)</code>, with
+<code>curl -sf http://localhost:8080/health</code> → HTTP 200
+<code>{"status":"ok"}</code> (FailingStreak=0). Evidence
+<code>docs/qa/20260622-222645-distribute-thinker-FULLY-GREEN/</code>.
+The fix chain that made it green: distribute_stack.sh
+(provider-preference for <code>podman-compose</code> + nested-mkdir +
+build-before-up + down-before-up idempotency); the
+<code>containers</code> submodule healthcheck on <code>/health</code>
+(<code>dcef56d</code>); and the HelixTrack Core Dockerfile bumped to
+<code>golang:1.24</code>, its gutted source restored
+(<code>3c62217</code>/<code>3483699</code>), with <code>curl</code>
+added to the runtime image (<code>d0f4bfb</code>) — that closed the
+prior Go-version blocker. <code>thinker.local</code> is the proven live
+rootless-podman target; the amber docker-fallback path (F115) has not
+yet been run.</li>
 <li><strong>Docker fallback for amber (F115) — gate logic verified, real
 deploy NOT run.</strong> <code>amber</code> has docker but no rootless
 podman, so it gets an <strong>operator-authorized docker
@@ -387,13 +393,16 @@ control-plane validation — Device B (F113)</strong></td>
 </tr>
 <tr>
 <td>VERIFIED</td>
-<td>24</td>
+<td>25</td>
 <td>Go submodules (F35-F41), containers (F68), .gitignore (F73),
 governance (F77-F85), CodeGraph wired (F88), frontend build + tests
 (F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159
 Recording Compliance (F106), HelixTrack Integration (F108), Build
-Resource Stats (F109), <strong>commit_all cascade-push (F117 — real
-commits pushed to all four mirrors this session)</strong></td>
+Resource Stats (F109), <strong>Container stack distribution (F114 — REAL
+fully-automated deploy to thinker GREEN: <code>(healthy)</code> +
+<code>/health</code> 200)</strong>, <strong>commit_all cascade-push
+(F117 — real commits pushed to all four mirrors this
+session)</strong></td>
 </tr>
 <tr>
 <td>PROVEN</td>
@@ -420,19 +429,15 @@ needs board)</td>
 </tr>
 <tr>
 <td>PARTIAL</td>
-<td>5</td>
+<td>4</td>
 <td>Stress+chaos coverage (F86 — partial submodule set), Cuttlefish
 <code>pkg/cuttlefish</code> (F112 — container path built + 30
 <code>-race</code> unit tests PASS + 1 honest topology SKIP; real-A/B
-run integration-pending, NOT a real-A/B PASS), <strong>Container stack
-distribution (F114 — mechanism dry-run-verified + 2 script bugs fixed,
-real deploy to thinker.local FAILED on HelixTrack sibling Dockerfile
-go-version defect, NOT a real-deploy PASS)</strong>,
-<strong>Docker-fallback distribution §11.4.161 (F115 — gate logic
-dry-run-verified, real docker deploy to amber NOT run)</strong>,
-<strong>Remote-emulator full-detachment §11.4.144 (F116 —
-<code>setsid</code> source hardening applied + reviewed, on-target
-persistence NOT run-proven)</strong></td>
+run integration-pending, NOT a real-A/B PASS), <strong>Docker-fallback
+distribution §11.4.161 (F115 — gate logic dry-run-verified, real docker
+deploy to amber NOT run)</strong>, <strong>Remote-emulator
+full-detachment §11.4.144 (F116 — <code>setsid</code> source hardening
+applied + reviewed, on-target persistence NOT run-proven)</strong></td>
 </tr>
 <tr>
 <td>NOT_STARTED</td>
@@ -459,33 +464,44 @@ time out → blocked path, captured root cause, NOT a Helix defect).
 hardware, NOT native A/B apply (F112’s job). ZERO device state changes
 (§11.4.122/§11.4.133). Evidence:
 <code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code>.</p>
-<p><strong>Distribution mechanism (F114/F115) — PARTIAL, NOT a
-real-deploy PASS (§11.4.1/§11.4.6).</strong>
-<code>distribute_stack.sh</code> (helix layer, §11.4.28) is designed to
-deploy the HelixTrack stack over SSH + remote rootless
-<code>podman-compose</code>. A <strong>REAL (non-dry-run) deploy to
-<code>thinker.local</code> was run and FAILED</strong> (evidence
-<code>docs/qa/20260622-211644-distribute-thinker/</code>) with 3
-defects: (1) rsync nested-mkdir gap — <strong>FIXED</strong> in the
-script; (2) wrong compose provider — it had selected the broken
-<code>podman compose</code> plugin instead of
-<code>podman-compose</code> — <strong>FIXED</strong> (now prefers
-<code>podman-compose</code>; dry-run confirms selection); (3) the
-<strong>HelixTrack sibling Dockerfile pins <code>golang:1.22</code> but
-its <code>go.mod</code> requires <code>go 1.24</code></strong> →
-helixtrack-core image build fails
-(<code>rootcause.log</code>/<code>go_mod_bug.log</code>;
-<code>final_state.log</code> = “NO helixtrack image built”, :8080
-unhealthy) — <strong>NOT fixed (sibling-repo blocker)</strong>. So the
-mechanism (probe→rsync→remote compose→health-check) + the 2 script bugs
-are proven/fixed by dry-run + the real-deploy transcript, but <strong>no
-successful end-to-end deploy has happened</strong>. For F115, the
-§11.4.161 operator-authorized docker fallback
+<p><strong>Distribution mechanism (F114 VERIFIED / F115 PARTIAL)
+(§11.4.5/§11.4.69).</strong> <code>distribute_stack.sh</code> (helix
+layer, §11.4.28) deploys the HelixTrack stack over SSH + remote rootless
+<code>podman-compose</code>. <strong>F114 is now VERIFIED on a REAL
+fully-automated GREEN deploy to <code>thinker.local</code></strong>
+(evidence
+<code>docs/qa/20260622-222645-distribute-thinker-FULLY-GREEN/</code>): a
+non-dry-run
+<code>HELIXTRACK_REMOTE_HOST=thinker.local bash scripts/distribute_stack.sh</code>
+<strong>built</strong> the helixtrack-core image on <code>thinker</code>
+(rootless podman-compose) from the Go 1.24 Dockerfile, brought the stack
+up, and a fresh container reported <code>podman ps</code>:
+<code>helixtrack-core Up (healthy)</code> +
+<code>helixtrack-postgres Up (healthy)</code>, with
+<code>curl -sf http://localhost:8080/health</code> → HTTP 200
+<code>{"status":"ok"}</code> (FailingStreak=0;
+<code>podman_ps.txt</code> + <code>health_body.txt</code>). <strong>Fix
+chain:</strong> distribute_stack.sh (provider-preference for
+<code>podman-compose</code> + nested-mkdir + build-before-up +
+down-before-up idempotency); <code>containers</code>-submodule
+healthcheck on <code>/health</code> (<code>dcef56d</code>); HelixTrack
+Core Dockerfile <code>golang:1.24</code> + restored gutted source
+(<code>3c62217</code>/<code>3483699</code>) + <code>curl</code> in the
+runtime image (<code>d0f4bfb</code>) — that closed the Rev-19 Go-version
+blocker. Honest §11.4.6/§11.4.28: the
+<code>deploy.log</code>/<code>deploy_tail.txt</code> from the idempotent
+re-run show the script’s own 60s health-probe printing a timeout line
+during the down/up churn; the authoritative fresh-container
+<code>podman_ps.txt</code>+<code>health_body.txt</code> (after settle)
+show <code>(healthy)</code>+200. The helix-layer compose file living in
+the <code>containers</code> submodule (<code>dcef56d</code>) is an
+operator-approved documented §11.4.28 exception. <strong>F115 stays
+PARTIAL:</strong> the §11.4.161 operator-authorized docker fallback
 (<code>HELIX_ALLOW_DOCKER_FALLBACK=1</code>, default-OFF
 rootless-or-nothing, §11.4.112 documented constraint = no rootless
 podman on amber yet) has its <strong>gate logic + host-selection
 dry-run-verified only</strong> — no real docker deploy to amber has run.
-<code>thinker.local</code> is the intended LIVE rootless-podman target;
+<code>thinker.local</code> is the proven LIVE rootless-podman target;
 <code>amber.local</code> onboarded 2026-06-22 (SSH key + docker);
 <code>nezha.local</code> is read/import-only (NOT a distribution
 target).</p>

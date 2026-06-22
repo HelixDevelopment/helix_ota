@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REPORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="full-stability-sweep-report-2026-06-19">Full Stability Sweep
+Report — 2026-06-19</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run date</td>
+<td>2026-06-19 02:15 UTC</td>
+</tr>
+<tr>
+<td>Project</td>
+<td>github.com/HelixDevelopment/helix_ota</td>
+</tr>
+<tr>
+<td>Server commit</td>
+<td>HEAD of main</td>
+</tr>
+<tr>
+<td>Gate script</td>
+<td><code>tests/pre_build_verification.sh</code></td>
+</tr>
+<tr>
+<td>Report path</td>
+<td><code>docs/qa/20260619-full-stability-sweep/REPORT.md</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="server-go-test-suite">1. Server Go Test Suite</h2>
+<p><strong>Command:</strong>
+<code>cd server &amp;&amp; go test -count=1 -v ./...</code></p>
+<p><strong>Result: ALL TESTED PACKAGES PASS</strong></p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Result</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server/internal/api</code></td>
+<td>PASS</td>
+<td>0.384s</td>
+</tr>
+<tr>
+<td><code>server/internal/config</code></td>
+<td>PASS</td>
+<td>0.344s</td>
+</tr>
+<tr>
+<td><code>server/internal/deviceemu</code></td>
+<td>PASS</td>
+<td>1.163s</td>
+</tr>
+<tr>
+<td><code>server/internal/fabric</code></td>
+<td>PASS</td>
+<td>0.595s</td>
+</tr>
+<tr>
+<td><code>server/internal/health</code></td>
+<td>PASS</td>
+<td>0.458s</td>
+</tr>
+<tr>
+<td><code>server/internal/rollout</code></td>
+<td>PASS</td>
+<td>0.723s</td>
+</tr>
+<tr>
+<td><code>server/internal/store</code></td>
+<td>PASS</td>
+<td>0.854s</td>
+</tr>
+<tr>
+<td><code>server/internal/transport</code></td>
+<td>PASS</td>
+<td>1.227s</td>
+</tr>
+<tr>
+<td><code>server/internal/api/manager-dist</code></td>
+<td>(no tests)</td>
+<td>–</td>
+</tr>
+<tr>
+<td><code>server/cmd/ota-device-emu</code></td>
+<td>(no tests)</td>
+<td>–</td>
+</tr>
+<tr>
+<td><code>server/cmd/ota-server</code></td>
+<td>(no tests)</td>
+<td>–</td>
+</tr>
+<tr>
+<td><code>server/tools/loadtest</code></td>
+<td>(no tests)</td>
+<td>–</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evidence:</strong> <code>/tmp/server_tests_r2.log</code></p>
+<hr />
+<h2 id="stress-chaos-tests">2. Stress + Chaos Tests</h2>
+<p><strong>Command:</strong>
+<code>bash tests/stress_chaos/run_server_stress.sh</code></p>
+<p><strong>Result: PASS</strong> (exit code 0)</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Subtest</th>
+<th>Result</th>
+<th>Key metrics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stress</td>
+<td>TestStressConcurrentGroupCreate</td>
+<td>PASS</td>
+<td>p50=271us p95=797us p99=1.02ms</td>
+</tr>
+<tr>
+<td>Stress</td>
+<td>TestStressSustainedReads</td>
+<td>PASS</td>
+<td>p50=10us p95=350us p99=1.20ms</td>
+</tr>
+<tr>
+<td>Stress</td>
+<td>TestStressConcurrentMembershipNoLostUpdates</td>
+<td>PASS</td>
+<td></td>
+</tr>
+<tr>
+<td>Stress</td>
+<td>TestStressConcurrentAuth</td>
+<td>PASS</td>
+<td>10/10 2xx</td>
+</tr>
+<tr>
+<td>Stress</td>
+<td>TestStressConcurrentDevice</td>
+<td>PASS</td>
+<td>10/10 2xx</td>
+</tr>
+<tr>
+<td>Stress</td>
+<td>TestStressConcurrentRelease</td>
+<td>PASS</td>
+<td>1 created / 99 conflicts (expected)</td>
+</tr>
+<tr>
+<td>Chaos</td>
+<td>TestChaosAuthBadPayload (4 cases)</td>
+<td>PASS</td>
+<td>All rejected 401</td>
+</tr>
+<tr>
+<td>Chaos</td>
+<td>TestChaosAuthHugePayload</td>
+<td>PASS</td>
+<td>401 graceful degradation</td>
+</tr>
+<tr>
+<td>Chaos</td>
+<td>TestChaosConcurrentMutation</td>
+<td>PASS</td>
+<td>49/50 conflicts (expected)</td>
+</tr>
+<tr>
+<td>Chaos</td>
+<td>TestChaosStoreRestart</td>
+<td>PASS</td>
+<td>Baseline 201 -&gt; fault 500 -&gt; recovered 201</td>
+</tr>
+<tr>
+<td>Chaos</td>
+<td>TestChaosRepoFaultDegradesAndRecovers</td>
+<td>PASS</td>
+<td>200 -&gt; 500 -&gt; 200</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evidence dir:</strong>
+<code>qa-results/stress_chaos/20260618T231559Z/</code></p>
+<hr />
+<h2 id="pre-build-gates">3. Pre-Build Gates</h2>
+<p><strong>Command:</strong>
+<code>bash tests/pre_build_verification.sh</code></p>
+<p><strong>Result: PASS</strong> (exit code 0)</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Result</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>constitution-inheritance A (clean tree)</td>
+<td>PASS</td>
+<td>All 7 invariants met</td>
+</tr>
+<tr>
+<td>constitution-inheritance B (sec1.1 mutation)</td>
+<td>PASS</td>
+<td>Mutation correctly caused FAIL</td>
+</tr>
+<tr>
+<td>constitution-inheritance C (submodule pointers)</td>
+<td>PASS</td>
+<td>All 8 owned submodules wired</td>
+</tr>
+<tr>
+<td>helixqa-bank-runner-self-test A (missing evidence)</td>
+<td>PASS</td>
+<td>Correctly FAILed</td>
+</tr>
+<tr>
+<td>helixqa-bank-runner-self-test B (real evidence)</td>
+<td>PASS</td>
+<td>Correctly PASSed</td>
+</tr>
+<tr>
+<td>CM-COVENANT-114-153 through 158 PROPAGATION</td>
+<td>OK</td>
+<td>All 6 propagation gates pass</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> First run FAILed because the constitution
+submodule was not checked out. After
+<code>git submodule init &amp;&amp; git submodule update</code>, all
+gates pass clean.</p>
+<p><strong>Evidence:</strong> <code>/tmp/gates_r2.log</code></p>
+<hr />
+<h2 id="go-submodule-tests">4. Go Submodule Tests</h2>
+<p><strong>Command:</strong>
+<code>for sm in ota-protocol ota-artifact-validator ota-rollout-engine ota-telemetry-schema http3; do cd submodules/$sm &amp;&amp; go test -count=1 ./...; done</code></p>
+<p><strong>Result: ALL 5 SUBMODULES PASS</strong></p>
+<table>
+<thead>
+<tr>
+<th>Submodule</th>
+<th>Result</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>submodules/ota-protocol</code></td>
+<td>PASS</td>
+<td>0.221s</td>
+</tr>
+<tr>
+<td><code>submodules/ota-artifact-validator</code></td>
+<td>PASS</td>
+<td>0.249s</td>
+</tr>
+<tr>
+<td><code>submodules/ota-rollout-engine</code></td>
+<td>PASS</td>
+<td>2.354s</td>
+</tr>
+<tr>
+<td><code>submodules/ota-telemetry-schema</code></td>
+<td>PASS</td>
+<td>0.195s</td>
+</tr>
+<tr>
+<td><code>submodules/http3</code></td>
+<td>PASS</td>
+<td>1.111s</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-build-vet">5. Go Build + Vet</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Exit Code</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>go build ./...</code></td>
+<td>0</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td><code>go vet ./...</code></td>
+<td>0</td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> First run FAILed because the
+<code>containers</code> submodule was not checked out. After
+<code>git submodule update</code>, both build and vet pass.</p>
+<hr />
+<h2 id="overall-verdict">Overall Verdict</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server test suite (7 packages with tests)</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Build</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Vet</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Stress tests</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Chaos tests</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Pre-build gates</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Go submodule tests (5 submodules)</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td><strong>OVERALL</strong></td>
+<td><strong>PASS</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="anomalies-noted">Anomalies noted</h3>
+<ol type="1">
+<li><strong>Submodule initialization required:</strong> The constitution
+and containers submodules were not checked out. A fresh clone requires
+<code>git submodule update --init</code> before tests/gates pass.</li>
+<li><strong>Containers dependency:</strong> The
+<code>digital.vasic.containers</code> replace directive in
+<code>go.mod</code> blocks all packages importing
+<code>internal/deviceemu</code> or <code>internal/transport</code> when
+the submodule is missing.</li>
+<li><strong>No tests for cmd packages:</strong>
+<code>ota-device-emu</code>, <code>ota-server</code>,
+<code>manager-dist</code>, and <code>loadtest</code> have no test files
+(expected for CLI entry points).</li>
+<li><strong>Concurrent release conflicts:</strong>
+<code>TestStressConcurrentRelease</code> reports 99 conflicts from 100
+concurrent version bumps – this is the expected optimistic-concurrency
+behaviour.</li>
+</ol>
+</body>
+</html>

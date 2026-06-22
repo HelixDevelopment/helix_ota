@@ -1,0 +1,81 @@
+[DIST] Probing milosvasic@thinker.local ...
+[DIST]   reachable + rootless podman (podman-compose) — selected thinker.local
+[DIST] Deploying to milosvasic@thinker.local (rootless podman-compose)...
+[DIST] Running remote rootless compose...
+helixtrack-postgres
+helixtrack-core
+helixtrack-postgres
+helixtrack-core
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+podman build -f ../helix_track/core/Application/Dockerfile -t containers_helixtrack-core ../helix_track/core/Application
+[1/2] STEP 1/7: FROM golang:1.24-alpine AS builder
+[1/2] STEP 2/7: RUN apk add --no-cache gcc musl-dev sqlite-dev
+--> Using cache 272ec8859f556ff76ea270a10586f6285346a3825f3c4ee960c94b3f6cffda9b
+--> 272ec8859f55
+[1/2] STEP 3/7: WORKDIR /app
+--> Using cache 61972e310746c9f1e75b48c3c3bc1b0534c06b94f597b2d76adaff74a8882ff7
+--> 61972e310746
+[1/2] STEP 4/7: COPY go.mod ./
+--> Using cache b949f8de4a0f697995785d24c1acfd4c1be1856c679b67df47bf7d96d2cccd5e
+--> b949f8de4a0f
+[1/2] STEP 5/7: COPY . .
+--> Using cache 4871e84c90498183111057f939148e840060a41619dc569f2d5a00a8f6003ce0
+--> 4871e84c9049
+[1/2] STEP 6/7: RUN go mod tidy && go mod download
+--> Using cache c865fb2acc473b42fd879620de14f12d049bd05384180d0d3d8a173256f46b33
+--> c865fb2acc47
+[1/2] STEP 7/7: RUN CGO_ENABLED=1 go build -o /app/htCore main.go
+--> Using cache dace55ff2f383ac0e079741c53a5356ad32eebe454f9a27d05fb73164474c4f8
+--> dace55ff2f38
+[2/2] STEP 1/9: FROM golang:1.24-alpine
+[2/2] STEP 2/9: WORKDIR /app
+--> Using cache 465aecebf4a2b20528faf71cb69113890afc91dd8cda3b18f5f5e824d5779eeb
+--> 465aecebf4a2
+[2/2] STEP 3/9: RUN apk add --no-cache sqlite-libs curl
+--> Using cache e22a3b4600a4aace548b9af43ca9912d69162137cbded72e370bb753cf5c379d
+--> e22a3b4600a4
+[2/2] STEP 4/9: COPY --from=builder /app/htCore .
+--> Using cache 0d344685815f6da8b2ed417568453b2483886a838dcf0b3c7a31a42c91ee186f
+--> 0d344685815f
+[2/2] STEP 5/9: COPY Configurations/ ./Configurations/
+--> Using cache cd37670398f70a3499b5bc5a569436c5611acf511fb6364655e7114a3e86adff
+--> cd37670398f7
+[2/2] STEP 6/9: RUN mkdir -p Database
+--> Using cache 4ca0bbad5a391023b491e5b29c7fad5cfb52b35081ff5ad9ee978ff5c917ed7b
+--> 4ca0bbad5a39
+[2/2] STEP 7/9: EXPOSE 8080
+--> Using cache 4b5073fcf6520667ec9918f53f7ba7244a6d8766d9e74a5886d2caf97e82e057
+--> 4b5073fcf652
+[2/2] STEP 8/9: COPY Database/ ./Database/
+--> Using cache 4a243d6bb8fcec27cc7bb6eb0079458036e1daf7f0d424318f24331946b68e0a
+--> 4a243d6bb8fc
+[2/2] STEP 9/9: CMD ["./htCore", "-config", "Configurations/default.json"]
+--> Using cache 7d938b3425232ff7669e4e45a5944de9cf30a44304d0ef2fa67bd492f418f348
+[2/2] COMMIT containers_helixtrack-core
+--> 7d938b342523
+Successfully tagged localhost/containers_helixtrack-core:latest
+7d938b3425232ff7669e4e45a5944de9cf30a44304d0ef2fa67bd492f418f348
+exit code: 0
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podman', 'inspect', '-t', 'image', '-f', '{{.Id}}', 'containers_helixtrack-core']
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=containers', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-core -d --label io.podman.compose.config-hash=163b156ddeafc46edcf0193f93f599e80f085583169bae8d6781f4b4f0eb6282 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-core -e HT_CONFIG=/config/default.json -e HT_SPACE_ROOT=/data/spaces/_default -e HT_DB_TYPE=sqlite -v /home/milosvasic/helix-dist/helix_track/spaces:/data/spaces -v /home/milosvasic/helix-dist/helix_track/core/Application/Configurations:/config --net helixtrack-network --network-alias helixtrack-core -p 8080:8080 --restart unless-stopped --healthcheck-command /bin/sh -c curl' '-f' 'http://localhost:8080/health --healthcheck-interval 10s --healthcheck-timeout 5s --healthcheck-start-period 15s --healthcheck-retries 5 containers_helixtrack-core ./htCore --space-root=/data/spaces/_default
+fa17ba6b58c36bc5861670f35c77921527812d15d70e09e1dd91eca9a4b4ce6c
+exit code: 0
+podman volume inspect containers_helixtrack-pg-data || podman volume create containers_helixtrack-pg-data
+['podman', 'volume', 'inspect', 'containers_helixtrack-pg-data']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-postgres -d --label io.podman.compose.config-hash=163b156ddeafc46edcf0193f93f599e80f085583169bae8d6781f4b4f0eb6282 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-postgres -e POSTGRES_DB=helixtrack -e POSTGRES_USER=helixtrack -e POSTGRES_PASSWORD=helixtrack_dev -e POSTGRES_INITDB_ARGS=--encoding=UTF-8 -v containers_helixtrack-pg-data:/var/lib/postgresql/data --net helixtrack-network --network-alias helixtrack-postgres -p 5432:5432 --restart unless-stopped --healthcheck-command /bin/sh -c 'pg_isready -U helixtrack -d helixtrack' --healthcheck-interval 5s --healthcheck-timeout 3s --healthcheck-start-period 10s --healthcheck-retries 10 postgres:16-alpine
+081d89fc972665f2c7f1f9031532df957dda4398fd7a00fb515985356bad1e16
+exit code: 0
+[DIST] Remote health-check (up to 60s)...
+CONTAINER ID  IMAGE                                        COMMAND               CREATED             STATUS                       PORTS                   NAMES
+fa17ba6b58c3  localhost/containers_helixtrack-core:latest  ./htCore --space-...  About a minute ago  Up About a minute (healthy)  0.0.0.0:8080->8080/tcp  helixtrack-core
+081d89fc9726  docker.io/library/postgres:16-alpine         postgres              About a minute ago  Up About a minute (healthy)  0.0.0.0:5432->5432/tcp  helixtrack-postgres
+[DIST] Stack deployed but health-check did NOT pass in 60s on thinker.local (genuine failure, not skipped).

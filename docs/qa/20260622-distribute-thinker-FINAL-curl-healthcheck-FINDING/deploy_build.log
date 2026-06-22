@@ -1,0 +1,96 @@
+[DIST] Probing milosvasic@thinker.local ...
+[DIST]   reachable + rootless podman (podman-compose) — selected thinker.local
+[DIST] Deploying to milosvasic@thinker.local (rootless podman-compose)...
+[DIST] Running remote rootless compose...
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+podman build -f ../helix_track/core/Application/Dockerfile -t containers_helixtrack-core ../helix_track/core/Application
+[1/2] STEP 1/7: FROM golang:1.24-alpine AS builder
+[1/2] STEP 2/7: RUN apk add --no-cache gcc musl-dev sqlite-dev
+--> Using cache 272ec8859f556ff76ea270a10586f6285346a3825f3c4ee960c94b3f6cffda9b
+--> 272ec8859f55
+[1/2] STEP 3/7: WORKDIR /app
+--> Using cache 61972e310746c9f1e75b48c3c3bc1b0534c06b94f597b2d76adaff74a8882ff7
+--> 61972e310746
+[1/2] STEP 4/7: COPY go.mod ./
+--> Using cache b949f8de4a0f697995785d24c1acfd4c1be1856c679b67df47bf7d96d2cccd5e
+--> b949f8de4a0f
+[1/2] STEP 5/7: COPY . .
+--> Using cache 57e3fca441c94c98bbabfd7d3d10550c3931bb874ea00fccd89551340d999bb1
+--> 57e3fca441c9
+[1/2] STEP 6/7: RUN go mod tidy && go mod download
+--> Using cache 0a1ce48714b23d8ec1f7b22fc14c9341f413d0de2fb6a0744a3dd2eeac93d124
+--> 0a1ce48714b2
+[1/2] STEP 7/7: RUN CGO_ENABLED=1 go build -o /app/htCore main.go
+--> Using cache e00ff18cab3790824d2beee46700fce65485d4b567110e538bc9e1ec1535feff
+--> e00ff18cab37
+[2/2] STEP 1/9: FROM golang:1.24-alpine
+[2/2] STEP 2/9: WORKDIR /app
+--> e9199458dd04
+[2/2] STEP 3/9: RUN apk add --no-cache sqlite-libs
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_CHOWN: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_DAC_OVERRIDE: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_FOWNER: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_FSETID: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_KILL: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_NET_BIND_SERVICE: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_SETFCAP: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_SETGID: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_SETPCAP: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_SETUID: operation not permitted"
+time="2026-06-22T22:20:31+03:00" level=warning msg="can't raise ambient capability CAP_SYS_CHROOT: operation not permitted"
+(1/1) Installing sqlite-libs (3.51.2-r0)
+OK: 9.8 MiB in 18 packages
+--> 7864b9f3a64b
+[2/2] STEP 4/9: COPY --from=builder /app/htCore .
+--> 88d3af7af461
+[2/2] STEP 5/9: COPY Configurations/ ./Configurations/
+--> d3dce6f624d2
+[2/2] STEP 6/9: RUN mkdir -p Database
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_CHOWN: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_DAC_OVERRIDE: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_FOWNER: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_FSETID: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_KILL: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_NET_BIND_SERVICE: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_SETFCAP: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_SETGID: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_SETPCAP: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_SETUID: operation not permitted"
+time="2026-06-22T22:20:32+03:00" level=warning msg="can't raise ambient capability CAP_SYS_CHROOT: operation not permitted"
+--> 8a224696ef69
+[2/2] STEP 7/9: EXPOSE 8080
+--> 4b68b94181ef
+[2/2] STEP 8/9: COPY Database/ ./Database/
+--> 18c1a48d254a
+[2/2] STEP 9/9: CMD ["./htCore", "-config", "Configurations/default.json"]
+[2/2] COMMIT containers_helixtrack-core
+--> 6e3ba8458b25
+Successfully tagged localhost/containers_helixtrack-core:latest
+6e3ba8458b25d05bb8578ad107bd9e72990eae68bbebf2098613cf0c2a5607e9
+exit code: 0
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podman', 'inspect', '-t', 'image', '-f', '{{.Id}}', 'containers_helixtrack-core']
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=containers', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-core -d --label io.podman.compose.config-hash=163b156ddeafc46edcf0193f93f599e80f085583169bae8d6781f4b4f0eb6282 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-core -e HT_CONFIG=/config/default.json -e HT_SPACE_ROOT=/data/spaces/_default -e HT_DB_TYPE=sqlite -v /home/milosvasic/helix-dist/helix_track/spaces:/data/spaces -v /home/milosvasic/helix-dist/helix_track/core/Application/Configurations:/config --net helixtrack-network --network-alias helixtrack-core -p 8080:8080 --restart unless-stopped --healthcheck-command /bin/sh -c curl' '-f' 'http://localhost:8080/health --healthcheck-interval 10s --healthcheck-timeout 5s --healthcheck-start-period 15s --healthcheck-retries 5 containers_helixtrack-core ./htCore --space-root=/data/spaces/_default
+31a65c2e828a78c67c2f069400f99626917d286f050aaf2d1b952e03a3df84c3
+exit code: 0
+podman volume inspect containers_helixtrack-pg-data || podman volume create containers_helixtrack-pg-data
+['podman', 'volume', 'inspect', 'containers_helixtrack-pg-data']
+Error: no such volume containers_helixtrack-pg-data
+['podman', 'volume', 'create', '--label', 'io.podman.compose.project=containers', '--label', 'com.docker.compose.project=containers', 'containers_helixtrack-pg-data']
+['podman', 'volume', 'inspect', 'containers_helixtrack-pg-data']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-postgres -d --label io.podman.compose.config-hash=163b156ddeafc46edcf0193f93f599e80f085583169bae8d6781f4b4f0eb6282 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-postgres -e POSTGRES_DB=helixtrack -e POSTGRES_USER=helixtrack -e POSTGRES_PASSWORD=helixtrack_dev -e POSTGRES_INITDB_ARGS=--encoding=UTF-8 -v containers_helixtrack-pg-data:/var/lib/postgresql/data --net helixtrack-network --network-alias helixtrack-postgres -p 5432:5432 --restart unless-stopped --healthcheck-command /bin/sh -c 'pg_isready -U helixtrack -d helixtrack' --healthcheck-interval 5s --healthcheck-timeout 3s --healthcheck-start-period 10s --healthcheck-retries 10 postgres:16-alpine
+d0b16da4cd6d8c76dd8bbacd007dd1829d100576db73982e50e98620f8d5b435
+exit code: 0
+[DIST] Remote health-check (up to 60s)...
+CONTAINER ID  IMAGE                                        COMMAND               CREATED             STATUS                         PORTS                   NAMES
+31a65c2e828a  localhost/containers_helixtrack-core:latest  ./htCore --space-...  About a minute ago  Up About a minute (unhealthy)  0.0.0.0:8080->8080/tcp  helixtrack-core
+d0b16da4cd6d  docker.io/library/postgres:16-alpine         postgres              About a minute ago  Up About a minute (healthy)    0.0.0.0:5432->5432/tcp  helixtrack-postgres
+[DIST] Stack deployed but health-check did NOT pass in 60s on thinker.local (genuine failure, not skipped).

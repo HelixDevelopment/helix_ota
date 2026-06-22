@@ -205,11 +205,12 @@ build_compose_remote_cmd() {
     if [ "$COMPOSE_ACTION" = "down" ]; then
         printf 'cd %s/containers && %s -f compose.helixtrack.yml down' "$REMOTE_DIR" "$COMPOSE_CMD"
     else
-        # build BEFORE up: podman-compose 1.0.6 does NOT auto-build on `up`, so
-        # without an explicit build it tries to PULL the locally-built image and
-        # fails (real deploy 2026-06-22). docker compose auto-builds, but the
-        # explicit build is harmless there and correct for podman-compose.
-        printf 'cd %s/containers && %s -f compose.helixtrack.yml build && %s -f compose.helixtrack.yml up -d' "$REMOTE_DIR" "$COMPOSE_CMD" "$COMPOSE_CMD"
+        # idempotent re-deploy: `down` FIRST removes any stale container — podman-compose
+        # `up` does NOT recreate an already-running container, so a re-deploy would silently
+        # reuse the OLD image (real finding 2026-06-22, "name already in use"). Named volumes
+        # persist across `down` (postgres data safe). THEN build BEFORE up: podman-compose
+        # 1.0.6 does NOT auto-build on `up` (it would try to PULL the local image and fail).
+        printf 'cd %s/containers && %s -f compose.helixtrack.yml down 2>/dev/null; %s -f compose.helixtrack.yml build && %s -f compose.helixtrack.yml up -d' "$REMOTE_DIR" "$COMPOSE_CMD" "$COMPOSE_CMD" "$COMPOSE_CMD"
     fi
 }
 
@@ -274,7 +275,7 @@ fi
 log "Remote health-check (up to 60s)..."
 healthy=0
 for i in $(seq 1 12); do
-    if ssh -o BatchMode=yes "${DIST_USER}@${DIST_HOST}" 'curl -sf http://localhost:8080 >/dev/null 2>&1'; then
+    if ssh -o BatchMode=yes "${DIST_USER}@${DIST_HOST}" 'curl -sf http://localhost:8080/health >/dev/null 2>&1'; then
         log "Stack HEALTHY on $DIST_HOST after $((i*5))s."
         healthy=1
         break

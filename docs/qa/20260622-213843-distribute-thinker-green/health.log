@@ -1,0 +1,64 @@
+=== wait for health to settle (poll up to 60s) ===
+  t=5s health=starting running=true
+  t=10s health=starting running=true
+  t=15s health=starting running=true
+  t=20s health=starting running=true
+  t=25s health=starting running=true
+  t=30s health=starting running=true
+  t=35s health=starting running=true
+  t=40s health=unhealthy running=true
+  t=45s health=unhealthy running=true
+  t=50s health=unhealthy running=true
+  t=55s health=unhealthy running=true
+  t=60s health=unhealthy running=true
+=== FINAL podman ps ===
+helixtrack-core Up About a minute (unhealthy) localhost/containers_helixtrack-core:latest
+helixtrack-postgres Up About a minute (healthy) docker.io/library/postgres:16-alpine
+=== REAL HTTP probe from inside the host ===
+--- curl -i http://localhost:8080/ ---
+HTTP/1.1 404 Not Found
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE
+Access-Control-Allow-Origin: *
+Content-Type: text/plain
+Date: Mon, 22 Jun 2026 18:53:44 GMT
+Content-Length: 18
+
+404 page not found--- curl health/common endpoints ---
+GET / -> HTTP 404
+GET /health -> HTTP 200
+GET /api/v1/health -> HTTP 404
+GET /ping -> HTTP 404
+=== /health full response body (REAL evidence app works) ===
+HTTP/1.1 200 OK
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE
+Access-Control-Allow-Origin: *
+Content-Type: application/json; charset=utf-8
+Date: Mon, 22 Jun 2026 18:54:01 GMT
+Content-Length: 15
+
+{"status":"ok"}
+=== container is genuinely running this binary ===
+-rwxr-xr-x    1 root     root      22617432 Jun 22 18:51 /app/htCore
+Usage of ./htCore:
+  -config string
+    	Path to configuration file (default "Configurations/default.json")
+=== last app logs (proof of real startup, listening) ===
+	/usr/local/go/src/runtime/proc.go:283
+2026-06-22T18:52:09.666Z	INFO	logger/logger.go:121	Initializing service discovery tables
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Service discovery tables created successfully
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Starting service health checker	{"interval": 60}
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Service health checker started
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Starting network discovery service	{"host": "0.0.0.0", "port": 8080}
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Network discovery service started successfully
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Network discovery service started
+2026-06-22T18:52:09.775Z	INFO	logger/logger.go:121	Attempting to start server	{"address": "0.0.0.0:8080", "attempt": 1}
+2026-06-22T18:53:44.475Z	INFO	logger/logger.go:121	HTTP Request	{"method": "GET", "path": "/", "status": 404, "latency": 0.000002793, "client_ip": "10.89.12.4"}
+2026-06-22T18:53:44.481Z	INFO	logger/logger.go:121	HTTP Request	{"method": "GET", "path": "/", "status": 404, "latency": 0.000002794, "client_ip": "10.89.12.4"}
+2026-06-22T18:53:44.486Z	INFO	logger/logger.go:121	HTTP Request	{"method": "GET", "path": "/health", "status": 200, "latency": 0.000032406, "client_ip": "10.89.12.4"}
+2026-06-22T18:53:44.491Z	INFO	logger/logger.go:121	HTTP Request	{"method": "GET", "path": "/api/v1/health", "status": 404, "latency": 0.000002374, "client_ip": "10.89.12.4"}
+2026-06-22T18:53:44.496Z	INFO	logger/logger.go:121	HTTP Request	{"method": "GET", "path": "/ping", "status": 404, "latency": 0.000002793, "client_ip": "10.89.12.4"}
+2026-06-22T18:54:01.002Z	INFO	logger/logger.go:121	HTTP Request	{"method": "GET", "path": "/health", "status": 200, "latency": 0.000037015, "client_ip": "10.89.12.4"}
+=== healthcheck cmd it uses (the misconfig) ===
+["CMD-SHELL","/bin/sh -c curl' '-f' 'http://localhost:8080"]

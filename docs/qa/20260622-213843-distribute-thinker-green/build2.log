@@ -1,0 +1,33 @@
+=== podman-compose build helixtrack-core (fixed source) ===
+go: downloading golang.org/x/mod v0.27.0
+go: downloading golang.org/x/sync v0.16.0
+go: downloading github.com/klauspost/cpuid/v2 v2.2.7
+go: downloading github.com/cloudwego/iasm v0.2.0
+--> 0a1ce48714b2
+[1/2] STEP 7/7: RUN CGO_ENABLED=1 go build -o /app/htCore main.go
+--> e00ff18cab37
+[2/2] STEP 1/9: FROM golang:1.24-alpine
+[2/2] STEP 2/9: WORKDIR /app
+--> 9a105a25ae4a
+[2/2] STEP 3/9: RUN apk add --no-cache sqlite-libs
+(1/1) Installing sqlite-libs (3.51.2-r0)
+OK: 9.8 MiB in 18 packages
+--> 4c9e49679f50
+[2/2] STEP 4/9: COPY --from=builder /app/htCore .
+--> 9b80676dba20
+[2/2] STEP 5/9: COPY Configurations/ ./Configurations/
+--> 18feecdd70b5
+[2/2] STEP 6/9: RUN mkdir -p Database
+--> 9b8c426d67ee
+[2/2] STEP 7/9: EXPOSE 8080
+--> f2fb770cebc9
+[2/2] STEP 8/9: COPY Database/ ./Database/
+--> 0b3dd1833cde
+[2/2] STEP 9/9: CMD ["./htCore", "-config", "Configurations/default.json"]
+[2/2] COMMIT containers_helixtrack-core
+--> fa84080b85f9
+Successfully tagged localhost/containers_helixtrack-core:latest
+fa84080b85f93ce20e874b2c921fba62a58f7602971f4d7ae3de9e909078c4ab
+exit code: 0
+=== built images ===
+localhost/containers_helixtrack-core:latest 300 MB

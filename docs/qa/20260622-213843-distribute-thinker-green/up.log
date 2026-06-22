@@ -1,0 +1,24 @@
+=== up -d (image now built locally) ===
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podman', 'inspect', '-t', 'image', '-f', '{{.Id}}', 'containers_helixtrack-core']
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=containers', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-core -d --label io.podman.compose.config-hash=30634a6e5a887292e3a81515d1fb50639a48ec5f267d16cd903a2ed273d88558 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-core -e HT_CONFIG=/config/default.json -e HT_SPACE_ROOT=/data/spaces/_default -e HT_DB_TYPE=sqlite -v /home/milosvasic/helix-dist/helix_track/spaces:/data/spaces -v /home/milosvasic/helix-dist/helix_track/core/Application/Configurations:/config --net helixtrack-network --network-alias helixtrack-core -p 8080:8080 --restart unless-stopped --healthcheck-command /bin/sh -c curl' '-f' 'http://localhost:8080 --healthcheck-interval 10s --healthcheck-timeout 5s --healthcheck-start-period 15s --healthcheck-retries 5 containers_helixtrack-core ./htCore --space-root=/data/spaces/_default
+21e5dcf97f754635b67fa7ea8bd8230791e1a7d54f6ac74b7ba6b325e0ac734f
+exit code: 0
+podman volume inspect containers_helixtrack-pg-data || podman volume create containers_helixtrack-pg-data
+['podman', 'volume', 'inspect', 'containers_helixtrack-pg-data']
+Error: no such volume containers_helixtrack-pg-data
+['podman', 'volume', 'create', '--label', 'io.podman.compose.project=containers', '--label', 'com.docker.compose.project=containers', 'containers_helixtrack-pg-data']
+['podman', 'volume', 'inspect', 'containers_helixtrack-pg-data']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-postgres -d --label io.podman.compose.config-hash=30634a6e5a887292e3a81515d1fb50639a48ec5f267d16cd903a2ed273d88558 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-postgres -e POSTGRES_DB=helixtrack -e POSTGRES_USER=helixtrack -e POSTGRES_PASSWORD=helixtrack_dev -e POSTGRES_INITDB_ARGS=--encoding=UTF-8 -v containers_helixtrack-pg-data:/var/lib/postgresql/data --net helixtrack-network --network-alias helixtrack-postgres -p 5432:5432 --restart unless-stopped --healthcheck-command /bin/sh -c 'pg_isready -U helixtrack -d helixtrack' --healthcheck-interval 5s --healthcheck-timeout 3s --healthcheck-start-period 10s --healthcheck-retries 10 postgres:16-alpine
+58a11751f45b2f16710ffee1c50d03ddd48900eecf53c80cb8fc98346cb16ce7
+exit code: 0
+=== sleep for start_period (15s) + a margin ===
+=== ps ===
+helixtrack-core | Up 22 seconds (starting) | localhost/containers_helixtrack-core:latest
+helixtrack-postgres | Up 21 seconds (healthy) | docker.io/library/postgres:16-alpine

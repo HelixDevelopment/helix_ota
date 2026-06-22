@@ -1,0 +1,25 @@
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podman', 'inspect', '-t', 'image', '-f', '{{.Id}}', 'containers_helixtrack-core']
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=containers', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-core -d --label io.podman.compose.config-hash=163b156ddeafc46edcf0193f93f599e80f085583169bae8d6781f4b4f0eb6282 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-core -e HT_CONFIG=/config/default.json -e HT_SPACE_ROOT=/data/spaces/_default -e HT_DB_TYPE=sqlite -v /home/milosvasic/helix-dist/helix_track/spaces:/data/spaces -v /home/milosvasic/helix-dist/helix_track/core/Application/Configurations:/config --net helixtrack-network --network-alias helixtrack-core -p 8080:8080 --restart unless-stopped --healthcheck-command /bin/sh -c curl' '-f' 'http://localhost:8080/health --healthcheck-interval 10s --healthcheck-timeout 5s --healthcheck-start-period 15s --healthcheck-retries 5 containers_helixtrack-core ./htCore --space-root=/data/spaces/_default
+Error: creating container storage: the container name "helixtrack-core" is already in use by 94204da3ef0a0b1624daa64dc8f273b057d1b6dabfde9c86dae6d32e841b61dc. You have to remove that container to be able to reuse that name: that name is already in use, or use --replace to instruct Podman to do so.
+exit code: 125
+podman start helixtrack-core
+exit code: 0
+podman volume inspect containers_helixtrack-pg-data || podman volume create containers_helixtrack-pg-data
+['podman', 'volume', 'inspect', 'containers_helixtrack-pg-data']
+['podman', 'network', 'exists', 'helixtrack-network']
+podman run --name=helixtrack-postgres -d --label io.podman.compose.config-hash=163b156ddeafc46edcf0193f93f599e80f085583169bae8d6781f4b4f0eb6282 --label io.podman.compose.project=containers --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@containers.service --label com.docker.compose.project=containers --label com.docker.compose.project.working_dir=/home/milosvasic/helix-dist/containers --label com.docker.compose.project.config_files=compose.helixtrack.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=helixtrack-postgres -e POSTGRES_DB=helixtrack -e POSTGRES_USER=helixtrack -e POSTGRES_PASSWORD=helixtrack_dev -e POSTGRES_INITDB_ARGS=--encoding=UTF-8 -v containers_helixtrack-pg-data:/var/lib/postgresql/data --net helixtrack-network --network-alias helixtrack-postgres -p 5432:5432 --restart unless-stopped --healthcheck-command /bin/sh -c 'pg_isready -U helixtrack -d helixtrack' --healthcheck-interval 5s --healthcheck-timeout 3s --healthcheck-start-period 10s --healthcheck-retries 10 postgres:16-alpine
+Error: creating container storage: the container name "helixtrack-postgres" is already in use by 591c4fc493ffd00b5cda51a8349767d0db3557e8cb71915f2dbaf2c511f408cd. You have to remove that container to be able to reuse that name: that name is already in use, or use --replace to instruct Podman to do so.
+exit code: 125
+podman start helixtrack-postgres
+exit code: 0
+[DIST] Remote health-check (up to 60s)...
+CONTAINER ID  IMAGE                                        COMMAND               CREATED             STATUS                       PORTS                   NAMES
+94204da3ef0a  localhost/containers_helixtrack-core:latest  ./htCore --space-...  About a minute ago  Up About a minute (healthy)  0.0.0.0:8080->8080/tcp  helixtrack-core
+591c4fc493ff  docker.io/library/postgres:16-alpine         postgres              About a minute ago  Up About a minute (healthy)  0.0.0.0:5432->5432/tcp  helixtrack-postgres
+[DIST] Stack deployed but health-check did NOT pass in 60s on thinker.local (genuine failure, not skipped).
