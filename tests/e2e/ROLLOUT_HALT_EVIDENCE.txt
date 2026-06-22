@@ -1,27 +1,27 @@
 == Helix OTA staged-rollout HALT-on-breach SAFETY E2E ==
-base_url=http://127.0.0.1:8082 run=rollouthalt-1782055761-99839 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/ROLLOUT_HALT_EVIDENCE.txt
-started: 2026-06-21T15:29:21Z
+base_url=http://127.0.0.1:57122 run=rollouthalt-1782113479-68307 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/ROLLOUT_HALT_EVIDENCE.txt
+started: 2026-06-22T07:31:19Z
 openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
 
 [PASS] generated ephemeral ed25519 keypair (raw pubkey 32 bytes, base64 configured)
 building ota-server (go build ./cmd/ota-server) ...
 [PASS] go build ./cmd/ota-server succeeded
-server pid=115 (port 8082), waiting for readiness ...
-[PASS] ota-server healthy on http://127.0.0.1:8082/healthz (HELIX_ARTIFACT_PUBKEY configured)
+server pid=69171 (port 57122), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:57122/healthz (HELIX_ARTIFACT_PUBKEY configured)
 [PASS] POST /auth/login (HTTP 200)
 [PASS] obtained admin access token
 [PASS] anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)
 [PASS] POST /artifacts/upload (signed v1.0.0) (HTTP 201)
 [PASS] artifact .verified == true
 [PASS] POST /releases (v1.0.0) (HTTP 201)
-[PASS] deployment D_BREACH created (8634ac3f8d90886a1861d0788b5119b6)
-[PASS] deployment D_CTRL created (4c9a38a41ca4f40ca3ec424292ff869f)
-[PASS] deployment D_INV created (b02d12e87e19b8f67aa59e0b01ffe6a0)
-[PASS] deployment D_PBF created (82f32b9629ac0a55536eaff8e715f923)
+[PASS] deployment D_BREACH created (040a4dac8f337fb04bf3fdcb045620bf)
+[PASS] deployment D_CTRL created (91a7ed842ba8c0341d81038a53e2fe85)
+[PASS] deployment D_INV created (42b939d33fbd4e1696f09eccb1da4d04)
+[PASS] deployment D_PBF created (311d1d8b2146f4b627f9286eb9939dd3)
 [PASS] POST /deployments/{absent}/rollout -> 404 (HTTP 404)
 [PASS] POST /deployments/{D_BREACH}/rollout (empty phases) -> 400 (HTTP 400)
 [PASS] POST /deployments/{D_BREACH}/rollout (2-phase plan) -> 201 (HTTP 201)
-[PASS] rollout state echoes deployment_id (.deployment_id == '8634ac3f8d90886a1861d0788b5119b6')
+[PASS] rollout state echoes deployment_id (.deployment_id == '040a4dac8f337fb04bf3fdcb045620bf')
 [PASS] fresh rollout starts ACTIVE (pre-breach baseline) (.status == 'active')
 [PASS] fresh rollout starts at current_phase 0 (.current_phase == '0')
 [PASS] POST /deployments/{D_CTRL}/rollout -> 201 (control) (HTTP 201)
@@ -53,6 +53,6 @@ server pid=115 (port 8082), waiting for readiness ...
 [PASS] POST-BOOT FAILURE leaves state .status == 'halted' (.state.status == 'halted')
 [PASS] POST /deployments/{D_PBF}/rollout/evaluate (success_rate 1.5 out of [0,1]) -> 400 (HTTP 400)
 
-finished: 2026-06-21T15:29:24Z
+finished: 2026-06-22T07:31:37Z
 == summary: 47 passed, 0 failed, 0 skipped ==
 RESULT: PASS

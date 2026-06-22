@@ -1,8 +1,17 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 7
-**Last modified:** 2026-06-20T17:30:00Z
+**Revision:** 8
+**Last modified:** 2026-06-22T08:10:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
+
+> **Video-evidence reconciliation (2026-06-22, §11.4.6 no-bluff).** Earlier revisions
+> cited video confirmations at the ephemeral `$HOME/Downloads` recording path, which is
+> the §11.4.128 gitignored raw corpus and has been cleared. Durable, committed evidence
+> now is: (1) 10 vision-verified server/e2e control-plane MP4s under
+> `docs/qa/20260622-server-recordings-regen/mp4/` (REPORT.md), and (2) the re-proven GREEN
+> QEMU A/B firmware console evidence under `docs/qa/20260622T07*` (slot-switch, rollback,
+> RAUC dm-verity). On-target RK3588 / Android-agent / real Android A/B rows remain
+> hardware/operator-gated (OTA-004, F55, F56) and are honestly NOT recorded on this host.
 
 ---
 

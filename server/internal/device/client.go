@@ -69,8 +69,17 @@ type ClientOption func(*ApplyPortClient)
 func WithInsecureSkipVerify() ClientOption {
 	return func(c *ApplyPortClient) {
 		c.insecureSkipVerify = true
+		// Secure-by-default: the zero-value client (NewApplyPortClient) sets no
+		// custom transport, so certificates ARE verified in production. This
+		// insecure transport is reached ONLY when a caller explicitly opts in
+		// via WithInsecureSkipVerify() — the documented dev-only path for
+		// self-signed servers. MinVersion pins the floor to TLS 1.2.
 		c.httpClient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			// nosemgrep: problem-based-packs.insecure-transport.go-stdlib.bypass-tls-verification.bypass-tls-verification -- InsecureSkipVerify is dev-only, gated behind the explicit WithInsecureSkipVerify() opt-in option; default NewApplyPortClient verifies certs. MinVersion pins TLS 1.2.
+			TLSClientConfig: &tls.Config{ //nolint:gosec
+				InsecureSkipVerify: true,
+				MinVersion:         tls.VersionTLS12,
+			},
 		}
 	}
 }

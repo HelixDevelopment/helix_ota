@@ -69,6 +69,7 @@ func (f *fwEnvManager) resolvePrintenv() string {
 // fw_setenv persists immediately for raw env regions; for FAT-file env the
 // persistence depends on the backend (see SaveEnv).
 func (f *fwEnvManager) SetEnv(key, value string) error {
+	// nosemgrep: go.lang.security.audit.dangerous-exec-command.dangerous-exec-command -- command path is server-config-derived (NewFwEnvManager arg), defaulting to the trusted constant "fw_setenv"; it is NEVER request input (§11.4.133 trust boundary). exec.Command shells out via execve (no /bin/sh) so key/value — internal constants from applyport.go/health.go, not user-controllable — cannot inject.
 	cmd := exec.Command(f.resolveSetenv(), key, value)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -82,6 +83,7 @@ func (f *fwEnvManager) SetEnv(key, value string) error {
 // Returns ("", nil) when the variable is not set (fw_printenv exits with
 // non-zero for unset vars — we swallow that and return empty).
 func (f *fwEnvManager) GetEnv(key string) (string, error) {
+	// nosemgrep: go.lang.security.audit.dangerous-exec-command.dangerous-exec-command -- command path is server-config-derived (NewFwEnvManager arg), defaulting to the trusted constant "fw_printenv"; never request input (§11.4.133 trust boundary). execve (no shell); key is an internal constant from applyport.go/health.go, not user-controllable.
 	cmd := exec.Command(f.resolvePrintenv(), key)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -108,6 +110,7 @@ func (f *fwEnvManager) SaveEnv() error {
 	// fw_setenv with no key triggers a save/flush on some backends.
 	// We call it silently; errors are informational only.
 	// See u-boot-tools/libubootenv docs for backend-specific behaviour.
+	// nosemgrep: go.lang.security.audit.dangerous-exec-command.dangerous-exec-command -- command path is server-config-derived (NewFwEnvManager arg), defaulting to the trusted constant "fw_setenv"; never request input (§11.4.133 trust boundary). No args, execve (no shell).
 	_ = exec.Command(f.resolveSetenv()).Run()
 	return nil
 }

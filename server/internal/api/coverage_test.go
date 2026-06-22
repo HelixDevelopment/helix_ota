@@ -103,14 +103,14 @@ func TestToDeviceListItem(t *testing.T) {
 
 	// Device with both optional fields set.
 	d := store.Device{
-		DeviceID:       "dev-001",
-		HardwareID:     "rk3588",
-		TargetVersion:  "2.0.0",
-		LastSeen:       now,
-		HealthOK:       true,
-		UpdateState:    "idle",
-		ActiveSlot:     "A",
-		RegisteredAt:   now,
+		DeviceID:      "dev-001",
+		HardwareID:    "rk3588",
+		TargetVersion: "2.0.0",
+		LastSeen:      now,
+		HealthOK:      true,
+		UpdateState:   "idle",
+		ActiveSlot:    "A",
+		RegisteredAt:  now,
 	}
 	item := toDeviceListItem(d)
 	if item.DeviceID != "dev-001" {

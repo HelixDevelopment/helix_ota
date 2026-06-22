@@ -793,4 +793,3 @@ func TestRespondValidatorRejectStages(t *testing.T) {
 		t.Fatalf("S5 want 400/VALIDATION_FAILED, got %d/%s", w5.Code, env.errCode(w5))
 	}
 }
-

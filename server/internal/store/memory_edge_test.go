@@ -35,7 +35,7 @@ func TestCloneStrMapNilInput(t *testing.T) {
 	// Non-nil path — CreateFabricNode also calls cloneStrMap on the input.
 	if err := r.CreateFabricNode(ctx, FabricNode{
 		NodeID: "node-with-labels", Kind: "ci-linux-kvm", Arch: "x86_64",
-		Labels: map[string]string{"pool": "runner-1"},
+		Labels:     map[string]string{"pool": "runner-1"},
 		LastSeenAt: ts, CreatedAt: ts,
 	}); err != nil {
 		t.Fatalf("CreateFabricNode (with labels): %v", err)

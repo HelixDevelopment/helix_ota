@@ -278,7 +278,19 @@ expect {
   -re {stop autoboot} {
     send "\r"
     expect -re {=> $}
-    send "setenv BOOT_ORDER \"B A\"\r"
+    # §11.4.115 polarity: the post-reboot BOOT_ORDER MUST follow RED_MODE so the
+    # second boot deterministically lands on the intended slot REGARDLESS of any
+    # leftover/persisted state. RED_MODE=1 = defect-present baseline -> stay on
+    # slot A ("A B"); RED_MODE=0 = GREEN -> switch to the cloned slot B ("B A").
+    # (The bootloader env itself is non-load-bearing here: U-Boot reports
+    #  "bad CRC, using default environment" each boot, so this explicit setenv at
+    #  the => prompt is the sole, deterministic slot selector — true per-run
+    #  isolation, §11.4.14, not an assertion weakening, §11.4.120.)
+    if {$red_mode eq "0"} {
+      send "setenv BOOT_ORDER \"B A\"\r"
+    } else {
+      send "setenv BOOT_ORDER \"A B\"\r"
+    }
     expect -re {=> $}
     send "load virtio 0:1 0x40400000 boot.scr\r"
     expect -re {=> $}
@@ -375,7 +387,7 @@ fi
   echo "fw_setenv rc: $(grep -aoE 'HELIX_FWSET_RC=[0-9]+' "$CON" | head -1)"
   echo "rauc install rc: $(grep -aoE 'HELIX_RAUC_INSTALL_RC=[0-9]+' "$CON" | head -1)"
   echo "dm-verity targets: $(grep -aoE 'HELIX_DMVERITY=[0-9]+' "$CON" | head -1)"
-  echo "root dev:  $(grep -aoE 'HELIX_ROOTDEV=[^ ]+' "$CON" | head -1)"
+  echo "root dev:  $(grep -aoE 'HELIX_ROOTDEV=/dev/[a-z0-9]+' "$CON" | head -1)"
   echo "Verdict: $([ "$fail" -eq 0 ] && echo PASS || echo FAIL)"
 } > "${EVID}/verdict.txt"
 

@@ -75,6 +75,33 @@ modules) and the dev/runtime infrastructure in `containers/`.
   verification is not evidence.
 - §11.4.159 — window-specific MP4 with vision validation, expected-content specification before recording, content-verification workflow (SPECIFY→RECORD→EXTRACT→VERIFY→CHECK→ACCEPT), terminal cleanup per window id, and root cause analysis on rejected recordings.
 
+### Universal mandates propagation (§11.4.160–§11.4.166)
+
+- §11.4.160 — every feature/QA recording is processed through a vision/OCR
+  bridge that reads on-screen content and confirms expected results BEFORE
+  acceptance (extends §11.4.158/§11.4.159).
+- §11.4.161 — all containerized workloads (the `containers/` dev/runtime
+  infra) use Podman in rootless mode via the `vasic-digital/containers`
+  submodule (§11.4.76); Docker-rootful / sudo / root escalation is forbidden.
+- §11.4.162 — any user-facing interface MUST use the OpenDesign design-token
+  system (light+dark themes, visual-regression covered); latent until this
+  project ships a UI surface.
+- §11.4.163 — every recorded artifact passes the MEDIA VALIDATION pipeline
+  (OCR / transcription / text-parse vs SPECIFY-phase patterns, self-validated
+  golden-good/golden-bad analyzer) before acceptance.
+- §11.4.164 — after every constitution pull, run
+  `constitution/scripts/post_update_hook.sh` (inherited by reference, NEVER
+  copied) to detect / register / install changed skills / MCP / hooks /
+  scripts.
+- §11.4.165 — every code change OR recorded media artifact passes an
+  INDEPENDENT verifier (structurally separate from the author) that iterates
+  to a zero-finding GO.
+- §11.4.166 — Semgrep static analysis is MANDATORY: installed + on PATH for
+  all users, scanned (`semgrep scan --config auto --error`) before every
+  commit / push, blocking on findings. Scripts inherited by reference from
+  `constitution/scripts/semgrep/*` (NEVER copied); MCP wired per §11.4.78
+  step 3. Scope: `server/`, `submodules/`, `scripts/`.
+
 ### Project-specific architecture notes
 
 - Persistence seam: `server/internal/store.Repository`. MVP wires the

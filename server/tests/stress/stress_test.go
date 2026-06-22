@@ -165,12 +165,12 @@ func TestStressSustainedGroupCreate(t *testing.T) {
 
 	p50, p95, p99 := percentiles(durations)
 	record := map[string]interface{}{
-		"test":    "TestStressSustainedGroupCreate",
-		"N":       N,
-		"failed":  failed,
-		"p50_ns":  p50.Nanoseconds(),
-		"p95_ns":  p95.Nanoseconds(),
-		"p99_ns":  p99.Nanoseconds(),
+		"test":   "TestStressSustainedGroupCreate",
+		"N":      N,
+		"failed": failed,
+		"p50_ns": p50.Nanoseconds(),
+		"p95_ns": p95.Nanoseconds(),
+		"p99_ns": p99.Nanoseconds(),
 	}
 	writeEvidenceJSON(t, "sustained_group_create", record)
 	t.Logf("Sustained group create N=%d: failed=%d p50=%v p95=%v p99=%v",

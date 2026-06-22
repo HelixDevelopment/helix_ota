@@ -45,8 +45,14 @@ def main():
     print(f"[{feature}] Running: {cmd[:80]}...")
     
     output_events = [(0.0, "=== " + feature.upper() + " ===")]
+    # Local dev-only demo-recording helper; `cmd` is an operator-supplied CLI
+    # argument (sys.argv[2], a "<shell-command>" per the usage banner) whose
+    # ENTIRE PURPOSE is to run an arbitrary bash pipeline for terminal capture.
+    # Not reachable from any network/request path; list-form argv would break
+    # the intended pipeline/redirect support.
     proc = subprocess.Popen(
-        cmd, shell=True, executable="/bin/bash",
+        # nosemgrep: python.lang.security.audit.subprocess-shell-true.subprocess-shell-true -- operator-supplied trusted CLI arg on a local dev recording tool; shell pipeline support is the feature.
+        cmd, shell=True, executable="/bin/bash",  # noqa: S602
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, bufsize=1
     )

@@ -42,6 +42,28 @@
   recording's on-screen content machine-read and verified as a genuine
   working result.
 - **Window-specific MP4 + vision validation.** §11.4.159. Every recording must be window-specific MP4 with expected-content specification BEFORE recording, vision validation AFTER recording, terminal window cleanup, and content-verification workflow.
+- **Vision-verified recording + HelixQA bridge.** Constitution §11.4.160.
+  Recordings processed through a vision/OCR bridge confirming expected
+  results before acceptance.
+- **Rootless containers.** Constitution §11.4.161. The `containers/` infra
+  runs Podman rootless via the `vasic-digital/containers` submodule; no
+  Docker-rootful / sudo / root escalation.
+- **OpenDesign UI system.** Constitution §11.4.162. Any user-facing UI uses
+  OpenDesign design tokens (light+dark, visual-regression covered); latent
+  until a UI surface ships.
+- **Media validation pipeline.** Constitution §11.4.163. Every recorded
+  artifact validated (OCR / transcription / parse vs SPECIFY-phase patterns,
+  self-validated analyzer) before acceptance.
+- **Constitution auto-propagation hook.** Constitution §11.4.164. After
+  every constitution pull run `constitution/scripts/post_update_hook.sh`
+  (inherited by reference) to register/install changed skills/MCP/hooks.
+- **Independent verification agent.** Constitution §11.4.165. Every code
+  change OR media artifact passes an independent verifier iterating to a
+  zero-finding GO.
+- **Semgrep static analysis.** Constitution §11.4.166. Semgrep installed +
+  on PATH; `semgrep scan --config auto --error` runs before every commit /
+  push and blocks on findings; scripts inherited by reference from
+  `constitution/scripts/semgrep/*`.
 
 ## Project-specific agent rules
 

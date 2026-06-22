@@ -406,6 +406,7 @@ func reboot() error {
 }
 
 func runCmd(name string, args ...string) error {
+	// nosemgrep: go.lang.security.audit.dangerous-exec-command.dangerous-exec-command -- name/args are ALL static string literals at every call site (runCmd("systemctl","reboot") and runCmd("reboot") in reboot()); no request/user input ever reaches here, and exec.Command uses execve (no shell).
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

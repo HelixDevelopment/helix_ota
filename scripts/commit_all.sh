@@ -190,6 +190,50 @@ _constitution_sibling_check() {
     return 0
 }
 
+# -----------------------------------------------------------------------------
+# §11.4.166 — Semgrep static-analysis gate (PREPARED, env-gated).
+# Semgrep scripts are inherited BY REFERENCE from the constitution submodule
+# (constitution/scripts/semgrep/*) per §11.4.28/§11.4.35 — NEVER copied.
+# Posture controlled by HELIX_SEMGREP_GATE:
+#   block — mandate-compliant per §11.4.166(3): any finding makes the commit
+#           FAIL (non-zero exit). Flip to this once the baseline is clean:
+#           `semgrep scan --config auto --error server/ submodules/ scripts/`.
+#   warn  — DEFAULT during the baseline-cleanup window (open findings present
+#           2026-06-22: 5 ERROR + 2 WARNING; see this batch's report). Prints
+#           findings but does NOT block, so triage can proceed incrementally.
+# Skips gracefully when semgrep is not installed (run semgrep_setup.sh).
+# -----------------------------------------------------------------------------
+_semgrep_scan_check() {
+    local mode="${HELIX_SEMGREP_GATE:-warn}"
+    local const_semgrep="$PROJECT_ROOT/constitution/scripts/semgrep"
+    # PATH integration inherited by reference per §11.4.166(2)
+    [[ -f "$const_semgrep/semgrep_path.sh" ]] && . "$const_semgrep/semgrep_path.sh"
+    if ! command -v semgrep >/dev/null 2>&1; then
+        log_warn "§11.4.166: semgrep not on PATH — run $const_semgrep/semgrep_setup.sh (scan SKIPPED)"
+        return 0
+    fi
+    local staged
+    staged=$(git -C "$PROJECT_ROOT" diff --cached --name-only --diff-filter=ACMR \
+        -- 'server/' 'submodules/' 'scripts/' 2>/dev/null \
+        | grep -E '\.(go|py|sh|bash|ts|js)$' || true)
+    [[ -z "$staged" ]] && { log_info "§11.4.166: no staged code files to scan"; return 0; }
+    log_info "§11.4.166: semgrep scanning staged code files..."
+    local out rc
+    out=$(cd "$PROJECT_ROOT" && echo "$staged" | xargs semgrep scan --config auto --error 2>&1)
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$out" | tail -20
+        if [[ "$mode" == "block" ]]; then
+            log_error "§11.4.166: semgrep findings present — commit BLOCKED (HELIX_SEMGREP_GATE=block)"
+            return 1
+        fi
+        log_warn "§11.4.166: semgrep findings present — WARN only (HELIX_SEMGREP_GATE=warn); set HELIX_SEMGREP_GATE=block after triage"
+        return 0
+    fi
+    log_ok "§11.4.166: semgrep clean on staged code"
+    return 0
+}
+
 # =============================================================================
 # Submodule cascade (N-level recursive)
 # =============================================================================
@@ -375,6 +419,9 @@ do_commit() {
 
     # §11.4.74 sibling check
     _constitution_sibling_check || exit 1
+
+    # §11.4.166 semgrep static-analysis gate (env-gated; see _semgrep_scan_check)
+    _semgrep_scan_check || exit 1
 
     git -C "$PROJECT_ROOT" commit -m "${COMMIT_MESSAGE}
 
