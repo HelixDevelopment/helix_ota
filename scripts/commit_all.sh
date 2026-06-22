@@ -626,34 +626,23 @@ _helixtrack_ensure_running() {
         return 0
     fi
 
-    # Container distribution targets (operator mandate 2026-06-22).
-    #   thinker.local — LIVE: passwordless SSH key (milosvasic) works, rootless podman.
-    #   amber.local   — configured but PENDING SSH KEY: the key is not yet authorized
-    #                   there (ssh returns "Permission denied (publickey,password)").
-    #                   Operator must run `ssh-copy-id milosvasic@amber.local` once;
-    #                   until then amber is unreachable and is skipped honestly.
-    # nezha.local is NO LONGER a distribution target (read/import-from-nezha is still
-    # allowed — e.g. the emulator host in scripts/boot_android_emulator.sh).
-    # First reachable candidate (in order) wins; HELIXTRACK_REMOTE_HOST overrides.
-    local dist_user="${HELIXTRACK_REMOTE_USER:-milosvasic}"
-    local dist_candidates="${HELIXTRACK_REMOTE_HOST:-thinker.local amber.local}"
-    local dist_host="" cand
-    for cand in $dist_candidates; do
-        if ssh -o ConnectTimeout=5 -o BatchMode=yes "${dist_user}@${cand}" "echo ok" 2>/dev/null | grep -q ok; then
-            dist_host="$cand"
-            break
-        fi
-    done
-    if [ -n "$dist_host" ]; then
-        log_info "Deploying HelixTrack on $dist_host (user=$dist_user)..."
-        local compose_file="$PROJECT_ROOT/containers/compose.helixtrack.yml"
-        if [ -f "$compose_file" ]; then
-            (cd "$PROJECT_ROOT/containers" && docker compose -f compose.helixtrack.yml up -d 2>/dev/null) && \
-                log_ok "HelixTrack deployed on $dist_host" || \
-                log_warn "Deploy to $dist_host failed"
-        fi
+    # No local HelixTrack Core. The per-commit path stays LIGHTWEIGHT: it only
+    # needs a reachable HelixTrack endpoint for the workable-items sync — it does
+    # NOT fire a heavy remote container deploy on every commit.
+    #
+    # Remote container distribution (rsync + remote ROOTLESS podman compose onto
+    # thinker.local / amber.local-when-podman-ready, §11.4.161) is an EXPLICIT,
+    # on-demand action: run `bash scripts/distribute_stack.sh`. It runs here only
+    # when the operator opts in with HELIX_DISTRIBUTE_ON_COMMIT=1 (default OFF),
+    # so routine commits never trigger a remote deploy.
+    if [ "${HELIX_DISTRIBUTE_ON_COMMIT:-0}" = "1" ] && [ -x "$SCRIPT_DIR/distribute_stack.sh" ]; then
+        log_info "HELIX_DISTRIBUTE_ON_COMMIT=1 — distributing stack via remote rootless podman compose..."
+        bash "$SCRIPT_DIR/distribute_stack.sh" 2>&1 | sed 's/^/  /' || log_warn "distribute_stack.sh returned non-zero"
+        # If the deploy brought HelixTrack up on a remote, sync may now reach it
+        # via an operator-configured tunnel; otherwise the sync stays skipped.
+        _helixtrack_do_sync 2>/dev/null || true
     else
-        log_info "No distribution host reachable ($dist_candidates) — skipping HelixTrack boot. Sync skipped. (amber.local pending SSH key per config.)"
+        log_info "No local HelixTrack Core; remote distribution is on-demand (run scripts/distribute_stack.sh, or set HELIX_DISTRIBUTE_ON_COMMIT=1). Sync skipped this commit."
     fi
     return 0
 }

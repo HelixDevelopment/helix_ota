@@ -55,28 +55,24 @@ if ! curl -sf -X POST "http://localhost:8080/do" \
             exit 0
         fi
     else
-        # Container distribution targets (operator mandate 2026-06-22):
-        # thinker.local (live, milosvasic key) + amber.local (PENDING SSH key —
-        # operator must `ssh-copy-id milosvasic@amber.local`; skipped until then).
-        # nezha.local is NO LONGER a distribution target (read/import still allowed).
-        DIST_USER="${HELIXTRACK_REMOTE_USER:-milosvasic}"
-        DIST_CANDIDATES="${HELIXTRACK_REMOTE_HOST:-thinker.local amber.local}"
-        DIST_HOST=""
-        for cand in $DIST_CANDIDATES; do
-            if ssh -o ConnectTimeout=3 -o BatchMode=yes "${DIST_USER}@${cand}" "echo ok" 2>/dev/null | grep -q ok; then
-                DIST_HOST="$cand"
-                break
-            fi
-        done
-        if [ -n "$DIST_HOST" ]; then
-            echo "[HELIXTRACK] Deploying on $DIST_HOST (user=$DIST_USER)..."
-            docker compose -f "$PROJECT_ROOT/containers/compose.helixtrack.yml" up -d 2>/dev/null && \
-                echo "[HELIXTRACK] Deployed on $DIST_HOST" || \
-                echo "[HELIXTRACK] Deploy failed"
+        # No local HelixTrack Core. The pre-commit hook stays LIGHTWEIGHT: it
+        # only needs a reachable HelixTrack endpoint for the workable-items sync;
+        # it does NOT fire a heavy remote container deploy on every commit.
+        #
+        # Remote container distribution (rsync + remote ROOTLESS podman compose,
+        # §11.4.161) is an EXPLICIT, on-demand action via
+        # scripts/distribute_stack.sh. It runs here only when the operator opts
+        # in with HELIX_DISTRIBUTE_ON_COMMIT=1 (default OFF), so routine commits
+        # never trigger a remote deploy.
+        if [ "${HELIX_DISTRIBUTE_ON_COMMIT:-0}" = "1" ] && [ -x "$PROJECT_ROOT/scripts/distribute_stack.sh" ]; then
+            echo "[HELIXTRACK] HELIX_DISTRIBUTE_ON_COMMIT=1 — distributing via remote rootless podman compose..."
+            bash "$PROJECT_ROOT/scripts/distribute_stack.sh" 2>&1 | sed 's/^/  /' || true
         else
-            echo "[HELIXTRACK] Core not running, no distribution host reachable ($DIST_CANDIDATES) — sync skipped (amber.local pending SSH key)"
+            echo "[HELIXTRACK] Core not running locally; remote distribution is on-demand (run scripts/distribute_stack.sh) — sync skipped this commit"
             exit 0
         fi
+        # If the on-demand deploy did not bring up a locally-reachable endpoint,
+        # the auth probe below fails gracefully and sync is skipped (no bluff).
     fi
 fi
 

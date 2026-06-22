@@ -138,7 +138,12 @@ exec ${EMU_BIN} \\
 LAUNCHER
 
 scp -q "${LAUNCHER_FILE}" "${SSH_DEST}:/tmp/emu-ota-launch.sh" 2>&1 | tee -a "${QA_DIR}/launch.log"
-sshx "chmod +x /tmp/emu-ota-launch.sh && nohup /tmp/emu-ota-launch.sh > /tmp/emulator-ota.log 2>&1 & echo EMULATOR_PID=\$!" 2>&1 | tee -a "${QA_DIR}/launch.log"
+# §11.4.144 true detachment: `setsid` puts the launcher in a new session (no
+# controlling terminal) and `</dev/null` closes stdin, so the remote emulator
+# SURVIVES the launching SSH session ending (the prior `nohup … &` alone got
+# SIGHUP'd when the session closed mid-boot-wait). Same fix proven on the
+# detached asset-download path.
+sshx "chmod +x /tmp/emu-ota-launch.sh && setsid nohup /tmp/emu-ota-launch.sh </dev/null > /tmp/emulator-ota.log 2>&1 & echo EMULATOR_PID=\$!" 2>&1 | tee -a "${QA_DIR}/launch.log"
 
 EMU_PID=$(grep "EMULATOR_PID=" "${QA_DIR}/launch.log" | tail -1 | cut -d= -f2)
 [ -n "${EMU_PID}" ] || fail "Could not determine emulator PID"
