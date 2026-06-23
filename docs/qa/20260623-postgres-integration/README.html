@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="postgres-pgx-integration-suite-real-run-evidence-11.4.83">Postgres
+pgx Integration Suite — REAL RUN evidence (§11.4.83)</h1>
+<p><strong>Run date:</strong> 2026-06-23 <strong>Run host:</strong>
+nezha.local (Linux x86_64, go1.26.2, rootless podman 5.7.1 +
+podman-compose) <strong>Driver host:</strong> mistborn (macOS) — has
+go1.26.2 but NO container runtime; tests were rsynced + run on nezha
+where go1.26 AND rootless podman both exist.</p>
+<h2 id="why-this-matters">Why this matters</h2>
+<p>The server’s production persistence target is the pgx/PostgreSQL
+<code>Repository</code> (<code>server/internal/store/postgres.go</code>)
+and the rollout <code>PostgresStore</code>
+(<code>server/internal/rollout/postgres.go</code>). These are covered
+ONLY by <code>//go:build integration</code> tests, which the default
+<code>go test ./...</code> run does NOT build/execute — so the headline
+coverage (store 47.9% / rollout 28.2%) understated the real figure
+because the pgx code paths were never run. This run executes them.</p>
+<h2 id="boot-mechanism-cited">Boot mechanism (cited)</h2>
+<p>The integration tests boot Postgres ON-DEMAND via the
+<code>digital.vasic.containers</code> submodule — never a manual
+<code>podman</code>/<code>compose</code> step (§11.4.76 on-demand-infra
+invariant):</p>
+<ul>
+<li><code>server/internal/store/postgres_integration_test.go</code> —
+imports
+<code>digital.vasic.containers/pkg/{boot,compose,endpoint,health,runtime,logging}</code>;
+<code>runtime.AutoDetect(ctx)</code> finds podman;
+<code>compose.NewDefaultOrchestrator</code> +
+<code>boot.NewBootManager(...).BootAll(ctx)</code> brings up the service
+defined in <code>server/deploy/postgres.compose.yml</code> (image
+<code>postgres:16-alpine</code>, host port <strong>55432</strong>, DSN
+<code>postgres://helix:helix@localhost:55432/helix_ota?sslmode=disable</code>).</li>
+<li><code>server/internal/store/postgres_fabric_integration_test.go</code>
+— fabric registry (leases/evidence) against the same DB.</li>
+<li><code>server/internal/rollout/postgres_integration_test.go</code> —
+boots <code>server/deploy/postgres-rollout.compose.yml</code> (host port
+<strong>55445</strong>).</li>
+<li><code>server/internal/{store,rollout}/pg_itest_lock_test.go</code> —
+a fixed-path <code>flock</code> serializes the shared Postgres lifecycle
+across the two integration BINARIES (§11.4.119 single resource owner) so
+parallel <code>go test</code> packages don’t race
+<code>compose up</code>/<code>down</code>.</li>
+</ul>
+<p>go.mod local deps (replace directives):
+<code>digital.vasic.containers =&gt; ../containers</code>,
+<code>digital.vasic.http3 =&gt; ../submodules/http3</code>,
+<code>ota-protocol =&gt; ../submodules/ota-protocol</code>. The
+<code>ota-artifact-validator</code>, <code>ota-rollout-engine</code>,
+<code>ota-telemetry-schema</code> bricks are published modules fetched
+via GOPROXY. All four local dirs were rsynced to nezha preserving the
+relative layout.</p>
+<h2 id="run-path-that-worked">Run path that worked</h2>
+<p>Path (b): rsync <code>server/</code> + <code>containers/</code> +
+<code>submodules/http3/</code> + <code>submodules/ota-protocol/</code>
+to nezha → <code>go mod download</code> →
+<code>go test -tags integration</code>. (Path (a)
+<code>DOCKER_HOST=ssh://</code> was NOT viable — the test connects
+pgxpool to <code>localhost:55432</code>, not to the runtime host, so a
+remote runtime would not be reachable from the Mac’s localhost.)</p>
+<h2 id="real-result-pass-with-measured-coverage">REAL result — PASS,
+with measured coverage</h2>
+<pre><code>ok  internal/store    25.937s  coverage: 85.5% of statements in ./internal/store/...
+ok  internal/rollout   7.953s  coverage: 83.1% of statements in ./internal/rollout/...</code></pre>
+<p>Combined run (<code>int_test.log</code>): all integration + unit
+tests PASS, EXIT=0.
+<code>TestPostgresRepositoryContract_Integration</code> PASS (6.99s) —
+<code>container runtime: podman</code>,
+<code>boot summary: started=1 discovered=0 failed=0</code>.
+<code>TestPostgresFabricRegistry_Integration</code> PASS (13.39s) —
+exercised real DB UNIQUE partial index
+<code>uq_fabric_lease_active</code> (lease exclusivity) +
+<code>fabric_evidence</code> CHECK constraint (0-byte INSERT rejected
+SQLSTATE 23514). <code>TestPostgresStoreScenario_Integration</code> PASS
+(6.59s) — <code>boot summary: started=1 failed=0</code>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package</th>
+<th>Default <code>go test</code> (no integration tag)</th>
+<th>Integration run (pgx paths executed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/store</code></td>
+<td>47.9%</td>
+<td><strong>85.5%</strong></td>
+</tr>
+<tr>
+<td><code>internal/rollout</code></td>
+<td>28.2%</td>
+<td><strong>83.1%</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="pgx-production-paths-genuinely-exercised-func-coverage">pgx
+production paths genuinely exercised (func coverage)</h2>
+<p>store/postgres.go: <code>CreateRelease 100%</code>,
+<code>GetRelease 100%</code>, <code>GetDeployment 100%</code>,
+<code>CreateDeployment 100%</code>,
+<code>ActiveDeploymentForTarget 100%</code>,
+<code>AppendTelemetry 100%</code>, <code>GetDevice 100%</code>,
+<code>GetDeviceByHardwareID 100%</code>,
+<code>CreateDevice 87.5%</code>, <code>ListReleases 86.4%</code>,
+<code>UpdateDeployment 85.7%</code>, … (full breakdown in
+<code>coverage_func_full.txt</code>). rollout/postgres.go:
+<code>Save 73.3%</code>, <code>Load 79.2%</code>,
+<code>NewPostgresStore 85.7%</code>. Residual uncovered:
+<code>ListDevices 0.0%</code>,
+<code>NewPostgresRepositoryFromPool 0.0%</code>,
+<code>NewPostgresStoreFromPool 0.0%</code> — not driven by the contract
+scenario.</p>
+<h2 id="evidence-files">Evidence files</h2>
+<ul>
+<li><code>integration_test_run.log</code> — combined <code>-v</code> run
+(all tests + boot summaries, EXIT=0)</li>
+<li><code>store_pkg_coverage.log</code> /
+<code>rollout_pkg_coverage.log</code> — per-package coverage lines</li>
+<li><code>coverage_func_full.txt</code> —
+<code>go tool cover -func</code> full per-function breakdown (both
+pkgs)</li>
+</ul>
+<h2 id="cleanup-11.4.14">Cleanup (§11.4.14)</h2>
+<p>postgres compose containers + lock files torn down on nezha after the
+run; staging dir <code>~/helix_ota_itest</code> left in place (not the
+project tree). See report for teardown confirmation.</p>
+</body>
+</html>

@@ -1,0 +1,18 @@
+§1.1 MUTATION PROOF — anti_bluff.sh ab_pass_with_evidence (helix_ota F-ANTIBLUFF-LIB)
+=====================================================================================
+Mutation: a throwaway COPY of tests/lib/anti_bluff.sh is appended with a shadowing
+ab_pass_with_evidence() that ALWAYS returns 0 and emits PASS regardless of evidence
+(the "// always pass" bluff). The original library is NEVER modified (copy-based,
+TMPDIR-scoped, §11.4.84 no-residue).
+
+Same input to both: ab_pass_with_evidence "X" <nonexistent-path>
+  - MUTANT (always-pass bluff present): rc=0  → PASS emitted with NO real evidence
+  - REAL   (library byte-unchanged):    rc=1  → rejects, no fake PASS
+  - POST-RESTORE real library:          rc=1  → no residue leaked
+
+VERDICT: the self-test discriminates the bluff from the real library. An always-pass
+mutant is caught (self-test would exit 1 if the mutant still returned 1). The
+no-evidence-no-PASS §11.4.69 guarantee is mechanically enforced and bluff-proofed.
+
+Captured by: sh tests/lib/anti_bluff_selftest.sh  (SELFTEST_EXIT=0, see selftest_output.txt)
+Wired standing guard: tests/regression/guard_antibluff_evidence_lib.sh (run_all.sh 8/8 GREEN)
