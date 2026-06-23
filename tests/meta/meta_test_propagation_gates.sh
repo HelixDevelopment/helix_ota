@@ -13,9 +13,9 @@
 # grep-presence gate with no paired mutation could be silently weakened (e.g.
 # the grep target file edited away) and never noticed.
 #
-# This meta-test closes that hole for a representative SAMPLE across the gate
-# range (early 11.4.153, middle 11.4.159, and the newest 11.4.166), proving for
-# each that the EXACT gate command:
+# This meta-test closes that hole for EVERY propagation anchor the pre-build
+# wires (the full 11.4.153 .. 11.4.166 range — all 14 CM-COVENANT-114-N-
+# PROPAGATION gates), proving for each that the EXACT gate command:
 #   (a) PASSes on the clean carrier,
 #   (b) FAILs when the carrier is mutated to strip the `11.4.N` anchor literal,
 #   (c) PASSes again after byte-identical restore (§11.4.84, sha256-verified by
@@ -55,11 +55,24 @@ propagation_gate() {
     grep -qF "$1" "$CLAUDE_MD"
 }
 
-# Representative sample across the gate range. Each must be a literal anchor the
-# pre-build wires a CM-COVENANT-114-N-PROPAGATION gate for (lines 37-50).
-SAMPLE_ANCHORS="11.4.153 11.4.159 11.4.166"
+# Data-driven anchor list: derive the COMPLETE set of propagation anchors
+# DIRECTLY from the pre-build gate definitions so this meta-test can never
+# silently drift behind the real gate set (§11.4.6 no-guessing — the gate list
+# is the source of truth, not a hand-maintained copy). We parse every
+# CM-COVENANT-114-N-PROPAGATION run_gate line and extract its grep'd `11.4.N`
+# literal. If a new propagation gate is added to pre_build_verification.sh, it is
+# automatically picked up here and proven bluff-proof.
+PRE_BUILD="${ROOT}/tests/pre_build_verification.sh"
+[[ -f "$PRE_BUILD" ]] || mt_fail "pre_build_verification.sh missing — cannot enumerate propagation gates."
 
-for anchor in $SAMPLE_ANCHORS; do
+ALL_ANCHORS=$(grep -E 'run_gate "CM-COVENANT-114-[0-9]+-PROPAGATION"' "$PRE_BUILD" \
+    | grep -oE "11\.4\.[0-9]+" | sort -u)
+[[ -n "$ALL_ANCHORS" ]] || mt_fail "no CM-COVENANT-114-N-PROPAGATION gates found in pre_build_verification.sh — parser drift or gates removed."
+
+ANCHOR_COUNT=$(echo "$ALL_ANCHORS" | wc -l | tr -d ' ')
+echo "  enumerated ${ANCHOR_COUNT} CM-COVENANT-114-N-PROPAGATION anchor gates from pre_build_verification.sh"
+
+for anchor in $ALL_ANCHORS; do
     echo "  --- gate: CM-COVENANT-114-${anchor#11.4.}-PROPAGATION (literal ${anchor}) ---"
 
     # Sanity: the anchor must actually be present (else the gate is already
@@ -78,5 +91,5 @@ for anchor in $SAMPLE_ANCHORS; do
     mt_assert_gate_passes "gate PASSes after byte-identical restore (${anchor})" propagation_gate "$anchor"
 done
 
-echo "META-GREEN: sampled CM-COVENANT-114-{153,159,166}-PROPAGATION gates each catch a stripped anchor (bluff-proof)."
+echo "META-GREEN: ALL ${ANCHOR_COUNT} CM-COVENANT-114-N-PROPAGATION gates each catch a stripped anchor (bluff-proof)."
 exit 0

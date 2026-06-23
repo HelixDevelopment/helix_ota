@@ -392,28 +392,35 @@ docs/qa/20260623-fuzz/)</td>
 </tr>
 <tr>
 <td>stress/chaos</td>
-<td>ota-* bricks have it; <strong>HTTP load vs live DONE</strong> —
-p50/p90/p99 <strong>3.69/8.54/14.32ms @ 5,540 req/s, 166K reqs, zero
-5xx, no saturation</strong> (docs/qa/20260623-http-load-live/)</td>
-<td>+ chaos fault-injection</td>
-<td><strong>HTTP load DONE</strong>; server-layer chaos pending</td>
+<td><strong>HTTP load + CHAOS vs live DONE</strong>. Load: p99 14.32ms @
+5,540 req/s, zero 5xx. Chaos 4/4 survive+recover
+(docs/qa/20260623-chaos-live/): postgres-kill→reconnect (no corruption,
+validates the main.go retry fix), malformed/oversized→400, 12-race
+idempotent register→1 winner+exactly-one-device, 400-conn
+churn→recovers</td>
+<td>full</td>
+<td><strong>DONE</strong></td>
 </tr>
 <tr>
 <td>benchmark</td>
-<td>7 exist, no baseline</td>
-<td>benchstat registry</td>
-<td>gap</td>
+<td><strong>benchstat baseline registry + negation-proven guard
+DONE</strong> (7 benches, e.g. MemoryFindDelta 196ns/0-allocs; threshold
+calibrated on measured variance — allocs &gt;25%, ns &gt;2×;
+docs/benchmarks/ + docs/qa/20260623-benchmarks/)</td>
+<td>tighter ns gate (dedicated runner)</td>
+<td><strong>DONE</strong></td>
 </tr>
 <tr>
 <td>Android instrumentation/ui</td>
 <td><strong>JaCoCo MEASURED</strong> (wired both bricks):
 ota-update-engine-bridge <strong>LINE 100%</strong> (113/113, 27 tests),
 ota-android-agent <strong>LINE 91.18%</strong> (362/397, 47 tests;
-json-codec branch 55.6% = honest gap);
+json-codec branch 55.6% <strong>→ now 100%/100%</strong> via 54 new
+tests, docs/qa/20260623-json-coverage/);
 docs/qa/20260623-android-jacoco/</td>
-<td>branch gaps + on-device A/B</td>
-<td><strong>JVM coverage DONE</strong>; json-branch + on-device
-pending</td>
+<td>on-device A/B</td>
+<td><strong>JVM coverage DONE</strong> (json 100%); on-device pending
+(needs device)</td>
 </tr>
 <tr>
 <td>Challenges</td>
@@ -437,8 +444,9 @@ intermittent flake found+fixed (§11.4.50, 10/10 det).
 docs/qa/20260623-metagates/</td>
 <td>all ~17 bluff-proof</td>
 <td><strong>F-METAGATES + propagation-gate batch DONE</strong> (meta
-suite 5/5; +3 propagation gates 153/159/166 strip-anchor→FAIL→restore
-proven); remaining anchor-greps pending</td>
+suite 5/5; <strong>ALL 14 propagation gates now §1.1-paired</strong>,
+data-driven from pre_build source so new gates auto-covered; no other
+unpaired grep-gate exists); meta suite + benchmark guard</td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,14 @@
+§11.4.85 CASE (a) — postgres-kill mid-operation: process-death + state-corruption injection
+captured_utc=2026-06-23T13:45:28Z
+target=milosvasic@thinker.local base=http://127.0.0.1:18080 pg_container=helix-ota-system_postgres_1
+(admin bearer redacted, §11.4.10)
+--- timeline ---
+pre_fault_register_http=201            (expect 201 — baseline write)
+survivor_hardware_id=chaos-a-1782222280-23831-survivor        (the no-corruption oracle device)
+INJECT: podman stop helix-ota-system_postgres_1          (upstream DB process-death)
+db_down_write_http=500           (expect 5xx clean degrade; 000=hang/crash=BAD)
+db_down_healthz_http=200        (expect 200 — server process survived DB loss)
+RECOVER: podman start helix-ota-system_postgres_1        (DB returns)
+post_recover_readyz_http=200     (expect 200 — server reconnected to DB)
+post_recover_write_http=201      (expect 201 — full write recovery)
+survivor_lookup_http=200      (expect 200 — prior committed state intact, NO corruption)

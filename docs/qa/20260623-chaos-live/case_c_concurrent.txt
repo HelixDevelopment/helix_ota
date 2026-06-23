@@ -1,0 +1,18 @@
+§11.4.85 CASE (c) — concurrent contention: 12 identical idempotent registers
+captured_utc=2026-06-23T13:45:59Z
+(admin bearer redacted, §11.4.10)
+hardware_id=chaos-c-1782222344-23831 idempotency_key=chaos-idem-chaos-c-1782222344-23831
+concurrent_requests=12
+responses_total=12  201(created)=1  200(replay)=11  409(conflict)=0  5xx=0  no_response(000)=0
+consistent_responses(201|200|409)=12  (expect = 12; every response in the consistent closed-set)
+--- raw response codes ---
+  11 200
+   1 201
+--- consistency oracle (by-hardware lookup) ---
+lookup_http=200   device_id_count_in_lookup=1  (expect exactly 1 => no duplicate)
+--- §11.4.85 interpretation ---
+Under a true write-race on the same hardware_id, the unique constraint fires
+before the idempotency key is visible (handler writes the key only after a
+committed create), so exactly ONE request wins (201) and the rest get a clean
+409 (or 200-replay if they arrive after the key is visible). 1 device exists =>
+consistent state, no duplicate, no deadlock, no 5xx. This is the CORRECT outcome.

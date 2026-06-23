@@ -1,0 +1,21 @@
+Guard exit-code proof (§11.4.6 — the guard is a real gate, not a bluff)
+=======================================================================
+Captured: 2026-06-23, Apple M3 Pro, go1.26.2, benchstat v0.0.0-20260615155930
+
+CLEAN baseline (real committed baseline vs fresh benchmark run):
+  RESULT: PASS — all 7 benchmarks within calibrated thresholds
+  exit code = 0
+  (see guard_run_pass.txt for per-benchmark detail)
+
+FORGED baseline (MemoryListAudit allocs/op edited 10 -> 1, so the real
+run's 10 allocs/op reads as +900% > 25% threshold):
+  RESULT: FAIL — MemoryListAudit-11 allocs/op 1->10 (+900%)
+  exit code = 1
+  (see guard_run_negation_fail.txt for full output)
+
+Direct exit-code confirmation (no tee masking):
+  FORGED_BASELINE_EXIT=1  (expect 1)  -- FAIL detected
+  CLEAN_BASELINE_EXIT=0   (expect 0)  -- PASS on healthy tree
+
+Baseline file restored intact after the negation test
+(6 occurrences of "10 allocs/op" present in internal_store.txt).
