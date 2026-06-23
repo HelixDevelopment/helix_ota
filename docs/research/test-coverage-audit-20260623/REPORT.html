@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REPORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-real-test-coverage-audit-2026-06-23">Helix OTA — Real
+Test-Coverage Audit (2026-06-23)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-23T12:30:00Z <strong>Scope:</strong> server (Go control plane) +
+owned <code>ota-*</code> Go submodules. Challenges/HelixQA + cluster
+covered in sibling research docs. <strong>Method:</strong> real
+<code>go test -cover</code> / <code>-race</code> / <code>go vet</code>
+runs + mutation-thinking per type + <strong>one live mutation
+proof</strong> on the security-critical OTA trust boundary. NO new
+tests, NO inflated numbers (§11.4.6). Evidence: the raw
+<code>.txt</code> files in this directory (§11.4.83).</p>
+<h2
+id="measured-server-coverage-fact-all-pass-go-vet-clean--race-clean">Measured
+server coverage (FACT — all PASS, <code>go vet</code> clean,
+<code>-race</code> clean)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package</th>
+<th>Cover</th>
+<th>Package</th>
+<th>Cover</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/health</code></td>
+<td><strong>100.0%</strong></td>
+<td><code>internal/api</code></td>
+<td><strong>89.0%</strong> (Gin via httptest)</td>
+</tr>
+<tr>
+<td><code>internal/fabric</code></td>
+<td><strong>96.7%</strong></td>
+<td><code>internal/device</code></td>
+<td><strong>70.0%</strong></td>
+</tr>
+<tr>
+<td><code>internal/transport</code></td>
+<td><strong>94.9%</strong></td>
+<td><code>internal/store</code></td>
+<td><strong>47.9%</strong> ⚠ understated (pgx)</td>
+</tr>
+<tr>
+<td><code>internal/deviceemu</code></td>
+<td><strong>94.0%</strong></td>
+<td><code>internal/rollout</code></td>
+<td><strong>28.2%</strong> ⚠ understated (pgx)</td>
+</tr>
+<tr>
+<td><code>internal/config</code></td>
+<td><strong>90.0%</strong></td>
+<td><code>cmd/*</code>, <code>tools/loadtest</code></td>
+<td>0.0% (mains)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="measured-submodule-coverage-fact-all-pass">Measured submodule
+coverage (FACT — all PASS)</h2>
+<ul>
+<li><strong>ota-artifact-validator 100.0%</strong> ·
+<strong>ota-rollout-engine 100.0%</strong> ·
+<strong>ota-telemetry-schema 98.9%</strong> · <strong>ota-protocol
+98.6%</strong> — each ships real stress + chaos + (validator/protocol)
+security tests.</li>
+<li>Android bricks (JVM): ota-android-agent (47 <code>@Test</code> core
++ 5 on-device), ota-update-engine-bridge (27 <code>@Test</code> core).
+Coverage % <strong>UNCONFIRMED</strong> — Gradle/JaCoCo not invoked;
+on-device needs a device.</li>
+</ul>
+<h2 id="anti-bluff-headline-mutation-proven-real">Anti-bluff headline —
+MUTATION-PROVEN REAL</h2>
+<p>Mutated <code>ota-artifact-validator/stages.go:110</code> (the S3
+ed25519 signature check) to always-accept — the classic bluff.
+<strong>Result: MUTANT KILLED — 11 test functions FAILED</strong> across
+unit + security + chaos
+(incl. <code>TestChaosNeverAcceptsCorruption</code> catching 40/120
+corrupted artifacts). Restored → green. <strong>The OTA security trust
+boundary is covered by genuine anti-bluff tests, not bluff.</strong>
+Proof: <code>mutation-proof-validator-s3.txt</code>. No bluff tests were
+found in the sampled set; mocks are confined to <code>*_test.go</code>
+(§11.4.27 OK).</p>
+<h2 id="honest-gaps-fact-unrunenvironment-gated-not-bluff">Honest gaps
+(FACT — unrun/environment-gated, NOT bluff)</h2>
+<ul>
+<li><strong>G1 (highest):</strong> <code>store</code> 47.9% /
+<code>rollout</code> 28.2% <strong>understate</strong> real coverage —
+the uncovered statements are the pgx/Postgres <code>Repository</code>
+(the <em>production</em> persistence target, architecture.md §4), tested
+by <code>//go:build integration</code> suites that boot a real Postgres
+via the containers brick. <code>go vet -tags integration</code> compiles
+clean — but the integration suite was <strong>NOT RUN</strong> in this
+audit (UNCONFIRMED PASS).</li>
+<li><strong>G2:</strong> shell e2e (<code>pipeline_signed.sh</code>, 60
+assert points) + security (<code>security_probes.sh</code>, 59 hard
+asserts, self-hosts a real server) suites exist + are real, but aren’t
+chained into one mechanical runner.</li>
+<li><strong>G3:</strong> Android JVM JaCoCo coverage uncaptured;
+on-device A/B needs a device.</li>
+<li><strong>G4:</strong> no HTTP load/scaling test with p50/p95/p99
+latency histogram (§11.4.85); <code>tools/loadtest</code> exists at 0%
+cover.</li>
+<li><strong>G5:</strong> 7 benchmarks exist but no baseline/regression
+registry; no Go-layer DDoS/fuzz beyond shell injection probes + 2
+rate-limit tests.</li>
+</ul>
+<h2 id="prioritized-gap-plan-risk-descending-11.4.132">Prioritized gap
+plan (risk-descending, §11.4.132)</h2>
+<ol type="1">
+<li><strong>[HIGHEST]</strong> Run + capture the Postgres integration
+suite (<code>-tags integration</code>, podman) → closes G1, turns the
+production persistence layer from UNCONFIRMED to captured.</li>
+<li><strong>[HIGH]</strong> HTTP load/scaling test with latency
+histogram (wire <code>tools/loadtest</code>) → G4.</li>
+<li><strong>[HIGH]</strong> Android JVM JaCoCo + on-device A/B with
+evidence → G3.</li>
+<li><strong>[MED]</strong> Aggregate shell e2e/security into one
+mechanical runner → G2.</li>
+<li><strong>[MED]</strong> benchstat baseline registry; rate-limit
+saturation + <code>go test -fuzz</code> on upload/telemetry parsers →
+G5.</li>
+<li><strong>[LOW]</strong> smoke tests for <code>cmd/*</code>
+mains.</li>
+</ol>
+<h2 id="bottom-line">Bottom line</h2>
+<p>The Go layer (server + ota-* bricks) has <strong>strong, genuinely
+anti-bluff coverage</strong> — mutation-proven on the security-critical
+path, race-clean, vet-clean. The real gaps are
+<strong>unrun/environment-gated</strong> (Postgres integration, Android,
+load-latency), not bluff. The only place the headline numbers mislead is
+the default suite understating Postgres coverage — documented honestly
+here, not papered over.</p>
+</body>
+</html>

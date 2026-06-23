@@ -1,0 +1,61 @@
+ANTI-BLUFF CLASSIFICATION — Helix OTA test-coverage audit (2026-06-23)
+Method: mutation thinking on a representative sample per test type; one LIVE
+mutation executed against the load-bearing trust boundary (S3 signature verify).
+=====================================================================
+
+[REAL — MUTATION-PROVEN] ota-artifact-validator S3 signature verification
+  Mutation: stages.go:110  `if !ed25519.Verify(...)` -> `if false && !ed25519.Verify(...)`
+            (the classic "always-accept signature" bluff).
+  Result: 11 test functions FAILED across unit + security + chaos:
+    TestChaosCorruptSignature (7 subcases), TestChaosWrongPublicKey,
+    TestChaosHashBeforeSignatureOrdering, TestChaosNeverAcceptsCorruption
+    (40/120 corrupted artifacts accepted -> §11.4.85 invariant violated),
+    TestSignatureBindsToS2DigestNotMetaField, TestValidateSignatureScopeBinding,
+    TestValidateSignatureRejectionMatrix, TestValidate (S3 wrong-key),
+    TestValidateSignature (forged_sig), plus tests/chaos package.
+  Verdict: these are GENUINE anti-bluff tests — they catch the negation hard.
+  Evidence: mutation-proof-validator-s3.txt. Source restored + re-green confirmed.
+
+[REAL] server security shell suite (tests/security/security_probes*.sh)
+  Self-hosts a real ota-server (ephemeral secrets), drives live HTTP, HARD-asserts
+  401/403/404/400 (never 5xx) on unauth/RBAC/ownership/JWT-tamper/injection/oversized.
+  59 assertion points; trust-boundary spot-check G asserts request cannot inject a
+  signing key. Not a metadata/grep/echo PASS.
+
+[REAL] server e2e shell suite (tests/e2e/pipeline_signed.sh etc.)
+  60 boot+curl+assert points; builds+boots server, runs signed pipeline end-to-end.
+
+[REAL] ota chaos tests (rollout/protocol/validator/telemetry)
+  Assert CATEGORISED recovery verdicts + invariants (halt-wins-over-advance,
+  terminal-state-consistency), explicitly NOT "no panic" (§11.4.6 cited in source).
+
+[REAL] server Go unit/integration (internal/api 89%, fabric 96.7%, health 100%,
+  transport 94.9%, deviceemu 94%, config 90%) — race-clean (race-proof.txt).
+
+[HONEST GAP — NOT BLUFF] store 47.9% / rollout 28.2% default coverage
+  The uncovered statements are the postgres Repository impl (store/postgres.go 973L +
+  postgres_fabric.go 310L = 1283/4764; rollout/postgres.go 130/236). Those paths ARE
+  tested by //go:build integration contract tests (TestPostgresRepositoryContract_
+  Integration, TestPostgresFabricRegistry_Integration, TestPostgresStoreScenario_
+  Integration) that boot a REAL postgres via the containers brick — compile-verified
+  under -tags integration (VET_INTEG_EXIT=0). They DO NOT run in the default sweep,
+  so the headline % understates real coverage. This is an honest topology gap, not a
+  bluff: the postgres path is the production target (architecture.md §4) and its
+  contract IS exercised, just gated behind the integration tag + a booted DB.
+
+[UNCONFIRMED] Postgres integration tests not executed in THIS audit (no DB booted).
+  Reason: avoid mutating host container state in a read-only audit. Their PASS status
+  is therefore UNCONFIRMED here — recommend a gated CI lane runs `-tags integration`
+  and records coverage to close this.
+
+[GAP — NOT BLUFF] cmd/* entrypoints (ota-server, ota-device-emu, applyport) 0.0%
+  main()/wire-up packages have no package tests; exercised indirectly by e2e shell
+  + deviceemu pkg tests. Standard Go pattern; low risk but a true coverage hole.
+
+[GAP] No dedicated DDoS / scaling / perf-baseline (latency p50/p95/p99 budget) Go
+  tests at the HTTP layer. api/stress + rate_limit exist (concurrent load, no
+  deadlock) but assert correctness-under-load, not throughput baselines. Benchmarks
+  exist (7) but no recorded baseline/regression budget per §11.4.85.
+
+[GAP] Android bridge has NO security_test / chaos_test analogue of the Go bricks;
+  on-device androidTest is 5 @Test (emulator-gated, not run in this audit).
