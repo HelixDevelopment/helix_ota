@@ -33,6 +33,23 @@
 #   SYSTEM_ARTIFACT_PUBKEY  base64 ed25519 pubkey (default: a throwaway test key
 #                   generated per boot; never committed)
 #
+#   CALLER-PUBKEY MODE (opt-in, §11.4.69 — lets the caller sign artifacts the
+#   LIVE server accepts, so signed-pipeline / trust-boundary tests can drive the
+#   real upload path instead of SKIPping):
+#     HELIX_SYSTEM_SIGNING_KEY  path to a caller-supplied ed25519 PRIVATE PEM.
+#                   When set, the harness derives the raw 32-byte PUBLIC key from
+#                   it and sets the server's HELIX_ARTIFACT_PUBKEY to THAT public
+#                   key — the caller keeps the private half and can produce
+#                   signatures the live server's config-trusted key verifies. The
+#                   harness NEVER reads, transmits, or stores the private key
+#                   (only the derived public half crosses to the remote).
+#     SYSTEM_ARTIFACT_PUBKEY    alternatively, the caller may pass the base64 raw
+#                   ed25519 public key directly (when it generated the keypair
+#                   itself) — this passthrough is honored unchanged.
+#   Default (neither set): a throwaway keypair is generated per boot and the
+#   private half is discarded (no caller can sign accepted artifacts — the legacy
+#   behavior, intact). Caller-pubkey mode is therefore strictly opt-in.
+#
 # Outputs / Side-effects
 #   --up   : cross-compiles a static linux/amd64 ota-server on the HOST (the
 #            §11.4.28 sibling `replace` directives resolve on the host), rsyncs a
@@ -133,12 +150,28 @@ do_up() {
     esac
     log "remote arch=${REMOTE_ARCH} => cross-compiling GOOS=linux GOARCH=${GOARCH}"
 
-    # --- throwaway artifact pubkey (per boot, never committed) ----------------
-    if [ -z "${SYSTEM_ARTIFACT_PUBKEY:-}" ]; then
+    # --- resolve the artifact pubkey the live server will trust ---------------
+    # Precedence (§11.4.6 deterministic):
+    #   (1) CALLER-PUBKEY MODE: HELIX_SYSTEM_SIGNING_KEY points at a caller's
+    #       ed25519 PRIVATE PEM => derive its raw 32-byte PUBLIC key here and
+    #       trust THAT. The caller keeps the private half + signs accepted
+    #       artifacts. Only the public half ever leaves the caller's control.
+    #   (2) SYSTEM_ARTIFACT_PUBKEY passed directly (caller generated the keypair).
+    #   (3) Default: throwaway per-boot pubkey, private half discarded (legacy).
+    if [ -n "${HELIX_SYSTEM_SIGNING_KEY:-}" ]; then
+        [ -r "${HELIX_SYSTEM_SIGNING_KEY}" ] \
+            || fail "caller-pubkey mode: HELIX_SYSTEM_SIGNING_KEY='${HELIX_SYSTEM_SIGNING_KEY}' is not a readable file"
+        SYSTEM_ARTIFACT_PUBKEY="$(_pubkey_b64_from_priv_pem "${HELIX_SYSTEM_SIGNING_KEY}")" \
+            || fail "caller-pubkey mode: could not derive ed25519 public key from HELIX_SYSTEM_SIGNING_KEY (need openssl >=3 ed25519)"
+        export SYSTEM_ARTIFACT_PUBKEY
+        log "CALLER-PUBKEY MODE: live server trusts the public key derived from the caller's signing key (private half stays with caller)"
+    elif [ -z "${SYSTEM_ARTIFACT_PUBKEY:-}" ]; then
         # Generate an ed25519 keypair; export only the base64 raw 32-byte pubkey.
         SYSTEM_ARTIFACT_PUBKEY="$(_gen_ed25519_pubkey_b64)" \
             || log "note: could not generate test pubkey; HELIX_ARTIFACT_PUBKEY stays empty (tolerated)"
         export SYSTEM_ARTIFACT_PUBKEY
+    else
+        log "CALLER-PUBKEY MODE: using caller-supplied SYSTEM_ARTIFACT_PUBKEY directly"
     fi
 
     # --- cross-compile static linux/<arch> ota-server on the host -------------
@@ -244,6 +277,26 @@ PY
         openssl rand -base64 32 && return 0
     fi
     return 1
+}
+
+# Derive the base64 raw 32-byte ed25519 PUBLIC key from a caller-supplied PRIVATE
+# PEM (caller-pubkey mode). The raw public key = last 32 bytes of the DER
+# SubjectPublicKeyInfo (same extraction the signed-pipeline test uses). The
+# private key is read ONLY locally to compute the public half; it is never
+# transmitted to the remote (§11.4.10). Prints the base64 pubkey on stdout;
+# non-zero on failure. Verifies the extracted key is exactly 32 bytes (a wrong
+# length would silently break verification — §11.4.6 no guessing).
+_pubkey_b64_from_priv_pem() {
+    _pk_priv="$1"
+    command -v openssl >/dev/null 2>&1 || return 1
+    # base64-encode the raw key INSIDE the pipe (text, no NUL bytes) — capturing
+    # raw DER bytes into a shell variable would strip NULs and corrupt the key.
+    _pk_b64="$(openssl pkey -in "${_pk_priv}" -pubout -outform DER 2>/dev/null | tail -c 32 | base64 | tr -d '\n')" || return 1
+    # Validate the decoded key is exactly 32 bytes (§11.4.6 no guessing — a wrong
+    # length would silently break verification).
+    _pk_len="$(printf '%s' "${_pk_b64}" | base64 -d 2>/dev/null | wc -c | tr -d ' ')"
+    [ "${_pk_len}" = "32" ] || return 1
+    printf '%s' "${_pk_b64}"
 }
 
 # ==============================================================================

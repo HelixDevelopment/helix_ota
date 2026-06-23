@@ -52,7 +52,7 @@ Every test type + Challenge + HelixQA result MUST: cite a captured-evidence path
 | integration (pgx) | **store 85.5% / rollout 83.1% MEASURED** (real podman+Postgres on nezha, 2026-06-23) | 100% of pgx paths | **DONE** — real PASS, evidence docs/qa/20260623-postgres-integration/ |
 | e2e / full-auto | **challenge_operational 39/39 PASS against REAL Postgres** (DB-proof: audit_logs 14 rows persisted, device_groups=0 end-of-run-delete real; docs/qa/20260623-e2e-live-system/). 4/5 suites self-hosting-by-design (must own the artifact pubkey to sign) → need a caller-pubkey F-CLUSTER mode for signed-pipeline-against-live. | all flows vs live + aggregated runner | **black-box e2e DONE vs real DB**; signed-pipeline-vs-live = new sub-item |
 | anti-bluff per-assertion helper | none | ab_pass_with_evidence everywhere | **F-ANTIBLUFF-LIB DONE** (8/8 guard, mutation-proven) |
-| security/ddos | 59 hard asserts + 2 rate-limit | + fuzz + saturation + trust-boundary negative | partial |
+| security/ddos | 59 hard asserts + 2 rate-limit + **runtime trust-boundary PROVEN vs live** (4/4: accept-valid 201 / bad-sig 422 / **request-supplied-key IGNORED** 422 header + 400 metadata; docs/qa/20260623-trust-boundary-live/) + caller-pubkey harness mode | + fuzz + saturation | **trust-boundary DONE**; fuzz/saturation pending |
 | stress/chaos | ota-* bricks have it; server HTTP-layer none | §11.4.85 full + latency histogram | gap |
 | benchmark | 7 exist, no baseline | benchstat registry | gap |
 | Android instrumentation/ui | 74 @Test, JaCoCo % UNCONFIRMED | measured + on-device A/B | gap |
