@@ -1,0 +1,22 @@
+== Helix OTA telemetry SCHEMA-VALIDATION live E2E ==
+base_url=http://127.0.0.1:55372 run=telemschema-1782226179-31102 evidence_dir=/Volumes/T7/Projects/helix_ota/tests/e2e/TELEMETRY_SCHEMA_EVIDENCE
+started: 2026-06-23T14:49:39Z
+
+building ota-server (go build ./cmd/ota-server) ...
+[PASS] go build ./cmd/ota-server succeeded
+server pid=31418 (port 55372), waiting for readiness ...
+[PASS] ota-server healthy on http://127.0.0.1:55372/healthz
+[PASS] obtained admin access token (HTTP 200)
+[PASS] registered device 03a65ae39552db9636ebf48abb478fa9 + issued device_token (201, token redacted in evidence)
+[PASS] VALID telemetry event ACCEPTED (202, accepted=1 rejected=0)
+[PASS] PERSISTED: GET /devices/{id}/telemetry returns the accepted 'installing' event (sink-side §11.4.69 evidence; items=1)
+[PASS] REJECT(strict-decode): an UNKNOWN top-level field -> HTTP 400 (DisallowUnknownFields, wrong schema refused)
+[PASS] REJECT(strict-decode): a NON-JSON body -> HTTP 400 (malformed body refused)
+[PASS] REJECT(strict-decode): an UNKNOWN event enum -> HTTP 400 (enum validated in UnmarshalJSON, whole batch refused at decode)
+[PASS] REJECT(schema): a MISSING required deployment_id is rejected (202 accepted=0 rejected=1, not persisted)
+[PASS] REJECT(schema): a NEGATIVE duration_ms is rejected (202 accepted=0 rejected=1, not persisted)
+[PASS] NO-RESIDUE: after 1 valid + 4 malformed POSTs the device has exactly 1 persisted event (malformed left no residue)
+
+finished: 2026-06-23T14:49:45Z
+== summary: 12 passed, 0 failed, 0 skipped ==
+RESULT: PASS

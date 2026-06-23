@@ -51,8 +51,8 @@
 bank:
   id: helix_ota_operational_rollout
   name: Helix OTA — operational + rollout E2E challenge bank
-  revision: 5
-  last_modified: "2026-06-23T16:50:00Z"
+  revision: 6
+  last_modified: "2026-06-23T17:55:00Z"
   description: >-
     Black-box, anti-bluff end-to-end challenges that drive the live ota-server
     REST API over real HTTP and assert real HTTP status codes plus key JSON
@@ -770,6 +770,112 @@ bank:
       skip_codes:
         "3": "ssh / the live host / podman unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
       evidence_artifact: docs/qa/20260623-chaos-live/SUMMARY.txt
+
+    - id: HOTA-TELEMETRY-SCHEMA-LIVE
+      title: Server-side telemetry SCHEMA validation on the LIVE system — valid event ACCEPTED + PERSISTED, wrong-schema/malformed REJECTED with no persisted residue
+      capability_area: telemetry-schema-validation-live
+      # LIVE-SYSTEM (§11.4.6 / §11.4.69 / §11.4.123): self-hosts a real ota-server
+      # (in-memory repo, plain HTTP on a probed free port, §11.4.119) and proves
+      # POST /api/v1/client/telemetry VALIDATES device telemetry against the
+      # ota-telemetry-schema codec contract server-side, over real HTTP (curl+jq,
+      # no mocks). A real device is registered (gets a device_token) and POSTs as
+      # itself with its Bearer token (the realistic device path). The VALID-accept
+      # PASS is gated on SINK-SIDE evidence (the event read back via GET
+      # /devices/{id}/telemetry), not merely the 202. Two distinct rejection
+      # layers are asserted as the server ACTUALLY implements them (VERIFIED-LIVE,
+      # not assumed — §11.4.6): (A) strict-decode 400 (unknown top-level field /
+      # non-JSON body / unknown event enum validated in TelemetryEvent.Unmarshal),
+      # (B) codec Validate() 202-accepted=0-rejected=1 (missing deployment_id /
+      # negative duration_ms). device_token / Bearer values REDACTED in committed
+      # evidence (§11.4.10). Server killed on every exit path (§11.4.14). A missing
+      # prerequisite tool => exit 3 SKIP, never a false PASS.
+      dispatch_command: >-
+        bash tests/e2e/telemetry_schema_live.sh
+      requires:
+        - bash
+        - go
+        - base64
+        - curl
+        - jq
+        - python3
+      pass_criterion: >-
+        Against a self-hosted live ota-server, 12 hard assertions hold (12 passed
+        / 0 failed / 0 skipped): a VALID telemetry event is ACCEPTED (202,
+        accepted=1 rejected=0) AND PERSISTED (read back via GET
+        /devices/{id}/telemetry — §11.4.69 sink-side evidence); a wrong-schema
+        UNKNOWN top-level field, a NON-JSON body, and an UNKNOWN event enum are
+        each REJECTED at the strict-decode layer with HTTP 400; a MISSING required
+        deployment_id and a NEGATIVE duration_ms are each REJECTED by the schema
+        codec (202 accepted=0 rejected=1, not persisted); and after 1 valid + 4
+        malformed POSTs the device has EXACTLY ONE persisted event — proving the
+        rejections left NO persisted residue.
+      asserted_lines:
+        - "VALID telemetry event ACCEPTED (202, accepted=1 rejected=0)"
+        - "PERSISTED: GET /devices/{id}/telemetry returns the accepted 'installing' event (sink-side §11.4.69 evidence; items=1)"
+        - "REJECT(strict-decode): an UNKNOWN top-level field -> HTTP 400 (DisallowUnknownFields, wrong schema refused)"
+        - "REJECT(strict-decode): a NON-JSON body -> HTTP 400 (malformed body refused)"
+        - "REJECT(strict-decode): an UNKNOWN event enum -> HTTP 400 (enum validated in UnmarshalJSON, whole batch refused at decode)"
+        - "REJECT(schema): a MISSING required deployment_id is rejected (202 accepted=0 rejected=1, not persisted)"
+        - "REJECT(schema): a NEGATIVE duration_ms is rejected (202 accepted=0 rejected=1, not persisted)"
+        - "NO-RESIDUE: after 1 valid + 4 malformed POSTs the device has exactly 1 persisted event (malformed left no residue)"
+      skip_codes:
+        "3": "go/curl/jq/python3/base64 missing — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260623-phase2-challenges/telemetry-schema/SUMMARY.txt
+
+    - id: HOTA-ROLLOUT-STAGED-LIVE
+      title: Staged-rollout progression + HALT-on-failure-threshold on the LIVE system — advances on a healthy verdict, HALTS (sticky) when the error threshold is breached
+      capability_area: rollout-staged-halt-live
+      # LIVE-SYSTEM (§11.4.6 / §11.4.69 / §11.4.85 / §11.4.123): self-hosts a real
+      # ota-server with an EPHEMERAL ed25519 keypair (mktemp, rm'd on exit,
+      # §11.4.10) and drives the SAFETY-CRITICAL half of the staged-rollout state
+      # machine over real HTTP (curl+jq, no mocks): a 2-phase rollout (50%/100%)
+      # ADVANCES on a healthy verdict (control, proves the endpoint is not
+      # stuck-halting), then HALTS the moment a phase cohort's error_rate breaches
+      # the phase error_threshold, and the halt is STICKY (a subsequently perfect
+      # verdict may never silently resume a halted rollout), durable (GET reflects
+      # the persisted halt), halt-wins-over-advance (a verdict meeting success AND
+      # breaching error halts), and post-boot-health-failure also halts. Anti-bluff
+      # negative controls: a bogus signature is 422-rejected, an absent deployment
+      # is 404, empty phases 400, out-of-range verdict rates 400. The signed
+      # artifact reproduces the server's exact verify contract; openssl-ed25519
+      # absent => exit 3 SKIP, never a fabricated 201. Server killed + keys rm'd on
+      # every exit path (§11.4.14). The live test source EXISTS at
+      # tests/e2e/rollout_halt_safety.sh.
+      dispatch_command: >-
+        bash tests/e2e/rollout_halt_safety.sh
+      requires:
+        - bash
+        - go
+        - "openssl (>=3, ed25519)"
+        - xxd
+        - base64
+        - curl
+        - jq
+        - python3
+      pass_criterion: >-
+        Against a self-hosted live ota-server, 47 hard assertions hold (47 passed
+        / 0 failed / 0 skipped): a fresh 2-phase rollout starts active@phase0; a
+        HEALTHY verdict on a control deployment ADVANCES (action "advance",
+        phase 0->1); an error_rate breaching the error_threshold HALTS (action
+        "halt", reason "error_threshold_breached", status "halted", phase did NOT
+        advance); a post-halt PERFECT verdict STILL halts (sticky — no silent
+        resume); GET reflects the persisted halt; halt WINS over advance when both
+        bars trip; a failed post-boot health window halts; and the anti-bluff
+        negative controls (bogus signature 422, absent deployment 404, empty
+        phases 400, out-of-range verdict rate 400) all hold.
+      asserted_lines:
+        - "control: a HEALTHY verdict ADVANCES (endpoint is not stuck-halting) (.action == 'advance')"
+        - "control: phase advanced 0 -> 1 (.state.current_phase == '1')"
+        - "BREACH HALTS: action == 'halt' (.action == 'halt')"
+        - "BREACH reason == 'error_threshold_breached' (.reason == 'error_threshold_breached')"
+        - "BREACH did NOT advance the phase (still 0 — no silent progress) (.state.current_phase == '0')"
+        - "STICKY-HALT: a halted rollout STAYS halted even on a perfect verdict (action 'halt') (.action == 'halt')"
+        - "persisted rollout .status == 'halted' (halt is durable, not fire-and-forget) (.status == 'halted')"
+        - "SAFETY INVARIANT: halt WINS over advance when both bars trip (action 'halt') (.action == 'halt')"
+        - "POST-BOOT FAILURE HALTS: action == 'halt' (perfect rates but failed health window) (.action == 'halt')"
+      skip_codes:
+        "3": "openssl ed25519 / go / a required tool missing — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260623-phase2-challenges/rollout-staged/SUMMARY.txt
 
   # ---------------------------------------------------------------------------
   # HELIXTRACK CHALLENGES (workable-items integration)

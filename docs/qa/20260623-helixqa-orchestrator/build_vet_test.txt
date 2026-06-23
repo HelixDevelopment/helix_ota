@@ -1,0 +1,51 @@
+# HelixQA Go orchestrator — build/vet/test evidence (audit AB-G5)
+Run: 2026-06-23T14:48:37Z — host Darwin 24.5.0 arm64
+Module: module digital.vasic.helixqa ; go go1.26.2
+
+## go build ./... (go.work active — DEFAULT)
+cmd/helixqa/main.go:31:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+pkg/autonomous/playwright_executor.go:13:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+pkg/autonomous/coordinator.go:15:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+pkg/autonomous/coordinator.go:16:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+exit=  (errors: 65 lines)
+
+## go build ./... (GOWORK=off)
+../challenges/pkg/userflow/container_infra.go:8:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+../challenges/pkg/userflow/container_infra.go:9:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+../challenges/pkg/userflow/container_infra.go:10:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+../challenges/pkg/userflow/container_infra.go:11:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+exit=  (errors: 23 lines)
+
+## go build -o helixqa ./cmd/helixqa (the orchestrator binary)
+../challenges/pkg/userflow/container_infra.go:8:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+../challenges/pkg/userflow/container_infra.go:9:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+../challenges/pkg/userflow/container_infra.go:10:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000: replacement directory ../containers does not exist
+exit=  (binary built: NO)
+
+## ROOT CAUSE: missing own-org sibling Go modules (replace targets)
+go.mod replace directives point at ../<name>; present under submodules/?:
+  containers         -> ../containers         : MISSING
+  challenges         -> ../challenges         : PRESENT
+  doc_processor      -> ../doc_processor      : MISSING
+  llm_orchestrator   -> ../llm_orchestrator   : MISSING
+  llm_provider       -> ../llm_provider       : MISSING
+  security           -> ../security           : MISSING
+  vision_engine      -> ../vision_engine      : MISSING
+  llms_verifier      -> ../llms_verifier      : MISSING
+  NOTE: containers/go.mod EXISTS at REPO ROOT (/Volumes/T7/Projects/helix_ota/containers) but helixqa replace expects submodules/containers
+
+## go vet ./pkg/orchestrator ./pkg/testbank (DEFAULT)
+pkg/orchestrator/orchestrator.go:18:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+pkg/orchestrator/definition_challenge.go:47:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+pkg/orchestrator/orchestrator.go:20:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+exit=
+
+## go test (any pkg) — blocked: _test.go files import ../containers
+# digital.vasic.helixqa/pkg/evidence
+pkg/evidence/annotator_test.go:11:2: digital.vasic.containers@v0.0.0-00010101000000-000000000000 (replaced by ../containers): reading ../containers/go.mod: open /Volumes/T7/Projects/helix_ota/submodules/containers/go.mod: no such file or directory
+FAIL	digital.vasic.helixqa/pkg/evidence [setup failed]
+exit=
+
+## OTA bank (tools/helixqa/banks/helix_ota.yaml) shape
+  cases (- id:): 5
+  dispatches_to: 5   http: action steps: 0

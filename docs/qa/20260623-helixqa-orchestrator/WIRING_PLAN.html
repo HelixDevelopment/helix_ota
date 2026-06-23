@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>WIRING_PLAN</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="helixqa-go-orchestrator-wiring-plan-vs-helix-ota-audit-ab-g5">HelixQA
+Go orchestrator — wiring plan vs Helix OTA (audit AB-G5)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-23T14:50:00Z <strong>Scope:</strong> wire
+<code>submodules/helixqa/cmd/helixqa</code> (Go orchestration engine)
+against the live Helix OTA control plane. Investigation-only; no commit
+(conductor commits).</p>
+<h2 id="current-state-captured-fact-see-build_vet_test.txt">1. Current
+state (captured fact — see <code>build_vet_test.txt</code>)</h2>
+<ul>
+<li><code>submodules/helixqa</code> is module
+<code>digital.vasic.helixqa</code> (go 1.26). Engine packages:
+<code>pkg/orchestrator</code>, <code>pkg/testbank</code>
+(incl. <code>dispatch.go</code>), <code>pkg/detector</code>,
+<code>pkg/validator</code>, <code>pkg/evidence</code>,
+<code>pkg/reporter</code>, <code>pkg/conduit</code> (the §11.4.116 sync
+channel), <code>pkg/infra</code> (containers boot),
+<code>pkg/autonomous</code> (LLM-driven), ~25 vision binaries in
+<code>cmd/</code>.</li>
+<li><strong><code>go build ./...</code> FAILS</strong> (65 error lines,
+go.work active) AND <strong><code>GOWORK=off go build ./...</code>
+FAILS</strong> (23 error lines). <strong>The <code>helixqa</code> binary
+does NOT build.</strong></li>
+<li><code>go vet ./...</code> and <code>go test ./...</code> are
+<strong>also blocked</strong> — every <code>_test.go</code> transitively
+imports the missing deps.</li>
+</ul>
+<h3 id="root-cause-fact-not-guess">Root cause (FACT, not guess)</h3>
+<p><code>helixqa/go.mod</code> declares 8 own-org <code>replace</code>
+directives pointing at sibling paths <code>../&lt;name&gt;</code>.
+Resolved from <code>submodules/helixqa/</code>, that is
+<code>submodules/&lt;name&gt;</code>. Presence:</p>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 46%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr>
+<th>replace dep</th>
+<th>expected path</th>
+<th>present?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>digital.vasic.containers</code></td>
+<td><code>submodules/containers</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td><code>digital.vasic.challenges</code></td>
+<td><code>submodules/challenges</code></td>
+<td>present</td>
+</tr>
+<tr>
+<td><code>digital.vasic.docprocessor</code></td>
+<td><code>submodules/doc_processor</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td><code>digital.vasic.llmorchestrator</code></td>
+<td><code>submodules/llm_orchestrator</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td><code>digital.vasic.llmprovider</code></td>
+<td><code>submodules/llm_provider</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td><code>digital.vasic.security</code></td>
+<td><code>submodules/security</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td><code>digital.vasic.visionengine</code></td>
+<td><code>submodules/vision_engine</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td><code>digital.vasic.llmsverifier</code></td>
+<td><code>submodules/llms_verifier/llm-verifier</code></td>
+<td><strong>MISSING</strong></td>
+</tr>
+</tbody>
+</table>
+<p>7 of 8 own-org Go-module dependencies are absent from
+<code>submodules/</code>. The one present sibling
+(<code>challenges</code>) itself <code>replace</code>s
+<code>../containers</code>, so it is also unbuildable standalone.
+<strong><code>containers/go.mod</code> DOES exist — but at the REPO ROOT
+(<code>helix_ota/containers</code>), not at
+<code>submodules/containers</code></strong> where helixqa’s replace
+expects it. This is a §11.4.28(C) dependency-layout mismatch (the OTA
+project laid <code>containers</code> at root while helixqa expects it as
+a flat sibling under <code>submodules/</code>).</p>
+<p><strong>This is exactly audit AB-G5: the Go orchestrator is powerful
+but uninstalled vs OTA — it cannot build in this checkout.</strong></p>
+<h2 id="how-cmdhelixqa-is-invoked-against-a-bank-live-target">2. How
+<code>cmd/helixqa</code> is invoked against a bank + live target</h2>
+<p>The CLI (<code>cmd/helixqa/main.go</code>, v0.2.0) has subcommands:
+<code>run</code>, <code>list</code>, <code>report</code>,
+<code>autonomous</code>, <code>http</code>, <code>replay</code>,
+<code>signoff</code>, <code>version</code>.</p>
+<p>Two relevant entry points for OTA:</p>
+<h3
+id="a-helixqa-http-for-http-action-banks-not-the-ota-banks-shape">(a)
+<code>helixqa http</code> — for <code>http:</code>-action banks (NOT the
+OTA bank’s shape)</h3>
+<p><code>cmd/helixqa/http.go</code> runs a bank’s
+<code>ActionTypeHTTP</code> steps against a live server with no
+browser/LLM:</p>
+<pre><code>helixqa http --bank &lt;bank.yaml&gt; --base-url http://127.0.0.1:8080 \
+  [--admin-user U --admin-pass P] [--login-path /api/v1/auth/login] \
+  [--token-field session_token] [--timeout 30s] [--json]</code></pre>
+<p>Drives <code>autonomous.HTTPExecutor</code>; per-case PASS only when
+every <code>http:</code> step passes; exit non-zero on any FAIL.
+<strong>Base URL is a required flag, never hardcoded</strong> (§11.4.28
+decoupling).</p>
+<h3
+id="b-helixqa-run-dispatcher-for-dispatches_to-banks-the-ota-banks-shape">(b)
+<code>helixqa run</code> / dispatcher — for <code>dispatches_to:</code>
+banks (the OTA bank’s shape)</h3>
+<p>The orchestrator (<code>pkg/orchestrator</code>) +
+<code>pkg/testbank.Dispatcher.Run()</code> execute each case’s
+<code>dispatches_to:</code> script via an injected
+<code>DeviceExec</code> hook, capture the real exit code (0=PASS),
+enforce the <code>required_evidence</code> ledger (§11.4.69), and emit
+verdicts on a <code>conduit</code> JSONL sync channel (§11.4.116). This
+is the native equivalent of the shell <code>run_bank.sh</code>.</p>
+<h2 id="ota-bank-format-match-vs-adapter">3. OTA bank format — MATCH vs
+adapter</h2>
+<p><code>tools/helixqa/banks/helix_ota.yaml</code>: <strong>5 cases, all
+<code>dispatches_to:</code> style, ZERO <code>http:</code> action
+steps.</strong> The schema (<code>pkg/testbank/schema.go</code>) DOES
+support <code>dispatches_to</code>, <code>challenge_id</code>,
+<code>required_evidence</code>, <code>domains</code>,
+<code>metadata</code> — <strong>the OTA bank’s keys parse natively, no
+schema adapter needed.</strong></p>
+<p>The gap is the EXECUTION HOOK, not the format: -
+<code>helixqa http</code> does NOT apply (no <code>http:</code> steps in
+the OTA bank). - <code>helixqa run</code> applies, BUT the
+<code>cmd/helixqa</code> CLI does <strong>not</strong> wire a
+<code>DeviceExec</code> for <code>dispatches_to</code> (grep found no
+<code>NewDispatcher</code>/<code>DeviceExec</code> wiring in
+<code>cmd/</code>). The <code>Dispatcher</code> is a library type that a
+consumer wraps; the OTA project would need a thin host-exec adapter (run
+the <code>dispatches_to</code> path via <code>os/exec</code> from the
+project root) injected as <code>DeviceExec</code>, plus a
+<code>Conduit</code> for the evidence/sync channel.</p>
+<p><strong>Net:</strong> bank FORMAT matches; a small CLI/host-exec
+<strong>adapter</strong> is required to run a <code>dispatches_to</code>
+bank from <code>cmd/helixqa</code> (or a tiny project-side Go
+<code>cmd/</code> that imports <code>pkg/testbank</code> +
+<code>pkg/orchestrator</code> and injects a host
+<code>DeviceExec</code>).</p>
+<h2 id="what-the-go-orchestrator-adds-over-shell-run_bank.sh">4. What
+the Go orchestrator adds over shell <code>run_bank.sh</code></h2>
+<p><code>tools/helixqa/run_bank.sh</code> already dispatches the 5 OTA
+challenges. Native <code>cmd/helixqa</code> adds: - <strong>Native
+crash/ANR/issue detection</strong> (<code>pkg/detector</code>,
+<code>pkg/issuedetector</code>) on captured output. - <strong>Per-step
+structured validation</strong> (<code>pkg/validator</code>) beyond shell
+exit code. - <strong>Evidence ledger gate</strong>
+(<code>pkg/testbank</code> <code>required_evidence</code> →
+real-artifact resolution, §11.4.69) enforced in-process. -
+<strong>Real-time conductor↔︎framework sync channel</strong>
+(<code>pkg/conduit</code> JSONL events + atomic status snapshot,
+§11.4.116) — verdict events carry evidence paths. - <strong>Structured
+<code>QAReport</code></strong> (<code>pkg/reporter</code>) with
+HTML/PDF, vs shell text. - <strong>Autonomous LLM-driven QA
+sessions</strong> (<code>pkg/autonomous</code>) and ~25 vision oracles
+(<code>cmd/helixqa-*</code>) for §11.4.107/.117 liveness/OCR.</p>
+<h2 id="concrete-wiring-steps-to-make-it-runnable-vs-ota">5. Concrete
+wiring steps (to make it runnable vs OTA)</h2>
+<ol type="1">
+<li><p><strong>Fix dependency layout</strong> so helixqa builds. Either:
+(A) add the 7 missing own-org modules as siblings under
+<code>submodules/</code> per §11.4.28(C) + §11.4.31
+<code>helix-deps.yaml</code> (<code>git submodule add</code> of
+<code>containers</code>, <code>doc_processor</code>,
+<code>llm_orchestrator</code>, <code>llm_provider</code>,
+<code>security</code>, <code>vision_engine</code>,
+<code>llms_verifier</code>); OR (B) re-point helixqa’s
+<code>replace</code> / add a <code>go.work use</code> entry so
+<code>digital.vasic.containers</code> resolves to the existing repo-root
+<code>helix_ota/containers</code> (and likewise lay the others). Option
+A is the constitution-canonical layout; option B is a faster local
+bridge. <strong>This is the blocking step — until it is done, no
+<code>helixqa</code> invocation runs.</strong></p></li>
+<li><p>Build the binary:
+<code>cd submodules/helixqa &amp;&amp; go build -o bin/helixqa ./cmd/helixqa</code>.</p></li>
+<li><p>Boot the live OTA server (the OTA bank header already documents
+this):</p>
+<pre><code>cd server &amp;&amp; HELIX_ADMIN_USERNAME=admin@helix.test HELIX_ADMIN_PASSWORD=s3cret \
+  HELIX_TOKEN_SECRET=test go run ./cmd/ota-server &amp;
+until curl -fsS http://127.0.0.1:8080/healthz; do sleep 0.5; done</code></pre></li>
+<li><p>Add a <code>DeviceExec</code> host-exec adapter (run
+<code>dispatches_to</code> via <code>sh -c</code> from
+<code>helix_ota/</code> root, env
+<code>HELIX_BASE_URL=http://127.0.0.1:8080</code>) and invoke the
+dispatcher over <code>tools/helixqa/banks/helix_ota.yaml</code>. (A
+sibling stream owns the live thinker/OTA boot; defer the live run to
+them.)</p></li>
+<li><p>Evidence lands under <code>docs/qa/&lt;run-id&gt;/</code> per
+§11.4.83; conduit JSONL under the configured evidence dir.</p></li>
+</ol>
+<h2 id="honest-gaps-11.4.6">6. Honest gaps (§11.4.6)</h2>
+<ul>
+<li><strong>Not yet runnable vs OTA</strong>: the orchestrator does NOT
+build in this checkout (7 missing sibling modules) — captured fact, not
+estimate. No self-test / dry-run could be run because the binary does
+not compile; running <code>helixqa version</code> / any subcommand is
+impossible until step 5.1 is done.</li>
+<li>The <code>cmd/helixqa</code> CLI has <strong>no
+<code>dispatches_to</code> run path wired</strong> today — the
+dispatcher is a library; an adapter (≈1 small Go file injecting a host
+<code>DeviceExec</code>) is the missing glue even after the build is
+fixed.</li>
+<li><code>containers</code> exists at repo root but at the WRONG path
+for helixqa’s replace — a layout decision (§11.4.28(C)) the
+conductor/operator must resolve (option A vs B above) per §11.4.66.</li>
+<li>Live-OTA run deferred to the sibling that owns the thinker/boot —
+NOT exercised here.</li>
+</ul>
+</body>
+</html>
