@@ -41,29 +41,46 @@ MT_NAME=""
 # Parallel arrays: a mutated file path and its byte-identical backup path.
 MT_MUT_FILES=()
 MT_MUT_BAKS=()
+# sha256 of each file's ORIGINAL content, captured BEFORE mutation. The restore
+# is verified against THIS (not against the backup — comparing file-to-backup
+# after `cp backup→file` is tautological and detects nothing).
+MT_MUT_ORIG_SHAS=()
 
 mt_ok()   { echo "  ok: $*"; }
 mt_fail() { echo "  META-FAIL: $*" >&2; mt_restore_all; exit 1; }
 
 mt_restore_all() {
     # Restore every registered file from its backup, verify byte-identical.
-    local i file bak
+    local i file bak orig a
     for i in "${!MT_MUT_FILES[@]}"; do
         file="${MT_MUT_FILES[$i]}"
         bak="${MT_MUT_BAKS[$i]}"
-        [[ -f "$bak" ]] || continue
+        orig="${MT_MUT_ORIG_SHAS[$i]:-}"
+        if [[ ! -f "$bak" ]]; then
+            echo "  META-FAIL: backup vanished — cannot restore $file" >&2
+            MT_RESTORE_FAILED=1
+            continue
+        fi
         cp -p "$bak" "$file"
         if command -v shasum >/dev/null 2>&1; then
-            local a b
             a=$(shasum -a 256 "$file" | awk '{print $1}')
-            b=$(shasum -a 256 "$bak"  | awk '{print $1}')
-            if [[ "$a" != "$b" ]]; then
-                echo "  META-FAIL: restore not byte-identical for $file" >&2
+            # Verify the RESTORED file against the ORIGINAL sha captured at
+            # mutate time — NOT against the backup (file==backup after cp is
+            # tautological). This catches a corrupted/tampered backup.
+            if [[ -z "$orig" || "$a" != "$orig" ]]; then
+                echo "  META-FAIL: restore not byte-identical to original for $file" >&2
+                MT_RESTORE_FAILED=1
             fi
+        else
+            # shasum absent: cannot verify byte-identity → fail closed (§11.4.6 —
+            # an unverifiable restore must NOT be silently trusted).
+            echo "  META-FAIL: shasum unavailable — cannot verify restore of $file" >&2
+            MT_RESTORE_FAILED=1
         fi
     done
     MT_MUT_FILES=()
     MT_MUT_BAKS=()
+    MT_MUT_ORIG_SHAS=()
 }
 
 mt_init() {
@@ -71,7 +88,10 @@ mt_init() {
     MT_TMP="$(mktemp -d 2>/dev/null || echo "/tmp/${MT_NAME}.$$")"
     mkdir -p "$MT_TMP"
     # On ANY exit path: restore mutations first, then clean tmp (§11.4.84/§11.4.14).
-    trap 'mt_restore_all; rm -rf "$MT_TMP"' EXIT INT TERM
+    # On ANY exit path restore + clean; a botched/unverifiable restore FAILS the
+    # meta-test (exit 90) — the bluff-proof machinery must not silently pass on a
+    # corrupt restore (independent-review finding, §11.4.84/§11.4.142).
+    trap 'mt_restore_all; rm -rf "$MT_TMP"; if [[ -n "${MT_RESTORE_FAILED:-}" ]]; then echo "  META-FAIL: restore integrity violated — failing meta-test" >&2; exit 90; fi' EXIT INT TERM
     echo "[${MT_NAME}] §1.1 paired-mutation meta-test"
 }
 
@@ -106,6 +126,13 @@ mt_mutate_file() {
     cp -p "$file" "$bak"
     MT_MUT_FILES+=("$file")
     MT_MUT_BAKS+=("$bak")
+    # Capture the ORIGINAL sha256 now (file is still unmutated) so restore can be
+    # verified against it — the only check that detects a corrupted backup.
+    if command -v shasum >/dev/null 2>&1; then
+        MT_MUT_ORIG_SHAS+=("$(shasum -a 256 "$file" | awk '{print $1}')")
+    else
+        MT_MUT_ORIG_SHAS+=("")
+    fi
     # Portable in-place sed (BSD/GNU): write to temp then move.
     local tmpf="${MT_TMP}/$(echo "$file" | tr '/' '_').mut"
     sed "$sed_expr" "$file" > "$tmpf" || mt_fail "mt_mutate_file: sed failed on $file."

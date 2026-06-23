@@ -1,0 +1,13 @@
+ota-protocol — AFTER — go test ./... -coverprofile : 100.0% of statements
+(captured 2026-06-23, `go tool cover -func`, sorted by coverage %)
+
+github.com/HelixDevelopment/ota-protocol/validate.go:46:	ValidateArtifactMeta		100.0%
+total:								(statements)			100.0%
+
+Tests added (validate_test.go TestValidateArtifactMeta table, +`math` import):
+  - "size exceeds MaxInt32"  Size = math.MaxInt32+1   -> ErrInvalidValue   (covers validate.go:58-60)
+  - "size at MaxInt32 ok"    Size = math.MaxInt32      -> nil               (boundary)
+  - "version too long"       Version = 256 chars       -> ErrInvalidValue   (covers validate.go:70-72)
+  - "version at max len ok"  Version = 255 chars       -> nil               (boundary)
+
+All tests PASS; go vet ./... clean (rc=0).

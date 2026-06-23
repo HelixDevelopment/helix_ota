@@ -1,0 +1,33 @@
+=== HelixQA Challenge-bank wiring — round live-system tests (§11.4.27) ===
+captured_utc=2026-06-23
+
+BANK: tools/helixqa/banks/helix_ota.yaml  rev 4 -> 5
+
+SCORED challenges registered (real committed evidence -> GATE 2 green):
+  HOTA-TRUST-BOUNDARY-LIVE  dispatch: tests/security/trust_boundary_live.sh
+                            evidence: docs/qa/20260623-trust-boundary-live/SUMMARY.txt
+  HOTA-HTTP-LOAD-LIVE       dispatch: tests/stress/http_load_live.sh
+                            evidence: docs/qa/20260623-http-load-live/SUMMARY.txt
+  HOTA-CHAOS-LIVE           dispatch: tests/chaos/chaos_live.sh
+                            evidence: docs/qa/20260623-chaos-live/SUMMARY.txt
+
+PENDING (NOT scored — sibling-owned script not yet committed, §11.4.6):
+  HOTA-SIGNED-PIPELINE-LIVE dispatch: tests/e2e/pipeline_signed_live.sh (ABSENT)
+                            registered in PENDING section so run_bank never reports PASS.
+
+VERIFICATION (bank structure only — live RUN deferred to thinker, sibling-owned):
+  run_bank.sh --self-test  -> RESULT: SELF-TEST PASS (gate catches its own negation)  exit=0
+  run_bank.sh --dry-run    -> 18 passed / 0 failed / 0 skipped; RESULT: PASS          exit=0
+                              (the 3 new live entries resolve real committed evidence)
+  parse_bank parity        -> 3 new ids appear in scored array; PENDING id excluded.
+  bash -n on the 3 dispatch scripts -> all OK.
+
+HONEST NOTE (§11.4.6): the new Challenge entries are REGISTERED + structurally
+validated + self-test/dry-run green. Their LIVE dispatch is NOT run here — it
+boots the real F-CLUSTER (real ota-server + PostgreSQL, owned by a sibling
+stream / thinker). The entries are run-ready: the moment run_bank.sh is invoked
+LIVE with the host topology present they dispatch the real scripts (exit-3 SKIP
+off-topology, never a fake PASS).
+
+Evidence in this dir: scored_challenge_ids.txt, self_test.log, dry_run.log,
+exit_codes.txt, scripts_parse.txt, git_status_bank.txt.

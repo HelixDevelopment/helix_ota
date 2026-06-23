@@ -1,0 +1,30 @@
+ota-telemetry-schema — AFTER — go test ./... -coverprofile : 98.9% of statements (UNCHANGED)
+(captured 2026-06-23)
+
+github.com/HelixDevelopment/ota-telemetry-schema/codec.go:33:	EncodeBatch	83.3%
+total:								(statements)	98.9%
+
+HONESTLY UNREACHABLE (§11.4.6 — no test added; code NOT contorted to hit it):
+
+  codec.go:38.16,40.3 — the `json.Marshal(b)` error branch in EncodeBatch.
+
+  EncodeBatch calls b.Validate() FIRST and returns before json.Marshal on any
+  validation failure. Every input that reaches json.Marshal has therefore passed
+  Validate(). The Batch type graph is:
+      Batch -> []Event -> { otaprotocol.TelemetryReport, 3x string }
+      TelemetryReport -> { string, string, TelemetryEvent(enum), int, string,
+                           time.Time, *int64, *int64 }
+  None of these types can make encoding/json.Marshal return an error:
+    - no channels, funcs, or complex types (the only kinds json.Marshal rejects);
+    - no NaN/Inf floats (no float fields at all);
+    - the only custom marshaler in the graph, TelemetryEvent.MarshalJSON ->
+      marshalEnum, only errors on `!v.Valid()` — but ValidateTelemetryReport
+      already rejects `!r.Event.Valid()`, the SAME predicate (enums.go:271 vs
+      validate.go:100). So a valid-after-Validate() event ALWAYS marshals cleanly.
+
+  Conclusion: there exists NO input that passes Validate() yet fails json.Marshal,
+  so this branch is genuinely unreachable defensive code (belt-and-suspenders).
+  98.9% is the honest floor for this module; not worth contorting code for the
+  last 1.1% of a structurally-unreachable error path.
+
+All tests PASS; go vet ./... clean (rc=0). No _test.go change made in this module.

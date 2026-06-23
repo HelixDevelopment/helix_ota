@@ -36,13 +36,23 @@
 # Captured evidence (real run): tests/e2e/RUN_EVIDENCE.txt
 #   — 28 passed, 0 failed, 1 skipped; RESULT: PASS; with negative controls
 #     proving the challenge FAILs on wrong password / server absent.
+#
+# rev 5 (2026-06-23): registered this round's LIVE-SYSTEM tests as Challenges so
+#   HelixQA drives them with the evidence-ledger gate — HOTA-TRUST-BOUNDARY-LIVE
+#   (tests/security/trust_boundary_live.sh), HOTA-HTTP-LOAD-LIVE
+#   (tests/stress/http_load_live.sh), HOTA-CHAOS-LIVE (tests/chaos/chaos_live.sh),
+#   each citing real committed captured evidence under docs/qa/20260623-*-live/.
+#   These boot the real F-CLUSTER stack (real ota-server + real PostgreSQL) via
+#   tests/lib/boot_real_system.sh and exit-3 SKIP off-topology — never a fake PASS.
+#   HOTA-SIGNED-PIPELINE-LIVE is registered run-ready in the PENDING section
+#   (sibling-owned tests/e2e/pipeline_signed_live.sh not yet committed; §11.4.6).
 # =============================================================================
 ---
 bank:
   id: helix_ota_operational_rollout
   name: Helix OTA — operational + rollout E2E challenge bank
-  revision: 4
-  last_modified: "2026-06-10T12:00:00Z"
+  revision: 5
+  last_modified: "2026-06-23T16:50:00Z"
   description: >-
     Black-box, anti-bluff end-to-end challenges that drive the live ota-server
     REST API over real HTTP and assert real HTTP status codes plus key JSON
@@ -636,6 +646,131 @@ bank:
         "3": "validated RK3588 board not adb-reachable / no LAN server on this host — operator-attended hardware topology absent, SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6 / §11.4.52)"
       evidence_artifact: docs/qa/20260622-rk3588-controlplane/raw_validation_transcript.txt
 
+    - id: HOTA-TRUST-BOUNDARY-LIVE
+      title: Artifact-signature trust boundary holds at RUNTIME on the LIVE system (config-only verify key, request key ignored)
+      capability_area: security-trust-boundary-live
+      # LIVE-SYSTEM (§11.4.69 / §11.4.123): boots the real F-CLUSTER stack (real
+      # ota-server backed by real PostgreSQL) in CALLER-PUBKEY MODE via
+      # tests/lib/boot_real_system.sh, then proves the artifact-signature trust
+      # boundary (server/internal/api/handlers_artifact.go:resolvePublicKey) holds
+      # end-to-end over real HTTP: the ed25519 verify key comes ONLY from server
+      # configuration, NEVER from the request. ed25519 keys are EPHEMERAL (mktemp,
+      # rm'd on exit, §11.4.10); captured evidence is redacted of key/token
+      # material. Tears the stack down on every exit path (§11.4.14). Missing
+      # openssl-ed25519 / a required tool / live host => exit 3 SKIP, never a false
+      # PASS (§11.4.3 / §11.4.6).
+      dispatch_command: >-
+        bash tests/security/trust_boundary_live.sh
+      requires:
+        - bash
+        - "openssl (>=3, ed25519)"
+        - xxd
+        - base64
+        - curl
+        - jq
+        - python3
+        - ssh
+        - "a reachable rootless-podman live host (boot_real_system.sh)"
+      pass_criterion: >-
+        Against the live F-CLUSTER in caller-pubkey mode, three real HTTP
+        assertions hold (4 passed / 0 failed / 0 skipped): (a) POSITIVE — an
+        artifact signed by the caller's matching private key (the key the server
+        is CONFIGURED to trust) is ACCEPTED: POST /api/v1/artifacts/upload -> 201
+        with .verified==true; (b) NEGATIVE bad-sig — the SAME artifact with a
+        corrupted signature is REJECTED 422 SIGNATURE_INVALID (the server
+        genuinely verifies); (c) NEGATIVE key-pin (THE trust boundary) — a
+        DIFFERENT attacker keypair signs the artifact AND the attacker pubkey is
+        supplied via the request (header + metadata field); the server MUST IGNORE
+        the request-supplied key and still REJECT 422 SIGNATURE_INVALID — proving
+        the request cannot override the config-trusted key.
+      asserted_lines:
+        - "PASS=4 FAIL=0 SKIP=0"
+        - "case (a) positive: artifact signed by config-trusted key ACCEPTED (201 verified=true)"
+        - "case (b) bad-sig: corrupted signature REJECTED 422 SIGNATURE_INVALID"
+        - "case (c) key-pin: request-supplied attacker pubkey IGNORED, REJECTED 422 (config-only trust boundary)"
+      skip_codes:
+        "3": "openssl ed25519 / a required tool / the live host unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260623-trust-boundary-live/SUMMARY.txt
+
+    - id: HOTA-HTTP-LOAD-LIVE
+      title: Sustained concurrent HTTP load against the LIVE system — measured p50/p95/p99 latency + no errors + no resource leak (§11.4.85)
+      capability_area: stress-http-load-live
+      # LIVE-SYSTEM (§11.4.85 sustained-load + contention): boots the real
+      # F-CLUSTER stack (real ota-server + real PostgreSQL) via
+      # tests/lib/boot_real_system.sh, cross-builds the standalone
+      # server/tools/loadtest harness for the remote arch, and drives sustained
+      # concurrent load (>=10 workers, >=30s) against a DB-touching read endpoint
+      # (/readyz) and a pure-server endpoint (/healthz), MEASURING p50/p95/p99
+      # latency + throughput + error rate from real round-trips. The p95 ceiling is
+      # CALIBRATED on the measured p50 (never literature-hardcoded, §11.4.6); FAIL
+      # only on a genuine regression (any 5xx/error under load, or /readyz != 200
+      # after load = resource-leak/collapse). Tears the stack down on every exit
+      # path (§11.4.14).
+      dispatch_command: >-
+        bash tests/stress/http_load_live.sh
+      requires:
+        - bash
+        - "ssh + rsync to the rootless-podman live host"
+        - "Go toolchain on the host (cross-compiles loadtest for the remote arch)"
+        - "tests/lib/boot_real_system.sh"
+      pass_criterion: >-
+        Against the live F-CLUSTER, sustained concurrent load (default 25 workers,
+        30s per endpoint) produces a MEASURED latency report with ZERO non-2xx
+        responses under load, and the server answers /readyz=200 AFTER the load
+        (no resource leak / saturation collapse). Every PASS cites the captured
+        measured JSON report path (ab_pass_with_evidence — a PASS without real
+        measured evidence is mechanically impossible). p95 stays under the
+        p50-calibrated tail ceiling. A real saturation/error finding is captured
+        as a FAIL the evidence backs, never hidden.
+      asserted_lines:
+        - "PASS over readyz/healthz load with non_2xx=0 under sustained concurrency"
+        - "LIVE server answers /readyz=200 AFTER sustained load (no resource leak)"
+        - "measured p50/p90/p99 latency captured from real round-trips (calibrated tail ceiling)"
+      skip_codes:
+        "3": "ssh/rsync/Go toolchain / the live host unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260623-http-load-live/SUMMARY.txt
+
+    - id: HOTA-CHAOS-LIVE
+      title: Chaos fault-injection against the LIVE system — survives + recovers (postgres-kill / input-corruption / contention / resource-churn) (§11.4.85)
+      capability_area: chaos-live
+      # LIVE-SYSTEM (§11.4.85 chaos / §11.4.27 no fakes beyond unit tests): boots
+      # the real F-CLUSTER stack (real ota-server + real PostgreSQL) via
+      # tests/lib/boot_real_system.sh, then injects four §11.4.85 chaos faults and
+      # asserts the live system SURVIVES + RECOVERS to a consistent serving state
+      # (never panics, hangs, or corrupts). Every injected fault is restored in a
+      # trap (§11.4.14 — postgres always restored, stack always torn down). Each
+      # PASS cites captured recovery evidence (ab_pass_with_evidence). A genuine
+      # defect (panic/hang/corruption/no-recovery) is captured as a REAL FAIL the
+      # evidence backs, not hidden.
+      dispatch_command: >-
+        bash tests/chaos/chaos_live.sh
+      requires:
+        - bash
+        - "ssh to the rootless-podman live host (podman + curl on the remote)"
+        - "tests/lib/boot_real_system.sh"
+      pass_criterion: >-
+        Against the live F-CLUSTER, four chaos cases hold (4 passed / 0 failed /
+        0 skipped): (a) PROCESS-DEATH/STATE-CORRUPTION — killing the postgres
+        container mid-operation: server does NOT crash (healthz=200 while DB down),
+        degrades cleanly (write returns a clean 5xx, NOT a panic/hang),
+        RECONNECTS (pgxpool: /readyz back to 200, a real write succeeds 201) with
+        prior committed state intact (survivor read 200, NO corruption);
+        (b) INPUT-CORRUPTION — malformed JSON + oversized body to a real authed
+        endpoint => clean 4xx (NOT 5xx, NOT a crash), server healthy after;
+        (c) CONCURRENT contention — N>=10 racing identical idempotent registers =>
+        consistent state (exactly one device, zero 5xx, no deadlock);
+        (d) RESOURCE pressure — rapid connection churn => server stays UP, /readyz
+        recovers to 200, a write recovers 201 (no FD/connection-leak collapse).
+      asserted_lines:
+        - "PASS=4 FAIL=0 SKIP=0"
+        - "CASE (a) postgres-kill: survived (healthz=200), degraded cleanly (5xx while down), RECONNECTED (readyz=200, write=201), prior state intact"
+        - "CASE (b) input-corruption: malformed=400 + oversized=400 rejected cleanly, server healthy after (no 5xx/crash)"
+        - "CASE (c) concurrent contention: consistent state — exactly one device, zero 5xx, no deadlock"
+        - "CASE (d) resource churn: server stayed UP, /readyz recovered=200, write recovered=201 (no leak collapse)"
+      skip_codes:
+        "3": "ssh / the live host / podman unavailable — SKIP-with-reason, never a false PASS (§11.4.3 / §11.4.6)"
+      evidence_artifact: docs/qa/20260623-chaos-live/SUMMARY.txt
+
   # ---------------------------------------------------------------------------
   # HELIXTRACK CHALLENGES (workable-items integration)
   # ---------------------------------------------------------------------------
@@ -707,6 +842,45 @@ bank:
   # the real flow ONLY where its topology is present (exit 3 SKIP elsewhere),
   # and graduates into the scored `challenges:` array the moment a real run on
   # the gated host lands committed captured evidence (§11.4.107 / §11.4.108).
+
+  - id: HOTA-SIGNED-PIPELINE-LIVE
+    name: "Signed-artifact full pipeline against the LIVE system (real PostgreSQL-backed ota-server)"
+    status: integration-pending-sibling
+    description: >
+      Drive the full signed-artifact pipeline (upload signed BASE+TARGET ->
+      releases -> deployment -> rollout create/get/evaluate -> deltas ->
+      GET /client/update with a populated .delta) against the LIVE F-CLUSTER stack
+      (real ota-server backed by REAL PostgreSQL via tests/lib/boot_real_system.sh)
+      rather than the in-memory ota-server the existing HOTA-PIPELINE-SIGNED
+      challenge targets — proving the same end-to-end happy path + the bogus-sig
+      422 SIGNATURE_INVALID anti-bluff control hold on the production-shaped
+      persistence backend. HONEST STATUS (§11.4.6): the dispatch script
+      tests/e2e/pipeline_signed_live.sh is being authored by a sibling work stream
+      and is NOT yet committed; this row REGISTERS the challenge run-ready so it
+      graduates into the scored `challenges:` array the moment the script + its
+      committed captured evidence land. It is intentionally OUTSIDE the
+      runner-scored `challenges:` array so run_bank.sh NEVER reports a PASS for it
+      while no real-run evidence exists (scoring a PASS now would be a §11.4.69 /
+      §11.4.1 bluff).
+    category: integration
+    priority: high
+    tags: ["artifact-pipeline-signed", "live-system", "postgres", "pending-sibling"]
+    requires_topology: "a reachable rootless-podman live host (boot_real_system.sh) + Go + openssl(ed25519) + curl + jq"
+    dispatches_to: "tests/e2e/pipeline_signed_live.sh"
+    skip_contract: >-
+      PENDING — the dispatch script is not yet committed (sibling-owned). Once it
+      lands it runs the real flow ONLY where the live host topology is present
+      (exit 3 SKIP elsewhere), never a fake PASS (§11.4.3 / §11.4.6).
+    expected_result: >-
+      PENDING (not PASS): becomes a real PASS only after the sibling commits
+      tests/e2e/pipeline_signed_live.sh AND a live run lands committed captured
+      evidence (signed upload 201 verified=true, .delta populated, bogus-sig 422)
+      under docs/qa/<run-id>/ — at which point this row MOVES into the scored
+      `challenges:` array with that evidence_artifact (§11.4.69 / §11.4.108).
+    documentation_refs:
+      - "tests/e2e/pipeline_signed.sh (in-memory sibling — HOTA-PIPELINE-SIGNED)"
+      - "tests/lib/boot_real_system.sh (live F-CLUSTER boot harness)"
+      - "tests/security/trust_boundary_live.sh (live signing recipe + boot pattern)"
 
   - id: HOTA-CF-TIER2-AB
     name: "Tier-2: REAL Android A/B OTA (update_engine + AVB/dm-verity + auto-rollback) on Cuttlefish"

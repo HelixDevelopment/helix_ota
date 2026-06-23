@@ -1,7 +1,7 @@
 # Helix OTA — Master Comprehensive Test-Coverage + Anti-Bluff Build-Out Plan
 
-**Revision:** 1
-**Last modified:** 2026-06-23T13:20:00Z
+**Revision:** 2
+**Last modified:** 2026-06-23T15:30:00Z
 **Goal (operator mandate, 2026-06-23):** genuine 100% real coverage by every supported test type (unit, integration, e2e, full-automation, stress, security, benchmark, chaos, ui/ux, perf/scaling) + Challenges (Challenges submodule) + HelixQA suites — all exercising **the real production-ready system running on the configured cluster**, every PASS backed by rock-solid captured physical evidence, comprehensive anti-bluff everywhere, no false positives.
 **Honesty (§11.4.6):** this is a multi-phase program, not a one-shot. Sources: the three audit docs in this directory (test-coverage-audit / cluster-and-system / challenges-helixqa-antibluff), each FACT-cited.
 
@@ -50,10 +50,10 @@ Every test type + Challenge + HelixQA result MUST: cite a captured-evidence path
 |---|---|---|---|
 | unit (Go) | server 47.9–100% per pkg; ota-* 98–100% | 100% real | strong; store/rollout pending integration run |
 | integration (pgx) | **store 85.5% / rollout 83.1% MEASURED** (real podman+Postgres on nezha, 2026-06-23) | 100% of pgx paths | **DONE** — real PASS, evidence docs/qa/20260623-postgres-integration/ |
-| e2e / full-auto | **challenge_operational 39/39 PASS against REAL Postgres** (DB-proof: audit_logs 14 rows persisted, device_groups=0 end-of-run-delete real; docs/qa/20260623-e2e-live-system/). 4/5 suites self-hosting-by-design (must own the artifact pubkey to sign) → need a caller-pubkey F-CLUSTER mode for signed-pipeline-against-live. | all flows vs live + aggregated runner | **black-box e2e DONE vs real DB**; signed-pipeline-vs-live = new sub-item |
+| e2e / full-auto | **challenge_operational 39/39 PASS against REAL Postgres** (DB-proof: audit_logs 14 rows persisted, device_groups=0 end-of-run-delete real; docs/qa/20260623-e2e-live-system/). 4/5 suites self-hosting-by-design (must own the artifact pubkey to sign) → caller-pubkey F-CLUSTER mode for signed-pipeline-against-live now drafted (`tests/e2e/pipeline_signed_live.sh`): a local run reports **15/15 PASS** (signed upload→release→deploy→rollout→device-poll-receives-signed-update vs live system) but its evidence dir is UNTRACKED/uncommitted — **IN FLIGHT** (not yet committed/§11.4.6, conductor lands it). | all flows vs live + aggregated runner | **black-box e2e DONE vs real DB**; signed-pipeline-vs-live IN FLIGHT |
 | anti-bluff per-assertion helper | none | ab_pass_with_evidence everywhere | **F-ANTIBLUFF-LIB DONE** (8/8 guard, mutation-proven) |
 | security/ddos | 59 hard asserts + rate-limit + **runtime trust-boundary 4/4 vs live** (request-supplied-key IGNORED) + **Go fuzz DONE** (4 targets, **10.8M execs, 0 crashers**, property-based: round-trip/antisymmetry/hex-oracle; docs/qa/20260623-fuzz/) | + saturation | **trust-boundary + fuzz DONE**; saturation pending |
-| stress/chaos | **HTTP load + CHAOS vs live DONE**. Load: p99 14.32ms @ 5,540 req/s, zero 5xx. Chaos 4/4 survive+recover (docs/qa/20260623-chaos-live/): postgres-kill→reconnect (no corruption, validates the main.go retry fix), malformed/oversized→400, 12-race idempotent register→1 winner+exactly-one-device, 400-conn churn→recovers | full | **DONE** |
+| stress/chaos | **HTTP load + CHAOS vs live DONE**. Load: p99 14.32ms @ 5,540 req/s, zero 5xx (docs/qa/20260623-http-load-live/). Chaos 4/4 survive+recover (docs/qa/20260623-chaos-live/): postgres-kill→reconnect (no corruption, validates the main.go retry fix), malformed/oversized→400, 12-race idempotent register→1 winner+exactly-one-device, 400-conn churn→recovers | full | **DONE** |
 | benchmark | **benchstat baseline registry + negation-proven guard DONE** (7 benches, e.g. MemoryFindDelta 196ns/0-allocs; threshold calibrated on measured variance — allocs >25%, ns >2×; docs/benchmarks/ + docs/qa/20260623-benchmarks/) | tighter ns gate (dedicated runner) | **DONE** |
 | Android instrumentation/ui | **JaCoCo MEASURED** (wired both bricks): ota-update-engine-bridge **LINE 100%** (113/113, 27 tests), ota-android-agent **LINE 91.18%** (362/397, 47 tests; json-codec branch 55.6% **→ now 100%/100%** via 54 new tests, docs/qa/20260623-json-coverage/); docs/qa/20260623-android-jacoco/ | on-device A/B | **JVM coverage DONE** (json 100%); on-device pending (needs device) |
 | Challenges | 15 HOTA banks (shell-dispatch) | + OTA holes + paired mutations | partial |

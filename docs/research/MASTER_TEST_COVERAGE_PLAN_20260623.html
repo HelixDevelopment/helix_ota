@@ -176,8 +176,8 @@
 id="helix-ota-master-comprehensive-test-coverage-anti-bluff-build-out-plan">Helix
 OTA — Master Comprehensive Test-Coverage + Anti-Bluff Build-Out
 Plan</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-06-23T13:20:00Z <strong>Goal (operator mandate,
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-06-23T15:30:00Z <strong>Goal (operator mandate,
 2026-06-23):</strong> genuine 100% real coverage by every supported test
 type (unit, integration, e2e, full-automation, stress, security,
 benchmark, chaos, ui/ux, perf/scaling) + Challenges (Challenges
@@ -367,11 +367,16 @@ docs/qa/20260623-postgres-integration/</td>
 Postgres</strong> (DB-proof: audit_logs 14 rows persisted,
 device_groups=0 end-of-run-delete real;
 docs/qa/20260623-e2e-live-system/). 4/5 suites self-hosting-by-design
-(must own the artifact pubkey to sign) → need a caller-pubkey F-CLUSTER
-mode for signed-pipeline-against-live.</td>
+(must own the artifact pubkey to sign) → caller-pubkey F-CLUSTER mode
+for signed-pipeline-against-live now drafted
+(<code>tests/e2e/pipeline_signed_live.sh</code>): a local run reports
+<strong>15/15 PASS</strong> (signed
+upload→release→deploy→rollout→device-poll-receives-signed-update vs live
+system) but its evidence dir is UNTRACKED/uncommitted — <strong>IN
+FLIGHT</strong> (not yet committed/§11.4.6, conductor lands it).</td>
 <td>all flows vs live + aggregated runner</td>
 <td><strong>black-box e2e DONE vs real DB</strong>;
-signed-pipeline-vs-live = new sub-item</td>
+signed-pipeline-vs-live IN FLIGHT</td>
 </tr>
 <tr>
 <td>anti-bluff per-assertion helper</td>
@@ -393,11 +398,11 @@ docs/qa/20260623-fuzz/)</td>
 <tr>
 <td>stress/chaos</td>
 <td><strong>HTTP load + CHAOS vs live DONE</strong>. Load: p99 14.32ms @
-5,540 req/s, zero 5xx. Chaos 4/4 survive+recover
-(docs/qa/20260623-chaos-live/): postgres-kill→reconnect (no corruption,
-validates the main.go retry fix), malformed/oversized→400, 12-race
-idempotent register→1 winner+exactly-one-device, 400-conn
-churn→recovers</td>
+5,540 req/s, zero 5xx (docs/qa/20260623-http-load-live/). Chaos 4/4
+survive+recover (docs/qa/20260623-chaos-live/): postgres-kill→reconnect
+(no corruption, validates the main.go retry fix),
+malformed/oversized→400, 12-race idempotent register→1
+winner+exactly-one-device, 400-conn churn→recovers</td>
 <td>full</td>
 <td><strong>DONE</strong></td>
 </tr>

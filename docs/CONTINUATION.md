@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 10
-**Last modified:** 2026-06-23T12:30:00Z
+**Revision:** 11
+**Last modified:** 2026-06-23T15:30:00Z
 
 ---
 
@@ -9,11 +9,31 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `983bcef1` (comprehensive test-coverage program — Phase 0 foundation + Phase 1 start, all 4-remote synced) |
+| **HEAD** | `21338527` (comprehensive test-coverage program — Phase 0 DONE + Phase 1 mostly done: integration/e2e/security/fuzz/load/chaos/benchmark/Android-JaCoCo, all 14 propagation gates §1.1-paired) |
 | **Phase** | **TEST-COVERAGE PROGRAM underway** (operator mandate 2026-06-23: 100% real coverage every test type + Challenges + HelixQA vs the real system on the cluster, anti-bluff everywhere). Plan + live ledger: `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`. Phase 0 DONE (real-system boot, anti-bluff helper, pgx coverage, meta-test gates). Prior terminal goal (Cuttlefish Tier-2 A/B) remains VERIFIED (F112/F55). |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets — **MET for the emulated Cuttlefish A/B path (F112/F55 VERIFIED); RK3588 stays control-plane-only by operator decision (§11.4.133)** |
 
-### Latest session (2026-06-23) — Comprehensive test-coverage + anti-bluff program (Phase 0 + Phase 1 start)
+### Latest session (2026-06-23) — Comprehensive test-coverage + anti-bluff program (Phase 0 DONE + Phase 1 mostly done)
+
+Continuation of the operator mandate (genuine 100% real coverage by every test type + Challenges + HelixQA vs the real running system, anti-bluff everywhere, rock-solid physical proof, no false positives). Honest framing (§11.4.6): multi-phase program — `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md` (Rev 2) holds the plan + the **live coverage ledger**. This round drove **Phase 1 risk-descending (§11.4.132)** deep; all items below have real captured evidence committed + 4-remote synced (HEAD `21338527`), except the two explicitly marked IN FLIGHT:
+
+- **Integration (pgx)** — store **85.5%** / rollout **83.1%** MEASURED via real `-tags integration` podman+Postgres run (`docs/qa/20260623-postgres-integration/`).
+- **F-ANTIBLUFF-LIB** — `tests/lib/anti_bluff.sh` `ab_pass_with_evidence` per-PASS §11.4.69 helper, mutation-proven self-test + standing guard (`docs/qa/20260623-antibluff-lib/`).
+- **F-CLUSTER real-system boot** — `server/deploy/system.compose.yml` + `tests/lib/boot_real_system.sh` boot the REAL ota-server + real Postgres → `/readyz`→200 + DB-backed admin JWT login (`docs/qa/20260623-real-system-boot/`); two §11.4.102 prod fixes (startup retry-with-backoff, harness clean-slate).
+- **e2e vs REAL DB** — `challenge_operational` **39/39 PASS** against live Postgres (DB-proof: 14 audit_logs rows, real end-of-run delete; `docs/qa/20260623-e2e-live-system/`).
+- **Security trust-boundary 4/4 vs live** — runtime proof the **request-supplied artifact pubkey is IGNORED** (server-config key only); throwaway test secrets redacted (§11.4.10, commits 84f32a66/1d71e182). Evidence `docs/qa/20260623-trust-boundary-live/`.
+- **Go fuzz** — 4 targets, **10.8M execs / 0 crashers**, property-based (round-trip / antisymmetry / hex-oracle); `docs/qa/20260623-fuzz/`.
+- **HTTP load** — p99 **14.32ms** @ 5,540 req/s, zero 5xx; `docs/qa/20260623-http-load-live/`.
+- **Chaos (§11.4.85) 4/4 survive+recover** — postgres-kill→reconnect (validates main.go retry fix, no corruption), malformed/oversized→400, 12-race idempotent register→exactly-one-device, 400-conn churn→recovers; `docs/qa/20260623-chaos-live/`.
+- **Benchmark** — benchstat baseline registry + negation-proven guard (7 benches; thresholds calibrated on measured variance); `docs/benchmarks/` + `docs/qa/20260623-benchmarks/`.
+- **Android JaCoCo** — wired both bricks: ota-update-engine-bridge **LINE 100%** (113/113), ota-android-agent **LINE 91.18%** (json-codec branch 55.6%→**100%/100%** via 54 new tests); `docs/qa/20260623-android-jacoco/` + `docs/qa/20260623-json-coverage/`.
+- **F-METAGATES + propagation-gate batch** — meta-test framework wired into pre-build; **ALL 14 propagation gates now §1.1-paired** (data-driven from pre_build source → new gates auto-covered); §11.4.166 semgrep fail-open FIXED; one real §11.4.50 flake found+fixed (10/10 det). `docs/qa/20260623-metagates/` + `docs/qa/20260623-propagation-metagates/`.
+- **Independent review (§11.4.165)** — the batch passed an independent verifier that **found + fixed a tautological restore-integrity bluff** in `tests/meta/lib_metatest.sh`.
+- **IN FLIGHT (not yet committed, §11.4.6):** signed-pipeline-vs-live (`tests/e2e/pipeline_signed_live.sh` — a local run is **15/15 PASS**: signed upload→release→deploy→rollout→device-poll-receives-signed-update vs live system, but `docs/qa/20260623-signed-pipeline-live/` is UNTRACKED) and the Challenges-bank dry-run (`docs/qa/20260623-challenges-bank/`, UNTRACKED). The conductor lands these.
+
+**NEXT (Phase 1 remainder + Phase 2, risk-ordered):** (1) commit the in-flight signed-pipeline-vs-live + challenges-bank evidence; (2) security **saturation / DDoS** (rate-limit flood vs live); (3) **on-device agent A/B** (drive the two JVM bricks on the live Cuttlefish cvd, or RK3588 when reachable); (4) **Phase 2** — wire the Go `cmd/helixqa` orchestrator + new OTA Challenges (bad-sig-rejected, request-key-ignored, telemetry-schema, rollout-staged+halt, chaos) against the live system; (5) functional §11.4.165 media/vision gate (the §11.4.163 pipeline) beyond the now-bluff-proof grep-gate layer. Suites: regression 8/8 + meta 5/5 GREEN. cvd still live on nezha. **OPERATOR: rotate the posted password (§11.4.10).**
+
+### Prior session (2026-06-23) — Comprehensive test-coverage + anti-bluff program (Phase 0 + Phase 1 start)
 
 Operator mandate: genuine 100% real coverage by every test type + Challenges + HelixQA vs the real production system on the configured cluster, anti-bluff everywhere, rock-solid physical proof, no false positives. Honest framing (§11.4.6): this is a multi-phase program — `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md` holds the plan + a **live coverage ledger** (updated as each item lands). Landed this round, all real captured evidence, committed + 4-remote synced:
 

@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
+| Last modified | 2026-06-23 |
 | Status | active |
-| Status summary | Project root README for Helix OTA — a universal, decoupled over-the-air update system (Go control plane + per-OS client SDKs/agents). First target is Android 15 on Orange Pi 5 Max. The project is currently in its specification/research phase: the authoritative design lives in the spec corpus under `docs/research/main_specs/`, and implementation follows that corpus. |
+| Status summary | Project root README for Helix OTA — a universal, decoupled over-the-air update system (Go control plane + per-OS client SDKs/agents). First target is Android 15 on Orange Pi 5 Max. A comprehensive real-coverage + anti-bluff test build-out is in progress against the running system (Phase 0 done, Phase 1 mostly done); plan + live ledger at `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`. |
 | Issues | The spec corpus entry point at [`docs/research/main_specs/README.md`](docs/research/main_specs/README.md) is referenced as the corpus index but is not yet present (UNVERIFIED); until it lands, start from the master design (§ links below). The six NEW `ota-*` submodule repositories are not yet created. HelixConstitution clause numbers are carried from the corpus convention and are UNVERIFIED against the authoritative constitution text. |
 | Fixed | N/A (initial revision). |
 | Continuation | Add the corpus index `README.md`; complete the per-component 1.0.0-MVP specs and the open ADRs; create the six PUBLIC `ota-*` repos on GitHub + GitLab; then begin implementation under the corpus. |
@@ -59,6 +59,17 @@ require evidence are deliberately deferred to the open ADRs. Implementation foll
 
 No claim of working server, agent, or `ota-*` submodule code is made here; those do not yet
 exist (anti-bluff, HelixConstitution §7.1 / §11.4.6, UNVERIFIED clause numbers).
+
+**Test-coverage program (2026-06-23, in progress).** A comprehensive real-coverage + anti-bluff
+build-out is under way against the real running system — its plan and a **live coverage ledger**
+live in
+[`docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`](docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md).
+Phase 0 (real-system boot harness, the per-PASS `ab_pass_with_evidence` evidence helper, pgx
+integration coverage, bluff-proof meta-test gates) is **DONE**; Phase 1 (per-test-type real
+coverage) is **mostly done** (integration store 85.5% / rollout 83.1%, e2e 39/39 vs real DB,
+runtime trust-boundary 4/4, Go fuzz 0 crashers, HTTP load p99 ≈ 14 ms, chaos 4/4, benchstat
+baseline, Android JaCoCo) with a few items still in flight (signed-pipeline-vs-live, saturation/DDoS,
+on-device agent A/B). Each closed item carries captured evidence under `docs/qa/20260623-*/`.
 
 ## 3. Mandated technology stack
 
@@ -221,6 +232,7 @@ on disk (HelixConstitution §11.4.57 / §7.1 anti-bluff, UNVERIFIED clause numbe
 | 1.0.3 delta updates — overview (README) | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/README.md) | [html](docs/research/main_specs/1.0.3-delta-updates/README.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/README.pdf) | — |
 | 1.0.3 delta updates — design | 2026-06-08 | 1 | [md](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.md) | [html](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.html) | [pdf](docs/research/main_specs/1.0.3-delta-updates/delta_updates_design.pdf) | — |
 | Repo public-visibility audit (gap G11) | 2026-06-08T00:00:00Z | 1 | [md](docs/research/main_specs/research/repo_audit.md) | [html](docs/research/main_specs/research/repo_audit.html) | [pdf](docs/research/main_specs/research/repo_audit.pdf) | — |
+| Master Test-Coverage + Anti-Bluff Plan (live coverage ledger) | 2026-06-23T15:30:00Z | 2 | [md](docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md) | [html](docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.html) | [pdf](docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.pdf) | — |
 <!-- doc-link-section:end -->
 
 ## 11. License
