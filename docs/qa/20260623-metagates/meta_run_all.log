@@ -1,0 +1,61 @@
+=== §1.1 paired-mutation meta-tests (gate bluff-proofing) ===
+
+>>> meta_test_antibluff_evidence_lib.sh
+[meta_test_antibluff_evidence_lib] gate: anti_bluff §11.4.69 evidence helper
+[anti_bluff_selftest] §11.4.69 helper + §1.1 mutation proof
+  ok: (a) nonexistent evidence → rejected (rc=1)
+  ok: (b) real non-empty evidence → accepted (rc=0)
+  ok: (c) empty evidence → rejected (rc=1)
+  ok: (d) valid SKIP reason 'operator_attended' → accepted (rc=0)
+  ok: (e) invalid SKIP reason 'bogus_reason' → rejected (rc=2)
+  --- all five behaviours correct ---
+  --- §1.1 mutation proof: always-pass mutant must be caught ---
+  ok: RED proven: always-pass mutant returns rc=0 on nonexistent evidence (bluff present)
+  ok: GREEN proven: real library returns rc=1 on the SAME input (bluff absent) — self-test discriminates
+  ok: post-restore: real library byte-unchanged, still rejects nonexistent evidence (rc=1)
+SELFTEST-GREEN: §11.4.69 helper behaves correctly AND the always-pass bluff is caught
+  ok: anti_bluff_selftest.sh GREEN — five behaviours + always-pass mutant caught + restore proven.
+META-GREEN: §11.4.69 evidence-gating gate is bluff-proof.
+<<< PASS meta_test_antibluff_evidence_lib.sh
+
+>>> meta_test_coverage_minimum.sh
+[meta_test_coverage_minimum] gate: CM-COVERAGE-MINIMUM (>= 60%)
+  ok: clean tree: gate PASS 69.6% (>= 60%)
+  ok: stashed 32 internal/api test files (coverage regression simulated).
+  ok: on coverage regression: gate FAIL 49.6% — gate is bluff-proof.
+  ok: post-restore: gate PASS 69.7% — corpus restored, no residue.
+META-GREEN: CM-COVERAGE-MINIMUM proven PASS-above / FAIL-below threshold (bluff-proof).
+<<< PASS meta_test_coverage_minimum.sh
+
+>>> meta_test_regression_guards.sh
+[meta_test_regression_guards] §1.1 paired-mutation meta-test
+  --- subject: guard_push_all_honest_exit.sh ---
+  ok: push-guard clean: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/push_all.sh (s/NOT_CONFIRMED/NOT_CONFIRMED_RENAMED_FOR_META/g)
+  ok: push-guard on mutation: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: push-guard post-restore: gate PASSED on clean tree (rc=0).
+  --- subject: guard_healthcheck_binary_present.sh ---
+  ok: hc-guard clean: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/deploy/helixtrack/compose.helixtrack.yml (s#"curl"#"definitely-not-in-image"#g)
+  ok: hc-guard on mutation: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: hc-guard post-restore: gate PASSED on clean tree (rc=0).
+META-GREEN: both regression guards proven RED-on-broken / GREEN-on-fixed (bluff-proof).
+<<< PASS meta_test_regression_guards.sh
+
+>>> meta_test_semgrep_wired.sh
+[meta_test_semgrep_wired] §1.1 paired-mutation meta-test
+  --- subject: scripts/commit_all.sh semgrep wiring ---
+  ok: wiring clean: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/commit_all.sh (s/semgrep scan --config auto --error/REMOVED_FOR_META/g)
+  ok: wiring: blocking-invocation removed: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: wiring post-restore (1): gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/commit_all.sh (s/_semgrep_scan_check/_REMOVED_FN_FOR_META/g)
+  ok: wiring: scan function removed: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: wiring post-restore (2): gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/commit_all.sh (s/semgrep NOT installed/semgrep skipped silently/g)
+  ok: wiring: fail-open re-introduced: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: wiring post-restore (3): gate PASSED on clean tree (rc=0).
+META-GREEN: CM-SEMGREP-WIRED catches wiring removal AND fail-open re-introduction (bluff-proof).
+<<< PASS meta_test_semgrep_wired.sh
+
+=== meta-test summary: 4/4 gates proven bluff-proof ===

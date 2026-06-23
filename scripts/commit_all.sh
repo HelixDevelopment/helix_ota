@@ -209,7 +209,15 @@ _semgrep_scan_check() {
     # PATH integration inherited by reference per §11.4.166(2)
     [[ -f "$const_semgrep/semgrep_path.sh" ]] && . "$const_semgrep/semgrep_path.sh"
     if ! command -v semgrep >/dev/null 2>&1; then
-        log_warn "§11.4.166: semgrep not on PATH — run $const_semgrep/semgrep_setup.sh (scan SKIPPED)"
+        # §11.4.166 + §11.4.6: NO silent fail-open. Absent semgrep is an honest,
+        # actionable blocker — never a silent SKIPPED-that-counts-as-clean.
+        log_error "§11.4.166: semgrep NOT installed / not on PATH — static-analysis gate cannot run."
+        log_error "  Install: bash $const_semgrep/semgrep_setup.sh   (then re-source your shell or $const_semgrep/semgrep_path.sh)"
+        if [[ "$mode" == "block" ]]; then
+            log_error "  HELIX_SEMGREP_GATE=block: commit BLOCKED until semgrep is installed (§11.4.166)."
+            return 1
+        fi
+        log_warn "  HELIX_SEMGREP_GATE=warn: proceeding, but §11.4.166 is UNSATISFIED until semgrep is installed (OPERATOR-BLOCKED, not clean)."
         return 0
     fi
     local staged

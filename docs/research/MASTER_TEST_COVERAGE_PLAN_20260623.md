@@ -58,7 +58,7 @@ Every test type + Challenge + HelixQA result MUST: cite a captured-evidence path
 | Android instrumentation/ui | 74 @Test, JaCoCo % UNCONFIRMED | measured + on-device A/B | gap |
 | Challenges | 15 HOTA banks (shell-dispatch) | + OTA holes + paired mutations | partial |
 | HelixQA | bank-runner gates only | Go orchestrator + vision against live | gap |
-| anti-bluff gates | 2–3 of ~17 bluff-proof | all bluff-proof + per-assertion evidence | **AB-G1/G2 highest-leverage** |
+| anti-bluff gates | **+4 now bluff-proof via paired §1.1 meta-tests** (coverage-minimum / semgrep-wired / 2 regression guards / evidence-lib) — tests/meta/ framework wired into pre-build; **semgrep fail-open FIXED** (no silent pass; semgrep on PATH → gate passes); a real intermittent flake found+fixed (§11.4.50, 10/10 det). docs/qa/20260623-metagates/ | all ~17 bluff-proof | **F-METAGATES first batch DONE**; ~14 anchor-greps pending |
 
 ## Execution discipline
 

@@ -1,0 +1,88 @@
+=== §11.4.135 regression guards ===
+
+>>> guard_antibluff_evidence_lib.sh
+[guard_antibluff_evidence_lib]
+  ok: anti_bluff.sh retains the §11.4.69 no-evidence-no-PASS rejection.
+[anti_bluff_selftest] §11.4.69 helper + §1.1 mutation proof
+  ok: (a) nonexistent evidence → rejected (rc=1)
+  ok: (b) real non-empty evidence → accepted (rc=0)
+  ok: (c) empty evidence → rejected (rc=1)
+  ok: (d) valid SKIP reason 'operator_attended' → accepted (rc=0)
+  ok: (e) invalid SKIP reason 'bogus_reason' → rejected (rc=2)
+  --- all five behaviours correct ---
+  --- §1.1 mutation proof: always-pass mutant must be caught ---
+  ok: RED proven: always-pass mutant returns rc=0 on nonexistent evidence (bluff present)
+  ok: GREEN proven: real library returns rc=1 on the SAME input (bluff absent) — self-test discriminates
+  ok: post-restore: real library byte-unchanged, still rejects nonexistent evidence (rc=1)
+SELFTEST-GREEN: §11.4.69 helper behaves correctly AND the always-pass bluff is caught
+  ok: anti_bluff_selftest.sh GREEN (five behaviours + always-pass mutation caught).
+GUARD-GREEN: §11.4.69 anti-bluff evidence helper
+<<< PASS guard_antibluff_evidence_lib.sh
+
+>>> guard_boot_emulator_setsid_numeric.sh
+[guard_boot_emulator_setsid_numeric]
+  ok: launch line has setsid + nohup + </dev/null (true detachment, §11.4.144).
+  ok: RED-CONFIRMED→GUARDED: non-numeric PID 'EMULATOR_PID=' is rejected.
+  ok: non-numeric 'not_a_pid' rejected.
+  ok: empty PID rejected.
+  ok: valid numeric PID '12345' accepted.
+  ok: scripts/boot_android_emulator.sh retains the numeric PID guard + abort.
+GUARD-GREEN: boot emulator setsid + numeric guard
+<<< PASS guard_boot_emulator_setsid_numeric.sh
+
+>>> guard_commit_all_detached_head_push.sh
+[guard_commit_all_detached_head_push]
+  ok: set up real bare origin + clone, HEAD detached at c2.
+  RED-CONFIRMED: 'git push origin HEAD' (detached) FAILED rc=1
+    git said: error: The destination you provided is not a full refname (i.e.,
+  ok: GREEN: 'git push origin HEAD:main' succeeded; origin/main advanced to detached HEAD.
+  ok: scripts/commit_all.sh cascade retains HEAD:$dest_branch push form.
+GUARD-GREEN: commit_all detached-HEAD cascade push (hermetic git proof)
+<<< PASS guard_commit_all_detached_head_push.sh
+
+>>> guard_cuttlefish_ab_proven.sh
+[guard_cuttlefish_ab_proven]
+  RED-CONFIRMED: every proof predicate FAILS on stripped/empty evidence (catches the negation).
+  ok: E1: slot_flip.log proves real A/B slot flip _a -> _b.
+  ok: E2: rollback.log proves forced-bad-slot auto-rollback to known-good slot.
+  ok: E3: apply_full.log proves update_engine OTA apply completed kSuccess.
+  ok: E4: validator HONEST STATUS header reflects VERIFIED on nezha 2026-06-23.
+GUARD-GREEN: Cuttlefish Tier-2 REAL Android A/B PASS evidence + VERIFIED claim intact.
+<<< PASS guard_cuttlefish_ab_proven.sh
+
+>>> guard_distribute_compose_provider.sh
+[guard_distribute_compose_provider]
+  RED-CONFIRMED: OLD ordering returns 'podman compose' (the broken plugin — the bug).
+  ok: FIXED ordering returns 'podman-compose' when both providers present.
+  ok: scripts/distribute_stack.sh checks podman-compose (L138) before plugin (L139).
+GUARD-GREEN: distribute compose-provider preference
+<<< PASS guard_distribute_compose_provider.sh
+
+>>> guard_distribute_redeploy_idempotent.sh
+[guard_distribute_redeploy_idempotent]
+  RED-CONFIRMED: OLD '<compose> build && up -d' (no down) FAILS the down→build→up ordering check (the bug).
+  ok: NEW 'down; build && up -d' command PASSES the down→build→up ordering check.
+  ok: scripts/distribute_stack.sh build_compose_remote_cmd emits down → build → up -d (idempotent re-deploy).
+GUARD-GREEN: distribute re-deploy idempotency (down-before-build-before-up)
+<<< PASS guard_distribute_redeploy_idempotent.sh
+
+>>> guard_healthcheck_binary_present.sh
+[guard_healthcheck_binary_present]
+  RED-CONFIRMED: a healthcheck probe binary absent from the image FAILS the known-binary check (the bug).
+  ok: a 'curl' healthcheck PASSES the known-binary check.
+  ok: deploy/helixtrack/compose.helixtrack.yml helixtrack-core healthcheck uses 'curl' (a known-installed binary).
+  ok: sibling Core Dockerfile (/Volumes/T7/Projects/helix_track/core/Application/Dockerfile) installs 'curl' via 'apk add' (real cross-check).
+GUARD-GREEN: healthcheck probe-binary present (compose curl + Dockerfile apk-add cross-check)
+<<< PASS guard_healthcheck_binary_present.sh
+
+>>> guard_push_all_honest_exit.sh
+[guard_push_all_honest_exit]
+  RED-CONFIRMED: OLD accounting returns exit 0 on all-SKIPPED_LOCKED (the bug).
+  ok: FIXED accounting exits 1 on all-SKIPPED_LOCKED (no remote confirmed).
+  ok: FIXED accounting exits 0 when every remote OK.
+  ok: FIXED accounting exits 1 when any remote is not OK/PHASED (mixed).
+  ok: scripts/push_all.sh retains NOT_CONFIRMED guard + exit 1.
+GUARD-GREEN: push_all honest-exit
+<<< PASS guard_push_all_honest_exit.sh
+
+=== regression summary: 8/8 GREEN ===

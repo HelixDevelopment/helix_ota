@@ -72,6 +72,56 @@ else
 fi
 rm -f "$COVER_OUT"
 
+# ---- gate: CM-SEMGREP-WIRED (§11.4.166) ----
+# Asserts (1) the commit_all.sh semgrep wiring exists and is NOT fail-open
+# (an absent semgrep must NOT silently return clean), and (2) semgrep is on
+# PATH. If semgrep is genuinely not installed, the gate reports OPERATOR-BLOCKED
+# honestly (§11.4.6) rather than silently passing.
+echo ">>> gate: CM-SEMGREP-WIRED"
+COMMIT_ALL="${SCRIPT_DIR}/../scripts/commit_all.sh"
+semgrep_wired_ok=1
+if [[ ! -f "$COMMIT_ALL" ]]; then
+    echo "  scripts/commit_all.sh missing — §11.4.166 wiring absent"
+    semgrep_wired_ok=0
+else
+    # Wiring present: the semgrep scan function + the blocking invocation.
+    if ! grep -q '_semgrep_scan_check' "$COMMIT_ALL"; then
+        echo "  _semgrep_scan_check wiring removed from commit_all.sh (§11.4.166 hole)"
+        semgrep_wired_ok=0
+    fi
+    if ! grep -q 'semgrep scan --config auto --error' "$COMMIT_ALL"; then
+        echo "  blocking 'semgrep scan --config auto --error' invocation removed (§11.4.166 hole)"
+        semgrep_wired_ok=0
+    fi
+    # Not fail-open: the not-installed branch must NOT silently 'return 0' clean.
+    # The honest fix emits an error + (in block mode) returns 1.
+    if ! grep -q 'semgrep NOT installed' "$COMMIT_ALL"; then
+        echo "  semgrep not-installed path is fail-open (no honest blocker message) — §11.4.166 silent SKIP hole"
+        semgrep_wired_ok=0
+    fi
+fi
+if [[ "$semgrep_wired_ok" -eq 1 ]]; then
+    if command -v semgrep >/dev/null 2>&1; then
+        echo "  semgrep on PATH ($(command -v semgrep)); wiring present + not fail-open"
+        echo "<<< gate: CM-SEMGREP-WIRED OK"
+    else
+        # Honest OPERATOR-BLOCKED, not a silent pass (§11.4.6 / §11.4.166).
+        echo "  OPERATOR-BLOCKED: semgrep wiring present but semgrep NOT on PATH — install via constitution/scripts/semgrep/semgrep_setup.sh"
+        echo "<<< gate: CM-SEMGREP-WIRED FAIL (OPERATOR-BLOCKED: semgrep install needed)"
+        rc=1
+    fi
+else
+    echo "<<< gate: CM-SEMGREP-WIRED FAIL (wiring broken / fail-open)"
+    rc=1
+fi
+echo
+
+# ---- gate: META-TESTS (§1.1 paired-mutation gate bluff-proofing) ----
+# Runs every tests/meta/meta_test_*.sh — each PROVES a gate catches its own
+# negation (mutate→FAIL→restore→PASS). A gate without a green meta-test here is
+# not yet proven bluff-proof.
+run_gate "meta-tests-bluff-proof" bash "${SCRIPT_DIR}/meta/run_all.sh"
+
 if [[ "${rc}" -ne 0 ]]; then
     echo "PRE-BUILD VERIFICATION: FAIL"
     exit 1
