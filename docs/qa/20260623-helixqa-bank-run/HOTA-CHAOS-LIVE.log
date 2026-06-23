@@ -1,0 +1,38 @@
+=== chaos_live_§11.4.85 — §11.4.69 evidence-gated anti-bluff run ===
+[15:35:28Z] BOOT: starting real F-CLUSTER system on milosvasic@thinker.local (this can take a few minutes)
+[15:36:56Z] BOOT: live http://127.0.0.1:18080
+[15:36:56Z] AUTH: logging in as admin to obtain operator bearer (token redacted in all evidence, §11.4.10)
+[15:37:01Z] AUTH: obtained admin bearer (len=178, value redacted)
+[15:37:01Z] === CASE (a): postgres-kill mid-operation — graceful 5xx + reconnect-recovery ===
+[15:37:06Z] CASE (a) pre-fault device register http=201 (expect 201)
+[15:37:12Z] CASE (a) INJECT: podman stop helix-ota-system_postgres_1 (process-death of upstream DB)
+[15:37:17Z] CASE (a) DB-DOWN: probing a DB-touching write (expect a clean 5xx, bounded — no hang)
+[15:37:33Z] CASE (a) DB-DOWN write http=500 (000=hang/crash[BAD]; 5xx=clean degrade[GOOD])
+[15:37:38Z] CASE (a) DB-DOWN /healthz=200 (200 => server process survived the DB loss)
+[15:37:38Z] CASE (a) RECOVER: podman start helix-ota-system_postgres_1; waiting up to 90s for /readyz=200
+[15:37:49Z] CASE (a) RECOVER: /readyz=200
+[15:37:59Z] CASE (a) POST-RECOVERY write http=201 (expect 201); survivor lookup http=200 (expect 200 => no corruption)
+PASS: CASE (a) postgres-kill: server survived (healthz=200, no hang), degraded cleanly (write=500 5xx), RECONNECTED (readyz=200, write=201), and prior state intact (survivor=200, NO corruption) [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-chaos-live/case_a_postgres_kill.txt]
+[15:37:59Z] === CASE (b): malformed + oversized input — clean 4xx, no 5xx, no crash ===
+[15:38:04Z] CASE (b) malformed-JSON register http=400 (expect 4xx; 000/5xx=BAD)
+[15:38:10Z] CASE (b) oversized-body register http=400 (expect 4xx; 000/5xx=BAD)
+[15:38:15Z] CASE (b) post-corrupt /healthz=200 (200 => server survived corrupt inputs)
+PASS: CASE (b) input-corruption: malformed JSON => 400 (4xx) and oversized body => 400 (4xx) both rejected CLEANLY, server healthy after (healthz=200) — no 5xx, no crash [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-chaos-live/case_b_input_corruption.txt]
+[15:38:16Z] === CASE (c): 12 concurrent identical idempotent registers — consistent state, no dup, no deadlock ===
+[15:41:57Z] CASE (c) total=12 201=1 200=11 409=0 5xx=0 000=0 device_ids=1
+PASS: CASE (c) concurrent contention: all 12 racing identical registers returned a CONSISTENT response (1×201 winner + 11×{200-replay/409-conflict}, zero 5xx, zero hang/deadlock) and EXACTLY ONE device exists (consistent state, no duplicate) [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-chaos-live/case_c_concurrent.txt]
+[15:41:57Z] === CASE (d): rapid connection churn — server stays up, /readyz recovers ===
+[15:42:04Z] CASE (d) connection-churn completed: 400/400 connects answered
+[15:42:14Z] CASE (d) post-churn /readyz=200 write=201
+PASS: CASE (d) resource churn: server stayed UP under 400 rapid connects (400 answered >=90%), /readyz recovered=200, write recovered=201 (no FD/connection-leak collapse) [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-chaos-live/case_d_resource_churn.txt]
+=== CHAOS LIVE — §11.4.85 SUMMARY ===
+captured_utc=2026-06-23T15:42:15Z
+target=milosvasic@thinker.local base=http://127.0.0.1:18080 project=helix-ota-system
+(all admin bearers redacted, §11.4.10)
+CASE (a) postgres-kill: db_down_write=500 healthz_down=200 readyz=200 post_write=201 survivor=200
+CASE (b) input-corruption: malformed=400 oversized=400 healthz=200
+CASE (c) concurrent: total=12 201=1 409=0 5xx=0 device_ids=1
+CASE (d) resource-churn: answered=400/400 readyz=200 write=201
+PASS=4 FAIL=0 SKIP=0
+=== SUMMARY (chaos_live_§11.4.85): PASS=4 FAIL=0 SKIP=0 TOTAL=4 ===
+[15:42:20Z] CLEANUP: tearing down F-CLUSTER stack (project 'helix-ota-system', §11.4.14/§11.4.119)

@@ -213,3 +213,100 @@ func TestCompleteRunNonSkipReasonIgnored(t *testing.T) {
 		t.Fatalf("CompleteRun FAIL: %+v err=%v", done, err)
 	}
 }
+
+// errInjectRepo embeds a real store.Repository (the memory impl) and overrides
+// exactly two write methods so a test can drive the Registry's repo-error return
+// branches without reimplementing the whole interface. The embedded interface
+// satisfies every method not overridden, so RecordRun/GetFabricRun etc. still
+// behave normally — only UpdateFabricRun and AttachFabricEvidence are forced to
+// fail in a controlled way. This stays entirely within the fabric package
+// (no production/store edits) and exercises the §11.4.69/§11.4.50 error paths.
+type errInjectRepo struct {
+	store.Repository
+	updateErr error // returned by UpdateFabricRun when non-nil
+	attachErr error // returned by AttachFabricEvidence when non-nil
+}
+
+func (r *errInjectRepo) UpdateFabricRun(ctx context.Context, run store.FabricRun) error {
+	if r.updateErr != nil {
+		return r.updateErr
+	}
+	return r.Repository.UpdateFabricRun(ctx, run)
+}
+
+func (r *errInjectRepo) AttachFabricEvidence(ctx context.Context, e store.FabricEvidence) error {
+	if r.attachErr != nil {
+		return r.attachErr
+	}
+	return r.Repository.AttachFabricEvidence(ctx, e)
+}
+
+// TestCompleteRunUpdateRepoError proves CompleteRun surfaces a store-layer
+// UpdateFabricRun failure verbatim (the previously-uncovered repo-error return
+// after the SKIP-reason guard). The run is recorded successfully first, then the
+// injected repo fails the terminal update — the registry MUST propagate the
+// error and NOT report a completed run.
+func TestCompleteRunUpdateRepoError(t *testing.T) {
+	ctx := context.Background()
+	ts := time.Date(2026, 6, 10, 12, 0, 0, 0, time.UTC)
+	wantErr := errors.New("store: update failed (injected)")
+	repo := &errInjectRepo{Repository: store.NewMemoryRepository(), updateErr: wantErr}
+	g := New(repo, fixedClock(ts))
+	if err := g.RegisterTarget(ctx, store.FabricTarget{TargetID: "t1", Tier: "T0", Tech: "ota-device-emulator"}); err != nil {
+		t.Fatalf("RegisterTarget: %v", err)
+	}
+	if _, err := g.RecordRun(ctx, "r1", "t1", "e2e", "ref"); err != nil {
+		t.Fatalf("RecordRun: %v", err)
+	}
+	done, err := g.CompleteRun(ctx, "r1", "PASS", "")
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("CompleteRun want injected update error, got %v", err)
+	}
+	if done.Verdict != "" || done.EndedAt != nil {
+		t.Fatalf("CompleteRun on repo error must return a zero run, got %+v", done)
+	}
+}
+
+// TestAttachEvidenceStoreEmptySentinelMapped proves AttachEvidence translates a
+// store-layer ErrEvidenceEmpty into the package-level ErrEmptyEvidence (the
+// previously-uncovered errors.Is mapping branch). The registry's own byteSize<=0
+// guard is bypassed by passing a POSITIVE byteSize while the injected repo
+// independently rejects with ErrEvidenceEmpty (defence-in-depth per §11.4.69).
+func TestAttachEvidenceStoreEmptySentinelMapped(t *testing.T) {
+	ctx := context.Background()
+	ts := time.Date(2026, 6, 10, 12, 0, 0, 0, time.UTC)
+	repo := &errInjectRepo{Repository: store.NewMemoryRepository(), attachErr: store.ErrEvidenceEmpty}
+	g := New(repo, fixedClock(ts))
+	if err := g.RegisterTarget(ctx, store.FabricTarget{TargetID: "t1", Tier: "T0", Tech: "ota-device-emulator"}); err != nil {
+		t.Fatalf("RegisterTarget: %v", err)
+	}
+	if _, err := g.RecordRun(ctx, "r1", "t1", "e2e", "ref"); err != nil {
+		t.Fatalf("RecordRun: %v", err)
+	}
+	err := g.AttachEvidence(ctx, "e1", "r1", "log", "docs/qa/r1/x.log", 4096, "sha")
+	if !errors.Is(err, ErrEmptyEvidence) {
+		t.Fatalf("store ErrEvidenceEmpty must map to ErrEmptyEvidence, got %v", err)
+	}
+}
+
+// TestAttachEvidenceStoreOtherErrorPassthrough proves a NON-sentinel store error
+// from AttachFabricEvidence is returned verbatim (the else-branch of the
+// errors.Is mapping), so the registry never masks an unrelated failure as an
+// empty-evidence rejection.
+func TestAttachEvidenceStoreOtherErrorPassthrough(t *testing.T) {
+	ctx := context.Background()
+	ts := time.Date(2026, 6, 10, 12, 0, 0, 0, time.UTC)
+	wantErr := errors.New("store: disk full (injected)")
+	repo := &errInjectRepo{Repository: store.NewMemoryRepository(), attachErr: wantErr}
+	g := New(repo, fixedClock(ts))
+	if err := g.RegisterTarget(ctx, store.FabricTarget{TargetID: "t1", Tier: "T0", Tech: "ota-device-emulator"}); err != nil {
+		t.Fatalf("RegisterTarget: %v", err)
+	}
+	if _, err := g.RecordRun(ctx, "r1", "t1", "e2e", "ref"); err != nil {
+		t.Fatalf("RecordRun: %v", err)
+	}
+	err := g.AttachEvidence(ctx, "e1", "r1", "log", "docs/qa/r1/x.log", 4096, "sha")
+	if !errors.Is(err, wantErr) || errors.Is(err, ErrEmptyEvidence) {
+		t.Fatalf("non-sentinel store error must pass through verbatim, got %v", err)
+	}
+}

@@ -1,0 +1,24 @@
+=== http_load_live_§11.4.85 — §11.4.69 evidence-gated anti-bluff run ===
+[15:31:44Z] BOOT: starting real F-CLUSTER system on milosvasic@thinker.local (this can take a few minutes)
+[15:33:13Z] BOOT: live BASE_URL=http://127.0.0.1:18080
+[15:33:18Z] BUILD: cross-compile loadtest GOOS=linux GOARCH=amd64
+[15:33:39Z] PUSH: loadtest staged at milosvasic@thinker.local:/home/milosvasic/.helix-ota-loadtest/loadtest
+[15:33:39Z] LOAD: /readyz concurrency=25 duration=30s (remote loopback :18080)
+[15:34:14Z] LOAD: /healthz concurrency=25 duration=30s (remote loopback :18080)
+[15:34:49Z] POST-LOAD: re-probing /readyz=200 (resource-leak / saturation check)
+[15:34:55Z] POST-LOAD: /readyz -> 200
+[15:34:55Z] HISTOGRAM written: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-http-load-live/latency_histogram.txt
+PASS: LIVE /readyz under c=25 d=30s: zero non-2xx, errors=21<=concurrency (boundary-cancel only), 294329 reqs [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-http-load-live/readyz_load.json]
+PASS: LIVE /readyz p99=5.857111ms <= calibrated ceiling 250.000ms (no saturation collapse) [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-http-load-live/latency_histogram.txt]
+PASS: LIVE server answers /readyz=200 AFTER sustained load (no resource leak) [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-http-load-live/post_load_readyz.txt]
+PASS: LIVE /healthz pure-server loop measured 356680 reqs (>=100 §11.4.85 sustained floor) [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-http-load-live/healthz_load.json]
+=== HTTP LOAD LIVE — §11.4.85 SUMMARY ===
+captured_utc=2026-06-23T15:34:55Z
+target=milosvasic@thinker.local base=http://127.0.0.1:18080
+profile concurrency=25 duration=30s
+readyz: total=294329 rps=9810.653485099723 errors=21 non_2xx=0 p50=2.380167 p90=4.025821 p99=5.857111
+healthz: total=356680
+calibrated_tail_ceiling_ms=250.000
+post_load_readyz=200
+=== SUMMARY (http_load_live_§11.4.85): PASS=4 FAIL=0 SKIP=0 TOTAL=4 ===
+[15:34:55Z] CLEANUP: tearing down F-CLUSTER stack + remote loadtest binary

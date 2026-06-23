@@ -1,0 +1,28 @@
+== PWU-AB-3 corrupt-slot AUTO-ROLLBACK proof (real U-Boot + QEMU virt + HVF) ==
+run=20260623T150951Z-ab-rollback  u-boot=1.0M  disk=1.0G
+
+-- Run ROLLBACK: BOOT_ORDER='B A' bootcount=2 bootlimit=1 (PAST limit ->
+   guard swaps to 'A B' -> expect boot /dev/vda2, slot_id=A = AUTO-ROLLBACK) --
+-- Run CONTROL: BOOT_ORDER='B A' bootcount=1 bootlimit=1 (NOT past limit ->
+   guard does NOT fire -> expect boot /dev/vda3, slot_id=B = no rollback) --
+[FAIL] Run ROLLBACK: U-Boot guard emitted the altbootcmd-swap rollback line
+[FAIL] Run ROLLBACK: post-swap selection active_slot=A root=/dev/vda2 (BOOT_ORDER head swapped to good slot)
+[FAIL] Run ROLLBACK: guest userspace reports /etc/slot_id=A (ROLLED BACK to good slot)
+[FAIL] Run ROLLBACK: guest findmnt confirms root = /dev/vda2 (slot A)
+[FAIL] Run ROLLBACK: kernel cmdline carries helix_slot=A (boot.scr selected A after swap)
+[FAIL] Run ROLLBACK: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run ROLLBACK: did NOT keep booting the bad slot B (rollback is real, not a no-op)
+[PASS] Run CONTROL: guard did NOT fire (bootcount not past bootlimit)
+[FAIL] Run CONTROL: guest booted head slot B (slot_id=B) — no rollback when counter not exhausted
+[FAIL] Run CONTROL: guest findmnt confirms root = /dev/vda3 (slot B)
+[FAIL] Run CONTROL: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run CONTROL: did NOT roll back to A (metamorphic: only the past-limit run rolls back)
+
+PWU-AB-3 corrupt-slot AUTO-ROLLBACK — run 20260623T150951Z-ab-rollback
+u-boot.bin: U-Boot 2024.01 (Jun 19 2026 - 18:51:31 +0000)
+Run ROLLBACK rc=2  Run CONTROL rc=2
+Run ROLLBACK (head was bad slot B, expect rolled-back to A):   
+Run CONTROL  (head slot B, expect no rollback -> B):           
+Verdict: FAIL
+EVIDENCE: /Volumes/T7/Projects/helix_ota/docs/qa/20260623T150951Z-ab-rollback/ (consoleROLLBACK.log 1 lines, consoleCONTROL.log 1 lines)
+RESULT: FAIL — see /Volumes/T7/Projects/helix_ota/docs/qa/20260623T150951Z-ab-rollback/ (qemu/expect rcR=2 rcC=2)

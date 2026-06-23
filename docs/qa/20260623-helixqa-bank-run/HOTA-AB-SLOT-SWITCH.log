@@ -1,0 +1,24 @@
+== PWU-AB-1 FULL slot-switch proof (real U-Boot + QEMU virt + HVF) ==
+run=20260623T150450Z-ab-slot-switch  u-boot=1.0M  disk=1.0G
+
+-- Run A: BOOT_ORDER='A B' (head=A -> expect root=/dev/vda2, slot_id=A) --
+-- Run B: BOOT_ORDER='B A' (head=B -> expect root=/dev/vda3, slot_id=B) --
+[FAIL] Run A: guest userspace reports /etc/slot_id=A
+[FAIL] Run A: guest findmnt confirms root = /dev/vda2 (slot A)
+[FAIL] Run A: kernel cmdline carries helix_slot=A (boot.scr selected A)
+[FAIL] Run A: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run A: did NOT boot slot B
+[FAIL] Run B: guest userspace reports /etc/slot_id=B (SLOT SWITCHED)
+[FAIL] Run B: guest findmnt confirms root = /dev/vda3 (slot B)
+[FAIL] Run B: kernel cmdline carries helix_slot=B (boot.scr selected B)
+[FAIL] Run B: interactive shell live (post-login sentinel, not a frozen frame)
+[PASS] Run B: did NOT boot slot A (the switch is real, not a no-op)
+
+PWU-AB-1 FULL slot-switch — run 20260623T150450Z-ab-slot-switch
+u-boot.bin: U-Boot 2024.01 (Jun 19 2026 - 18:51:31 +0000)
+Run A rc=2  Run B rc=2
+Run A:   
+Run B:   
+Verdict: FAIL
+EVIDENCE: /Volumes/T7/Projects/helix_ota/docs/qa/20260623T150450Z-ab-slot-switch/ (consoleA.log 1 lines, consoleB.log 1 lines)
+RESULT: FAIL — see /Volumes/T7/Projects/helix_ota/docs/qa/20260623T150450Z-ab-slot-switch/ (qemu/expect rcA=2 rcB=2)

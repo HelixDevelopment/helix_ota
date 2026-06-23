@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="postgres-pgx-integration-coverage-push-real-run-evidence-11.4.83">Postgres
+pgx Integration Coverage Push — REAL RUN evidence (§11.4.83)</h1>
+<p><strong>Run date:</strong> 2026-06-23 <strong>Run host:</strong>
+nezha.local (Linux x86_64, go1.26.2, rootless podman 5.7.1 +
+podman-compose) <strong>Driver host:</strong> mistborn (macOS) —
+go1.26.2 but NO container runtime; tests were rsynced + run on nezha
+where go1.26 AND rootless podman both exist (mirrors the original
+<code>docs/qa/20260623-postgres-integration/</code> staging at
+<code>~/helix_ota_itest</code>).</p>
+<h2 id="goal">Goal</h2>
+<p>Push the pgx/Postgres integration coverage (store 85.5% / rollout
+83.1% from the prior real run) toward 100% by adding integration tests
+that exercise the genuinely-reachable pgx paths the existing contract
+tests do NOT drive.</p>
+<h2 id="tests-added-2-files-gobuild-integration">Tests added (2 files,
+<code>//go:build integration</code>)</h2>
+<ul>
+<li><code>server/internal/store/postgres_coverage_integration_test.go</code>
+— <code>TestPostgresCoveragePaths_Integration</code>: boots real PG
+(port 55432, lock-serialized per §11.4.119) and drives:
+<ul>
+<li><strong>Project CRUD</strong> (was 0.0%): <code>CreateProject</code>
++ unique-name conflict (23505→<code>ErrConflict</code>),
+<code>GetProject</code> found + <code>ErrNotFound</code>,
+<code>ListProjects</code> (ordered), <code>UpdateProject</code> found +
+<code>ErrNotFound</code> + rename-onto-existing-name conflict,
+<code>DeleteProject</code> found + already-gone
+<code>ErrNotFound</code>.</li>
+<li><strong>Project access</strong> (was 0.0%):
+<code>SetProjectAccess</code> insert + upsert (role change),
+<code>GetProjectAccess</code> found + <code>ErrNotFound</code>,
+<code>ListProjectMembers</code> (ordered),
+<code>RemoveProjectAccess</code> found + already-gone
+<code>ErrNotFound</code>, <strong>FK ON DELETE CASCADE</strong> proof
+(deleting the project removes its access rows).</li>
+<li><strong>ListDevices</strong> (was 0.0%): unfiltered, filter by
+os_type / model / status, offset-cursor paging (limit 2 → page1+next,
+page2 no-cursor), no-match empty.</li>
+<li><strong>NewPostgresRepositoryFromPool</strong> (was 0.0%): the repo
+is constructed via this path.</li>
+</ul></li>
+<li><code>server/internal/rollout/postgres_coverage_integration_test.go</code>
+— <code>TestPostgresStoreCoveragePaths_Integration</code>: boots real PG
+(port 55445, lock-serialized) and drives:
+<ul>
+<li><strong>NewPostgresStoreFromPool</strong> (was 0.0%).</li>
+<li><strong>Load</strong> not-found → <code>engine.ErrNotFound</code>
+(the <code>pgx.ErrNoRows</code> branch).</li>
+<li><strong>Save</strong> with ZERO <code>PhaseStartedAt</code>
+(nil-timestamp branch) + 3-phase round-trip asserting zero round-trips
+as zero.</li>
+<li><strong>Save</strong> OVERWRITE: a 2-phase plan + SET
+<code>PhaseStartedAt</code> — exercises the DELETE-then-reinsert
+phase-replacement path; Load reflects ONLY the new phases.</li>
+</ul></li>
+</ul>
+<p>The two new tests do NOT modify the shared
+<code>contract_test.go</code> / <code>scenario_test.go</code> harnesses,
+so memory-repo coverage is unchanged — the delta is pure pgx.</p>
+<h2
+id="real-result-pass-with-measured-coverage-from-integration_test_run.log">REAL
+result — PASS, with measured coverage (from
+<code>integration_test_run.log</code>)</h2>
+<pre><code>=== STORE coverage run ===
+ok  internal/store    20.702s  coverage: 92.4% of statements
+STORE_EXIT=0
+=== ROLLOUT coverage run ===
+ok  internal/rollout  13.971s  coverage: 87.3% of statements
+ROLLOUT_EXIT=0</code></pre>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>BEFORE (prior real run)</th>
+<th>AFTER (this run)</th>
+<th>Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/store</code></td>
+<td>85.5%</td>
+<td><strong>92.4%</strong></td>
+<td><strong>+6.9pp</strong></td>
+</tr>
+<tr>
+<td><code>internal/rollout</code></td>
+<td>83.1%</td>
+<td><strong>87.3%</strong></td>
+<td><strong>+4.2pp</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>go test -tags integration -count=1</code> → all integration +
+unit tests PASS, both package coverprofiles captured
+(<code>cov_store_after.out</code> / <code>cov_rollout_after.out</code>
+on nezha; func breakdown in <code>coverage_func_after.txt</code>).</p>
+<h2
+id="pgx-paths-newly-covered-func-breakdown-from-coverage_func_after.txt">pgx
+paths newly covered (func breakdown, from
+<code>coverage_func_after.txt</code>)</h2>
+<p>store/postgres.go:
+<code>NewPostgresRepositoryFromPool 0.0%→100%</code>,
+<code>CreateProject 0.0%→100%</code>, <code>GetProject 0.0%→100%</code>,
+<code>GetProjectAccess 0.0%→100%</code>,
+<code>SetProjectAccess 0.0%→100%</code>,
+<code>ListProjects 0.0%→81.8%</code>,
+<code>UpdateProject 0.0%→88.9%</code>,
+<code>DeleteProject 0.0%→83.3%</code>,
+<code>ListProjectMembers 0.0%→81.8%</code>,
+<code>RemoveProjectAccess 0.0%→85.7%</code>,
+<code>ListDevices 0.0%→86.4%</code>. rollout/postgres.go:
+<code>NewPostgresStoreFromPool 0.0%→100%</code>,
+<code>Load 79.2%→higher</code>, <code>Save 73.3%→higher</code>
+(overwrite + nil-timestamp branches now hit).</p>
+<h2
+id="genuinely-unreachable-pgx-lines-left-honest-11.4.6">Genuinely-unreachable
+pgx lines left (honest §11.4.6)</h2>
+<p>The residual sub-100% lines are uniformly <strong>driver-level fault
+branches</strong> that cannot be triggered deterministically against a
+healthy booted DB without a fault-injection proxy: -
+<code>rows.Err()</code> / mid-iteration <code>rows.Scan</code> error
+returns in every <code>List*</code> / <code>Telemetry*</code> /
+<code>scan*</code> function (fire only on a connection drop / driver
+fault during a live query). - <code>pool.Query(...)</code>
+connection-failure return branches. - <code>Migrate 66.7%</code> — the
+<code>Exec</code> error branch = DDL failure, not triggerable on the
+valid embedded schema. - <code>jsonbOf 75%</code> /
+<code>nullTime 66.7%</code> — the <code>json.Marshal</code> error path
+is <strong>impossible</strong>: Go never fails to marshal a
+<code>map[string]string</code>. This is defensive code by design.</p>
+<p>These are NOT closed by contorting the test; closing them would
+require a mid-query connection-kill harness (a separate fault-injection
+work item), and the <code>json.Marshal</code> branch is structurally
+unreachable. Stated as a fact, not bluffed.</p>
+<h2 id="cleanup-11.4.14-project-scoped">Cleanup (§11.4.14 —
+project-scoped)</h2>
+<ul>
+<li>Boot via the <code>digital.vasic.containers</code> brick; teardown
+via the brick’s own <code>mgr.Shutdown</code> (<code>compose down</code>
+scoped to <code>postgres.compose.yml</code> /
+<code>postgres-rollout.compose.yml</code>) on <code>t.Cleanup</code> —
+<strong>never</strong> an <code>ancestor=</code> filter (the prior
+incident).</li>
+<li>Pre-run container baseline captured: <strong>63</strong> containers
+(<code>.containers_baseline_coverage.txt</code>). Post-run count:
+<strong>63</strong> (exact match). <code>comm -13 baseline after</code>
+= <strong>empty</strong> — no container from this run remains.</li>
+<li>Other projects’ containers (helixcode, atmosphere, lava, ytdlp,
+llmsverifier, helixtranslate — incl. three pre-existing
+<code>postgres:16-alpine</code> from OTHER projects) were <strong>NOT
+touched</strong>. No <code>helix_ota</code> / port-55432 / port-55445 /
+<code>deploy_postgres</code> container is present.</li>
+</ul>
+<h2 id="evidence-files">Evidence files</h2>
+<ul>
+<li><code>integration_test_run.log</code> — combined store+rollout
+coverage run (both EXIT=0)</li>
+<li><code>coverage_func_after.txt</code> —
+<code>go tool cover -func</code> full per-function breakdown (both
+pkgs)</li>
+</ul>
+</body>
+</html>

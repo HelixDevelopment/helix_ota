@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>LEDGER</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helixqa-bank-run-helix_ota-evidence-ledger">HelixQA Bank Run —
+helix_ota — Evidence Ledger</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-23T15:45:00Z</p>
+<p>Phase-2 HelixQA autonomous-session run of
+<code>tools/helixqa/banks/helix_ota.yaml</code> (rev 6) against the LIVE
+system (§11.4.27). 20 scored challenges. Real captured evidence, honest
+§11.4.6 verdicts, §11.4.10 token redaction, §11.4.14 cleanup. NOT
+committed by this subagent (conductor commits).</p>
+<h2 id="run-context">Run context</h2>
+<ul>
+<li>HEAD at run start: <code>1f6ec790</code></li>
+<li>Live host (thinker live-system stack — owned by this run):
+<code>milosvasic@thinker.local</code> (x86_64, rootless podman 4.9.3 +
+podman-compose 1.0.6, §11.4.161).</li>
+<li>Shared in-memory ota-server booted once on
+<code>127.0.0.1:18091</code> for the 6 operational
+<code>&lt;pw&gt;</code> challenges (port 8080 was held by a sibling
+<code>htCore</code> process — left untouched).</li>
+<li>thinker F-CLUSTER (real ota-server + real PostgreSQL) self-booted
+per the 3 live-system challenges, run SERIALLY (single-resource-owner,
+§11.4.119 — the chaos challenge kills postgres, so no shared
+stack).</li>
+</ul>
+<h2 id="evidence-ledger-challenge-verdict-evidence-path">Evidence ledger
+(challenge | verdict | evidence path)</h2>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 33%" />
+<col style="width: 27%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Challenge</th>
+<th>Verdict</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>HOTA-AUTH-LOGIN</td>
+<td>PASS</td>
+<td>docs/qa/20260623-helixqa-bank-run/operational-shared-server.txt
+(live :18091; 39/0/1)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>HOTA-DEVICE-REGISTER</td>
+<td>PASS</td>
+<td>operational-shared-server.txt</td>
+</tr>
+<tr>
+<td>3</td>
+<td>HOTA-GROUP-LIFECYCLE</td>
+<td>PASS</td>
+<td>operational-shared-server.txt</td>
+</tr>
+<tr>
+<td>4</td>
+<td>HOTA-AUDIT-TRAIL</td>
+<td>PASS</td>
+<td>operational-shared-server.txt</td>
+</tr>
+<tr>
+<td>5</td>
+<td>HOTA-TELEMETRY-OVERVIEW</td>
+<td>PASS</td>
+<td>operational-shared-server.txt</td>
+</tr>
+<tr>
+<td>6</td>
+<td>HOTA-ROLLOUT-ROUTE-GATES</td>
+<td>PASS</td>
+<td>operational-shared-server.txt (1 expected pipeline
+SKIP-with-reason)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>HOTA-PIPELINE-SIGNED</td>
+<td>PASS</td>
+<td>HOTA-PIPELINE-SIGNED.log (32/0/0; free-port) +
+tests/e2e/PIPELINE_EVIDENCE.txt</td>
+</tr>
+<tr>
+<td>8</td>
+<td>HOTA-RECALL-LIFECYCLE</td>
+<td>PASS</td>
+<td>HOTA-RECALL-LIFECYCLE.log (35/0/0) +
+tests/e2e/RECALL_EVIDENCE.txt</td>
+</tr>
+<tr>
+<td>9</td>
+<td>HOTA-SECURITY-PROBES</td>
+<td>PASS</td>
+<td>HOTA-SECURITY-PROBES.log (37/0/0; free-port) +
+tests/security/RUN_EVIDENCE.txt</td>
+</tr>
+<tr>
+<td>10</td>
+<td>HOTA-SECURITY-PROBES-EXTENDED</td>
+<td>PASS</td>
+<td>HOTA-SECURITY-PROBES-EXTENDED.log (26/0/0) +
+tests/security/RUN_EVIDENCE_EXTENDED.txt</td>
+</tr>
+<tr>
+<td>11</td>
+<td>HOTA-FILTERS-PAGINATION</td>
+<td>PASS</td>
+<td>HOTA-FILTERS-PAGINATION.log (50/0/0) +
+tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt</td>
+</tr>
+<tr>
+<td>12</td>
+<td>HOTA-AB-VIRT-BOOT</td>
+<td>FAIL (host: QEMU+HVF accelerator non-functional — not a helix
+defect)</td>
+<td>HOTA-AB-VIRT-BOOT.log; committed ref boot
+docs/qa/20260611T061626Z-ab-virt-boot/console.log</td>
+</tr>
+<tr>
+<td>13</td>
+<td>HOTA-AB-SLOT-SWITCH</td>
+<td>FAIL (same host QEMU+HVF condition)</td>
+<td>HOTA-AB-SLOT-SWITCH.log; committed ref
+docs/qa/20260611T094958Z-ab-slot-switch/verdict.txt</td>
+</tr>
+<tr>
+<td>14</td>
+<td>HOTA-AB-ROLLBACK</td>
+<td>FAIL (same host QEMU+HVF condition)</td>
+<td>HOTA-AB-ROLLBACK.log; committed ref
+docs/qa/20260611T095918Z-ab-rollback/verdict.txt</td>
+</tr>
+<tr>
+<td>15</td>
+<td>HOTA-RK3588-CONTROLPLANE</td>
+<td>SKIP (exit 3, off-topology — board not adb-reachable; §11.4.52)</td>
+<td>HOTA-RK3588-CONTROLPLANE.log; committed ref
+docs/qa/20260622-rk3588-controlplane/raw_validation_transcript.txt</td>
+</tr>
+<tr>
+<td>16</td>
+<td>HOTA-TRUST-BOUNDARY-LIVE</td>
+<td>PASS</td>
+<td>HOTA-TRUST-BOUNDARY-LIVE.log (4/0/0) +
+docs/qa/20260623-trust-boundary-live/SUMMARY.txt</td>
+</tr>
+<tr>
+<td>17</td>
+<td>HOTA-HTTP-LOAD-LIVE</td>
+<td>PASS</td>
+<td>HOTA-HTTP-LOAD-LIVE.log (4/0/0; p50=2.38ms p99=5.86ms non_2xx=0) +
+docs/qa/20260623-http-load-live/SUMMARY.txt</td>
+</tr>
+<tr>
+<td>18</td>
+<td>HOTA-CHAOS-LIVE</td>
+<td>PASS</td>
+<td>HOTA-CHAOS-LIVE.log (4/0/0; pg-kill+reconnect, corruption,
+contention, churn) + docs/qa/20260623-chaos-live/SUMMARY.txt</td>
+</tr>
+<tr>
+<td>19</td>
+<td>HOTA-TELEMETRY-SCHEMA-LIVE</td>
+<td>PASS</td>
+<td>HOTA-TELEMETRY-SCHEMA-LIVE.log (12/0/0) +
+docs/qa/20260623-phase2-challenges/telemetry-schema/SUMMARY.txt</td>
+</tr>
+<tr>
+<td>20</td>
+<td>HOTA-ROLLOUT-STAGED-LIVE</td>
+<td>PASS</td>
+<td>HOTA-ROLLOUT-STAGED-LIVE.log (47/0/0) +
+docs/qa/20260623-phase2-challenges/rollout-staged/SUMMARY.txt</td>
+</tr>
+</tbody>
+</table>
+<h2 id="tally">Tally</h2>
+<ul>
+<li><strong>16 PASS</strong> (vs live), <strong>1
+SKIP-with-reason</strong> (off-topology, honest), <strong>3
+FAIL</strong> (host QEMU+HVF accelerator condition — NOT helix-ota
+product defects).</li>
+<li>The 6 thinker live-system OTA challenges (TRUST-BOUNDARY, HTTP-LOAD,
+CHAOS, TELEMETRY-SCHEMA, ROLLOUT-STAGED + the F-CLUSTER-backed paths)
+all PASS vs live.</li>
+</ul>
+<h2 id="honest-findings-11.4.6">Honest findings (§11.4.6)</h2>
+<ol type="1">
+<li><p><strong>AB-virt trio (12/13/14) FAIL — host QEMU+HVF accelerator
+non-functional.</strong> The SAME unchanged A/B image booted fully on
+2026-06-11 (committed 196-line console transcript). On this run QEMU+HVF
+emitted ZERO kernel output before the expect timeout; a standalone
+<code>qemu-system-aarch64 -accel hvf</code> sanity run also produced no
+kernel output in 20s. Host load avg ~9.5, 3-day uptime, 8 users. Root
+cause = HVF accelerator unavailable/contended on this Apple-Silicon host
+right now — NOT a helix-ota defect, NOT an A/B-image regression, NOT a
+test-script defect. Minor test-robustness gap: the SKIP guard checks
+qemu <em>presence</em> but not HVF <em>functionality</em>, so a dead
+accelerator hard-FAILs instead of exit-3 SKIPping. Image prereqs
+(<code>out/.ok</code>, images) WERE present.</p></li>
+<li><p><strong>Boot-harness leftover-container race (intermittent,
+self-recovering).</strong> <code>tests/lib/boot_real_system.sh</code>
+idempotent re-run hits <code>container state improper</code> /
+<code>name already in use</code> on a stale postgres container; it
+self-recovers and reaches <code>/readyz=200</code>. First trust-boundary
+in-challenge boot returned BASE_URL prematurely (~11s) so the
+challenge’s own 6s readyz probe got 000 → honest SKIP
+<code>network_unreachable_external</code> (correct anti-bluff behavior,
+no fake-pass). Re-run detached with a pre-clean → PASS 4/0/0.</p></li>
+<li><p><strong>Port collisions are harness artifacts, not
+defects.</strong> PIPELINE-SIGNED and SECURITY-PROBES default to port
+8080 when invoked directly; the sibling <code>htCore</code> owns mac
+:8080. The runner injects <code>HELIX_PORT=&lt;free&gt;</code> for
+self-hosting challenges, avoiding this. Re-run with a free port → both
+PASS.</p></li>
+</ol>
+<h2 id="cleanup-11.4.14-project-scoped">Cleanup (§11.4.14,
+project-scoped)</h2>
+<ul>
+<li>Shared :18091 ota-server killed (incl. lingering <code>go run</code>
+child); :18091 free.</li>
+<li>thinker F-CLUSTER project <code>helix-ota-system</code> torn down (0
+containers).</li>
+<li>Sibling stacks UNTOUCHED: <code>lava-postgres-thinker</code> +
+<code>lava-api-go-thinker</code> (Up), mac <code>htCore</code> :8080
+(Up). No stray ssh forwards.</li>
+<li>§11.4.10: no tokens/secrets in ledger (test scripts redact; bank-run
+admin password was env-only, never logged).</li>
+</ul>
+</body>
+</html>

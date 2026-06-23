@@ -74,6 +74,10 @@ func TestLoadInvalidValues(t *testing.T) {
 		val  string
 	}{
 		{"bad duration", "HELIX_POLL_INTERVAL", "not-a-duration"},
+		{"bad poll jitter", "HELIX_POLL_JITTER", "not-a-duration"},
+		{"bad access token ttl", "HELIX_ACCESS_TOKEN_TTL", "nope"},
+		{"bad device token ttl", "HELIX_DEVICE_TOKEN_TTL", "12x"},
+		{"bad max inflight", "HELIX_MAX_INFLIGHT", "not-an-int"},
 		{"bad int", "HELIX_MAX_UPLOAD_BYTES", "not-an-int"},
 		{"bad base64 pubkey", "HELIX_ARTIFACT_PUBKEY", "!!!not-base64!!!"},
 	}

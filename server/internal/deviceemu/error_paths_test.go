@@ -2,6 +2,7 @@ package deviceemu_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -625,6 +626,283 @@ func TestRunLoopDefaultInterval(t *testing.T) {
 	case <-outc: // immediate first cycle fired despite interval<=0
 	case <-time.After(5 * time.Second):
 		t.Fatal("default-interval RunLoop did not run the immediate cycle")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != context.Canceled {
+			t.Fatalf("RunLoop returned %v, want context.Canceled", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("RunLoop did not exit on cancel")
+	}
+}
+
+// pathFailRoundTripper is a transport that forwards every request to a real
+// inner http.Client EXCEPT requests whose path contains failOn, which fail with
+// a synthetic transport error. It lets a test exercise a transport failure on
+// ONE specific endpoint (e.g. /client/update) while letting register/login
+// succeed against a stub — driving the per-method "do:" error branches without
+// needing the whole server to be unreachable.
+type pathFailRoundTripper struct {
+	inner  http.RoundTripper
+	failOn string
+}
+
+func (rt pathFailRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.Contains(req.URL.Path, rt.failOn) {
+		return nil, fmt.Errorf("synthetic transport failure on %s", req.URL.Path)
+	}
+	return rt.inner.RoundTrip(req)
+}
+
+// TestRegisterTransportError proves Register wraps a transport-level failure on
+// the POST /devices/register call as a "register: do:" error (the device has a
+// pre-supplied operator token so Login is a no-op and the failure occurs at the
+// register POST, not at login).
+func TestRegisterTransportError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	base := ts.URL
+	ts.Close() // refuse connections
+
+	dev, err := deviceemu.New(deviceemu.Config{
+		BaseURL:        base,
+		OperatorToken:  "op-token",
+		HardwareID:     "hw",
+		Model:          fxModel,
+		OSType:         "android",
+		CurrentVersion: "1.0.0",
+		HTTPClient:     &http.Client{Timeout: 2 * time.Second},
+	})
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	err = dev.Register(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "register: do:") {
+		t.Fatalf("want wrapped register transport error, got %v", err)
+	}
+	if dev.DeviceID() != "" {
+		t.Fatalf("DeviceID must stay empty on transport failure, got %q", dev.DeviceID())
+	}
+}
+
+// TestRegisterPropagatesLoginError proves Register returns the Login error
+// verbatim (not a "register:"-wrapped one) when the up-front login fails — the
+// device uses admin credentials (so a real login is attempted) against a closed
+// server. This covers the Login-error early-return at the top of Register.
+func TestRegisterPropagatesLoginError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	base := ts.URL
+	ts.Close()
+
+	dev, err := deviceemu.New(deviceemu.Config{
+		BaseURL:    base,
+		AdminUser:  "admin",
+		AdminPass:  "pw",
+		HardwareID: "hw",
+		Model:      fxModel,
+		OSType:     "android",
+		HTTPClient: &http.Client{Timeout: 2 * time.Second},
+	})
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	err = dev.Register(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "login:") {
+		t.Fatalf("want propagated login error from Register, got %v", err)
+	}
+}
+
+// TestLoginDecodeError proves doJSON (via Login) wraps a JSON decode failure on
+// an otherwise-OK (200) response as a "decode body" error — the server answers
+// the login with status 200 but a malformed body, so the unmarshal into the
+// response struct fails. This is the doJSON success-status-but-bad-body branch.
+func TestLoginDecodeError(t *testing.T) {
+	base := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{not valid json`))
+	})
+	dev, err := deviceemu.New(deviceemu.Config{
+		BaseURL:    base,
+		AdminUser:  "admin",
+		AdminPass:  "pw",
+		HardwareID: "hw",
+		Model:      fxModel,
+		OSType:     "android",
+	})
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	err = dev.Login(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "decode body") {
+		t.Fatalf("want decode-body error from Login on malformed 200 body, got %v", err)
+	}
+}
+
+// TestCheckUpdateTransportError proves CheckUpdate wraps a transport failure on
+// the GET /client/update call as a "check update: do:" error. The device first
+// registers successfully against a live stub, then its transport is rigged to
+// fail ONLY the /client/update request — isolating the CheckUpdate "do:" branch.
+func TestCheckUpdateTransportError(t *testing.T) {
+	base := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/devices/register"):
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{"device_id":"d","device_token":"dt"}`))
+		default:
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+	})
+	dev, err := deviceemu.New(deviceemu.Config{
+		BaseURL:        base,
+		OperatorToken:  "op-token",
+		HardwareID:     "hw",
+		Model:          fxModel,
+		OSType:         "android",
+		CurrentVersion: "1.0.0",
+		HTTPClient: &http.Client{
+			Timeout:   2 * time.Second,
+			Transport: pathFailRoundTripper{inner: http.DefaultTransport, failOn: "/client/update"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	if err := dev.Register(context.Background()); err != nil {
+		t.Fatalf("register (should succeed): %v", err)
+	}
+	_, _, err = dev.CheckUpdate(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "check update: do:") {
+		t.Fatalf("want wrapped check-update transport error, got %v", err)
+	}
+}
+
+// TestRunOnceRegisterError proves RunOnce returns the registration error when an
+// unregistered device cannot register (closed server) — the early Register call
+// in RunOnce fails and RunOnce surfaces it without proceeding to CheckUpdate.
+func TestRunOnceRegisterError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	base := ts.URL
+	ts.Close()
+
+	dev, err := deviceemu.New(deviceemu.Config{
+		BaseURL:        base,
+		OperatorToken:  "op-token",
+		HardwareID:     "hw",
+		Model:          fxModel,
+		OSType:         "android",
+		CurrentVersion: "1.0.0",
+		HTTPClient:     &http.Client{Timeout: 2 * time.Second},
+	})
+	if err != nil {
+		t.Fatalf("new: %v", err)
+	}
+	if _, err := dev.RunOnce(context.Background()); err == nil ||
+		!strings.Contains(err.Error(), "register: do:") {
+		t.Fatalf("want register error from RunOnce, got %v", err)
+	}
+}
+
+// TestRunOnceApplyError proves RunOnce surfaces an ApplyAndReport failure: the
+// stub registers and offers an update, but rejects the telemetry POST with a
+// non-202 status, so ApplyAndReport errors and RunOnce returns it with the
+// version NOT advanced.
+func TestRunOnceApplyError(t *testing.T) {
+	base := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/devices/register"):
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{"device_id":"d","device_token":"dt"}`))
+		case strings.HasSuffix(r.URL.Path, "/client/update"):
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"version":"1.1.0","size":1024,"deployment_id":"dep-1"}`))
+		case strings.HasSuffix(r.URL.Path, "/client/telemetry"):
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(`{"error":"boom"}`))
+		default:
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+	})
+	dev := newStubDevice(t, base, "1.0.0")
+	out, err := dev.RunOnce(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "apply: report") {
+		t.Fatalf("want apply error from RunOnce, got %v (out=%+v)", err, out)
+	}
+	if dev.CurrentVersion() != "1.0.0" {
+		t.Fatalf("version must not advance on apply failure, got %q", dev.CurrentVersion())
+	}
+}
+
+// TestRunOnceTelemetryRejectedNote proves RunOnce sets the explanatory Note when
+// the server ACCEPTS the telemetry batch (202) but reports rejected events AND
+// no deployment_id is available (the offer omits it and no Config.DeploymentID
+// is set). This covers the ack.Rejected>0 && DeploymentID=="" note branch.
+func TestRunOnceTelemetryRejectedNote(t *testing.T) {
+	base := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/devices/register"):
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{"device_id":"d","device_token":"dt"}`))
+		case strings.HasSuffix(r.URL.Path, "/client/update"):
+			// Offer WITHOUT a deployment_id so out.DeploymentID stays empty.
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"version":"1.1.0","size":1024}`))
+		case strings.HasSuffix(r.URL.Path, "/client/telemetry"):
+			// Accepted batch (202) but the validator rejected events.
+			w.WriteHeader(http.StatusAccepted)
+			_, _ = w.Write([]byte(`{"accepted":0,"rejected":1}`))
+		default:
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+	})
+	// Device with NO Config.DeploymentID, so resolveDeploymentID("") yields "".
+	dev := newStubDevice(t, base, "1.0.0")
+	out, err := dev.RunOnce(context.Background())
+	if err != nil {
+		t.Fatalf("RunOnce: %v", err)
+	}
+	if out.DeploymentID != "" {
+		t.Fatalf("expected empty DeploymentID precondition, got %q", out.DeploymentID)
+	}
+	if out.TelemetryRejected != 1 {
+		t.Fatalf("expected 1 rejected telemetry event, got %d", out.TelemetryRejected)
+	}
+	if !strings.Contains(out.Note, "telemetry rejected by schema validator") {
+		t.Fatalf("expected rejected-telemetry note, got %q", out.Note)
+	}
+}
+
+// TestRunLoopTickerFires proves the RunLoop ticker branch (case <-t.C) executes
+// at least one additional cycle after the immediate first run, by using a short
+// interval and waiting for two onOutcome callbacks before cancelling. This
+// covers the previously-uncovered ticker-driven run() invocation.
+func TestRunLoopTickerFires(t *testing.T) {
+	base := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/devices/register"):
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{"device_id":"d","device_token":"dt"}`))
+		default:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+	dev := newStubDevice(t, base, "1.0.0")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	outc := make(chan deviceemu.Outcome, 8)
+	done := make(chan error, 1)
+	go func() {
+		done <- dev.RunLoop(ctx, 20*time.Millisecond, func(o deviceemu.Outcome) { outc <- o }, nil)
+	}()
+
+	// Drain two cycles: the immediate first cycle + at least one ticker-driven.
+	for i := 0; i < 2; i++ {
+		select {
+		case <-outc:
+		case <-time.After(5 * time.Second):
+			t.Fatalf("expected cycle %d (ticker did not fire)", i+1)
+		}
 	}
 	cancel()
 	select {

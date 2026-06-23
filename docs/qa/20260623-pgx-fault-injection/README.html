@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="pgx-driver-fault-injection-coverage-push-real-run-evidence-11.4.83">pgx
+Driver-Fault Injection Coverage Push — REAL RUN evidence (§11.4.83)</h1>
+<p><strong>Run date:</strong> 2026-06-23 <strong>Run host:</strong>
+nezha.local (Linux x86_64, go1.26.2, rootless podman 5.7.1 +
+podman-compose) <strong>Driver host:</strong> mistborn (macOS) —
+go1.26.2 but NO container runtime; the fault tests were authored +
+gofmt/vet/compile-checked on mistborn, then rsynced to nezha’s
+<code>~/helix_ota_itest</code> staging tree (the same tree the
+integration coverage push used) where go1.26 AND rootless podman both
+exist, and run there.</p>
+<h2 id="goal">Goal</h2>
+<p>Close the honest pgx driver-fault coverage gap the integration
+coverage push (<code>docs/qa/20260623-integration-coverage-push/</code>,
+store 92.4% / rollout 87.3%) flagged: the residual sub-100% lines were
+uniformly <strong>driver-level fault branches</strong> (mid-query
+connection kill, <code>rows.Scan</code>/<code>rows.Err()</code> error
+returns, <code>pool.Query</code> connection-failure, tx
+Begin/Exec/Commit failure) that are genuinely unreachable against a
+healthy booted DB. These require <strong>fault injection</strong> to
+trigger — not a contrived test.</p>
+<h2
+id="fault-mechanism-built-in-process-tcp-fault-injection-proxy">Fault
+mechanism built — in-process TCP fault-injection proxy</h2>
+<p><code>faultproxy_test.go</code> (one per package, kept per-package
+per §11.4.28 decoupling). A tiny in-process TCP proxy listens on an
+ephemeral <code>127.0.0.1:0</code> port, forwards bytes in both
+directions to the REAL brick-booted Postgres (port 55432 / 55445), and
+on <code>Fault()</code> (idempotent) <strong>closes every live
+connection</strong> (a hard mid-query TCP kill) AND <strong>refuses
+every new connection</strong> thereafter. The test points a
+<code>pgxpool</code> DSN at the proxy, runs a healthy warm-up query,
+then arms the fault and asserts the production pgx methods return a
+<strong>clean error (never a panic)</strong> — exercising the exact
+connection-fault branches. This is the standard in-process
+toxiproxy-equivalent pattern; it is NOT a container runtime, so it is
+faithful to §11.4.74 (do not reimplement orchestration — the proxy sits
+in front of the real brick-booted Postgres, which is still
+booted/torn-down via <code>digital.vasic.containers</code>).</p>
+<p>Tests added (4 files, all <code>//go:build integration</code>): -
+<code>internal/store/faultproxy_test.go</code> +
+<code>internal/store/postgres_fault_integration_test.go</code> —
+<code>TestPostgresDriverFaults_Integration</code> (3 subtests). -
+<code>internal/rollout/faultproxy_test.go</code> +
+<code>internal/rollout/postgres_fault_integration_test.go</code> —
+<code>TestPostgresStoreDriverFaults_Integration</code> (3 subtests).</p>
+<h2 id="real-result-all-pass-with-measured-coverage-delta">REAL result —
+ALL PASS, with measured coverage delta</h2>
+<pre><code>ok  internal/store     33.166s  coverage: 93.5% of statements  STORE_EXIT=0
+ok  internal/rollout   21.299s  coverage: 91.5% of statements  ROLLOUT_EXIT=0</code></pre>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Integration-push baseline</th>
+<th>AFTER fault tests</th>
+<th>Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/store</code></td>
+<td>92.4%</td>
+<td><strong>93.5%</strong></td>
+<td><strong>+1.1pp</strong></td>
+</tr>
+<tr>
+<td><code>internal/rollout</code></td>
+<td>87.3%</td>
+<td><strong>91.5%</strong></td>
+<td><strong>+4.2pp</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Determinism (§11.4.50): both suites ran GREEN across multiple
+independent <code>-count=1</code> invocations during this session (store
+fault-only, rollout fault-only, and the two combined full-suite runs) —
+identical PASS.</p>
+<h2
+id="driver-fault-branches-now-covered-real-captured-faults">Driver-fault
+branches now covered (REAL captured faults)</h2>
+<p><strong>store</strong> (<code>store_fault_branches_v.txt</code>) —
+every method below surfaced a CLEAN driver error
+(<code>unexpected EOF</code> / <code>connection reset by peer</code>),
+no panic: - <code>pool.Query</code> / <code>QueryRow</code>
+connection-failure return branch: <code>ListDevices</code>
+(86.4→<strong>95.5%</strong>), <code>ListReleases</code> (→90.9%),
+<code>ListActiveDeployments</code> (→90.9%), <code>LatestRelease</code>
+(→90.0%), <code>TelemetryEventCounts</code> (→91.7%),
+<code>DeviceStateCounts</code> (→92.3%), <code>ListGroups</code>
+(→90.9%), <code>ListProjects</code> (→90.9%), <code>ListAudit</code>,
+<code>GetDevice</code> (→100%), <code>GetArtifact</code> (→91.7%), and
+the <code>Exec</code>-error path of
+<code>CreateDevice</code>/<code>AppendTelemetry</code>. -
+<strong>mid-iteration <code>rows.Err()</code></strong>: the proxy was
+armed <em>during</em> a live streaming cursor over 500 seeded rows —
+<code>mid-iteration rows.Err captured cleanly after   132 rows: unexpected EOF</code>.
+This is the genuine in-cursor kill landing inside the read loop, exactly
+the <code>if err := rows.Err(); err != nil</code> branch the production
+<code>List*</code> loops guard. - <strong>pool-acquire failure</strong>:
+a lazy pool faulted before first use → <code>Query</code>/
+<code>QueryRow</code> acquire-fail return.</p>
+<p><strong>rollout</strong> (<code>rollout_fault_branches_v.txt</code>):
+- <code>Load</code> QueryRow.Scan / Query connection-failure (Load
+79.2→<strong>91.7%</strong>). - <code>Save</code> tx Begin/Exec failure
+(Save 73.3→<strong>86.7%</strong>) — connection_failure case. -
+<strong>mid-transaction</strong> kill:
+<code>Save observed mid-transaction driver fault (attempt   0): unexpected EOF</code>
+— the fault fired concurrently <em>inside</em> a 200-phase Save
+transaction (Begin + DELETE + 200 INSERTs + Commit). - pool-acquire
+failure for both <code>Load</code> and <code>Save</code>.</p>
+<h2
+id="branches-still-genuinely-unreachable-by-this-proxy-honest-11.4.6">Branches
+still genuinely unreachable by this proxy (honest §11.4.6)</h2>
+<p>The fault proxy closes <strong>connection-fault</strong> branches.
+The following residual sub-100% lines are a DIFFERENT class and are NOT
+closeable by a connection kill — stated as fact, not bluffed shut:</p>
+<ul>
+<li><strong><code>json.Marshal</code> error path</strong> —
+<code>jsonbOf</code> 75% (store L68–71), <code>nullTime</code> 66.7%
+(L845–846): <code>json.Marshal</code> of a
+<code>map[string]string</code> / <code>time.Time</code> <strong>cannot
+fail</strong> in Go. Structurally unreachable defensive code.</li>
+<li><strong><code>json.Unmarshal</code> of DB-stored JSONB
+error</strong> — <code>scanDevice</code> L161, <code>ListAudit</code>
+L706, <code>ListRollbacks</code> L808: the DB only ever holds JSONB the
+code itself wrote, so the unmarshal-error branch is unreachable without
+injecting corrupt JSONB directly into the table (out of scope — not a
+driver fault).</li>
+<li><strong><code>Migrate</code> Exec-error</strong> — store L52–53
+(66.7%), rollout L46–47 (66.7%): a DDL failure on the valid embedded
+schema. Migrate runs on the healthy seed pool by design (you cannot
+migrate a faulted connection), so the proxy cannot reach it.</li>
+<li><strong><code>NewPostgresStore</code> ping-error</strong> (rollout
+L31) — needs a bad-DSN unit, not a connection fault; the fault tests use
+<code>*FromPool</code> by design.</li>
+<li><strong>rollout Save phase-insert <code>tx.Exec</code> error
+(L84–85)</strong> and <strong>Load phases-cursor L116/L123</strong> —
+these ARE connection-fault branches and are reachable, but landing the
+kill at that <em>exact</em> statement is timing-probabilistic. The
+mid-transaction subtest hit the tx path on attempt 0 this run; it is
+honestly written to <code>t.Skip</code> (not fail) if the timing window
+misses in 8 attempts, with the deterministic
+<code>connection_failure</code> case covering the Save error path.</li>
+</ul>
+<p>The goal was the <strong>reachable driver-fault branches</strong>,
+not a contorted 100%.</p>
+<h2 id="cleanup-11.4.14-project-scoped">Cleanup (§11.4.14 —
+PROJECT-SCOPED)</h2>
+<ul>
+<li>Boot + teardown via the <code>digital.vasic.containers</code>
+brick’s own <code>mgr.Shutdown</code> (<code>compose down</code> scoped
+to <code>postgres.compose.yml</code> /
+<code>postgres-rollout.compose.yml</code>) on <code>t.Cleanup</code> —
+<strong>never</strong> an <code>ancestor=</code> filter (the prior
+incident).</li>
+<li>Container baseline captured BEFORE the run: <strong>63</strong>
+(<code>cleanup_project_scoped.txt</code>). Post-run count:
+<strong>63</strong> (exact match). <code>comm -13 baseline after</code>
+= <strong>empty</strong> — no container from this run remains. No
+<code>helix_ota</code> / <code>deploy_postgres</code> / port-5543x /
+port-5544x container present. Other projects’ 63 containers were NOT
+touched.</li>
+</ul>
+<h2 id="evidence-files">Evidence files</h2>
+<ul>
+<li><code>integration_fault_run.log</code> — consolidated store+rollout
+final run (both EXIT=0, both coverages)</li>
+<li><code>store_fault_branches_v.txt</code> — <code>-v</code> per-method
+clean-error capture (store)</li>
+<li><code>rollout_fault_branches_v.txt</code> — <code>-v</code>
+per-method clean-error capture (rollout)</li>
+<li><code>coverage_func_fault.txt</code> —
+<code>go tool cover -func</code> full per-function breakdown (both
+pkgs)</li>
+<li><code>cov_store_fault.out</code> /
+<code>cov_rollout_fault.out</code> — raw coverprofiles</li>
+<li><code>cleanup_project_scoped.txt</code> — baseline==after container
+accounting</li>
+</ul>
+</body>
+</html>

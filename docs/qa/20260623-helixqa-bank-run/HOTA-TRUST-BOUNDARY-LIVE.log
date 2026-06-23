@@ -1,0 +1,17 @@
+=== trust_boundary_live — §11.4.69 evidence-gated anti-bluff run ===
+[15:28:49Z] keypairs ready (caller=trusted, attacker=untrusted; both ephemeral, never committed)
+[15:28:49Z] BOOT: booting the REAL system in CALLER-PUBKEY MODE (server trusts the caller's pubkey)
+[15:30:20Z] live base_url=http://127.0.0.1:18080
+[15:30:25Z] live /readyz -> 200
+[15:30:31Z] obtained live admin token (redacted in evidence)
+[15:30:43Z] CASE (a) positive: HTTP 201 verified=true
+PASS: case (a) POSITIVE: caller-signed artifact ACCEPTED by live server (201, verified=true) — config-trusted key verifies the matching signature [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-trust-boundary-live/case_a_positive_accept.txt]
+[15:30:54Z] CASE (b) bad-sig: HTTP 422 error.code=SIGNATURE_INVALID
+PASS: case (b) NEGATIVE bad-signature: live server REJECTS corrupted signature (422 SIGNATURE_INVALID) — proves it really verifies [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-trust-boundary-live/case_b_bad_signature_reject.txt]
+[15:31:05Z] CASE (c) key-pin: HTTP 422 error.code=SIGNATURE_INVALID (attacker pubkey supplied via X-Helix-Artifact-Pubkey header)
+PASS: case (c) NEGATIVE request-supplied-key-IGNORED (TRUST BOUNDARY): attacker-signed artifact + attacker pubkey in the request header => live server IGNORES the request key, verifies against the CONFIG key, REJECTS (422 SIGNATURE_INVALID). The request cannot override the trusted key. [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-trust-boundary-live/case_c_request_key_ignored_reject.txt]
+[15:31:16Z] CASE (c2) metadata-key-field: HTTP 400 issue=json: unknown field "public_key"
+PASS: case (c2) metadata-key-field REJECTED: the metadata schema has NO key field + DisallowUnknownFields => a public_key smuggled into metadata is rejected at parse (400 unknown-field). The metadata channel cannot carry a verification key by construction. [evidence: /Volumes/T7/Projects/helix_ota/docs/qa/20260623-trust-boundary-live/case_c2_metadata_key_field_rejected.txt]
+[15:31:16Z] finished: 2026-06-23T15:31:16Z
+=== SUMMARY (trust_boundary_live): PASS=4 FAIL=0 SKIP=0 TOTAL=4 ===
+[15:31:16Z] TEARDOWN: tearing down the live system stack (project-scoped; pg of the integration suite untouched)
