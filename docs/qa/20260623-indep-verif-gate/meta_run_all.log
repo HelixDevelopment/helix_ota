@@ -1,0 +1,155 @@
+=== §1.1 paired-mutation meta-tests (gate bluff-proofing) ===
+
+>>> meta_test_antibluff_evidence_lib.sh
+[meta_test_antibluff_evidence_lib] gate: anti_bluff §11.4.69 evidence helper
+[anti_bluff_selftest] §11.4.69 helper + §1.1 mutation proof
+  ok: (a) nonexistent evidence → rejected (rc=1)
+  ok: (b) real non-empty evidence → accepted (rc=0)
+  ok: (c) empty evidence → rejected (rc=1)
+  ok: (d) valid SKIP reason 'operator_attended' → accepted (rc=0)
+  ok: (e) invalid SKIP reason 'bogus_reason' → rejected (rc=2)
+  --- all five behaviours correct ---
+  --- §1.1 mutation proof: always-pass mutant must be caught ---
+  ok: RED proven: always-pass mutant returns rc=0 on nonexistent evidence (bluff present)
+  ok: GREEN proven: real library returns rc=1 on the SAME input (bluff absent) — self-test discriminates
+  ok: post-restore: real library byte-unchanged, still rejects nonexistent evidence (rc=1)
+SELFTEST-GREEN: §11.4.69 helper behaves correctly AND the always-pass bluff is caught
+  ok: anti_bluff_selftest.sh GREEN — five behaviours + always-pass mutant caught + restore proven.
+META-GREEN: §11.4.69 evidence-gating gate is bluff-proof.
+<<< PASS meta_test_antibluff_evidence_lib.sh
+
+>>> meta_test_coverage_minimum.sh
+[meta_test_coverage_minimum] gate: CM-COVERAGE-MINIMUM (>= 60%)
+  ok: clean tree: gate PASS 74.7% (>= 60%)
+  ok: stashed 33 internal/api test files (coverage regression simulated).
+  ok: on coverage regression: gate FAIL 53.4% — gate is bluff-proof.
+  ok: post-restore: gate PASS 74.7% — corpus restored, no residue.
+META-GREEN: CM-COVERAGE-MINIMUM proven PASS-above / FAIL-below threshold (bluff-proof).
+<<< PASS meta_test_coverage_minimum.sh
+
+>>> meta_test_independent_verification.sh
+[meta_test_independent_verification] §1.1 paired-mutation meta-test
+  ok: gate PASSES on clean tree (machinery wired + marker present): gate PASSED on clean tree (rc=0).
+  --- mutation 1: strip MT_RESTORE_FAILED review-seam from lib_metatest.sh ---
+  ok: mutated /Volumes/T7/Projects/helix_ota/tests/meta/lib_metatest.sh (s/MT_RESTORE_FAILED/MT_REVIEW_SEAM_STRIPPED/g)
+  ok: gate FAILs when review-seam (MT_RESTORE_FAILED) stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (seam): gate PASSED on clean tree (rc=0).
+  --- mutation 2: strip fatal 'exit 90' abort from lib_metatest.sh ---
+  ok: mutated /Volumes/T7/Projects/helix_ota/tests/meta/lib_metatest.sh (s/exit 90/exit 0/g)
+  ok: gate FAILs when fatal abort (exit 90) removed: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (abort): gate PASSED on clean tree (rc=0).
+  --- mutation 3: empty a docs/qa/**/INDEPENDENT_REVIEW.md findings marker ---
+  ok: emptied marker /Volumes/T7/Projects/helix_ota/docs/qa/20260623-indep-verif-gate/INDEPENDENT_REVIEW.md (truncated to 0 bytes)
+  ok: gate FAILs when no non-empty findings marker remains: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (marker): gate PASSED on clean tree (rc=0).
+META-GREEN: CM-INDEPENDENT-VERIFICATION-AGENT catches (1) stripped review-seam, (2) removed fatal abort, (3) emptied findings marker — bluff-proof on both halves.
+<<< PASS meta_test_independent_verification.sh
+
+>>> meta_test_propagation_gates.sh
+[meta_test_propagation_gates] §1.1 paired-mutation meta-test
+  enumerated 14 CM-COVENANT-114-N-PROPAGATION anchor gates from pre_build_verification.sh
+  --- gate: CM-COVENANT-114-153-PROPAGATION (literal 11.4.153) ---
+  ok: anchor 11.4.153 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.153/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.153 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.153): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-154-PROPAGATION (literal 11.4.154) ---
+  ok: anchor 11.4.154 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.154/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.154 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.154): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-155-PROPAGATION (literal 11.4.155) ---
+  ok: anchor 11.4.155 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.155/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.155 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.155): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-156-PROPAGATION (literal 11.4.156) ---
+  ok: anchor 11.4.156 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.156/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.156 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.156): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-157-PROPAGATION (literal 11.4.157) ---
+  ok: anchor 11.4.157 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.157/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.157 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.157): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-158-PROPAGATION (literal 11.4.158) ---
+  ok: anchor 11.4.158 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.158/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.158 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.158): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-159-PROPAGATION (literal 11.4.159) ---
+  ok: anchor 11.4.159 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.159/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.159 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.159): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-160-PROPAGATION (literal 11.4.160) ---
+  ok: anchor 11.4.160 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.160/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.160 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.160): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-161-PROPAGATION (literal 11.4.161) ---
+  ok: anchor 11.4.161 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.161/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.161 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.161): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-162-PROPAGATION (literal 11.4.162) ---
+  ok: anchor 11.4.162 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.162/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.162 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.162): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-163-PROPAGATION (literal 11.4.163) ---
+  ok: anchor 11.4.163 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.163/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.163 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.163): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-164-PROPAGATION (literal 11.4.164) ---
+  ok: anchor 11.4.164 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.164/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.164 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.164): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-165-PROPAGATION (literal 11.4.165) ---
+  ok: anchor 11.4.165 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.165/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.165 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.165): gate PASSED on clean tree (rc=0).
+  --- gate: CM-COVENANT-114-166-PROPAGATION (literal 11.4.166) ---
+  ok: anchor 11.4.166 present on clean carrier: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/CLAUDE.md (s/11\.4\.166/STRIPPED_FOR_META/g)
+  ok: gate FAILs when 11.4.166 stripped: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: gate PASSes after byte-identical restore (11.4.166): gate PASSED on clean tree (rc=0).
+META-GREEN: ALL 14 CM-COVENANT-114-N-PROPAGATION gates each catch a stripped anchor (bluff-proof).
+<<< PASS meta_test_propagation_gates.sh
+
+>>> meta_test_regression_guards.sh
+[meta_test_regression_guards] §1.1 paired-mutation meta-test
+  --- subject: guard_push_all_honest_exit.sh ---
+  ok: push-guard clean: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/push_all.sh (s/NOT_CONFIRMED/NOT_CONFIRMED_RENAMED_FOR_META/g)
+  ok: push-guard on mutation: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: push-guard post-restore: gate PASSED on clean tree (rc=0).
+  --- subject: guard_healthcheck_binary_present.sh ---
+  ok: hc-guard clean: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/deploy/helixtrack/compose.helixtrack.yml (s#"curl"#"definitely-not-in-image"#g)
+  ok: hc-guard on mutation: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: hc-guard post-restore: gate PASSED on clean tree (rc=0).
+META-GREEN: both regression guards proven RED-on-broken / GREEN-on-fixed (bluff-proof).
+<<< PASS meta_test_regression_guards.sh
+
+>>> meta_test_semgrep_wired.sh
+[meta_test_semgrep_wired] §1.1 paired-mutation meta-test
+  --- subject: scripts/commit_all.sh semgrep wiring ---
+  ok: wiring clean: gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/commit_all.sh (s/semgrep scan --config auto --error/REMOVED_FOR_META/g)
+  ok: wiring: blocking-invocation removed: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: wiring post-restore (1): gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/commit_all.sh (s/_semgrep_scan_check/_REMOVED_FN_FOR_META/g)
+  ok: wiring: scan function removed: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: wiring post-restore (2): gate PASSED on clean tree (rc=0).
+  ok: mutated /Volumes/T7/Projects/helix_ota/scripts/commit_all.sh (s/semgrep NOT installed/semgrep skipped silently/g)
+  ok: wiring: fail-open re-introduced: gate FAILED on mutation (rc=1) — bluff-proof.
+  ok: wiring post-restore (3): gate PASSED on clean tree (rc=0).
+META-GREEN: CM-SEMGREP-WIRED catches wiring removal AND fail-open re-introduction (bluff-proof).
+<<< PASS meta_test_semgrep_wired.sh
+
+=== meta-test summary: 6/6 gates proven bluff-proof ===

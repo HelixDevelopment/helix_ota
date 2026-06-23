@@ -116,6 +116,79 @@ else
 fi
 echo
 
+# ---- gate: CM-INDEPENDENT-VERIFICATION-AGENT (§11.4.165) ----
+# §11.4.165 mandates every batch/artifact pass an INDEPENDENT verifier
+# (structurally separate from the author) iterating to a zero-finding GO. The
+# propagation gate above (CM-COVENANT-114-165-PROPAGATION) only proves the
+# anchor literal is present in CLAUDE.md — it does NOT prove the review STEP is
+# wired or that a substantive batch carried a real (non-rubber-stamp) review.
+# This FUNCTIONAL gate closes that hole by asserting BOTH, mechanically:
+#   (A) the independent-review MACHINERY is wired — tests/meta/lib_metatest.sh
+#       (the shared §1.1 paired-mutation primitive that is the author-independent
+#       verifier of every pre-build gate) exists, is executable, and carries the
+#       structurally-separate review SEAM proven real by its fatal
+#       restore-integrity abort (`exit 90` on a corrupted/unverifiable restore —
+#       the machinery itself catches a bluff rather than silently passing);
+#   (B) a substantive batch carries an independent-review FINDINGS→FIX marker —
+#       at least one non-empty docs/qa/**/INDEPENDENT_REVIEW.md, the standing
+#       convention proving the review ran and produced a VERIFIABLE ARTIFACT (a
+#       real finding that was fixed), not a stamp.
+#
+# Honest boundary (§11.4.6): this gate asserts the review machinery is wired AND
+# the review step ran + produced a verifiable artifact. It does NOT mechanically
+# prove the reviewer was independent of the author (an irreducibly social
+# property — enforced by the §11.4.70/§11.4.20 subagent seam, not a grep) NOR
+# that the reviewed code is correct (that rests on §11.4.108 + §11.4.40). A gate
+# that asserted "the review was independent" with no falsifiable check would be
+# the always-green bluff this gate exists to prevent — so it asserts only the
+# two things it CAN falsify.
+echo ">>> gate: CM-INDEPENDENT-VERIFICATION-AGENT"
+indep_verif_ok=1
+LIB_METATEST="${SCRIPT_DIR}/meta/lib_metatest.sh"
+# (A) machinery wired.
+if [[ ! -f "$LIB_METATEST" ]]; then
+    echo "  tests/meta/lib_metatest.sh missing — §11.4.165 review machinery absent"
+    indep_verif_ok=0
+else
+    if [[ ! -x "$LIB_METATEST" ]]; then
+        echo "  tests/meta/lib_metatest.sh not executable — review machinery not runnable"
+        indep_verif_ok=0
+    fi
+    # The structurally-separate review SEAM: the machinery must FAIL FATALLY on a
+    # corrupted/unverifiable restore (exit 90 via MT_RESTORE_FAILED) — i.e. it
+    # catches a bluff in itself rather than silently passing. Removing this makes
+    # the verifier a rubber stamp.
+    if ! grep -q 'MT_RESTORE_FAILED' "$LIB_METATEST"; then
+        echo "  restore-integrity guard (MT_RESTORE_FAILED) removed from lib_metatest.sh — verifier can silently pass a bluff (§11.4.165 hole)"
+        indep_verif_ok=0
+    fi
+    if ! grep -q 'exit 90' "$LIB_METATEST"; then
+        echo "  fatal restore-integrity abort (exit 90) removed from lib_metatest.sh — verifier is fail-open (§11.4.165 hole)"
+        indep_verif_ok=0
+    fi
+fi
+# (B) findings→fix marker present (non-empty) for a substantive batch.
+QA_DIR="${SCRIPT_DIR}/../docs/qa"
+indep_marker=""
+if [[ -d "$QA_DIR" ]]; then
+    # First non-empty INDEPENDENT_REVIEW.md under docs/qa/** (standing convention).
+    indep_marker=$(find "$QA_DIR" -type f -name 'INDEPENDENT_REVIEW.md' -size +0c 2>/dev/null | head -n1)
+fi
+if [[ -z "$indep_marker" ]]; then
+    echo "  no non-empty docs/qa/**/INDEPENDENT_REVIEW.md findings→fix marker — §11.4.165 review step has no verifiable artifact"
+    indep_verif_ok=0
+else
+    echo "  independent-review marker: ${indep_marker#${SCRIPT_DIR}/../}"
+fi
+if [[ "$indep_verif_ok" -eq 1 ]]; then
+    echo "  review machinery wired (lib_metatest.sh + fatal restore-integrity seam) + findings→fix marker present"
+    echo "<<< gate: CM-INDEPENDENT-VERIFICATION-AGENT OK"
+else
+    echo "<<< gate: CM-INDEPENDENT-VERIFICATION-AGENT FAIL"
+    rc=1
+fi
+echo
+
 # ---- gate: META-TESTS (§1.1 paired-mutation gate bluff-proofing) ----
 # Runs every tests/meta/meta_test_*.sh — each PROVES a gate catches its own
 # negation (mutate→FAIL→restore→PASS). A gate without a green meta-test here is

@@ -387,13 +387,15 @@ mutation-proven)</td>
 </tr>
 <tr>
 <td>security/ddos</td>
-<td>59 hard asserts + rate-limit + <strong>runtime trust-boundary 4/4 vs
-live</strong> (request-supplied-key IGNORED) + <strong>Go fuzz
-DONE</strong> (4 targets, <strong>10.8M execs, 0 crashers</strong>,
-property-based: round-trip/antisymmetry/hex-oracle;
-docs/qa/20260623-fuzz/)</td>
-<td>+ saturation</td>
-<td><strong>trust-boundary + fuzz DONE</strong>; saturation pending</td>
+<td>trust-boundary 4/4 + Go fuzz (10.8M/0) + <strong>SATURATION/DDoS
+DONE</strong> (docs/qa/20260623-saturation-live/): cap-enabled flood→429
+shed+recover (200=75/429=25/0-5xx), default-stack
+360-flood→0-5xx+legit-6/6+recover. <strong>⚠ HONEST FINDING:
+rate-limiter ships OFF</strong> (<code>HELIX_MAX_INFLIGHT</code> unset
+in system.compose.yml → no-op) — capability works but disabled by
+default; hardening rec, not silently changed (§11.4.122)</td>
+<td>enable-cap-in-shipped-config (operator decision)</td>
+<td><strong>DONE</strong> + 1 hardening rec</td>
 </tr>
 <tr>
 <td>stress/chaos</td>
@@ -420,12 +422,13 @@ docs/benchmarks/ + docs/qa/20260623-benchmarks/)</td>
 <td><strong>JaCoCo MEASURED</strong> (wired both bricks):
 ota-update-engine-bridge <strong>LINE 100%</strong> (113/113, 27 tests),
 ota-android-agent <strong>LINE 91.18%</strong> (362/397, 47 tests;
-json-codec branch 55.6% <strong>→ now 100%/100%</strong> via 54 new
-tests, docs/qa/20260623-json-coverage/);
-docs/qa/20260623-android-jacoco/</td>
+<strong>both bricks now 100%</strong>: ota-update-engine-bridge LINE
+100%, ota-android-agent :core <strong>LINE 100% / BRANCH 100%</strong>
+(poll 77→100%, json 55.6→100%;
+docs/qa/20260623-{json,agent-poll}-coverage/)</td>
 <td>on-device A/B</td>
-<td><strong>JVM coverage DONE</strong> (json 100%); on-device pending
-(needs device)</td>
+<td><strong>JVM coverage 100% DONE</strong>; on-device pending (needs
+device)</td>
 </tr>
 <tr>
 <td>Challenges</td>

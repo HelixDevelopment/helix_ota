@@ -1,0 +1,149 @@
+diff --git a/core/src/test/kotlin/digital/vasic/helix/ota/core/delta/DeltaApplyDecisionTest.kt b/core/src/test/kotlin/digital/vasic/helix/ota/core/delta/DeltaApplyDecisionTest.kt
+index 5fe0fb2..8bd73db 100644
+--- a/core/src/test/kotlin/digital/vasic/helix/ota/core/delta/DeltaApplyDecisionTest.kt
++++ b/core/src/test/kotlin/digital/vasic/helix/ota/core/delta/DeltaApplyDecisionTest.kt
+@@ -78,6 +78,32 @@ class DeltaApplyDecisionTest {
+         assertEquals(DeltaDecision(ApplyChoice.FULL_PAYLOAD, DeltaReason.DELTA_MALFORMED), d)
+     }
+ 
++    @Test
++    fun fullPayload_whenCurrentShaBlank_butVersionPresent() {
++        // Isolates the curSha.isEmpty() operand of the malformed `||` chain: version is
++        // present, ONLY the device's current SHA-256 is blank -> DELTA_MALFORMED (never
++        // risk a delta when we cannot identify the device's base image).
++        val d = DeltaApplyDecision.decide(currentVersion = curVersion, currentSha256 = "   ", offer = offer())
++        assertEquals(DeltaDecision(ApplyChoice.FULL_PAYLOAD, DeltaReason.DELTA_MALFORMED), d)
++    }
++
++    @Test
++    fun fullPayload_whenOfferBaseShaBlank_butBaseVersionPresent() {
++        // Isolates the baseSha.isEmpty() operand: the offer's base VERSION is present but
++        // its base SHA-256 is blank -> DELTA_MALFORMED.
++        val d = DeltaApplyDecision.decide(curVersion, curSha, offer(baseSha256 = "  "))
++        assertEquals(DeltaDecision(ApplyChoice.FULL_PAYLOAD, DeltaReason.DELTA_MALFORMED), d)
++    }
++
++    @Test
++    fun decisionFields_choiceAndReasonAreReadable() {
++        // Exercises the DeltaDecision data-class component accessors (choice + reason)
++        // directly rather than only via equals().
++        val d = DeltaApplyDecision.decide(curVersion, curSha, offer())
++        assertEquals(ApplyChoice.USE_DELTA, d.choice)
++        assertEquals(DeltaReason.BASE_MATCHES, d.reason)
++    }
++
+     @Test
+     fun mutationImmunity_baseMatchGateIsLoadBearing() {
+         // A matching base USES the delta; any mismatch FALLS BACK. A mutation that
+diff --git a/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/JitterTest.kt b/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/JitterTest.kt
+index b830df6..bf1b6a3 100644
+--- a/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/JitterTest.kt
++++ b/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/JitterTest.kt
+@@ -52,4 +52,23 @@ class JitterTest {
+             Jitter.nextDelayMillis(base, -1L, Random(1))
+         }
+     }
++
++    @Test
++    fun defaultRng_isUsedWhenRngOmitted() {
++        // Calling the 2-arg form (rng defaulted to Random.Default) exercises the
++        // `nextDelayMillis$default` bridge. With zero jitter the result is deterministic
++        // (exactly base) so the default-RNG path is asserted without flakiness.
++        assertEquals(base, Jitter.nextDelayMillis(base, 0L))
++    }
++
++    @Test
++    fun defaultRng_withJitter_staysWithinBounds() {
++        // Non-zero jitter via the default RNG: the draw is non-deterministic but MUST
++        // remain within [base, base+jitterMax). Proves the default RNG actually draws.
++        repeat(1_000) {
++            val d = Jitter.nextDelayMillis(base, jitterMax)
++            assertTrue(d >= base, "delay $d below base $base")
++            assertTrue(d < base + jitterMax, "delay $d >= base+jitterMax ${base + jitterMax}")
++        }
++    }
+ }
+diff --git a/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/PollStateMachineTest.kt b/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/PollStateMachineTest.kt
+index 06f9c40..6c00bc1 100644
+--- a/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/PollStateMachineTest.kt
++++ b/core/src/test/kotlin/digital/vasic/helix/ota/core/poll/PollStateMachineTest.kt
+@@ -91,4 +91,52 @@ class PollStateMachineTest {
+         assertTrue(!PollState.Idle.isTerminal)
+         assertTrue(!PollState.Verified.isTerminal)
+     }
++
++    @Test
++    fun nonTerminalFlags_everyIntermediateStateIsNonTerminal() {
++        // isTerminal must be false for every NON-terminal state. This both exercises the
++        // intermediate PollState members (Polled/Assigned/Downloading/Downloaded/Applying)
++        // and asserts the terminal predicate does not over-fire on them.
++        assertTrue(!PollState.Polled.isTerminal)
++        assertTrue(!PollState.Assigned.isTerminal)
++        assertTrue(!PollState.Downloading.isTerminal)
++        assertTrue(!PollState.Downloaded.isTerminal)
++        assertTrue(!PollState.Applying.isTerminal)
++    }
++
++    @Test
++    fun poll_fromPolledState_isAlsoValid() {
++        // onPoll accepts Idle OR Polled (a re-poll after a prior poll). The Polled branch
++        // of the `check` precondition was previously unexercised.
++        assertEquals(
++            PollState.Assigned,
++            PollStateMachine.onPoll(PollState.Polled, PollOutcome.UpdateAssigned),
++        )
++        assertEquals(
++            PollState.Success,
++            PollStateMachine.onPoll(PollState.Polled, PollOutcome.NoUpdate),
++        )
++        assertEquals(
++            PollState.Retry,
++            PollStateMachine.onPoll(PollState.Polled, PollOutcome.TransientError),
++        )
++    }
++
++    @Test
++    fun illegalTransition_onPollFromAssigned_throws() {
++        // onPoll is only valid from Idle/Polled — any other state must fail loudly so a
++        // wiring bug never silently re-polls mid-cycle.
++        assertFailsWith<IllegalStateException> {
++            PollStateMachine.onPoll(PollState.Assigned, PollOutcome.NoUpdate)
++        }
++    }
++
++    @Test
++    fun illegalTransition_onApplyResultFromNonApplying_throws() {
++        // onApplyResult is only valid from Applying — the failing `check` branch on
++        // line 106 of PollStateMachine.kt was previously unexercised.
++        assertFailsWith<IllegalStateException> {
++            PollStateMachine.onApplyResult(PollState.Verified, applyThrew = false)
++        }
++    }
+ }
+diff --git a/core/src/test/kotlin/digital/vasic/helix/ota/core/protocol/CodecRoundTripTest.kt b/core/src/test/kotlin/digital/vasic/helix/ota/core/protocol/CodecRoundTripTest.kt
+index 9e034de..cd900b8 100644
+--- a/core/src/test/kotlin/digital/vasic/helix/ota/core/protocol/CodecRoundTripTest.kt
++++ b/core/src/test/kotlin/digital/vasic/helix/ota/core/protocol/CodecRoundTripTest.kt
+@@ -110,6 +110,22 @@ class CodecRoundTripTest {
+         assertEquals(ack, OtaCodec.telemetryAck(OtaCodec.encode(OtaCodec.toJson(ack))))
+     }
+ 
++    @Test
++    fun telemetryAck_absentCounters_defaultToZero() {
++        // A server response omitting "accepted" and "rejected" must parse with both
++        // defaulting to 0 (the `?: 0` elvis fallbacks in OtaCodec.telemetryAck) rather
++        // than throwing — request_id is still required.
++        val parsed = OtaCodec.telemetryAck("""{"request_id":"01J-only"}""")
++        assertEquals(TelemetryAck(accepted = 0, rejected = 0, requestId = "01J-only"), parsed)
++    }
++
++    @Test
++    fun telemetryAck_partialCounters_onlyAcceptedPresent() {
++        // Only "accepted" present: accepted parses, rejected falls back to 0.
++        val parsed = OtaCodec.telemetryAck("""{"accepted":5,"request_id":"01J-partial"}""")
++        assertEquals(TelemetryAck(accepted = 5, rejected = 0, requestId = "01J-partial"), parsed)
++    }
++
+     @Test
+     fun telemetryEvent_hasExactlySixValues_noIdle() {
+         assertEquals(6, TelemetryEvent.entries.size)

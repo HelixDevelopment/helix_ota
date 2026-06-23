@@ -1,0 +1,13 @@
+=== CASE (b) DDoS-RESILIENCE — DEFAULT live stack (cap OFF, shipped config) ===
+captured_utc=2026-06-23T14:39:02Z
+target=http://127.0.0.1:18080  rounds=6 conc/round=60 total~=360
+pre_flood_readyz=200
+total_5xx_under_flood=0  (0 == server never errored under flood)
+legit_requests_succeeded_during_flood=6/6
+post_flood_readyz=200  post_flood_healthz=200
+
+HONEST CONFIG FINDING (§11.4.6): the live default stack has NO active
+rate-limiter — HELIX_MAX_INFLIGHT is unset in server/deploy/system.compose.yml,
+so maxInflightMiddleware is a no-op passthrough. The server survives this
+bounded flood via the host scheduler + bounded work, NOT via shedding.
+Case (a) proves the 429 control works WHEN HELIX_MAX_INFLIGHT is set.

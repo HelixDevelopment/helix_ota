@@ -1,0 +1,66 @@
+[14:35:14Z] UP: booting REAL system (ota-server + real PostgreSQL) on milosvasic@thinker.local
+[14:35:20Z] PRE-CLEAN: force-removing any prior 'helix-ota-system' stack
+[14:35:46Z] remote arch=x86_64 => cross-compiling GOOS=linux GOARCH=amd64
+[14:35:46Z] BUILD: cross-compile static ota-server (host — sibling replaces resolve here)
+[14:35:47Z] built: 22605986 /Volumes/T7/Projects/helix_ota/server/.docker-bin/ota-server
+[14:35:47Z] SYNC: rsync build bundle -> milosvasic@thinker.local:/home/milosvasic/.helix-ota-system-stack
+[14:35:58Z] COMPOSE: podman-compose build (project 'helix-ota-system')
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+podman build -f ../Dockerfile -t ota-control-plane:system ..
+exit code: 0
+[14:36:04Z] COMPOSE: up -d postgres (first), then wait for it to accept connections
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  {'ota-server'}
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=helix-ota-system', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+recreating: ...
+** excluding:  {'ota-server'}
+podman stop -t 10 helix-ota-system_postgres_1
+time="2026-06-23T17:36:19+03:00" level=warning msg="StopSignal SIGINT failed to stop container helix-ota-system_postgres_1 in 10 seconds, resorting to SIGKILL"
+exit code: 0
+podman rm helix-ota-system_postgres_1
+exit code: 0
+recreating: done
+
+
+['podman', 'network', 'exists', 'helix-ota-system_default']
+podman run --name=helix-ota-system_postgres_1 -d --label io.podman.compose.config-hash=42f8ab1210b90af3a947badc88f428c0a800f728faa95138e5a0d79cdddfa276 --label io.podman.compose.project=helix-ota-system --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@helix-ota-system.service --label com.docker.compose.project=helix-ota-system --label com.docker.compose.project.working_dir=/home/milosvasic/.helix-ota-system-stack/deploy --label com.docker.compose.project.config_files=system.compose.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=postgres -e POSTGRES_USER=helix -e POSTGRES_PASSWORD=helix -e POSTGRES_DB=helix_ota --net helix-ota-system_default --network-alias postgres -p 55480:5432 -m 512m --healthcheck-command /bin/sh -c 'pg_isready -U helix -d helix_ota' --healthcheck-interval 2s --healthcheck-timeout 3s --healthcheck-retries 30 docker.io/library/postgres:16-alpine
+exit code: 0
+** skipping:  helix-ota-system_ota-server_1
+[14:36:21Z] PG-WAIT: waiting up to 60s for postgres to accept connections
+[14:36:26Z] PG-WAIT: postgres accepting connections.
+[14:36:27Z] COMPOSE: up -d ota-server (postgres now ready =[14:36:29Z] PG-WAIT: postgres acceppodman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podpodman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podman', 'inspect', '-t', 'image', '-f', '{{.Id}}', 'ota-control-plane:system']
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=helix-ota-system', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+recreating: ...
+** excluding:  set()
+podman stop -t 10 helix-ota-system_ota-server_1
+exit code: 0
+podman stop -t 10 helix-ota-system_postgres_1
+exit code: 0
+podman rm helix-ota-system_ota-server_1
+exit code: 0
+podman rm helix-ota-system_postgres_1
+exit code: 0
+recreating: done
+
+
+['podman', 'network', 'exists', 'helix-ota-system_default']
+podman run --name=helix-ota-system_postgres_1 -d --label io.podman.compose.config-hash=3022f2156218123ebe1447ceb0c4605c1727510ee737e85b1520d68517a819ac --label io.podman.compose.project=helix-ota-system --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@helix-ota-system.service --label com.docker.compose.project=helix-ota-system --label com.docker.compose.project.working_dir=/home/milosvasic/.helix-ota-system-stack/deploy --label com.docker.compose.project.config_files=system.compose.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=postgres -e POSTGRES_USER=helix -e POSTGRES_PASSWORD=helix -e POSTGRES_DB=helix_ota --net helix-ota-system_default --network-alias postgres -p 55480:5432 -m 512m --healthcheck-command /bin/sh -c 'pg_isready -U helix -d helix_ota' --healthcheck-interval 2s --healthcheck-timeout 3s --healthcheck-retries 30 docker.io/library/postgres:16-alpine
+exit code: 0
+['podman', 'network', 'exists', 'helix-ota-system_default']
+podman run --name=helix-ota-system_ota-server_1 -d --requires=helix-ota-system_postgres_1 --label io.podman.compose.config-hash=3022f2156218123ebe1447ceb0c4605c1727510ee737e85b1520d68517a819ac --label io.podman.compose.project=helix-ota-system --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@helix-ota-system.service --label com.docker.compose.project=helix-ota-system --label com.docker.compose.project.working_dir=/home/milosvasic/.helix-ota-system-stack/deploy --label com.docker.compose.project.config_files=system.compose.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=ota-server -e HELIX_PORT=8080 -e HELIX_API_BASE_PATH=/api/v1 -e HELIX_DATABASE_URL=postgres://helix:helix@postgres:5432/helix_ota?sslmode=disable -e HELIX_ADMIN_USERNAME=admin@helix.system -e HELIX_ADMIN_PASSWORD=<redacted-§11.4.10> -e HELIX_TOKEN_SECRET=ephemeral-test-stack-token-NOT-A-SECRET -e HELIX_ARTIFACT_PUBKEY=G8FpU89YMO7AlMGHMSUGJrBkqkCMe9YCp7FQ5fY49Rw= -e HELIX_ARTIFACT_BASE_URL=http://localhost:18080/artifacts --net helix-ota-system_default --network-alias ota-server -p 18080:8080 -m 256m --healthcheck-command /bin/sh -c 'wget -qO- http://127.0.0.1:8080/readyz >/dev/null 2>&1 || exit 1' --healthcheck-interval 3s --healthcheck-timeout 3s --healthcheck-start-period 3s --healthcheck-retries 20 ota-control-plane:system
+exit code: 0
+[14:36:38Z] READY: waiting up t[14:36:46Z] READY: /ready[14:36:49Z] READY: /readyz -> 200 {"status":"ready"}
+[14:36:49Z] UP: complete. Live base URL (on thinker.local): http://127.0.0.1:18080
+[14:36:49Z]     higher suites reach it via the remote loopback (ssh) or http://thinker.local:18080 if the port is exposed.
