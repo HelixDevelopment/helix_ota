@@ -1,0 +1,35 @@
+STEP 1/9: FROM alpine:3.21
+STEP 2/9: RUN apk add --no-cache ca-certificates wget && update-ca-certificates
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/x86_64/APKINDEX.tar.gz
+(1/5) Installing ca-certificates (20260413-r0)
+(2/5) Installing libunistring (1.2-r0)
+(3/5) Installing libidn2 (2.3.7-r0)
+(4/5) Installing pcre2 (10.43-r0)
+(5/5) Installing wget (1.25.0-r0)
+Executing busybox-1.37.0-r14.trigger
+Executing ca-certificates-20260413-r0.trigger
+OK: 10 MiB in 20 packages
+--> f0b6c70be6f5
+STEP 3/9: RUN addgroup -S helix && adduser -S -G helix helix
+--> e4071cf17a75
+STEP 4/9: COPY .docker-bin/ota-server /usr/local/bin/ota-server
+--> cd6533e6945a
+STEP 5/9: ENV HELIX_PORT=8080     HELIX_API_BASE_PATH=/api/v1
+--> 3769d730c91a
+STEP 6/9: EXPOSE 8080
+--> c80873a1b696
+STEP 7/9: HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=12     CMD wget -qO- "http://127.0.0.1:${HELIX_PORT}/healthz" >/dev/null 2>&1 || exit 1
+--> 98855779b17b
+STEP 8/9: USER helix:helix
+--> d795b3d18562
+STEP 9/9: ENTRYPOINT ["/usr/local/bin/ota-server"]
+COMMIT ota-control-plane:system
+--> 2eec4b0d52db
+Successfully tagged localhost/ota-control-plane:system
+2eec4b0d52dbea329e07d7e4fda2c5e85c090c2b583e730eef6ec048a51cf7cd
+helix-ota-system_postgres_1
+helix-ota-system_postgres_1
+16ba53939e5b9de87460c9fc00920023acbf75b316f61d584928afa0ae716a71
+c644c069fb9b3dd3ccf8304f39fd1338270fee4e4e8182f3ed17d2c61ac65a36
+BASE_URL=http://127.0.0.1:18080

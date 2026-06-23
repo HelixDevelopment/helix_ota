@@ -1,0 +1,102 @@
+[11:52:56Z] UP: booting REAL system (ota-server + real PostgreSQL) on milosvasic@thinker.local
+[11:53:08Z] remote arch=x86_64 => cross-compiling GOOS=linux GOARCH=amd64
+[11:53:08Z] BUILD: cross-compile static ota-server (host — sibling replaces resolve here)
+[11:53:10Z] built: 22605986 /Volumes/T7/Projects/helix_ota/server/.docker-bin/ota-server
+[11:53:10Z] SYNC: rsync build bundle -> milosvasic@thinker.local:/home/milosvasic/.helix-ota-system-stack
+[11:53:22Z] COMPOSE: podman-compose build (project 'helix-ota-system')
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+podman build -f ../Dockerfile -t ota-control-plane:system ..
+STEP 1/9: FROM alpine:3.21
+STEP 2/9: RUN apk add --no-cache ca-certificates wget && update-ca-certificates
+--> Using cache f0b6c70be6f5bc3b49ddcb9858f50de0e2c5ed1f11f43c1b0994aeabcdf9e2b0
+--> f0b6c70be6f5
+STEP 3/9: RUN addgroup -S helix && adduser -S -G helix helix
+--> Using cache e4071cf17a75bad141c26d6831735a83dd2a423193d11c6d93b8a57c27d95ae9
+--> e4071cf17a75
+STEP 4/9: COPY .docker-bin/ota-server /usr/local/bin/ota-server
+--> Using cache cd6533e6945a8b922db018e91de6028610a923097889884dd62abb1dbb4f0dde
+--> cd6533e6945a
+STEP 5/9: ENV HELIX_PORT=8080     HELIX_API_BASE_PATH=/api/v1
+--> Using cache 3769d730c91ac98acf1e59f44fd16977f236987cb6d534619a15ce1e63fea92f
+--> 3769d730c91a
+STEP 6/9: EXPOSE 8080
+--> Using cache c80873a1b6967b9bfd49311b9efc4557ab19ede75fe4b3cdc3b17a1c10b43882
+--> c80873a1b696
+STEP 7/9: HEALTHCHECK --interval=5s --timeout=3s --start-period=2s --retries=12     CMD wget -qO- "http://127.0.0.1:${HELIX_PORT}/healthz" >/dev/null 2>&1 || exit 1
+--> Using cache 98855779b17b6ce6b5cd37d464314d1d6ec3163ed671e7bee6914e2780887c41
+--> 98855779b17b
+STEP 8/9: USER helix:helix
+--> Using cache d795b3d18562a8a79d56ca331880ecc685415371ef5aaddce6ff59480dfcdd5c
+--> d795b3d18562
+STEP 9/9: ENTRYPOINT ["/usr/local/bin/ota-server"]
+--> Using cache 2eec4b0d52dbea329e07d7e4fda2c5e85c090c2b583e730eef6ec048a51cf7cd
+COMMIT ota-control-plane:system
+--> 2eec4b0d52db
+Successfully tagged localhost/ota-control-plane:system
+2eec4b0d52dbea329e07d7e4fda2c5e85c090c2b583e730eef6ec048a51cf7cd
+exit code: 0
+[11:53:29Z] COMPOSE: up -d postgres (first), then wait for it to accept connections
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  {'ota-server'}
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=helix-ota-system', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+recreating: ...
+** excluding:  {'ota-server'}
+podman stop -t 10 helix-ota-system_postgres_1
+helix-ota-system_postgres_1
+exit code: 0
+podman rm helix-ota-system_postgres_1
+Error: container 16ba53939e5b9de87460c9fc00920023acbf75b316f61d584928afa0ae716a71 has dependent containers which must be removed before it: c644c069fb9b3dd3ccf8304f39fd1338270fee4e4e8182f3ed17d2c61ac65a36: container already exists
+exit code: 125
+recreating: done
+
+
+['podman', 'network', 'exists', 'helix-ota-system_default']
+podman run --name=helix-ota-system_postgres_1 -d --label io.podman.compose.config-hash=989a12a81cd269c264f74474b87016ca420b6c8ea0c077202c66142dae04dfd5 --label io.podman.compose.project=helix-ota-system --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@helix-ota-system.service --label com.docker.compose.project=helix-ota-system --label com.docker.compose.project.working_dir=/home/milosvasic/.helix-ota-system-stack/deploy --label com.docker.compose.project.config_files=system.compose.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=postgres -e POSTGRES_USER=helix -e POSTGRES_PASSWORD=helix -e POSTGRES_DB=helix_ota --net helix-ota-system_default --network-alias postgres -p 55480:5432 -m 512m --healthcheck-command /bin/sh -c 'pg_isready -U helix -d helix_ota' --healthcheck-interval 2s --healthcheck-timeout 3s --healthcheck-retries 30 docker.io/library/postgres:16-alpine
+Error: creating container storage: the container name "helix-ota-system_postgres_1" is already in use by 16ba53939e5b9de87460c9fc00920023acbf75b316f61d584928afa0ae716a71. You have to remove that container to be able to reuse that name: that name is already in use, or use --replace to instruct Podman to do so.
+exit code: 125
+podman start helix-ota-system_postgres_1
+helix-ota-system_postgres_1
+exit code: 0
+** skipping:  helix-ota-system_ota-server_1
+[11:53:39Z] PG-WAIT: waiting up to 60s for postgres to accept connections
+[11:53:44Z] PG-WAIT: postgres accepting connections.
+[11:53:44Z] COMPOSE: up -d ota-server (postgres now ready => server connect+Migrate succeeds)
+podman-compose version: 1.0.6
+['podman', '--version', '']
+using podman version: 4.9.3
+** excluding:  set()
+['podman', 'inspect', '-t', 'image', '-f', '{{.Id}}', 'ota-control-plane:system']
+['podman', 'ps', '--filter', 'label=io.podman.compose.project=helix-ota-system', '-a', '--format', '{{ index .Labels "io.podman.compose.config-hash"}}']
+recreating: ...
+** excluding:  set()
+podman stop -t 10 helix-ota-system_ota-server_1
+helix-ota-system_ota-server_1
+exit code: 0
+podman stop -t 10 helix-ota-system_postgres_1
+helix-ota-system_postgres_1
+exit code: 0
+podman rm helix-ota-system_ota-server_1
+helix-ota-system_ota-server_1
+exit code: 0
+podman rm helix-ota-system_postgres_1
+helix-ota-system_postgres_1
+exit code: 0
+recreating: done
+
+
+['podman', 'network', 'exists', 'helix-ota-system_default']
+podman run --name=helix-ota-system_postgres_1 -d --label io.podman.compose.config-hash=989a12a81cd269c264f74474b87016ca420b6c8ea0c077202c66142dae04dfd5 --label io.podman.compose.project=helix-ota-system --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@helix-ota-system.service --label com.docker.compose.project=helix-ota-system --label com.docker.compose.project.working_dir=/home/milosvasic/.helix-ota-system-stack/deploy --label com.docker.compose.project.config_files=system.compose.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=postgres -e POSTGRES_USER=helix -e POSTGRES_PASSWORD=helix -e POSTGRES_DB=helix_ota --net helix-ota-system_default --network-alias postgres -p 55480:5432 -m 512m --healthcheck-command /bin/sh -c 'pg_isready -U helix -d helix_ota' --healthcheck-interval 2s --healthcheck-timeout 3s --healthcheck-retries 30 docker.io/library/postgres:16-alpine
+39493a2c8a8463ec42cde79a196222d8053155e16251851348bf819a25e8ef6e
+exit code: 0
+['podman', 'network', 'exists', 'helix-ota-system_default']
+podman run --name=helix-ota-system_ota-server_1 -d --requires=helix-ota-system_postgres_1 --label io.podman.compose.config-hash=989a12a81cd269c264f74474b87016ca420b6c8ea0c077202c66142dae04dfd5 --label io.podman.compose.project=helix-ota-system --label io.podman.compose.version=1.0.6 --label PODMAN_SYSTEMD_UNIT=podman-compose@helix-ota-system.service --label com.docker.compose.project=helix-ota-system --label com.docker.compose.project.working_dir=/home/milosvasic/.helix-ota-system-stack/deploy --label com.docker.compose.project.config_files=system.compose.yml --label com.docker.compose.container-number=1 --label com.docker.compose.service=ota-server -e HELIX_PORT=8080 -e HELIX_API_BASE_PATH=/api/v1 -e HELIX_DATABASE_URL=postgres://helix:helix@postgres:5432/helix_ota?sslmode=disable -e HELIX_ADMIN_USERNAME=admin@helix.system -e HELIX_ADMIN_PASSWORD=<redacted-test-admin-pw-§11.4.10> -e HELIX_TOKEN_SECRET=<redacted-test-token-secret-§11.4.10> -e HELIX_ARTIFACT_PUBKEY=IM15hxOa1wMIjvCZ/LKf0ehsZSc3T2jG+kwK2d0GTpM= -e HELIX_ARTIFACT_BASE_URL=http://localhost:18080/artifacts --net helix-ota-system_default --network-alias ota-server -p 18080:8080 -m 256m --healthcheck-command /bin/sh -c 'wget -qO- http://127.0.0.1:8080/readyz >/dev/null 2>&1 || exit 1' --healthcheck-interval 3s --healthcheck-timeout 3s --healthcheck-start-period 3s --healthcheck-retries 20 ota-control-plane:system
+b4a967a4d725ddcf1ef0cb2aa65793d12801226c01005fb8a56e2334c75b0308
+exit code: 0
+[11:53:54Z] READY: waiting up to 90s for /readyz -> 200
+[11:55:29Z] ota-server never reached /readyz=200 (last code=000000); container logs:
+2026/06/23 11:53:53 ota-server: connect postgres: store: ping postgres: failed to connect to `user=helix database=helix_ota`: 10.89.12.8:5432 (postgres): dial error: dial tcp 10.89.12.8:5432: connect: connection refused
+[11:55:35Z] FAIL: real system not ready within 90s

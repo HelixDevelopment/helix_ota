@@ -45,9 +45,23 @@ func main() {
 	var rolloutSvc *rollout.Service
 	if cfg.DatabaseURL != "" {
 		bootCtx := context.Background()
-		pg, perr := store.NewPostgresRepository(bootCtx, cfg.DatabaseURL)
-		if perr != nil {
-			log.Fatalf("ota-server: connect postgres: %v", perr)
+		// Startup connection retry (robustness): a freshly started PostgreSQL
+		// reports its container "up" before it accepts connections, so the first
+		// ping can hit "connection refused" on a boot-ordering race (compose /
+		// k8s / systemd). Retry with bounded backoff (up to 60s) instead of
+		// crashing the control plane; only a persistent failure is fatal.
+		var pg *store.PostgresRepository
+		var perr error
+		deadline := time.Now().Add(60 * time.Second)
+		for {
+			if pg, perr = store.NewPostgresRepository(bootCtx, cfg.DatabaseURL); perr == nil {
+				break
+			}
+			if time.Now().After(deadline) {
+				log.Fatalf("ota-server: connect postgres (after 60s of retries): %v", perr)
+			}
+			log.Printf("ota-server: postgres not ready yet: %v — retrying in 2s", perr)
+			time.Sleep(2 * time.Second)
 		}
 		if perr := pg.Migrate(bootCtx); perr != nil {
 			log.Fatalf("ota-server: migrate store schema: %v", perr)

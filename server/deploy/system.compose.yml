@@ -1,0 +1,86 @@
+# Helix OTA — REAL full-system stack: ota-server (PostgreSQL-backed) + postgres.
+#
+# This is the FOUNDATIONAL real-system enabler (F-CLUSTER): it boots the ACTUAL
+# control plane against a REAL PostgreSQL — NOT the in-memory store — so every
+# higher test type (integration / e2e / full-automation / security / stress /
+# chaos per §11.4.27) can hit ONE live instance instead of re-booting infra.
+#
+# The on-demand-infra invariant (§11.4.76 / §11.4.161): the stack is brought up
+# by the boot harness (tests/lib/boot_real_system.sh) — operators never run
+# `podman-compose up` by hand. Rootless-podman-compatible syntax only (§11.4.161):
+# no `privileged`, no host networking, no root user, fully-qualified image refs.
+#
+# Persistence seam: HELIX_DATABASE_URL is set => server selects the pgx/Postgres
+# Repository (server/cmd/ota-server/main.go ~46-64), runs Migrate(), and serves
+# real DB-backed state. Unset would fall back to in-memory — which this stack
+# deliberately does NOT do.
+#
+# Port hygiene (§11.4.119 single-resource-owner): the integration suite uses
+# host port 55432 (postgres.compose.yml). This system stack uses DIFFERENT host
+# ports (18080 for the API, 55480 for postgres) + a distinct compose project
+# name (`helix-ota-system`) so the two never contend on the same host.
+#
+# The ota-server image is built from server/Dockerfile, which expects a static
+# binary pre-staged at `.docker-bin/ota-server`. The binary is cross-compiled on
+# the build host (where the §11.4.28 sibling `replace` directives resolve) and
+# staged by the harness BEFORE `podman-compose build` — see boot_real_system.sh.
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: helix
+      POSTGRES_PASSWORD: helix
+      POSTGRES_DB: helix_ota
+    # Distinct host port from the integration suite's 55432 (§11.4.119). The
+    # in-network address ota-server uses is postgres:5432 (the container port).
+    ports:
+      - "55480:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helix -d helix_ota"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # Bounded memory (§12.6 host-budget; rootless-friendly).
+    mem_limit: 512m
+
+  ota-server:
+    # Built from server/Dockerfile with the cross-compiled binary staged at
+    # ../.docker-bin/ota-server (context = the server/ dir, one level up from
+    # deploy/). The harness performs the cross-compile + stage before build.
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ota-control-plane:system
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HELIX_PORT: "8080"
+      HELIX_API_BASE_PATH: "/api/v1"
+      # REAL PostgreSQL — the production persistence target (architecture.md §4).
+      # Host = the compose service name `postgres`, port = the container's 5432.
+      HELIX_DATABASE_URL: "postgres://helix:helix@postgres:5432/helix_ota?sslmode=disable"
+      # Seeded admin login (enables the static user => /auth/login works).
+      HELIX_ADMIN_USERNAME: "admin@helix.system"
+      HELIX_ADMIN_PASSWORD: "system-stack-admin-secret"
+      # Bearer-token signing secret (never a hard-coded code secret; env-supplied).
+      HELIX_TOKEN_SECRET: "helix-ota-system-stack-token-secret"
+      # Trusted artifact ed25519 public key (base64). Injected by the harness via
+      # the SYSTEM_ARTIFACT_PUBKEY env so the value is not committed; a throwaway
+      # test keypair is generated per boot. Empty is tolerated by config.Load.
+      HELIX_ARTIFACT_PUBKEY: "${SYSTEM_ARTIFACT_PUBKEY:-}"
+      HELIX_ARTIFACT_BASE_URL: "http://localhost:18080/artifacts"
+    ports:
+      # Host 18080 -> container 8080. 18080 is free + distinct from the
+      # integration suite + the Tier-1 E2E harness's 8080.
+      - "18080:8080"
+    healthcheck:
+      # /readyz returns 200 {"status":"ready"} once the repo (real Postgres) is
+      # reachable; the alpine runtime image ships wget.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/readyz >/dev/null 2>&1 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+    mem_limit: 256m

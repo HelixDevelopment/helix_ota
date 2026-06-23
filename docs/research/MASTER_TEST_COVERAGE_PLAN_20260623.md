@@ -50,7 +50,8 @@ Every test type + Challenge + HelixQA result MUST: cite a captured-evidence path
 |---|---|---|---|
 | unit (Go) | server 47.9–100% per pkg; ota-* 98–100% | 100% real | strong; store/rollout pending integration run |
 | integration (pgx) | **store 85.5% / rollout 83.1% MEASURED** (real podman+Postgres on nezha, 2026-06-23) | 100% of pgx paths | **DONE** — real PASS, evidence docs/qa/20260623-postgres-integration/ |
-| e2e / full-auto | real shell dispatch vs in-memory server | real system + aggregated runner | F-CLUSTER pending |
+| e2e / full-auto | real shell dispatch (was in-memory) — **real-system stack now bootable** (ota-server+real Postgres, /readyz 200 + DB-backed login, evidence docs/qa/20260623-real-system-boot/) | real system + aggregated runner | **F-CLUSTER DONE**; suites-against-live pending |
+| anti-bluff per-assertion helper | none | ab_pass_with_evidence everywhere | **F-ANTIBLUFF-LIB DONE** (8/8 guard, mutation-proven) |
 | security/ddos | 59 hard asserts + 2 rate-limit | + fuzz + saturation + trust-boundary negative | partial |
 | stress/chaos | ota-* bricks have it; server HTTP-layer none | §11.4.85 full + latency histogram | gap |
 | benchmark | 7 exist, no baseline | benchstat registry | gap |
