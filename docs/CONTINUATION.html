@@ -237,12 +237,9 @@
   </style>
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">CONTINUATION</h1>
-</header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 9 <strong>Last modified:</strong>
-2026-06-23T09:20:00Z</p>
+<p><strong>Revision:</strong> 10 <strong>Last modified:</strong>
+2026-06-23T12:30:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -259,17 +256,19 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>e3c86f85</code> (conductor commits this
-Cuttlefish-A/B-VERIFIED docs/evidence/guard/validator update on top;
-parent pointer to containers <code>54aa9b2</code>)</td>
+<td><code>983bcef1</code> (comprehensive test-coverage program — Phase 0
+foundation + Phase 1 start, all 4-remote synced)</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
-<td><strong>TERMINAL GOAL MET</strong> — Cuttlefish Tier-2 REAL Android
-A/B VERIFIED on nezha 2026-06-23 (real <code>update_engine</code> apply
-→ slot flip <code>_a→_b</code> → auto-rollback on a live cvd). Control
-plane proven on real RK3588 hardware (F113); native A/B fidelity proven
-on the Cuttlefish containerized path (F112/F55).</td>
+<td><strong>TEST-COVERAGE PROGRAM underway</strong> (operator mandate
+2026-06-23: 100% real coverage every test type + Challenges + HelixQA vs
+the real system on the cluster, anti-bluff everywhere). Plan + live
+ledger:
+<code>docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md</code>. Phase
+0 DONE (real-system boot, anti-bluff helper, pgx coverage, meta-test
+gates). Prior terminal goal (Cuttlefish Tier-2 A/B) remains VERIFIED
+(F112/F55).</td>
 </tr>
 <tr>
 <td><strong>Terminal goal</strong></td>
@@ -282,7 +281,70 @@ by operator decision (§11.4.133)</strong></td>
 </tbody>
 </table>
 <h3
-id="latest-session-2026-06-23-cuttlefish-tier-2-real-android-ab-verified-on-nezha-f112f55-ota-003-closed">Latest
+id="latest-session-2026-06-23-comprehensive-test-coverage-anti-bluff-program-phase-0-phase-1-start">Latest
+session (2026-06-23) — Comprehensive test-coverage + anti-bluff program
+(Phase 0 + Phase 1 start)</h3>
+<p>Operator mandate: genuine 100% real coverage by every test type +
+Challenges + HelixQA vs the real production system on the configured
+cluster, anti-bluff everywhere, rock-solid physical proof, no false
+positives. Honest framing (§11.4.6): this is a multi-phase program —
+<code>docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md</code> holds
+the plan + a <strong>live coverage ledger</strong> (updated as each item
+lands). Landed this round, all real captured evidence, committed +
+4-remote synced:</p>
+<ul>
+<li><strong>Push-all</strong> — every owned submodule + main current on
+all configured mirrors (constitution ×8 etc.).</li>
+<li><strong>3 research audits + master plan</strong>
+(<code>docs/research/</code>): coverage-audit (Go layer mutation-proven
+anti-bluff; flipping the ed25519 sig-check killed 11 tests),
+cluster-and-system (pgx Repository IS implemented; “cluster”
+aspirational for OTA = thinker), challenges-helixqa-antibluff
+(Challenges+HelixQA powerful but unwired vs ota-server; anti-bluff on
+~2-3 of 17 gates).</li>
+<li><strong>Integration coverage CAPTURED</strong>
+(<code>docs/qa/20260623-postgres-integration/</code>): real
+<code>-tags integration</code> pgx run on nezha — store
+<strong>47.9%→85.5%</strong>, rollout <strong>28.2%→83.1%</strong>.</li>
+<li><strong>F-ANTIBLUFF-LIB</strong>
+(<code>tests/lib/anti_bluff.sh</code>,
+<code>docs/qa/20260623-antibluff-lib/</code>): the §11.4.69 per-PASS
+<code>ab_pass_with_evidence</code> helper + mutation-proven self-test +
+standing guard.</li>
+<li><strong>F-CLUSTER real-system boot PROVEN</strong>
+(<code>docs/qa/20260623-real-system-boot/</code>):
+<code>server/deploy/system.compose.yml</code> +
+<code>tests/lib/boot_real_system.sh</code> boot the REAL ota-server +
+real Postgres on thinker → <code>/readyz</code>→200 + DB-backed admin
+JWT login. Two §11.4.102 production fixes: server startup
+retry-with-backoff (was <code>log.Fatalf</code> on first pg ping —
+compose/k8s crash-loop), harness clean-slate <code>do_down</code>
+(exit-125 recreate collision).</li>
+<li><strong>e2e vs REAL DB</strong>
+(<code>docs/qa/20260623-e2e-live-system/</code>):
+<code>challenge_operational</code> <strong>39/39 PASS</strong> against
+live Postgres (DB-proof: 14 audit_logs rows persisted, device_groups=0
+end-of-run-delete real). Finding: 4/5 e2e suites self-hosting-by-design
+(must own the artifact pubkey to sign) → signed-pipeline-vs-live needs a
+caller-pubkey F-CLUSTER mode.</li>
+<li><strong>F-METAGATES</strong> (<code>tests/meta/</code>,
+<code>docs/qa/20260623-metagates/</code>): meta-test framework wired
+into pre-build; <strong>4 gates now bluff-proof</strong> via paired §1.1
+mutate→FAIL→restore→PASS (coverage-minimum, semgrep-wired, 2 regression
+guards, evidence-lib); <strong>§11.4.166 semgrep fail-open
+FIXED</strong> (semgrep on PATH → gate passes); a real flake found+fixed
+(§11.4.50, 10/10 det).</li>
+</ul>
+<p><strong>NEXT (Phase 1 risk-ordered, all documented in the master
+plan):</strong> signed-pipeline-vs-live (caller-pubkey F-CLUSTER mode) ·
+security trust-boundary negatives + <code>go test -fuzz</code> · HTTP
+load/latency p50/p95/p99 (wire <code>tools/loadtest</code>) · Android
+JaCoCo + on-device A/B · remaining ~14 anchor-greps → functional/paired
+gates · Phase 2 Challenges+HelixQA Go orchestrator vs live system.
+Suites: regression 8/8 + meta 4/4 GREEN. cvd still live on nezha.
+<strong>OPERATOR: rotate the posted password (§11.4.10).</strong></p>
+<h3
+id="prior-session-2026-06-23-cuttlefish-tier-2-real-android-ab-verified-on-nezha-f112f55-ota-003-closed">Prior
 session (2026-06-23) — Cuttlefish Tier-2 REAL Android A/B VERIFIED on
 nezha (F112/F55, OTA-003 closed)</h3>
 <p><strong>TERMINAL GOAL MET (honest §11.4.6 — real captured
