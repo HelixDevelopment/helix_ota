@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MASTER_TEST_COVERAGE_PLAN_20260623</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="helix-ota-master-comprehensive-test-coverage-anti-bluff-build-out-plan">Helix
+OTA — Master Comprehensive Test-Coverage + Anti-Bluff Build-Out
+Plan</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-23T13:20:00Z <strong>Goal (operator mandate,
+2026-06-23):</strong> genuine 100% real coverage by every supported test
+type (unit, integration, e2e, full-automation, stress, security,
+benchmark, chaos, ui/ux, perf/scaling) + Challenges (Challenges
+submodule) + HelixQA suites — all exercising <strong>the real
+production-ready system running on the configured cluster</strong>,
+every PASS backed by rock-solid captured physical evidence,
+comprehensive anti-bluff everywhere, no false positives. <strong>Honesty
+(§11.4.6):</strong> this is a multi-phase program, not a one-shot.
+Sources: the three audit docs in this directory (test-coverage-audit /
+cluster-and-system / challenges-helixqa-antibluff), each FACT-cited.</p>
+<h2 id="current-state-fact-from-the-three-audits">Current state (FACT,
+from the three audits)</h2>
+<ul>
+<li><strong>Go layer is strong + genuinely anti-bluff</strong> —
+measured <code>go test -cover</code> (health 100% …
+ota-validator/rollout 100%), <code>-race</code>/<code>vet</code> clean,
+and <strong>mutation-proven</strong>: flipping the OTA ed25519 signature
+check to always-accept KILLED 11 tests. No bluff tests in the sampled
+set.</li>
+<li><strong>The pgx/Postgres <code>Repository</code> is fully
+implemented</strong> (real-DB is one env var away); store/rollout
+default coverage is understated only because the
+<code>-tags integration</code> suite wasn’t run.</li>
+<li><strong>“Configured cluster” is aspirational for OTA</strong> — one
+live podman host (thinker) runs the HelixTrack stack, NOT
+<code>ota-server</code>; no multi-node/k8s. Primary blocker: no combined
+<code>ota-server</code>+postgres compose stack for one-command
+real-system boot.</li>
+<li><strong>Challenges + HelixQA are powerful but not wired against the
+OTA server</strong> (shell-dispatch bank only; the Go
+<code>cmd/helixqa</code> orchestrator + vision toolchain are uninstalled
+against OTA).</li>
+<li><strong>Anti-bluff pattern is correct but partial</strong> — applied
+to ~2–3 of ~17 pre-build gates; <code>ab_pass_with_evidence</code>
+per-assertion helper unimplemented in helix_ota; 14 pre-build gates are
+bare anchor-presence greps.</li>
+</ul>
+<h2
+id="phase-0-foundational-enablers-highest-leverage-unblock-everything">Phase
+0 — foundational enablers (highest leverage; unblock everything)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Deliverable</th>
+<th>Unblocks</th>
+<th>Evidence on done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F-CLUSTER</strong></td>
+<td><code>server/deploy/system.compose.yml</code> (ota-server +
+postgres, real envs + <code>/readyz</code> healthcheck) + a Go boot
+harness (mirror <code>postgres_integration_test.go</code>) via the
+containers brick <code>pkg/{boot,compose,health}</code> → returns the
+live base URL</td>
+<td>integration/e2e/full-auto/stress/security/chaos against the REAL
+system (real HTTP + real DB, §11.4.27)</td>
+<td>the harness boots the stack, <code>/readyz</code>→200, captured</td>
+</tr>
+<tr>
+<td><strong>F-ANTIBLUFF-LIB</strong></td>
+<td><code>tests/lib/anti_bluff.sh</code> —
+<code>ab_pass_with_evidence &lt;desc&gt; &lt;path&gt;</code> (refuses
+PASS unless path exists+non-empty),
+<code>ab_skip_with_reason &lt;closed-set&gt;</code> (§11.4.69)</td>
+<td>mechanical per-assertion no-evidence-no-PASS across all
+<code>tests/</code></td>
+<td>self-test: PASS-without-evidence→FAIL, with-evidence→PASS</td>
+</tr>
+<tr>
+<td><strong>F-METAGATES</strong></td>
+<td><code>tests/meta/meta_test_&lt;gate&gt;.sh</code> per functional
+gate (mutate→FAIL→restore→PASS) + <code>tests/meta/run_all.sh</code>
+into pre-build; implement <code>CM-SEMGREP-WIRED</code> (no
+fail-open)</td>
+<td>every gate becomes bluff-proof (§1.1)</td>
+<td>each meta-test: mutated→gate FAILs, restored→PASSes</td>
+</tr>
+<tr>
+<td><strong>F-CLUSTER-DEPLOY</strong></td>
+<td>a <code>deploy/ota-system/</code> compose +
+<code>distribute_stack.sh</code> path that deploys
+<code>ota-server</code>+postgres to thinker = the real “cluster”
+target</td>
+<td>“real system on the configured cluster” testing</td>
+<td><code>podman ps (healthy)</code> + <code>/readyz</code>→200 on
+thinker, captured</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="phase-1-per-test-type-real-coverage-to-100-risk-descending-11.4.132">Phase
+1 — per-test-type real coverage to 100% (risk-descending,
+§11.4.132)</h2>
+<p>Each closes with: real run against F-CLUSTER’s live system + captured
+evidence (§11.4.5/§11.4.69) + a paired §1.1 mutation routed through
+F-ANTIBLUFF-LIB.</p>
+<ol type="1">
+<li><strong>Integration (pgx/Postgres)</strong> — run
+<code>-tags integration</code>, capture store/rollout real coverage →
+from UNCONFIRMED to measured. <em>(in progress)</em></li>
+<li><strong>e2e / full-automation</strong> — <code>tests/e2e/*</code>
+against the live system stack (real HTTP+DB), aggregated into one
+mechanical runner; cover every flow (auth, device-register, artifact
+upload+signature-verify, rollout staged+halt, recall, telemetry).</li>
+<li><strong>Security / DDoS</strong> — extend
+<code>security_probes.sh</code> (authz/injection/JWT-tamper/the
+request-supplied-key-ignored trust boundary) + rate-limit saturation +
+<code>go test -fuzz</code> on upload/telemetry parsers.</li>
+<li><strong>Stress / chaos (§11.4.85)</strong> — HTTP load with
+p50/p95/p99 (wire <code>tools/loadtest</code>); chaos:
+malformed/oversized artifact, replay, concurrent rollout, mid-write
+SIGKILL, postgres-down/network-fault recovery.</li>
+<li><strong>Benchmark</strong> — benchstat baseline registry for the 7
+existing benchmarks + regression guard.</li>
+<li><strong>Android (instrumentation/ui)</strong> — Gradle/JaCoCo
+coverage for the two JVM bricks + on-device A/B (Cuttlefish cvd —
+already proven Tier-2, or RK3588) with captured evidence.</li>
+<li><strong>cmd/* smoke</strong> — boot each main.</li>
+</ol>
+<h2 id="phase-2-challenges-helixqa-against-the-real-system">Phase 2 —
+Challenges + HelixQA against the real system</h2>
+<ul>
+<li><strong>AB-G4</strong> new OTA challenges (each real dispatch +
+evidence artifact + paired mutation): bad-signature-rejected,
+request-key-ignored, telemetry-schema, rollout-staged+halt, chaos.</li>
+<li><strong>AB-G5</strong> wire the Go <code>cmd/helixqa</code>
+orchestrator (native crash/ANR/step-validation/evidence) against the
+live OTA system; bridge UI recordings through HelixQA vision
+(<code>helixqa-text</code>/<code>recvalidate</code>/<code>recording-analyzer</code>)
+for read-the-screen PASS (§11.4.27/§11.4.160).</li>
+<li>Run a full HelixQA autonomous session over the helix_ota bank
+against F-CLUSTER’s live system; capture the evidence ledger.</li>
+</ul>
+<h2
+id="phase-3-anti-bluff-everywhere-ab-g1..g3-woven-through-every-phase">Phase
+3 — anti-bluff everywhere (AB-G1..G3, woven through every phase)</h2>
+<p>Every test type + Challenge + HelixQA result MUST: cite a
+captured-evidence path (F-ANTIBLUFF-LIB refuses PASS otherwise); carry a
+paired §1.1 mutation (F-METAGATES); the §11.4.165 independent-verifier
+on the batch; the §11.4.163 media-validation pipeline for any recorded
+artifact. No gate without its mutation; no PASS without its evidence
+path.</p>
+<h2 id="coverage-ledger-live-updated-as-phases-close">Coverage ledger
+(live — updated as phases close)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test type</th>
+<th>Current real coverage</th>
+<th>Target</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unit (Go)</td>
+<td>server 47.9–100% per pkg; ota-* 98–100%</td>
+<td>100% real</td>
+<td>strong; store/rollout pending integration run</td>
+</tr>
+<tr>
+<td>integration (pgx)</td>
+<td>UNCONFIRMED (suite unrun)</td>
+<td>measured 100% of pgx paths</td>
+<td><strong>in progress</strong></td>
+</tr>
+<tr>
+<td>e2e / full-auto</td>
+<td>real shell dispatch vs in-memory server</td>
+<td>real system + aggregated runner</td>
+<td>F-CLUSTER pending</td>
+</tr>
+<tr>
+<td>security/ddos</td>
+<td>59 hard asserts + 2 rate-limit</td>
+<td>+ fuzz + saturation + trust-boundary negative</td>
+<td>partial</td>
+</tr>
+<tr>
+<td>stress/chaos</td>
+<td>ota-* bricks have it; server HTTP-layer none</td>
+<td>§11.4.85 full + latency histogram</td>
+<td>gap</td>
+</tr>
+<tr>
+<td>benchmark</td>
+<td>7 exist, no baseline</td>
+<td>benchstat registry</td>
+<td>gap</td>
+</tr>
+<tr>
+<td>Android instrumentation/ui</td>
+<td>74 <span class="citation" data-cites="Test">@Test</span>, JaCoCo %
+UNCONFIRMED</td>
+<td>measured + on-device A/B</td>
+<td>gap</td>
+</tr>
+<tr>
+<td>Challenges</td>
+<td>15 HOTA banks (shell-dispatch)</td>
+<td>+ OTA holes + paired mutations</td>
+<td>partial</td>
+</tr>
+<tr>
+<td>HelixQA</td>
+<td>bank-runner gates only</td>
+<td>Go orchestrator + vision against live</td>
+<td>gap</td>
+</tr>
+<tr>
+<td>anti-bluff gates</td>
+<td>2–3 of ~17 bluff-proof</td>
+<td>all bluff-proof + per-assertion evidence</td>
+<td><strong>AB-G1/G2 highest-leverage</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="execution-discipline">Execution discipline</h2>
+<p>Subagent-driven (§11.4.70), parallel background streams (§11.4.103,
+paced for the API throttle), each deliverable producing rock-solid
+captured evidence under <code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83),
+honest §11.4.6 (measured numbers as FACT, unrun as UNCONFIRMED,
+blocked-with-reason never faked). Phase 0 first (it unblocks
+everything); then Phase 1 risk-descending; Phases 2–3 woven in.</p>
+</body>
+</html>

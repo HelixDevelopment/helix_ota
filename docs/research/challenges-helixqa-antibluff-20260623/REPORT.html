@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REPORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="helix-ota-challenges-helixqa-anti-bluff-audit-2026-06-23">Helix
+OTA — Challenges + HelixQA + Anti-Bluff Audit (2026-06-23)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-23T13:10:00Z <strong>Method:</strong> on-disk inspection at
+HEAD; FACT-with-citation or honest gap (§11.4.6). NO commit by the
+research stream.</p>
+<h2 id="part-1-challenges-helixqa">Part 1 — Challenges + HelixQA</h2>
+<p><strong>Challenges (<code>submodules/challenges/</code>,
+vasic-digital/Challenges).</strong> Generic reusable Go module:
+<code>pkg/challenge</code> (Challenge interface + BaseChallenge +
+ProgressReporter liveness), <code>pkg/registry</code> (topological dep
+ordering), <code>pkg/runner</code> (seq/parallel/pipeline + liveness
+kill), <code>pkg/assertion</code> (16 evaluators), <code>pkg/bank</code>
+(JSON/YAML banks), <code>pkg/userflow</code> (8 adapters / 21 impls:
+Playwright·ADB·Tauri·HTTP·gRPC·WS·Gradle·Cargo·npm, incl. recorded+video
+variants), <code>pkg/infra</code> (containers bridge),
+<code>cmd/userflow-runner</code>, <code>lib/anti_bluff.sh</code>
+(<code>ab_evidence_token</code> per-run UUID defeating stale-cache,
+<code>ab_assert_delta</code>, <code>ab_assert_kernel_value</code>). 28
+example banks. <strong>Run:</strong> load a bank via
+<code>pkg/bank</code> → <code>runner.RunAll</code>, or shell-bank
+dispatch (bank entry names a real <code>dispatch_command</code> +
+<code>evidence_artifact</code>).</p>
+<p><strong>HelixQA (<code>submodules/helixqa/</code>,
+HelixDevelopment/HelixQA).</strong> Go QA orchestration engine composing
+Challenges+Containers: <code>pkg/orchestrator</code>,
+<code>pkg/testbank</code> (<code>dispatch.go</code> = canonical
+dispatch+evidence-ledger), <code>pkg/detector</code> (real-time
+crash/ANR), <code>pkg/validator</code>, <code>pkg/evidence</code>,
+<code>pkg/ticket</code>, <code>pkg/reporter</code>. ~25 vision/capture
+binaries in <code>cmd/</code> (<code>helixqa-text</code> OCR,
+omniparser, uitars, lpips, recvalidate, recording-analyzer,
+x11grab/kmsgrab, axtree) — the §11.4.107/117/137/160/163 vision+media
+toolchain. Ships <code>docker-compose.stack.yml</code> +
+<code>pkg/infra</code> (§11.4.76/161). <strong>Run:</strong>
+<code>cmd/helixqa</code> against the live system → orchestrator
+dispatches, detector watches, evidence collected, reporter emits
+MD/HTML/JSON + tickets; PASS requires positive captured evidence.</p>
+<p><strong>helix_ota existing coverage.</strong>
+<code>tools/helixqa/banks/helix_ota.yaml</code> (rev 4): 15
+<code>HOTA-*</code> challenges (AUTH-LOGIN+401, DEVICE-REGISTER,
+GROUP-LIFECYCLE, AUDIT-TRAIL, TELEMETRY-OVERVIEW, ROLLOUT-ROUTE-GATES,
+PIPELINE-SIGNED, RECALL-LIFECYCLE, SECURITY-PROBES[-EXTENDED],
+FILTERS-PAGINATION, AB-VIRT-BOOT/SLOT-SWITCH/ROLLBACK,
+RK3588-CONTROLPLANE) + HELIXTRACK-001..003 + HOTA-CF-TIER2-AB.
+<code>tools/helixqa/run_bank.sh</code> machine-runs with GATE 1
+(dispatch-exit-0) + GATE 2 (evidence-ledger non-empty
+<code>evidence_artifact</code>) + <code>--self-test</code>. Real
+dispatch in <code>tests/e2e/*</code> (black-box curl+jq vs live
+ota-server), <code>tests/emulator/*</code>,
+<code>tests/security/*</code>, <code>tests/helixqa/*</code>
+(Playwright).</p>
+<p><strong>Gaps:</strong> signed-artifact path often SKIPs (need a
+deterministic signed fixture + a <strong>NEGATIVE bad-signature /
+request-supplied-key-ignored</strong> challenge for the
+<code>resolvePublicKey</code> trust boundary); no
+telemetry-schema-validation challenge; rollout
+staged-progression+halt-on-failure thin; no §11.4.85 chaos challenges
+(malformed/oversized artifact, replay, concurrent rollout); UI
+recordings not bridged to HelixQA vision. <strong>The bank is
+shell-dispatch only — the Go <code>cmd/helixqa</code> orchestrator +
+vision binaries are NOT yet wired against the OTA server.</strong></p>
+<h2 id="part-2-anti-bluff-audit">Part 2 — Anti-bluff audit</h2>
+<p><strong>Bluff-proof (paired §1.1 mutation makes them FAIL) —
+2:</strong> <code>run_bank.sh</code> GATE 1+2 (verified
+<code>--self-test</code> builds missing-evidence→FAIL +
+real-evidence→PASS); <code>test_constitution_inheritance.sh</code>.
+<strong>Real-but-unpaired — 1:</strong> <code>CM-COVERAGE-MINIMUM</code>
+(≥60% go test, no mutation companion). <strong>Partial:</strong>
+<code>challenge_operational.sh</code> (negative controls, no registered
+mutation); <code>tests/regression/run_all.sh</code> guards
+(RED-on-broken but not all paired); §11.4.166 semgrep (wired in
+<code>commit_all.sh</code> but <strong>fail-opens silently when not on
+PATH</strong>, unpaired). <strong>NOT bluff-proof — 14:</strong>
+<code>tests/pre_build_verification.sh</code> (80 lines) — 14 gates are
+bare <code>grep -qF '11.4.N'</code> anchor-presence checks. The
+functional gates <code>CM-FEATURE-STATUS-VIDEO-CONFIRMED</code>,
+<code>CM-MEDIA-VALIDATION-PIPELINE</code>,
+<code>CM-SEMGREP-WIRED</code>,
+<code>CM-VISION-VERIFIED-RECORDING-BRIDGE</code>,
+<code>CM-INDEPENDENT-VERIFICATION-AGENT</code> are NOT implemented (only
+their propagation counterparts). <strong>§11.4.69 FACT:</strong>
+<code>ab_pass_with_evidence</code> / <code>ab_skip_with_reason</code>
+exist only in constitution docs — <strong>no helix_ota shell helper lib
+implements them</strong>; e2e scripts use a local
+<code>pass</code>/<code>fail</code> idiom; evidence-path discipline is
+enforced at the bank-runner layer, not per-assertion.</p>
+<h2 id="anti-bluff-gap-plan-anti-bluff-everywhere">Anti-bluff gap plan →
+“anti-bluff everywhere”</h2>
+<ul>
+<li><strong>AB-G1</strong> implement
+<code>tests/lib/anti_bluff.sh</code>
+(<code>ab_pass_with_evidence &lt;desc&gt; &lt;path&gt;</code> refuses
+PASS unless path exists+non-empty; <code>ab_skip_with_reason</code>);
+route every <code>tests/</code> PASS through it = mechanical
+per-assertion no-evidence-no-PASS.</li>
+<li><strong>AB-G2</strong> one registered
+<code>tests/meta/meta_test_&lt;gate&gt;.sh</code> per functional gate
+(template = <code>run_bank.sh --self-test</code>): mutate→assert
+FAIL→restore→assert PASS; <code>tests/meta/run_all.sh</code> into
+pre-build.</li>
+<li><strong>AB-G3</strong> replace the 14 presence-greps with functional
+gates (or pair each with an anchor-strip mutation); implement
+<code>CM-SEMGREP-WIRED</code> (no fail-open), the media/vision-bridge
+gates, the §11.4.165 independent-verifier.</li>
+<li><strong>AB-G4</strong> close OTA challenge holes:
+bad-signature-rejected + request-key-ignored, telemetry-schema,
+rollout-staged+halt, §11.4.85 chaos — each with real dispatch + evidence
+artifact + paired mutation.</li>
+<li><strong>AB-G5</strong> bridge the Go <code>cmd/helixqa</code>
+orchestrator (native crash/ANR/step-validation/evidence) + feed UI
+recordings through HelixQA vision for read-the-screen PASS
+(§11.4.27/§11.4.160).</li>
+</ul>
+<p><strong>Honest net (§11.4.6):</strong> the anti-bluff
+<em>pattern</em> is correct and present, but applied to only ~2–3 of ~17
+pre-build gates; the per-assertion evidence helper is unimplemented in
+helix_ota; the HelixQA Go orchestrator + vision toolchain are
+uninstalled against the OTA system. <strong>AB-G1 + AB-G2 are the
+highest-leverage steps</strong> from “anti-bluff at the bank boundary”
+to “anti-bluff everywhere”.</p>
+</body>
+</html>
