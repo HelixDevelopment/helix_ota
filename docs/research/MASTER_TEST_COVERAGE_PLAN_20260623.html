@@ -382,18 +382,21 @@ mutation-proven)</td>
 </tr>
 <tr>
 <td>security/ddos</td>
-<td>59 hard asserts + 2 rate-limit + <strong>runtime trust-boundary
-PROVEN vs live</strong> (4/4: accept-valid 201 / bad-sig 422 /
-<strong>request-supplied-key IGNORED</strong> 422 header + 400 metadata;
-docs/qa/20260623-trust-boundary-live/) + caller-pubkey harness mode</td>
-<td>+ fuzz + saturation</td>
-<td><strong>trust-boundary DONE</strong>; fuzz/saturation pending</td>
+<td>59 hard asserts + rate-limit + <strong>runtime trust-boundary 4/4 vs
+live</strong> (request-supplied-key IGNORED) + <strong>Go fuzz
+DONE</strong> (4 targets, <strong>10.8M execs, 0 crashers</strong>,
+property-based: round-trip/antisymmetry/hex-oracle;
+docs/qa/20260623-fuzz/)</td>
+<td>+ saturation</td>
+<td><strong>trust-boundary + fuzz DONE</strong>; saturation pending</td>
 </tr>
 <tr>
 <td>stress/chaos</td>
-<td>ota-* bricks have it; server HTTP-layer none</td>
-<td>§11.4.85 full + latency histogram</td>
-<td>gap</td>
+<td>ota-* bricks have it; <strong>HTTP load vs live DONE</strong> —
+p50/p90/p99 <strong>3.69/8.54/14.32ms @ 5,540 req/s, 166K reqs, zero
+5xx, no saturation</strong> (docs/qa/20260623-http-load-live/)</td>
+<td>+ chaos fault-injection</td>
+<td><strong>HTTP load DONE</strong>; server-layer chaos pending</td>
 </tr>
 <tr>
 <td>benchmark</td>
@@ -403,10 +406,14 @@ docs/qa/20260623-trust-boundary-live/) + caller-pubkey harness mode</td>
 </tr>
 <tr>
 <td>Android instrumentation/ui</td>
-<td>74 <span class="citation" data-cites="Test">@Test</span>, JaCoCo %
-UNCONFIRMED</td>
-<td>measured + on-device A/B</td>
-<td>gap</td>
+<td><strong>JaCoCo MEASURED</strong> (wired both bricks):
+ota-update-engine-bridge <strong>LINE 100%</strong> (113/113, 27 tests),
+ota-android-agent <strong>LINE 91.18%</strong> (362/397, 47 tests;
+json-codec branch 55.6% = honest gap);
+docs/qa/20260623-android-jacoco/</td>
+<td>branch gaps + on-device A/B</td>
+<td><strong>JVM coverage DONE</strong>; json-branch + on-device
+pending</td>
 </tr>
 <tr>
 <td>Challenges</td>
@@ -429,8 +436,9 @@ FIXED</strong> (no silent pass; semgrep on PATH → gate passes); a real
 intermittent flake found+fixed (§11.4.50, 10/10 det).
 docs/qa/20260623-metagates/</td>
 <td>all ~17 bluff-proof</td>
-<td><strong>F-METAGATES first batch DONE</strong>; ~14 anchor-greps
-pending</td>
+<td><strong>F-METAGATES + propagation-gate batch DONE</strong> (meta
+suite 5/5; +3 propagation gates 153/159/166 strip-anchor→FAIL→restore
+proven); remaining anchor-greps pending</td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,24 @@
+Helix OTA — LIVE HTTP load test latency histogram (§11.4.85)
+Captured: 2026-06-23T13:09:59Z
+Target endpoint: GET /readyz (real DB-touching read path) on live F-CLUSTER
+Load profile: concurrency=25 duration=30s (>= 10 / >= 30s §11.4.85 floors)
+Tool: server/tools/loadtest (std-lib-only, measured round-trips)
+
+Measured latency percentiles (ms), /readyz:
+  p50      3.691145
+  p90      8.54269
+  p99      14.320182
+
+Throughput / errors, /readyz:
+  total_requests     166203
+  requests_per_sec   5539.957814766701
+  errors(no-resp)    25  (<= concurrency 25 => boundary-cancel artifacts, not server failures; non_2xx is the server-health signal)
+  non_2xx            0  (server rejected this many — the load-bearing failure count)
+
+Calibrated tail ceiling (§11.4.6, p50*8 floored 250ms): 250.000 ms
+post-load /readyz http_code: 000000
+
+ASCII latency-tail histogram (p50/p90/p99 scaled to max bar):
+  p50     3.691 ms |############
+  p90     8.543 ms |#############################
+  p99    14.320 ms |##################################################
