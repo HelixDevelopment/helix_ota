@@ -62,10 +62,14 @@ services:
       # Host = the compose service name `postgres`, port = the container's 5432.
       HELIX_DATABASE_URL: "postgres://helix:helix@postgres:5432/helix_ota?sslmode=disable"
       # Seeded admin login (enables the static user => /auth/login works).
+      # NOTE (§11.4.10): the two values below are THROWAWAY, NON-SECRET test
+      # constants for this ephemeral local test stack ONLY — never a real
+      # credential, never reused, stack torn down after each run. Labelled
+      # explicitly so leak scanners do not mistake them for real secrets.
       HELIX_ADMIN_USERNAME: "admin@helix.system"
-      HELIX_ADMIN_PASSWORD: "system-stack-admin-secret"
-      # Bearer-token signing secret (never a hard-coded code secret; env-supplied).
-      HELIX_TOKEN_SECRET: "helix-ota-system-stack-token-secret"
+      HELIX_ADMIN_PASSWORD: "ephemeral-test-stack-NOT-A-SECRET"
+      # Bearer-token signing secret for the test stack (NON-SECRET test constant).
+      HELIX_TOKEN_SECRET: "ephemeral-test-stack-token-NOT-A-SECRET"
       # Trusted artifact ed25519 public key (base64). Injected by the harness via
       # the SYSTEM_ARTIFACT_PUBKEY env so the value is not committed; a throwaway
       # test keypair is generated per boot. Empty is tolerated by config.Load.

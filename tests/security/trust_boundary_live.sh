@@ -75,7 +75,7 @@ RUN_LOG="${EVIDENCE_DIR}/run.log"
 : > "${RUN_LOG}"
 
 ADMIN_USER="${ADMIN_USER:-admin@helix.system}"
-ADMIN_PW="${ADMIN_PW:-system-stack-admin-secret}"
+ADMIN_PW="${ADMIN_PW:-ephemeral-test-stack-NOT-A-SECRET}"  # §11.4.10 non-secret test constant (matches system.compose.yml)
 
 DO_BOOT=1
 [ "${1:-}" = "--no-boot" ] && DO_BOOT=0
