@@ -11,7 +11,7 @@
 #   now `apk add --no-cache sqlite-libs curl` so the probe binary exists.
 #
 # Invariant asserted (two coupled facts):
-#   (1) compose-side  — containers/compose.helixtrack.yml's helixtrack-core
+#   (1) compose-side  — deploy/helixtrack/compose.helixtrack.yml's helixtrack-core
 #       healthcheck `test:` command uses a KNOWN binary (`curl`). RED: a
 #       healthcheck referencing a binary the image does not ship is the defect
 #       class; the guard reproduces it with an inline `wget`-using fixture and
@@ -39,7 +39,9 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-COMPOSE="${ROOT}/containers/compose.helixtrack.yml"
+# compose lives in the helix_ota CONSUMER layer (§11.4.28) — relocated out of the
+# project-agnostic vasic-digital/containers submodule, which stays decoupled.
+COMPOSE="${ROOT}/deploy/helixtrack/compose.helixtrack.yml"
 SIBLING_DOCKERFILE="/Volumes/T7/Projects/helix_track/core/Application/Dockerfile"
 
 # Closed set of binaries known to be installed into the Core image (the probe
@@ -88,7 +90,7 @@ is_known "$green_bin" \
 pass "a 'curl' healthcheck PASSES the known-binary check."
 
 # --- GREEN (compose-side source-assertion): the REAL helixtrack-core healthcheck
-[ -f "$COMPOSE" ] || fail "containers/compose.helixtrack.yml not found"
+[ -f "$COMPOSE" ] || fail "deploy/helixtrack/compose.helixtrack.yml not found"
 
 # Extract the helixtrack-core service block's healthcheck `test:` line. The
 # service key is `helixtrack-core:`; the postgres service has its own (pg_isready)
@@ -109,7 +111,7 @@ is_known "$core_bin" \
     || fail "helixtrack-core healthcheck uses probe binary '$core_bin' NOT in the known-installed set ($KNOWN_IMAGE_BINARIES) — the image may not ship it (unhealthy-despite-200 regression)."
 [ "$core_bin" = "curl" ] \
     || fail "helixtrack-core healthcheck probe binary is '$core_bin', expected 'curl' (the fixed probe). If intentionally changed, update KNOWN_IMAGE_BINARIES AND the Dockerfile install AND this guard together (§11.4.120)."
-pass "containers/compose.helixtrack.yml helixtrack-core healthcheck uses 'curl' (a known-installed binary)."
+pass "deploy/helixtrack/compose.helixtrack.yml helixtrack-core healthcheck uses 'curl' (a known-installed binary)."
 
 # --- Dockerfile-side REAL cross-check (sibling repo) — SKIP if absent ----------
 if [ -f "$SIBLING_DOCKERFILE" ]; then

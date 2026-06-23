@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Cuttlefish Tier-2 A/B Evidence Report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Cuttlefish Tier-2 A/B Evidence Report</h1>
+</header>
+<h1
+id="tier-2-cuttlefish-real-android-ab-update_engine-ota-evidence-report">Tier-2
+Cuttlefish — REAL Android A/B <code>update_engine</code> OTA — Evidence
+Report</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-23T09:10:00Z <strong>Run-id:</strong>
+20260623-cuttlefish-tier2-ab <strong>Verdict:</strong>
+<strong>PASS</strong> — REAL Android <code>update_engine</code> A/B +
+Virtual-A/B + auto-rollback, verified on a live Cuttlefish
+<code>cvd</code> with captured evidence (§11.4.5 / §11.4.69 / §11.4.107
+/ §11.4.108). <strong>Authority:</strong> §11.4.83 (per-feature e2e
+evidence), §11.4.3 / §11.4.112 (Cuttlefish is the hardware-free A/B
+proxy), §11.4.133 (bounded, inactive-slot-only destructive write),
+§11.4.6 (every claim is a captured FACT, no guessing), §11.4.158
+(read-the-screen content verification).</p>
+<hr />
+<h2 id="what-was-proven">1. What was proven</h2>
+<p>A REAL Android A/B over-the-air update was applied end-to-end on a
+live Cuttlefish virtual device (build <strong>15660610</strong>,
+<code>aosp_cf_x86_64_only_phone</code>, Android 17 / API 37) running on
+the operator’s <code>nezha</code> Linux+KVM host, driven autonomously
+from that host as user <code>milosvasic</code> over
+<code>adb -s 127.0.0.1:6520</code> — <strong>no sudo for the A/B flow
+itself</strong>. The three headline proofs of native A/B fidelity — real
+payload apply, slot flip, and auto-rollback — all reproduced with
+captured evidence. This is the deepest tier the Helix OTA emulation
+ladder reaches without physical silicon.</p>
+<p><strong>A/B capability of the cvd (captured,
+<code>ab_facts.txt</code>):</strong></p>
+<ul>
+<li><code>ab_update=true</code>, <code>ro.virtual_ab.enabled=true</code>
+(Virtual A/B + compression + userspace snapshots)</li>
+<li><code>veritymode=enforcing</code> (AVB/dm-verity active)</li>
+<li><strong>15 A/B partitions</strong>:
+<code>boot,init_boot,odm,odm_dlkm,product,system,system_dlkm,system_ext,vbmeta,vbmeta_system,vbmeta_system_dlkm,vbmeta_vendor_dlkm,vendor,vendor_boot,vendor_dlkm</code></li>
+<li>bootctl HAL <code>android.hardware.boot@aidl::IBootControl</code>,
+<code>number-slots=2</code></li>
+<li><code>update_engine</code> daemon <strong>running +
+responsive</strong> (<code>init.svc.update_engine=running</code>,
+<code>onStatusUpdate(UPDATE_STATUS_IDLE (0), 0)</code>)</li>
+</ul>
+<p><strong>FACT (§11.4.6):</strong> <code>bootctl</code> and
+<code>update_engine_client</code> work <strong>only as root</strong> on
+the cvd (<code>su</code> / selinux <code>u:r:su:s0</code>), not from a
+plain shell. The A/B <em>apply</em> itself is driven from the host via
+the AOSP <code>update_device.py</code> over adb and does
+<strong>not</strong> require host sudo.</p>
+<hr />
+<h2
+id="headline-proof-1-real-ota-payload-apply-apply_full.log-apply.log">2.
+Headline proof #1 — REAL OTA payload apply (<code>apply_full.log</code>,
+<code>apply.log</code>)</h2>
+<p>The OTA payload was obtained <strong>autonomously, with no
+credentials</strong>: the public
+<code>androidbuildinternal.googleapis.com</code> build API serves a
+<strong>pre-signed GCS URL</strong> (host
+<code>storage.googleapis.com</code>) for
+<code>aosp_cf_x86_64_only_phone-ota-15660610.zip</code> —
+<strong>1003473429 bytes, md5
+<code>d90870a9a6eeece3868520d7fd3f098c</code></strong> (size + md5
+verified; <code>ota_artifact_availability.txt</code>,
+<code>ota_verified.txt</code>). The zip contains the expected
+<code>payload.bin</code> (1003462967 B) +
+<code>payload_properties.txt</code> + <code>care_map.pb</code> +
+<code>metadata</code> (<code>ota-type=AB</code>,
+<code>post-build … /15660610</code>, <code>ota_metadata.txt</code>).</p>
+<p>Applied via the AOSP <code>update_device.py</code> over adb
+(<code>apply.log</code>, <code>verify_only.log</code>):</p>
+<ul>
+<li><strong>Applicability check first:</strong>
+<code>update_engine_client --verify</code> -&gt;
+<code>[INFO:update_engine_client_android.cc(269)] Payload is applicable.</code></li>
+<li><strong>Full apply</strong> progressed through the genuine
+<code>update_engine</code> state machine (<code>apply_full.log</code>):
+<code>UPDATE_STATUS_UPDATE_AVAILABLE</code> -&gt;
+<code>CLEANUP_PREVIOUS_UPDATE</code> -&gt; <code>DOWNLOADING</code> (0
+-&gt; 1.0) -&gt; <code>VERIFYING</code> (0 -&gt; 1.0) -&gt;
+<code>FINALIZING</code> (0 -&gt; 1.0) -&gt;</li>
+<li><strong>Completion (verbatim):</strong>
+<code>[INFO:update_engine_client_android.cc(102)] onPayloadApplicationComplete(ErrorCode::kSuccess (0))</code>
+<code>[INFO:update_engine_client_android.cc(94)] onStatusUpdate(UPDATE_STATUS_UPDATED_NEED_REBOOT (6), 0)</code>
+<code>INFO:root:Update took 115.394 seconds</code></li>
+</ul>
+<p><code>kSuccess</code> + <code>UPDATED_NEED_REBOOT</code> = the
+payload was written to the inactive slot and the slot was armed. Not a
+metadata check, not a dry run — a real ~1 GB payload through the real
+daemon to a real inactive slot.</p>
+<hr />
+<h2
+id="headline-proof-2-slot-flip-_a---_b-slot_flip.log-slot_before.txt-slot_after.txt">3.
+Headline proof #2 — slot flip <code>_a -&gt; _b</code>
+(<code>slot_flip.log</code>, <code>slot_before.txt</code>,
+<code>slot_after.txt</code>)</h2>
+<p>After the apply, a reboot was performed and the <strong>running
+active slot flipped from <code>_a</code> to
+<code>_b</code></strong>:</p>
+<pre><code>== SLOT-FLIP TEST 2026-06-23T08:53:41Z ==
+SLOT_BEFORE(running)=_a  active-next=1
+rebooting...
+SLOT_AFTER(running)=_b
+bootctl-current-after=1
+snapshot-merge-status-after=merging
+RESULT: SLOT FLIPPED _a -&gt; _b (REAL A/B SLOT SWITCH CONFIRMED)</code></pre>
+<ul>
+<li><code>slot_before.txt</code> = <code>_a</code>,
+<code>slot_after.txt</code> = <code>_b</code> (runtime
+<code>ro.boot.slot_suffix</code>).</li>
+<li><code>bootctl current-slot</code> = <code>1</code> (=
+<code>_b</code>) post-boot.</li>
+<li>Virtual-A/B merge transitioned <code>merging</code> -&gt;
+<code>none</code> and slot <code>_b</code> was marked
+<strong>successful</strong> (the userspace snapshot merge completing on
+the new slot — the genuine VAB path, not legacy A/B).</li>
+</ul>
+<p>This is a REAL bootloader-level A/B slot switch onto the
+freshly-applied slot.</p>
+<hr />
+<h2
+id="headline-proof-3-auto-rollback-rollback.log-rollback_trace.txt-corrupt_dd.txt">4.
+Headline proof #3 — auto-rollback (<code>rollback.log</code>,
+<code>rollback_trace.txt</code>, <code>corrupt_dd.txt</code>)</h2>
+<p>With <code>_b</code> known-good and active, slot <code>_a</code> was
+deliberately made un-bootable and the device was forced to try it — and
+<strong>the device rejected bad <code>_a</code> and booted known-good
+<code>_b</code></strong>:</p>
+<pre><code>== AUTO-ROLLBACK TEST 2026-06-23T08:55:16Z ==
+GOOD_SLOT(running,successful)=_b
+-- corrupting inactive slot _a (bounded write to boot_a, inactive-only) --
+corrupt rc=0 (see corrupt_dd.txt)
+-- forcing next boot to corrupted slot _a (bootctl set-active-boot-slot 0) --
+set-active rc=0 -&gt; active-next=0
+-- reboot, expecting AUTO-ROLLBACK to known-good _b --
+BOOTED=1  SLOT_AFTER_ROLLBACK=_b
+RESULT: AUTO-ROLLBACK CONFIRMED -- forced-bad slot _a rejected, device booted known-good _b</code></pre>
+<ul>
+<li><strong>Corruption was bounded + inactive-slot-only
+(§11.4.133):</strong> a <strong>256 KB</strong> write to
+<code>boot_a</code> (the <em>inactive</em> slot — never the active/good
+slot), <code>corrupt_dd.txt</code>:
+<code>262144 bytes (256 K) copied</code>. The active known-good
+<code>_b</code> was never touched.</li>
+<li><code>_a</code> was marked unbootable AND set active-next
+(<code>set-active rc=0 -&gt; active-next=0</code>) to force the bad-boot
+path.</li>
+<li>After reboot, <code>slot_after_rollback.txt</code> =
+<code>_b</code>, <code>bootctl current-slot=1</code> — the device
+<strong>auto-rolled-back</strong> to the known-good slot.
+<code>rollback_trace.txt</code> captures the boot trace.</li>
+</ul>
+<p>This is the headline Tier-2 proof: a corrupted slot is rejected and
+the device recovers to the last-known-good slot, exactly as a fielded
+A/B device must.</p>
+<hr />
+<h2 id="ota-payload-resolution-no-credentials-autonomous">5. OTA-payload
+resolution (no-credentials, autonomous)</h2>
+<p>The single hardest part of an autonomous A/B test — getting a real
+signed OTA payload without operator credentials — was solved
+(<code>ota_artifact_availability.txt</code>):</p>
+<ul>
+<li><code>androidbuildinternal.googleapis.com</code> lists the build’s
+artifacts <strong>with no auth</strong>, including
+<code>aosp_cf_x86_64_only_phone-ota-15660610.zip</code>.</li>
+<li>Requesting its download yields a <strong>pre-signed GCS URL</strong>
+(<code>host=storage.googleapis.com</code>, query-params present) —
+<strong>no credentials required</strong>.</li>
+<li>The download was integrity-checked (size <code>1003473429</code> +
+md5 <code>d90870a9a6eeece3868520d7fd3f098c</code>) before apply.</li>
+</ul>
+<p>The full journey to this point (provenance): <code>curl</code>
+download failed -&gt; resumable <code>wget -c</code> recovery -&gt; 27.6
+GB single-stage image attempt -&gt; slimmed to a 1.11 GB prebuilt-deb
+path (<code>containers</code> submodule <code>54aa9b2</code>) -&gt;
+operator privileged launch (<code>cf-launch.sh</code>) -&gt; cvd booted
+-&gt; this A/B PASS. The cvd was left running on <code>nezha</code>.</p>
+<hr />
+<h2 id="honest-boundary-11.4.3-11.4.112-11.4.133">6. Honest boundary
+(§11.4.3 / §11.4.112 / §11.4.133)</h2>
+<ul>
+<li><strong>Cuttlefish is the hardware-free A/B proxy.</strong> This
+PASS proves native Android <code>update_engine</code> A/B + Virtual-A/B
++ AVB/dm-verity + auto-rollback <strong>on a virtual
+<code>cvd</code></strong>, the deepest fidelity reachable without
+silicon. It is NOT a claim about any specific physical board’s
+bootloader.</li>
+<li><strong>The RK3588 / Orange Pi 5 Max boards stay control-plane-only
+by operator decision (§11.4.133).</strong> Both fielded boards are
+NON-A/B (single-slot, no <code>update_engine</code>); their validated
+surface is the device-originated control-plane round-trip (F113,
+<code>docs/qa/20260622-rk3588-controlplane/</code>). Native A/B apply is
+<strong>Cuttlefish-only by operator decision</strong> — not run on the
+boards.</li>
+<li><strong><code>bootctl</code>/<code>update_engine_client</code> are
+root-only on the cvd</strong> (FACT, §1) — the A/B flow is driven from
+the host via <code>update_device.py</code> over adb; only the in-guest
+control commands need <code>su</code>.</li>
+<li><strong>Determinism:</strong> this is a single captured full-journey
+run (apply -&gt; flip -&gt; rollback), each step with its own captured
+artefact. The standing §11.4.135 regression guard
+(<code>tests/regression/guard_cuttlefish_ab_proven.sh</code>) asserts
+these evidence anchors on every sweep.</li>
+</ul>
+<hr />
+<h2 id="read-the-screen-content-verification-11.4.158">7.
+Read-the-screen content verification (§11.4.158)</h2>
+<p>Each headline claim was machine-read against its captured artefact
+(not “a log exists” — the exact verbatim line was confirmed
+present):</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Claim</th>
+<th>Evidence file</th>
+<th>Verbatim line read + confirmed</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>A/B + VAB + verity capability</td>
+<td><code>ab_facts.txt</code></td>
+<td><code>ab_update=true</code> / <code>virtual_ab=true</code> /
+<code>veritymode=enforcing</code> / 15 ab_ota_partitions / HAL
+<code>IBootControl</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Payload applicable</td>
+<td><code>verify_only.log</code></td>
+<td><code>Payload is applicable.</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Apply success</td>
+<td><code>apply_full.log</code></td>
+<td><code>onPayloadApplicationComplete(ErrorCode::kSuccess (0))</code>
+-&gt; <code>UPDATE_STATUS_UPDATED_NEED_REBOOT (6)</code> /
+<code>Update took 115.394 seconds</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Slot flip <code>_a -&gt; _b</code></td>
+<td><code>slot_flip.log</code> +
+<code>slot_before.txt</code>/<code>slot_after.txt</code></td>
+<td><code>RESULT: SLOT FLIPPED _a -&gt; _b (REAL A/B SLOT SWITCH CONFIRMED)</code>
+/ <code>_a</code> -&gt; <code>_b</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Bounded inactive-only corruption</td>
+<td><code>corrupt_dd.txt</code></td>
+<td><code>262144 bytes (256 K) copied</code> (boot_a, inactive)</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Auto-rollback</td>
+<td><code>rollback.log</code> +
+<code>slot_after_rollback.txt</code></td>
+<td><code>RESULT: AUTO-ROLLBACK CONFIRMED -- forced-bad slot _a rejected, device booted known-good _b</code>
+/ <code>_b</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>7</td>
+<td>OTA payload no-creds + integrity</td>
+<td><code>ota_artifact_availability.txt</code> /
+<code>ota_verified.txt</code></td>
+<td><code>host=storage.googleapis.com</code> pre-signed URL /
+<code>size: 1003473429</code> /
+<code>md5: d90870a9a6eeece3868520d7fd3f098c</code></td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Overall verdict: PASS</strong> — REAL Android A/B OTA, slot
+flip, and auto-rollback proven on a live Cuttlefish cvd with captured,
+read-the-screen-verified evidence.</p>
+<hr />
+<h2 id="evidence-manifest">8. Evidence manifest</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ab_facts.txt</code></td>
+<td>cvd A/B/VAB/verity capability snapshot (root bootctl +
+update_engine)</td>
+</tr>
+<tr>
+<td><code>ota_artifact_availability.txt</code> /
+<code>ota_availability.txt</code></td>
+<td>no-creds androidbuildinternal API artifact list + pre-signed GCS URL
++ size/md5</td>
+</tr>
+<tr>
+<td><code>ota_verified.txt</code> / <code>ota_metadata.txt</code></td>
+<td>downloaded OTA zip integrity + payload contents + AB metadata</td>
+</tr>
+<tr>
+<td><code>verify_only.log</code></td>
+<td><code>Payload is applicable.</code> applicability proof</td>
+</tr>
+<tr>
+<td><code>apply.log</code> / <code>apply_full.log</code></td>
+<td>full <code>update_engine</code> apply state machine -&gt;
+<code>kSuccess</code> -&gt; <code>UPDATED_NEED_REBOOT</code></td>
+</tr>
+<tr>
+<td><code>slot_before.txt</code> / <code>slot_after.txt</code> /
+<code>slot_flip.log</code></td>
+<td>slot flip <code>_a -&gt; _b</code> runtime + bootctl + VAB
+merge</td>
+</tr>
+<tr>
+<td><code>corrupt_dd.txt</code></td>
+<td>bounded 256 KB inactive-slot <code>boot_a</code> corruption
+(§11.4.133)</td>
+</tr>
+<tr>
+<td><code>rollback.log</code> / <code>slot_after_rollback.txt</code> /
+<code>rollback_trace.txt</code></td>
+<td>forced-bad-slot reboot -&gt; auto-rollback to known-good
+<code>_b</code></td>
+</tr>
+<tr>
+<td><code>dm_slot_layout.txt</code> / <code>verity_after.txt</code></td>
+<td>partition/dm/verity layout</td>
+</tr>
+<tr>
+<td><code>update_engine_present.txt</code> /
+<code>update_engine_follow.txt</code></td>
+<td>daemon presence + follow trace</td>
+</tr>
+</tbody>
+</table>
+<p>Driven from <code>nezha</code> as <code>milosvasic</code>,
+<code>adb -s 127.0.0.1:6520</code>. cvd left running.</p>
+</body>
+</html>

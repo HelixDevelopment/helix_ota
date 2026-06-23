@@ -240,12 +240,16 @@
 <header id="title-block-header">
 <h1 class="title">CONTINUATION</h1>
 </header>
-<h1 id="helix-ota--continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 8 <strong>Last modified:</strong>
-2026-06-23T00:00:00Z</p>
+<h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
+<p><strong>Revision:</strong> 9 <strong>Last modified:</strong>
+2026-06-23T09:20:00Z</p>
 <hr />
-<h2 id="1-current-state">1. Current state</h2>
+<h2 id="current-state">1. Current state</h2>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -255,31 +259,87 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>659c2326</code> (parent pointer to containers
-<code>54aa9b2</code> — slim Cuttlefish image built+committed; conductor
-commits this Cuttlefish launch-verified docs/evidence update on
-top)</td>
+<td><code>e3c86f85</code> (conductor commits this
+Cuttlefish-A/B-VERIFIED docs/evidence/guard/validator update on top;
+parent pointer to containers <code>54aa9b2</code>)</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
-<td>Stable / release-readiness — control plane proven on real RK3588
-hardware; native A/B fidelity routed through the Cuttlefish
-containerized path. Cuttlefish launch command now VERIFIED (asset-feed +
-<code>launch_cvd</code> proven §4.5); WAITING ON operator's privileged
-<code>sudo</code> launch, then agent drives A/B.</td>
+<td><strong>TERMINAL GOAL MET</strong> — Cuttlefish Tier-2 REAL Android
+A/B VERIFIED on nezha 2026-06-23 (real <code>update_engine</code> apply
+→ slot flip <code>_a→_b</code> → auto-rollback on a live cvd). Control
+plane proven on real RK3588 hardware (F113); native A/B fidelity proven
+on the Cuttlefish containerized path (F112/F55).</td>
 </tr>
 <tr>
 <td><strong>Terminal goal</strong></td>
 <td>Fully validated Helix OTA control plane driving real Android A/B
 updates end-to-end (protocol round-trip → payload apply → slot switch →
-rollback) on emulated + physical targets</td>
+rollback) on emulated + physical targets — <strong>MET for the emulated
+Cuttlefish A/B path (F112/F55 VERIFIED); RK3588 stays control-plane-only
+by operator decision (§11.4.133)</strong></td>
 </tr>
 </tbody>
 </table>
 <h3
-id="latest-session-2026-06-23--cuttlefish-slim-image-built--launch-command-verified-asset-feed--launch_cvd-proven">Latest
-session (2026-06-23) — Cuttlefish slim image built + launch command
-VERIFIED (asset-feed + <code>launch_cvd</code> proven)</h3>
+id="latest-session-2026-06-23-cuttlefish-tier-2-real-android-ab-verified-on-nezha-f112f55-ota-003-closed">Latest
+session (2026-06-23) — Cuttlefish Tier-2 REAL Android A/B VERIFIED on
+nezha (F112/F55, OTA-003 closed)</h3>
+<p><strong>TERMINAL GOAL MET (honest §11.4.6 — real captured
+evidence).</strong> A real ~1 GB OTA payload was applied through
+<code>update_engine</code> to a live Cuttlefish cvd (build 15660610,
+<code>aosp_cf_x86_64_only_phone</code>, Virtual A/B + verity enforcing,
+15 A/B partitions) on nezha, driven autonomously as
+<code>milosvasic</code> over <code>adb -s 127.0.0.1:6520</code> (no host
+sudo for the A/B flow):
+<code>onPayloadApplicationComplete(kSuccess)</code> →
+<code>UPDATE_STATUS_UPDATED_NEED_REBOOT</code> (115 s) → reboot slot
+flip <code>_a→_b</code> (VAB merge
+<code>merging</code>→<code>none</code>, <code>_b</code> marked
+successful) → forced-bad slot <code>_a</code> (bootctl
+set-slot-as-unbootable + bounded 256 KB inactive-slot boot_a write,
+§11.4.133) rejected → device booted known-good <code>_b</code>. The OTA
+payload was obtained with NO credentials (androidbuildinternal
+pre-signed GCS URL <code>storage.googleapis.com</code>, 1003473429 B,
+md5 <code>d90870a9a6eeece3868520d7fd3f098c</code> — size+md5 verified
+before apply).</p>
+<ul>
+<li><strong>Evidence:</strong>
+<code>docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md</code> (+
+<code>apply_full.log</code>, <code>slot_flip.log</code>,
+<code>rollback.log</code>, <code>corrupt_dd.txt</code>,
+<code>ab_facts.txt</code>, …) — read-the-screen verified per §11.4.158
+(REPORT §7).</li>
+<li><strong>Status:</strong> F112 PARTIAL→VERIFIED; F55 (Tier-2 driver)
+OPERATOR-BLOCKED→VERIFIED (Status.md rev 21, Status_Summary rev 13;
+VERIFIED 25→27, PARTIAL 4→3, OPERATOR-BLOCKED 2→1).</li>
+<li><strong>Validator:</strong>
+<code>tests/emulator/tier2_cuttlefish_ab.sh</code> HONEST STATUS →
+VERIFIED on nezha 2026-06-23; UNCONFIRMED items resolved to FACT
+(bootctl/update_engine_client root-only; no-creds androidbuildinternal
+ota-<code>&lt;BID&gt;</code>.zip; Virtual A/B not legacy; corrupt =
+set-unbootable + bounded boot_a write); new running-container
+<code>--serial</code>/<code>HELIX_CF_SERIAL</code> mode (topology B)
+added; bash -n / sh -n clean.</li>
+<li><strong>Regression guard:</strong>
+<code>tests/regression/guard_cuttlefish_ab_proven.sh</code> GREEN
+(§11.4.135; asserts slot_flip/rollback/kSuccess evidence + validator
+VERIFIED header, RED on stripped proof).</li>
+<li><strong>Full journey (provenance):</strong> curl-download-fail →
+resumable wget-c recovery → 27.6 GB single-stage image → slim 1.11 GB
+prebuilt-deb path (containers <code>54aa9b2</code>) → operator
+privileged launch (<code>cf-launch.sh</code>) → cvd booted → this A/B
+PASS. <strong>cvd left running on nezha.</strong></li>
+<li><strong>Honest boundary (§11.4.3/§11.4.112/§11.4.133):</strong>
+Cuttlefish is the hardware-free A/B proxy; the RK3588 boards (F113) stay
+control-plane-only by operator decision (native A/B is Cuttlefish-only);
+<code>bootctl</code>/<code>update_engine_client</code> are root-only on
+the cvd (FACT).</li>
+</ul>
+<h3
+id="prior-session-2026-06-23-earlier-cuttlefish-slim-image-built-launch-command-verified-asset-feed-launch_cvd-proven">Prior
+session (2026-06-23, earlier) — Cuttlefish slim image built + launch
+command VERIFIED (asset-feed + <code>launch_cvd</code> proven)</h3>
 <p>Cuttlefish moved from runbook-ready to
 <strong>launch-command-VERIFIED</strong> (honest §11.4.6 — still NOT a
 real-A/B PASS):</p>
@@ -329,14 +389,15 @@ remains. Evidence:
 closed by the <code>save|load</code> step (§11.4.161 exception —
 privileged run is rootful).</li>
 </ol>
-<p><strong>HONEST BOUNDARY:</strong> F112 / OTA-003 stays
-integration-pending — NOT a real-A/B PASS — until the operator runs the
-§2.3 privileged launch and the agent drives
-<code>tier2_cuttlefish_ab.sh</code> capturing slot-flip + auto-rollback
-evidence. <code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code> rev 2
-carries the verified command.</p>
+<p><strong>HONEST BOUNDARY (superseded 2026-06-23):</strong> this
+prior-session boundary said F112/OTA-003 was integration-pending. That
+has since been DONE — the operator ran the privileged launch and the
+agent drove <code>tier2_cuttlefish_ab.sh</code>, capturing the real A/B
+apply + slot-flip + auto-rollback evidence (see the latest-session block
+above; <code>docs/qa/20260623-cuttlefish-tier2-ab/</code>). F112/F55 are
+VERIFIED.</p>
 <h3
-id="prior-session-2026-06-22-late--distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Prior
+id="prior-session-2026-06-22-late-distribution-mechanism-infra-fixes-amber-onboarded-cuttlefish-runbook-ready">Prior
 session (2026-06-22, late) — distribution mechanism, infra fixes, amber
 onboarded, Cuttlefish runbook-ready</h3>
 <p><strong>LATE UPDATE (2026-06-22, distribution path now fully VERIFIED
@@ -422,7 +483,7 @@ synced.</p>
 <p><strong>Operator action items (carried + new):</strong> (1)
 <strong>Cuttlefish on nezha</strong> — run the VERIFIED privileged
 launch block in <code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code>
-§2.3 (the slim image + assets are ready; only the operator's
+§2.3 (the slim image + assets are ready; only the operator’s
 <code>sudo modprobe vhost_vsock</code> +
 <code>sudo podman load -i /tmp/cf-slim.tar</code> +
 <code>sudo podman run --privileged …</code> remains) to unblock the real
@@ -432,7 +493,7 @@ docker-fallback exception (preferred over the fallback); (3) Cuttlefish
 on-target persistence verification is operator-attended; (4) physical
 RK3588 boards remain NON-A/B (control-plane validation only).</p>
 <h3
-id="prior-session-2026-06-22-evening--cuttlefish-tier-2-container-path--real-rk3588-control-plane-validation">Prior
+id="prior-session-2026-06-22-evening-cuttlefish-tier-2-container-path-real-rk3588-control-plane-validation">Prior
 session (2026-06-22, evening) — Cuttlefish Tier-2 container path + real
 RK3588 control-plane validation</h3>
 <p>Three new real capabilities landed (honest §11.4.6 — boundaries
@@ -455,7 +516,7 @@ real-A/B PASS.</strong> The real end-to-end Android
 <code>update_engine</code>/AVB/dm-verity A/B run is
 <strong>integration-pending</strong> on nezha Linux+KVM (assets staging;
 privileged <code>launch_cvd</code> operator-gated). Native A/B fidelity
-is this path's job once provisioned.</li>
+is this path’s job once provisioned.</li>
 </ul></li>
 <li><strong>Real RK3588 hardware control-plane validation
 (F113)</strong> — evidence
@@ -467,7 +528,7 @@ cross-built linux/amd64, run <strong>rootless</strong> on nezha (uid
 204 (no active deployment — correct),
 <code>POST /api/v1/client/telemetry</code> 202, and sink-side
 <code>GET /devices/by-hardware/1acdceab90248933</code> →
-<code>update_state=success</code> (the board's own telemetry mutated
+<code>update_state=success</code> (the board’s own telemetry mutated
 server state). <strong>Device A</strong> (Wi-Fi,
 <code>19bbb528a1dbbc4d</code>) honest topology <strong>SKIP</strong> —
 VPN tun1 full-tunnel / Wi-Fi AP isolation (busybox nc to both
@@ -490,39 +551,33 @@ target; (2) <strong>Cuttlefish on nezha</strong> — the privileged
 integration-pending); (3) <strong>assets staging in progress</strong>
 for the Cuttlefish Tier-2 run; (4) the <strong>physical RK3588 boards
 are NON-A/B</strong> (single-slot) — real on-device A/B fidelity is the
-Cuttlefish path's job, not these boards (control-plane validation only
+Cuttlefish path’s job, not these boards (control-plane validation only
 on them).</p>
 <h3
-id="prior-session-2026-06-22-daytime--do-everything-workable-sweep">Prior
-session (2026-06-22, daytime) — "do everything workable" sweep</h3>
-<p>All autonomous items GREEN with real captured evidence (no
-bluffs):</p>
-<ul>
-<li>Test sweep GREEN (server 11/11 + 4 Go submodules 3/3,
-<code>-race</code> 0); <strong>gofmt fixed</strong> (13 files);
-pre-build gates PASS; docs_chain in-sync.</li>
-<li><strong>Local QEMU A/B OTA 6/6 GREEN</strong>
+id="prior-session-2026-06-22-daytime-do-everything-workable-sweep">Prior
+session (2026-06-22, daytime) — “do everything workable” sweep</h3>
+<p>All autonomous items GREEN with real captured evidence (no bluffs): -
+Test sweep GREEN (server 11/11 + 4 Go submodules 3/3, <code>-race</code>
+0); <strong>gofmt fixed</strong> (13 files); pre-build gates PASS;
+docs_chain in-sync. - <strong>Local QEMU A/B OTA 6/6 GREEN</strong>
 (smoke/boot/slot-switch/rollback/OTA-apply) — evidence
 <code>docs/qa/20260622T07*</code>. Fixed a real §11.4.115 RED-mode
 polarity isolation bug in <code>ab_rauc_verity.sh</code> (RED×2+GREEN×2
-deterministic).</li>
-<li><strong>10 server-feature recordings regenerated</strong>,
-vision-verified (203 HTTP assertions) —
+deterministic). - <strong>10 server-feature recordings
+regenerated</strong>, vision-verified (203 HTTP assertions) —
 <code>docs/qa/20260622-server-recordings-regen/</code>; Status.md
-§11.4.153 reconciled to durable paths.</li>
-<li><strong>§11.4.166 Semgrep</strong>: propagated §11.4.160-166 into
-CLAUDE/AGENTS/GEMINI; tokenless local scan wired into
-<code>commit_all.sh</code>; constitution pin → <code>09d8940</code>
-(adds <code>docs/semgrep/TOKEN_SETUP.md</code>); 7 findings triaged →
-<strong>0 remaining</strong> (TLS MinVersion fix + cited
-suppressions).</li>
-<li>Submodule push parity closed (<code>ota-update-engine-bridge</code>,
-<code>ota-android-agent</code>); GitFlic "blocker" disproven; §11.4.30
-transient <code>qa-results/</code> untracked+ignored (232 files).</li>
-<li>nezha AVD boot proven; real Android A/B = honest
+§11.4.153 reconciled to durable paths. - <strong>§11.4.166
+Semgrep</strong>: propagated §11.4.160-166 into CLAUDE/AGENTS/GEMINI;
+tokenless local scan wired into <code>commit_all.sh</code>; constitution
+pin → <code>09d8940</code> (adds
+<code>docs/semgrep/TOKEN_SETUP.md</code>); 7 findings triaged →
+<strong>0 remaining</strong> (TLS MinVersion fix + cited suppressions).
+- Submodule push parity closed (<code>ota-update-engine-bridge</code>,
+<code>ota-android-agent</code>); GitFlic “blocker” disproven; §11.4.30
+transient <code>qa-results/</code> untracked+ignored (232 files). -
+nezha AVD boot proven; real Android A/B = honest
 <strong>operator-attended SKIP</strong> (Cuttlefish unprovisioned —
-needs sudo+reboot+fetch_cvd).</li>
-</ul>
+needs sudo+reboot+fetch_cvd).</p>
 <p><strong>Operator action items:</strong> (1) Semgrep
 <code>SEMGREP_APP_TOKEN</code> — follow
 <code>constitution/docs/semgrep/TOKEN_SETUP.md</code>
@@ -534,7 +589,7 @@ unblock real Android A/B; (3) RK3588 board for OTA-004/F55/F56.</p>
 <code>scripts/boot_android_emulator.sh</code> — the remote qemu/AVD on
 nezha stays tied to the launching SSH session and exits gracefully if
 that session ends mid-boot-wait (the nohup does not fully detach the
-remote process; the final SSH-tunnel/attestation step isn't reached on
+remote process; the final SSH-tunnel/attestation step isn’t reached on
 interrupt). Boot itself is PROVEN (<code>emulator-5554</code>, API 36,
 <code>boot_completed=1</code>, evidence
 <code>qa-results/20260622T071848Z-nezha-android-ab/</code>). Fix
@@ -547,6 +602,12 @@ change to the working boot path is forbidden per §11.4.1 without
 rock-solid proof.</p>
 <h3 id="active-items">Active items</h3>
 <table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -560,7 +621,8 @@ rock-solid proof.</p>
 <td>OTA-003</td>
 <td>Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity
 auto-rollback)</td>
-<td>In testing</td>
+<td>Completed (→ Fixed.md) — VERIFIED on nezha 2026-06-23, evidence
+docs/qa/20260623-cuttlefish-tier2-ab/</td>
 <td>Task</td>
 </tr>
 <tr>
@@ -574,6 +636,11 @@ slot-switch, dm-verity on real partitions</td>
 </table>
 <h3 id="recently-closed-items">Recently closed items</h3>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -623,7 +690,7 @@ slot-switch, dm-verity on real partitions</td>
 <code>docs/Fixed.md</code> · <code>docs/Issues_Summary.md</code> ·
 <code>docs/Fixed_Summary.md</code>.</p>
 <hr />
-<h2 id="2-server-tests--all-green">2. Server tests — all GREEN</h2>
+<h2 id="server-tests-all-green">2. Server tests — all GREEN</h2>
 <p>All 13 testable packages pass (11 internal packages + chaos + stress
 suites):</p>
 <pre><code>ok  internal/api
@@ -641,8 +708,12 @@ ok  tests/stress</code></pre>
 <code>cmd/ota-device-emu</code>, <code>cmd/ota-server</code>,
 <code>tools/loadtest</code>.</p>
 <hr />
-<h2 id="3-emulator-status">3. Emulator status</h2>
+<h2 id="emulator-status">3. Emulator status</h2>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Property</th>
@@ -682,7 +753,7 @@ tunnel)</td>
 The CZ_API36_Phone image provides the standard Android 16 AOSP stack on
 an x86_64 KVM host.</p>
 <hr />
-<h2 id="4-whats-running">4. What's running</h2>
+<h2 id="whats-running">4. What’s running</h2>
 <ul>
 <li><strong>Main stream:</strong> Emulator Tier-2 validation (remote on
 nezha.local)</li>
@@ -691,18 +762,20 @@ nezha.local)</li>
 per §11.4.158(D) (default; no project-level override)</li>
 </ul>
 <hr />
-<h2 id="5-next-actions-priority-ordered">5. Next actions
+<h2 id="next-actions-priority-ordered">5. Next actions
 (priority-ordered)</h2>
 <ol type="1">
-<li><strong>OTA-003 — Emulator Tier-2 inline testing.</strong> Verify
-the Android emulator on nezha.local can register with the control plane,
-receive an OTA payload, apply it via <code>update_engine</code>, A/B
-slot-switch, and auto-rollback on corruption. Drive end-to-end through
-the real user-equivalent path per §11.4.143.</li>
+<li><strong>OTA-003 — DONE (VERIFIED on nezha 2026-06-23).</strong> Real
+Android A/B (<code>update_engine</code> apply → slot flip
+<code>_a→_b</code> → auto-rollback) proven on a live Cuttlefish cvd;
+evidence <code>docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md</code>;
+§11.4.135 guard GREEN. Migrate the Issues.md entry → Fixed.md
+(conductor) and confirm exports.</li>
 <li><strong>OTA-004 — Hardware unblock.</strong> When a physical RK3588
 / Orange Pi 5 Max board becomes reachable over ADB/SSH, flash and
 validate Tier-3 (vendor HAL, U-Boot slot-switch, real-partition
-dm-verity).</li>
+dm-verity). Boards stay control-plane-only by operator decision
+(§11.4.133) until then.</li>
 <li><strong>Feature-coverage video recording.</strong> Produce §11.4.153
 mandatory per-feature real-use videos confirming every server endpoint,
 every emulator tier, and every submodule works — with §11.4.159
@@ -712,7 +785,7 @@ every closed OTA-NNN item has its §11.4.115 polarity-switch regression
 test registered in the suite.</li>
 </ol>
 <hr />
-<h2 id="6-binding-constraints">6. Binding constraints</h2>
+<h2 id="binding-constraints">6. Binding constraints</h2>
 <ul>
 <li><strong>Anti-bluff (§11.4 / §107):</strong> Every PASS carries
 captured physical evidence per §11.4.5 / §11.4.69 / §11.4.107.
@@ -723,7 +796,7 @@ PASS are all forbidden.</li>
 <code>+&lt;ref&gt;</code> are STRICTLY FORBIDDEN. Always merge onto
 latest <code>main</code> and push fast-forward-only.</li>
 <li><strong>Commit via <code>commit_all.sh</code>:</strong> All changes
-use the project's canonical commit wrapper. Direct
+use the project’s canonical commit wrapper. Direct
 <code>git add</code>/<code>git commit</code>/<code>git push</code> are
 never used.</li>
 <li><strong>Four-layer fix-verification (§11.4.108):</strong> SOURCE →
@@ -742,18 +815,21 @@ DISABLED. Enforcement is through local git hooks +
 <code>pre_build_verification.sh</code>.</li>
 </ul>
 <hr />
-<h2 id="7-feature-tracking">7. Feature tracking</h2>
+<h2 id="feature-tracking">7. Feature tracking</h2>
 <p>Feature inventory and per-row status:
 <code>docs/features/Status.md</code> (Rev 18, 2026-06-22). Summary
 companion: <code>docs/features/Status_Summary.md</code>.</p>
 <hr />
-<h2 id="8-fresh-session-start">8. Fresh session start</h2>
+<h2 id="fresh-session-start">8. Fresh session start</h2>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> fetch <span class="at">--all</span> <span class="at">--prune</span> <span class="at">--tags</span></span></code></pre></div>
 <p>Then read this file (<code>docs/CONTINUATION.md</code>) and
-<code>docs/Issues.md</code> for the full active-item context. The single
-highest-priority next action is <strong>Emulator Tier-2 inline testing
-on nezha.local</strong> (OTA-003) — drive the Android emulator through
-the full OTA lifecycle against the control plane.</p>
+<code>docs/Issues.md</code> for the full active-item context.
+<strong>The terminal goal is MET</strong>: Cuttlefish Tier-2 REAL
+Android A/B is VERIFIED on nezha 2026-06-23 (OTA-003 / F112 / F55 —
+evidence <code>docs/qa/20260623-cuttlefish-tier2-ab/</code>). The
+remaining open item is OTA-004 (Tier-3 physical RK3588), which is
+operator-blocked on hardware (boards stay control-plane-only by operator
+decision, §11.4.133). The cvd is left running on nezha.</p>
 </body>
 </html>

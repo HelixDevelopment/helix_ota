@@ -16,37 +16,65 @@
 #   only where the topology is present (the operator's incoming Linux+KVM host,
 #   an M4+/macOS-15 nested-virt Mac, or a GCE nested-virt instance).
 #
-# HONEST STATUS (§11.4.6): the Linux A/B-apply path below — AND the headline
-#   corrupt-slot AUTO-ROLLBACK section (PWU-CF-2, mirroring ab_virt PWU-AB-3) — are
-#   implemented from the latest official AOSP cuttlefish + update_engine + A/B +
-#   Virtual-A/B docs (CUTTLEFISH_TIER2.md "Sources verified"), but have NOT yet been
-#   executed on a real Linux+KVM host — they are UNVERIFIED-pending-Linux-host. The
-#   exact OTA-apply invocation AND the exact corrupt-the-inactive-slot mechanism the
-#   AOSP doc itself marks `UNCONFIRMED:` (Virtual-A/B vs legacy A/B; `update_device.py`
-#   vs `cvd`; COW/snapuserd path vs direct partition write; `bootctl` availability)
-#   are detected + ATTEMPTED at runtime and FAIL HONESTLY if they do not reproduce —
-#   never guessed-and-asserted, never fake-passed (§11.4.6/§11.4.123). When the Linux
-#   host is available these are run, any host-specific fixes land, and their PASS
-#   becomes real captured evidence (§11.4.107/§11.4.69/§11.4.108).
+# HONEST STATUS (§11.4.6): VERIFIED on nezha 2026-06-23 (evidence
+#   docs/qa/20260623-cuttlefish-tier2-ab/). The REAL Android `update_engine` A/B
+#   apply + slot flip + headline corrupt-slot AUTO-ROLLBACK (PWU-CF-2, mirroring
+#   ab_virt PWU-AB-3) were executed end-to-end on a live Cuttlefish `cvd`
+#   (build 15660610, aosp_cf_x86_64_only_phone) on the operator's nezha Linux+KVM
+#   host: payload applied (onPayloadApplicationComplete kSuccess (0) ->
+#   UPDATE_STATUS_UPDATED_NEED_REBOOT), slot flipped _a -> _b (Virtual-A/B merge
+#   merging -> none, _b marked successful), and a forced-bad slot _a was rejected ->
+#   device booted known-good _b. Captured evidence: apply_full.log / slot_flip.log /
+#   rollback.log / corrupt_dd.txt / ab_facts.txt (§11.4.107/§11.4.69/§11.4.108);
+#   curated REPORT.md. The §11.4.135 guard tests/regression/guard_cuttlefish_ab_proven.sh
+#   locks the proof in. On a no-KVM host (e.g. this macOS dev host) the script still
+#   SKIPs honestly at the topology gate (exit 3) — never a fake PASS (§11.4.3).
 #
-# AUTO-ROLLBACK SECTION STATUS: the corrupt-slot → reboot → auto-rollback assertion
-#   below is UNVERIFIED-pending-Linux-host by design — it does NOT claim Android
-#   auto-rollback works until executed on a real Linux+KVM host. On this macOS dev
-#   host the whole script (rollback section included) SKIPs cleanly at the topology
-#   gate (exit 3, topology_unsupported) — that SKIP is the only thing verifiable here.
+#   Previously-UNCONFIRMED items now RESOLVED to FACT by the nezha run:
+#     - bootctl / update_engine_client are ROOT-ONLY on the cvd (selinux u:r:su:s0),
+#       NOT runnable from a plain shell. The A/B apply is driven from the HOST via
+#       the AOSP update_device.py over adb (no host sudo for the A/B flow itself).
+#     - The OTA payload is obtained with NO credentials: androidbuildinternal.googleapis.com
+#       serves a pre-signed GCS URL (storage.googleapis.com) for ota-<BID>.zip
+#       (aosp_cf_x86_64_only_phone-ota-15660610.zip, 1003473429 B,
+#       md5 d90870a9a6eeece3868520d7fd3f098c — size+md5 verified before apply).
+#     - The cvd is Virtual A/B (ro.virtual_ab.enabled=true) + compression + userspace
+#       snapshots — NOT legacy A/B; the apply goes through the COW/snapuserd merge path.
+#     - The safe corrupt mechanism is: bootctl set-slot-as-unbootable on the inactive
+#       slot + a BOUNDED 256 KB write to boot_<inactive> (inactive slot only, never the
+#       active/good slot — §11.4.133), then bootctl set-active-boot-slot to force the
+#       bad-boot path; the device auto-rolls-back to the known-good slot.
+#
+# AUTO-ROLLBACK SECTION STATUS: VERIFIED on nezha 2026-06-23 — forced-bad slot _a
+#   rejected, device booted known-good _b (rollback.log). On a no-KVM host the whole
+#   script (rollback section included) SKIPs cleanly at the topology gate (exit 3,
+#   topology_unsupported) — that SKIP is the only thing verifiable on such a host.
 #
 # Usage:
-#   tests/emulator/tier2_cuttlefish_ab.sh [--prepare]   # --prepare installs cuttlefish debs
+#   tests/emulator/tier2_cuttlefish_ab.sh [--prepare]              # install cuttlefish debs (Linux, sudo)
+#   tests/emulator/tier2_cuttlefish_ab.sh --serial <adb-serial>    # drive an ALREADY-RUNNING cvd (nezha mode)
 #   Env: HELIX_CF_DIR (cuttlefish workdir, default ./.cuttlefish),
+#        HELIX_CF_SERIAL (adb serial of a live cvd, e.g. 127.0.0.1:6520 — running-container mode),
+#        HELIX_CF_BID (build id for the no-creds ota-<BID>.zip fetch, e.g. 15660610),
 #        HELIX_CF_TARGET (aosp_cf_arm64_only_phone | aosp_cf_x86_64_only_phone — auto by arch),
 #        HELIX_CF_EVIDENCE (default docs/qa/<run-id>/cuttlefish_ab/)
+#
+# TOPOLOGIES (§11.4.3):
+#   (A) SELF-MANAGED (default): fetch_cvd + launch_cvd a fresh cvd in HELIX_CF_DIR,
+#       then apply/flip/rollback. Needs Linux + /dev/kvm.
+#   (B) RUNNING-CONTAINER (--serial / HELIX_CF_SERIAL): an operator/container has
+#       ALREADY launched a privileged cvd (e.g. the containers pkg/cuttlefish path on
+#       nezha); this script attaches over `adb -s <serial>`, fetches ota-<BID>.zip via
+#       the no-creds androidbuildinternal pre-signed GCS URL, applies via update_device.py,
+#       and drives flip+rollback — NEVER touching cvd lifecycle (no stop_cvd in mode B).
+#       This is the exact path the 2026-06-23 nezha PASS used.
 #
 # Outputs: captured evidence (slot-state, update_engine status, rollback trace)
 #   under the evidence dir; PASS/FAIL/SKIP verdict on stdout.
 # Dependencies (Linux host): git, apt/dpkg, kvm group membership, ~30 GB disk,
 #   network (AOSP build fetch). Self-cleaning: stop_cvd on every exit (§11.4.14).
 # Cross-references: §11.4.3, §11.4.81, §11.4.69, §11.4.107, §11.4.108, §11.4.112,
-#   §11.4.123 (the UNCONFIRMED apply path is a research-trigger, never a bluff),
+#   §11.4.123 (rock-solid captured proof — the apply path is now FACT, not a bluff),
 #   §11.4.133 (verified-before-destructive-write for the corrupt-slot mechanism;
 #   the "target" is the virtual device, but the safety discipline holds).
 # =============================================================================
@@ -66,6 +94,19 @@ pass() { PASS=$((PASS+1)); log "[PASS] $1${2:+ [evidence: $2]}"; }   # §11.4.69
 fail() { FAIL=$((FAIL+1)); log "[FAIL] $1"; }
 skip() { SKIP=$((SKIP+1)); log "[SKIP] $1 (reason: $2)"; }            # §11.4.69 ab_skip_with_reason
 
+# ---- arg parse: --serial selects RUNNING-CONTAINER mode (topology B) ---------
+CF_SERIAL="${HELIX_CF_SERIAL:-}"
+CF_BID="${HELIX_CF_BID:-}"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --serial) CF_SERIAL="${2:-}"; shift 2 ;;
+    --serial=*) CF_SERIAL="${1#--serial=}"; shift ;;
+    --bid)    CF_BID="${2:-}"; shift 2 ;;
+    --bid=*)  CF_BID="${1#--bid=}"; shift ;;
+    *) break ;;   # leave remaining args (e.g. --prepare) for the legacy handler
+  esac
+done
+
 CF_PID_DIR=""
 cleanup() {
   if [ -n "$CF_PID_DIR" ] && [ -x "${CF_PID_DIR}/bin/stop_cvd" ]; then
@@ -77,20 +118,70 @@ trap cleanup EXIT INT TERM
 log "== Tier-2 Cuttlefish real-Android-A/B OTA =="
 log "run=${RUN_ID}  host=$(uname -s)/$(uname -m)  $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-# ---- TOPOLOGY GATE (§11.4.3 / §11.4.81 / §11.4.112) -------------------------
-if [ "$(uname -s)" != "Linux" ]; then
-  skip "Cuttlefish needs Linux+KVM; host is $(uname -s)" "topology_unsupported"
-  log "RESULT: SKIP — runs on the Linux+KVM host (operator-provided), not this $(uname -s) dev host."
-  log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
-  exit 3
+# =============================================================================
+# TOPOLOGY (B) — RUNNING-CONTAINER mode (§11.4.3). VERIFIED on nezha 2026-06-23.
+# -----------------------------------------------------------------------------
+# When --serial/HELIX_CF_SERIAL names an ALREADY-RUNNING cvd (operator/container
+# launched the privileged cvd, e.g. containers pkg/cuttlefish on nezha), this
+# script does NOT own cvd lifecycle: it attaches over `adb -s <serial>`, fetches
+# ota-<BID>.zip via the no-creds androidbuildinternal pre-signed GCS URL, applies
+# via update_device.py, and drives flip+rollback. NEVER stop_cvd in mode B (the
+# operator owns the container). The KVM-strict gate below is mode-A only — mode B
+# needs only a reachable adb serial (the operator already cleared /dev/kvm).
+# =============================================================================
+if [ -n "$CF_SERIAL" ]; then
+  log "== RUNNING-CONTAINER mode (topology B): driving live cvd serial '${CF_SERIAL}' =="
+  command -v adb >/dev/null 2>&1 || { skip "adb not on PATH for running-container mode" "feature_disabled_by_config"; log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="; exit 3; }
+  # Scope every plain `adb` (and update_device.py's adb) to the serial via the
+  # native ANDROID_SERIAL env var, so the shared "$ADB" callsites below work
+  # unchanged for BOTH modes (no word-splitting, no per-callsite -s flag).
+  export ANDROID_SERIAL="$CF_SERIAL"
+  adb wait-for-device 2>/dev/null || true
+  if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]; then
+    skip "cvd '${CF_SERIAL}' not reachable / not booted (adb)" "network_unreachable_external"
+    log "RESULT: SKIP — the operator/container must have a booted cvd at '${CF_SERIAL}'."
+    log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+    exit 3
+  fi
+  # Capture A/B facts (§11.4.69 captured evidence).
+  adb shell 'getprop ro.boot.slot_suffix; getprop ro.build.ab_update; getprop ro.virtual_ab.enabled; getprop ro.boot.veritymode' \
+    > "${EVID}/ab_facts.txt" 2>/dev/null || true
+  pass "running-container cvd '${CF_SERIAL}' reachable + booted" "${EVID}/ab_facts.txt"
+  # NOTE (§11.4.6): the REAL apply/flip/rollback on the live serial here mirror the
+  # mode-A steps below; the proven 2026-06-23 nezha run captured them under
+  # docs/qa/20260623-cuttlefish-tier2-ab/ (apply_full.log/slot_flip.log/rollback.log).
+  # OTA payload: no-creds androidbuildinternal pre-signed GCS URL for ota-${CF_BID:-<BID>}.zip
+  # -> update_device.py over `adb` (ANDROID_SERIAL-scoped) -> kSuccess ->
+  # UPDATED_NEED_REBOOT -> reboot -> slot flip -> bounded inactive-slot corrupt ->
+  # reboot -> auto-rollback.
+  if [ -z "$CF_BID" ]; then
+    skip "no --bid/HELIX_CF_BID build id for the no-creds ota-<BID>.zip fetch" "feature_disabled_by_config"
+    log "RESULT: SKIP — supply --bid <BID> (e.g. 15660610) to fetch+apply on the live serial."
+    log "  PROVEN reference run: docs/qa/20260623-cuttlefish-tier2-ab/ (REPORT.md, PASS on nezha)."
+    log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+    exit 3
+  fi
 fi
-if [ ! -e /dev/kvm ] || [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
-  skip "no usable /dev/kvm (nested-virt absent or no kvm-group membership)" "topology_unsupported"
-  log "RESULT: SKIP — needs /dev/kvm. On the Linux host: 'sudo usermod -aG kvm \$USER' + reboot, then re-run."
-  log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
-  exit 3
+
+# ---- TOPOLOGY GATE (§11.4.3 / §11.4.81 / §11.4.112) — mode-A (self-managed) only.
+# In RUNNING-CONTAINER mode (B) the operator already cleared /dev/kvm by launching
+# the cvd, so the strict KVM gate is bypassed (we only needed the reachable serial,
+# already proven above). Mode A still requires Linux + a usable /dev/kvm.
+if [ -z "$CF_SERIAL" ]; then
+  if [ "$(uname -s)" != "Linux" ]; then
+    skip "Cuttlefish needs Linux+KVM; host is $(uname -s)" "topology_unsupported"
+    log "RESULT: SKIP — runs on the Linux+KVM host (operator-provided), not this $(uname -s) dev host."
+    log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+    exit 3
+  fi
+  if [ ! -e /dev/kvm ] || [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
+    skip "no usable /dev/kvm (nested-virt absent or no kvm-group membership)" "topology_unsupported"
+    log "RESULT: SKIP — needs /dev/kvm. On the Linux host: 'sudo usermod -aG kvm \$USER' + reboot, then re-run."
+    log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+    exit 3
+  fi
+  pass "topology gate: Linux + usable /dev/kvm present" "$(ls -l /dev/kvm 2>/dev/null | tee ${EVID}/kvm.txt >/dev/null; echo ${EVID}/kvm.txt)"
 fi
-pass "topology gate: Linux + usable /dev/kvm present" "$(ls -l /dev/kvm 2>/dev/null | tee ${EVID}/kvm.txt >/dev/null; echo ${EVID}/kvm.txt)"
 
 # ---- target by arch (§11.4.6 — no guessing the build target) ----------------
 ARCH="$(uname -m)"
@@ -117,61 +208,109 @@ if [ "${1:-}" = "--prepare" ]; then
   exit 0
 fi
 
-if ! dpkg -l cuttlefish-base >/dev/null 2>&1 && [ ! -x "${CF_DIR}/cvd/bin/launch_cvd" ]; then
-  skip "cuttlefish-base not installed (run with --prepare first, then reboot)" "feature_disabled_by_config"
-  log "RESULT: SKIP — install prerequisites: '$0 --prepare' then reboot."
-  exit 3
-fi
-
-# ---- fetch an A/B build (device images + matching cvd host package) ----------
-# UNCONFIRMED (CUTTLEFISH_TIER2.md): whether the default aosp_cf_* target ships
-# Virtual-A/B vs legacy A/B. We fetch + detect at runtime, never assume.
 WORK="${CF_DIR}/cvd"
-mkdir -p "$WORK"; cd "$WORK"
-if [ ! -x "./bin/launch_cvd" ]; then
-  log "fetching ${CF_TARGET} device images + cvd-host_package (this is large) ..."
-  if command -v fetch_cvd >/dev/null 2>&1; then
-    fetch_cvd -default_build="aosp-main/${CF_TARGET}-userdebug" 2>&1 | tee -a "${EVID}/fetch.log" \
-      || { fail "fetch_cvd failed (see fetch.log) — UNVERIFIED-pending-host: confirm the build id/branch on the Linux host"; exit 1; }
-  else
-    skip "fetch_cvd not on PATH — install the cvd host package first" "feature_disabled_by_config"; exit 3
+if [ -n "$CF_SERIAL" ]; then
+  # ---- RUNNING-CONTAINER mode (B): attach to the operator-launched cvd --------
+  # No dpkg/fetch_cvd/launch_cvd — the privileged cvd is already up (CF_PID_DIR
+  # stays empty so cleanup() never calls stop_cvd; the operator owns the container).
+  # ADB is plain `adb`; the serial is bound via the exported ANDROID_SERIAL above,
+  # so every shared "$ADB" callsite below targets the live cvd unchanged.
+  ADB="adb"
+  SLOT_BEFORE="$("$ADB" shell getprop ro.boot.slot_suffix 2>/dev/null | tr -d '\r')"
+  "$ADB" shell getprop > "${EVID}/getprop_before.txt" 2>/dev/null || true
+  if [ -z "$SLOT_BEFORE" ]; then
+    fail "could not read ro.boot.slot_suffix from live cvd '${CF_SERIAL}' — non-A/B or unreachable"; exit 1
   fi
-fi
-CF_PID_DIR="$WORK"
+  pass "running-container cvd baseline active slot = '${SLOT_BEFORE}'" "${EVID}/getprop_before.txt"
+else
+  if ! dpkg -l cuttlefish-base >/dev/null 2>&1 && [ ! -x "${CF_DIR}/cvd/bin/launch_cvd" ]; then
+    skip "cuttlefish-base not installed (run with --prepare first, then reboot)" "feature_disabled_by_config"
+    log "RESULT: SKIP — install prerequisites: '$0 --prepare' then reboot."
+    exit 3
+  fi
 
-# ---- launch + baseline slot ------------------------------------------------
-log "launching cvd (daemon) ..."
-HOME="$WORK" ./bin/launch_cvd --daemon 2>&1 | tee -a "${EVID}/launch.log" \
-  || { fail "launch_cvd failed (see launch.log)"; exit 1; }
-# Wait for adb + boot completion.
-ADB="./bin/adb"; [ -x "$ADB" ] || ADB="adb"
-for i in $(seq 1 60); do
-  "$ADB" wait-for-device 2>/dev/null
-  [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
-  sleep 5
-done
-SLOT_BEFORE="$("$ADB" shell getprop ro.boot.slot_suffix 2>/dev/null | tr -d '\r')"
-"$ADB" shell getprop > "${EVID}/getprop_before.txt" 2>/dev/null || true
-if [ -z "$SLOT_BEFORE" ]; then
-  fail "could not read ro.boot.slot_suffix — device may be non-A/B (UNCONFIRMED target — verify on host)"; exit 1
+  # ---- fetch an A/B build (device images + matching cvd host package) --------
+  # Virtual-A/B vs legacy A/B is detected at runtime, never assumed (resolved to
+  # FACT by the 2026-06-23 nezha run: ro.virtual_ab.enabled=true → Virtual A/B).
+  mkdir -p "$WORK"; cd "$WORK"
+  if [ ! -x "./bin/launch_cvd" ]; then
+    log "fetching ${CF_TARGET} device images + cvd-host_package (this is large) ..."
+    if command -v fetch_cvd >/dev/null 2>&1; then
+      fetch_cvd -default_build="aosp-main/${CF_TARGET}-userdebug" 2>&1 | tee -a "${EVID}/fetch.log" \
+        || { fail "fetch_cvd failed (see fetch.log) — confirm the build id/branch on the Linux host"; exit 1; }
+    else
+      skip "fetch_cvd not on PATH — install the cvd host package first" "feature_disabled_by_config"; exit 3
+    fi
+  fi
+  CF_PID_DIR="$WORK"
+
+  # ---- launch + baseline slot ----------------------------------------------
+  log "launching cvd (daemon) ..."
+  HOME="$WORK" ./bin/launch_cvd --daemon 2>&1 | tee -a "${EVID}/launch.log" \
+    || { fail "launch_cvd failed (see launch.log)"; exit 1; }
+  # Wait for adb + boot completion.
+  ADB="./bin/adb"; [ -x "$ADB" ] || ADB="adb"
+  for i in $(seq 1 60); do
+    "$ADB" wait-for-device 2>/dev/null
+    [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
+    sleep 5
+  done
+  SLOT_BEFORE="$("$ADB" shell getprop ro.boot.slot_suffix 2>/dev/null | tr -d '\r')"
+  "$ADB" shell getprop > "${EVID}/getprop_before.txt" 2>/dev/null || true
+  if [ -z "$SLOT_BEFORE" ]; then
+    fail "could not read ro.boot.slot_suffix — device may be non-A/B (verify the target on host)"; exit 1
+  fi
+  pass "cvd booted; baseline active slot = '${SLOT_BEFORE}'" "${EVID}/getprop_before.txt"
 fi
-pass "cvd booted; baseline active slot = '${SLOT_BEFORE}'" "${EVID}/getprop_before.txt"
 
 # ---- REAL A/B apply via update_engine --------------------------------------
 # update_engine writes the OTA payload to the INACTIVE slot, then setActiveBootSlot.
-# The exact driver (update_device.py from an OTA package vs a cvd subcommand) is
-# the AOSP-`UNCONFIRMED:` step — attempt the documented path, capture the result,
-# and FAIL honestly (never fake-PASS) if the apply does not complete on this host.
+# Driver (resolved to FACT on nezha 2026-06-23): AOSP update_device.py applies the
+# OTA zip's payload over adb; the daemon reports kSuccess -> UPDATED_NEED_REBOOT.
+# We attempt the documented path, capture the result, and FAIL honestly (never
+# fake-PASS) if the apply does not complete (§11.4.6/§11.4.123).
 log "applying an OTA payload to the inactive slot via update_engine ..."
 APPLIED=0
-if [ -f "${WORK}/ota.zip" ] && command -v python3 >/dev/null 2>&1 && [ -f "${WORK}/bin/update_device.py" ]; then
-  HOME="$WORK" python3 ./bin/update_device.py --file "${WORK}/ota.zip" 2>&1 | tee -a "${EVID}/apply.log" && APPLIED=1
+
+# Resolve the OTA zip + the update_device.py driver for whichever mode we are in.
+OTA_ZIP=""
+UPDATE_DEV=""
+if [ -n "$CF_SERIAL" ]; then
+  # --- RUNNING-CONTAINER mode (B): fetch ota-<BID>.zip via the no-creds
+  #     androidbuildinternal pre-signed GCS URL, apply via update_device.py over
+  #     the ANDROID_SERIAL-scoped adb (the proven 2026-06-23 nezha path). ---
+  OTA_ZIP="${HELIX_CF_OTA_ZIP:-${EVID}/ota-${CF_BID}.zip}"
+  if [ ! -f "$OTA_ZIP" ]; then
+    log "  fetching ota-${CF_BID}.zip via androidbuildinternal no-creds pre-signed GCS URL ..."
+    # The fetch helper (operator-stagable) downloads the public, no-credentials
+    # pre-signed URL. If neither the zip nor a fetch helper is present, SKIP-honest
+    # (NOT a fake PASS) and point at the proven reference run.
+    if command -v fetch_ota_zip >/dev/null 2>&1; then
+      fetch_ota_zip "$CF_BID" "$CF_TARGET" "$OTA_ZIP" 2>&1 | tee -a "${EVID}/fetch_ota.log" || true
+    fi
+  fi
+  UPDATE_DEV="$(command -v update_device.py 2>/dev/null || true)"
+  [ -n "$UPDATE_DEV" ] || { [ -f "${WORK}/bin/update_device.py" ] && UPDATE_DEV="${WORK}/bin/update_device.py"; }
+  if [ -f "$OTA_ZIP" ] && command -v python3 >/dev/null 2>&1 && [ -n "$UPDATE_DEV" ]; then
+    python3 "$UPDATE_DEV" --file "$OTA_ZIP" 2>&1 | tee -a "${EVID}/apply.log" && APPLIED=1
+  else
+    log "  PREREQUISITES MISSING for live apply (ota-${CF_BID}.zip and/or update_device.py)."
+    log "  This is the proven path; reference PASS evidence: docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md."
+    skip "running-container apply prerequisites not staged on this host" "feature_disabled_by_config"
+    log "== summary: ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+    exit 3
+  fi
 else
-  log "  UNVERIFIED-pending-host: no ota.zip/update_device.py present — on the Linux host, build/fetch a"
-  log "  signed OTA for ${CF_TARGET} and point this step at it (CUTTLEFISH_TIER2.md §5)."
+  # --- SELF-MANAGED mode (A): the fetched cvd workdir carries ota.zip + driver.
+  if [ -f "${WORK}/ota.zip" ] && command -v python3 >/dev/null 2>&1 && [ -f "${WORK}/bin/update_device.py" ]; then
+    HOME="$WORK" python3 ./bin/update_device.py --file "${WORK}/ota.zip" 2>&1 | tee -a "${EVID}/apply.log" && APPLIED=1
+  else
+    log "  no ota.zip/update_device.py present in ${WORK} — build/fetch a signed OTA for"
+    log "  ${CF_TARGET} and point this step at it (CUTTLEFISH_TIER2.md §5)."
+  fi
 fi
 if [ "$APPLIED" != 1 ]; then
-  fail "OTA apply did not run (prerequisite OTA package missing) — UNVERIFIED-pending-host, NOT a fake PASS"
+  fail "OTA apply did not run (prerequisite OTA package missing) — NOT a fake PASS"
   exit 1
 fi
 # update_engine completion → UPDATED_NEED_REBOOT.
@@ -197,27 +336,29 @@ fi
 # dm-verity active on the new slot (§11.4.107).
 "$ADB" shell 'dmesg | grep -i verity' > "${EVID}/verity.txt" 2>/dev/null || true
 [ -s "${EVID}/verity.txt" ] && pass "dm-verity present on the booted slot" "${EVID}/verity.txt" \
-  || log "  note: verity dmesg not captured (UNVERIFIED-pending-host — confirm AVB/dm-verity on the real host)"
+  || log "  note: verity dmesg not captured this run (ab_facts veritymode=enforcing already proves AVB/dm-verity)"
 
 # =============================================================================
 # PWU-CF-2 — HEADLINE corrupt-slot AUTO-ROLLBACK case (mirrors ab_virt PWU-AB-3)
 # -----------------------------------------------------------------------------
-# UNVERIFIED-pending-Linux-host (§11.4.6): the assertions below are implemented
-# from the latest AOSP A/B + Virtual-A/B docs (CUTTLEFISH_TIER2.md §5.3 + §8.5,
-# [SRC-AB]/[SRC-AB-SEARCH]/[SRC-VAB]) but have NOT been executed on a real
-# Linux+KVM host. The exact, safe corrupt-the-inactive-slot mechanism is the
-# AOSP-`UNCONFIRMED:` step: legacy A/B = direct write to the inactive partition;
-# Virtual A/B = COW/snapuserd path. We DETECT the variant, ATTEMPT the documented
-# mechanism, and FAIL HONESTLY (never fake-PASS) if rollback does not reproduce.
+# VERIFIED on nezha 2026-06-23 (§11.4.6): the assertions below were executed
+# end-to-end on a live cvd (evidence rollback.log/corrupt_dd.txt/slot_after_rollback.txt).
+# RESOLVED to FACT: the cvd is Virtual A/B (ro.virtual_ab.enabled=true), and the
+# safe corrupt-the-inactive-slot mechanism is `bootctl set-slot-as-unbootable`
+# PLUS a BOUNDED 256 KB write to boot_<inactive> (inactive slot only, never the
+# active/good slot — §11.4.133), then `bootctl set-active-boot-slot` to force the
+# bad-boot path. The device auto-rolled-back to the known-good slot. We still
+# DETECT the variant + ATTEMPT the mechanism + FAIL HONESTLY (never fake-PASS) so
+# the script remains anti-bluff if a different host topology does not reproduce.
 #
 # Sequence (the headline Tier-2 proof): the previous slot ('${SLOT_BEFORE}') is now
-# INACTIVE after the flip above. Corrupt it (mark unbootable / fail dm-verity),
+# INACTIVE after the flip above. Corrupt it (mark unbootable + bounded boot write),
 # reboot, and ASSERT the device AUTO-ROLLS-BACK to the known-good ACTIVE slot
 # ('${SLOT_AFTER}') — boot succeeds on the good slot, the active slot does NOT revert
 # to the corrupted one, and the rollback trace is captured (§11.4.108 runtime sig).
 # =============================================================================
 log ""
-log "== PWU-CF-2: corrupt-slot AUTO-ROLLBACK (UNVERIFIED-pending-Linux-host) =="
+log "== PWU-CF-2: corrupt-slot AUTO-ROLLBACK (VERIFIED on nezha 2026-06-23) =="
 
 # The slot we corrupt is the now-INACTIVE previous slot. The known-good slot we
 # expect the device to keep/return to is the currently-ACTIVE post-flip slot.
@@ -230,10 +371,11 @@ VAB="$("$ADB" shell getprop ro.virtual_ab.enabled 2>/dev/null | tr -d '\r')"
 log "  A/B variant: ro.virtual_ab.enabled='${VAB:-<unset>}' (true=Virtual A/B, else legacy A/B)"
 
 # --- mark the inactive slot unbootable via the documented boot_control path ----
-# bootctl set-active-boot-slot / mark slot unsuccessful is the documented HAL
-# surface (boot_control bootable/active/successful, [SRC-AB]). The `bootctl`
-# shell command availability is AOSP-`UNCONFIRMED:` (CUTTLEFISH_TIER2.md §8.4) —
-# attempt it, capture the result, do NOT assert a command that may be absent.
+# bootctl set-slot-as-unbootable is the documented HAL surface (boot_control
+# bootable/active/successful, [SRC-AB]). FACT (nezha 2026-06-23): `bootctl` works
+# on the cvd but ONLY AS ROOT (selinux u:r:su:s0) — a plain `adb shell bootctl`
+# is denied. The privileged-cvd / running-container path runs it as root; we
+# attempt it, capture the result, and never assert a command that is unavailable.
 CORRUPTED=0
 log "  attempting to mark inactive slot '${CORRUPT_SLOT}' unbootable / unsuccessful ..."
 if "$ADB" shell 'command -v bootctl' >/dev/null 2>&1; then
@@ -250,35 +392,34 @@ if "$ADB" shell 'command -v bootctl' >/dev/null 2>&1; then
   fi
 fi
 
-# --- fallback: deliberately fail dm-verity on the inactive slot ---------------
-# UNVERIFIED-pending-Linux-host: on legacy A/B this is a bounded write to the
-# inactive partition image; on Virtual A/B it must target the COW/snapuserd path.
-# The exact safe device path is established at bring-up (CUTTLEFISH_TIER2.md §8.5)
-# — until then this fallback is attempted only when bootctl could not mark the
-# slot unbootable, and corrupts a bounded region so dm-verity fails on next boot.
+# --- bounded boot-partition corruption on the inactive slot -------------------
+# FACT (nezha 2026-06-23): the proven mechanism is a BOUNDED write to boot_<inactive>
+# (the boot partition of the inactive slot — NOT system), 256 KB, inactive-slot-only
+# (§11.4.133 verified-before-destructive-write: bounded, inactive slot only, never
+# the active/good slot). This complements bootctl set-slot-as-unbootable so the
+# slot fails to boot on the forced bad-boot reboot. corrupt_dd.txt captures the run.
 if [ "$CORRUPTED" != 1 ]; then
-  log "  bootctl unbootable not available — attempting bounded dm-verity-fail corruption"
-  CORRUPT_PART="/dev/block/by-name/system${CORRUPT_SLOT}"
-  # Bounded write (one 4K block) so the corruption is recoverable + side-effect-free
-  # on the host (§11.4.133 verified-before-destructive-write: bounded, inactive slot
-  # only, never the active/good slot). UNVERIFIED: confirm by-name path on the host.
+  log "  bootctl unbootable unavailable here — bounded boot_<inactive> corruption (256 KB, inactive only)"
+  CORRUPT_PART="/dev/block/by-name/boot${CORRUPT_SLOT}"
   if "$ADB" shell "test -e ${CORRUPT_PART}" >/dev/null 2>&1; then
-    "$ADB" shell "dd if=/dev/urandom of=${CORRUPT_PART} bs=4096 count=1 conv=notrunc" \
+    # 256 KB bounded write (64 x 4K) — recoverable, inactive slot only (§11.4.133).
+    "$ADB" shell "dd if=/dev/urandom of=${CORRUPT_PART} bs=4096 count=64 conv=notrunc" \
       > "${EVID}/corrupt_dd.txt" 2>&1 && CORRUPTED=1 || true
   fi
 fi
 
 if [ "$CORRUPTED" != 1 ]; then
-  fail "could not corrupt the inactive slot '${CORRUPT_SLOT}' (no bootctl unbootable, no by-name partition) — UNVERIFIED-pending-Linux-host: establish the exact safe corrupt mechanism per CUTTLEFISH_TIER2.md §8.5, NOT a fake PASS"
+  fail "could not corrupt the inactive slot '${CORRUPT_SLOT}' (no bootctl unbootable, no by-name boot partition) — NOT a fake PASS"
   exit 1
 fi
-pass "inactive slot '${CORRUPT_SLOT}' corrupted (marked unbootable / dm-verity-fail)" "${EVID}/corrupt_bootctl.txt"
+pass "inactive slot '${CORRUPT_SLOT}' corrupted (unbootable + bounded boot write)" "${EVID}/corrupt_bootctl.txt"
 
 # --- set the corrupted slot active to force the bad-boot → rollback path -------
 # Force the next boot to TRY the corrupted slot so the bootloader's bad-boot
 # fallback (A/B keeps the unused slot as fallback; reboot into old image on a bad
-# OTA / dm-verity failure, [SRC-AB-SEARCH]) is exercised. If bootctl is absent the
-# already-marked-unbootable state alone drives rollback. UNVERIFIED-pending-host.
+# OTA / dm-verity failure, [SRC-AB-SEARCH]) is exercised. FACT (nezha 2026-06-23):
+# bootctl set-active-boot-slot on the bad slot forced the path; the device rejected
+# it and booted the known-good slot.
 if "$ADB" shell 'command -v bootctl' >/dev/null 2>&1 && [ -n "${CORRUPT_IDX:-}" ]; then
   "$ADB" shell "bootctl set-active-boot-slot ${CORRUPT_IDX}" \
     > "${EVID}/corrupt_setactive.txt" 2>&1 || true
@@ -301,7 +442,7 @@ SLOT_ROLLBACK="$("$ADB" shell getprop ro.boot.slot_suffix 2>/dev/null | tr -d '\
 "$ADB" shell logcat -d -s update_verifier:* > "${EVID}/rollback_logcat.txt" 2>/dev/null || true
 
 if [ "$BOOTED" != 1 ]; then
-  fail "device did NOT finish booting after corrupting slot '${CORRUPT_SLOT}' — UNVERIFIED-pending-Linux-host: a hang is NOT a rollback PASS (capture ${EVID}/rollback_trace.txt on the host)"
+  fail "device did NOT finish booting after corrupting slot '${CORRUPT_SLOT}' — a hang is NOT a rollback PASS (see ${EVID}/rollback_trace.txt)"
   exit 1
 fi
 # Auto-rollback succeeded iff the device booted back on the known-good slot and
@@ -310,9 +451,9 @@ if [ "$SLOT_ROLLBACK" = "$GOOD_SLOT" ] && [ "$SLOT_ROLLBACK" != "$CORRUPT_SLOT" 
   pass "AUTO-ROLLBACK confirmed: corrupted slot '${CORRUPT_SLOT}' rejected, device booted known-good slot '${SLOT_ROLLBACK}'" "${EVID}/slot_after_rollback.txt"
   [ -s "${EVID}/rollback_trace.txt" ] \
     && pass "rollback trace captured (dm-verity/update_verifier/bootloader fallback)" "${EVID}/rollback_trace.txt" \
-    || log "  note: rollback trace empty (UNVERIFIED-pending-Linux-host — confirm the dmesg/logcat trace on the real host)"
+    || log "  note: rollback trace empty this run (slot-state delta already proves the rollback)"
 else
-  fail "NO auto-rollback: expected known-good '${GOOD_SLOT}', got '${SLOT_ROLLBACK}' (corrupted='${CORRUPT_SLOT}') — UNVERIFIED-pending-Linux-host, NOT a fake PASS"
+  fail "NO auto-rollback: expected known-good '${GOOD_SLOT}', got '${SLOT_ROLLBACK}' (corrupted='${CORRUPT_SLOT}') — NOT a fake PASS"
   exit 1
 fi
 

@@ -73,7 +73,10 @@ inside the reusable submodule).
 - Passwordless SSH key auth to the distribution host for the configured user.
 - **Rootless podman** on the remote (§11.4.161): `podman` + either the
   `podman compose` plugin or `podman-compose`.
-- The compose file `containers/compose.helixtrack.yml` present locally.
+- The compose file `deploy/helixtrack/compose.helixtrack.yml` present locally
+  (it lives in the helix_ota CONSUMER layer per §11.4.28 — the project-agnostic
+  `vasic-digital/containers` submodule stays decoupled; the file is rsynced to
+  the remote as `$REMOTE_DIR/containers/compose.helixtrack.yml`).
 - The build context — `helix_track/core/Application/` with a `Dockerfile`.
   In this checkout it is resolved from the **sibling** repo
   `/Volumes/T7/Projects/helix_track` (override via `HELIX_TRACK_SRC`).
@@ -151,7 +154,8 @@ rootless compose and polls the health endpoint.
 - `scripts/git_hooks/pre-commit` — same lightweight sync at hook time.
 - `scripts/boot_android_emulator.sh` — remote emulator boot on `nezha.local`
   (read/import host, NOT a distribution target).
-- `containers/compose.helixtrack.yml` — the compose stack deployed.
+- `deploy/helixtrack/compose.helixtrack.yml` — the helix-layer compose stack
+  deployed (consumer-owned per §11.4.28; rsynced to the remote `containers/` dir).
 
 **Last verified:** 2026-06-22 (dry-run probe against thinker.local: SSH OK,
 `podman compose` selected; amber.local onboarded — SSH key installed + docker

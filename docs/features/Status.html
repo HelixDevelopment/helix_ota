@@ -177,8 +177,8 @@
 </header>
 <h1 id="helix-ota-feature-inventory-and-status">Helix OTA — Feature
 Inventory and Status</h1>
-<p><strong>Revision:</strong> 20 <strong>Last modified:</strong>
-2026-06-22T22:45:00Z <strong>Scope:</strong> Comprehensive inventory of
+<p><strong>Revision:</strong> 21 <strong>Last modified:</strong>
+2026-06-23T09:15:00Z <strong>Scope:</strong> Comprehensive inventory of
 every feature, component, subsystem, test suite, and infrastructure
 concern across the Helix OTA monorepo — covering the Go server, Go
 submodules, Android submodules, emulation tiers, e2e/security tests,
@@ -233,8 +233,10 @@ direct-dd (evidence docs/qa/20260620T051026Z-ab-rauc-verity/) - PWU-AB-4
 ApplyPort = IMPLEMENTED — 36 tests, 3 Go source files, 2 Kotlin files,
 CLI binary - PWU-AB-4 ApplyPort Scaffold (slot manager, signature
 verifier, health marker, HTTP client) = IMPLEMENTED - Tier-2 Cuttlefish
-Android A/B = OPERATOR-BLOCKED (needs Linux + KVM host) - Tier-3 RK3588
-physical board = OPERATOR-BLOCKED (no hardware)</p>
+Android A/B = VERIFIED (nezha 2026-06-23 — real update_engine A/B apply
+-&gt; slot flip _a-&gt;_b -&gt; auto-rollback on a live cvd; evidence
+docs/qa/20260623-cuttlefish-tier2-ab/) - Tier-3 RK3588 physical board =
+OPERATOR-BLOCKED (no hardware)</p>
 <p><strong>Production deployment</strong> — The full 3-container stack
 (server + PostgreSQL + SPA) is deployed and verified on
 <code>nezha.local</code>. Container orchestration handles boot,
@@ -1163,21 +1165,39 @@ at server/cmd/applyport/main.go.</td>
 <td>Emulator</td>
 <td>Tier-2 Cuttlefish Android A/B</td>
 <td>Real Android update_engine A/B + AVB/dm-verity + auto-rollback</td>
-<td>OPERATOR-BLOCKED</td>
-<td>tests/emulator/tier2_cuttlefish_ab.sh</td>
-<td>Driver authored (PWU-CF-2 corrupt-slot rollback section mirrors
-PWU-AB-3)</td>
-<td>Topology-gated: needs Linux + /dev/kvm (confirmed absent on this
-Apple Silicon macOS host)</td>
-<td>OPERATOR-BLOCKED / hardware-gated — no recording: real Android
-update_engine A/B + AVB/dm-verity + rollback needs Linux + /dev/kvm
-(Cuttlefish). nezha AVD boots
-(qa-results/20260622T071848Z-nezha-android-ab/) but the OTA apply flow
-is operator-attended (sudo + reboot + ~30 GB fetch_cvd). Screen
-recording owed when provisioned.</td>
-<td>Operator-block: No /dev/kvm on this macOS dev host. Script exits 3
-(SKIP). Ready to run on operator’s incoming Linux + nested-KVM host.
-Section UNCONFIRMED: pending runtime.</td>
+<td>VERIFIED</td>
+<td>tests/emulator/tier2_cuttlefish_ab.sh (HONEST STATUS header now
+VERIFIED on nezha 2026-06-23; added running-container
+<code>--serial</code> mode; UNCONFIRMED items resolved to FACT)</td>
+<td>Driver RAN end-to-end on a live cvd on nezha — apply -&gt; slot flip
+-&gt; auto-rollback (PWU-CF-2). §11.4.135 guard
+<code>tests/regression/guard_cuttlefish_ab_proven.sh</code> GREEN. On a
+no-KVM host it still SKIPs honestly (exit 3).</td>
+<td>Real Android <code>update_engine</code> A/B + AVB/dm-verity
+(enforcing) + auto-rollback exercised on a live Cuttlefish cvd (build
+15660610).</td>
+<td><strong>VERIFIED on nezha 2026-06-23</strong> — captured evidence
+<code>docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md</code> (+
+apply_full.log/slot_flip.log/rollback.log/corrupt_dd.txt/ab_facts.txt).
+Real OTA payload applied
+(<code>kSuccess</code>-&gt;<code>UPDATED_NEED_REBOOT</code>), slot flip
+<code>_a-&gt;_b</code>, forced-bad-slot auto-rollback to known-good
+<code>_b</code>. OTA payload no-creds (androidbuildinternal pre-signed
+GCS URL, size+md5 verified). Read-the-screen verified per §11.4.158
+(REPORT.md §7).</td>
+<td><strong>VERIFIED — real Android A/B on a live Cuttlefish cvd (honest
+§11.4.6).</strong> The Tier-2 driver executed the full flow on nezha
+(driven over <code>adb -s 127.0.0.1:6520</code>, no host sudo for the
+A/B flow). <code>bootctl</code>/<code>update_engine_client</code> are
+root-only on the cvd (FACT). The driver gained a running-container
+<code>--serial</code>/<code>HELIX_CF_SERIAL</code> mode (topology B) to
+drive an operator-launched cvd; the self-managed fetch_cvd/launch_cvd
+path (topology A) is retained, and the §11.4.3 topology SKIP (exit 3)
+still fires on no-KVM hosts. Honest boundary (§11.4.3/§11.4.112):
+Cuttlefish is the hardware-free A/B proxy; native A/B fidelity is
+Cuttlefish-only by operator decision — the RK3588 boards (F113) stay
+control-plane-only (§11.4.133). Complements the containerized path
+F112.</td>
 </tr>
 <tr>
 <td>F56</td>
@@ -2031,37 +2051,52 @@ sync, orphans, concurrent safety. All PASS.</td>
 <td>containers pkg/cuttlefish</td>
 <td>Cuttlefish <code>cvd</code> lifecycle wrapper — Tier-2 containerized
 Android A/B path</td>
-<td>PARTIAL</td>
+<td>VERIFIED</td>
 <td>containers/pkg/cuttlefish/ — cuttlefish.go, accel.go, cleanup.go,
 health.go, types.go, entrypoint.sh, Containerfile (cvd
 launch/health/cleanup lifecycle); rootful-privileged documented
 exception <code>docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md</code>
 (§11.4.161 documented exception via §11.4.112 — rootless infeasible: cvd
 needs <code>--privileged</code> + <code>cvd-ebr</code> bridge + tap
-devices, cited)</td>
+devices, cited). <strong>REAL-A/B evidence:
+<code>docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md</code> (+
+apply_full.log, slot_flip.log, rollback.log, corrupt_dd.txt,
+ab_facts.txt).</strong></td>
 <td><code>go test -race ./pkg/cuttlefish/</code> — 30 PASS + 1 honest
-topology SKIP (no Linux+KVM on this macOS host)</td>
-<td>Unit-level cvd-lifecycle wrapper BUILT + race-tested. Real
-end-to-end A/B apply NOT yet exercised.</td>
-<td>integration-pending — NO real-A/B recording on this host: end-to-end
-run is gated on nezha Linux+KVM (assets staging in progress; privileged
-<code>launch_cvd</code> operator-gated, needs sudo+reboot+~30 GB
-fetch_cvd).</td>
-<td><strong>Container path BUILT + unit-tested — NOT yet a real-A/B PASS
-(honest §11.4.6).</strong> The <code>pkg/cuttlefish</code> cvd-lifecycle
-wrapper compiles and passes 30 <code>-race</code> unit tests + 1 honest
-topology SKIP. Rootful-privileged launch is a §11.4.161 documented
-exception (rootless cannot host Cuttlefish — cited in the exception
-doc). Real Android <code>update_engine</code>/AVB/dm-verity A/B apply
-through this path is <strong>integration-pending</strong> (OTA-003;
-complements the operator-blocked Tier-2 driver F55). Native A/B fidelity
-is this path’s job once provisioned. <strong>Bring-up is
-RUNBOOK-READY</strong> —
-<code>docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md</code> gives the exact
-operator-vs-agent step split for the real nezha run (operator runs the 3
-privileged steps; agent drives extract/launch_cvd/A-B-rollback
-validation). NOT a real-A/B PASS until that runbook executes with
-captured slot-flip/rollback evidence.</td>
+topology SKIP; <strong>PLUS real end-to-end A/B run on a live cvd (build
+15660610) on nezha</strong> + §11.4.135 guard
+<code>tests/regression/guard_cuttlefish_ab_proven.sh</code> GREEN.</td>
+<td>Unit cvd-lifecycle wrapper + **REAL update_engine A/B apply -&gt;
+slot flip _a-&gt;_b -&gt; auto-rollback** exercised end-to-end on a live
+cvd.</td>
+<td><strong>VERIFIED on nezha 2026-06-23</strong> — captured evidence
+<code>docs/qa/20260623-cuttlefish-tier2-ab/</code>: apply
+<code>kSuccess</code>-&gt;<code>UPDATED_NEED_REBOOT</code>
+(<code>apply_full.log</code>), slot flip <code>_a-&gt;_b</code>
+(<code>slot_flip.log</code>), forced-bad-slot auto-rollback to
+known-good <code>_b</code> (<code>rollback.log</code>), bounded 256 KB
+inactive-slot corrupt (<code>corrupt_dd.txt</code>, §11.4.133).
+Read-the-screen verified per §11.4.158 (REPORT.md §7).</td>
+<td><strong>VERIFIED — REAL Android A/B PASS on a live Cuttlefish cvd
+(honest §11.4.6).</strong> A real ~1 GB OTA payload was applied through
+<code>update_engine</code> to a live cvd (build 15660610,
+<code>aosp_cf_x86_64_only_phone</code>, Virtual A/B + verity enforcing,
+15 A/B partitions) on nezha, driven autonomously as
+<code>milosvasic</code> over <code>adb -s 127.0.0.1:6520</code> (no host
+sudo for the A/B flow):
+<code>onPayloadApplicationComplete(kSuccess)</code> -&gt;
+<code>UPDATED_NEED_REBOOT</code> -&gt; reboot slot flip
+<code>_a-&gt;_b</code> (VAB merge
+<code>merging</code>-&gt;<code>none</code>, <code>_b</code> marked
+successful) -&gt; forced-bad slot <code>_a</code> rejected -&gt; device
+booted known-good <code>_b</code>. OTA payload obtained with NO
+credentials (androidbuildinternal pre-signed GCS URL, size+md5
+verified). Honest boundary (§11.4.3/§11.4.112): Cuttlefish is the
+hardware-free A/B proxy; the RK3588 boards (F113) stay
+control-plane-only by operator decision (§11.4.133), native A/B is
+Cuttlefish-only. <code>bootctl</code>/<code>update_engine_client</code>
+are root-only on the cvd (FACT). The §11.4.135 guard locks the proof in.
+Rootful-privileged launch is a §11.4.161 documented exception.</td>
 </tr>
 <tr>
 <td>F113</td>
@@ -2448,12 +2483,14 @@ Scaffold), F111 (DB Migration Test)</td>
 </tr>
 <tr>
 <td>VERIFIED</td>
-<td>25</td>
-<td>F35-F41, F68, F72 (Build resource stats), F73, F77-F85, F88,
+<td>27</td>
+<td>F35-F41, F55 (Tier-2 Cuttlefish driver — REAL A/B on live cvd, nezha
+2026-06-23), F68, F72 (Build resource stats), F73, F77-F85, F88,
 F92-F93, F96 (Production Deploy), F97 (Remote Stress), F106 (§11.4.159
 Recording Compliance), F108 (HelixTrack Integration), F109 (Build
-Resource Stats), F114 (Container stack distribution — REAL deploy to
-thinker GREEN: <code>(healthy)</code>+<code>/health</code> 200), F117
+Resource Stats), F112 (Cuttlefish pkg/cuttlefish — REAL A/B PASS on live
+cvd, nezha 2026-06-23), F114 (Container stack distribution — REAL deploy
+to thinker GREEN: <code>(healthy)</code>+<code>/health</code> 200), F117
 (commit_all cascade-push)</td>
 </tr>
 <tr>
@@ -2465,18 +2502,16 @@ Video), F95 (AB Rollback Video)</td>
 </tr>
 <tr>
 <td>OPERATOR-BLOCKED</td>
-<td>2</td>
-<td>F55 (Tier-2 Cuttlefish driver), F56 (Tier-3 HW)</td>
+<td>1</td>
+<td>F56 (Tier-3 HW)</td>
 </tr>
 <tr>
 <td>PARTIAL</td>
-<td>4</td>
-<td>F86 (stress+chaos coverage), F112 (Cuttlefish pkg/cuttlefish —
-container path built + unit-tested, real-A/B integration-pending), F115
-(Docker-fallback distribution — gate logic dry-run-verified, real docker
-deploy to amber NOT run), F116 (Remote-emulator full-detachment — setsid
-source hardening applied + reviewed, on-target persistence NOT
-run-proven)</td>
+<td>3</td>
+<td>F86 (stress+chaos coverage), F115 (Docker-fallback distribution —
+gate logic dry-run-verified, real docker deploy to amber NOT run), F116
+(Remote-emulator full-detachment — setsid source hardening applied +
+reviewed, on-target persistence NOT run-proven)</td>
 </tr>
 <tr>
 <td>NOT_STARTED</td>
@@ -2489,8 +2524,10 @@ run-proven)</td>
 the Device-B control-plane round-trip on real RK3588 Android-15 hardware
 (sink-side <code>update_state=success</code>), with Device-A an honest
 topology SKIP — counted under PASS above. Both boards are NON-A/B
-(control-plane validation only; native A/B fidelity is F112’s Cuttlefish
-path).</p>
+(control-plane validation only; native A/B fidelity is F112/F55’s
+Cuttlefish path — now <strong>VERIFIED on nezha 2026-06-23</strong> with
+real update_engine A/B apply + slot flip + auto-rollback, evidence
+<code>docs/qa/20260623-cuttlefish-tier2-ab/</code>).</p>
 <hr />
 <h2 id="provenance">Provenance</h2>
 <table>
@@ -2505,6 +2542,45 @@ path).</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>2026-06-23</td>
+<td>Rev 21 — <strong>Cuttlefish Tier-2 REAL Android A/B VERIFIED on
+nezha (terminal goal met).</strong> A real ~1 GB OTA payload was applied
+through <code>update_engine</code> to a live Cuttlefish cvd (build
+15660610, <code>aosp_cf_x86_64_only_phone</code>, Virtual A/B + verity
+enforcing, 15 A/B partitions) on the operator’s nezha Linux+KVM host,
+driven autonomously as <code>milosvasic</code> over
+<code>adb -s 127.0.0.1:6520</code> (no host sudo for the A/B flow):
+<code>onPayloadApplicationComplete(kSuccess)</code> →
+<code>UPDATE_STATUS_UPDATED_NEED_REBOOT</code> (115 s) → reboot slot
+flip <code>_a→_b</code> (VAB merge
+<code>merging</code>→<code>none</code>, <code>_b</code> marked
+successful) → forced-bad slot <code>_a</code> (bootctl
+set-slot-as-unbootable + bounded 256 KB inactive-slot boot_a write,
+§11.4.133) rejected → device booted known-good <code>_b</code>. OTA
+payload obtained with NO credentials (androidbuildinternal pre-signed
+GCS URL <code>storage.googleapis.com</code>, 1003473429 B, md5
+<code>d90870a9a6eeece3868520d7fd3f098c</code> — size+md5 verified before
+apply). <strong>F112 PARTIAL→VERIFIED; F55 (Tier-2 driver)
+OPERATOR-BLOCKED→VERIFIED.</strong> Evidence + curated report
+<code>docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md</code>
+(read-the-screen verified per §11.4.158). §11.4.135 regression guard
+<code>tests/regression/guard_cuttlefish_ab_proven.sh</code> GREEN.
+Validator <code>tests/emulator/tier2_cuttlefish_ab.sh</code> HONEST
+STATUS updated to VERIFIED + UNCONFIRMED items resolved to FACT + new
+running-container <code>--serial</code> mode (bash -n/sh -n clean).
+<strong>Full journey (provenance):</strong> curl-download-fail →
+resumable wget-c recovery → 27.6 GB single-stage image → slim 1.11 GB
+prebuilt-deb path (containers <code>54aa9b2</code>) → operator
+privileged launch (<code>cf-launch.sh</code>) → cvd booted → this A/B
+PASS; cvd left running on nezha. Summary-by-Status: VERIFIED 25→27,
+PARTIAL 4→3, OPERATOR-BLOCKED 2→1. Honest boundary
+(§11.4.3/§11.4.112/§11.4.133): Cuttlefish is the hardware-free A/B
+proxy; the RK3588 boards (F113) stay control-plane-only by operator
+decision (native A/B is Cuttlefish-only);
+<code>bootctl</code>/<code>update_engine_client</code> are root-only on
+the cvd (FACT). Exports regenerated.</td>
+</tr>
 <tr>
 <td>2026-06-18</td>
 <td>Initial feature inventory creation (HEAD at time of writing).</td>

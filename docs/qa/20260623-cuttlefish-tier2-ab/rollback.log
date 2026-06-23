@@ -1,0 +1,13 @@
+== AUTO-ROLLBACK TEST 2026-06-23T08:55:16Z ==
+GOOD_SLOT(running,successful)=_b
+pre: current-slot=1 active-next=1
+pre: is-slot-bootable 0(_a)=0
+rc=70
+-- corrupting inactive slot _a (bounded write to boot_a, inactive-only) --
+corrupt rc=0 (see corrupt_dd.txt)
+-- forcing next boot to corrupted slot _a (bootctl set-active-boot-slot 0) --
+set-active rc=0 -> active-next=0
+-- reboot, expecting AUTO-ROLLBACK to known-good _b --
+BOOTED=1  SLOT_AFTER_ROLLBACK=_b
+post: current-slot=1
+RESULT: AUTO-ROLLBACK CONFIRMED -- forced-bad slot _a rejected, device booted known-good _b

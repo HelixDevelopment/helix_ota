@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 12
-**Last modified:** 2026-06-22T22:45:00Z
+**Revision:** 13
+**Last modified:** 2026-06-23T09:15:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 > **Video-evidence reconciliation (2026-06-22, §11.4.6 no-bluff).** Earlier revisions
@@ -82,12 +82,13 @@ and what state it is in.
 - **Android OTA agent on-device verification** — the two Kotlin modules exist and
   the ApplyPort Go/Kotlin code is implemented but has not been tested against a
   real Android target.
-- **Cuttlefish Tier-2 containerized path (F112)** — a new `pkg/cuttlefish`
-  cvd-lifecycle wrapper was added to the containers submodule and passes its unit
-  tests (30 PASS + 1 honest skip). **But the real end-to-end Android A/B run has
-  NOT happened yet** — it needs the nezha Linux+KVM host (assets are staging, and
-  the privileged `launch_cvd` step needs operator sudo + reboot + ~30 GB download).
-  So this is **built and unit-tested, NOT a real-A/B pass** — integration-pending.
+- **Cuttlefish Tier-2 Android A/B (F112 / F55) — DONE, now VERIFIED.** As of
+  2026-06-23 the real end-to-end Android A/B update ran on a live Cuttlefish
+  virtual device on the nezha host: a real ~1 GB update was applied, the device
+  switched to the new slot (`_a`→`_b`), and when the old slot was deliberately
+  broken the device safely fell back to the known-good slot — exactly how a real
+  phone protects itself from a bad update. The update file was downloaded with no
+  passwords needed. This is the deepest test we can run without a physical board.
   Rootless containers cannot host Cuttlefish, so a narrow rootful-privileged
   exception is documented (`docs/design/CUTTLEFISH_ROOTFUL_EXCEPTION.md`).
   **The bring-up is now runbook-ready** — `docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md`
@@ -150,12 +151,12 @@ open items before a release tag.
 |---|---|---|
 | PASS | 50 | All server handlers (F01-F34), emulator Tier-0/Tier-1 (F44-F49), e2e tests (F57-F67), build gates (F69-F71), scripts (F74-F76), Multi-Project API + IDOR (F90-F91), MountManagerUI (F98), IDOR Security (F99), Tauri IPC (F100), Docker Secrets (F101), Remote Deploy (F103), Devices List API (F104), Hardware ID Reverse Lookup (F105), **RK3588 control-plane validation — Device B (F113)** |
 | SKIP | 1 | Demo Re-recordings (F107) — stale/rotated per §11.4.154 |
-| VERIFIED | 25 | Go submodules (F35-F41), containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159 Recording Compliance (F106), HelixTrack Integration (F108), Build Resource Stats (F109), **Container stack distribution (F114 — REAL fully-automated deploy to thinker GREEN: `(healthy)` + `/health` 200)**, **commit_all cascade-push (F117 — real commits pushed to all four mirrors this session)** |
+| VERIFIED | 27 | Go submodules (F35-F41), **Tier-2 Cuttlefish driver (F55 — REAL Android A/B on a live cvd, nezha 2026-06-23)**, containers (F68), .gitignore (F73), governance (F77-F85), CodeGraph wired (F88), frontend build + tests (F92-F93), Production Deploy (F96), Remote Stress (F97), §11.4.159 Recording Compliance (F106), HelixTrack Integration (F108), Build Resource Stats (F109), **Cuttlefish `pkg/cuttlefish` (F112 — REAL A/B PASS on a live cvd, nezha 2026-06-23)**, **Container stack distribution (F114 — REAL fully-automated deploy to thinker GREEN: `(healthy)` + `/health` 200)**, **commit_all cascade-push (F117 — real commits pushed to all four mirrors this session)** |
 | PROVEN | 6 | PWU-AB-1 base+boot (F50), slot switch (F51), auto-rollback (F52), PWU-AB-2 RAUC dm-verity (F53), slot switch video (F94), rollback video (F95) |
 | IMPLEMENTED | 2 | PWU-AB-4 ApplyPort (F54), ApplyPort Scaffold (F102) |
 | DESIGN | 2 | ota-android-agent (F42), ota-update-engine-bridge (F43) |
-| OPERATOR-BLOCKED | 2 | Tier-2 Cuttlefish driver (F55 — needs Linux+KVM), Tier-3 HW (F56 — needs board) |
-| PARTIAL | 4 | Stress+chaos coverage (F86 — partial submodule set), Cuttlefish `pkg/cuttlefish` (F112 — container path built + 30 `-race` unit tests PASS + 1 honest topology SKIP; real-A/B run integration-pending, NOT a real-A/B PASS), **Docker-fallback distribution §11.4.161 (F115 — gate logic dry-run-verified, real docker deploy to amber NOT run)**, **Remote-emulator full-detachment §11.4.144 (F116 — `setsid` source hardening applied + reviewed, on-target persistence NOT run-proven)** |
+| OPERATOR-BLOCKED | 1 | Tier-3 HW (F56 — needs board) |
+| PARTIAL | 3 | Stress+chaos coverage (F86 — partial submodule set), **Docker-fallback distribution §11.4.161 (F115 — gate logic dry-run-verified, real docker deploy to amber NOT run)**, **Remote-emulator full-detachment §11.4.144 (F116 — `setsid` source hardening applied + reviewed, on-target persistence NOT run-proven)** |
 | NOT_STARTED | 2 | Build-resource-stats (F72), workable-items DB (F87) |
 
 **F113 (RK3588 control-plane validation) — PASS, honest boundary.** Device B (Ethernet,
@@ -166,8 +167,9 @@ serial `1acdceab90248933`) on real RK3588 Android-15 originated `GET /healthz` 2
 state). Device A (Wi-Fi, `19bbb528a1dbbc4d`) is an honest topology **SKIP** (VPN tun1 full-tunnel /
 Wi-Fi AP isolation — busybox nc to both `:18080` and `:22` time out → blocked path, captured
 root cause, NOT a Helix defect). **Both boards are NON-A/B** (single-slot, no `update_engine`) —
-this validates the control plane on real hardware, NOT native A/B apply (F112's job). ZERO device
-state changes (§11.4.122/§11.4.133). Evidence: `docs/qa/20260622-rk3588-controlplane/REPORT.md`.
+this validates the control plane on real hardware, NOT native A/B apply (F112/F55's job — now
+**VERIFIED on nezha 2026-06-23**). ZERO device state changes (§11.4.122/§11.4.133). Evidence:
+`docs/qa/20260622-rk3588-controlplane/REPORT.md`.
 
 **Distribution mechanism (F114 VERIFIED / F115 PARTIAL) (§11.4.5/§11.4.69).** `distribute_stack.sh`
 (helix layer, §11.4.28) deploys the HelixTrack stack over SSH + remote rootless `podman-compose`.
@@ -200,13 +202,18 @@ asserted here; only the source-level detachment hardening is done. F117 (VERIFIE
 timeout; four-upstream fan-out per §2.1/§11.4.88) — multiple **real commits** (e.g. `17cbd47a`,
 `74af4684`) pushed to all four mirrors this session through the fix.
 
-**Cuttlefish bring-up RUNBOOK-READY (F112).** `docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md` gives the
-exact operator-vs-agent step split for the real nezha run — operator runs the 3 privileged steps
-(modprobe/`/dev/vsock` if absent; group membership; the `--privileged --network host --device …`
-container run, since nezha has no passwordless sudo); agent drives extract/`launch_cvd`/
-A-B-slot-flip/auto-rollback validation (`tier2_cuttlefish_ab.sh`) + evidence capture. **F112 stays
-PARTIAL / integration-pending — NOT a real-A/B PASS** until the runbook executes with captured
-slot-flip + rollback evidence (§11.4.107/§11.4.108/§11.4.69).
+**Cuttlefish Tier-2 REAL Android A/B — VERIFIED on nezha 2026-06-23 (F112 / F55).** The runbook
+`docs/design/CUTTLEFISH_NEZHA_RUNBOOK.md` was executed: the operator ran the privileged container
+launch (`cf-launch.sh`, no passwordless sudo on nezha) and the agent drove the A/B flow over
+`adb -s 127.0.0.1:6520`. A real ~1 GB OTA payload (no-creds androidbuildinternal pre-signed GCS URL,
+size+md5 verified) was applied through `update_engine` to a live cvd (build 15660610, Virtual A/B +
+verity enforcing, 15 A/B partitions): `onPayloadApplicationComplete(kSuccess)` → `UPDATED_NEED_REBOOT`
+→ slot flip `_a→_b` (VAB merge `merging`→`none`, `_b` successful) → forced-bad slot `_a` (bootctl
+set-slot-as-unbootable + bounded 256 KB inactive-slot write, §11.4.133) rejected → device booted
+known-good `_b`. **F112 PARTIAL→VERIFIED; F55 OPERATOR-BLOCKED→VERIFIED.** Evidence
+`docs/qa/20260623-cuttlefish-tier2-ab/REPORT.md` (read-the-screen verified, §11.4.158);
+§11.4.135 guard `tests/regression/guard_cuttlefish_ab_proven.sh` GREEN
+(§11.4.107/§11.4.108/§11.4.69). cvd left running on nezha.
 
 **Proven A/B core (captured evidence):**
 - **PWU-AB-1 slot switch** — `docs/qa/20260611T094958Z-ab-slot-switch/` (3/3

@@ -53,7 +53,9 @@
 #
 # Cross-references:
 #   §11.4.161 rootless container runtime · §11.4.76 containers submodule ·
-#   §11.4.28 helix-layer only (no project context inside the submodule) ·
+#   §11.4.28 decoupling — the HelixTrack-specific compose lives in the helix_ota
+#   CONSUMER layer (deploy/helixtrack/compose.helixtrack.yml), NOT inside the
+#   project-agnostic containers submodule ·
 #   §11.4.6 no-bluff honest SKIP · §11.4.18 companion doc
 #   (docs/scripts/distribute_stack.md).
 # =============================================================================
@@ -98,7 +100,12 @@ case "$REMOTE_DIR" in
         exit 1 ;;
 esac
 
-COMPOSE_FILE="$PROJECT_ROOT/containers/compose.helixtrack.yml"
+# compose lives in the helix_ota CONSUMER layer (§11.4.28) — the project-agnostic
+# vasic-digital/containers submodule stays decoupled, so the HelixTrack-specific
+# compose is owned here. It is rsynced to the remote as $REMOTE_DIR/containers/
+# compose.helixtrack.yml (remote filename unchanged), where its ../helix_track/
+# relative build-context paths resolve against the rsynced $REMOTE_DIR/helix_track/.
+COMPOSE_FILE="$PROJECT_ROOT/deploy/helixtrack/compose.helixtrack.yml"
 
 # Build context (the compose `helixtrack-core` service builds from
 # ../helix_track/core/Application). In this checkout that path may be empty,
