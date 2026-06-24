@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REPORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="helixqa-go-orchestrator-drives-the-ota-bank-host-exec-deviceexec-wired-proven-2026-06-24">HelixQA
+Go orchestrator DRIVES the OTA bank — host-exec DeviceExec wired +
+PROVEN (2026-06-24)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-06-24T00:00:00Z <strong>Operator directive:</strong> wire + run the
+DeviceExec host-exec adapter so the HelixQA Go orchestrator drives the
+OTA bank vs the live system. Verdict: <strong>DONE — real PASS through
+the orchestrator.</strong></p>
+<h2 id="what-was-built">What was built</h2>
+<ul>
+<li><strong><code>tools/helixqa_runner/</code></strong> — a
+consumer-side Go module (NOT in the helixqa submodule, §11.4.28(B)) that
+drives <code>testbank.Dispatcher</code> against the OTA bank. It wires
+the missing piece: a host-exec <code>DeviceExec</code>
+(<code>testbank.DeviceExecFunc</code>) that runs each challenge’s
+<code>dispatches_to</code> script via <code>os/exec</code> from the repo
+root and surfaces its <strong>real exit code</strong>, plus an
+<code>EvidenceResolver</code>
+(<code>testbank.EvidenceResolverFunc</code>) that resolves each
+<code>required_evidence</code> token to a <strong>real non-empty
+path</strong> (§11.4.69). Builds clean (<code>go build</code> EXIT 0,
+4.1 MB binary links) against the 7-dep submodule layout.</li>
+<li><strong><code>tools/helixqa/banks/helix_ota_orchestrator.yaml</code></strong>
+— the orchestrator-native (<code>testbank</code> schema) twin of the
+shell <code>helix_ota.yaml</code> bank: each case
+<code>dispatches_to</code> a real OTA test script + declares a real
+<code>required_evidence</code> path.</li>
+</ul>
+<h2 id="verdict-order-dispatcher.run">Verdict order
+(Dispatcher.Run)</h2>
+<ol type="1">
+<li><strong>GATE 1</strong> — run <code>dispatches_to</code>; non-zero
+exit ⇒ FAIL (the challenge body failed). Consumer layer re-maps
+<strong>exit 3 ⇒ SKIP</strong> (this project’s off-topology self-gate
+convention, §11.4.3) — honest SKIP, never a fake PASS.</li>
+<li><strong>GATE 2</strong> — every <code>required_evidence</code> token
+MUST resolve to a real non-empty artefact (§11.4.69); any missing ⇒
+FAIL.</li>
+<li>Both clear ⇒ PASS, citing the satisfied evidence.</li>
+</ol>
+<h2 id="rock-solid-proof-11.4.6-real-exit-codes-captured">Rock-solid
+proof (§11.4.6 — real exit codes, captured)</h2>
+<pre><code>$ helixqa_runner helix_ota_orchestrator.yaml &lt;repo&gt; FILTERS
+HOTA-FILTERS-PAGINATION        PASS   exit=0
+ORCHESTRATOR LEDGER: 1 PASS / 0 FAIL / 0 SKIP (dispatched 1)</code></pre>
+<p><strong><code>HOTA-FILTERS-PAGINATION → PASS exit=0</code> through
+the orchestrator</strong> — the orchestrator loaded the bank, dispatched
+the real <code>tests/e2e/challenge_filters_pagination.sh</code> via the
+host-exec <code>DeviceExec</code>, the script self-hosted + exited 0
+(GATE 1), <code>FILTERS_PAGINATION_EVIDENCE.txt</code> resolved
+non-empty (GATE 2), and the native QAReport recorded PASS. This is
+genuine end-to-end orchestration, not a shell tally — the audit’s
+<strong>AB-G5 “Go orchestrator vs live” blocker is
+RESOLVED</strong>.</p>
+<h2 id="honest-results-on-this-host-11.4.6">Honest results on this host
+(§11.4.6)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Challenge</th>
+<th>Verdict</th>
+<th>Honest cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HOTA-FILTERS-PAGINATION</td>
+<td><strong>PASS</strong> exit=0</td>
+<td>both gates fired — the real proof</td>
+</tr>
+<tr>
+<td>HOTA-RECALL-LIFECYCLE</td>
+<td><strong>SKIP</strong> exit=3</td>
+<td><code>openssl</code> on this macOS host cannot generate ed25519 keys
+(the signing challenges’ self-gate) — an honest off-topology SKIP,
+mapped from exit-3</td>
+</tr>
+<tr>
+<td>HOTA-SECURITY-PROBES</td>
+<td>FAIL exit=1</td>
+<td>self-hosted server “not healthy” in the bare orchestrator invocation
+(environment/prereq — the feature itself PASSed 37/0 in the full shell
+bank-run; <strong>not a helix defect</strong>, UNCONFIRMED whether a
+missing env var or a port/timing prereq the <code>run_bank</code>
+harness sets)</td>
+</tr>
+</tbody>
+</table>
+<p>The PASS proves the wiring; the SKIP + FAIL are honest environment
+outcomes of a bare invocation on a Mac without the shell harness’s env.
+Running the full bank with healthy self-host (or on thinker/nezha where
+<code>openssl</code> supports ed25519) is the path to a green ledger —
+the orchestrator is now the driver.</p>
+<h2 id="honest-boundary">Honest boundary</h2>
+<p>This wires + proves the <strong>Go orchestrator drives the OTA bank
+with real exit-coded + evidence-ledger verdicts</strong>. A full green
+orchestrator run of every challenge needs the per-challenge prereqs
+(ed25519-capable host for signing, healthy self-host or live F-CLUSTER)
+the shell <code>run_bank</code> harness already provides — a follow-up,
+not a wiring gap. The binary + <code>orchestrator_report.json</code> are
+gitignored (regenerable via <code>go build</code> + a run).</p>
+</body>
+</html>

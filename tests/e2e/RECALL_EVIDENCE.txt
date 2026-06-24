@@ -1,49 +1,6 @@
 == Helix OTA server-driven RECALL (forward-fix) lifecycle E2E ==
-base_url=http://127.0.0.1:56919 run=recall-1782226933-73021 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/RECALL_EVIDENCE.txt
-started: 2026-06-23T15:02:13Z
-openssl: OpenSSL 3.6.2 7 Apr 2026 (Library: OpenSSL 3.6.2 7 Apr 2026)
+base_url=http://127.0.0.1:59741 run=recall-1782281030-81377 evidence=/Volumes/T7/Projects/helix_ota/tests/e2e/RECALL_EVIDENCE.txt
+started: 2026-06-24T06:03:50Z
+openssl: LibreSSL 3.3.6
 
-[PASS] generated ephemeral ed25519 keypair (raw pubkey 32 bytes, base64 configured)
-building ota-server (go build ./cmd/ota-server) ...
-[PASS] go build ./cmd/ota-server succeeded
-server pid=73114 (port 56919), waiting for readiness ...
-[PASS] ota-server healthy on http://127.0.0.1:56919/healthz (HELIX_ARTIFACT_PUBKEY configured)
-[PASS] POST /auth/login (HTTP 200)
-[PASS] obtained admin access token
-[PASS] anti-bluff: a bogus signature is rejected 422 SIGNATURE_INVALID (server really verifies)
-[PASS] POST /artifacts/upload (signed v1.1.0) (HTTP 201)
-[PASS] v1.1.0 artifact .verified == true
-[PASS] POST /artifacts/upload (signed v1.2.0 forward-fix) (HTTP 201)
-[PASS] v1.2.0 artifact .verified == true
-[PASS] POST /releases (v1.1.0 current) (HTTP 201)
-      current_release_id(v1.1.0)=a02c03c940f5a1ad4f69d76c34cf944f
-[PASS] POST /releases (v1.2.0 forward-fix) (HTTP 201)
-      forward_fix_release_id(v1.2.0)=bfd37c83ae647bfe2d7d68bfa5f9bc8d
-[PASS] POST /deployments (v1.1.0 -> all-targets) = D1 (HTTP 201)
-[PASS] D1 starts ACTIVE
-[PASS] D1 points at the v1.1.0 release
-      D1 deployment_id=496c7212ff0906629afb1bb271b54f04
-[PASS] POST /deployments/{D1}/recall (empty to_release_id) -> 400 (HTTP 400)
-[PASS] POST /deployments/{D1}/recall (absent target release) -> 404 (HTTP 404)
-[PASS] POST /deployments/{absent}/recall -> 404 (HTTP 404)
-[PASS] POST /deployments/{D1}/recall (forward-fix to v1.2.0) -> 201 (HTTP 201)
-[PASS] rollback row deployment_id == D1
-[PASS] rollback row .kind == 'rollback'
-[PASS] rollback row .from_release_id == the v1.1.0 release (D1's current)
-[PASS] rollback row .to_release_id == the v1.2.0 forward-fix release
-[PASS] rollback row .details.mode == 'forward-fix'
-[PASS] rollback row carries a non-empty recall_deployment_id (223c77954f956afb954e8ed282ebefa4)
-[PASS] rollback row records triggered_by (the recalling operator)
-[PASS] GET /deployments/{D1}/rollbacks -> 200 (HTTP 200)
-[PASS] rollback history is non-empty (1 row(s))
-[PASS] rollback history contains the recall row id we just created
-[PASS] history row carries kind=rollback + mode=forward-fix + from(v1.1.0)/to(v1.2.0) release ids
-[PASS] GET /deployments/{D1} -> 200 (HTTP 200)
-[PASS] superseded deployment D1 .status == 'superseded' (recall changed it from 'active')
-[PASS] GET /deployments/{recall_deployment_id} -> 200 (HTTP 200)
-[PASS] recall deployment is ACTIVE
-[PASS] recall deployment points at the v1.2.0 forward-fix release
-
-finished: 2026-06-23T15:02:15Z
-== summary: 35 passed, 0 failed, 0 skipped ==
-RESULT: PASS
+ABORT: openssl could not generate an ed25519 key (scheme unsupported on this host)

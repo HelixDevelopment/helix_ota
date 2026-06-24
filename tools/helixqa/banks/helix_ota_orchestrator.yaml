@@ -1,0 +1,86 @@
+# Helix OTA — HelixQA Go-orchestrator-native bank (testbank schema).
+#
+# This is the orchestrator-loadable twin of helix_ota.yaml (which is the shell
+# run_bank.sh format). Each case dispatches_to a REAL test script and declares
+# required_evidence as a REAL path the script produces. The helixqa_runner
+# (tools/helixqa_runner) drives these through testbank.Dispatcher: GATE 1 =
+# script exit 0, GATE 2 = every required_evidence path resolves non-empty
+# (§11.4.69). No fake PASS — a missing-evidence or non-zero exit is a real FAIL.
+version: "1.0"
+name: "Helix OTA — orchestrator-native E2E bank"
+description: "OTA challenges driven through the HelixQA Go orchestrator (testbank.Dispatcher) via the consumer host-exec DeviceExec adapter, vs the live system."
+metadata:
+  project: "helix_ota"
+  driver: "tools/helixqa_runner"
+
+test_cases:
+  - id: HOTA-RECALL-LIFECYCLE
+    name: "Recall lifecycle vs live system (self-hosting)"
+    category: e2e
+    priority: critical
+    platforms: [linux]
+    dispatches_to: "tests/e2e/recall_lifecycle.sh"
+    domains: [recall, rollback, api]
+    required_evidence: ["tests/e2e/RECALL_EVIDENCE.txt"]
+    expected_result: "exit 0 + RECALL_EVIDENCE.txt non-empty"
+
+  - id: HOTA-FILTERS-PAGINATION
+    name: "List-filter + pagination vs live system (self-hosting)"
+    category: e2e
+    priority: high
+    platforms: [linux]
+    dispatches_to: "tests/e2e/challenge_filters_pagination.sh"
+    domains: [api, pagination]
+    required_evidence: ["tests/e2e/FILTERS_PAGINATION_EVIDENCE.txt"]
+    expected_result: "exit 0 + filters evidence non-empty"
+
+  - id: HOTA-SECURITY-PROBES
+    name: "Security probes (authz / injection / JWT-tamper / trust-boundary)"
+    category: security
+    priority: critical
+    platforms: [linux]
+    dispatches_to: "tests/security/security_probes.sh"
+    domains: [security, authz]
+    required_evidence: ["tests/security/RUN_EVIDENCE.txt"]
+    expected_result: "exit 0 + security evidence non-empty"
+
+  - id: HOTA-PIPELINE-SIGNED
+    name: "Signed artifact pipeline (upload→release→deploy→rollout→poll)"
+    category: e2e
+    priority: critical
+    platforms: [linux]
+    dispatches_to: "tests/e2e/pipeline_signed.sh"
+    domains: [artifact, signature, rollout]
+    required_evidence: ["tests/e2e/PIPELINE_EVIDENCE.txt"]
+    expected_result: "exit 0 + pipeline evidence non-empty"
+
+  - id: HOTA-ROLLOUT-HALT-SAFETY
+    name: "Staged rollout halt-on-failure safety"
+    category: e2e
+    priority: high
+    platforms: [linux]
+    dispatches_to: "tests/e2e/rollout_halt_safety.sh"
+    domains: [rollout, safety]
+    required_evidence: ["tests/e2e/ROLLOUT_HALT_EVIDENCE.txt"]
+    expected_result: "exit 0 + rollout-halt evidence non-empty"
+
+  # --- live-system challenges (boot F-CLUSTER on thinker; exit-3 SKIP off-topology) ---
+  - id: HOTA-TRUST-BOUNDARY-LIVE
+    name: "Trust boundary: request-supplied key ignored, server key authoritative (live)"
+    category: security
+    priority: critical
+    platforms: [linux]
+    dispatches_to: "tests/security/trust_boundary_live.sh"
+    domains: [security, trust-boundary, live]
+    required_evidence: ["docs/qa/20260623-trust-boundary-live"]
+    expected_result: "exit 0 + live trust-boundary evidence dir non-empty"
+
+  - id: HOTA-TELEMETRY-SCHEMA-LIVE
+    name: "Telemetry schema validation vs live system"
+    category: e2e
+    priority: high
+    platforms: [linux]
+    dispatches_to: "tests/e2e/telemetry_schema_live.sh"
+    domains: [telemetry, schema, live]
+    required_evidence: ["docs/qa/20260623-telemetry-schema-live"]
+    expected_result: "exit 0 + telemetry-schema evidence dir non-empty"
