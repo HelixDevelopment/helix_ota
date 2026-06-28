@@ -1,12 +1,12 @@
 == Helix OTA EXTENDED security probe suite ==
-run=secx-1782226995-78890 evidence=/Volumes/T7/Projects/helix_ota/tests/security/RUN_EVIDENCE_EXTENDED.txt
-started: 2026-06-23T15:03:15Z
+run=secx-1781866385-176746 evidence=/home/milosvasic/Projects/helix_ota/tests/security/RUN_EVIDENCE_EXTENDED.txt
+started: 2026-06-19T10:53:05Z
 
 building ota-server ...
-booting S1 (default token TTL) on http://127.0.0.1:57098 ...
-[PASS] S1 self-hosted ota-server healthy on http://127.0.0.1:57098 (default token TTL)
+booting S1 (default token TTL) on http://127.0.0.1:56257 ...
+[PASS] S1 self-hosted ota-server healthy on http://127.0.0.1:56257 (default token TTL)
 [PASS] S1 admin login established
-      device A=e8e6ceba961dd880a97b594e19fc6d68  device B=0b9548f1827c74b6c2c2f1cd3774e464
+      device A=c9b28e2c847766092a83db80b88ec8ba  device B=613bc6b9c39692eec38f96d41a36e1b0
 
 --- H. refresh-token single-use rotation ---
 [PASS] H1 first refresh rotates the token pair -> 200 (HTTP 200)
@@ -35,22 +35,22 @@ booting S1 (default token TTL) on http://127.0.0.1:57098 ...
 [PASS] L1 duplicate hardware_id register handled cleanly (first=201 second=409, no 5xx)
 
 --- I. access-token expiry (dedicated TTL=1s server, real wall-clock) ---
-booting S_EXP (HELIX_ACCESS_TOKEN_TTL=1s) on http://127.0.0.1:57120 ...
+booting S_EXP (HELIX_ACCESS_TOKEN_TTL=1s) on http://127.0.0.1:47047 ...
 [PASS] I1 fresh access token works immediately -> 200 (HTTP 200)
       waiting 2s for the 1s-TTL access token to expire ...
 [PASS] I2 same access token AFTER expiry -> 401 (exp enforced, not just signature) (HTTP 401)
 
 --- M. in-flight cap sheds excess concurrency with 429 RATE_LIMITED ---
-booting S2 (HELIX_MAX_INFLIGHT=1) on http://127.0.0.1:57132 ...
-[PASS] S2 self-hosted ota-server healthy on http://127.0.0.1:57132 (HELIX_MAX_INFLIGHT=1)
-      burst result: 80 requests, 5 shed with 429
+booting S2 (HELIX_MAX_INFLIGHT=1) on http://127.0.0.1:38697 ...
+[PASS] S2 self-hosted ota-server healthy on http://127.0.0.1:38697 (HELIX_MAX_INFLIGHT=1)
+      burst result: 80 requests, 10 shed with 429
 burst status histogram:
-  75 401
-   5 429
-[PASS] M1 in-flight cap shed 5/80 concurrent requests with 429
+     70 401
+     10 429
+[PASS] M1 in-flight cap shed 10/80 concurrent requests with 429
 [PASS] M1b shed response carries error.code=RATE_LIMITED
 [PASS] M1c shed response carries a Retry-After header
 
-finished: 2026-06-23T15:03:20Z
+finished: 2026-06-19T10:53:08Z
 == summary: 26 passed, 0 failed, 0 skipped ==
 RESULT: PASS
