@@ -7,7 +7,7 @@ require (
 	github.com/HelixDevelopment/ota-protocol v0.1.0
 	github.com/HelixDevelopment/ota-rollout-engine v0.1.0
 	github.com/HelixDevelopment/ota-telemetry-schema v0.1.0
-	github.com/andybalholm/brotli v1.2.1
+	github.com/andybalholm/brotli v1.2.2
 	github.com/gin-gonic/gin v1.12.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/quic-go/quic-go v0.60.0
