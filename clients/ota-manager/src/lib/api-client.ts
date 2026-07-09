@@ -62,6 +62,22 @@ export async function apiDelete<T>(url: string, config?: Record<string, unknown>
   return data;
 }
 
+// Multipart POST — used by the artifact upload endpoint (multipart/form-data
+// body: file + metadata + optional sha256/signature parts, per
+// server/internal/api/handlers_artifact.go handleUploadArtifact).
+export async function apiMultipartPost<T>(
+  url: string,
+  formData: FormData,
+  config?: Record<string, unknown>,
+): Promise<T> {
+  const { headers, ...rest } = config ?? {};
+  const { data } = await apiClient.post<T>(url, formData, {
+    ...rest,
+    headers: { "Content-Type": "multipart/form-data", ...(headers as Record<string, string> | undefined) },
+  });
+  return data;
+}
+
 // -- Types shared between this client and the Go server wire protocol --
 
 export interface ApiErrorResponse {
@@ -348,6 +364,58 @@ export interface GroupList {
   cursor?: string;
 }
 
+// Artifacts (server/internal/api/wire.go: ArtifactUploadMetadata, Artifact)
+export interface ArtifactUploadMetadata {
+  sha256: string;
+  signature: string;
+  version: string;
+  os: string;
+  target_model: string;
+  file_hash?: string;
+  file_size?: number;
+  metadata_hash?: string;
+  metadata_size?: number;
+  payload_offset?: number;
+  payload_size?: number;
+}
+
+export interface Artifact {
+  artifact_id: string;
+  sha256: string;
+  size: number;
+  os: string;
+  target_model: string;
+  version: string;
+  storage_ref?: string;
+  verified: boolean;
+  uploaded_at: string;
+}
+
+// Deltas (server/internal/api/handlers_delta.go: DeltaRegister, DeltaView)
+export interface DeltaRegisterRequest {
+  base_artifact_id: string;
+  target_artifact_id: string;
+  sha256?: string;
+  size?: number;
+  storage_ref?: string;
+}
+
+export interface DeltaView {
+  id: string;
+  base_artifact_id: string;
+  target_artifact_id: string;
+  sha256?: string;
+  size?: number;
+  storage_ref?: string;
+  created_at: string;
+}
+
+// GET /deltas?base=<id>&target=<id> (server/internal/api/handlers_delta.go handleFindDelta)
+export interface DeltaFindParams {
+  base: string;
+  target: string;
+}
+
 // Audit
 export interface AuditEntry {
   id: string;
@@ -358,4 +426,20 @@ export interface AuditEntry {
   details: Record<string, unknown>;
   ip_address: string;
   created_at: string;
+}
+
+// GET /audit query filters (server/internal/api/handlers_audit.go handleListAudit)
+export interface AuditFilter {
+  action?: string;
+  resource_type?: string;
+  since?: string;
+  until?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+// GET /audit paged body (server/internal/api/audit_wire.go AuditLogList)
+export interface AuditLogList {
+  items: AuditEntry[];
+  next_cursor?: string;
 }

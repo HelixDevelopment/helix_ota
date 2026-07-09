@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1 id="ota-manager-typescript-typecheck-triage-evidence">ota-manager
+TypeScript Typecheck Triage — EVIDENCE</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z</p>
+<h2 id="scope">Scope</h2>
+<p>Stream P, single-resource-owner for the <code>ota-manager</code>
+build this stream (§11.4.119). Triaged the 118 pre-existing TypeScript
+type errors in <code>clients/ota-manager</code>
+(<code>pnpm tsc --noEmit -p tsconfig.json</code>), fixed the
+router-independent subset, and left every error that depends on the
+operator-gated react-router-dom → <span class="citation"
+data-cites="tanstack/react-router">@tanstack/react-router</span>
+reconciliation untouched. No git commands were run (per instructions —
+this is the conductor’s job). No routing was wired.</p>
+<h2 id="result-summary">Result summary</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Errors before</td>
+<td><strong>118</strong></td>
+</tr>
+<tr>
+<td>Errors after</td>
+<td><strong>85</strong></td>
+</tr>
+<tr>
+<td>Net fixed</td>
+<td><strong>33</strong></td>
+</tr>
+<tr>
+<td>Files fully fixed (0 errors remaining)</td>
+<td>13</td>
+</tr>
+<tr>
+<td>Files left untouched (bucket a, router/unrouted-page)</td>
+<td>11</td>
+</tr>
+<tr>
+<td><code>pnpm build</code> (vite)</td>
+<td><strong>PASS</strong>, exit 0</td>
+</tr>
+<tr>
+<td><code>pnpm vitest run</code></td>
+<td><strong>PASS</strong>, 9 files / 36 tests, exit 0</td>
+</tr>
+</tbody>
+</table>
+<p>Captured command output: <code>typecheck_before.log</code> (118
+errors, full list), <code>typecheck_after.log</code> (85 errors, full
+list), <code>build.log</code>, <code>vitest.log</code> — all in this
+directory.</p>
+<h2 id="how-the-reproduction-was-run">How the reproduction was run</h2>
+<pre><code>cd clients/ota-manager
+pnpm install                              # &quot;Already up to date&quot;
+pnpm tsc --noEmit -p tsconfig.json        # 118 errors (exit 2) — typecheck_before.log</code></pre>
+<p><code>package.json</code> has no separate <code>test</code> script;
+the project’s test runner is invoked directly as
+<code>pnpm vitest run</code> (vitest is a devDependency,
+<code>vitest.config.ts</code> present at the client root).
+<code>pnpm build</code> runs <code>vite build</code> per
+<code>package.json</code>’s <code>build</code> script (it does not
+itself invoke <code>tsc</code>, hence build passing does not by itself
+prove zero type errors — the typecheck above is the authoritative
+type-error count).</p>
+<h2
+id="root-cause-finding-that-unlocked-most-of-the-fixable-set">Root-cause
+finding that unlocked most of the fixable set</h2>
+<p><code>src/lib/api-client.ts</code> already defines the full wire-type
+contract for every domain (devices, releases, deployments, groups,
+audit) matching the real Go server
+(<code>server/internal/api/wire.go</code>,
+<code>handlers_delta.go</code>, <code>audit_wire.go</code>,
+<code>handlers_audit.go</code> — read for reference only, never
+modified). But <code>src/types/api.ts</code> — the barrel file every
+hook imports from — only re-exported a small subset of those types.
+Every hook file importing a type that existed in
+<code>api-client.ts</code> but was not in that subset failed with
+<code>TS2305: has no exported member</code>. This is the majority of the
+118 errors and has <strong>nothing to do with routing</strong> — it is a
+plain re-export gap. Fixing <code>types/api.ts</code> (and, for the one
+domain — Artifacts/Deltas — whose types did not exist anywhere yet,
+adding them to <code>api-client.ts</code> after reading the real server
+contract) resolved this class mechanically, with no design/router
+decision involved.</p>
+<p><strong>Side effect, disclosed honestly:</strong> because those
+imports previously failed to resolve, TypeScript had been silently
+widening the affected hook return values to effectively
+<code>any</code>, which was <em>hiding</em> several genuine,
+pre-existing data-shape bugs in downstream consumers (a hook returning a
+paginated <code>{items, next_cursor}</code> wrapper being treated by its
+page as a flat array). Fixing the root cause makes those hidden bugs
+visible again as real errors. None of these are new bugs I introduced —
+they were always broken, just masked. Every one of them lands in a file
+that is itself an unrouted/off-limits page per bucket (a) below, so they
+are left untouched for the same reason as the rest of that cluster.</p>
+<h2 id="bucket-definitions">Bucket definitions</h2>
+<ul>
+<li><strong>(a) ROUTER/UNROUTED-PAGE dependent</strong> — off limits.
+The file is either the router config itself, a page not present in the
+live <code>route-tree.gen.ts</code> (confirmed: the only routes actually
+registered and rendered are <code>/login</code> and
+<code>/dashboard</code> via <code>MainLayout</code> — every other
+feature page is unrouted), or a live component whose specific error is a
+react-router-dom-style API used against
+<code>@tanstack/react-router</code>’s different
+<code>Link</code>/<code>useNavigate</code> contract. Left entirely
+untouched.</li>
+<li><strong>(b) Independent genuine type bug</strong> — safe to fix
+without any router/UX decision. Fixed.</li>
+</ul>
+<h2 id="full-categorization-table">Full categorization table</h2>
+<h3 id="bucket-b-fixed">Bucket (b) — FIXED</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Original error(s) (line:code)</th>
+<th>Reason it’s bucket (b)</th>
+<th>Fix applied</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/__tests__/features/releases.test.tsx</code></td>
+<td>72:24 TS6133, 72:31 TS6133</td>
+<td>Unused destructured params in a Vitest mock — no runtime/router
+meaning</td>
+<td>Removed unused <code>value</code>/<code>onValueChange</code> from
+the <code>Select</code> mock’s destructure</td>
+</tr>
+<tr>
+<td><code>src/components/ui/form.tsx</code></td>
+<td>7:7 TS6133, 12:7 TS6133</td>
+<td><code>FormFieldContext</code>/<code>FormItemContext</code> are never
+provided (<code>.Provider</code>) nor consumed anywhere in the file —
+genuinely dead local declarations</td>
+<td>Removed both dead context declarations</td>
+</tr>
+<tr>
+<td><code>src/components/ui/toast.tsx</code></td>
+<td>4:20 TS6133, 8:7 TS6133</td>
+<td><code>VariantProps</code> and the <code>cva</code>-built
+<code>ToastActionVariants</code> are unused; nothing in the file’s
+public API (<code>Toast</code>, <code>ToastProvider</code>,
+<code>useToast</code>) touches them</td>
+<td>Removed the unused import and the unused <code>cva</code> const</td>
+</tr>
+<tr>
+<td><code>src/features/auth/auth-guard.tsx</code></td>
+<td>2:10 TS2614</td>
+<td><code>login-page.tsx</code> uses <code>export default</code>; the
+import used named-import syntax — a plain import-statement bug,
+unrelated to routing</td>
+<td>Changed <code>import { LoginPage }</code> →
+<code>import LoginPage</code></td>
+</tr>
+<tr>
+<td><code>src/features/dashboard/dashboard-page.tsx</code></td>
+<td>13:3 TS6133</td>
+<td>Unused <code>Server</code> icon import from
+<code>lucide-react</code></td>
+<td>Removed <code>Server</code> from the import list (see also note
+below — a <em>different</em>, previously-masked error later surfaced in
+this same file; left in bucket (a), see next table)</td>
+</tr>
+<tr>
+<td><code>src/hooks/use-artifacts.ts</code></td>
+<td>7:3,8:3,9:3,10:3,11:3 TS2305; 13:27 TS2305; 48:52 TS18046</td>
+<td>The 5 imported types + <code>apiMultipartPost</code> genuinely did
+not exist anywhere in the client. Verified the real server contract
+(<code>server/internal/api/wire.go</code>
+<code>ArtifactUploadMetadata</code>/<code>Artifact</code>,
+<code>handlers_delta.go</code>
+<code>DeltaRegister</code>/<code>DeltaView</code>,
+<code>handleFindDelta</code> query params
+<code>base</code>/<code>target</code>) — a mechanical, non-guessed fix,
+zero router involvement</td>
+<td>Added <code>Artifact</code>, <code>ArtifactUploadMetadata</code>,
+<code>DeltaRegisterRequest</code>, <code>DeltaView</code>,
+<code>DeltaFindParams</code> interfaces +
+<code>apiMultipartPost()</code> helper to <code>api-client.ts</code>;
+re-exported via <code>types/api.ts</code>. The TS18046
+(<code>data</code> of type <code>unknown</code>) resolved automatically
+once <code>apiMultipartPost&lt;T&gt;</code> is properly generic</td>
+</tr>
+<tr>
+<td><code>src/hooks/use-audit.ts</code></td>
+<td>6:15, 6:29 TS2305</td>
+<td><code>AuditLogList</code>/<code>AuditFilter</code> did not exist;
+verified against <code>server/internal/api/audit_wire.go</code>
+(<code>AuditLogList{items, next_cursor}</code>) and
+<code>handlers_audit.go</code> query params (<code>action</code>,
+<code>resource_type</code>, <code>since</code>, <code>until</code>,
+<code>cursor</code>, <code>limit</code>)</td>
+<td>Added both interfaces to <code>api-client.ts</code>, re-exported via
+<code>types/api.ts</code></td>
+</tr>
+<tr>
+<td><code>src/hooks/use-deployments.ts</code></td>
+<td>7:3,8:3,9:3,11:3,12:3,13:3,14:3,15:3 TS2305/TS2724</td>
+<td>All 8 types (<code>Deployment</code>, <code>DeploymentList</code>,
+<code>CreateRolloutRequest</code>, <code>RolloutState</code>,
+<code>RolloutDecision</code>, <code>RecallRequest</code>,
+<code>RollbackList</code>, plus <code>DeploymentStatus</code>) already
+exist fully-defined in <code>api-client.ts</code> — pure re-export
+gap</td>
+<td>Added the missing re-exports to <code>types/api.ts</code></td>
+</tr>
+<tr>
+<td><code>src/hooks/use-devices.ts</code></td>
+<td>7:3,10:3,11:3,12:3,13:3,14:3 TS2305</td>
+<td><code>DeviceRegistration</code>, <code>DeviceListFilter</code>,
+<code>DeviceList</code>, <code>TelemetryHistory</code>,
+<code>TelemetryFilter</code>, <code>TelemetryOverview</code> already
+exist in <code>api-client.ts</code> — re-export gap</td>
+<td>Added the missing re-exports</td>
+</tr>
+<tr>
+<td><code>src/hooks/use-groups.ts</code></td>
+<td>8:3,10:3,11:3,12:3,13:3 TS2305/TS2724; 55:49, 70:49 TS2345</td>
+<td><code>GroupList</code>, <code>UpdateGroupRequest</code>,
+<code>AddGroupMembersRequest</code>, <code>AddGroupMembersResult</code>,
+<code>GroupMembers</code> already exist — re-export gap. Separately:
+<code>useCreateGroup</code>/<code>useUpdateGroup</code> read
+<code>data.group_id</code> (optional field on <code>Group</code>) as a
+query-cache key needing a required <code>string</code>; verified server
+truth (<code>server/internal/store/store.go</code>
+<code>Group{ID, Name, Description, CreatedAt}</code> — no
+<code>group_id</code> field on the store row at all) confirms
+<code>id</code> is the real, always-present identifier</td>
+<td>Added the missing re-exports; changed <code>data.group_id</code> →
+<code>data.id</code> in both <code>onSuccess</code> handlers</td>
+</tr>
+<tr>
+<td><code>src/hooks/use-projects.ts</code></td>
+<td>8:15 TS2305</td>
+<td><code>Project</code> already exists in <code>api-client.ts</code> —
+re-export gap</td>
+<td>Added the re-export</td>
+</tr>
+<tr>
+<td><code>src/hooks/use-releases.ts</code></td>
+<td>7:3,8:3,9:3 TS2305 (+ 1 latent bug surfaced after the re-export fix:
+59:51 TS2345)</td>
+<td><code>Release</code>, <code>ReleaseList</code>,
+<code>ReleaseFilter</code> already exist — re-export gap. The surfaced
+bug: <code>useCreateRelease</code>’s <code>onSuccess</code> read
+<code>data.release_id</code> (optional on
+<code>ReleaseResponse</code>/<code>Release</code>) as a cache key;
+<code>id</code> is the required field</td>
+<td>Added the missing re-exports; changed <code>data.release_id</code> →
+<code>data.id</code></td>
+</tr>
+<tr>
+<td><code>src/lib/permissions.ts</code></td>
+<td>7:15, 7:21 TS2305</td>
+<td><code>Role</code>, <code>ProjectAccess</code> already exist —
+re-export gap</td>
+<td>Added the missing re-exports</td>
+</tr>
+</tbody>
+</table>
+<p><strong>13 files, 0 remaining errors in every one of
+them.</strong></p>
+<h3 id="bucket-a-left-untouched-routerunrouted-page-dependent">Bucket
+(a) — LEFT UNTOUCHED (router/unrouted-page dependent)</h3>
+<p>Confirmed by reading <code>src/route-tree.gen.ts</code> (the tree
+actually consumed by <code>src/main.tsx</code>’s
+<code>createRouter({ routeTree })</code>): the <strong>only</strong>
+routes live in the running app are <code>/login</code> and
+<code>/dashboard</code> (via <code>MainLayout</code> →
+<code>Sidebar</code> + <code>Topbar</code> + <code>Outlet</code>). Every
+other feature page below is not reachable through the app at all
+today.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Error count (before → after)</th>
+<th>Why it’s bucket (a)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/routes/index.tsx</code></td>
+<td>10 → 10</td>
+<td>This <em>is</em> the router-migration file: hand-written
+<code>createFileRoute(...)</code> calls for every feature route, none of
+which are registered in the live <code>route-tree.gen.ts</code>. Every
+error is
+<code>TS2345: Argument of type "&lt;path&gt;" is not assignable to parameter of type 'undefined'</code>
+— a direct consequence of the route not being registered. This file
+isn’t even imported by <code>main.tsx</code>/<code>App.tsx</code>.
+Fixing it <em>is</em> wiring the router.</td>
+</tr>
+<tr>
+<td><code>src/features/deployments/deployment-detail-page.tsx</code></td>
+<td>12 → 14</td>
+<td>Unrouted page. Mixes genuine router-API errors
+(<code>useNavigate({to:"/deployments"})</code>/<code>useParams({from:"/deployments/$deploymentId"})</code>
+against an unregistered route; literal-type errors),
+incomplete-hook-shape errors (<code>useToast()</code> destructuring
+<code>{toast}</code> when the real <code>ToastContextValue</code> shape
+is <code>{toasts, addToast, removeToast}</code>;
+<code>useEvaluateRollout</code>/<code>useRecall</code> call-shape
+mismatches), and 2 newly-surfaced (previously any-masked)
+<code>Property 'id' does not exist on type 'DeploymentStatus'</code>
+errors (the real field is <code>deployment_id</code>) — same off-limits
+data/router rewiring cluster.</td>
+</tr>
+<tr>
+<td><code>src/features/deployments/deployments-page.tsx</code></td>
+<td>10 → 11</td>
+<td>Unrouted page; same <code>useNavigate</code>/route-literal +
+toast-shape + <code>CreateDeploymentRequest</code> shape-mismatch
+pattern, plus 1 newly-surfaced
+<code>DeploymentList</code>→<code>Deployment[]</code> cast error
+(previously masked).</td>
+</tr>
+<tr>
+<td><code>src/features/devices/device-detail-page.tsx</code></td>
+<td>12 → 12</td>
+<td>Unrouted page; <code>useParams({from:"/devices/$deviceId"})</code>
+against an unregistered route, and the page destructures a bespoke
+<code>{device, updates, groups, loading, refresh}</code> shape out of a
+plain <code>UseQueryResult</code> (the real react-query hook contract) —
+a hook-layer rewrite, not an isolated bug.</td>
+</tr>
+<tr>
+<td><code>src/features/devices/devices-page.tsx</code></td>
+<td>8 → 9</td>
+<td>Unrouted page; same <code>UseQueryResult</code>-vs-bespoke-shape
+mismatch, plus 1 newly-surfaced <code>search</code> property not in
+<code>DeviceListFilter</code> (previously masked).</td>
+</tr>
+<tr>
+<td><code>src/features/groups/groups-page.tsx</code></td>
+<td>4 → 6</td>
+<td>Unrouted page; toast-shape + <code>CreateGroupRequest</code> shape
+mismatch, plus 2 newly-surfaced
+<code>GroupList</code>-vs-<code>Group[]</code> errors (previously masked
+by the unresolved import).</td>
+</tr>
+<tr>
+<td><code>src/features/releases/releases-page.tsx</code></td>
+<td>13 → 15</td>
+<td>Unrouted page; toast-shape +
+<code>CreateReleaseRequest</code>/<code>ReleaseFilter</code> shape
+mismatches + <code>Release</code> import via the (also-unrouted)
+<code>useReleases</code> hook, plus 2 newly-surfaced
+<code>Artifact</code>/<code>ReleaseList</code> array-shape errors
+(previously masked).</td>
+</tr>
+<tr>
+<td><code>src/features/layout/app-layout.tsx</code></td>
+<td>3 → 3</td>
+<td>Entirely unwired alternate layout (superseded by
+<code>main-layout.tsx</code>+<code>sidebar.tsx</code>+<code>topbar.tsx</code>,
+the ones actually in <code>route-tree.gen.ts</code>; zero importers
+anywhere in <code>src/</code>). Its errors are
+<code>useNavigate("/login")</code> called with a bare string (the
+react-router-dom calling convention) against
+<code>@tanstack/react-router</code>’s object-argument contract, plus
+<code>useLogout()</code> destructured as a <code>useMutation</code>
+result when it is actually a plain <code>() =&gt; void</code> — both are
+exactly the react-router-dom → <span class="citation"
+data-cites="tanstack/react-router">@tanstack/react-router</span>
+reconciliation this task calls out as off-limits.</td>
+</tr>
+<tr>
+<td><code>src/features/layout/sidebar.tsx</code></td>
+<td>2 → 2</td>
+<td><strong>Live</strong> component (rendered via the active
+<code>MainLayout</code>), but the specific error is the router-API
+mismatch itself:
+<code>&lt;Link className={({isActive}) =&gt; ...}&gt;</code> is
+react-router-dom’s <code>NavLink</code> render-prop pattern;
+<code>@tanstack/react-router</code>’s <code>Link.className</code> is a
+plain string, not a function. This is the textbook case the task names
+explicitly — fixing it means choosing the tanstack-router replacement
+pattern (<code>activeProps</code>, <code>data-status</code> CSS, etc.),
+an operator/design decision.</td>
+</tr>
+<tr>
+<td><code>src/features/dashboard/dashboard-page.tsx</code></td>
+<td>1 → 1 (different error)</td>
+<td>The original trivial <code>TS6133</code> (unused <code>Server</code>
+import) was fixed (bucket b, see above table). Fixing the
+<code>types/api.ts</code> re-export gap then surfaced a
+<em>different</em>, previously-masked error: <code>useAuditLog()</code>
+(via <code>@/hooks/useAuditLog</code> → <code>./use-audit</code>) now
+correctly resolves to <code>AuditLogList</code>
+(<code>{items, next_cursor}</code>), but the page still assigns it
+directly to an <code>ActivityEvent[]</code>-typed slot. This file is
+reachable only through the dead <code>src/routes/index.tsx</code> and a
+test mock — not through the live route tree — so it belongs to the same
+unrouted/off-limits cluster as the rest, and the fix (unwrap
+<code>.items</code>, or redesign the activity-feed hook) is exactly the
+kind of data/router-layer rework this task is scoped to avoid.</td>
+</tr>
+<tr>
+<td><code>src/features/audit/audit-page.tsx</code></td>
+<td>0 → 2 (new)</td>
+<td>Same root cause as <code>dashboard-page.tsx</code> immediately
+above: <code>useAuditLog()</code> now resolves to the real paginated
+<code>AuditLogList</code> wrapper instead of silently degrading to
+<code>any</code>, and this page’s
+<code>.filter()</code>/<code>.length</code> calls assume a flat array.
+<code>audit-page.tsx</code> is also not present in the live
+<code>route-tree.gen.ts</code> — it is unrouted — so this is the same
+off-limits cluster, not a new file-outside-the-cluster regression.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>11 files, 85 errors total, all confined to the
+router/unrouted-page cluster.</strong></p>
+<h2 id="honest-boundary-11.4.6-11.4.108">Honest boundary (§11.4.6 /
+§11.4.108)</h2>
+<ul>
+<li>The <code>types/api.ts</code> re-export fix and the
+<code>Artifact</code>/<code>Delta</code>/<code>Audit</code> type
+additions to <code>api-client.ts</code> are grounded in the real Go
+server contract (<code>server/internal/api/wire.go</code>,
+<code>handlers_delta.go</code>, <code>audit_wire.go</code>,
+<code>handlers_audit.go</code> — read only, never modified, per the “do
+not touch <code>server/</code>” instruction).</li>
+<li>Fixing that root cause is a net improvement (33 fewer errors) but it
+is <strong>not</strong> free of side effects: it un-masks 4
+previously-hidden latent bugs (2 in <code>audit-page.tsx</code>, 1 in
+<code>dashboard-page.tsx</code>, and the <code>.id</code> vs
+<code>deployment_id</code>/<code>search</code>/<code>GroupList</code>/<code>Artifact</code>
+shape mismatches spread across the already off-limits
+deployment/device/group/release pages). None of these are new defects I
+introduced — they were always present, masked by TypeScript’s
+<code>any</code>-fallback on the unresolved imports. All of them land
+inside files that are independently classified bucket (a) for
+router/unrouted reasons, so none required touching an off-limits file to
+achieve the fix, and none change what the operator still needs to decide
+for the router migration.</li>
+<li><strong>85 bucket-(a) errors remain, correctly left for the
+operator-gated react-router-dom → <span class="citation"
+data-cites="tanstack/react-router">@tanstack/react-router</span>
+reconciliation</strong> (and the accompanying data-hook-layer rewrite
+these 7 feature pages need once they are wired into
+<code>route-tree.gen.ts</code>). No routing was wired. No file under
+<code>dashboard/</code>, <code>design-systems/</code>,
+<code>server/</code>, or any token <code>.css</code> was touched. No
+<code>git</code> command was run.</li>
+</ul>
+<h2 id="files-changed-all-under-clientsota-managersrc">Files changed
+(all under <code>clients/ota-manager/src</code>)</h2>
+<ul>
+<li><code>src/lib/api-client.ts</code> — added <code>Artifact</code>,
+<code>ArtifactUploadMetadata</code>, <code>DeltaRegisterRequest</code>,
+<code>DeltaView</code>, <code>DeltaFindParams</code>,
+<code>AuditFilter</code>, <code>AuditLogList</code>,
+<code>apiMultipartPost()</code>.</li>
+<li><code>src/types/api.ts</code> — expanded the re-export barrel to
+cover every type already defined in <code>api-client.ts</code> (was
+re-exporting a small subset).</li>
+<li><code>src/hooks/use-groups.ts</code> — <code>data.group_id</code> →
+<code>data.id</code> (2 call sites).</li>
+<li><code>src/hooks/use-releases.ts</code> —
+<code>data.release_id</code> → <code>data.id</code> (1 call site).</li>
+<li><code>src/features/auth/auth-guard.tsx</code> — default-import fix
+for <code>LoginPage</code>.</li>
+<li><code>src/features/dashboard/dashboard-page.tsx</code> — removed
+unused <code>Server</code> icon import.</li>
+<li><code>src/components/ui/form.tsx</code> — removed dead
+<code>FormFieldContext</code>/ <code>FormItemContext</code>.</li>
+<li><code>src/components/ui/toast.tsx</code> — removed unused
+<code>VariantProps</code> import and dead
+<code>ToastActionVariants</code> const.</li>
+<li><code>src/__tests__/features/releases.test.tsx</code> — removed
+unused destructured mock params.</li>
+</ul>
+<h2 id="captured-command-outputs">Captured command outputs</h2>
+<ul>
+<li><code>typecheck_before.log</code> — full 118-error
+<code>tsc --noEmit</code> output.</li>
+<li><code>typecheck_after.log</code> — full 85-error
+<code>tsc --noEmit</code> output (post-fix).</li>
+<li><code>build.log</code> — <code>pnpm build</code> (vite), exit
+0.</li>
+<li><code>vitest.log</code> — <code>pnpm vitest run</code>, 9 files / 36
+tests passed, exit 0.</li>
+</ul>
+</body>
+</html>

@@ -56,7 +56,7 @@ export function useCreateRelease() {
       apiPost<Release>('/releases', req),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: releaseKeys.lists() });
-      queryClient.setQueryData(releaseKeys.detail(data.release_id), data);
+      queryClient.setQueryData(releaseKeys.detail(data.id), data);
     },
   });
 }

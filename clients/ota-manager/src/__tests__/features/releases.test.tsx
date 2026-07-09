@@ -69,7 +69,7 @@ vi.mock('@/components/ui/form', () => ({
 }))
 
 vi.mock('@/components/ui/select', () => ({
-  Select: ({ children, value, onValueChange }: any) => <div data-testid="select">{children}</div>,
+  Select: ({ children }: any) => <div data-testid="select">{children}</div>,
   SelectTrigger: ({ children }: any) => <button data-testid="select-trigger">{children}</button>,
   SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
   SelectContent: ({ children }: any) => <div>{children}</div>,

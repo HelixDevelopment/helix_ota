@@ -1,16 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface FormFieldContextValue {
-  name: string;
-}
-const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue);
-
-interface FormItemContextValue {
-  id: string;
-}
-const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
-
 const Form = React.forwardRef<HTMLFormElement, React.FormHTMLAttributes<HTMLFormElement>>(({ className, ...props }, ref) => (
   <form ref={ref} className={cn("space-y-4", className)} {...props} />
 ));

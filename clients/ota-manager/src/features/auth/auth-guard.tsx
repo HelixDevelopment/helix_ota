@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/stores/auth-store";
-import { LoginPage } from "./login-page";
+import LoginPage from "./login-page";
 
 interface AuthGuardProps {
   children: React.ReactNode;

@@ -10,7 +10,6 @@ import {
   Rocket,
   RefreshCw,
   AlertTriangle,
-  Server,
   Users,
   PackageOpen,
   ScrollText,
