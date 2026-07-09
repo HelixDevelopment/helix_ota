@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1
+id="signed-pipeline-vs-live-fresh-re-validation-2026-07-09">Signed-Pipeline
+vs Live — FRESH Re-validation (2026-07-09)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T17:15:00Z</p>
+<p>Fresh, single-owner (§11.4.119) re-run of the signed OTA pipeline
+against a <strong>freshly booted REAL system</strong> (real
+<code>ota-server</code> + real PostgreSQL, rootless podman). Supersedes
+the 2026-06-23 UNTRACKED/stale 15/15 evidence per §11.4.108 (no stale
+evidence — everything below was re-run today from a clean boot).</p>
+<p>Host: <code>the-factory</code> (user <code>milos</code>), podman
+5.7.1 rootless, Go 1.26.4, x86_64. Boot target:
+<code>milos@localhost</code> (the harness’s default
+<code>thinker.local</code> was unreachable — DNS
+<code>Name or service not known</code>; the run was pointed at the local
+rootless-podman host over ssh-to-localhost, which the harness
+supports).</p>
+<h2 id="boot-the-real-system-readyz-admin-login-pass">1. Boot the real
+system + /readyz + admin login — PASS</h2>
+<p>Command:</p>
+<pre><code>TARGET=milos@localhost REMOTE_USER=milos bash tests/lib/boot_real_system.sh --up</code></pre>
+<p>Result (<code>boot_standalone.log</code>): cross-compiled a static
+<code>linux/amd64</code> ota-server (22,618,274 bytes),
+<code>podman-compose build</code> + ordered up (postgres-first, waited
+for <code>pg_isready</code>, then ota-server),
+<code>/readyz -&gt; 200 {"status":"ready"}</code>.
+<code>BASE_URL=http://127.0.0.1:18080</code>.</p>
+<p>Independent capture (<code>boot_readyz_login.txt</code>), against the
+live loopback: - <code>GET /readyz</code> -&gt; <strong>HTTP
+200</strong> <code>{"status":"ready"}</code> - <code>GET /healthz</code>
+-&gt; <strong>HTTP 200</strong> <code>{"status":"ok"}</code> -
+<code>POST /api/v1/auth/login</code> (admin@helix.system) -&gt;
+<strong>HTTP 200</strong>, real DB-backed <code>access_token</code>
+issued (redacted), <code>roles:["admin","operator","viewer"]</code>. -
+Containers:
+<code>helix-ota-system_postgres_1 Up (healthy) :55480-&gt;5432</code>,
+<code>helix-ota-system_ota-server_1 Up (healthy) :18080-&gt;8080</code>.</p>
+<p>Standalone stack then torn down
+(<code>bash boot_real_system.sh --down</code>) — orphan check returned
+<code>NONE</code> (§11.4.14).</p>
+<h2 id="testse2epipeline_signed_live.sh-fresh-1515-pass">2.
+tests/e2e/pipeline_signed_live.sh — FRESH 15/15 PASS</h2>
+<p>Command:</p>
+<pre><code>TARGET=milos@localhost REMOTE_USER=milos \
+EVIDENCE_DIR=docs/qa/20260709-signed-pipeline-revalidate \
+bash tests/e2e/pipeline_signed_live.sh</code></pre>
+<p>Self-booted the real system in CALLER-PUBKEY MODE (live server trusts
+the caller’s ephemeral ed25519 pubkey; real Postgres),
+<code>/readyz -&gt; 200</code> (<code>run.log</code>), drove the full
+pipeline, self-tore-down. <strong>PASS=15 FAIL=0 SKIP=0, exit=0</strong>
+(<code>SUMMARY.txt</code>). Per-step captured evidence (real HTTP
+responses, tokens redacted):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Assertion</th>
+<th>HTTP</th>
+<th>Evidence file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td>live admin login, access_token</td>
+<td>200</td>
+<td>step01_login.txt</td>
+</tr>
+<tr>
+<td>02</td>
+<td>anti-bluff: bogus signature REJECTED (SIGNATURE_INVALID)</td>
+<td>422</td>
+<td>step02_antibluff_bogus_sig_reject.txt</td>
+</tr>
+<tr>
+<td>03</td>
+<td>upload BASE v1.0.0 (caller-signed) verified=true</td>
+<td>201</td>
+<td>step03_upload_base_signed.txt</td>
+</tr>
+<tr>
+<td>04</td>
+<td>upload TARGET v1.1.0 (caller-signed) verified=true</td>
+<td>201</td>
+<td>step04_upload_target_signed.txt</td>
+</tr>
+<tr>
+<td>05</td>
+<td>GET target artifact persisted (id echoes)</td>
+<td>200</td>
+<td>step05_get_target_artifact.txt</td>
+</tr>
+<tr>
+<td>06</td>
+<td>create BASE release</td>
+<td>201</td>
+<td>step06_release_base.txt</td>
+</tr>
+<tr>
+<td>07</td>
+<td>create TARGET release</td>
+<td>201</td>
+<td>step07_release_target.txt</td>
+</tr>
+<tr>
+<td>08</td>
+<td>register device on 1.0.0 (device_token issued)</td>
+<td>201</td>
+<td>step08_register_device.txt</td>
+</tr>
+<tr>
+<td>09</td>
+<td>deploy TARGET release</td>
+<td>201</td>
+<td>step09_deploy_target.txt</td>
+</tr>
+<tr>
+<td>10</td>
+<td>rollout create (echoes deployment_id)</td>
+<td>201</td>
+<td>step10_rollout_create.txt</td>
+</tr>
+<tr>
+<td>11</td>
+<td>rollout get</td>
+<td>200</td>
+<td>step11_rollout_get.txt</td>
+</tr>
+<tr>
+<td>12</td>
+<td>rollout evaluate -&gt; action=advance</td>
+<td>200</td>
+<td>step12_rollout_evaluate.txt</td>
+</tr>
+<tr>
+<td>13</td>
+<td>register base-&gt;target delta</td>
+<td>201</td>
+<td>step13_register_delta.txt</td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>PAYOFF</strong>: device on 1.0.0 polls /client/update,
+RECEIVES signed 1.1.0 (version, release, sha256 echoes signed TARGET,
+signature present, delta base_version=1.0.0 sha matches)</td>
+<td>200</td>
+<td>step14_device_poll_receives_signed_update.txt</td>
+</tr>
+<tr>
+<td>15</td>
+<td>control: device already on 1.1.0 gets no update</td>
+<td>204</td>
+<td>step15_device_on_target_poll.txt</td>
+</tr>
+</tbody>
+</table>
+<p>Step-14 captured body (real): <code>version:"1.1.0"</code>,
+<code>sha256:91ae83856bdd…</code>,
+<code>signature:"OxSx/DrERKBN…VBg=="</code>,
+<code>delta.base_version:"1.0.0"</code>,
+<code>delta.sha256:7dfb18b3336a…</code> — the device receives the
+correct SIGNED update through the full real-DB pipeline.</p>
+<p>Post-run orphan check: <code>NONE_CLEAN</code> (§11.4.14 quiescence —
+no leftover containers).</p>
+<h2 id="challenges-bank-dry-run-pass-2000">3. Challenges bank dry-run —
+PASS (20/0/0)</h2>
+<p>Command:</p>
+<pre><code>bash tools/helixqa/run_bank.sh --dry-run</code></pre>
+<p>Result (<code>challenges_dryrun.log</code>): <strong>20 passed / 0
+failed / 0 skipped (mode=dry), RESULT: PASS</strong>, exit=0. Honest
+boundary (§11.4.6): <code>--dry-run</code> is a STATIC coverage audit
+(bank structure + declared evidence_artifact existence) — it touches
+nothing live and is NOT a live challenge execution. A live full-bank run
+requires <code>HELIX_ADMIN_PASSWORD</code> and each challenge
+self-boots/tears-down.</p>
+<h2 id="teardown-cleanup-pass">4. Teardown / cleanup — PASS</h2>
+<p>Both the standalone boot and the pipeline’s self-teardown removed
+their project-scoped stacks; post-run
+<code>podman ps -a | grep helix-ota-system</code> returned none. No
+source files modified (<code>git status</code>: only this new evidence
+dir added).</p>
+<h2 id="skip-with-reason">SKIP-with-reason</h2>
+<p>None. The default remote host <code>thinker.local</code> was
+unreachable, but the run was NOT skipped — it was pointed at the local
+rootless-podman host, booted, and proven live. No fabricated PASS; no
+metadata-only PASS.</p>
+<h2 id="evidence-files-this-run">Evidence files (this run)</h2>
+<ul>
+<li>boot_standalone.log, boot_standalone.stdout — standalone boot</li>
+<li>boot_readyz_login.txt — independent /readyz + /healthz + admin login
+capture</li>
+<li>run.log — pipeline_signed_live full run log (self-boot readyz)</li>
+<li>step01..step15 *.txt — per-step captured HTTP responses
+(redacted)</li>
+<li>SUMMARY.txt — PASS=15 FAIL=0 SKIP=0 exit=0</li>
+<li>pipeline_console.log — full console of the pipeline run</li>
+<li>challenges_dryrun.log — challenges bank dry-run (20/0/0 PASS)</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,37 @@
+=== pipeline_signed_live — §11.4.69 evidence-gated anti-bluff run ===
+[17:11:35Z] caller ed25519 keypair ready (ephemeral, never committed; server will trust the public half)
+[17:11:35Z] BOOT: booting the REAL system in CALLER-PUBKEY MODE (server trusts the caller's pubkey, real Postgres)
+[17:12:16Z] live base_url=http://127.0.0.1:18080
+[17:12:18Z] live /readyz -> 200
+PASS: step 01 login: live admin /auth/login -> 200, access_token issued (redacted) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step01_login.txt]
+[17:12:27Z] step 02 anti-bluff bogus-sig: HTTP 422 error.code=SIGNATURE_INVALID
+PASS: step 02 anti-bluff: live server REJECTS a bogus signature (422 SIGNATURE_INVALID) — it really verifies, so a 201 below is a genuine valid signature [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step02_antibluff_bogus_sig_reject.txt]
+[17:12:35Z] step 03 BASE upload: HTTP 201 verified=true artifact_id=a1ea43c424a26b070556bca03af2ddce
+PASS: step 03 upload BASE v1.0.0: caller-signed artifact ACCEPTED by LIVE server (201, verified=true) on real Postgres [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step03_upload_base_signed.txt]
+[17:12:42Z] step 04 TARGET upload: HTTP 201 verified=true artifact_id=db5051da3bee438f7cad8b745b88d0df
+PASS: step 04 upload TARGET v1.1.0: caller-signed artifact ACCEPTED by LIVE server (201, verified=true) on real Postgres [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step04_upload_target_signed.txt]
+[17:12:44Z] step 05 GET artifact: HTTP 200 artifact_id=db5051da3bee438f7cad8b745b88d0df
+PASS: step 05 GET /artifacts/{id}: target artifact persisted + retrievable from real Postgres (200, id echoes) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step05_get_target_artifact.txt]
+[17:12:46Z] step 06 BASE release: HTTP 201 release_id=ee85f8a6a8ff28851db53cbcb1e66a6a
+PASS: step 06 create BASE release v1.0.0: live server persists release referencing the signed BASE artifact (201) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step06_release_base.txt]
+[17:12:49Z] step 07 TARGET release: HTTP 201 release_id=875ae64becca322196d2d0a03c99b003
+PASS: step 07 create TARGET release v1.1.0: live server persists release referencing the signed TARGET artifact (201) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step07_release_target.txt]
+[17:12:51Z] step 08 register device (on 1.0.0): HTTP 201 device_id=92be295d5a4487d466249d776dfb6c41
+PASS: step 08 register device on 1.0.0: live server registers the device + issues a device_token (201, token redacted) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step08_register_device.txt]
+[17:12:54Z] step 09 deploy TARGET release: HTTP 201 deployment_id=04687f8740cb1d5801396b771d50afbd target_count=0
+PASS: step 09 deploy TARGET release: live server creates a deployment targeting matching devices (201) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step09_deploy_target.txt]
+[17:12:56Z] step 10 rollout create: HTTP 201 deployment_id=04687f8740cb1d5801396b771d50afbd
+PASS: step 10 rollout create: live server creates a staged rollout for the deployment (201, echoes deployment_id) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step10_rollout_create.txt]
+[17:12:58Z] step 11 rollout get: HTTP 200
+PASS: step 11 rollout get: live server returns the rollout state (200) [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step11_rollout_get.txt]
+[17:13:01Z] step 12 rollout evaluate: HTTP 200 action=advance
+PASS: step 12 rollout evaluate: live server returns a rollout decision action='advance' from a healthy-metrics evaluation (200) — rollout PROGRESSES [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step12_rollout_evaluate.txt]
+[17:13:03Z] step 13 register delta: HTTP 201 delta_id=62bb51159b4c97a6cfa04c4c2c54d3e6
+PASS: step 13 register delta: live server persists a base->target delta (201, echoes base_artifact_id) on real Postgres [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step13_register_delta.txt]
+[17:13:05Z] step 14 device poll: HTTP 200 version=1.1.0 release_id=875ae64becca322196d2d0a03c99b003 sha=91ae83856bdd… sig?=yes delta?=yes
+PASS: step 14 DEVICE POLL (the payoff): device on 1.0.0 polls /client/update and RECEIVES the correct SIGNED 1.1.0 update through the full real-DB pipeline — version=1.1.0, release matches, sha256 echoes the uploaded signed TARGET artifact, signature present, AND the registered base->target .delta (base_version=1.0.0, sha matches) is served. End-to-end signed OTA flow works against real Postgres. [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step14_device_poll_receives_signed_update.txt]
+[17:13:10Z] step 15 device-on-1.1.0 poll: HTTP 204
+PASS: step 15 control: a device already on 1.1.0 polling /client/update gets 204 (no update) — the live pipeline does not over-serve [evidence: /home/milos/Factory/projects/tools_and_research/helix_ota/docs/qa/20260709-signed-pipeline-revalidate/step15_device_on_target_poll.txt]
+[17:13:10Z] finished: 2026-07-09T17:13:10Z
+=== SUMMARY (pipeline_signed_live): PASS=15 FAIL=0 SKIP=0 TOTAL=15 ===
+[17:13:10Z] TEARDOWN: tearing down the live system stack (project-scoped; integration suite pg untouched) — §11.4.14

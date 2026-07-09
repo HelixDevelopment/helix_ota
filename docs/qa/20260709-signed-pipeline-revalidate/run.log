@@ -1,0 +1,41 @@
+[17:11:35Z] caller ed25519 keypair ready (ephemeral, never committed; server will trust the public half)
+[17:11:35Z] BOOT: booting the REAL system in CALLER-PUBKEY MODE (server trusts the caller's pubkey, real Postgres)
+[17:11:35Z] UP: booting REAL system (ota-server + real PostgreSQL) on milos@localhost
+[17:11:37Z] PRE-CLEAN: force-removing any prior 'helix-ota-system' stack
+[17:11:49Z] remote arch=x86_64 => cross-compiling GOOS=linux GOARCH=amd64
+[17:11:49Z] CALLER-PUBKEY MODE: live server trusts the public key derived from the caller's signing key (private half stays with caller)
+[17:11:49Z] BUILD: cross-compile static ota-server (host — sibling replaces resolve here)
+[17:11:50Z] built: 22618274 /home/milos/Factory/projects/tools_and_research/helix_ota/server/.docker-bin/ota-server
+[17:11:50Z] SYNC: rsync build bundle -> milos@localhost:/home/milos/.helix-ota-system-stack
+[17:11:55Z] COMPOSE: podman-compose build (project 'helix-ota-system')
+time="2026-07-09T22:12:02+05:00" level=warning msg="HEALTHCHECK is not supported for OCI image format and will be ignored. Must use `docker` format"
+time="2026-07-09T22:12:02+05:00" level=warning msg="HEALTHCHECK is not supported for OCI image format and will be ignored. Must use `docker` format"
+time="2026-07-09T22:12:03+05:00" level=warning msg="HEALTHCHECK is not supported for OCI image format and will be ignored. Must use `docker` format"
+[17:12:03Z] COMPOSE: up -d postgres (first), then wait for it to accept connections
+[17:12:06Z] PG-WAIT: waiting up to 60s for postgres to accept connections
+[17:12:08Z] PG-WAIT: postgres accepting connections.
+[17:12:08Z] COMPOSE: up -d ota-server (postgres now ready => server connect+Migrate succeeds)
+[17:12:11Z] READY: waiting up to 90s for /readyz -> 200
+[17:12:16Z] READY: /readyz -> 200 {"status":"ready"}
+[17:12:16Z] UP: complete. Live base URL (on localhost): http://127.0.0.1:18080
+[17:12:16Z]     higher suites reach it via the remote loopback (ssh) or http://localhost:18080 if the port is exposed.
+[17:12:16Z] live base_url=http://127.0.0.1:18080
+[17:12:18Z] live /readyz -> 200
+[17:12:27Z] step 02 anti-bluff bogus-sig: HTTP 422 error.code=SIGNATURE_INVALID
+[17:12:35Z] step 03 BASE upload: HTTP 201 verified=true artifact_id=a1ea43c424a26b070556bca03af2ddce
+[17:12:42Z] step 04 TARGET upload: HTTP 201 verified=true artifact_id=db5051da3bee438f7cad8b745b88d0df
+[17:12:44Z] step 05 GET artifact: HTTP 200 artifact_id=db5051da3bee438f7cad8b745b88d0df
+[17:12:46Z] step 06 BASE release: HTTP 201 release_id=ee85f8a6a8ff28851db53cbcb1e66a6a
+[17:12:49Z] step 07 TARGET release: HTTP 201 release_id=875ae64becca322196d2d0a03c99b003
+[17:12:51Z] step 08 register device (on 1.0.0): HTTP 201 device_id=92be295d5a4487d466249d776dfb6c41
+[17:12:54Z] step 09 deploy TARGET release: HTTP 201 deployment_id=04687f8740cb1d5801396b771d50afbd target_count=0
+[17:12:56Z] step 10 rollout create: HTTP 201 deployment_id=04687f8740cb1d5801396b771d50afbd
+[17:12:58Z] step 11 rollout get: HTTP 200
+[17:13:01Z] step 12 rollout evaluate: HTTP 200 action=advance
+[17:13:03Z] step 13 register delta: HTTP 201 delta_id=62bb51159b4c97a6cfa04c4c2c54d3e6
+[17:13:05Z] step 14 device poll: HTTP 200 version=1.1.0 release_id=875ae64becca322196d2d0a03c99b003 sha=91ae83856bdd… sig?=yes delta?=yes
+[17:13:10Z] step 15 device-on-1.1.0 poll: HTTP 204
+[17:13:10Z] finished: 2026-07-09T17:13:10Z
+[17:13:10Z] TEARDOWN: tearing down the live system stack (project-scoped; integration suite pg untouched) — §11.4.14
+[17:13:10Z] DOWN: tearing down project 'helix-ota-system' on milos@localhost
+[17:13:20Z] DOWN: complete (project 'helix-ota-system' removed; integration suite untouched).
