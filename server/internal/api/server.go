@@ -114,13 +114,24 @@ func (s *Server) Router() *gin.Engine {
 	// `Vary: Accept-Encoding` (superseding the bare varyMiddleware). The optional
 	// in-flight cap (HELIX_MAX_INFLIGHT) sheds excess load with 429 before any
 	// handler work — DoS protection, default-off.
-	r.Use(recoveryMiddleware(), requestIDMiddleware(), maxInflightMiddleware(s.cfg.MaxInflight), compressionMiddleware())
+	//
+	// securityHeadersMiddleware (Item O, Tier A) sets the global security response
+	// headers on EVERY response. It runs before the in-flight limiter so even a
+	// 429-shed and error/panic responses carry them; HSTS is emitted only when
+	// TLS is configured.
+	r.Use(recoveryMiddleware(), requestIDMiddleware(), securityHeadersMiddleware(s.tlsEnabled()),
+		maxInflightMiddleware(s.cfg.MaxInflight), compressionMiddleware())
 
 	// Health/readiness are unversioned, unauthenticated operational probes.
 	r.GET("/healthz", s.handleHealthz)
 	r.GET("/readyz", s.handleReadyz)
 
 	v1 := r.Group(s.cfg.APIBasePath)
+	// apiSecurityHeadersMiddleware (Item O, Tier B) adds the strict JSON CSP
+	// (default-src 'none') + Cache-Control: no-store to every API response,
+	// including the public auth endpoints and API error paths. Scoped to the API
+	// group so the /manager SPA's hashed assets keep their cacheable headers.
+	v1.Use(apiSecurityHeadersMiddleware())
 
 	// Public auth endpoints (endpoints.md §7).
 	v1.POST("/auth/login", s.handleLogin)

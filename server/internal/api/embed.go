@@ -64,8 +64,24 @@ func (s *Server) MountManagerUI(r *gin.Engine) {
 		panic("embed: cannot create fs.Sub for manager-dist: " + err.Error())
 	}
 
-	// Serve the SPA at /manager with a directory index.
-	r.StaticFS("/manager", http.FS(sub))
+	// Tier C (Item O): the SPA document CSP. Gated exactly like HSTS — the
+	// `upgrade-insecure-requests` directive is emitted only when TLS is
+	// configured, because over plaintext HTTP it would upgrade the same-origin
+	// /manager/assets/* subresource loads to https and white-screen the UI on any
+	// non-localhost HTTP deployment. See docs/qa/20260710-server-security-headers/
+	// EVIDENCE.md for the bundle static-analysis that derived each directive.
+	spaCSP := spaDocumentCSP(s.tlsEnabled())
+
+	// Serve the SPA at /manager with a directory index. A group middleware
+	// attaches the document CSP; the header is harmless on asset subresource
+	// responses (browsers apply CSP only to documents/workers) and load-bearing
+	// on the index.html document served at /manager/ and /manager/index.html.
+	mgr := r.Group("/manager")
+	mgr.Use(func(c *gin.Context) {
+		c.Header("Content-Security-Policy", spaCSP)
+		c.Next()
+	})
+	mgr.StaticFS("/", http.FS(sub))
 
 	// SPA fallback: any GET request under /manager that does not match a file
 	// serves the SPA's index.html so client-side routing works.
@@ -116,6 +132,10 @@ func (s *Server) MountManagerUI(r *gin.Engine) {
 			c.Next()
 			return
 		}
+		// The SPA-fallback index.html is a DOCUMENT response for a client route
+		// (e.g. /manager/devices) served outside the /manager static group, so set
+		// the Tier-C document CSP here too.
+		c.Header("Content-Security-Policy", spaCSP)
 		c.Data(http.StatusOK, "text/html; charset=utf-8", indexData)
 		c.Abort()
 	})
