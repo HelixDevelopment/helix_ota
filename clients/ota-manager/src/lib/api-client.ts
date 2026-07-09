@@ -144,10 +144,16 @@ export interface DeviceListFilter {
   limit?: number;
 }
 
+// DeviceList mirrors the REAL GET /devices wire shape — server/internal/api/
+// wire.go:97-100 (DeviceList struct): `{items, next_cursor}`, cursor-paginated.
+// NextCursor is a `*string` with NO `omitempty` tag, so the key is ALWAYS
+// present on the wire — `null` on the last page, a string cursor otherwise
+// (§11.4.6/§11.4.108: this previously declared a fabricated `{total, cursor}`
+// shape the server never sends — both fields were always `undefined` at
+// runtime).
 export interface DeviceList {
   items: DeviceRegistered[];
-  total: number;
-  cursor?: string;
+  next_cursor: string | null;
 }
 
 export interface DeviceStatus {
@@ -177,10 +183,15 @@ export interface TelemetryFilter {
   limit?: number;
 }
 
+// TelemetryHistory mirrors the REAL GET /devices/{id}/telemetry wire shape —
+// server/internal/api/handlers_telemetry.go:30-38 (TelemetryHistory struct):
+// `{device_id, items, next_cursor}`, cursor-paginated. NextCursor is a
+// `*string` with NO `omitempty` tag, so the key is ALWAYS present — `null` on
+// the last page (§11.4.6/§11.4.108: this previously declared a fabricated
+// `{total, cursor}` shape the server never sends).
 export interface TelemetryHistory {
   items: Record<string, unknown>[];
-  total: number;
-  cursor?: string;
+  next_cursor: string | null;
 }
 
 // TelemetryOverview mirrors the REAL GET /telemetry/overview wire shape —
@@ -243,10 +254,14 @@ export interface ReleaseFilter {
   limit?: number;
 }
 
+// ReleaseList mirrors the REAL GET /releases wire shape — server/internal/api/
+// wire.go:159-162 (ReleaseList struct): `{items, next_cursor}`, cursor-
+// paginated. NextCursor is a `*string` with NO `omitempty` tag, so the key is
+// ALWAYS present — `null` on the last page (§11.4.6/§11.4.108: this previously
+// declared a fabricated `{total, cursor}` shape the server never sends).
 export interface ReleaseList {
   items: Release[];
-  total: number;
-  cursor?: string;
+  next_cursor: string | null;
 }
 
 // Deployments
@@ -262,10 +277,22 @@ export interface Deployment {
   created_by: string;
 }
 
+// DeploymentList mirrors the REAL GET /deployments wire shape —
+// server/internal/api/wire.go:184-190 (DeploymentList struct): `{items,
+// next_cursor}`. CORRECTION vs the original conductor briefing for this task:
+// DeploymentList DOES carry a `next_cursor` field on the wire (a `*string`
+// with NO `omitempty` tag, so the key is ALWAYS present) — it is NOT
+// items-only. handleListDeployments (handlers_deployment.go:106-117) never
+// sets it, so it is always `null` today (wire.go's own comment: "NextCursor is
+// reserved for future pagination parity with ReleaseList; the MVP returns all
+// active deployments in one page") — but the JSON key is still emitted as
+// `"next_cursor":null`, not omitted. Typed here as the real wire shape rather
+// than dropping the field, so a future paginated /deployments needs no client
+// type change. (§11.4.6/§11.4.108: this previously declared a fabricated
+// `{total, cursor}` shape the server never sends.)
 export interface DeploymentList {
   items: Deployment[];
-  total: number;
-  cursor?: string;
+  next_cursor: string | null;
 }
 
 export interface DeploymentStatus extends Deployment {
@@ -303,9 +330,13 @@ export interface RecallRequest {
   force: boolean;
 }
 
+// RollbackList mirrors the REAL GET /deployments/{id}/rollbacks wire shape —
+// server/internal/api/handlers_recall.go:36-39 (RollbackList struct):
+// `{items}` ONLY — no cursor/pagination field of any kind on this endpoint
+// (§11.4.6/§11.4.108: this previously declared a fabricated `total` field the
+// server never sends).
 export interface RollbackList {
   items: { id: string; deployment_id: string; reason: string; created_at: string }[];
-  total: number;
 }
 
 export interface Project {
@@ -374,10 +405,14 @@ export interface Group {
   created_at: string;
 }
 
+// GroupList mirrors the REAL GET /groups wire shape — server/internal/api/
+// handlers_group.go:62-67 (GroupList struct): `{items, next_cursor}`, cursor-
+// paginated. NextCursor is a `*string` with NO `omitempty` tag, so the key is
+// ALWAYS present — `null` on the last page (§11.4.6/§11.4.108: this previously
+// declared a fabricated `{total, cursor}` shape the server never sends).
 export interface GroupList {
   items: Group[];
-  total: number;
-  cursor?: string;
+  next_cursor: string | null;
 }
 
 // Artifacts (server/internal/api/wire.go: ArtifactUploadMetadata, Artifact)

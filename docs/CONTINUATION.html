@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 21 <strong>Last modified:</strong>
-2026-07-10T21:35:00Z</p>
+<p><strong>Revision:</strong> 22 <strong>Last modified:</strong>
+2026-07-10T22:40:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,11 +263,38 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>d97d85a2</code> — 43 parent commits this session (+5 submodule
-gofmt commits), all pushed 4/4 FF §11.4.113. <strong>Wave-5 (2026-07-10
-cont. — operator decisions executed):</strong> <code>992bd497</code>
-<strong>O-impl tiered security headers</strong> (global
-nosniff/frame-DENY/COOP/CORP/TLS-gated-HSTS wired to survive
+<td><code>95c3a533</code> (+ containers submodule <code>1a526ab</code>)
+— all pushed to all mirrors FF §11.4.113 (verified live via
+<code>ls-remote</code>). <strong>Wave-6 (2026-07-10 cont-2):</strong>
+<code>95c3a533</code> <strong>TEL/BUG-1 telemetry real-shape
+mapping</strong> (dashboard hook was a bare re-export casting the raw
+<code>/telemetry/overview</code> body to a FABRICATED camelCase shape →
+every stat card read <code>undefined</code>; now a mapping adapter onto
+the real <code>{event_counts,total,failure_rate,by_state}</code>;
+<code>pendingUpdates</code> = the four NON-terminal buckets verified
+EXACTLY vs <code>submodules/ota-protocol/enums.go:201-206</code>,
+<code>by_state</code> fed by
+<code>handlers_client.go:207 UpdateState=string(ev.Event)</code>;
+independently re-verified §11.4.142, tsc 0 vitest 49/49, +HTML/PDF/DOCX
+evidence) · <code>1a526ab</code> <strong>containers idle-shutdown
+stale-fire race</strong> (submodule, all 5 mirrors — <code>fire()</code>
+gained a <code>lastTouch</code>-vs-<code>timeout</code> guard that
+reschedules instead of shutting down when a <code>Touch</code> beat the
+timer; UNEXPORTED clock-injection seam makes the sub-ms race
+deterministic; §11.4.115 fake-clock RED→GREEN, <code>-race</code>×3,
+conductor-verified) · <strong><code>/healthz</code> follow-up RESOLVED
+not-reproducible</strong> (§11.4.90 — zero client callers repo-wide;
+server correctly serves <code>/healthz</code>+<code>/readyz</code>
+unversioned) · <strong>client-wire list-shape reconciliation
+CLOSED</strong> (this commit — 6 client list interfaces declared the
+wrong <code>{items,total,cursor}</code>; fixed to
+<code>{items,next_cursor}</code> for
+DeviceList/ReleaseList/GroupList/TelemetryHistory/DeploymentList and
+<code>{items}</code> for RollbackList, matched to the real server
+structs + compile-time guard test; tsc 0, vitest 50/50). <strong>Wave-5
+(2026-07-10 cont. — operator decisions executed):</strong>
+<code>992bd497</code> <strong>O-impl tiered security headers</strong>
+(global nosniff/frame-DENY/COOP/CORP/TLS-gated-HSTS wired to survive
 404/401/500/429-shed + <code>/api/v1</code> CSP+no-store + SPA-document
 CSP with style-src unsafe-inline for React19 hoisting, upgrade-insecure
 TLS-gated to avoid plain-HTTP white-screen; conductor-reverified 8/8
@@ -363,9 +390,105 @@ by operator decision (§11.4.133)</strong></td>
 </tbody>
 </table>
 <h3
-id="latest-session-2026-07-10-postgres-e2e-review-driven-anti-bluff-fix-gofmt-sweep-operator-briefs">Latest
-session (2026-07-10) — Postgres e2e + review-driven anti-bluff fix +
-gofmt sweep + operator briefs</h3>
+id="latest-session-2026-07-10-cont-2-bug-1-telemetry-fix-containers-idle-race-fix-follow-up-triage">Latest
+session (2026-07-10, cont-2) — BUG-1 telemetry fix + containers
+idle-race fix + follow-up triage</h3>
+<p>Operator directive (re-sent, standing §11.4.126): continue the
+endless autonomous loop with 3-4 parallel subagents on real evidence, no
+bluff. This continuation drained the post-fan-out follow-up queue. Every
+stream conductor-independently re-verified before commit (§11.4.142);
+all pushes FF, no force (§11.4.113).</p>
+<ul>
+<li><strong>TEL / BUG-1 telemetry model-drift CLOSED</strong>
+(<code>95c3a533</code>, §11.4.6/§11.4.115): the C-impl-disclosed
+pre-existing bug. <code>useTelemetryOverview.ts</code> was a bare
+re-export casting the raw <code>GET /telemetry/overview</code> body to a
+FABRICATED camelCase shape the server never sends → every dashboard stat
+card silently read <code>undefined</code>. Now a mapping adapter onto
+the REAL wire shape
+<code>{event_counts,total,failure_rate,by_state}</code>; every stat
+real-derived. <strong>Independently verified (§11.4.142, not the
+subagent self-report):</strong> traced <code>by_state</code> keys to the
+authoritative <code>submodules/ota-protocol/enums.go:201-206</code>
+<code>TelemetryEvent</code> enum
+(<code>download_started/installing/installed/verifying/success/failure</code>,
+fed via
+<code>handlers_client.go:207 UpdateState=string(ev.Event)</code>) —
+<code>pendingUpdates</code> = the four NON-terminal buckets is EXACT and
+complete; <code>activeDeployments</code> = <code>/deployments</code>
+<code>items.length</code> confirmed (<code>handleListDeployments</code>
+calls <code>ListActiveDeployments</code> unconditionally). tsc 0, vitest
+49/49 (new non-tautological 5-case test: totalDevices=42 vs
+pendingUpdates=8 proves selective sum). +HTML/PDF/DOCX evidence
+siblings. <code>docs/qa/20260710-bug1-telemetry-fix/</code>.</li>
+<li><strong>Containers idle-shutdown stale-fire race CLOSED</strong>
+(<code>1a526ab</code>, submodule, all 5 mirrors — the BT-stream ROOT
+CAUSE, previously reverted-unproven): <code>IdleShutdown.fire()</code>
+shut the service down whenever <code>stopped==false</code>, ignoring a
+<code>Touch()</code> that reset the timer AFTER it was scheduled (Go
+<code>AfterFunc</code>+<code>Reset</code> race: fire() goroutine blocks
+on the lock while a concurrent Touch resets). Fix: <code>fire()</code>
+computes <code>sinceLastTouch</code> and, if <code>&lt; timeout</code>,
+reschedules for the remaining duration instead of firing. Made
+deterministic via an UNEXPORTED clock-injection seam
+(<code>clock.go</code>; <code>NewIdleShutdown</code> public signature
+byte-identical). §11.4.115 fake-clock RED (guard stripped → onIdle
+wrongly fires) → GREEN. Conductor-re-verified: <code>-race</code>×3,
+vet+gofmt clean, full lifecycle regression ok.
+<code>submodules/containers/qa-results/idle_race_fix/</code> (gitignored
+local proof; the regression test is the durable guard).</li>
+<li><strong><code>/healthz</code> follow-up RESOLVED
+not-reproducible</strong> (§11.4.90): the “dashboard calls
+<code>/api/v1/healthz</code> → silent 404” finding does NOT reproduce —
+repo-wide grep found ZERO client callers of healthz/readyz and no
+versioned-health reference anywhere; the server correctly registers
+<code>/healthz</code>+<code>/readyz</code> unversioned (top-level,
+before the <code>v1</code> group). No bug.</li>
+<li><strong>client-wire list-shape reconciliation CLOSED</strong>
+(subagent, conductor-verified §11.4.142): 6 client list interfaces
+declared the wrong <code>{items,total,cursor}</code>
+(<code>total</code>/<code>cursor</code> always <code>undefined</code> at
+runtime). Fixed per-interface against the REAL server structs:
+<code>DeviceList</code>/<code>ReleaseList</code>/<code>GroupList</code>/<code>TelemetryHistory</code>/<code>DeploymentList</code>
+→ <code>{items, next_cursor: string|null}</code>;
+<code>RollbackList</code> → <code>{items}</code> only.
+<code>AuditLogList</code> was already correct. <strong>Subagent
+corrected the conductor’s briefing</strong> (§11.4.6): I mis-read
+<code>DeploymentList</code> as items-only (I checked
+<code>handleListDeployments</code> construction but not the struct) —
+<code>wire.go:187-190</code> gives it
+<code>NextCursor *string json:"next_cursor"</code> with NO
+<code>omitempty</code>, so it emits
+<code>{items, next_cursor: null}</code>; verified directly. New
+compile-time guard test <code>wire-shape-pagination.test.ts</code>
+(real-shaped fixtures + <code>@ts-expect-error</code> on the fabricated
+fields; §11.4.115 RED = 6 <code>TS2353</code>/<code>TS2741</code> on the
+old shape). No caller code needed fixing (request-side
+<code>*Filter.cursor</code> is a separate correct type). tsc 0, vitest
+50/50. <code>docs/qa/20260710-client-wire-shape-reconciliation/</code>.
+Deferred note: <code>TelemetryHistory</code> also carries a server
+<code>device_id</code> field the client never declares (no caller reads
+it) — tracked-if-needed.</li>
+<li><strong>item E wrapper fix confirmed effective</strong>: the
+<code>commit_all.sh --paths</code> <code>git reset -q</code>
+index-isolation (landed <code>d3842845</code>) worked as designed this
+session — the TEL <code>--paths</code> commit isolated exactly its
+listed paths despite a large shared-checkout dirty state (dist/ rebuild
+leftovers, other streams’ <code>docs/qa/20260709-*</code> regenerations,
+foreign <code>helixqa</code>/<code>challenges</code> pointers) with ZERO
+leak.</li>
+<li><strong>export_docs <code>--paths</code> sibling gotcha
+(recorded)</strong>: <code>commit_all.sh</code> refuses a
+<code>docs/qa/*.md</code> commit lacking FLAT
+<code>.html</code>/<code>.pdf</code> siblings, but its auto-repair runs
+<code>export_docs.sh</code> over the whole default scope (96 files,
+slow, and it writes to <code>_exports/</code> not flat) and never covers
+a brand-new evidence dir → persistent REFUSE. Resolution for new
+evidence dirs: run
+<code>bash scripts/export_docs.sh &lt;the-new-dir&gt;/</code> then copy
+<code>_exports/*.{html,pdf,docx}</code> FLAT beside the <code>.md</code>
+before committing.</li>
+</ul>
 <p>Operator directive (re-sent): continue the endless autonomous loop
 with 3-4 parallel subagents on real evidence, no bluff. Ran multiple
 parallel-subagent waves; 5 parent commits
