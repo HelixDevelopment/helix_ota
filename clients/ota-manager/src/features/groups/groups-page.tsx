@@ -23,7 +23,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -297,10 +296,14 @@ export default function GroupsPage() {
 
 function GroupDetailContent({ groupId }: { groupId: string }) {
   // Placeholder for member list and add/remove member functionality.
-  // When a real member-fetching hook is available, wire it here.
+  // The group-membership hooks (useGroupMembers/useAddGroupMember) exist; wiring
+  // the member table here is deferred (see EVIDENCE.md).
   return (
     <div className="mt-6 space-y-4">
-      <p className="text-muted-foreground text-sm">Member management will be implemented with the device membership API.</p>
+      <p className="text-muted-foreground text-sm">
+        Member management for group <span className="font-mono">{groupId}</span> will be implemented with the device
+        membership API.
+      </p>
     </div>
   );
 }

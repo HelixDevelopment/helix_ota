@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useDevices } from "@/hooks/useDevices";
 import { DataTable } from "@/components/data-table/data-table";

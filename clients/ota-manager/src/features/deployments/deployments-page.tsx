@@ -371,10 +371,7 @@ export default function DeploymentsPage() {
 
   const { data: deployments, isLoading, isError, error, refetch } = useDeployments();
 
-  const deploymentList = useMemo(() => {
-    if (!deployments) return [];
-    return deployments as Deployment[];
-  }, [deployments]);
+  const deploymentList = useMemo<Deployment[]>(() => deployments ?? [], [deployments]);
 
   const handleRowClick = (deployment: Deployment) => {
     navigate({ to: "/deployments/$deploymentId", params: { deploymentId: deployment.id } });

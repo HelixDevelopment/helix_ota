@@ -1,14 +1,32 @@
 import * as React from "react";
+import {
+  Controller,
+  FormProvider,
+  type Control,
+  type ControllerRenderProps,
+  type FieldValues,
+  type FieldPath,
+} from "react-hook-form";
 import { cn } from "@/lib/utils";
 
-const Form = React.forwardRef<HTMLFormElement, React.FormHTMLAttributes<HTMLFormElement>>(({ className, ...props }, ref) => (
-  <form ref={ref} className={cn("space-y-4", className)} {...props} />
-));
-Form.displayName = "Form";
+// `Form` is react-hook-form's FormProvider so `<Form {...form}>` (the shadcn
+// idiom) supplies the form context to every FormField below it. The actual
+// <form> element is rendered by each consumer around its fields.
+const Form = FormProvider;
 
-const FormField = <T extends { name: string }>(props: { control?: unknown; name: string; render: (field: { field: T }) => React.ReactNode }) => {
-  return <>{props.render({ field: { name: props.name } as T })}</>;
-};
+// `FormField` wraps react-hook-form's Controller so the `field` render-prop
+// carries the real ControllerRenderProps ({ value, onChange, onBlur, name, ref })
+// instead of the previous stub that only exposed `name`.
+function FormField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>(props: {
+  control: Control<TFieldValues>;
+  name: TName;
+  render: (renderProps: { field: ControllerRenderProps<TFieldValues, TName> }) => React.ReactElement;
+}) {
+  return <Controller control={props.control} name={props.name} render={props.render} />;
+}
 
 const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
   <div ref={ref} className={cn("space-y-1", className)} {...props} />
@@ -28,12 +46,13 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
 ));
 FormMessage.displayName = "FormMessage";
 
-export { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription, useFormField };
-function useFormField() {
-  return { id: "", error: false };
-}
-
 const FormDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => (
   <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
 ));
 FormDescription.displayName = "FormDescription";
+
+function useFormField() {
+  return { id: "", error: false };
+}
+
+export { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription, useFormField };

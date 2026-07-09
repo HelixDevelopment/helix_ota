@@ -1,15 +1,14 @@
 // §11.4.170 host-render dual-oracle runner for ota-manager Dashboard — the
-// SHIPPED `/dashboard` route (src/routes/dashboard.tsx, mounted via the REAL
-// unmodified route-tree.gen.ts exactly as src/main.tsx wires it).
+// SHIPPED `/dashboard` route, mounted via the REAL unmodified route-tree.gen.ts
+// exactly as src/main.tsx wires it.
 //
-// IMPORTANT FINDING (captured as evidence, not asserted from memory): the
-// route tree imports `DashboardPage` from "@/routes/dashboard" — a static,
-// data-free placeholder component. The feature-rich, hook-driven component at
-// src/features/dashboard/dashboard-page.tsx (useTelemetryOverview/useAuditLog,
-// react-router-dom's useNavigate) is NOT imported anywhere in route-tree.gen.ts
-// and is therefore unwired/dead code, not the shipped `/dashboard` screen. See
-// docs/qa/20260709-ota-manager-dashboard-hostrender/EVIDENCE.md for the full
-// investigation. This runner proves the screen that is ACTUALLY routed.
+// UPDATE (20260710 router-wiring): the route tree now mounts the feature-rich,
+// hook-driven component at src/features/dashboard/dashboard-page.tsx (the former
+// static placeholder src/routes/dashboard.tsx was retired). That component reads
+// useTelemetryOverview + useAuditLog, so this runner installs Playwright network
+// stubs for GET /telemetry/overview and GET /audit (type-shape-accurate canned
+// JSON) so the real component reaches its loaded state — no product source is
+// modified. This runner proves the screen that is ACTUALLY routed.
 //
 // Produces: baseline PNGs (light+dark), re-render PNGs, mutated (golden-bad)
 // PNGs, diff PNGs, bounds JSON, OCR text, and a structured results.json — all
@@ -35,7 +34,7 @@ const dirs = {
 
 const THEMES = ["light", "dark"];
 const VIEWPORT = { width: 1280, height: 900 };
-const EXPECT_LABELS = ["Dashboard", "Total Devices", "Active Releases", "Deployments", "Online", "Recent Deployments", "Device Health"];
+const EXPECT_LABELS = ["Dashboard", "Total Devices", "Active Deployments", "Pending Updates", "Failed Devices", "Recent Activity", "Quick Actions"];
 // OCR golden-bad: suppress this one on-screen label (paint over its real
 // rendered bounds) — the OCR oracle MUST then report it missing while the
 // other labels stay present. "Total Devices" is chosen (not the "Dashboard"
@@ -52,19 +51,41 @@ const MUTATE_CSS = `main h1{height:0!important;min-height:0!important;padding:0!
 const TOL_GOOD = 0.001; // <=0.1% differing pixels on identical re-render => PASS
 const MIN_BAD = 0.002; // >=0.2% differing pixels on mutated render => oracle correctly flags
 
-const NEED = ["title", "statTotalDevices", "statActiveReleases", "statDeployments", "statOnline", "cardRecentDeployments", "cardDeviceHealth"];
-const ORDER = ["title", "statTotalDevices", "cardRecentDeployments"];
+const NEED = ["title", "statTotalDevices", "statActiveDeployments", "statPendingUpdates", "statFailedDevices", "cardRecentActivity", "cardQuickActions"];
+const ORDER = ["title", "statTotalDevices", "cardRecentActivity"];
+
+// §11.4.170 visual-proof note (anti-bluff, §11.4.107 / §11.4.123): the stub
+// below feeds the DashboardPage its DECLARED input contract (the camelCase
+// `TelemetryOverview` view-model the component's TypeScript type consumes). This
+// harness proves the SCREEN RENDERS CORRECTLY for that view-model (both themes,
+// image-diff + OCR + layout oracles, self-validated golden-good/golden-bad). It
+// does NOT assert backend integration — the REAL Go server GET /telemetry/overview
+// emits {event_counts,total,failure_rate,by_state}, which does NOT match this
+// camelCase model (documented as BUG-1 in EVIDENCE.md). No end-to-end claim.
+const CANNED_OVERVIEW = { totalDevices: 1287, activeDeployments: 4, pendingUpdates: 23, failedDevices: 2 };
+async function setupDashboardRoutes(page) {
+  await page.route("**/*", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/telemetry/overview")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(CANNED_OVERVIEW) });
+    }
+    if (url.includes("/audit")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) });
+    }
+    return route.continue();
+  });
+}
 
 async function captureDashboardBounds(page) {
   const main = page.locator("main");
   const targets = {
     title: main.getByRole("heading", { level: 1, name: "Dashboard", exact: true }),
     statTotalDevices: main.getByText("Total Devices", { exact: true }),
-    statActiveReleases: main.getByText("Active Releases", { exact: true }),
-    statDeployments: main.getByText("Deployments", { exact: true }),
-    statOnline: main.getByText("Online", { exact: true }),
-    cardRecentDeployments: main.getByText("Recent Deployments", { exact: true }),
-    cardDeviceHealth: main.getByText("Device Health", { exact: true }),
+    statActiveDeployments: main.getByText("Active Deployments", { exact: true }),
+    statPendingUpdates: main.getByText("Pending Updates", { exact: true }),
+    statFailedDevices: main.getByText("Failed Devices", { exact: true }),
+    cardRecentActivity: main.getByText("Recent Activity", { exact: true }),
+    cardQuickActions: main.getByText("Quick Actions", { exact: true }),
   };
   const bounds = {};
   for (const [name, loc] of Object.entries(targets)) {
@@ -84,7 +105,7 @@ async function main() {
   const { server, base } = await startStaticServer();
   const results = {
     generated_at: new Date().toISOString(),
-    screen: "Dashboard (/dashboard, src/routes/dashboard.tsx via the real route-tree.gen.ts)",
+    screen: "Dashboard (/dashboard, src/features/dashboard/dashboard-page.tsx via the real route-tree.gen.ts; visual proof of the declared TelemetryOverview view-model — see BUG-1 for backend drift)",
     themes: {},
     self_validation: {},
   };
@@ -95,6 +116,7 @@ async function main() {
     viewport: VIEWPORT,
     captureBoundsFn: captureDashboardBounds,
     waitForMountFn: waitForDashboardMount,
+    setupRoutes: setupDashboardRoutes,
   };
 
   try {

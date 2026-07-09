@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Monitor,
   Rocket,
@@ -142,6 +142,16 @@ export default function DashboardPage() {
     useTelemetryOverview();
   const { data: auditEvents, isLoading: activityLoading } = useAuditLog({ limit: 10 });
 
+  const activityEvents: ActivityEvent[] = (auditEvents ?? []).map((entry) => ({
+    id: entry.id,
+    action: entry.action,
+    resource: entry.target,
+    resourceType: "",
+    performedBy: entry.actor,
+    timestamp: entry.timestamp,
+    severity: "info",
+  }));
+
   // Loading skeleton state
   if (statsLoading) {
     return (
@@ -241,7 +251,7 @@ export default function DashboardPage() {
             <CardTitle className="text-lg">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <ActivityFeed events={auditEvents ?? []} loading={activityLoading} />
+            <ActivityFeed events={activityEvents} loading={activityLoading} />
           </CardContent>
         </Card>
 
@@ -251,19 +261,19 @@ export default function DashboardPage() {
             <CardTitle className="text-lg">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="default" onClick={() => navigate("/releases/create")}>
+            <Button className="w-full justify-start" variant="default" onClick={() => navigate({ to: "/releases" })}>
               <PackageOpen className="h-4 w-4 mr-2" />
               Create Release
             </Button>
-            <Button className="w-full justify-start" variant="default" onClick={() => navigate("/deployments/create")}>
+            <Button className="w-full justify-start" variant="default" onClick={() => navigate({ to: "/deployments" })}>
               <Rocket className="h-4 w-4 mr-2" />
               Create Deployment
             </Button>
-            <Button className="w-full justify-start" variant="default" onClick={() => navigate("/devices/register")}>
+            <Button className="w-full justify-start" variant="default" onClick={() => navigate({ to: "/devices" })}>
               <Monitor className="h-4 w-4 mr-2" />
               Register Device
             </Button>
-            <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/groups")}>
+            <Button className="w-full justify-start" variant="outline" onClick={() => navigate({ to: "/groups" })}>
               <Users className="h-4 w-4 mr-2" />
               Manage Groups
             </Button>

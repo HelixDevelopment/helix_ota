@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import DashboardPage from '@/features/dashboard/dashboard-page'
 
-vi.mock('react-router-dom', () => ({
+vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => vi.fn(),
 }))
 

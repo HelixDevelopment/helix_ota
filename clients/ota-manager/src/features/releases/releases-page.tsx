@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -564,10 +564,7 @@ export default function ReleasesPage() {
     status: statusFilter,
   });
 
-  const filteredReleases = useMemo(() => {
-    if (!releases) return [];
-    return releases as Release[];
-  }, [releases]);
+  const filteredReleases = useMemo<Release[]>(() => releases ?? [], [releases]);
 
   /* ---- states ---- */
   if (isLoading) {

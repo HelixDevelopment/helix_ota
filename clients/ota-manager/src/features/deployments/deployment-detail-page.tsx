@@ -21,14 +21,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Form,
   FormControl,
   FormField,
@@ -509,9 +501,8 @@ function RollbackHistory({ events }: RollbackHistoryProps) {
 /* ------------------------------------------------------------------ */
 
 export default function DeploymentDetailPage() {
-  const { deploymentId } = useParams({ from: "/deployments/$deploymentId" });
+  const { deploymentId } = useParams({ from: "/layout/deployments/$deploymentId" });
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const [recallReason, setRecallReason] = useState("");
 

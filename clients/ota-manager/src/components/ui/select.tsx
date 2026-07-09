@@ -24,8 +24,14 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttrib
 ));
 SelectTrigger.displayName = "SelectTrigger";
 
-const SelectValue = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(({ className, ...props }, ref) => (
-  <span ref={ref} className={cn("text-sm", className)} {...props} />
+interface SelectValueProps extends React.HTMLAttributes<HTMLSpanElement> {
+  placeholder?: string;
+}
+
+const SelectValue = React.forwardRef<HTMLSpanElement, SelectValueProps>(({ className, placeholder, children, ...props }, ref) => (
+  <span ref={ref} className={cn("text-sm", className)} {...props}>
+    {children ?? placeholder}
+  </span>
 ));
 SelectValue.displayName = "SelectValue";
 

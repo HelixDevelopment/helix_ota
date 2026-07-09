@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useParams } from "@tanstack/react-router";
 import { useDeviceStatus } from "@/hooks/useDeviceStatus";
@@ -18,19 +17,24 @@ type DeviceStatus = "online" | "offline" | "updating" | "error" | "unknown";
 interface DeviceInfo {
   id: string;
   hardwareId: string;
-  os: string;
   version: string;
-  buildId: string;
   status: DeviceStatus;
   lastSeen: string;
-  firstSeen: string;
-  currentSlot: "a" | "b";
-  bootSlot: "a" | "b";
+  // Fields below are not carried by the current device-status wire contract
+  // (GET /devices/:id/status returns device_id/online/current_release_id/
+  // last_seen/ip_address only). They are optional and render as honest
+  // placeholders until a richer device-detail endpoint exists.
+  os?: string;
+  buildId?: string;
+  firstSeen?: string;
+  currentSlot?: "a" | "b";
+  bootSlot?: "a" | "b";
   availableUpdate?: string;
-  healthStatus: "healthy" | "degraded" | "critical";
+  healthStatus?: "healthy" | "degraded" | "critical";
   targetModel?: string;
   imei?: string;
   serial?: string;
+  ipAddress?: string;
 }
 
 interface TelemetryEntry {
@@ -230,7 +234,7 @@ function DeviceInfoCard({ device }: { device: DeviceInfo }) {
         </div>
         <div>
           <span className="text-muted-foreground">OS</span>
-          <p>{device.os}</p>
+          <p>{device.os ?? "—"}</p>
         </div>
         <div>
           <span className="text-muted-foreground">Target Model</span>
@@ -254,7 +258,7 @@ function DeviceInfoCard({ device }: { device: DeviceInfo }) {
         </div>
         <div>
           <span className="text-muted-foreground">First Seen</span>
-          <p>{formatDateTime(device.firstSeen)}</p>
+          <p>{device.firstSeen ? formatDateTime(device.firstSeen) : "—"}</p>
         </div>
         <div>
           <span className="text-muted-foreground">Last Seen</span>
@@ -268,10 +272,12 @@ function DeviceInfoCard({ device }: { device: DeviceInfo }) {
                 ? "default"
                 : device.healthStatus === "degraded"
                   ? "outline"
-                  : "destructive"
+                  : device.healthStatus === "critical"
+                    ? "destructive"
+                    : "secondary"
             }
           >
-            {device.healthStatus}
+            {device.healthStatus ?? "Unknown"}
           </Badge>
         </div>
       </CardContent>
@@ -292,7 +298,7 @@ function VersionCard({ device }: { device: DeviceInfo }) {
         </div>
         <div>
           <span className="text-muted-foreground">Build ID</span>
-          <p className="font-mono text-xs">{device.buildId}</p>
+          <p className="font-mono text-xs">{device.buildId ?? "—"}</p>
         </div>
         <div>
           <span className="text-muted-foreground">Available Update</span>
@@ -353,11 +359,9 @@ function SlotCard({ device }: { device: DeviceInfo }) {
 }
 
 function TelemetryCard({
-  deviceId,
   telemetry,
   loading,
 }: {
-  deviceId: string;
   telemetry: TelemetryEntry[];
   loading: boolean;
 }) {
@@ -455,29 +459,39 @@ function GroupsCard({ groups }: { groups: GroupInfo[] }) {
 /* ------------------------------------------------------------------ */
 
 export default function DeviceDetailPage() {
-  const { deviceId } = useParams({ from: "/devices/$deviceId" });
-  const {
-    device,
-    updates,
-    groups,
-    loading: statusLoading,
-    error: statusError,
-    refresh: refreshStatus,
-  } = useDeviceStatus(deviceId);
+  const { deviceId } = useParams({ from: "/layout/devices/$deviceId" });
 
-  const {
-    telemetry,
-    loading: telemetryLoading,
-    error: telemetryError,
-    refresh: refreshTelemetry,
-  } = useDeviceTelemetry(deviceId);
+  const statusQuery = useDeviceStatus(deviceId);
+  const telemetryQuery = useDeviceTelemetry(deviceId);
 
+  // Map the device-status wire result onto the rich view model. Fields the
+  // contract does not carry are left undefined and shown as honest placeholders.
+  const device: DeviceInfo | null = statusQuery.data
+    ? {
+        id: statusQuery.data.device_id,
+        hardwareId: statusQuery.data.device_id,
+        version: statusQuery.data.current_release_id || "—",
+        status: statusQuery.data.online ? "online" : "offline",
+        lastSeen: statusQuery.data.last_seen,
+        ipAddress: statusQuery.data.ip_address,
+      }
+    : null;
+
+  // The wire contract exposes no per-device update history, group membership, or
+  // typed telemetry series (telemetry items are opaque records), so these render
+  // their empty states until richer endpoints exist (see EVIDENCE.md).
+  const updates: UpdateEvent[] = [];
+  const groups: GroupInfo[] = [];
+  const telemetry: TelemetryEntry[] = [];
+
+  const statusLoading = statusQuery.isLoading;
+  const telemetryLoading = telemetryQuery.isLoading;
   const loading = statusLoading || telemetryLoading;
-  const error = statusError ?? telemetryError;
+  const error = statusQuery.error?.message ?? telemetryQuery.error?.message ?? null;
 
   const handleRetry = () => {
-    refreshStatus();
-    refreshTelemetry();
+    statusQuery.refetch();
+    telemetryQuery.refetch();
   };
 
   /* ---- loading ---- */
@@ -519,7 +533,7 @@ export default function DeviceDetailPage() {
           <h1 className="text-2xl font-bold tracking-tight">{device.id}</h1>
           <p className="text-sm text-muted-foreground">
             <span className="font-mono">{device.hardwareId}</span> &middot;{" "}
-            {device.os} &middot; {device.targetModel ?? "Generic"}
+            {device.os ?? "—"} &middot; {device.targetModel ?? "Generic"}
           </p>
         </div>
 
@@ -539,7 +553,6 @@ export default function DeviceDetailPage() {
       {/* Telemetry */}
       <div className="mb-6">
         <TelemetryCard
-          deviceId={deviceId}
           telemetry={telemetry}
           loading={telemetryLoading}
         />
