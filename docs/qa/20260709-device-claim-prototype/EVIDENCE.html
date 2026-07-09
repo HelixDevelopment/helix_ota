@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1 id="device-claim-prototype-engine-consumption-evidence">Device-Claim
+Prototype — Engine Consumption Evidence</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z <strong>Scope:</strong> REAL prototype proving
+Helix OTA can consume the <code>session_orchestrator</code> reusable
+engine’s <code>claim</code> + <code>scheduler</code> packages as a
+single-owner device-claim registry (§11.4.176 exactly-once / §11.4.119
+single-resource-owner). Dev-tooling only — NOT product runtime. Engine
+consumed BY REFERENCE (§11.4.28(C) depth-1 carve-out); the engine
+submodule was NOT modified. §11.4.6: every claim below is backed by
+captured command output in <code>test_output.txt</code> (sibling
+file).</p>
+<hr />
+<h2 id="engine-api-consumed-cited-exact-filesfunctions">1. Engine API
+consumed (cited exact files/functions)</h2>
+<p>Engine module
+<code>github.com/vasic-digital/session_orchestrator</code> (go 1.22),
+<code>constitution/submodules/session_orchestrator/</code>. The
+prototype consumes:</p>
+<h3
+id="claim-package-the-single-owner-exactly-once-registry"><code>claim</code>
+package — the single-owner exactly-once registry</h3>
+<ul>
+<li><code>claim.New(cfg Config) *Registry</code> —
+<code>claim/claim.go:167</code>.
+<code>Config{Now Clock, NewID IDGen, Liveness Liveness}</code> (all
+injected, nil-safe defaults) — <code>claim/claim.go:53-151</code>.</li>
+<li><code>(*Registry).TryClaim(resourceID, holder string, ttl time.Duration) (Claim, Outcome, error)</code>
+— <code>claim/claim.go:203</code>. NON-BLOCKING atomic compare-and-set
+under one mutex (<code>claim/claim.go:214-239</code>). Outcomes
+<code>GRANTED</code> / <code>GRANTED_EXISTING</code> /
+<code>DENIED</code> — <code>claim/claim.go:86-98</code>. This is the
+exactly-once (§11.4.176-A) + single-owner (P1 / §11.4.119) primitive:
+two concurrent claimants of one free resource are serialized by the lock
+— exactly one wins <code>GRANTED</code>, every other gets clean
+<code>DENIED</code>.</li>
+<li><code>(*Registry).Release(resourceID, claimID string) error</code> —
+<code>claim/claim.go:246</code>. Claim-id must match
+(<code>ErrClaimMismatch</code>) so a stale holder cannot release a
+reaped-and-re-granted claim (§9.2).</li>
+<li><code>(*Registry).Renew(resourceID, claimID string) (Claim, error)</code>
+— <code>claim/claim.go:279</code>. Explicit TTL heartbeat.</li>
+<li><code>(*Registry).Reap() []Claim</code> / <code>IsClaimed</code> /
+<code>Snapshot</code> / <code>Events</code> / <code>WriteStatus</code> —
+<code>claim/claim.go:315,304,384,398,419</code>.</li>
+<li><strong>TTL / dead-holder reap semantics</strong> —
+<code>staleReason</code> <code>claim/claim.go:364</code>: with a
+<code>Liveness</code> proof configured the proof is authoritative (a
+provably-DEAD holder is reaped ANY time; a provably-ALIVE holder is
+NEVER reaped even past TTL — reaping a live holder would
+cross-contaminate its resource, §9.2); with NO <code>Liveness</code>
+proof it is a pure-TTL lease reaped once
+<code>now &gt;= ExpiresAt()</code>. Absence-of-proof never becomes
+“assume dead” (§11.4.6) — <code>claim/claim.go:20-34</code>.</li>
+</ul>
+<h3
+id="scheduler-package-non-failover-placement-pure-composition"><code>scheduler</code>
+package — non-failover placement (pure composition)</h3>
+<ul>
+<li><code>scheduler.Schedule(reg *alias.Registry, cr *claim.Registry, workUnits []string, cfg Config) (Result, error)</code>
+— <code>scheduler/scheduler.go:133</code>. Composes
+<code>claim.FirstOperableUnclaimed</code>
+(<code>claim/select.go:30</code> — “pool minus currently-claimed minus
+non-operable” in priority order) + <code>claim.TryClaim</code>. Each
+work-unit gets exactly one operable, unclaimed alias, exactly-once; a
+work-unit with no claimable operable alias is returned explicitly
+<code>Unassigned</code> (never dropped, never double-assigned —
+<code>scheduler/scheduler.go:161-170,196-217</code>).
+<code>Config.Probe</code> is required — a nil probe is a config error,
+there is NO fail-open “unprobed = healthy” path (§11.4.69) —
+<code>scheduler/scheduler.go:107-109,140-142</code>.</li>
+<li><code>alias</code> health layer used indirectly:
+<code>alias.NewRegistry</code>, <code>(*Registry).Register</code>,
+<code>alias.ProbeResult{HTTPStatus,Body,Err}</code>,
+<code>alias.VerifyToken</code>, <code>alias.IsOperable</code>
+(fail-closed) — <code>alias/registry.go:52,59</code>,
+<code>alias/health.go:80,28,155</code>.</li>
+</ul>
+<h3 id="honest-boundary-11.4.6-the-absent-failover-spine">Honest
+boundary (§11.4.6) — the absent failover spine</h3>
+<p>The engine’s same-session FAILOVER / re-homing spine (WS-C: detect a
+degraded holder → atomically move its work onto another) is
+<strong>UNCONFIRMED / NOT implemented</strong> in the engine
+(<code>claim/claim.go:36-38</code>,
+<code>scheduler/scheduler.go:16-22</code>). The prototype therefore
+models claim / release / single-owner / dead-holder-reap ONLY. Automatic
+re-homing of a crashed worker’s in-flight device test remains
+conductor-driven (§11.4.147) on top of the dead-holder reap this exposes
+— the engine gives the death SIGNAL (reap), not the automatic re-home
+ACTION.</p>
+<h2 id="engine-builds-tests-green-unmodified">2. Engine builds + tests
+GREEN (unmodified)</h2>
+<p><code>cd constitution/submodules/session_orchestrator &amp;&amp; go build ./... &amp;&amp; go test ./...</code>
+(captured, <code>test_output.txt</code> lines 4-10):</p>
+<pre><code>engine BUILD_EXIT=0
+ok  github.com/vasic-digital/session_orchestrator/alias      0.006s
+ok  github.com/vasic-digital/session_orchestrator/claim      0.418s
+ok  github.com/vasic-digital/session_orchestrator/scheduler  0.003s
+ok  github.com/vasic-digital/session_orchestrator/supervisor 0.066s
+engine TEST_EXIT=0</code></pre>
+<p>The engine submodule was NOT modified (read-only per task
+mandate).</p>
+<h2 id="prototype-design">3. Prototype design</h2>
+<p><code>tools/device_claim/</code> — module
+<code>github.com/HelixDevelopment/helix_ota/tools/device_claim</code>
+(go 1.22). Consumes the engine via <code>go.mod</code>:</p>
+<pre><code>require github.com/vasic-digital/session_orchestrator v0.0.0
+replace github.com/vasic-digital/session_orchestrator =&gt; ../../constitution/submodules/session_orchestrator</code></pre>
+<p>The engine has zero external deps
+(<code>helix-deps.yaml: deps: []</code>, stdlib only), so the local
+<code>replace</code> resolves with NO network fetch and NO
+<code>go.sum</code> for it.</p>
+<p><code>devclaim.go</code> wraps <code>claim.Registry</code> as a
+<strong>device-claim registry</strong> modelling the real Helix case:
+the exclusive resource is a physical target device addressed by its
+<strong>stable serial</strong> (§11.4.111 — never an
+<code>adb devices</code> enumeration slot, reassigned on hotplug); the
+holder is a test-worker id.</p>
+<ul>
+<li><code>New(Config{Now, Liveness})</code> → wraps
+<code>claim.New</code>. <code>Liveness</code> = the consumer’s fast
+non-blocking dead-worker proof (<code>kill -0</code> / heartbeat-file
+mtime).</li>
+<li><code>TryAcquire(serial, worker, ttl) (Lease, Outcome, error)</code>
+→ <code>TryClaim</code>
+<ul>
+<li>a stable-serial / non-empty-worker guard (§11.4.111).</li>
+</ul></li>
+<li><code>Release</code> / <code>Renew</code> / <code>Owner</code> /
+<code>IsHeld</code> / <code>Reap</code> → the engine primitives, renamed
+into the Helix device domain.</li>
+<li><code>PlaceWorkers(devices, workers, reachable, ttl, now)</code> →
+composes <code>scheduler.Schedule</code>: each device registered as an
+alias keyed by stable serial; a device is a candidate only if
+<code>reachable(serial)</code> (the device-testing analogue of alias
+health, mapped to a positive-evidence probe / fail-closed UNREACHABLE)
+AND unclaimed. All-or-nothing, single-owner, never-drop.</li>
+</ul>
+<p>It composes, does not re-implement — exactly-once / single-owner /
+non-blocking / TTL-reap all come from the engine; the wrapper adds only
+Helix-domain naming + the stable-serial guard + the reachable→probe
+mapping.</p>
+<h2
+id="test-results-go-test--race--count1-captured-test_output.txt-lines-16-41">4.
+Test results (<code>go test -race -count=1</code>, captured
+<code>test_output.txt</code> lines 16-41)</h2>
+<p><code>gofmt -l</code> clean, <code>go vet</code> exit 0. All 9 tests
+PASS under <code>-race</code>; re-run <code>-count=3</code> also GREEN
+(self-cleaning state, §11.4.98).</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Required property</th>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(a)</td>
+<td><strong>exactly-once</strong> — 2 concurrent claimants of one serial
+⇒ exactly one GRANTED, one DENIED (500 iterations, maximal race)</td>
+<td><code>TestExactlyOnce_ConcurrentClaimants</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>(a)</td>
+<td>same-worker re-acquire is idempotent (GRANTED_EXISTING, same claim
+id)</td>
+<td><code>TestExactlyOnce_SameWorkerIdempotent</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>(b)</td>
+<td><strong>single-owner over time</strong> — hold → deny-other →
+release → re-claim by different worker; wrong-claim-id release rejected
+(§9.2)</td>
+<td><code>TestSingleOwner_ReleaseThenReclaim</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>(c)</td>
+<td><strong>deadlock-free</strong> — 60 workers × 3 devices
+TryAcquire/Release storm completes &lt; 10s, never double-owns</td>
+<td><code>TestDeadlockFree_MultiDeviceStorm</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>(c)</td>
+<td><strong>deadlock-free (scheduler)</strong> — 4 workers / 2 devices
+all-or-nothing placement terminates, 2 assigned + 2 honest Unassigned,
+no device double-assigned</td>
+<td><code>TestDeadlockFree_PlaceWorkersStorm</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>(d)</td>
+<td><strong>TTL reap</strong> — pure-TTL lease past horizon reclaimable
+by another worker; denied before expiry</td>
+<td><code>TestTTLReap_ExpiredLease</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>(d)</td>
+<td><strong>dead-worker reap</strong> — provably-dead holder reclaimable
+immediately (before TTL); provably-alive holder NEVER reaped even past
+TTL</td>
+<td><code>TestLivenessReap_DeadWorker</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>guard</td>
+<td>stable-serial (§11.4.111) — empty serial / empty worker
+rejected</td>
+<td><code>TestStableSerialGuard</code></td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>guard</td>
+<td>fail-closed — unreachable device NEVER assigned (§11.4.69)</td>
+<td><code>TestPlaceWorkers_UnreachableDeviceExcluded</code></td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<pre><code>ok  github.com/HelixDevelopment/helix_ota/tools/device_claim  1.031s   (-race -count=1)
+ok  github.com/HelixDevelopment/helix_ota/tools/device_claim  1.060s   (-race -count=3)</code></pre>
+<h3
+id="systematic-debugging-note-11.4.102-one-real-failure-caught-fixed">Systematic-debugging
+note (§11.4.102) — one real failure caught + fixed</h3>
+<p>First <code>-race</code> run:
+<code>TestLivenessReap_DeadWorker</code> FAILed —
+<code>dead-worker device owner="" (want worker-takeover)</code>. Root
+cause (proven, not guessed): the engine reaps ANY holder whose
+<code>Liveness</code> proof returns false; the test’s <code>alive</code>
+map omitted <code>worker-takeover</code>, so its default
+<code>false</code> made the engine correctly reap the brand-new
+legitimate holder on the next <code>Snapshot</code>. This was a
+TEST-FIXTURE bug (§11.4.1 — a live takeover worker must report alive),
+NOT an engine defect; fixed by registering
+<code>worker-takeover: true</code>. Re-run GREEN. This confirms the
+engine’s fail-closed liveness discipline is genuinely strict.</p>
+<h2 id="verdict">5. Verdict</h2>
+<p>The <code>session_orchestrator</code> <code>claim</code> +
+<code>scheduler</code> packages are a build-verified, test-covered,
+deterministic implementation of exactly the §11.4.176 exactly-once /
+§11.4.119 single-owner device-claim primitive Helix OTA needs for
+parallel device testing. This prototype consumes them BY REFERENCE with
+a small dev-tooling wrapper and proves all four required properties
+under <code>-race</code>. The only gap is the UNCONFIRMED absent WS-C
+failover spine — conductor-driven §11.4.147 respawn stays on top of the
+engine’s dead-holder reap until that spine lands.</p>
+</body>
+</html>
