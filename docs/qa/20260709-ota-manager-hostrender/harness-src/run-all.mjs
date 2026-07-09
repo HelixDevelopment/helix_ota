@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { startStaticServer, renderShot } from "./lib-render.mjs";
 import { diffPng } from "./oracle-diff.mjs";
-import { ocrText, ocrLabelsPresent, layoutCheck } from "./oracle-ocr.mjs";
+import { ocrText, ocrLabelsPresent, layoutCheck, blankTextRegion } from "./oracle-ocr.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EVID = path.resolve(__dirname, "../../../docs/qa/20260709-ota-manager-hostrender");
@@ -23,6 +23,11 @@ const dirs = {
 
 const THEMES = ["light", "dark"];
 const EXPECT_LABELS = ["OTA Manager", "Email", "Password", "Sign in"];
+// OCR golden-bad: suppress this one on-screen label (paint over its real
+// rendered bounds) — the OCR oracle MUST then report it missing while the other
+// labels stay present. Proves the oracle depends on the rendered text.
+const OCR_SUPPRESS_LABEL = "OTA Manager";
+const OCR_SUPPRESS_BOUND = "title"; // captureBounds key for OCR_SUPPRESS_LABEL's element
 // golden-bad mutation: collapse the submit button (the §11.4.170 forensic
 // "broken/collapsed button while token-equality tests stay green" case).
 const MUTATE_CSS = `button[type="submit"]{height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;line-height:0!important;overflow:hidden!important;opacity:0!important;}`;
@@ -62,9 +67,32 @@ async function main() {
       const imgBadDetected = dBad.ratio >= MIN_BAD;
 
       // --- oracle (ii): OCR + layout ---
+      // OCR golden-good: read the unmutated baseline — all labels must be present.
       const text = await ocrText(baseline);
       await writeFile(path.join(dirs.ocr, `login-${theme}.txt`), text);
       const ocr = ocrLabelsPresent(text, EXPECT_LABELS);
+
+      // OCR golden-bad: paint over the real rendered bounds of one label, re-OCR,
+      // and require the oracle to report exactly that label missing (§11.4.107(10)).
+      const ocrBadPng = path.join(dirs.mutated, `login-${theme}-ocrbad.png`);
+      const suppressBound = good.bounds[OCR_SUPPRESS_BOUND];
+      let ocrBad, ocrBadDetected, blankRect;
+      if (!suppressBound) {
+        // The label element was not found in the DOM — cannot construct the
+        // golden-bad honestly; surface as a hard fail rather than fake it.
+        ocrBad = { found: {}, missing: [`${OCR_SUPPRESS_LABEL} (bound '${OCR_SUPPRESS_BOUND}' MISSING)`], ok: false };
+        ocrBadDetected = false;
+        blankRect = null;
+      } else {
+        blankRect = await blankTextRegion(baseline, ocrBadPng, suppressBound);
+        const badText = await ocrText(ocrBadPng);
+        await writeFile(path.join(dirs.ocr, `login-${theme}-ocrbad.txt`), badText);
+        ocrBad = ocrLabelsPresent(badText, EXPECT_LABELS);
+        // The oracle "flags" the mutation iff it now reports the suppressed label
+        // missing (and does NOT spuriously drop every other label).
+        ocrBadDetected = ocrBad.missing.includes(OCR_SUPPRESS_LABEL);
+      }
+
       const layoutGood = layoutCheck(good.bounds, good.viewport);
       const layoutBad = layoutCheck(bad.bounds, bad.viewport);
       const layoutBadDetected = !layoutBad.ok && layoutBad.issues.some((i) => i.startsWith("submit:"));
@@ -77,7 +105,20 @@ async function main() {
           good: { ...dGood, pass: imgGoodPass, diff_png: path.relative(EVID, diffGood) },
           bad: { ...dBad, detected: imgBadDetected, diff_png: path.relative(EVID, diffBad) },
         },
-        ocr: { text_file: path.relative(EVID, path.join(dirs.ocr, `login-${theme}.txt`)), ...ocr },
+        ocr: {
+          text_file: path.relative(EVID, path.join(dirs.ocr, `login-${theme}.txt`)),
+          ...ocr,
+          golden_bad: {
+            suppressed_label: OCR_SUPPRESS_LABEL,
+            blank_rect: blankRect,
+            mutated_png: blankRect ? path.relative(EVID, ocrBadPng) : null,
+            text_file: blankRect ? path.relative(EVID, path.join(dirs.ocr, `login-${theme}-ocrbad.txt`)) : null,
+            found: ocrBad.found,
+            missing: ocrBad.missing,
+            ok: ocrBad.ok,
+            detected: ocrBadDetected,
+          },
+        },
         layout_good: layoutGood,
         layout_bad_detected: layoutBadDetected,
         layout_bad_issues: layoutBad.issues,
@@ -92,11 +133,16 @@ async function main() {
     // self-validation of each analyzer (§11.4.107(10)): golden-good passes AND golden-bad is flagged
     const imgSound = THEMES.every((t) => results.themes[t].image_diff.good.pass && results.themes[t].image_diff.bad.detected);
     const layoutSound = THEMES.every((t) => results.themes[t].layout_good.ok && results.themes[t].layout_bad_detected);
+    // OCR analyzer is sound iff (golden-good) it reads all labels on the unmutated
+    // baseline AND (golden-bad) it flags the suppressed label on the painted-over
+    // render — for BOTH themes.
+    const ocrSound = THEMES.every((t) => results.themes[t].ocr.ok && results.themes[t].ocr.golden_bad.detected);
     results.self_validation = {
       image_diff_analyzer_sound: imgSound,
       layout_analyzer_sound: layoutSound,
+      ocr_analyzer_sound: ocrSound,
     };
-    if (!imgSound || !layoutSound) hardFail = true;
+    if (!imgSound || !layoutSound || !ocrSound) hardFail = true;
 
     await writeFile(path.join(EVID, "results.json"), JSON.stringify(results, null, 2));
     // copy the harness source into evidence for reproducibility
@@ -109,13 +155,15 @@ async function main() {
       console.log(`\n[${t}]`);
       console.log(`  image-diff  golden-good : ratio=${(r.image_diff.good.ratio * 100).toFixed(4)}%  -> ${r.image_diff.good.pass ? "PASS (matches baseline)" : "FAIL"}`);
       console.log(`  image-diff  golden-bad  : ratio=${(r.image_diff.bad.ratio * 100).toFixed(4)}%  -> ${r.image_diff.bad.detected ? "FLAGGED (regression caught)" : "MISSED"}`);
-      console.log(`  ocr labels             : ${r.ocr.ok ? "ALL PRESENT" : "MISSING " + JSON.stringify(r.ocr.missing)}`);
+      console.log(`  ocr golden-good        : ${r.ocr.ok ? "ALL PRESENT" : "MISSING " + JSON.stringify(r.ocr.missing)}`);
+      console.log(`  ocr golden-bad         : ${r.ocr.golden_bad.detected ? `FLAGGED missing "${r.ocr.golden_bad.suppressed_label}"` : "MISSED"}  (missing=${JSON.stringify(r.ocr.golden_bad.missing)})`);
       console.log(`  layout (baseline)      : ${r.layout_good.ok ? "OK (no collapse/clip/offscreen/overlap)" : "ISSUES " + JSON.stringify(r.layout_good.issues)}`);
       console.log(`  layout (golden-bad)    : ${r.layout_bad_detected ? "FLAGGED collapsed submit" : "MISSED"}  ${JSON.stringify(r.layout_bad_issues)}`);
     }
     console.log("\n---- analyzer self-validation ----");
     console.log(`  image-diff analyzer sound : ${results.self_validation.image_diff_analyzer_sound}`);
     console.log(`  layout   analyzer sound   : ${results.self_validation.layout_analyzer_sound}`);
+    console.log(`  ocr      analyzer sound   : ${results.self_validation.ocr_analyzer_sound}`);
     console.log(`\nOVERALL: ${hardFail ? "FAIL" : "PASS"}`);
   } finally {
     server.close();

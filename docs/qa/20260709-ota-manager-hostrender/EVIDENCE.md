@@ -1,7 +1,7 @@
 # §11.4.170 Host-Render Visual Proof — ota-manager LoginPage (first increment)
 
-**Revision:** 1
-**Last modified:** 2026-07-09T00:00:00Z
+**Revision:** 2
+**Last modified:** 2026-07-09T16:56:00Z
 **Scope:** `clients/ota-manager` frontend only (harness added under `clients/ota-manager/visual/`).
 **Mandate:** §11.4.170 — device-independent HOST-side rendered-pixel visual proof, per screen×state×{light,dark}, dual-validated by (i) golden image-diff AND (ii) an OCR/vision layout oracle.
 
@@ -83,10 +83,87 @@ FAIL/flag its golden-bad input:
 
 - `image_diff_analyzer_sound: true` (good=0.0000% pass, bad≥0.2% flagged, both themes)
 - `layout_analyzer_sound: true` (baseline clean, golden-bad collapse detected, both themes)
+- `ocr_analyzer_sound: true` (baseline reads all labels, golden-bad flags the
+  suppressed label, both themes — see §4a for the M1 closure detail)
 
 This is the concrete rebuttal to a value/token-equality test being the sole proof
 (§11.4.170 forbids that): the collapsed-button regression is invisible to a
 hex/sp/dp equality unit test but is caught by BOTH rendered-pixel oracles here.
+
+## 4a. OCR oracle self-validation (M1 closure)
+
+**Gap closed.** The prior increment (Revision 1) self-validated the image-diff and
+layout oracles with golden-good + golden-bad fixtures, but the **OCR oracle
+(`oracle-ocr.mjs`, Tesseract 5.3.0) ran only against the unmutated baseline** — it
+was never shown to FAIL on a missing/garbled label. `results.json` therefore
+carried `image_diff_analyzer_sound` + `layout_analyzer_sound` but **no**
+`ocr_analyzer_sound`. Per §11.4.107(10) an analyzer that is never exercised against
+a golden-bad input is an unproven (potential rubber-stamp) gate. This section closes
+that Minor finding (M1) with captured evidence.
+
+**The OCR mutation.** A new producer `blankTextRegion(srcPng, outPng, rect)`
+(`oracle-ocr.mjs`) paints a flat opaque rectangle over the **real Playwright
+rendered bounds** of one on-screen label — the title **"OTA Manager"** (bounds key
+`title`) — inflated by 4 px to also cover glyph anti-alias fringes, destroying the
+glyphs so the label physically cannot be OCR-read. The exact rectangle painted is
+recorded in `results.json` (`ocr.golden_bad.blank_rect`, e.g. light =
+`{x:297,y:222,width:406,height:40}`). The golden-bad PNGs are committed at
+`mutated/login-{light,dark}-ocrbad.png` and their re-OCR output at
+`ocr/login-{light,dark}-ocrbad.txt`. This mutation is orthogonal to the image-diff
+and layout golden-bads (a collapsed submit button) — it targets rendered *text*
+specifically.
+
+**Result (both themes, deterministic across two consecutive runs):**
+
+| theme | OCR golden-good (baseline) | OCR golden-bad (title painted over) |
+|---|---|---|
+| light | ALL PRESENT (`OTA Manager`, `Email`, `Password`, `Sign in`) → **PASS** | missing = `["OTA Manager"]`, other 3 still read → **FLAGGED** |
+| dark  | ALL PRESENT → **PASS** | missing = `["OTA Manager"]`, other 3 still read → **FLAGGED** |
+
+- **Golden-good PASS** — `ocrText(baseline)` reads all four expected labels
+  (`ocr/login-{light,dark}.txt`); `ocrLabelsPresent(...).ok = true`.
+- **Golden-bad FLAGGED** — `ocrText(ocrbad.png)` on the painted-over render no longer
+  reads the title; `ocrLabelsPresent` reports `missing:["OTA Manager"]`,
+  `ok:false`, and the runner sets `ocr.golden_bad.detected = true`. The other three
+  labels remain present, proving the flag is specific to the suppressed text and not
+  a blanket failure. (The description line "…access the OTA management dashboard."
+  is *not* a false-positive match for `"OTA Manager"` — "ota management" ≠ "ota
+  manager".)
+- **Negative control** — the golden-good run is itself the rubber-stamp guard: on
+  the un-blanked image the oracle does **not** report `OTA Manager` missing
+  (`detected` would be `false`), so `ocr_analyzer_sound` can only be `true` when the
+  mutation genuinely removed the text AND the oracle noticed.
+
+**Soundness gate.** `run-all.mjs` now computes
+`ocr_analyzer_sound = THEMES.every(t => ocr.ok && ocr.golden_bad.detected)` and
+folds it into the hard-fail condition alongside the other two analyzers.
+`results.json` `self_validation` now reads:
+
+```
+image_diff_analyzer_sound: true
+layout_analyzer_sound:      true
+ocr_analyzer_sound:         true      ← NEW (M1 closure)
+```
+
+**Exact command output** (`pnpm hostrender`, exit 0, run twice with byte-identical
+verdicts):
+
+```
+[light]
+  ocr golden-good        : ALL PRESENT
+  ocr golden-bad         : FLAGGED missing "OTA Manager"  (missing=["OTA Manager"])
+[dark]
+  ocr golden-good        : ALL PRESENT
+  ocr golden-bad         : FLAGGED missing "OTA Manager"  (missing=["OTA Manager"])
+---- analyzer self-validation ----
+  image-diff analyzer sound : true
+  layout   analyzer sound   : true
+  ocr      analyzer sound   : true
+OVERALL: PASS
+```
+
+The image-diff and layout self-validations are unchanged and still PASS — this
+increment only **adds** the OCR self-validation.
 
 ## 5. Reproduction
 
@@ -107,10 +184,12 @@ Exit 0 = all gates + both analyzer self-validations PASS. Full log: `run.log`.
 - `run.log` — full `pnpm hostrender` console output (exit 0)
 - `baselines/login-{light,dark}.png` — committed golden baselines
 - `rerender/login-{light,dark}.png` — identical re-render (golden-good input)
-- `mutated/login-{light,dark}-bad.png` — mutated render (golden-bad input)
+- `mutated/login-{light,dark}-bad.png` — mutated render (image-diff/layout golden-bad input)
+- `mutated/login-{light,dark}-ocrbad.png` — title painted over (OCR golden-bad input, M1)
 - `diff/login-{light,dark}-{good,bad}-diff.png` — pixelmatch diff visualizations
 - `bounds/login-{light,dark}-{good,bad}.json` — real rendered bounding boxes
-- `ocr/login-{light,dark}.txt` — Tesseract OCR output per baseline
+- `ocr/login-{light,dark}.txt` — Tesseract OCR output per baseline (OCR golden-good)
+- `ocr/login-{light,dark}-ocrbad.txt` — Tesseract OCR of the painted-over render (OCR golden-bad, M1)
 - `harness-src/*` — copy of the harness source for reproducibility
 
 Harness source of record lives in-tree at `clients/ota-manager/visual/`

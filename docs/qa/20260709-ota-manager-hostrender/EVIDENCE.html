@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>EVIDENCE</title>
+  <title>§11.4.170 Host-Render Visual Proof — ota-manager LoginPage</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -177,20 +177,21 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">EVIDENCE</h1>
+<h1 class="title">§11.4.170 Host-Render Visual Proof — ota-manager
+LoginPage</h1>
 </header>
 <h1
-id="host-render-visual-proof-ota-manager-loginpage-first-increment">§11.4.170
+id="114170-host-render-visual-proof--ota-manager-loginpage-first-increment">§11.4.170
 Host-Render Visual Proof — ota-manager LoginPage (first increment)</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-07-09T00:00:00Z <strong>Scope:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-09T16:56:00Z <strong>Scope:</strong>
 <code>clients/ota-manager</code> frontend only (harness added under
 <code>clients/ota-manager/visual/</code>). <strong>Mandate:</strong>
 §11.4.170 — device-independent HOST-side rendered-pixel visual proof,
 per screen×state×{light,dark}, dual-validated by (i) golden image-diff
 AND (ii) an OCR/vision layout oracle.</p>
 <hr />
-<h2 id="what-was-stood-up">1. What was stood up</h2>
+<h2 id="1-what-was-stood-up">1. What was stood up</h2>
 <p>The FIRST provable increment of a §11.4.170 host-render harness for
 <code>ota-manager</code>: the <strong>real <code>LoginPage</code>
 component</strong> (<code>src/features/auth/login-page.tsx</code>,
@@ -202,11 +203,6 @@ TanStack-Router memory history —
 <code>LoginPage → useLogin → useMutation</code>/<code>useNavigate</code>).</p>
 <p>Harness stack (installed, versions captured):</p>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>Tool</th>
@@ -238,10 +234,7 @@ TanStack-Router memory history —
 (<code>visual/.out</code>)</td>
 </tr>
 <tr>
-<td><span class="citation"
-data-cites="vitejs/plugin-react">@vitejs/plugin-react</span> + <span
-class="citation"
-data-cites="tailwindcss/vite">@tailwindcss/vite</span></td>
+<td>@vitejs/plugin-react + @tailwindcss/vite</td>
 <td>(project devDeps)</td>
 <td>real React 19 + Tailwind v4 pipeline</td>
 </tr>
@@ -273,9 +266,9 @@ both succeeded; <code>pnpm exec playwright install chromium</code>
 downloaded the matching browser (the cached chromium-1228 did not match
 the pinned 1.55.1, which needs chromium-1193 — honest version
 reconciliation, no fake). Chromium launch was verified before use.</p>
-<h2 id="screens-states-rendered">2. Screens × states rendered</h2>
-<p>Representative screen: <strong>LoginPage</strong> (title “OTA
-Manager”, description, Email + Password fields, “Sign in” button) — in
+<h2 id="2-screens--states-rendered">2. Screens × states rendered</h2>
+<p>Representative screen: <strong>LoginPage</strong> (title "OTA
+Manager", description, Email + Password fields, "Sign in" button) — in
 BOTH themes, driven exactly by the <code>src/index.css</code> token
 contract:</p>
 <ul>
@@ -295,19 +288,11 @@ render</li>
 </ul>
 <p>Both were visually confirmed as genuine, correctly-themed, distinct
 renders of the real login screen (not blank).</p>
-<h2 id="dual-oracle-result-both-themes-pass">3. Dual-oracle result (both
-themes PASS)</h2>
+<h2 id="3-dual-oracle-result-both-themes-pass">3. Dual-oracle result
+(both themes PASS)</h2>
 <p>From <code>results.json</code> / <code>run.log</code> (re-run
 deterministic, exit 0):</p>
-<table style="width:100%;">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
+<table>
 <thead>
 <tr>
 <th>theme</th>
@@ -341,19 +326,19 @@ deterministic, exit 0):</p>
 (<code>oracle-diff.mjs</code>, pixelmatch): re-render vs committed
 baseline differs by 0.0000% (identical → no false positive). A
 deliberately-mutated render (golden-bad: the submit button collapsed to
-height 0 — the §11.4.170 forensic “broken button while token tests stay
-green” case) differs by 0.71%/1.47% and is correctly
+height 0 — the §11.4.170 forensic "broken button while token tests stay
+green" case) differs by 0.71%/1.47% and is correctly
 <strong>FLAGGED</strong>. Diff visualizations written to
 <code>diff/login-{light,dark}-{good,bad}-diff.png</code>.</p>
 <p><strong>Oracle (ii) — OCR + rendered-bounds layout</strong>
-(<code>oracle-ocr.mjs</code>): Tesseract read all expected labels (“OTA
-Manager”, “Email”, “Password”, “Sign in”) from BOTH baseline PNGs
+(<code>oracle-ocr.mjs</code>): Tesseract read all expected labels ("OTA
+Manager", "Email", "Password", "Sign in") from BOTH baseline PNGs
 (<code>ocr/login-{light,dark}.txt</code>). The layout oracle over the
 REAL Playwright bounding boxes confirmed no element is collapsed /
 clipped / off-screen / overlapping on the baseline, and correctly
 <strong>FLAGGED</strong> the collapsed submit button on the golden-bad
 render (<code>bounds/login-{theme}-{good,bad}.json</code>).</p>
-<h2 id="analyzer-self-validation-11.4.10710-golden-good-golden-bad">4.
+<h2 id="4-analyzer-self-validation-11410710-golden-good--golden-bad">4.
 Analyzer self-validation (§11.4.107(10) golden-good + golden-bad)</h2>
 <p>Neither oracle can silently bluff — each was proven to PASS its
 golden-good input AND FAIL/flag its golden-bad input:</p>
@@ -362,12 +347,117 @@ golden-good input AND FAIL/flag its golden-bad input:</p>
 bad≥0.2% flagged, both themes)</li>
 <li><code>layout_analyzer_sound: true</code> (baseline clean, golden-bad
 collapse detected, both themes)</li>
+<li><code>ocr_analyzer_sound: true</code> (baseline reads all labels,
+golden-bad flags the suppressed label, both themes — see §4a for the M1
+closure detail)</li>
 </ul>
 <p>This is the concrete rebuttal to a value/token-equality test being
 the sole proof (§11.4.170 forbids that): the collapsed-button regression
 is invisible to a hex/sp/dp equality unit test but is caught by BOTH
 rendered-pixel oracles here.</p>
-<h2 id="reproduction">5. Reproduction</h2>
+<h2 id="4a-ocr-oracle-self-validation-m1-closure">4a. OCR oracle
+self-validation (M1 closure)</h2>
+<p><strong>Gap closed.</strong> The prior increment (Revision 1)
+self-validated the image-diff and layout oracles with golden-good +
+golden-bad fixtures, but the <strong>OCR oracle
+(<code>oracle-ocr.mjs</code>, Tesseract 5.3.0) ran only against the
+unmutated baseline</strong> — it was never shown to FAIL on a
+missing/garbled label. <code>results.json</code> therefore carried
+<code>image_diff_analyzer_sound</code> +
+<code>layout_analyzer_sound</code> but <strong>no</strong>
+<code>ocr_analyzer_sound</code>. Per §11.4.107(10) an analyzer that is
+never exercised against a golden-bad input is an unproven (potential
+rubber-stamp) gate. This section closes that Minor finding (M1) with
+captured evidence.</p>
+<p><strong>The OCR mutation.</strong> A new producer
+<code>blankTextRegion(srcPng, outPng, rect)</code>
+(<code>oracle-ocr.mjs</code>) paints a flat opaque rectangle over the
+<strong>real Playwright rendered bounds</strong> of one on-screen label
+— the title <strong>"OTA Manager"</strong> (bounds key
+<code>title</code>) — inflated by 4 px to also cover glyph anti-alias
+fringes, destroying the glyphs so the label physically cannot be
+OCR-read. The exact rectangle painted is recorded in
+<code>results.json</code> (<code>ocr.golden_bad.blank_rect</code>, e.g.
+light = <code>{x:297,y:222,width:406,height:40}</code>). The golden-bad
+PNGs are committed at <code>mutated/login-{light,dark}-ocrbad.png</code>
+and their re-OCR output at
+<code>ocr/login-{light,dark}-ocrbad.txt</code>. This mutation is
+orthogonal to the image-diff and layout golden-bads (a collapsed submit
+button) — it targets rendered <em>text</em> specifically.</p>
+<p><strong>Result (both themes, deterministic across two consecutive
+runs):</strong></p>
+<table>
+<thead>
+<tr>
+<th>theme</th>
+<th>OCR golden-good (baseline)</th>
+<th>OCR golden-bad (title painted over)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>light</td>
+<td>ALL PRESENT (<code>OTA Manager</code>, <code>Email</code>,
+<code>Password</code>, <code>Sign in</code>) →
+<strong>PASS</strong></td>
+<td>missing = <code>["OTA Manager"]</code>, other 3 still read →
+<strong>FLAGGED</strong></td>
+</tr>
+<tr>
+<td>dark</td>
+<td>ALL PRESENT → <strong>PASS</strong></td>
+<td>missing = <code>["OTA Manager"]</code>, other 3 still read →
+<strong>FLAGGED</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Golden-good PASS</strong> — <code>ocrText(baseline)</code>
+reads all four expected labels
+(<code>ocr/login-{light,dark}.txt</code>);
+<code>ocrLabelsPresent(...).ok = true</code>.</li>
+<li><strong>Golden-bad FLAGGED</strong> —
+<code>ocrText(ocrbad.png)</code> on the painted-over render no longer
+reads the title; <code>ocrLabelsPresent</code> reports
+<code>missing:["OTA Manager"]</code>, <code>ok:false</code>, and the
+runner sets <code>ocr.golden_bad.detected = true</code>. The other three
+labels remain present, proving the flag is specific to the suppressed
+text and not a blanket failure. (The description line "…access the OTA
+management dashboard." is <em>not</em> a false-positive match for
+<code>"OTA Manager"</code> — "ota management" ≠ "ota manager".)</li>
+<li><strong>Negative control</strong> — the golden-good run is itself
+the rubber-stamp guard: on the un-blanked image the oracle does
+<strong>not</strong> report <code>OTA Manager</code> missing
+(<code>detected</code> would be <code>false</code>), so
+<code>ocr_analyzer_sound</code> can only be <code>true</code> when the
+mutation genuinely removed the text AND the oracle noticed.</li>
+</ul>
+<p><strong>Soundness gate.</strong> <code>run-all.mjs</code> now
+computes
+<code>ocr_analyzer_sound = THEMES.every(t =&gt; ocr.ok &amp;&amp; ocr.golden_bad.detected)</code>
+and folds it into the hard-fail condition alongside the other two
+analyzers. <code>results.json</code> <code>self_validation</code> now
+reads:</p>
+<pre><code>image_diff_analyzer_sound: true
+layout_analyzer_sound:      true
+ocr_analyzer_sound:         true      ← NEW (M1 closure)</code></pre>
+<p><strong>Exact command output</strong> (<code>pnpm hostrender</code>,
+exit 0, run twice with byte-identical verdicts):</p>
+<pre><code>[light]
+  ocr golden-good        : ALL PRESENT
+  ocr golden-bad         : FLAGGED missing &quot;OTA Manager&quot;  (missing=[&quot;OTA Manager&quot;])
+[dark]
+  ocr golden-good        : ALL PRESENT
+  ocr golden-bad         : FLAGGED missing &quot;OTA Manager&quot;  (missing=[&quot;OTA Manager&quot;])
+---- analyzer self-validation ----
+  image-diff analyzer sound : true
+  layout   analyzer sound   : true
+  ocr      analyzer sound   : true
+OVERALL: PASS</code></pre>
+<p>The image-diff and layout self-validations are unchanged and still
+PASS — this increment only <strong>adds</strong> the OCR
+self-validation.</p>
+<h2 id="5-reproduction">5. Reproduction</h2>
 <p>From <code>clients/ota-manager/</code>:</p>
 <pre><code>pnpm install
 pnpm add -D playwright@1.55.1 pixelmatch@6.0.0 pngjs@7.0.0   # first time only
@@ -375,8 +465,8 @@ pnpm exec playwright install chromium                        # first time only
 pnpm hostrender          # build harness + render + dual-oracle self-validation</code></pre>
 <p>Exit 0 = all gates + both analyzer self-validations PASS. Full log:
 <code>run.log</code>.</p>
-<h2 id="evidence-file-manifest-this-directory">6. Evidence file manifest
-(this directory)</h2>
+<h2 id="6-evidence-file-manifest-this-directory">6. Evidence file
+manifest (this directory)</h2>
 <ul>
 <li><code>results.json</code> — structured machine-readable verdicts
 (source of truth)</li>
@@ -387,13 +477,17 @@ baselines</li>
 <li><code>rerender/login-{light,dark}.png</code> — identical re-render
 (golden-good input)</li>
 <li><code>mutated/login-{light,dark}-bad.png</code> — mutated render
-(golden-bad input)</li>
+(image-diff/layout golden-bad input)</li>
+<li><code>mutated/login-{light,dark}-ocrbad.png</code> — title painted
+over (OCR golden-bad input, M1)</li>
 <li><code>diff/login-{light,dark}-{good,bad}-diff.png</code> —
 pixelmatch diff visualizations</li>
 <li><code>bounds/login-{light,dark}-{good,bad}.json</code> — real
 rendered bounding boxes</li>
 <li><code>ocr/login-{light,dark}.txt</code> — Tesseract OCR output per
-baseline</li>
+baseline (OCR golden-good)</li>
+<li><code>ocr/login-{light,dark}-ocrbad.txt</code> — Tesseract OCR of
+the painted-over render (OCR golden-bad, M1)</li>
 <li><code>harness-src/*</code> — copy of the harness source for
 reproducibility</li>
 </ul>
@@ -403,7 +497,7 @@ reproducibility</li>
 <code>vite.harness.config.ts</code>, <code>lib-render.mjs</code>,
 <code>oracle-diff.mjs</code>, <code>oracle-ocr.mjs</code>,
 <code>run-all.mjs</code>) + <code>pnpm hostrender</code> script.</p>
-<h2 id="honest-findings-scope-boundaries-11.4.6">7. Honest findings
+<h2 id="7-honest-findings--scope-boundaries-1146">7. Honest findings
 &amp; scope boundaries (§11.4.6)</h2>
 <ul>
 <li><strong>Theming-wiring gap (real finding, FACT — not fixed
@@ -424,7 +518,7 @@ this first increment).</li>
 Error/validation/ loading states and other screens (dashboard, devices,
 releases, …) are follow-on §11.4.170 coverage, not claimed here.</li>
 <li>The <code>data-theme</code> attribute the artifact/theme-toggle
-convention uses elsewhere is not part of this app; the app’s actual
+convention uses elsewhere is not part of this app; the app's actual
 contract is the <code>.light</code>/<code>:root</code> class split
 above, which is what was reproduced. No behaviour is claimed that was
 not rendered and captured.</li>

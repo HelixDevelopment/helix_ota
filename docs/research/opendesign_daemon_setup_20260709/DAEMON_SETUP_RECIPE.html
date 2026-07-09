@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DAEMON_SETUP_RECIPE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DAEMON_SETUP_RECIPE</h1>
+</header>
+<h1
+id="opendesign-author-time-daemon-mcp-wiring-reviewed-rootless-container-setup-recipe">OpenDesign
+author-time daemon + MCP wiring — reviewed rootless-container setup
+recipe</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z <strong>Status:</strong> REVIEWED — ready for
+operator/next-session adoption (containerized, localhost-only)
+<strong>Authority:</strong> Helix OTA §11.4.161 (rootless containers) ·
+§11.4.76 (containers submodule) · §11.4.173 (containerized/distributed
+build) · §11.4.162 (OpenDesign is the design system) · §11.4.99
+(latest-source verification) <strong>Scope of this document:</strong> a
+vetted, ready-to-execute recipe. It is a REVIEWED RECIPE, not an
+execution log — nothing here was built or run. Building the image is a
+heavy, security-sensitive step and stays NEEDS-REVIEW / operator-gated.
+<strong>Ground truth:</strong>
+<code>docs/research/opendesign_integration_20260709/INTEGRATION_GROUND_TRUTH.md</code>
+(W1 verdict: author-time half = <code>od</code> daemon + Next.js UI +
+MCP server; NEEDS-REVIEW because the daemon is a network service).</p>
+<hr />
+<h2 id="tldr-verdict">0. TL;DR verdict</h2>
+<p><strong>SAFE TO ADOPT — containerized, rootless, localhost-only, with
+the hardening in §5 applied.</strong></p>
+<p>The upstream <code>deploy/docker-compose.yml</code> is already
+hardened to a degree most projects never reach (read-only rootfs,
+<code>no-new-privileges</code>, non-root uid 1001,
+<code>pids_limit</code>, <code>mem_limit</code>, tmpfs
+<code>/tmp</code>, and a <strong><code>127.0.0.1</code>-only</strong>
+port publish). It maps almost 1:1 onto a rootless-podman run. The daemon
+also ships a real, DNS-aware SSRF guard and a bind-token safety floor
+(verified in source, §4).</p>
+<p>The residual risk is <strong>not</strong> the network surface — it is
+that the daemon’s job is to <strong>spawn coding-agent runtimes (Claude
+Code / Codex / opencode) as child processes</strong> to do design work.
+That is arbitrary-code-execution <em>by design</em>, contained by the
+container sandbox. Two concrete things must be controlled by the
+operator: (a) never adopt the <code>docker-compose.linux.yml</code>
+host-networking + host-credential-mount override unless a nested agent
+runtime is actually required, and (b) if it is required, treat the
+mounted <code>~/.claude</code> credentials + <code>*_API_KEY</code> env
+as the blast radius and scope them per §5.</p>
+<hr />
+<h2
+id="source-of-truth-files-all-under-the-read-only-clone-scratchpadopen-design">1.
+Source-of-truth files (all under the read-only clone
+<code>…/scratchpad/open-design/</code>)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Concern</th>
+<th>File</th>
+<th>What it establishes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base compose (hardened)</td>
+<td><code>deploy/docker-compose.yml</code></td>
+<td><code>127.0.0.1:${PORT}:7456</code>, <code>read_only: true</code>,
+<code>security_opt: [no-new-privileges:true]</code>,
+<code>mem_limit</code>, <code>pids_limit: 256</code>, tmpfs
+<code>/tmp</code>, named volume <code>open_design_data:/app/.od</code>,
+healthcheck. <code>OD_BIND_HOST: 0.0.0.0</code> <strong>inside</strong>
+the container (the <code>127.0.0.1</code> host publish is what confines
+it).</td>
+</tr>
+<tr>
+<td>Image build</td>
+<td><code>deploy/Dockerfile</code></td>
+<td>Multi-stage <code>node:24-alpine</code>; native builds
+(<code>better-sqlite3</code>, <code>python3/make/g++</code>); runtime
+stage drops to non-root user <code>open-design</code> (uid/gid 1001),
+<code>tini</code> init, <code>poppler-utils bash git</code>. Entry:
+<code>node apps/daemon/dist/cli.js --no-open</code>.</td>
+</tr>
+<tr>
+<td>Env template</td>
+<td><code>deploy/.env.example</code></td>
+<td><code>OD_API_TOKEN</code> (bearer for non-loopback),
+<code>OPEN_DESIGN_DISABLE_API_AUTH</code>,
+<code>OPEN_DESIGN_ALLOWED_ORIGINS</code>,
+<code>OPEN_DESIGN_MEM_LIMIT</code>, <code>OD_CODEX_SANDBOX</code>.
+Explicit note: “Keep Compose bound to localhost; use an authenticated
+reverse proxy, SSH tunnel, or VPN before exposing remotely.”</td>
+</tr>
+<tr>
+<td>Linux CLI-mount override (<strong>high-risk</strong>)</td>
+<td><code>deploy/docker-compose.linux.yml</code></td>
+<td><code>network_mode: host</code>, <code>cpus: '1.5'</code>, forces
+<code>OD_BIND_HOST: 127.0.0.1</code>, mounts host agent CLIs +
+<strong><code>~/.claude</code> credentials (ro)</strong> +
+<code>ANTHROPIC_API_KEY</code>/<code>OPENAI_API_KEY</code>/<code>DEEPSEEK_API_KEY</code>.</td>
+</tr>
+<tr>
+<td>Deploy guidance</td>
+<td><code>deploy/README.md</code></td>
+<td>“Do not publish the daemon directly on a public or shared LAN
+interface. The API is unauthenticated for non-browser clients.” Image
+“intentionally does not bundle Claude/Codex/Gemini CLI binaries.”</td>
+</tr>
+<tr>
+<td>Bind-token safety floor</td>
+<td><code>apps/daemon/src/server.ts</code> (≈L1923–1956)</td>
+<td>Refuses to bind a non-loopback host unless <code>OD_API_TOKEN</code>
+is set or <code>OD_DISABLE_API_AUTH=1</code>. Loopback
+(<code>127.0.0.1</code>/<code>::1</code>/<code>localhost</code>) always
+allowed tokenless.</td>
+</tr>
+<tr>
+<td>Bearer-token auth</td>
+<td><code>apps/daemon/src/api-token-auth.ts</code> +
+<code>server.ts</code> bearer middleware</td>
+<td><code>Authorization: Bearer &lt;OD_API_TOKEN&gt;</code> enforced on
+<code>/api/*</code> when a token is set; loopback origins exempt;
+health/readiness/version stay open.</td>
+</tr>
+<tr>
+<td>Origin / same-origin guard</td>
+<td><code>apps/daemon/src/http/origin-guard.ts</code>,
+<code>apps/daemon/src/origin-validation.ts</code></td>
+<td>Browser-origin + Host-header validation;
+<code>OD_ALLOWED_ORIGINS</code> allowlist; <code>sec-fetch-site</code>
+handling; clipper extension carve-out narrowly scoped.</td>
+</tr>
+<tr>
+<td><strong>SSRF guard (real)</strong></td>
+<td><code>apps/daemon/src/origin-validation.ts</code>
+(<code>isPrivateIpv4</code>, <code>isLoopbackOrPrivateLanHost</code>,
+<code>configuredAllowedInternalHosts</code>) +
+<code>apps/daemon/src/connectionTest.ts</code>
+(<code>assertExternalAssetUrl</code>, DNS-aware re-resolution)</td>
+<td>Default-deny to RFC1918 / loopback / link-local
+(<code>169.254</code>); <strong>re-resolves DNS names</strong> and
+re-checks every resolved address (anti-DNS-rebinding); documented
+loopback carve-out for local LLMs; operator opt-in
+<code>OD_ALLOWED_INTERNAL_HOSTS</code> (CIDR rejected loudly, never
+silently trusted).</td>
+</tr>
+<tr>
+<td>Reasoning egress policy</td>
+<td><code>apps/daemon/src/reasoning-egress.ts</code></td>
+<td>Per-run allowlist for outbound LLM provider egress
+(<code>enabled</code>/<code>disabled</code>/<code>allowlist</code>),
+base-URL + model allowlisting.</td>
+</tr>
+<tr>
+<td>MCP → agent installer</td>
+<td><code>apps/daemon/src/mcp-agent-install.ts</code></td>
+<td>For <code>claude</code> it shells
+<code>claude mcp add --scope user &lt;name&gt; -e &lt;ENV&gt; -- &lt;command&gt; &lt;args&gt;</code>
+(uses Claude Code’s own merge rules, does not hand-edit config).
+JSON-merge strategy for cursor/cline/etc.; print-only for unverified
+formats.</td>
+</tr>
+<tr>
+<td>MCP launch spec</td>
+<td><code>apps/daemon/src/mcp-install-info.ts</code>
+(<code>buildMcpInstallPayload</code>)</td>
+<td>Wires <code>command=&lt;node execPath&gt;</code>,
+<code>args=[&lt;cli.js&gt;, mcp, --daemon-url, http://127.0.0.1:&lt;port&gt;]</code>,
+<code>env={OD_DATA_DIR,…}</code>. Daemon URL is <strong>loopback
+only</strong>.</td>
+</tr>
+<tr>
+<td>MCP stdio server (tool surface)</td>
+<td><code>apps/daemon/src/mcp.ts</code></td>
+<td>Stateless stdio bridge; “holds no state and never touches the
+filesystem; every tool resolves to a <code>fetch()</code> against
+<code>OD_DAEMON_URL</code>.” Tools: <code>list_projects</code>,
+<code>get_active_context</code>, <code>get_project</code>,
+<code>create_project</code>, <code>delete_project</code>,
+<code>list_files</code>, <code>get_file</code>,
+<code>search_files</code>, <code>get_artifact</code>,
+<code>create_artifact</code>, <code>write_file</code>,
+<code>delete_file</code>, <code>list_skills</code>,
+<code>list_plugins</code>, <code>start_run</code>, <code>get_run</code>,
+<code>cancel_run</code>. 30-min idle self-exit.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="rootless-podman-recipe-11.4.161-11.4.173">2. Rootless-podman
+recipe (§11.4.161 / §11.4.173)</h2>
+<h3 id="preconditions-host-one-time-no-root">2.0 Preconditions (host,
+one-time — no root)</h3>
+<ul>
+<li><p>Rootless podman + <code>podman-compose</code> (or
+<code>podman compose</code> provider) present and on PATH.</p></li>
+<li><p>cgroups v2 with <strong>systemd user delegation</strong> so
+<code>mem_limit</code>/<code>pids_limit</code> are honored rootless.
+Verify:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/fs/cgroup/user.slice/user-<span class="va">$(</span><span class="fu">id</span> <span class="at">-u</span><span class="va">)</span>.slice/user@<span class="va">$(</span><span class="fu">id</span> <span class="at">-u</span><span class="va">)</span>.service/cgroup.controllers   <span class="co"># must list: cpu memory pids</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> info <span class="at">--format</span> <span class="st">&#39;{{.Host.CgroupsVersion}} {{.Host.CgroupControllers}}&#39;</span></span></code></pre></div>
+<p>If <code>memory</code>/<code>pids</code> are absent,
+<code>mem_limit</code>/<code>pids_limit</code> become no-ops (podman
+warns) — do NOT silently accept an unbounded container; enable
+delegation first (<code>loginctl enable-linger $USER</code>, drop-in
+<code>Delegate=memory pids cpu</code>). This composes with §12.6 (60%
+mem ceiling) — the container MUST stay bounded.</p></li>
+<li><p><strong>Do NOT run any of this under sudo/root</strong>
+(§11.4.161).</p></li>
+</ul>
+<h3
+id="preferred-path-through-the-vasic-digitalcontainers-submodule-11.4.76">2.1
+Preferred path: through the <code>vasic-digital/containers</code>
+submodule (§11.4.76)</h3>
+<p>The containers submodule is the sanctioned orchestration layer and
+already speaks rootless <code>podman-compose</code> first-class:</p>
+<ul>
+<li><code>containers/pkg/compose</code> —
+<code>NewOrchestrator("podman-compose", …)</code> (see
+<code>containers/pkg/compose/podman_compose_test.go</code>,
+<code>orchestrator_test.go</code>). It knows the podman-compose quirks
+(e.g. it must NOT emit the unsupported <code>--wait</code> flag) and
+parses <code>podman-compose ps</code> JSON.</li>
+<li><code>containers/pkg/runtime</code> auto-detects Docker → Podman;
+force Podman rootless.</li>
+<li><code>containers/pkg/volume</code>, <code>pkg/network</code>,
+<code>pkg/health</code> cover the volume/health lifecycle.</li>
+</ul>
+<p>Adoption pattern (do NOT hand-roll bare <code>podman</code> calls per
+§11.4.161): register OpenDesign’s compose file as a Helix-managed
+compose group with runtime pinned to <code>podman-compose</code>,
+pointing at a <strong>copy</strong> of
+<code>deploy/docker-compose.yml</code> placed under a Helix-owned deploy
+dir (never mutate the read-only clone). The orchestrator’s
+<code>Up/Down/Status</code> then drives the lifecycle. (The submodule is
+a Go module; the exact wiring call lives in Helix deploy code, out of
+scope for this research doc — this recipe fixes the compose + env inputs
+it consumes.)</p>
+<h3 id="underlying-mechanism-fallback-bare-podman-compose">2.2
+Underlying mechanism / fallback: bare <code>podman-compose</code></h3>
+<p>Documented as the mechanism the submodule invokes and the escape
+hatch if the submodule path is unavailable. Pull the
+<strong>pre-built</strong> image (avoids the heavy native build entirely
+— §2.4):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Copy upstream compose + env into a Helix-owned deploy dir (never edit the read-only clone)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/helix-opendesign <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ~/helix-opendesign</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="op">&lt;</span>clone<span class="op">&gt;</span>/deploy/docker-compose.yml ./docker-compose.yml</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="op">&lt;</span>clone<span class="op">&gt;</span>/deploy/.env.example ./.env</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Generate a bearer token even for localhost (defense in depth; harmless on loopback)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;OD_API_TOKEN=%s\n&#39;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">openssl</span> rand <span class="at">-hex</span> 32<span class="va">)</span><span class="st">&quot;</span> <span class="op">&gt;&gt;</span> ./.env</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Pin the image by DIGEST (not the mutable :latest) in .env, e.g.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#    OPEN_DESIGN_IMAGE=ghcr.io/nexu-io/od@sha256:&lt;digest&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#    (resolve the digest with: podman manifest inspect ghcr.io/nexu-io/od:&lt;version&gt;)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Bring up, rootless, localhost-only</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">--env-file</span> ./.env <span class="at">-f</span> ./docker-compose.yml up <span class="at">-d</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Verify it is bound to loopback ONLY and healthy</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="ex">podman-compose</span> <span class="at">-f</span> ./docker-compose.yml ps</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-ltnp</span> <span class="kw">|</span> <span class="fu">grep</span> 7456          <span class="co"># MUST show 127.0.0.1:7456, never 0.0.0.0:7456</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> http://127.0.0.1:7456/api/health</span></code></pre></div>
+<p>Rootless-specific notes for this exact compose: -
+<strong>Port</strong>
+<code>127.0.0.1:${OPEN_DESIGN_PORT:-7456}:7456</code> — publishes on
+host loopback only. Rootless podman honors the <code>127.0.0.1</code>
+host-IP prefix. <strong>Verify with <code>ss -ltnp</code> every
+launch</strong> (§4 anti-bluff — do not assume). - <strong>Named
+volume</strong> <code>open_design_data</code> lands under
+<code>~/.local/share/containers/storage/volumes/</code> and podman
+auto-chowns it to the container user (uid 1001 → your subuid range). No
+<code>:U</code>/manual chown normally needed for a named volume; only
+add <code>:U</code> if a permission error appears. -
+<strong><code>read_only: true</code> + tmpfs <code>/tmp</code></strong>
+— works rootless; the daemon writes only to the <code>/app/.od</code>
+named volume and <code>/tmp</code>. -
+<strong><code>security_opt: no-new-privileges:true</code></strong> —
+works rootless; keep it. -
+<strong><code>OD_BIND_HOST: 0.0.0.0</code></strong> inside the container
+is fine ONLY because the host publish is <code>127.0.0.1</code>. Do NOT
+“fix” it to a LAN IP.</p>
+<h3
+id="wait-for-health-before-declaring-up-11.4.5-evidence-not-assumption">2.3
+Wait-for-health before declaring up (§11.4.5 evidence, not
+assumption)</h3>
+<p>The compose healthcheck runs
+<code>node -e "fetch('http://127.0.0.1:7456/api/health')…"</code>. Gate
+any downstream step on <code>podman healthcheck run open-design</code> /
+<code>podman-compose ps</code> reporting healthy, plus a real
+<code>curl /api/health</code> 200 — never on “up -d returned 0”.</p>
+<h3
+id="building-the-image-needs-review-do-not-run-on-bare-host-autonomously">2.4
+Building the image (NEEDS-REVIEW — do NOT run on bare host
+autonomously)</h3>
+<p><code>deploy/Dockerfile</code> performs native compilation
+(<code>better-sqlite3</code>, <code>sharp</code> transitively,
+<code>python3/make/g++</code>) and a full pnpm workspace build — heavy
+and long. Per §11.4.173 this MUST run inside a build container on the
+designated remote build host, artifacts brought back — never a bare-host
+<code>podman build</code>. <strong>Prefer pulling the published
+<code>ghcr.io/nexu-io/od@sha256:&lt;digest&gt;</code> image</strong>
+(§2.2 step 3) and skip building entirely. If a self-built image is
+genuinely required, route it through the containers-submodule
+<code>crossbuild</code>/<code>distribution</code> path and treat it as
+its own operator-gated work item.</p>
+<hr />
+<h2 id="wiring-the-mcp-server-into-claude-code">3. Wiring the MCP server
+into Claude Code</h2>
+<p><strong>Key correctness fact:</strong>
+<code>od mcp install claude</code> bakes the <code>node</code> execPath
++ <code>cli.js</code> path of <strong>wherever it runs</strong>. Run it
+<em>inside</em> the container and it wires the container’s throwaway
+<code>~/.config</code>, not your host Claude Code. So for a
+<strong>containerized daemon + host Claude Code</strong>, do NOT run the
+in-container installer. Wire the host agent to a stdio bridge that
+reaches the loopback daemon. The bridge
+(<code>apps/daemon/src/mcp.ts</code>) is stateless and only proxies to
+<code>OD_DAEMON_URL</code>.</p>
+<h3
+id="recommended-fully-containerized-bridge-no-host-nodeod-needed">3.1
+Recommended (fully containerized bridge, no host node/<code>od</code>
+needed)</h3>
+<p>Point Claude Code’s MCP at a <code>podman exec -i</code> into the
+running container. The bridge runs inside the container’s netns, so its
+daemon URL <code>http://127.0.0.1:7456</code> is the daemon itself:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">--scope</span> user open-design <span class="at">--</span> <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  podman exec <span class="at">-i</span> open-design node apps/daemon/dist/cli.js mcp <span class="at">--daemon-url</span> http://127.0.0.1:7456</span></code></pre></div>
+<ul>
+<li><code>-i</code> attaches stdio (MCP stdio transport). Claude Code
+spawns/respawns this on demand.</li>
+<li>No host Node.js, no host <code>od</code> CLI, no extra open port —
+the MCP path never leaves loopback + a local
+<code>podman exec</code>.</li>
+<li>UNCONFIRMED: interaction of the bridge’s 30-min idle self-exit
+(<code>MCP_STDIO_IDLE_EXIT_MS</code>) with Claude Code’s stdio-server
+respawn was not runtime-tested here; MCP clients normally respawn stdio
+servers, so this is expected-benign but should be confirmed on first
+real use.</li>
+</ul>
+<h3 id="alternative-host-side-od-cli-bridge">3.2 Alternative (host-side
+<code>od</code> CLI bridge)</h3>
+<p>If you install a host <code>od</code> CLI (Node) separately, you may
+instead run the installer on the host pointed at the containerized
+daemon:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">od</span> mcp install claude <span class="at">--daemon-url</span> http://127.0.0.1:7456</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># → shells: claude mcp add --scope user open-design -e OD_DATA_DIR=&lt;…&gt; -- &lt;node&gt; &lt;od cli.js&gt; mcp --daemon-url http://127.0.0.1:7456</span></span></code></pre></div>
+<p>Only adopt this if you already want a host <code>od</code> CLI;
+otherwise §3.1 keeps everything in the container.</p>
+<h3
+id="what-the-mcp-surface-grants-the-outer-agent-review-this-before-wiring">3.3
+What the MCP surface grants the outer agent (review this before
+wiring)</h3>
+<p>Via the 17 tools in <code>mcp.ts</code>, a Claude Code session gains,
+<strong>scoped to Open Design projects under the daemon data
+dir</strong> (not arbitrary host paths): - read:
+<code>list_projects</code>/<code>get_project</code>/<code>list_files</code>/<code>get_file</code>/<code>search_files</code>/<code>get_artifact</code>/<code>list_skills</code>/<code>list_plugins</code>/<code>get_active_context</code>;
+- mutate:
+<code>create_project</code>/<code>delete_project</code>/<code>create_artifact</code>/<code>write_file</code>/<code>delete_file</code>;
+- <strong>commission a nested agent</strong>: <code>start_run</code> —
+“Open Design spawns its own agent to do the work”. This is the MCP path
+into the daemon’s runtime-spawning surface (§4).
+<code>delete_project</code>/<code>delete_file</code> are destructive
+within the project store.</p>
+<p>There is <strong>no raw-shell tool</strong> on the MCP surface. The
+code-execution capability is the daemon’s <code>start_run</code> runtime
+spawning, contained by the container.</p>
+<hr />
+<h2 id="security-review">4. Security review</h2>
+<h3
+id="network-exposure-low-as-configured-contingent-on-localhost-bind">4.1
+Network exposure — LOW as configured, contingent on localhost bind</h3>
+<ul>
+<li>Listens on <strong>one</strong> TCP port, default <code>7456</code>,
+serving both <code>/api</code> and the static Next.js export. Base
+compose publishes it on <code>127.0.0.1</code> only.</li>
+<li><strong>Bind-token safety floor is real</strong>
+(<code>server.ts</code> ≈L1940): the daemon <em>refuses to start</em> on
+a non-loopback bind without <code>OD_API_TOKEN</code> (or explicit
+<code>OD_DISABLE_API_AUTH=1</code>). So a misconfig to
+<code>0.0.0.0</code> fails closed unless a token is set — good.</li>
+<li>Honest gap the vendor states plainly: <strong>the API is
+unauthenticated for non-browser clients on loopback</strong> (bearer +
+origin checks exempt loopback so the local UI works). Anything with
+loopback access to <code>7456</code> (any local user / another container
+sharing the netns) can call <code>/api/*</code>. Mitigation: keep it a
+single-user host and localhost-only; do not run with
+<code>network_mode: host</code> on a shared box.</li>
+</ul>
+<h3
+id="authentication-adequate-for-localhost-must-be-tightened-for-any-exposure">4.2
+Authentication — adequate for localhost, must be tightened for any
+exposure</h3>
+<ul>
+<li>Bearer <code>OD_API_TOKEN</code> enforced on <code>/api/*</code>
+when set; loopback exempt. Health/readiness/version open (fine for
+probes).</li>
+<li><code>OD_DISABLE_API_AUTH=1</code> is a real bypass — only for a
+trusted reverse proxy that authenticates upstream. Treat setting it as a
+§11.4.122-class decision.</li>
+</ul>
+<h3 id="ssrf-gate-real-and-defense-in-depth-verified-in-source">4.3 SSRF
+gate — REAL and defense-in-depth (verified in source)</h3>
+<ul>
+<li>Literal-IP block: <code>isPrivateIpv4</code> covers
+<code>10/8</code>, <code>172.16–31</code>, <code>192.168/16</code>,
+<code>169.254/16</code>; <code>isLoopbackOrPrivateLanHost</code> adds
+loopback + <code>0.0.0.0</code>/<code>::</code>.</li>
+<li><strong>DNS-aware</strong>: <code>connectionTest.ts</code>
+re-resolves the hostname and re-runs the block-list against
+<strong>every resolved address</strong> — this defeats a public DNS name
+pointing at internal infra / DNS-rebinding (the comment calls this out
+explicitly).</li>
+<li><code>assertExternalAssetUrl</code> guards the attacker-controllable
+asset-download path and is <strong>not</strong> widened by the operator
+internal-host allowlist.</li>
+<li>Operator opt-in <code>OD_ALLOWED_INTERNAL_HOSTS</code> exists for a
+deliberately-reachable internal LLM; <strong>CIDR entries are rejected
+loudly</strong>, malformed entries dropped with a warning — it cannot
+silently widen.</li>
+<li>Reasoning-provider egress is separately gated by an allowlist policy
+(<code>reasoning-egress.ts</code>).</li>
+<li>Verdict: the SSRF posture is stronger than typical. Keep the default
+(empty <code>OD_ALLOWED_INTERNAL_HOSTS</code>).</li>
+</ul>
+<h3
+id="the-actual-blast-radius-the-daemon-spawns-coding-agent-runtimes">4.4
+The actual blast radius — the daemon spawns coding-agent runtimes</h3>
+<ul>
+<li>The daemon’s design function is to run agent runtimes (Claude Code /
+Codex / opencode) as child processes to generate designs
+(<code>src/runtimes/</code>, <code>start_run</code>). That is arbitrary
+code execution <strong>by design</strong>.</li>
+<li>In the plain container this is confined: non-root uid 1001,
+read-only rootfs, <code>no-new-privileges</code>,
+<code>pids_limit</code>, <code>mem_limit</code>, no host mounts,
+loopback-only.</li>
+<li><strong><code>OD_CODEX_SANDBOX=danger-full-access</code></strong>
+(documented escape hatch when Codex’s own workspace-write sandbox can’t
+init in an unprivileged container) <strong>removes Codex’s inner
+sandbox</strong> — broader filesystem access <em>inside the
+container</em>. Do not set it unless required, and only on a trusted
+single-user host.</li>
+<li><strong><code>docker-compose.linux.yml</code> is the high-risk
+mode</strong>: <code>network_mode: host</code> (drops the bridge’s port
+isolation; compensated only by <code>OD_BIND_HOST=127.0.0.1</code>), and
+it mounts host <strong><code>~/.claude</code> credentials (ro)</strong>
++ injects
+<code>ANTHROPIC_API_KEY</code>/<code>OPENAI_API_KEY</code>/<code>DEEPSEEK_API_KEY</code>.
+A nested agent runtime then executes with those live credentials
+mounted. If you never need in-container agent CLIs, <strong>do not use
+this override at all</strong> — the plain
+<code>docker-compose.yml</code> has none of these mounts.</li>
+</ul>
+<h3 id="mcp-path-no-raw-shell-but-writedelete-nested-run-reachable">4.5
+MCP path — no raw shell, but write/delete + nested-run reachable</h3>
+<ul>
+<li>The stdio bridge is a stateless loopback HTTP proxy — it does not
+touch the filesystem or run shell itself.</li>
+<li>It does expose
+<code>write_file</code>/<code>delete_file</code>/<code>delete_project</code>/<code>start_run</code>
+to the outer agent, scoped to the project store. Review §3.3 before
+wiring; the destructive + nested-run tools are the reason this is not a
+pure read-only surface.</li>
+</ul>
+<h3 id="verdict">4.6 Verdict</h3>
+<p><strong>SAFE TO ADOPT — containerized, rootless, localhost-only —
+with §5 hardening.</strong> NEEDS-MORE-REVIEW only for two opt-in modes:
+(a) the <code>docker-compose.linux.yml</code> host-networking +
+credential-mount override, and (b)
+<code>OD_CODEX_SANDBOX=danger-full-access</code>. BLOCKED: exposing the
+daemon beyond localhost without an authenticated proxy + token; building
+the image on the bare host (must go through §11.4.173).</p>
+<hr />
+<h2 id="required-hardening-apply-all">5. Required hardening (apply
+all)</h2>
+<ol type="1">
+<li><strong>Localhost only.</strong> Keep the
+<code>127.0.0.1:PORT:7456</code> publish. Verify with
+<code>ss -ltnp | grep 7456</code> on every launch. Never bind a
+LAN/public IP without an authenticated reverse proxy AND
+<code>OD_API_TOKEN</code> (§4.1).</li>
+<li><strong>Rootless podman, no sudo</strong> (§11.4.161). Confirm
+<code>podman info</code> shows rootless; confirm cgroup
+<code>memory</code>/<code>pids</code> delegation so the limits bite
+(§2.0).</li>
+<li><strong>Set <code>OD_API_TOKEN</code></strong> even on loopback
+(defense in depth; harmless). Never <code>OD_DISABLE_API_AUTH=1</code>
+outside a trusted authenticated proxy.</li>
+<li><strong>Pin the image by digest</strong>
+(<code>ghcr.io/nexu-io/od@sha256:&lt;digest&gt;</code>), not
+<code>:latest</code> (§2.2).</li>
+<li><strong>Keep the base compose’s guards</strong>:
+<code>read_only: true</code>, <code>no-new-privileges:true</code>,
+<code>pids_limit</code>, <code>mem_limit</code> (bounded per §12.6),
+tmpfs <code>/tmp</code>, named volume for <code>/app/.od</code>. Do not
+relax them.</li>
+<li><strong>Do NOT adopt <code>docker-compose.linux.yml</code></strong>
+(host networking + <code>~/.claude</code> credential mount + API-key
+env) unless an in-container agent runtime is genuinely required. If it
+is: scope credentials to a throwaway key, keep the mount read-only, keep
+<code>OD_BIND_HOST=127.0.0.1</code>, and treat it as a separate
+operator-gated decision (§11.4.122).</li>
+<li><strong>Leave SSRF defaults</strong>: empty
+<code>OD_ALLOWED_INTERNAL_HOSTS</code>; do not set
+<code>OD_CODEX_SANDBOX</code> (§4.4).</li>
+<li><strong>No external egress beyond what a design run needs.</strong>
+Consider a rootless podman network with restricted egress
+(containers-submodule <code>pkg/egress</code>/<code>pkg/network</code>)
+if the host policy requires it; the daemon’s own reasoning-egress
+allowlist (§4.3) is the in-app second layer.</li>
+<li><strong>MCP wiring stays loopback</strong> (§3.1
+<code>podman exec -i</code>, or §3.2 with
+<code>--daemon-url http://127.0.0.1:7456</code>). Never point the MCP
+bridge at a non-loopback daemon URL.</li>
+<li><strong>Build only via §11.4.173</strong> (containerized/distributed
+on the remote build host) or pull the pre-built image — never bare-host
+build.</li>
+</ol>
+<hr />
+<h2 id="do-not">6. DO NOT</h2>
+<blockquote>
+<p><strong>DO NOT run the OpenDesign daemon directly on the bare
+host</strong> (no <code>pnpm --filter @open-design/daemon start</code>,
+no host <code>od</code> daemon) — it is a network service that spawns
+coding-agent runtimes; run it only inside the rootless container
+(§11.4.173).</p>
+<p><strong>DO NOT expose the daemon beyond
+<code>127.0.0.1</code>.</strong> No <code>0.0.0.0</code> publish, no LAN
+IP, no public port, no <code>network_mode: host</code> on a shared
+machine. Any remote reach MUST go through an authenticated reverse proxy
+/ SSH tunnel / VPN <strong>and</strong> <code>OD_API_TOKEN</code>
+(vendor + §4.1).</p>
+<p><strong>DO NOT set <code>OD_DISABLE_API_AUTH=1</code>,
+<code>OD_CODEX_SANDBOX=danger-full-access</code>, or adopt
+<code>docker-compose.linux.yml</code></strong> without an explicit
+operator decision — each widens the blast radius (§4.4, §11.4.122).</p>
+<p><strong>DO NOT build the image on the bare host</strong> — heavy
+native build, §11.4.173 requires the containerized/distributed build
+path; prefer the pinned pre-built image.</p>
+</blockquote>
+<hr />
+<h2 id="sources-verified-2026-07-09">Sources verified 2026-07-09</h2>
+<p>Primary source of truth is the read-only clone at commit-state cloned
+into scratchpad (<code>…/scratchpad/open-design/</code>), files cited
+inline in §1. Cross-referenced against latest upstream (§11.4.99):</p>
+<ul>
+<li>https://github.com/nexu-io/open-design — repo overview (author-time
+daemon + MCP + 20+ CLIs via BYOK)</li>
+<li>https://github.com/nexu-io/open-design/blob/main/deploy/README.md —
+Docker deploy, localhost-bind guidance, “API unauthenticated for
+non-browser clients”, image excludes agent CLIs</li>
+<li>https://github.com/nexu-io/open-design/blob/main/QUICKSTART.md —
+<code>od mcp install &lt;agent&gt;</code> one-liner + hosted
+<code>install.sh | sh -s &lt;agent&gt;</code></li>
+<li>https://github.com/nexu-io/open-design/issues/3430 — per-agent MCP
+installer (tool surface: search files, get files, get artifacts, run
+plugins, list skills; <code>od mcp install &lt;agent&gt;</code>)</li>
+<li>https://deepwiki.com/nexu-io/open-design/12.5-docker-and-nix-deployment
+— Docker/Nix deployment, port 7456, env vars</li>
+<li>https://www.tutorialworks.com/podman-rootless-volumes/ — rootless
+podman named-volume storage under <code>$HOME</code>, ownership
+handling</li>
+<li>https://oneuptime.com/blog/post/2026-02-02-podman-security-configuration/view
+— rootless <code>--security-opt no-new-privileges:true</code> +
+<code>--read-only</code> + resource limits</li>
+<li>https://oneuptime.com/blog/post/2026-03-17-configure-volume-options-rootless-podman/view
+— <code>:U</code>/<code>:Z</code> volume flags, rootless permission
+handling</li>
+<li>https://oneuptime.com/blog/post/2026-01-27-podman-compose/view —
+podman-compose named volumes vs bind mounts</li>
+</ul>
+<p>Negative finding: no upstream doc contradicts the localhost-only +
+rootless posture; the vendor’s own guidance is stricter-or-equal to this
+recipe. No upstream rootless-podman-specific OpenDesign guide exists
+(vendor documents Docker + the Linux host-mount override); the rootless
+mapping in §2 is derived from the compose file + general rootless-podman
+references above and is marked where runtime-unverified.</p>
+</body>
+</html>

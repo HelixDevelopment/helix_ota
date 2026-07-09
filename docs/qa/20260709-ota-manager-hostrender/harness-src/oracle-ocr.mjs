@@ -4,6 +4,8 @@
 // element is collapsed / clipped / off-screen / overlapping.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { readFile, writeFile } from "node:fs/promises";
+import { PNG } from "pngjs";
 const execFileP = promisify(execFile);
 
 export async function ocrText(pngPath) {
@@ -12,6 +14,31 @@ export async function ocrText(pngPath) {
     maxBuffer: 8 * 1024 * 1024,
   });
   return stdout;
+}
+
+// §11.4.107(10) OCR golden-bad producer. Paints a flat opaque rectangle over a
+// rendered text region (given by the REAL Playwright bounding box), destroying
+// the glyphs so the label physically cannot be OCR-read. This proves the OCR
+// oracle genuinely depends on the rendered text — a mutation the layout and
+// image-diff oracles do not exercise. `pad` inflates the rect to also cover
+// glyph anti-alias fringes. Returns the flattened rectangle actually painted.
+export async function blankTextRegion(srcPng, outPng, rect, { pad = 4, rgb = [128, 128, 128] } = {}) {
+  const img = PNG.sync.read(await readFile(srcPng));
+  const x0 = Math.max(0, Math.floor(rect.x - pad));
+  const y0 = Math.max(0, Math.floor(rect.y - pad));
+  const x1 = Math.min(img.width, Math.ceil(rect.x + rect.width + pad));
+  const y1 = Math.min(img.height, Math.ceil(rect.y + rect.height + pad));
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const idx = (img.width * y + x) << 2;
+      img.data[idx] = rgb[0];
+      img.data[idx + 1] = rgb[1];
+      img.data[idx + 2] = rgb[2];
+      img.data[idx + 3] = 255;
+    }
+  }
+  await writeFile(outPng, PNG.sync.write(img));
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
 }
 
 export function ocrLabelsPresent(text, labels) {
