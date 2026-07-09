@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 17 <strong>Last modified:</strong>
-2026-07-09T19:09:33Z</p>
+<p><strong>Revision:</strong> 18 <strong>Last modified:</strong>
+2026-07-09T19:26:31Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,9 +263,17 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>95d8328e</code> — 24 commits this session, all pushed 4/4 FF
-§11.4.113. Through <code>444b68f4</code>: <code>35035ba4</code> brand
-tokens · <code>cc3f5dc8</code> vendoring plan ·
+<td><code>ca3860d8</code> — 29 commits this session, all pushed 4/4 FF
+§11.4.113. <strong>Wave-2 (S/T/U/V) all landed:</strong>
+<code>a8c12d9a</code> ota-manager shadcn AA fix (S — closes A2; S caught
+a rounding trap in M’s audit, used precise values, 38/38 verified) ·
+<code>870ca9ff</code> dashboard screen×STATE empty+error for
+Releases/Fleet (U — 81→117) · <code>5a3e036a</code> llms_verifier
+pointer bump (T — RED tests were a foreign-TLS-on-port-8080 §11.4.3 SKIP
+condition, test-side fix + 11 upstream commits integrated) ·
+<code>ca3860d8</code> server §11.4.169 coverage audit (V). Through
+<code>444b68f4</code>: <code>35035ba4</code> brand tokens ·
+<code>cc3f5dc8</code> vendoring plan ·
 <code>26e98390</code>/<code>d7491292</code> device-claim+signed-pipeline
 · <code>74b94bb8</code> ota-manager vendor+toggle-fix ·
 <code>4c6b201d</code> dashboard vendor+dark-mode+controller-tests ·
@@ -1153,15 +1161,21 @@ each independently re-verified by the conductor before commit
 (§11.4.142): M’s ratios genuine, P’s 85-count re-run, R’s 81/81 re-run +
 oracle-broadening reviewed sound, K’s challenges fix green under
 <code>-race -count=5</code> + FF-pushed to the brick’s remotes.</li>
-<li><strong>Wave-2 streams (3 in flight at Rev 17, partitioned by
-buildable-project owner §11.4.119):</strong> <strong>S</strong> apply
-M’s ota-manager shadcn AA contrast fixes → re-prove via ota-manager
-host-render (owns ota-manager build); <strong>T</strong> root-cause +
-fix the <code>llms_verifier/llm-verifier</code> 2 RED CLI tests
-(submodule; conductor commits per §11.4.113); <strong>U</strong>
-dashboard screen×STATE host-render — prove empty + error states for 2
-core screens ×{light,dark} (owns dashboard build). Evidence only;
-conductor reviews + commits (no subagent git ops §11.4.84).</li>
+<li><strong>Wave-2 streams (S/T/U/V) — ALL LANDED + reviewed +
+committed</strong>
+(<code>a8c12d9a</code>/<code>5a3e036a</code>/<code>870ca9ff</code>/<code>ca3860d8</code>),
+each conductor-re-verified (§11.4.142): S’s ratios re-run 38/38 +
+rounding-trap caught, T’s tests re-run SKIP-OK + submodule integrated
+11-behind→FF-pushed, U’s 117/117 re-run, V’s audit real captured
+suite.</li>
+<li><strong>Wave-3 streams (2 in flight at Rev 18):</strong>
+<strong>W</strong> close V’s top server §11.4.169 gaps —
+memory/heap-growth assertion for core handlers + a native Go Fuzz target
+(test-only, owns server build); <strong>Y</strong> extend ota-manager
+§11.4.170 host-render beyond LoginPage to the shipped
+<code>/dashboard</code> screen ×{light,dark}, with honest §11.4.3
+SKIP-with-reason if it’s too coupled to render (owns ota-manager build).
+Evidence only; conductor reviews + commits.</li>
 <li><strong>Recording directory:</strong> <code>$HOME/Downloads</code>
 per §11.4.158(D) (default; no project-level override)</li>
 </ul>
@@ -1186,11 +1200,17 @@ ota-manager (shadcn HSL wins the cascade — A EVIDENCE.md §4), so
 ota-manager’s shipped colors are still un-audited. Stream
 <strong>M</strong> audit DONE (<code>d463ec3e</code>): 38 pairs checked,
 10 UI-boundary (SC 1.4.11) fails, 0 text fails, same-hue fixes proposed.
-Stream <strong>S</strong> in flight APPLYING those fixes to
-<code>clients/ota-manager/src/index.css</code> + re-proving via
-ota-manager host-render. Residual: light <code>--danger</code>
-<code>#dc2626</code> = 3.81 on its own badge-tint (documented honest
-follow-up). B. <strong>ota-manager type errors — Stream P DONE
+Stream <strong>S</strong> DONE (<code>a8c12d9a</code>) — <strong>A2
+CLOSED for UI boundaries</strong>: applied same-hue AA fixes to
+<code>--border</code>/<code>--input</code>/<code>--ring</code>/<code>--sidebar-border</code>
+in both themes, all ≥3:1 (independently re-run 38/38 PASS), ota-manager
+host-render OVERALL PASS self-validated. S caught+corrected a rounding
+trap in M’s 2-decimal proposed values (they recompute just under 3.00 at
+full precision) — used precise 4-decimal values. Honest gap:
+<code>--sidebar-border</code> proven by ratio only (LoginPage harness
+has no sidebar). Residual: light <code>--danger</code>
+<code>#dc2626</code> = 3.81 on its own badge-tint (documented, not
+over-changed). B. <strong>ota-manager type errors — Stream P DONE
 (<code>34f7dcf6</code>): 118 → 85.</strong> 33 router-independent
 genuine bugs fixed (root cause: a <code>types/api.ts</code> re-export
 gap + real cache-key bugs verified against the Go server contract). The
@@ -1242,14 +1262,20 @@ graceful-degrade subtest. Verified <code>-race -count=5</code> PASS,
 brick <code>go test ./...</code> rc=0; FF-pushed to the brick’s remotes
 (0-ahead/0-behind everywhere), parent pointer bumped to
 <code>5bac429</code> (also integrated the brick’s 3 upstream commits).
-I. <strong><code>llms_verifier/llm-verifier</code> RED (pre-existing) —
-Stream T in flight.</strong> <code>TestCommandFlagValidation</code> +
-<code>TestOutputFormats</code> fail (build/vet green →
-CLI-contract/behavioral mismatch). Systematic-debug (§11.4.102) to
-root-cause test-vs-product then fix; conductor commits the submodule +
-bumps pointer. J. <strong>gofmt drift across bricks (formatting-only,
-pre-existing, all otherwise green):</strong> <code>ota-protocol</code>
-(1), <code>http3</code> (1), <code>llm_orchestrator</code> (6),
+I. <strong><code>llms_verifier/llm-verifier</code> RED — Stream T DONE
+(<code>5a3e036a</code>).</strong> Root cause (§11.4.102): NOT a CLI
+defect — a foreign TLS service occupies port 8080 on this shared host
+(302→https, cert invalid for localhost → x509), and the CLI provably
+never speaks TLS (no <code>ListenAndServeTLS</code>). Test-side fix:
+extended <code>serverUnavailable()</code> to recognize the x509/TLS
+condition as the §11.4.3 no-compatible-server SKIP it already documents
+(no assertion weakened). Submodule integrated 11 upstream commits +
+FF-pushed; pointer → <code>8a184dab</code>. Follow-up: these CLI tests
+SKIP here (no compatible server on 8080) — a future §11.4.98 improvement
+could spin up an ephemeral server to actually exercise the CLI. J.
+<strong>gofmt drift across bricks (formatting-only, pre-existing, all
+otherwise green):</strong> <code>ota-protocol</code> (1),
+<code>http3</code> (1), <code>llm_orchestrator</code> (6),
 <code>security</code> (13), <code>vision_engine</code> (17),
 <code>containers</code> (34), <code>llms_verifier</code> (211/177). A
 <code>gofmt -w</code> sweep per owned brick (each its own submodule
@@ -1258,6 +1284,30 @@ commit + push). K. <strong>Android bricks static-only</strong>
 no <code>gradlew</code> wrapper committed → full AGP build not run
 (needs Android SDK). Honest §11.4.6 boundary; a real build pass is owed
 when the toolchain is available.</p>
+<p><strong>Server §11.4.169 test-type gaps (from Stream V audit,
+<code>docs/research/server_test_type_coverage_audit_20260709/AUDIT.md</code>;
+suite is 100% PASS + 0 races today):</strong></p>
+<p>L. <strong>Memory + Fuzz gaps — Stream W in flight:</strong> add a
+heap/goroutine-growth assertion for core API handlers (only the embed
+handler has a leak check) + a native Go <code>Fuzz*</code> target
+(currently ZERO fuzz targets in server/). M2. <strong>Postgres
+integration suite unexecuted</strong> — the
+<code>-tags integration</code> pgx path TYPE-CHECKS clean but was never
+run (no live PG/containers booted). Boot Postgres via the containers
+submodule (§11.4.161 rootless) + capture real evidence. N.
+<strong>Benchmark regression baseline</strong> — 7 real benchmarks exist
+but nothing gates regression; add a baseline + comparison. O.
+<strong>Security follow-ups</strong> — no security-response-headers set
+anywhere (product decision: add headers + test); a cross-secret
+token-forgery test (V corrected: scheme is fixed HMAC-SHA256, not
+multi-alg JWT, so <code>alg=none</code> doesn’t apply — positive
+finding); SQL/NoSQL-injection probe against the real pgx path inside
+<code>server/</code>. P. <strong>Aborted security-suite run</strong> —
+<code>tests/security/RUN_EVIDENCE.txt</code> last run ABORTED on a port
+conflict (unlike its clean-PASS siblings); re-run resolving the conflict
++ capture fresh evidence. Q. <strong>DDoS default posture</strong> — the
+rate-limit cap is disabled by default
+(<code>HELIX_MAX_INFLIGHT=0</code>); decide the shipped default.</p>
 <p><strong>Prior (A/B path):</strong></p>
 <ol type="1">
 <li><strong>OTA-003 — DONE (VERIFIED on nezha 2026-06-23).</strong> Real
