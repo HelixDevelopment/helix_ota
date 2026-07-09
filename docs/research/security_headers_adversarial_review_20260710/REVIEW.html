@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REVIEW</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">REVIEW</h1>
+</header>
+<h1
+id="adversarial-independent-security-review-security-response-headers-commit-992bd497">Adversarial
+Independent Security Review — Security Response Headers (commit
+992bd497)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T00:00:00Z</p>
+<p>Scope: <code>server/internal/api/security_headers.go</code>,
+<code>security_headers_test.go</code>, <code>server.go</code>
+(middleware order), <code>embed.go</code> (Tier-C SPA CSP). Read-only
+adversarial review per §11.4.125/§11.4.134/§11.4.142. Verdict at the
+bottom.</p>
+<p>Every claim below was checked against real evidence — the actual gin
+v1.12.0 vendored source
+(<code>/home/milos/go/pkg/mod/github.com/gin-gonic/gin@v1.12.0</code>),
+the real <code>go test</code> run of the 8 tests, and a byte-level grep
+of the ACTUAL embedded SPA bundle
+(<code>server/internal/api/manager-dist/assets/index-*.js</code>) — not
+assumptions. No finding here is speculative.</p>
+<hr />
+<h2 id="verdict-go-with-fixes">Verdict:
+<strong>GO-WITH-FIXES</strong></h2>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Important</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Minor</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Nit</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The Tier-A/B header middleware itself
+(<code>security_headers.go</code>) is well-designed and correctly wired
+(confirmed via gin internals, not just the tests). The <strong>one
+Critical finding is not in <code>security_headers.go</code> at
+all</strong> — it is a build-artifact defect in the embedded SPA that
+silently invalidates the <code>connect-src 'self'</code> directive’s
+stated justification and will break the Manager UI outside of a
+coincidental <code>localhost:8080</code> dev topology. It must be fixed
+(or at minimum tracked + the CSP evidence doc corrected) before this is
+considered done, hence GO-WITH-FIXES rather than a clean GO.</p>
+<hr />
+<h2 id="critical">CRITICAL</h2>
+<h3
+id="c1-connect-src-self-justification-is-false-for-the-actual-shipped-spa-bundle-manager-ui-will-be-non-functional-or-csp-blocked-in-any-real-deployment">C1
+— <code>connect-src 'self'</code> justification is false for the actual
+shipped SPA bundle; Manager UI will be non-functional (or CSP-blocked)
+in any real deployment</h3>
+<p><strong>Files:</strong>
+<code>server/internal/api/security_headers.go:63-65</code> (the
+<code>connect-src</code> comment) ·
+<code>server/internal/api/embed.go:6-16</code> (undocumented build step)
+· <code>clients/ota-manager/src/lib/api-client.ts:11-17</code> · shipped
+artifact
+<code>server/internal/api/manager-dist/assets/index-{C51iU0QH,BCUfw0_g}.js</code></p>
+<p><strong>Failure scenario:</strong> The CSP’s
+<code>connect-src 'self'</code> comment claims: <em>“the SPA calls its
+own API same-origin (axios baseURL is the serving origin in the
+single-binary topology).”</em> This is <strong>false for the actual
+embedded bundle</strong>. Byte-level inspection of the real,
+currently-embedded JS confirms:</p>
+<pre><code>h4=&quot;http://localhost:8080&quot;,ty=Nt.create({baseURL:h4,timeout:3e4,...})</code></pre>
+<p>i.e. axios’s <code>baseURL</code> is a <strong>compile-time,
+hardcoded, absolute</strong> URL literal
+(<code>http://localhost:8080</code>) baked into the bundle at
+<code>pnpm build</code> time from
+<code>clients/ota-manager/src/lib/api-client.ts:14</code>:
+<code>const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080"</code>.</p>
+<p><code>clients/ota-manager/README.md:59</code> and the
+standalone-nginx
+<code>docker/ota-manager.docker-compose.yml:35-38</code> both document
+that <code>VITE_API_BASE_URL=/api</code> is the value required for the
+same-origin (single-binary or nginx-proxied) topology — <strong>but
+<code>embed.go</code>’s own documented “Usage” build steps
+(<code>cd clients/ota-manager &amp;&amp; pnpm build</code>) never set
+this env var</strong>, and no build/CI script anywhere in the repo sets
+it for the <code>go:embed</code> path either (verified: repo-wide grep
+for <code>VITE_API_BASE_URL</code> outside an unrelated
+<code>submodules/helixqa</code> vendor script finds nothing). The
+currently-embedded artifact was built exactly this way and ships the
+hardcoded <code>http://localhost:8080</code> value.</p>
+<p>Consequence: <code>'self'</code> in CSP is evaluated by the browser
+against the <strong>actual page origin at load time</strong> (whatever
+host/port/scheme the operator really deployed at), not against a string
+baked into the JS at build time. In literally any deployment that is not
+exactly <code>http://localhost:8080</code> — any real production
+host/port, any TLS deployment, anything behind a reverse proxy — the
+SPA’s own <code>fetch</code>/XHR calls target a different origin than
+the page, so the browser’s CSP enforcement of
+<code>connect-src 'self'</code> <strong>blocks every API call the
+Manager UI makes</strong>: login, device list, everything. (If CSP
+somehow didn’t block it, an HTTPS deployment would separately hit
+mixed-content blocking for the same reason.) It “works” today only by
+coincidence, because dev/test happens to run at <code>:8080</code>.</p>
+<p>The project’s own evidence doc bakes in the same error:
+<code>docs/qa/20260710-server-security-headers/EVIDENCE.md:119</code>
+states <em>“axios <code>baseURL="http://localhost:8080"</code> = the
+serving origin in the single-binary topology … <code>'self'</code>
+covers same-origin API calls”</em> — this conflates a dev-machine
+coincidence with what <code>'self'</code> actually means, and none of
+the 8 Go tests can catch this class of defect (it requires a real
+browser enforcing CSP against a real fetch call; <code>httptest</code>
+never drives a browser or inspects the compiled bundle’s network
+target).</p>
+<p><strong>Fix:</strong> 1. Set <code>VITE_API_BASE_URL=/api</code> (or
+the correct relative value — confirm axios’s behavior for an
+empty/relative baseURL is same-origin, not <code>undefined</code>)
+before <code>pnpm build</code> for the <code>go:embed</code> deployment
+path, and update <code>embed.go</code>’s documented “Usage” build steps
+(lines 6-16) to state this explicitly, mirroring the docker-compose
+comment. 2. Regenerate <code>manager-dist/</code> with the corrected env
+var. 3. Add a build-time or CI assertion that greps the built bundle for
+the literal <code>http://localhost</code> / any absolute
+<code>http://</code>/<code>https://</code> axios <code>baseURL</code>
+and fails the build if found — so this cannot silently regress (this is
+exactly the class of defect §11.4.108 “source vs. artifact” and
+§11.4.110 “change-impact clash detection” exist to catch mechanically).
+4. Correct <code>EVIDENCE.md</code>’s <code>connect-src</code> row to
+state the actual requirement (relative/same-origin baseURL) instead of
+rationalizing the coincidental dev value as if it were architecturally
+guaranteed.</p>
+<hr />
+<h2 id="important">IMPORTANT</h2>
+<h3
+id="i1-hsts-and-tier-c-upgrade-insecure-requests-gate-on-this-process-terminates-tls-not-on-the-browser-sees-https-silently-absent-behind-a-tls-terminating-reverse-proxy">I1
+— HSTS (and Tier-C <code>upgrade-insecure-requests</code>) gate on “this
+process terminates TLS,” not on “the browser sees HTTPS” — silently
+absent behind a TLS-terminating reverse proxy</h3>
+<p><strong>File:</strong>
+<code>server/internal/api/security_headers.go:124-126</code>
+(<code>tlsEnabled()</code>) ·
+<code>server/internal/config/config.go:79-108</code></p>
+<p><code>tlsEnabled()</code> is
+<code>s.cfg.TLSCertFile != "" &amp;&amp; s.cfg.TLSKeyFile != ""</code> —
+i.e. purely whether <em>this Go process</em> holds a cert/key pair.
+There is no <code>X-Forwarded-Proto</code> / trusted-proxy detection and
+no explicit config override (confirmed: no such handling anywhere in
+<code>config.go</code> or <code>internal/api/*.go</code>). In the very
+common production topology where TLS is terminated at an edge (k8s
+ingress, ALB, Cloudflare, nginx — plausible given this project’s
+containerized rollout per CLAUDE.md) and the Go binary is deployed
+serving plain HTTP internally,
+<code>HELIX_TLS_CERT</code>/<code>HELIX_TLS_KEY</code> are unset, so
+<code>tlsEnabled()</code> returns <code>false</code> and <strong>HSTS is
+never emitted even though real end users are on HTTPS</strong> —
+silently dropping the primary browser defense against
+SSL-stripping/downgrade attacks on the browser-to-edge leg, for what is
+likely the <em>most common</em> real deployment shape, not an edge
+case.</p>
+<p><strong>Fix:</strong> add an explicit config override
+(e.g. <code>HELIX_BEHIND_TLS_PROXY=true</code>) or honor a trusted
+<code>X-Forwarded-Proto: https</code> from a documented/allow-listed
+proxy, so operators terminating TLS upstream still get HSTS + the CSP
+<code>upgrade-insecure-requests</code> directive.</p>
+<h3
+id="i2-the-429-shed-headers-survive-test-does-not-exercise-the-real-production-middleware-chain-a-real-ordering-regression-would-ship-undetected">I2
+— The 429-shed “headers survive” test does not exercise the real
+production middleware chain; a real ordering regression would ship
+undetected</h3>
+<p><strong>File:</strong>
+<code>server/internal/api/security_headers_test.go:107-141</code>
+(<code>TestSecurityHeaders_TierA_OnShed429</code>)</p>
+<p>The test file’s own header comment (lines 20-23) states these tests
+“exercise the REAL wired router … not a hand-rolled stand-in, so a PASS
+proves the headers reach real responses.”
+<code>TestSecurityHeaders_TierA_OnShed429</code> is the <strong>one
+exception</strong>: it builds its own bespoke router —
+<code>r := gin.New(); r.Use(securityHeadersMiddleware(false), maxInflightMiddleware(1))</code>
+— hard-coding the correct order, rather than calling the real
+<code>Server.Router()</code> (<code>server.go:122-123</code>). Verified:
+<code>newTestEnv</code> (<code>testutil_test.go:52-59</code>) never sets
+<code>cfg.MaxInflight</code>, so it defaults to <code>0</code>, and
+<code>maxInflightMiddleware(0)</code> (<code>rate_limit.go:18-20</code>)
+is a permanent no-op under <code>env.router</code> — <strong>no other
+test in the suite can ever trigger a real 429 shed against the actual
+production wiring.</strong></p>
+<p>Net effect: if a future change reorders <code>r.Use(...)</code> in
+<code>server.go</code> (e.g. <code>maxInflightMiddleware</code> before
+<code>securityHeadersMiddleware</code>), a real 429-shed response in
+production would silently lose all Tier-A headers, and <strong>none of
+the 8 tests would catch it</strong> — this is precisely the §11.4.134
+“would a paired mutation make a test FAIL?” check, and today the answer
+is no for this specific regression.</p>
+<p><strong>Fix:</strong> rebuild this test using
+<code>NewServer(Options{Config: config.Config{MaxInflight: 1, ...}}).Router()</code>
+(analogous to the existing <code>newSecHeadersRouter</code> helper), so
+the shed-preserves-headers property is proven against the real
+production chain, not a hand-authored copy of it.</p>
+<h3
+id="i3-panic-recoverymiddleware-500-path-is-untested-for-tier-a-header-presence-despite-being-an-explicit-claim-in-the-code">I3
+— Panic → <code>recoveryMiddleware</code> → 500 path is untested for
+Tier-A header presence, despite being an explicit claim in the code</h3>
+<p><strong>Files:</strong> <code>server.go:118-121</code> comment ·
+<code>security_headers_test.go</code> (no panic-path test exists)</p>
+<p>I verified by reading the real <code>gin v1.12.0</code> source
+(<code>response_writer.go:66-81</code>) that this <strong>currently
+holds correctly</strong>: <code>responseWriter.WriteHeader</code> only
+records the intended status in memory and does not flush to the wire
+until the first <code>Write</code>/<code>Flush</code> call
+(<code>WriteHeaderNow</code>), and
+<code>securityHeadersMiddleware</code> sets its headers on the shared
+<code>http.Header</code> map well before any handler can panic — so
+<code>recoveryMiddleware</code>’s <code>respondError</code> →
+<code>c.AbortWithStatusJSON(500, ...)</code> correctly flushes the
+already-set Tier-A headers on a genuine panic today. This is <strong>not
+a live bug</strong> — but it is completely unverified by the test suite,
+despite the middleware-order comment in <code>server.go</code>
+explicitly claiming “present even on … error/panic responses.” A future
+change to <code>recoveryMiddleware</code> (e.g. constructing a fresh
+writer instead of reusing <code>c.Writer</code>) would silently break
+this guarantee with zero test signal.</p>
+<p><strong>Fix:</strong> add
+<code>TestSecurityHeaders_TierA_OnPanic500</code> — a bespoke router
+with <code>securityHeadersMiddleware</code> +
+<code>recoveryMiddleware</code> + a handler that panics — mirroring the
+structure of the existing 429-shed test (and subject to the same I2
+caveat: prefer building it against the real <code>Server.Router()</code>
+chain if a panicking route can be added safely, or clearly document why
+it can’t).</p>
+<hr />
+<h2 id="minor">MINOR</h2>
+<h3
+id="m1-style-src-self-unsafe-inline-is-a-real-if-currently-justified-and-likely-unavoidable-css-injection-surface">M1
+— <code>style-src 'self' 'unsafe-inline'</code> is a real (if currently
+justified and likely unavoidable) CSS-injection surface</h3>
+<p><strong>File:</strong> <code>security_headers.go:54-59</code></p>
+<p><code>'unsafe-inline'</code> for styles does not permit script
+execution, but it does allow CSS-based
+data-exfiltration/attribute-selector techniques (e.g.
+<code>input[value^="a"]{background:url(...)}</code> keylogging-via-CSS)
+<em>if</em> an attacker ever achieves any HTML injection elsewhere in
+the SPA. Given React’s default JSX escaping this is low-likelihood
+today, and the justification (React 19 runtime
+<code>&lt;style&gt;</code> injection, static <code>go:embed</code>
+bundle can’t emit per-response nonces) is genuine and correctly reasoned
+— this is not a bug to fix now, but worth an explicit tracked follow-up
+(nonce-based <code>style-src</code> becomes possible only if the
+index.html document is ever served dynamically instead of as a static
+embedded file).</p>
+<h3
+id="m2-x-request-id-reflects-client-input-unbounded-with-no-lengthcharset-cap">M2
+— <code>X-Request-Id</code> reflects client input unbounded, with no
+length/charset cap</h3>
+<p><strong>File:</strong> <code>middleware.go:22-32</code> (adjacent to,
+not inside, <code>security_headers.go</code>, but directly relevant to
+the “header value derived from request input” question)</p>
+<p><code>requestIDMiddleware</code> echoes the client-supplied
+<code>X-Request-Id</code> header verbatim with no length cap and no
+charset allow-list. Real CRLF/header- splitting injection is not
+practically exploitable here (HTTP/1.1 header framing plus Go’s
+<code>net/http</code> already prevent smuggling raw CRLF inside a single
+header value), so this is not a Critical/Important finding, but an
+oversized or garbage client-supplied value gets reflected into every
+response on that connection and potentially logged elsewhere — a minor
+amplification / log-hygiene gap. Recommend capping to e.g. 128 bytes and
+restricting to a safe charset (<code>[A-Za-z0-9_-]</code>), falling back
+to a freshly generated ID otherwise.</p>
+<hr />
+<h2 id="nit">NIT</h2>
+<h3 id="n1-fullscreen-in-the-deny-all-permissions-policy">N1 —
+<code>fullscreen=()</code> in the deny-all Permissions-Policy</h3>
+<p><strong>File:</strong> <code>security_headers.go:28-34</code></p>
+<p>Blocks the Fullscreen API entirely for the Manager UI — a UX
+consideration, not a security bug, worth a second look only if a
+dashboard feature (log viewers, topology diagrams) ever wants
+fullscreen.</p>
+<hr />
+<h2 id="verified-clean-explicitly-checked-no-finding">Verified clean
+(explicitly checked, no finding)</h2>
+<ul>
+<li><strong>Middleware ordering</strong>: confirmed via the real gin
+v1.12.0 source that Tier-A headers survive the 429 shed, 404 NoRoute,
+401 auth failure, and (per I3’s reasoning) a genuine panic/500 —
+<code>securityHeadersMiddleware</code> runs before
+<code>maxInflightMiddleware</code>/<code>compressionMiddleware</code> in
+<code>server.go:122</code>, and <code>compressWriter</code> wraps rather
+than replaces the underlying <code>http.Header</code> map, so header
+content set before the wrap survives.</li>
+<li><strong>SPA client-route fallback correctness</strong>: I initially
+suspected gin’s <code>createStaticHandler</code>
+(<code>routergroup.go:216-237</code>) — which calls
+<code>c.Writer.WriteHeader(http.StatusNotFound)</code> before handing
+off to <code>NoRoute</code> — might commit a 404 status that a later
+<code>c.Data(200, ...)</code> couldn’t override. Verified via
+<code>response_writer.go</code> that gin’s <code>WriteHeader</code> is
+lazily buffered (only committed on first <code>Write</code>), so the
+later 200 from the SPA fallback correctly wins. All 8 tests pass
+(<code>go test ./internal/api/... -run 'TestSecurityHeaders|TestSPACSP'</code>
+— 8/8 PASS, verified live, not assumed).</li>
+<li><strong>CSP directive completeness</strong>:
+<code>object-src 'none'</code>, <code>base-uri 'self'</code>,
+<code>form-action 'self'</code>, <code>frame-ancestors 'none'</code> are
+all present and correct; <code>default-src 'none'</code> on the API tier
+correctly needs no additional <code>object-src</code>/etc.
+(fetch-directive fallback), while <code>base-uri</code>/
+<code>frame-ancestors</code> are correctly set explicitly since
+<code>default-src</code> does not cover those non-fetch directives.</li>
+<li><strong><code>X-XSS-Protection</code></strong>: correctly omitted
+(deprecated; modern guidance is to omit rather than set
+<code>1; mode=block</code>, which has its own history of introducing
+vulnerabilities in older browsers).</li>
+<li><strong><code>Clear-Site-Data</code> on logout</strong>: not
+applicable yet — confirmed via repo grep that no
+<code>/auth/logout</code> endpoint exists at all. Flag as a forward
+note: add <code>Clear-Site-Data</code> when a logout endpoint is
+introduced.</li>
+<li><strong>COEP <code>require-corp</code> omission</strong>: explicitly
+and reasonably justified in the code comment (high breakage risk, no
+material benefit here); COOP <code>same-origin</code> is still set,
+which is the right partial-isolation trade-off.</li>
+<li><strong>No duplicate/conflicting header sets</strong>:
+<code>handlers_client.go:25</code> sets the same
+<code>Cache-Control: no-store</code> value Tier B already sets —
+redundant but not conflicting. Tier B’s <code>apiCSP</code> and Tier C’s
+<code>spaCSP</code> are scoped to disjoint route groups (confirmed by
+<code>TestSecurityHeaders_TierB_ScopedToAPI</code> /
+<code>TestSecurityHeaders_TierB_NotOnSPAAssets</code>), so no response
+ever carries both.</li>
+<li><strong>Test value-assertion adequacy (the other 7 tests)</strong>:
+<code>assertTierA</code> compares exact string values (not mere
+presence), so a mutation flipping e.g. <code>X-Frame-Options</code> to
+<code>SAMEORIGIN</code> or dropping the HSTS TLS-gate would be caught.
+The <code>TestSPACSP_CompatibleWithRealBundle</code> test ties the CSP
+to the real built <code>index.html</code>’s actual asset references and
+inline-script absence — a genuine anti-bluff check, not a rubber
+stamp.</li>
+</ul>
+<hr />
+<h2 id="summary-for-the-conductor">Summary for the conductor</h2>
+<ul>
+<li><strong>Verdict:</strong> GO-WITH-FIXES.</li>
+<li><strong>Critical (1):</strong> C1 — <code>connect-src 'self'</code>
+CSP justification is false for the actual shipped SPA bundle
+(<code>api-client.ts</code> baseURL hardcodes
+<code>http://localhost:8080</code>; confirmed in the real embedded JS
+bytes); breaks the Manager UI (or gets CSP-blocked) in any deployment
+not literally at <code>localhost:8080</code>.
+<code>server/internal/api/embed.go:6-16</code> (undocumented build
+step), <code>clients/ota-manager/src/lib/api-client.ts:14</code>,
+<code>server/internal/api/manager-dist/assets/index-*.js</code> (shipped
+artifact).</li>
+<li><strong>Important (3):</strong> I1 — HSTS never fires behind a
+TLS-terminating reverse proxy (<code>security_headers.go:124-126</code>,
+no <code>X-Forwarded-Proto</code>/override). I2 — the 429-shed
+header-survival test doesn’t exercise the real
+<code>Server.Router()</code> chain, so a real ordering regression ships
+undetected (<code>security_headers_test.go:112-141</code>). I3 — the
+panic/500 header-survival path is correct today (verified against real
+gin source) but has zero test coverage despite being an explicit claim
+in the code (<code>server.go:118-121</code>).</li>
+<li>This determines whether a fix pass is dispatched before the headers
+work is considered done — recommend dispatching a fix for C1 first
+(highest real-world impact: the Manager UI is non-functional outside dev
+today), then I1–I3.</li>
+</ul>
+<hr />
+<h2
+id="conductor-disposition-2026-07-10-independent-verification-11.4.211.4.611.4.134">Conductor
+disposition (2026-07-10, independent verification
+§11.4.2/§11.4.6/§11.4.134)</h2>
+<p>I independently re-checked every finding against the live tree before
+dispositioning — the review is NOT rubber-stamped:</p>
+<ul>
+<li><strong>C1 — CONFIRMED REAL (Critical).</strong> Verified:
+<code>clients/ota-manager/src/lib/api-client.ts:14</code> is
+<code>const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";</code>
+and the literal <code>http://localhost:8080</code> IS present in the
+embedded bundle
+<code>server/internal/api/manager-dist/assets/index-C51iU0QH.js</code>;
+no build script sets <code>VITE_API_BASE_URL</code>. So the Tier-C CSP
+<code>connect-src 'self'</code> (landed <code>992bd497</code>) blocks
+the Manager UI’s API calls at any origin ≠
+<code>http://localhost:8080</code>. <strong>The CSP is
+correct-in-principle; the BUNDLE is the defect.</strong> Correct fix
+(NOT loosening the CSP): change the source default to a
+same-origin/relative value (<code>?? ""</code> → axios uses relative
+URLs) AND rebuild + re-embed the bundle (tracked item K).
+<strong>Disposition:</strong> the source file lives in
+<code>clients/ota-manager</code>, owned by the in-flight C-impl stream
+(§11.4.119 — not editable now); routed to the C-impl integration /
+item-K re-embed window. <strong>BLOCKING for any non-localhost
+deployment</strong> — folds into the §11.4.185 QA gate; the CSP MUST NOT
+ship to a real (non-localhost) deployment until the bundle is rebuilt
+same-origin. Not silently loosened.</li>
+<li><strong>I1 — CONFIRMED REAL (Important),
+operator-config-gated.</strong> HSTS gates on
+<code>TLSCertFile &amp;&amp; TLSKeyFile</code>; behind a TLS-terminating
+reverse proxy (a likely prod topology) HSTS never fires. Correct fix
+requires trusting <code>X-Forwarded-Proto=https</code> — which MUST be
+gated on a <strong>trusted-proxy config</strong> (blindly trusting a
+client-spoofable header is itself a vuln). <strong>Disposition:</strong>
+operator decision on trusted-proxy configuration (a config addition, not
+a blind autonomous edit). Tracked.</li>
+<li><strong>I2 — NARROWED to Minor.</strong> Re-verified:
+<code>newSecHeadersRouter</code> builds the REAL
+<code>srv.Router()</code>, so <strong>6 of the 8 tests already exercise
+production middleware wiring</strong> (Tier-A on normal/404/401, HSTS
+gating, Tier-B/C scoping) — a <code>server.go</code> reordering that
+drops/moves <code>securityHeaders</code> out of the production chain
+WOULD be caught by those. Only the shed-carries-headers property uses a
+hand-built composition chain, because a deterministic 429 shed needs a
+blocking route the real router lacks. Residual risk = one specific
+reorder (securityHeaders after maxInflight) in the shed path only.
+<strong>Disposition:</strong> add a real-router deterministic-shed test
+when a blocking-route test seam is introduced; low residual risk given
+the 6 real-router tests. Tracked follow-up.</li>
+<li><strong>I3 — Minor.</strong> The panic→recovery→500 header path is
+(per SR) correct via gin’s lazy <code>WriteHeader</code> buffering but
+lacks a test. A faithful test needs a panic-route hook in the real chain
+(adding one to production wiring is itself a change).
+<strong>Disposition:</strong> tracked server test-seam follow-up.</li>
+</ul>
+<p><strong>Net:</strong> review recorded with independent verification;
+the one Critical (C1) has a precise correct fix routed to the owning
+stream + flagged BLOCKING-before-non-localhost-deploy (never silently
+loosened, never fake-closed); I1 is an operator config decision; I2/I3
+are minor/tracked. §11.4.134 satisfied: no finding dismissed, none
+fake-passed; the CSP does not ship to real deployment until C1’s bundle
+fix lands (§11.4.185).</p>
+</body>
+</html>
