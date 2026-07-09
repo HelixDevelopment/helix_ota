@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 19 <strong>Last modified:</strong>
-2026-07-10T00:35:00Z</p>
+<p><strong>Revision:</strong> 20 <strong>Last modified:</strong>
+2026-07-10T21:00:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,9 +263,25 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>660e8e6d</code> — 38 parent commits this session (+5 submodule
-gofmt commits), all pushed 4/4 FF §11.4.113. <strong>Wave-4 (2026-07-10
-— Postgres + review-remediation + gofmt sweep + operator
+<td><code>d97d85a2</code> — 43 parent commits this session (+5 submodule
+gofmt commits), all pushed 4/4 FF §11.4.113. <strong>Wave-5 (2026-07-10
+cont. — operator decisions executed):</strong> <code>992bd497</code>
+<strong>O-impl tiered security headers</strong> (global
+nosniff/frame-DENY/COOP/CORP/TLS-gated-HSTS wired to survive
+404/401/500/429-shed + <code>/api/v1</code> CSP+no-store + SPA-document
+CSP with style-src unsafe-inline for React19 hoisting, upgrade-insecure
+TLS-gated to avoid plain-HTTP white-screen; conductor-reverified 8/8
+header tests PASS 0-skip incl
+<code>TestSPACSP_CompatibleWithRealBundle</code>, full
+<code>internal/api</code> <code>-race</code> clean 12.6s) ·
+<code>d97d85a2</code>+<code>8f68cb0b</code> <strong>item Q
+closed</strong> (HELIX_MAX_INFLIGHT documented in .env.example +
+system.compose.yml; operator kept 0=unlimited, OOM-risk stated, limiter
+guards memory not CPU) · <code>3ada0a12</code> mirror-fork brief
+(LLMProvider IS a dep via <code>llm_orchestrator/go.mod:18</code> → keep
+origin helix-deps.yaml). C-impl (ota-manager router) + DASH (dashboard
+regression) + BT (owned-Go-brick test sweep) in flight. <strong>Wave-4
+(2026-07-10 — Postgres + review-remediation + gofmt sweep + operator
 briefs):</strong> <code>720ef748</code> READINESS Rev3 + <strong>M2
 Postgres integration RAN e2e</strong> (15/15 <code>ok</code> +
 <code>-race</code> clean, real pgx
@@ -419,6 +435,47 @@ INTENDED features (git <code>a0552d8e</code> + design spec §4) → WIRE
 not delete. Both need operator decisions.
 <code>docs/research/operator_brief_{security_headers_ddos,ota_manager_router}_20260710/</code>.</li>
 </ul>
+<h3
+id="latest-session-2026-07-10-continued-operator-decisions-executed-4-stream-fan-out">Latest
+session (2026-07-10, continued) — operator decisions executed + 4-stream
+fan-out</h3>
+<p>Operator answered the 3 gated briefs (C=wire all v1 routes per design
+spec §4; O=all tiers incl SPA-document CSP; Q=keep 0 unlimited).
+Executed: - <strong>O-impl security headers LANDED</strong>
+(<code>992bd497</code>) — three tiers wired into the real router chain,
+conductor-independently re-verified (§11.4.142/§11.4.6, NOT trusting the
+subagent):
+<code>go build</code>/<code>go vet</code>/<code>gofmt -l</code> clean,
+8/8 header tests PASS with <strong>0 skips</strong> incl
+<code>TestSPACSP_CompatibleWithRealBundle</code> (proves the
+SPA-document CSP does not white-screen the real Vite/React bundle —
+style-src widened to <code>'unsafe-inline'</code> for React19 style
+hoisting, upgrade-insecure TLS-gated), full <code>internal/api</code>
+suite <code>-race</code> clean 12.6s no regression. Purely additive;
+<code>HELIX_MAX_INFLIGHT</code> untouched.
+<code>docs/qa/20260710-server-security-headers/</code>. - <strong>Item Q
+CLOSED</strong> (<code>8f68cb0b</code> .env.example +
+<code>d97d85a2</code> system.compose.yml) —
+<code>HELIX_MAX_INFLIGHT</code> documented both places; operator kept
+default <code>0</code>=UNLIMITED, OOM risk + memory-not-CPU nature
+stated, <code>#HELIX_MAX_INFLIGHT: 256</code> hardening knob shown. YAML
+re-validated. - <strong>Mirror-fork fact resolved</strong>
+(<code>3ada0a12</code>) —
+<code>submodules/llm_orchestrator/go.mod:18</code>
+<code>replace digital.vasic.llmprovider =&gt; ../LLMProvider</code>
+proves LLMProvider IS a dep, so origin’s helix-deps.yaml is factually
+correct; convergence deferred to an operator-batchable window (BT stream
+is reading those bricks now → §11.4.119 avoids write-contention). -
+<strong>Parallel streams</strong> (§11.4.103, disjoint scope, subagents
+never git — conductor reviews+commits §11.4.142): <strong>DASH
+DONE</strong> (<code>52bdb1f8</code> — dashboard regression on HEAD
+GREEN: tsc 0, vitest 107/107, Playwright host-render 117/117 across 26
+screen×theme, conductor-reconfirmed). <strong>In flight:</strong> main +
+<strong>C-impl</strong> (ota-manager: wire all v1 routes + fix 85 tsc
+errors) + <strong>BT</strong> (owned Go-brick build/vet/gofmt/test
+sweep, §11.4.169/§11.4.28) + <strong>SR</strong> (adversarial security
+review of the O-impl headers <code>992bd497</code>,
+§11.4.125/§11.4.134). Auto-backfilled SR when DASH freed a slot.</p>
 <h3
 id="latest-session-2026-07-09-late-opendesign-adoption-complete-both-frontends-hardening">Latest
 session (2026-07-09, late) — OpenDesign adoption COMPLETE (both

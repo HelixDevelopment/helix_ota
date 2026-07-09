@@ -1,7 +1,7 @@
 # Helix OTA — Frontend / UI Production-Readiness Ledger
 
-**Revision:** 3
-**Last modified:** 2026-07-10T00:52:00Z
+**Revision:** 4
+**Last modified:** 2026-07-10T21:10:00Z
 **Scope:** Every Helix OTA user-facing UI surface (`clients/ota-manager`,
 `dashboard`) + the server SPA-serve seam + the headless Android bricks. Consolidates
 the §11.4.25 per-feature × platform × invariant coverage ledger with the §11.4.172
@@ -132,9 +132,16 @@ type-checked — the **pgx/PostgreSQL production persistence path is now RAN end
 brick; 15/15 integration packages `ok` + `-race` clean; real fault-injection evidence —
 live TCP-kill pgx errors, a real `SQLSTATE 23514` CHECK rejection, a real
 `uq_fabric_lease_active` partial-unique-index conflict; `docs/qa/20260709-server-postgres-integration/EVIDENCE.md`).
-The remaining highest-value items are **operator-gated decisions** (see §3.2 /
-§4), not autonomous work: router-wiring (C), guard-hook regex via the constitution workflow
-(D), security-response-header middleware (O), DDoS default posture (Q), OpenDesign daemon
+**Wave-5 (2026-07-10 cont.):** two of those operator-gated items are now EXECUTED on
+operator decision — **security-response-header middleware LANDED** (O → `992bd497`: three
+tiers, conductor-reverified 8/8 tests PASS 0-skip incl. the SPA-CSP-vs-real-bundle
+compatibility test, full `internal/api` `-race` clean); **DDoS default posture CLOSED** (Q →
+`8f68cb0b`/`d97d85a2`: operator kept `HELIX_MAX_INFLIGHT`=0=unlimited, documented with the
+OOM risk + a `256` hardening knob in `.env.example` + `system.compose.yml`); and a fresh
+**dashboard regression re-confirmed GREEN on HEAD** (`52bdb1f8`: tsc 0, vitest 107/107,
+host-render 117/117 across 26 screen×theme). The remaining highest-value items are
+**operator-gated decisions** (see §3.2 / §4), not autonomous work: router-wiring (C, in
+flight this session), guard-hook regex via the constitution workflow (D), OpenDesign daemon
 (G). Per §11.4.185, none of this ships until the QA team's manual confirmation.
 
 ### 3.1 Production-ready NOW

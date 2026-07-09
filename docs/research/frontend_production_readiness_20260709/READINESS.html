@@ -181,8 +181,8 @@
 </header>
 <h1 id="helix-ota-frontend-ui-production-readiness-ledger">Helix OTA —
 Frontend / UI Production-Readiness Ledger</h1>
-<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
-2026-07-10T00:52:00Z <strong>Scope:</strong> Every Helix OTA user-facing
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-07-10T21:10:00Z <strong>Scope:</strong> Every Helix OTA user-facing
 UI surface (<code>clients/ota-manager</code>, <code>dashboard</code>) +
 the server SPA-serve seam + the headless Android bricks. Consolidates
 the §11.4.25 per-feature × platform × invariant coverage ledger with the
@@ -624,12 +624,24 @@ fault-injection evidence — live TCP-kill pgx errors, a real
 <code>SQLSTATE 23514</code> CHECK rejection, a real
 <code>uq_fabric_lease_active</code> partial-unique-index conflict;
 <code>docs/qa/20260709-server-postgres-integration/EVIDENCE.md</code>).
-The remaining highest-value items are <strong>operator-gated
+<strong>Wave-5 (2026-07-10 cont.):</strong> two of those operator-gated
+items are now EXECUTED on operator decision —
+<strong>security-response-header middleware LANDED</strong> (O →
+<code>992bd497</code>: three tiers, conductor-reverified 8/8 tests PASS
+0-skip incl. the SPA-CSP-vs-real-bundle compatibility test, full
+<code>internal/api</code> <code>-race</code> clean); <strong>DDoS
+default posture CLOSED</strong> (Q →
+<code>8f68cb0b</code>/<code>d97d85a2</code>: operator kept
+<code>HELIX_MAX_INFLIGHT</code>=0=unlimited, documented with the OOM
+risk + a <code>256</code> hardening knob in <code>.env.example</code> +
+<code>system.compose.yml</code>); and a fresh <strong>dashboard
+regression re-confirmed GREEN on HEAD</strong> (<code>52bdb1f8</code>:
+tsc 0, vitest 107/107, host-render 117/117 across 26 screen×theme). The
+remaining highest-value items are <strong>operator-gated
 decisions</strong> (see §3.2 / §4), not autonomous work: router-wiring
-(C), guard-hook regex via the constitution workflow (D),
-security-response-header middleware (O), DDoS default posture (Q),
-OpenDesign daemon (G). Per §11.4.185, none of this ships until the QA
-team’s manual confirmation.</p>
+(C, in flight this session), guard-hook regex via the constitution
+workflow (D), OpenDesign daemon (G). Per §11.4.185, none of this ships
+until the QA team’s manual confirmation.</p>
 <h3 id="production-ready-now">3.1 Production-ready NOW</h3>
 <table>
 <colgroup>
