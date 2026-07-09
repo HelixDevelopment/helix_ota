@@ -23,25 +23,34 @@ import (
 // (groups/devices/releases). This file is a TEST-ONLY addition — it does not
 // change any handler/product behavior.
 //
-// Method (§11.4.6/§11.4.107(13) — no hardcoded literature threshold): drive
-// warmup + three EQUAL-SIZE batches of real GET requests (idempotent list
-// reads over a fixed, already-seeded dataset — so no legitimate store growth
-// is expected once seeding is done) through the real Gin router
-// (newResilienceServer / real Server.Router(), real in-memory store, no
-// mocks per §11.4.27), forcing a full runtime.GC() + runtime.ReadMemStats
-// before/after each batch. The growth measured across the FIRST two
-// post-warmup batches is used as THIS run's own calibration reference (real
-// captured evidence from THIS host, THIS run, THIS build — never an
-// imported/literature number); the growth in the THIRD batch must stay
-// within a bounded multiple of that reference (plus an absolute noise
-// floor guarding a near-zero/negative reference). A genuine per-request
-// heap leak retains bytes every batch (roughly the same amount per
-// equal-size batch, since each batch drives the identical workload), so an
-// actual regression shows up as growth persisting past what the calibration
-// batches already captured, not shrinking toward the floor the way real
-// post-GC noise does. Reuses the same doStressReq / newResilienceServer /
-// resilienceAdminToken helpers as resilience_test.go (same package, same
-// real-router pattern) and the same goroutine-leak check shape as
+// Method — RETENTION-SCALES-WITH-LOAD discriminator (§11.4.6/§11.4.107(13);
+// corrects the earlier per-equal-batch-delta design flagged by the session
+// whole-branch review as unable to detect a *steady* linear leak). Drive
+// warmup, then measure retained live heap (post-GC HeapAlloc, relative to a
+// warmed baseline) at TWO very different cumulative request counts — a small
+// phase (N requests) and a large phase (~LARGE_MULT×N requests) — of real GET
+// traffic (idempotent list reads over a fixed, already-seeded dataset, so no
+// legitimate store growth is expected once seeding is done) through the real
+// Gin router (newResilienceServer / real Server.Router(), real in-memory
+// store, no mocks per §11.4.27).
+//
+// The load-invariant signal a steady leak produces: retained live heap that
+// SCALES with the number of requests served. A handler that leaks L bytes
+// per request retains ~N·L after the small phase and ~LARGE_MULT·N·L after
+// the large phase (≈ LARGE_MULT× more) — retention tracks request count. A
+// healthy handler's post-GC live heap PLATEAUS after warmup (pools/buckets
+// saturate) and does NOT scale with request count, so retainedLarge ≈
+// retainedSmall. The verdict is therefore a pure comparison —
+// classifyHeapGrowth: FAIL only when retainedLarge both exceeds an absolute
+// noise floor AND exceeds a bounded multiple of the small-phase retention
+// (retention scaled up with load). This catches the sub-floor-per-batch
+// steady leak the old delta test missed, because the leak's signature is the
+// SCALING across 8× the requests, not the size of any single equal batch.
+// The classifier is self-validated (§11.4.107(10)) by TestMemoryGrowthClassifier
+// (golden-good flat / golden-bad scaling) AND proven on a REAL injected steady
+// leak (§11.4.115 RED) by TestMemoryGrowthClassifier_DetectsInjectedSteadyLeak.
+// Reuses the same doStressReq / newResilienceServer / resilienceAdminToken
+// helpers as resilience_test.go and the same goroutine-leak check shape as
 // embed_stress_chaos_test.go's TestStressManagerSPA_SustainedMixedLoad
 // (tolerance <= 4, identical rationale).
 
@@ -132,7 +141,8 @@ func TestMemory_SustainedAPILoadNoGrowth(t *testing.T) {
 	}
 
 	const warmup = 300
-	const batchSize = 1500 // >= §5 gap-1's "N>=1000 iterations" ask; >= §11.4.85's 100-req sustained-load floor
+	const smallN = 1500 // >= §5 gap-1's "N>=1000 iterations" ask; >= §11.4.85's 100-req sustained-load floor
+	const largeMult = 8 // large phase serves ~8x the small phase's requests; a steady leak scales retention ~8x
 
 	endpoints := []string{"/api/v1/groups", "/api/v1/devices", "/api/v1/releases"}
 	runBatch := func(n int) {
@@ -153,40 +163,32 @@ func TestMemory_SustainedAPILoadNoGrowth(t *testing.T) {
 	// batches, so the calibration reference reflects steady-state behavior.
 	runBatch(warmup)
 
-	var m0, m1, m2, m3 runtime.MemStats
+	const noiseFloor = 512 * 1024 // 512 KiB absolute floor below which retention is treated as post-GC noise
+
+	// Warmed baseline: post-GC live heap after warmup, BEFORE the measured phases.
+	var mBase, mSmall, mLarge runtime.MemStats
 	runtime.GC()
-	runtime.ReadMemStats(&m0)
+	runtime.ReadMemStats(&mBase)
 
-	runBatch(batchSize)
+	// Small phase: smallN requests, then post-GC retained heap vs the baseline.
+	runBatch(smallN)
 	runtime.GC()
-	runtime.ReadMemStats(&m1)
+	runtime.ReadMemStats(&mSmall)
 
-	runBatch(batchSize)
+	// Large phase: (largeMult-1)*smallN MORE requests (cumulative largeMult*smallN
+	// since the baseline), then post-GC retained heap vs the SAME baseline.
+	runBatch(smallN * (largeMult - 1))
 	runtime.GC()
-	runtime.ReadMemStats(&m2)
+	runtime.ReadMemStats(&mLarge)
 
-	runBatch(batchSize)
-	runtime.GC()
-	runtime.ReadMemStats(&m3)
+	retainedSmall := int64(mSmall.HeapAlloc) - int64(mBase.HeapAlloc)
+	retainedLarge := int64(mLarge.HeapAlloc) - int64(mBase.HeapAlloc)
 
-	growth1 := int64(m1.HeapAlloc) - int64(m0.HeapAlloc) // calibration batch A
-	growth2 := int64(m2.HeapAlloc) - int64(m1.HeapAlloc) // calibration batch B
-	growth3 := int64(m3.HeapAlloc) - int64(m2.HeapAlloc) // asserted batch
-
-	// Self-calibrated threshold (§11.4.6/§11.4.107(13)): derived from THIS
-	// run's own first two post-warmup batches, never a hardcoded literature
-	// number. The noise floor guards against a near-zero/negative reference
-	// (which would otherwise make ANY small positive growth3 fail
-	// spuriously on a perfectly healthy build).
-	const noiseFloor = 512 * 1024 // 512 KiB
-	ref := growth1
-	if growth2 > ref {
-		ref = growth2
-	}
-	threshold := ref * 4
-	if threshold < noiseFloor {
-		threshold = noiseFloor
-	}
+	// Verdict via the pure, self-validated classifier (§11.4.107(10)): a leak
+	// is reported only when retention BOTH exceeds the absolute noise floor AND
+	// scaled up with the 8x request count (retainedLarge > ref * scaleNum/scaleDen).
+	const scaleNum, scaleDen = 3, 1
+	leak, reason := classifyHeapGrowth(retainedSmall, retainedLarge, noiseFloor, scaleNum, scaleDen)
 
 	// Goroutine-leak check: identical pattern + tolerance to
 	// embed_stress_chaos_test.go's TestStressManagerSPA_SustainedMixedLoad.
@@ -201,25 +203,132 @@ func TestMemory_SustainedAPILoadNoGrowth(t *testing.T) {
 	}
 
 	census := []string{
-		fmt.Sprintf("test=%s warmup=%d batch_size=%d endpoints=groups,devices,releases", t.Name(), warmup, batchSize),
-		fmt.Sprintf("HeapAlloc bytes: after_warmup=%d after_batchA=%d after_batchB=%d after_batchC=%d",
-			m0.HeapAlloc, m1.HeapAlloc, m2.HeapAlloc, m3.HeapAlloc),
-		fmt.Sprintf("HeapObjects: after_warmup=%d after_batchC=%d NumGC=%d", m0.HeapObjects, m3.HeapObjects, m3.NumGC),
-		fmt.Sprintf("growth bytes: batchA=%d batchB=%d batchC=%d", growth1, growth2, growth3),
-		fmt.Sprintf("calibrated threshold=%d bytes (ref=max(batchA,batchB)=%d * 4, noise_floor=%d)", threshold, ref, noiseFloor),
+		fmt.Sprintf("test=%s warmup=%d small_n=%d large_mult=%d endpoints=groups,devices,releases", t.Name(), warmup, smallN, largeMult),
+		fmt.Sprintf("HeapAlloc bytes: baseline=%d after_small=%d after_large=%d", mBase.HeapAlloc, mSmall.HeapAlloc, mLarge.HeapAlloc),
+		fmt.Sprintf("HeapObjects: baseline=%d after_large=%d NumGC=%d", mBase.HeapObjects, mLarge.HeapObjects, mLarge.NumGC),
+		fmt.Sprintf("retained-vs-baseline bytes: small_phase(%d reqs)=%d large_phase(%d reqs)=%d", smallN, retainedSmall, smallN*largeMult, retainedLarge),
+		fmt.Sprintf("verdict leak=%v scale=%d/%d noise_floor=%d reason=%q", leak, scaleNum, scaleDen, noiseFloor, reason),
 		fmt.Sprintf("goroutines base=%d delta=%d (leak-tolerance<=4)", baseGoroutines, leaked),
 	}
 	p := writeMemoryCensus(t, "memory_sustained_api_load", census)
 
-	t.Logf("memory_sustained_api_load: growth_batchA=%d growth_batchB=%d growth_batchC=%d threshold=%d goroutine_delta=%d evidence=%s",
-		growth1, growth2, growth3, threshold, leaked, p)
+	t.Logf("memory_sustained_api_load: retainedSmall=%d retainedLarge=%d leak=%v reason=%q goroutine_delta=%d evidence=%s",
+		retainedSmall, retainedLarge, leak, reason, leaked, p)
 
-	if growth3 > threshold {
-		t.Errorf("heap growth: batch C grew %d bytes, exceeds calibrated threshold %d bytes (ref=%d, batchA=%d, batchB=%d) — possible memory leak in the core API handlers",
-			growth3, threshold, ref, growth1, growth2)
+	if leak {
+		t.Errorf("heap retention scaled with load across %dx requests: retainedSmall=%d retainedLarge=%d (%s) — possible memory leak in the core API handlers",
+			largeMult, retainedSmall, retainedLarge, reason)
 	}
 	if leaked > 4 {
 		t.Errorf("goroutine leak: base=%d now=%d delta=%d (>4) — a handler leaked goroutines under sustained API load",
 			baseGoroutines, baseGoroutines+leaked, leaked)
 	}
+}
+
+// classifyHeapGrowth is the pure verdict for the retention-scales-with-load
+// leak discriminator, extracted so it is unit-self-validatable independently
+// of the slow real-router measurement (§11.4.107(10)). retainedSmall /
+// retainedLarge are post-GC live-heap bytes retained (vs a warmed baseline)
+// after the small and large request phases. A leak is reported ONLY when
+// retention BOTH exceeds the absolute noiseFloor AND scaled up beyond
+// scaleNum/scaleDen of the small-phase retention (retention tracked request
+// count) — the load-invariant signature of a steady per-request leak. A
+// healthy handler plateaus (retainedLarge ~ retainedSmall) or stays below the
+// floor, so it is not flagged. This REPLACES the earlier per-equal-batch delta
+// threshold, which could not see a steady linear leak (each equal batch
+// retained ~equal bytes, so the asserted batch never exceeded a multiple of
+// the calibration batches — the reference was contaminated by the leak itself).
+func classifyHeapGrowth(retainedSmall, retainedLarge, noiseFloor int64, scaleNum, scaleDen int64) (leak bool, reason string) {
+	if retainedLarge <= noiseFloor {
+		return false, fmt.Sprintf("retainedLarge=%d <= noiseFloor=%d (flat/below floor — retention did not scale)", retainedLarge, noiseFloor)
+	}
+	ref := retainedSmall
+	if ref < noiseFloor {
+		ref = noiseFloor // never divide noise-by-noise; anchor the ratio at the floor
+	}
+	if retainedLarge*scaleDen > ref*scaleNum {
+		return true, fmt.Sprintf("retainedLarge=%d > ref=%d * %d/%d (retention scaled with request count → leak)", retainedLarge, ref, scaleNum, scaleDen)
+	}
+	return false, fmt.Sprintf("retainedLarge=%d <= ref=%d * %d/%d (retention did not scale with load)", retainedLarge, ref, scaleNum, scaleDen)
+}
+
+// TestMemoryGrowthClassifier self-validates the leak discriminator (§11.4.107(10)):
+// golden-good inputs (flat/plateau, one-time growth, GC-freed) must NOT be
+// flagged; golden-bad inputs (retention scaling with load) MUST be flagged. A
+// classifier that passes its golden-bad or fails its golden-good is itself a
+// §11.4 bluff, so this runs as a fast unit test independent of the slow
+// real-router measurement.
+func TestMemoryGrowthClassifier(t *testing.T) {
+	const floor = 512 * 1024
+	const sn, sd = 3, 1
+	kb := int64(1024)
+	cases := []struct {
+		name         string
+		small, large int64
+		wantLeak     bool
+	}{
+		{"flat-below-floor", 120 * kb, 140 * kb, false},              // healthy plateau, below floor
+		{"one-time-growth-no-scaling", 800 * kb, 900 * kb, false},    // grew once above floor but did not scale
+		{"negative-small-flat-large", -50 * kb, 100 * kb, false},     // GC freed in small phase; large below floor
+		{"steady-leak-scales-8x", 800 * kb, 6400 * kb, true},         // retention ~8x with 8x load → leak
+		{"subfloor-small-scaling-large", 300 * kb, 2400 * kb, true},  // small below floor, large scales far past it
+		{"exactly-at-3x-ref-not-leak", 800 * kb, 2400 * kb, false},   // == ref*3, strictly-greater test → not a leak
+		{"just-over-3x-ref-leak", 800 * kb, 2400*kb + 1, true},       // one byte over the 3x bound → leak
+	}
+	for _, c := range cases {
+		leak, reason := classifyHeapGrowth(c.small, c.large, floor, sn, sd)
+		if leak != c.wantLeak {
+			t.Errorf("%s: classifyHeapGrowth(small=%d,large=%d) leak=%v want=%v (%s)", c.name, c.small, c.large, leak, c.wantLeak, reason)
+		}
+	}
+	// Explicit §11.4.107(10) self-validation gate.
+	goodLeak, _ := classifyHeapGrowth(120*kb, 140*kb, floor, sn, sd)
+	badLeak, _ := classifyHeapGrowth(800*kb, 6400*kb, floor, sn, sd)
+	if goodLeak || !badLeak {
+		t.Fatalf("analyzer self-validation FAILED: golden-good flagged=%v (want false), golden-bad flagged=%v (want true)", goodLeak, badLeak)
+	}
+}
+
+// TestMemoryGrowthClassifier_DetectsInjectedSteadyLeak proves the discriminator
+// on a REAL steady leak (§11.4.115 RED): it retains perIter bytes on every
+// iteration (the shape of a handler that appends to a package global per
+// request), grows the sink with the iteration count across a small then a large
+// phase, and asserts the SAME classifier the real test uses flags it. This is
+// the end-to-end proof that detection — not merely the assertion wiring — works.
+func TestMemoryGrowthClassifier_DetectsInjectedSteadyLeak(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping injected-leak RED in short mode")
+	}
+	const noiseFloor = 512 * 1024
+	const perIter = 4096
+	const smallN = 2000
+	const largeMult = 8
+	sink := make([][]byte, 0, smallN*largeMult)
+	leakIters := func(n int) {
+		for i := 0; i < n; i++ {
+			buf := make([]byte, perIter)
+			for j := range buf {
+				buf[j] = byte(i) // touch every byte so it is genuinely live, not zero-page-elided
+			}
+			sink = append(sink, buf)
+		}
+	}
+	var b0, bs, bl runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&b0)
+	leakIters(smallN)
+	runtime.GC()
+	runtime.ReadMemStats(&bs)
+	leakIters(smallN * (largeMult - 1))
+	runtime.GC()
+	runtime.ReadMemStats(&bl)
+	retainedSmall := int64(bs.HeapAlloc) - int64(b0.HeapAlloc)
+	retainedLarge := int64(bl.HeapAlloc) - int64(b0.HeapAlloc)
+	leak, reason := classifyHeapGrowth(retainedSmall, retainedLarge, noiseFloor, 3, 1)
+	t.Logf("injected steady leak (%d B/iter): retainedSmall=%d retainedLarge=%d → leak=%v (%s)", perIter, retainedSmall, retainedLarge, leak, reason)
+	if !leak {
+		t.Errorf("classifier FAILED to detect an injected steady %d B/iter leak: retainedSmall=%d retainedLarge=%d (%s) — the leak discriminator is a bluff",
+			perIter, retainedSmall, retainedLarge, reason)
+	}
+	runtime.KeepAlive(sink)
 }
