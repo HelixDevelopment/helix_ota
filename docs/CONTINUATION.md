@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 11
-**Last modified:** 2026-06-23T15:30:00Z
+**Revision:** 12
+**Last modified:** 2026-07-09T15:55:00Z
 
 ---
 
@@ -9,9 +9,26 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `21338527` (comprehensive test-coverage program — Phase 0 DONE + Phase 1 mostly done: integration/e2e/security/fuzz/load/chaos/benchmark/Android-JaCoCo, all 14 propagation gates §1.1-paired) |
-| **Phase** | **TEST-COVERAGE PROGRAM underway** (operator mandate 2026-06-23: 100% real coverage every test type + Challenges + HelixQA vs the real system on the cluster, anti-bluff everywhere). Plan + live ledger: `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`. Phase 0 DONE (real-system boot, anti-bluff helper, pgx coverage, meta-test gates). Prior terminal goal (Cuttlefish Tier-2 A/B) remains VERIFIED (F112/F55). |
+| **HEAD** | `634fcb50` (constitution adopted `fc4e9b8→e60cbde`, 59 commits: carriers append §11.4.167-186+§12.12; pre-build +propagation gates 167-186/§12.12, −semgrep gate (§11.4.166 REPEALED); §11.4.109 PreToolUse guard-hook wired; ETXTBSY mutex + weasyprint export fixes — 2 commits `bb3b4189`+`634fcb50` pushed 4/4 FF §11.4.113). Prior test-coverage HEAD `21338527`. |
+| **Phase** | **CONSTITUTION e60cbde ADOPTED (2026-07-09)** — autonomous loop (§11.4.126). NEXT actionable (parallel §11.4.103): adopt pulled nested engines token_optimizer+session_orchestrator (§11.4.141/§11.4.106); UI/UX OpenDesign refinement (§11.4.162/§11.4.170). **OPERATOR DECISION PENDING (§11.4.66/§11.4.122):** canonical frontend — `clients/ota-manager` (React 19+shadcn+Tauri) vs `dashboard` (React 18+Playwright/axe) — before sinking OpenDesign effort. Prior: **TEST-COVERAGE PROGRAM** (mandate 2026-06-23) Phase 0 DONE + Phase 1 mostly done; plan+ledger `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`. Cuttlefish Tier-2 A/B remains VERIFIED (F112/F55). |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets — **MET for the emulated Cuttlefish A/B path (F112/F55 VERIFIED); RK3588 stays control-plane-only by operator decision (§11.4.133)** |
+
+### Latest session (2026-07-09) — Constitution e60cbde adoption + UI/UX/OpenDesign audit
+
+Operator directives this session: (1) fetch+pull latest constitution submodule + nested deps, adopt all new tech/rules ASAP; (2) continue the endless autonomous loop with 3-4 parallel subagents on real evidence, no bluff; (3) answer whether Helix OTA has OpenDesign-refined production UI on all platforms.
+
+Landed + pushed 4/4 FF (no force §11.4.113), commits `bb3b4189` (semgrep meta-test deletion, split off by a `git add` pathspec fatal) + `634fcb50` (main batch, 29 files +3485/−110):
+- **Constitution** `fc4e9b8→e60cbde` (59 commits); nested engines pulled (token_optimizer @c0591b5, session_orchestrator @6961c99). Parent pointer bumped.
+- **Carriers** CLAUDE/AGENTS/GEMINI (.md+HTML+PDF §11.4.65): appended §11.4.167-174, 176-186, §12.12 (pure append, 0 deletions).
+- **§11.4.166 REPEALED reconciliation** (§11.4.120, not fake-pass): removed CM-SEMGREP-WIRED gate + CM-COVENANT-114-166 propagation + `_semgrep_scan_check` in commit_all.sh + the semgrep meta-test; **added** propagation gates 167-174/176-186/§12.12 to pre_build.
+- **§11.4.109 anti-forgetting** wired: `.claude/settings.json` PreToolUse guard-hook (blocks force-push/sudo/host-power/raw-emulator at the tool boundary) + `docs/AGENT_GUARDRAILS.md` (preamble+checklist) + renamed guard meta-test (26/26 bluff-proof).
+- **Fixes:** `coverage_extra_test.go` execStubMu mutex → ETXTBSY fork+exec fd race (golang/go#22315; 20/20 -count, 10× -race clean); `guard_benchmark_baseline.sh` GUARD-SKIP when benchstat absent (regression 9/9); `export_docs.sh` +weasyprint PDF engine (pandoc 3.10 EXIT-0, genuine PDF 1.7 — a haiku delta-reviewer's NO-GO on this was **refuted by captured same-conditions evidence** per §11.4.7, see `qa-results/delta_review_20260709/refutation.md`).
+- **UI/UX audit answer (`docs/research/ui_ux_opendesign_audit_20260709/FINDINGS.md`):** NO — Helix OTA is NOT OpenDesign-refined. TWO React frontends exist (`clients/ota-manager` shadcn/Tauri; `dashboard` hand-rolled+Playwright/axe); OpenDesign (§11.4.162) not installed in either; host-render visual-proof (§11.4.170) unmet in both. The project CLAUDE.md "§11.4.162 latent" note is stale.
+- Validation: pre_build PASS, inheritance PASS, regression 9/9, meta 6/6 bluff-proof, device 10× deterministic; independent review GO.
+
+**IN FLIGHT (parallel background streams, §11.4.147 registry):** (A) new-tech engine adoption plan → `docs/research/new_tech_adoption_20260709/ADOPTION_PLAN.md`; (B) server-health remediation (go build/vet/gofmt/test) → `docs/research/server_health_20260709/REMEDIATION.md`; (C) OpenDesign + §11.4.170 host-render harness prep + sharpened frontend decision → `docs/research/ui_ux_opendesign_audit_20260709/OPENDESIGN_PLAN.md`. Conductor commits their evidence on completion.
+
+**NEXT:** land A/B/C evidence; **surface the canonical-frontend operator decision (§11.4.66)**; then OpenDesign install + §11.4.170 harness on the chosen frontend; resume the TEST-COVERAGE PROGRAM Phase 1 remainder (signed-pipeline-vs-live + challenges-bank still UNTRACKED from 2026-06-23). Known follow-up: `commit_all.sh --paths` fatals when a pre-staged **deletion** path is in the list (whole `git add` aborts) → switch to `git add -A -- $paths` or per-path add. **OPERATOR: rotate the posted password (§11.4.10).**
 
 ### Latest session (2026-06-23) — Comprehensive test-coverage + anti-bluff program (Phase 0 DONE + Phase 1 mostly done)
 
