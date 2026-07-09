@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 15
-**Last modified:** 2026-07-09T18:15:00Z
+**Revision:** 16
+**Last modified:** 2026-07-09T18:50:13Z
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `444b68f4` — OpenDesign adoption COMPLETE on BOTH frontends + hardening. 11 commits this session, all pushed 4/4 FF §11.4.113: `35035ba4` brand tokens · `cc3f5dc8` vendoring plan · `26e98390`/`d7491292` device-claim+signed-pipeline · `74b94bb8` ota-manager vendor+toggle-fix · `4c6b201d` dashboard vendor+dark-mode+controller-tests · `961ec31c` UI audit+WCAG contrast · `6466edc2` guard-hook root-cause · `28ce6fd6` ota-manager RED-suite restore+latent-bugfix · `94fb10a2` typecheck-gate-fixed · `444b68f4` dashboard hex-completion. Prior constitution-adoption HEAD `634fcb50`. |
+| **HEAD** | `7c95b763` — 18 commits this session, all pushed 4/4 FF §11.4.113. Through `444b68f4`: `35035ba4` brand tokens · `cc3f5dc8` vendoring plan · `26e98390`/`d7491292` device-claim+signed-pipeline · `74b94bb8` ota-manager vendor+toggle-fix · `4c6b201d` dashboard vendor+dark-mode+controller-tests · `961ec31c` UI audit+WCAG contrast · `6466edc2` guard-hook root-cause · `28ce6fd6` ota-manager RED-suite restore+latent-bugfix · `94fb10a2` typecheck-gate-fixed · `444b68f4` dashboard hex-completion. **After:** `a0df513b` CONTINUATION Rev15 · `7fb2a724`/`acf3c012` server SPA greedy-fallback→asset-aware-404 (§11.4.120-reconciled) + real-router asset-chain tests · `dbc20d51` **WCAG-AA token re-vendor** (danger/warn/success/muted + border-strong, computed ratios + host-render re-proof) · `604c0508` server SPA §11.4.85 stress+chaos incl. traversal-no-escape census · `cdce12c7` dashboard light-golden evidence re-sync (45/45) · `7c95b763` readiness ledger Rev 2. Prior constitution-adoption HEAD `634fcb50`. |
 | **Phase** | **OPENDESIGN ADOPTION — COMPLETE (2026-07-09)** — autonomous loop (§11.4.126). Both web frontends fully ADOPTED: `design-systems/helix-ota/` brand tokens authored → vendored byte-identical into `clients/ota-manager` + `dashboard` → ota-manager theme-toggle DOM-class bug FIXED → dashboard real light/dark theme added + controller tested → all screen hex repointed to tokens → proven light+dark by §11.4.170 host-render (self-validated oracles) on both. UI-surface audit: ota-manager+dashboard ADOPTED, server N/A (serves SPA), Android agents N/A/headless. Remaining = polish/hardening follow-ups (see §5), all non-blocking. Prior: **TEST-COVERAGE PROGRAM** (2026-06-23) Phase 0 DONE + Phase 1 mostly done. Cuttlefish Tier-2 A/B VERIFIED (F112/F55). |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets — **MET for the emulated Cuttlefish A/B path (F112/F55 VERIFIED); RK3588 stays control-plane-only by operator decision (§11.4.133)** |
 
@@ -329,8 +329,8 @@ The HelixTrack API is accessible from the emulator via SSH tunnel. The CZ_API36_
 
 ## 4. What's running
 
-- **Main stream:** OpenDesign adoption COMPLETE (both frontends); autonomous loop continuing on polish/hardening follow-ups (§5).
-- **Background agents:** None currently dispatched (last batch: T2/T3 vendoring, B restore, G typecheck, C/D/F audits — all landed).
+- **Main stream:** OpenDesign adoption COMPLETE (both frontends); autonomous loop (§11.4.126) continuing on polish/hardening follow-ups (§5).
+- **Background agents (4 in flight at Rev 16):** **M** ota-manager shadcn-`:root`-palette WCAG audit (read-only → `docs/research/ota_manager_shadcn_contrast_audit_20260709/`); **P** ota-manager 118-type-error triage + fix router-independent subset (owns ota-manager build); **R** dashboard host-render matrix expand to Deployments/Fleet/Groups/Overview (owns dashboard build); **K** submodule-brick health audit — **DONE**, awaiting conductor review+commit of its `challenges` fix (real `Result.RecordAction` race + chaos-test FAIL-bluff; `docs/research/submodules_health_audit_20260709/AUDIT.md`). Each produces evidence only; conductor reviews + commits (subagent-driven §11.4.70; no subagent git ops §11.4.84).
 - **Recording directory:** `$HOME/Downloads` per §11.4.158(D) (default; no project-level override)
 
 ---
@@ -339,13 +339,21 @@ The HelixTrack API is accessible from the emulator via SSH tunnel. The CZ_API36_
 
 **OpenDesign polish/hardening follow-ups (from the 2026-07-09-late session — all non-blocking):**
 
-A. **WCAG contrast token re-vendor (highest UI-polish value).** Coordinated change: edit `design-systems/helix-ota/tokens.css` values (dark `--danger`→`#dc2626`, light `--warn`→`#a16207`, light `--muted`→`#475569`, `--success` text tone, add `--border-strong`), then re-vendor byte-identical into `clients/ota-manager/src/styles/opendesign-tokens.css` + `dashboard/src/styles/tokens.css`, then REGENERATE both frontends' §11.4.170 goldens (pixels change) + re-prove. Measured evidence + proposed values: `docs/research/opendesign_token_contrast_audit_20260709/CONTRAST.md`.
-B. **ota-manager 118 type errors** now surfaced by the functional gate (`94fb10a2`) — dedicated cleanup; ~57 are on the dead unrouted feature pages (bundle with C).
+A. **WCAG contrast token re-vendor — DONE for dashboard** (`dbc20d51` + `cdce12c7`, §11.4.170 re-proven 45/45). Applied values (all AA): dark `--danger`→`#ef4444` (5.32), light `--warn`→`#854d0e` (6.85), light `--success`→`#166534` (7.13), light `--muted`→`#475569` (7.58), `--border-strong` `#64748b` added. Evidence `docs/qa/20260709-wcag-token-revendor/EVIDENCE.md` + ledger `docs/research/frontend_production_readiness_20260709/READINESS.md` (Rev 2).
+A2. **NEW — ota-manager shadcn `:root` palette WCAG audit.** The vendored OpenDesign tokens are INERT for ota-manager (shadcn HSL wins the cascade — A EVIDENCE.md §4), so ota-manager's shipped colors are still un-audited. Stream **M** is auditing this now (compute real ratios → propose AA tones → re-prove via ota-manager host-render). Residual: light `--danger` `#dc2626` = 3.81 on its own badge-tint (documented honest follow-up).
+B. **ota-manager 118 type errors** surfaced by the functional gate (`94fb10a2`). Stream **P** in flight: triaging into router-dependent (leave for C) vs independent (fix now). ~57 are on the dead unrouted feature pages (bundle with C).
 C. **Router-wiring of ota-manager feature pages — OPERATOR-GATED (§11.4.101).** The restored feature pages (devices/releases/deployments) are importable+tested but unrouted; wiring needs a `react-router-dom`→`@tanstack/react-router` `useNavigate` reconciliation in `dashboard-page.tsx` + a UX decision (which dashboard, nav links). Do NOT auto-wire.
 D. **Guard-hook fix — §11.4.26 constitution workflow.** Tighten the force-push regex per `docs/research/guard_hook_false_positive_20260709/FINDINGS.md` (fuller split-on-separators + scoped-inner; minimal regex has a documented `git -c k=v push` false-negative) + update the ≥20-case hook test suite; push to all constitution upstreams. Operator-aware.
 E. **§11.4.30 hygiene:** untrack `clients/ota-manager/dist/` (build artifact) + gitignore — blocked on the `commit_all.sh --paths` deletion-pathspec bug (a deletion path in `--paths` fatals the whole `git add`); fix that wrapper bug first. Also gitignore `toPdfViaTempFile*` export residue.
-F. **Expand §11.4.170 screen×state matrix** on ota-manager (only LoginPage host-rendered there; dashboard now has 5 screens).
+F. **Expand §11.4.170 screen×state matrix.** Stream **R** in flight for dashboard (adding Deployments/Fleet/Groups/Overview to the existing 5). ota-manager still owes its matrix beyond LoginPage (unrouted pages + 118 type errors block it; bundle after B/C).
 G. **OpenDesign author-time daemon** (`od` MCP + Next.js UI) setup — rootless/containerized (§11.4.161/§11.4.173), operator-review-gated (heavy product).
+
+**Submodule-brick health follow-ups (from Stream K audit, `docs/research/submodules_health_audit_20260709/AUDIT.md`):**
+
+H. **`challenges` brick fix — DONE by K, pending conductor submodule-commit.** Real `pkg/challenge/result.go` `Result.RecordAction` data race (unsynchronized `append`, 30 concurrent callers lost updates) fixed with an unexported mutex (JSON byte-unchanged); a §11.4.1 chaos-test FAIL-bluff (`tests/chaos` built a path from 500 NUL bytes — illegal) fixed to a valid long nested path + a graceful-degrade subtest. Verified `-race -count=5` PASS, full brick `go test ./...` rc=0. Commit inside the submodule → push to its 4 upstreams (FF §11.4.113) → bump parent pointer.
+I. **`llms_verifier/llm-verifier` RED (pre-existing).** `TestCommandFlagValidation` + `TestOutputFormats` fail (build/vet green → CLI-contract/behavioral mismatch). Dedicated systematic-debug pass (§11.4.102).
+J. **gofmt drift across bricks (formatting-only, pre-existing, all otherwise green):** `ota-protocol` (1), `http3` (1), `llm_orchestrator` (6), `security` (13), `vision_engine` (17), `containers` (34), `llms_verifier` (211/177). A `gofmt -w` sweep per owned brick (each its own submodule commit + push).
+K. **Android bricks static-only** (`ota-android-agent`, `ota-update-engine-bridge`): no `gradlew` wrapper committed → full AGP build not run (needs Android SDK). Honest §11.4.6 boundary; a real build pass is owed when the toolchain is available.
 
 **Prior (A/B path):**
 

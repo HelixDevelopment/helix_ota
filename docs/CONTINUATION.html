@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 15 <strong>Last modified:</strong>
-2026-07-09T18:15:00Z</p>
+<p><strong>Revision:</strong> 16 <strong>Last modified:</strong>
+2026-07-09T18:50:13Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,18 +263,26 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>444b68f4</code> — OpenDesign adoption COMPLETE on BOTH
-frontends + hardening. 11 commits this session, all pushed 4/4 FF
-§11.4.113: <code>35035ba4</code> brand tokens · <code>cc3f5dc8</code>
-vendoring plan · <code>26e98390</code>/<code>d7491292</code>
-device-claim+signed-pipeline · <code>74b94bb8</code> ota-manager
-vendor+toggle-fix · <code>4c6b201d</code> dashboard
-vendor+dark-mode+controller-tests · <code>961ec31c</code> UI audit+WCAG
-contrast · <code>6466edc2</code> guard-hook root-cause ·
-<code>28ce6fd6</code> ota-manager RED-suite restore+latent-bugfix ·
-<code>94fb10a2</code> typecheck-gate-fixed · <code>444b68f4</code>
-dashboard hex-completion. Prior constitution-adoption HEAD
-<code>634fcb50</code>.</td>
+<td><code>7c95b763</code> — 18 commits this session, all pushed 4/4 FF
+§11.4.113. Through <code>444b68f4</code>: <code>35035ba4</code> brand
+tokens · <code>cc3f5dc8</code> vendoring plan ·
+<code>26e98390</code>/<code>d7491292</code> device-claim+signed-pipeline
+· <code>74b94bb8</code> ota-manager vendor+toggle-fix ·
+<code>4c6b201d</code> dashboard vendor+dark-mode+controller-tests ·
+<code>961ec31c</code> UI audit+WCAG contrast · <code>6466edc2</code>
+guard-hook root-cause · <code>28ce6fd6</code> ota-manager RED-suite
+restore+latent-bugfix · <code>94fb10a2</code> typecheck-gate-fixed ·
+<code>444b68f4</code> dashboard hex-completion. <strong>After:</strong>
+<code>a0df513b</code> CONTINUATION Rev15 ·
+<code>7fb2a724</code>/<code>acf3c012</code> server SPA
+greedy-fallback→asset-aware-404 (§11.4.120-reconciled) + real-router
+asset-chain tests · <code>dbc20d51</code> <strong>WCAG-AA token
+re-vendor</strong> (danger/warn/success/muted + border-strong, computed
+ratios + host-render re-proof) · <code>604c0508</code> server SPA
+§11.4.85 stress+chaos incl. traversal-no-escape census ·
+<code>cdce12c7</code> dashboard light-golden evidence re-sync (45/45) ·
+<code>7c95b763</code> readiness ledger Rev 2. Prior
+constitution-adoption HEAD <code>634fcb50</code>.</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
@@ -1130,11 +1138,22 @@ an x86_64 KVM host.</p>
 <h2 id="whats-running">4. What’s running</h2>
 <ul>
 <li><strong>Main stream:</strong> OpenDesign adoption COMPLETE (both
-frontends); autonomous loop continuing on polish/hardening follow-ups
-(§5).</li>
-<li><strong>Background agents:</strong> None currently dispatched (last
-batch: T2/T3 vendoring, B restore, G typecheck, C/D/F audits — all
-landed).</li>
+frontends); autonomous loop (§11.4.126) continuing on polish/hardening
+follow-ups (§5).</li>
+<li><strong>Background agents (4 in flight at Rev 16):</strong>
+<strong>M</strong> ota-manager shadcn-<code>:root</code>-palette WCAG
+audit (read-only →
+<code>docs/research/ota_manager_shadcn_contrast_audit_20260709/</code>);
+<strong>P</strong> ota-manager 118-type-error triage + fix
+router-independent subset (owns ota-manager build); <strong>R</strong>
+dashboard host-render matrix expand to Deployments/Fleet/Groups/Overview
+(owns dashboard build); <strong>K</strong> submodule-brick health audit
+— <strong>DONE</strong>, awaiting conductor review+commit of its
+<code>challenges</code> fix (real <code>Result.RecordAction</code> race
++ chaos-test FAIL-bluff;
+<code>docs/research/submodules_health_audit_20260709/AUDIT.md</code>).
+Each produces evidence only; conductor reviews + commits
+(subagent-driven §11.4.70; no subagent git ops §11.4.84).</li>
 <li><strong>Recording directory:</strong> <code>$HOME/Downloads</code>
 per §11.4.158(D) (default; no project-level override)</li>
 </ul>
@@ -1143,25 +1162,31 @@ per §11.4.158(D) (default; no project-level override)</li>
 (priority-ordered)</h2>
 <p><strong>OpenDesign polish/hardening follow-ups (from the
 2026-07-09-late session — all non-blocking):</strong></p>
-<p>A. <strong>WCAG contrast token re-vendor (highest UI-polish
-value).</strong> Coordinated change: edit
-<code>design-systems/helix-ota/tokens.css</code> values (dark
-<code>--danger</code>→<code>#dc2626</code>, light
-<code>--warn</code>→<code>#a16207</code>, light
-<code>--muted</code>→<code>#475569</code>, <code>--success</code> text
-tone, add <code>--border-strong</code>), then re-vendor byte-identical
-into <code>clients/ota-manager/src/styles/opendesign-tokens.css</code> +
-<code>dashboard/src/styles/tokens.css</code>, then REGENERATE both
-frontends’ §11.4.170 goldens (pixels change) + re-prove. Measured
-evidence + proposed values:
-<code>docs/research/opendesign_token_contrast_audit_20260709/CONTRAST.md</code>.
-B. <strong>ota-manager 118 type errors</strong> now surfaced by the
-functional gate (<code>94fb10a2</code>) — dedicated cleanup; ~57 are on
-the dead unrouted feature pages (bundle with C). C.
-<strong>Router-wiring of ota-manager feature pages — OPERATOR-GATED
-(§11.4.101).</strong> The restored feature pages
-(devices/releases/deployments) are importable+tested but unrouted;
-wiring needs a
+<p>A. <strong>WCAG contrast token re-vendor — DONE for
+dashboard</strong> (<code>dbc20d51</code> + <code>cdce12c7</code>,
+§11.4.170 re-proven 45/45). Applied values (all AA): dark
+<code>--danger</code>→<code>#ef4444</code> (5.32), light
+<code>--warn</code>→<code>#854d0e</code> (6.85), light
+<code>--success</code>→<code>#166534</code> (7.13), light
+<code>--muted</code>→<code>#475569</code> (7.58),
+<code>--border-strong</code> <code>#64748b</code> added. Evidence
+<code>docs/qa/20260709-wcag-token-revendor/EVIDENCE.md</code> + ledger
+<code>docs/research/frontend_production_readiness_20260709/READINESS.md</code>
+(Rev 2). A2. <strong>NEW — ota-manager shadcn <code>:root</code> palette
+WCAG audit.</strong> The vendored OpenDesign tokens are INERT for
+ota-manager (shadcn HSL wins the cascade — A EVIDENCE.md §4), so
+ota-manager’s shipped colors are still un-audited. Stream
+<strong>M</strong> is auditing this now (compute real ratios → propose
+AA tones → re-prove via ota-manager host-render). Residual: light
+<code>--danger</code> <code>#dc2626</code> = 3.81 on its own badge-tint
+(documented honest follow-up). B. <strong>ota-manager 118 type
+errors</strong> surfaced by the functional gate (<code>94fb10a2</code>).
+Stream <strong>P</strong> in flight: triaging into router-dependent
+(leave for C) vs independent (fix now). ~57 are on the dead unrouted
+feature pages (bundle with C). C. <strong>Router-wiring of ota-manager
+feature pages — OPERATOR-GATED (§11.4.101).</strong> The restored
+feature pages (devices/releases/deployments) are importable+tested but
+unrouted; wiring needs a
 <code>react-router-dom</code>→<code>@tanstack/react-router</code>
 <code>useNavigate</code> reconciliation in
 <code>dashboard-page.tsx</code> + a UX decision (which dashboard, nav
@@ -1177,11 +1202,40 @@ blocked on the <code>commit_all.sh --paths</code> deletion-pathspec bug
 (a deletion path in <code>--paths</code> fatals the whole
 <code>git add</code>); fix that wrapper bug first. Also gitignore
 <code>toPdfViaTempFile*</code> export residue. F. <strong>Expand
-§11.4.170 screen×state matrix</strong> on ota-manager (only LoginPage
-host-rendered there; dashboard now has 5 screens). G. <strong>OpenDesign
-author-time daemon</strong> (<code>od</code> MCP + Next.js UI) setup —
-rootless/containerized (§11.4.161/§11.4.173), operator-review-gated
-(heavy product).</p>
+§11.4.170 screen×state matrix.</strong> Stream <strong>R</strong> in
+flight for dashboard (adding Deployments/Fleet/Groups/Overview to the
+existing 5). ota-manager still owes its matrix beyond LoginPage
+(unrouted pages + 118 type errors block it; bundle after B/C). G.
+<strong>OpenDesign author-time daemon</strong> (<code>od</code> MCP +
+Next.js UI) setup — rootless/containerized (§11.4.161/§11.4.173),
+operator-review-gated (heavy product).</p>
+<p><strong>Submodule-brick health follow-ups (from Stream K audit,
+<code>docs/research/submodules_health_audit_20260709/AUDIT.md</code>):</strong></p>
+<p>H. <strong><code>challenges</code> brick fix — DONE by K, pending
+conductor submodule-commit.</strong> Real
+<code>pkg/challenge/result.go</code> <code>Result.RecordAction</code>
+data race (unsynchronized <code>append</code>, 30 concurrent callers
+lost updates) fixed with an unexported mutex (JSON byte-unchanged); a
+§11.4.1 chaos-test FAIL-bluff (<code>tests/chaos</code> built a path
+from 500 NUL bytes — illegal) fixed to a valid long nested path + a
+graceful-degrade subtest. Verified <code>-race -count=5</code> PASS,
+full brick <code>go test ./...</code> rc=0. Commit inside the submodule
+→ push to its 4 upstreams (FF §11.4.113) → bump parent pointer. I.
+<strong><code>llms_verifier/llm-verifier</code> RED
+(pre-existing).</strong> <code>TestCommandFlagValidation</code> +
+<code>TestOutputFormats</code> fail (build/vet green →
+CLI-contract/behavioral mismatch). Dedicated systematic-debug pass
+(§11.4.102). J. <strong>gofmt drift across bricks (formatting-only,
+pre-existing, all otherwise green):</strong> <code>ota-protocol</code>
+(1), <code>http3</code> (1), <code>llm_orchestrator</code> (6),
+<code>security</code> (13), <code>vision_engine</code> (17),
+<code>containers</code> (34), <code>llms_verifier</code> (211/177). A
+<code>gofmt -w</code> sweep per owned brick (each its own submodule
+commit + push). K. <strong>Android bricks static-only</strong>
+(<code>ota-android-agent</code>, <code>ota-update-engine-bridge</code>):
+no <code>gradlew</code> wrapper committed → full AGP build not run
+(needs Android SDK). Honest §11.4.6 boundary; a real build pass is owed
+when the toolchain is available.</p>
 <p><strong>Prior (A/B path):</strong></p>
 <ol type="1">
 <li><strong>OTA-003 — DONE (VERIFIED on nezha 2026-06-23).</strong> Real
