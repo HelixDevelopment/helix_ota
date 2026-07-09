@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AUDIT</h1>
+</header>
+<h1 id="opendesign-ui-surface-adoption-audit-helix-ota">OpenDesign
+UI-Surface Adoption Audit — Helix OTA</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T17:39:01Z <strong>Scope:</strong> Every user-facing UI
+surface in the <code>helix_ota</code> repository (submodules included) +
+its OpenDesign / <code>design-systems/helix-ota/tokens.css</code>
+adoption status. <strong>Method:</strong> Static inspection only
+(<code>find</code> / <code>grep</code> over the working tree). Per
+§11.4.162 / §11.4.170 this catalogues <em>adoption status</em>; it does
+<strong>not</strong> prove any surface renders correctly — that is the
+per-surface §11.4.170 host-render proof, out of scope here.
+<strong>Author authority:</strong> §11.4.6 (no guessing) — every verdict
+below cites the exact file/line evidence it was derived from. Values not
+observed are marked <code>UNKNOWN:</code>.</p>
+<hr />
+<h2 id="token-source-of-truth">1. Token source of truth</h2>
+<p><code>design-systems/helix-ota/tokens.css</code> is the canonical
+brand token package (authored against the OpenDesign
+<code>TOKEN_SCHEMA</code>; provenance header lines 1–31 of that file
+trace every color to <code>clients/ota-manager/src/index.css</code>).
+Its siblings: <code>DESIGN.md</code>, <code>manifest.json</code>,
+<code>tailwind-v4.css</code>. Adoption = a surface consumes these tokens
+(CSS <code>var(--…)</code> bindings vendored from this file, or a
+per-stack equivalent), not hardcoded colors.</p>
+<h2 id="per-surface-inventory">2. Per-surface inventory</h2>
+<table>
+<colgroup>
+<col style="width: 3%" />
+<col style="width: 11%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+<col style="width: 16%" />
+<col style="width: 23%" />
+<col style="width: 12%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Surface</th>
+<th>Path</th>
+<th>Stack</th>
+<th>Platform(s)</th>
+<th>OpenDesign status</th>
+<th>Evidence</th>
+<th>Adoption gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>OTA Manager (desktop client + <code>/manager</code> SPA)</td>
+<td><code>clients/ota-manager/</code></td>
+<td>React 19 + TanStack + Radix + Tailwind, Tauri v2 (Rust)</td>
+<td>Desktop (Tauri <code>targets:"all"</code> → macOS/Win/Linux) + web
+(served by server at <code>/manager</code>)</td>
+<td><strong>ADOPTED</strong></td>
+<td><code>src/index.css:2</code>
+<code>@import "./styles/opendesign-tokens.css"</code>; vendored file
+<code>src/styles/opendesign-tokens.css:2</code> =
+<code>design-systems/helix-ota/tokens.css</code>; <strong>0</strong>
+hardcoded hex in <code>src</code> (excl. the vendored token file);
+<code>index.css</code> uses <code>var(--…)</code> (5 refs);
+<code>src-tauri/tauri.conf.json</code> productName “Helix OTA
+Manager”</td>
+<td>None for tokens. Note (from <code>index.css:2</code> comment):
+shadcn HSL <code>:root</code> intentionally wins 3 name collisions — a
+documented layering choice, not a gap. §11.4.170 host-render already run
+(<code>docs/qa/20260709-ota-manager-hostrender/</code>).</td>
+</tr>
+<tr>
+<td>2</td>
+<td>OTA Operator Dashboard</td>
+<td><code>dashboard/</code></td>
+<td>React 18 SPA + react-router 6 (inline-style + <code>ui.tsx</code>
+primitives)</td>
+<td>Web (SPA over <code>/api/v1</code>)</td>
+<td><strong>PARTIAL</strong></td>
+<td>Vendors tokens: <code>src/main.tsx:6</code>
+<code>import "./styles/tokens.css"</code>;
+<code>src/styles/tokens.css:2</code> = the helix-ota token file;
+<code>src/theme.ts</code> drives explicit <code>data-theme</code>
+light/dark; <code>src/components/ui.tsx</code> repoints
+<strong>29</strong> <code>var(--…)</code> tokens
+(<code>ui.tsx:151-153</code> comment cites the vendoring plan). BUT
+<strong>58</strong> hardcoded hex remain in <code>src</code> (excl.
+<code>tokens.css</code>) —
+e.g. <code>components/AppShell.tsx:105 background:"#0f172a"</code>,
+<code>:113 "#cbd5e1"</code>, <code>:119 "#1e293b"</code>,
+<code>:125 "#334155"</code>;
+<code>screens/AuditScreen.tsx:115,152,158</code>;
+<code>screens/ReleasesScreen.tsx:189,195</code>;
+<code>screens/ArtifactUploadScreen.tsx:192</code></td>
+<td>Repoint the remaining 58 inline hex (concentrated in
+<code>AppShell.tsx</code> chrome + the
+<code>AuditScreen</code>/<code>ReleasesScreen</code>/<code>ArtifactUploadScreen</code>
+tables) to <code>var(--token)</code> the same way <code>ui.tsx</code>
+already does. This is the single highest-value remaining OTA-brand
+vendoring task.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>OTA Control-Plane server</td>
+<td><code>server/</code></td>
+<td>Go / Gin</td>
+<td>Server binary</td>
+<td><strong>N/A (own UI) — inherits #1</strong></td>
+<td><code>server/internal/api/embed.go</code>
+<code>//go:embed manager-dist/*</code> + <code>MountManagerUI</code>
+<code>StaticFS("/manager", …)</code>;
+<code>manager-dist/index.html</code>
+<code>&lt;title&gt;Helix OTA Manager&lt;/title&gt;</code> — it serves
+the <strong>ota-manager</strong> build (a build artifact per embed.go
+note), not an independent UI. No Go HTML/template rendering found.</td>
+<td>None — its only UI is the embedded ota-manager SPA (#1).
+<code>manager-dist/</code> is a stale build artifact; re-embed after
+ota-manager rebuilds so served bytes match source.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>OTA Android agent</td>
+<td><code>submodules/ota-android-agent/</code></td>
+<td>Kotlin (Android system library, JVM core)</td>
+<td>Android (system-image, RK3588/Orange Pi 5 Max)</td>
+<td><strong>N/A (no visual UI)</strong></td>
+<td><code>grep</code> for <code>androidx.compose</code> /
+<code>@Composable</code> / <code>MaterialTheme</code> /
+<code>Color(</code> across <code>--include=*.kt</code> →
+<strong>0</strong> matches; no <code>res/**/*.xml</code>;
+<code>android/src/main/AndroidManifest.xml</code> declares only
+permissions + <code>sharedUserId=android.uid.system</code> (no
+Activity/LAUNCHER) — headless poll worker/<code>ApplyPort</code></td>
+<td>No token target today (no UI). IF an on-device status/settings
+Activity is ever added, tokens.css is CSS-only — Compose needs a
+<strong>Kotlin <code>Color.kt</code> token bridge</strong> + host-render
+proof (Roborazzi/Paparazzi) per §11.4.170. Currently <strong>no Compose
+theme exists at all.</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>OTA update-engine bridge</td>
+<td><code>submodules/ota-update-engine-bridge/</code></td>
+<td>Kotlin (Android library + JVM core)</td>
+<td>Android (system-image)</td>
+<td><strong>N/A (no visual UI)</strong></td>
+<td><code>android/src/main/AndroidManifest.xml</code> =
+<code>&lt;manifest/&gt;</code> (comment: “library carries no
+components”); 0 Compose markers</td>
+<td>Same as #4 — no UI to vendor; latent Compose bridge need only if a
+UI surface is introduced.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>HelixQA docs website</td>
+<td><code>submodules/helixqa/website/</code></td>
+<td>VitePress</td>
+<td>Web (docs site)</td>
+<td><strong>NOT-ADOPTED</strong></td>
+<td><code>package.json</code> name <code>helixqa-website</code>,
+<code>vitepress</code> devDep, <code>vitepress dev/build</code>
+scripts</td>
+<td>Out of OTA-brand primary scope: this is the QA-tooling submodule’s
+own docs site. If brought in scope, needs a VitePress custom-theme token
+override. Low priority.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>LLM Verifier (separate product) — web</td>
+<td><code>submodules/llms_verifier/llm-verifier/web/</code></td>
+<td>Angular</td>
+<td>Web</td>
+<td><strong>NOT-ADOPTED</strong></td>
+<td><code>package.json</code> name <code>llm-verifier-web</code>,
+description “Modern Angular Web Interface”</td>
+<td>Distinct product (owned org <code>vasic-digital</code>), not a Helix
+OTA brand surface. Own design system. Out of OTA scope.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>LLM Verifier — desktop</td>
+<td><code>submodules/llms_verifier/llm-verifier/desktop/{tauri,electron}/</code></td>
+<td>Tauri + Electron</td>
+<td>Desktop</td>
+<td><strong>NOT-ADOPTED</strong></td>
+<td><code>desktop/tauri/package.json</code>,
+<code>desktop/electron/package.json</code>,
+<code>desktop/tauri/src-tauri/Cargo.toml</code></td>
+<td>Same as #7 — separate product’s UI. Out of OTA scope.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>LLM Verifier — mobile</td>
+<td><code>submodules/llms_verifier/llm-verifier/mobile/{react-native,flutter,aurora_os,harmony_os}/</code></td>
+<td>React Native / Flutter / Kotlin (Aurora/Harmony)</td>
+<td>Mobile</td>
+<td><strong>NOT-ADOPTED</strong></td>
+<td><code>mobile/react-native/package.json</code>;
+<code>mobile/aurora_os/app/build.gradle.kts</code></td>
+<td>Same as #7. Out of OTA scope.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Manager-UI e2e harness</td>
+<td><code>tests/e2e/manager-ui/</code></td>
+<td>Playwright</td>
+<td>Test harness</td>
+<td><strong>N/A (not a shipped UI)</strong></td>
+<td><code>tests/e2e/manager-ui/package.json</code> — drives #1, not
+itself a user-facing surface</td>
+<td>None.</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Go CLIs</td>
+<td><code>cmd/workable-items/</code>, <code>cmd/build-stats/</code>,
+<code>tools/device_claim/</code>,
+<code>tools/helixqa_runner/</code></td>
+<td>Go (stdout CLI)</td>
+<td>CLI</td>
+<td><strong>N/A (no TUI/visual UI)</strong></td>
+<td><code>cmd/*/main.go</code>, <code>tools/*/*.go</code> — plain CLIs,
+no TUI framework observed</td>
+<td>None (no visual design surface).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="excluded-third-party-vendored-not-helix-ota-surfaces">Excluded
+(third-party vendored, not Helix OTA surfaces)</h3>
+<p><code>submodules/helixqa/tools/opensource/**</code> vendors a large
+third-party tree with its own frontends — appium, midscene, chroma,
+perfetto, signoz, skyvern, mem0, ui-tars-desktop, stagehand, etc. (~200
+<code>package.json</code> under that path). These are upstream tools,
+<strong>not</strong> Helix OTA user-facing surfaces, and are excluded
+from OpenDesign adoption scope (§11.4.28 owned-submodule discipline does
+not extend to their vendored third-party subtrees).
+<code>helix_track/</code> (<code>config.json</code> only) and
+<code>helix_code/</code> (launcher scripts only) contain no UI.</p>
+<h2 id="design-token-bridge-gap-per-non-adopted-surface">3. Design-token
+bridge gap per non-adopted surface</h2>
+<ul>
+<li><strong>Dashboard (#2, PARTIAL → the real work):</strong> tokens are
+already vendored and wired (<code>main.tsx</code>,
+<code>theme.ts</code>, <code>ui.tsx</code>); what remains is
+<em>mechanical</em> — 58 inline hex literals in
+<code>AppShell.tsx</code> (nav/sidebar chrome) and three screen table
+stylesheets still bypass the tokens. EXISTS: token file + 29 repointed
+refs in <code>ui.tsx</code>. MISSING: the same repoint across
+<code>AppShell.tsx</code> + <code>Audit</code>/
+<code>Releases</code>/<code>ArtifactUpload</code> screens. No new bridge
+needed — same CSS-var mechanism.</li>
+<li><strong>Android agents (#4, #5):</strong> EXISTS: nothing (fully
+headless — no Activity, no Compose, no <code>res/</code>). MISSING:
+everything, but only <em>conditionally</em> — there is no UI to theme
+today. A CSS <code>tokens.css</code> is not consumable by Compose; a
+future on-device UI would need a generated Kotlin
+<code>Color.kt</code>/<code>Theme.kt</code> derived from the same brand
+tokens plus §11.4.170 host-render (Roborazzi/Paparazzi) proof. Until a
+UI ships, there is nothing to vendor.</li>
+<li><strong>HelixQA website (#6) / LLM Verifier (#7–9):</strong> own
+products/tooling with their own design; each would need its stack-native
+token bridge (VitePress theme; Angular/Tauri/Electron/RN theming) — out
+of OTA-brand scope unless the operator pulls them in.</li>
+</ul>
+<h2 id="next-vendoring-targets-priority-list">4. Next vendoring targets
+— priority list</h2>
+<ol type="1">
+<li><strong><code>dashboard/</code> — finish PARTIAL → ADOPTED
+(HIGH).</strong> Repoint the 58 remaining inline hex in
+<code>AppShell.tsx</code> + <code>AuditScreen.tsx</code> +
+<code>ReleasesScreen.tsx</code> + <code>ArtifactUploadScreen.tsx</code>
+to the already-vendored <code>var(--token)</code> set. Only in-flight
+OTA-brand surface not fully on tokens. §11.4.170 host-render exists
+(<code>docs/qa/20260709-dashboard-hostrender/</code>) and will
+re-validate the repoint.</li>
+<li><strong>Android on-device UI token bridge — DEFERRED / conditional
+(LOW).</strong> No target exists until an Activity/Compose surface is
+introduced in <code>ota-android-agent</code>. If/when it is, build a
+Kotlin token bridge (not a CSS import) + host-render proof.</li>
+<li><strong>Out-of-scope products (HelixQA website, LLM Verifier) — not
+queued.</strong> Bring in only on explicit operator direction; each is a
+separate product/tooling surface.</li>
+</ol>
+<p><strong>Honest boundary (§11.4.6):</strong> The two primary OTA-brand
+shipped surfaces are <code>ota-manager</code> (ADOPTED) and
+<code>dashboard</code> (PARTIAL). The server has no independent UI. The
+two Android modules ship no UI at all today. So the <em>entire remaining
+OTA-brand vendoring surface</em> is item #1 above (the dashboard
+repoint). This audit did not render or diff any pixels — correctness
+proof per surface is §11.4.170’s job.</p>
+<h2 id="sources-verified">Sources verified</h2>
+<p>Files inspected on 2026-07-09 (working tree, no network):</p>
+<ul>
+<li><code>.gitmodules</code> (submodule roster)</li>
+<li><code>design-systems/helix-ota/</code> (tokens.css header lines
+1–31, tailwind-v4.css, DESIGN.md, manifest.json — presence)</li>
+<li><code>clients/ota-manager/package.json</code>,
+<code>clients/ota-manager/src/index.css</code> (line 2),
+<code>clients/ota-manager/src/styles/opendesign-tokens.css</code> (line
+2), <code>clients/ota-manager/src-tauri/tauri.conf.json</code>
+(productName/targets), ota-manager <code>src/</code> tree + hex grep (0
+matches)</li>
+<li><code>dashboard/package.json</code>,
+<code>dashboard/src/main.tsx</code> (line 6),
+<code>dashboard/src/styles/tokens.css</code> (line 2),
+<code>dashboard/src/theme.ts</code>,
+<code>dashboard/src/components/ui.tsx</code> (lines 151–153; 29
+<code>var(--)</code> refs), hex grep across <code>dashboard/src</code>
+(58 matches; sample lines cited)</li>
+<li><code>server/internal/api/embed.go</code> (full),
+<code>server/internal/api/manager-dist/index.html</code>
+(<code>&lt;title&gt;</code>)</li>
+<li><code>submodules/ota-android-agent/</code> <code>.kt</code> tree +
+Compose/Color grep (0),
+<code>android/src/main/AndroidManifest.xml</code></li>
+<li><code>submodules/ota-update-engine-bridge/</code> <code>.kt</code>
+tree + Compose grep (0),
+<code>android/src/main/AndroidManifest.xml</code></li>
+<li><code>submodules/helixqa/website/package.json</code></li>
+<li><code>submodules/llms_verifier/llm-verifier/{web,desktop/tauri,desktop/electron,mobile/react-native,mobile/aurora_os}/</code>
+(package.json / build.gradle.kts / Cargo.toml presence)</li>
+<li><code>tests/e2e/manager-ui/package.json</code>,
+<code>cmd/*/main.go</code>, <code>tools/device_claim/</code>,
+<code>tools/helixqa_runner/</code>, <code>helix_track/</code>,
+<code>helix_code/</code> (structure)</li>
+</ul>
+</body>
+</html>

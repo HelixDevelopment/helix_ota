@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONTRAST</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONTRAST</h1>
+</header>
+<h1 id="helix-ota-opendesign-token-wcag-contrast-audit">Helix OTA —
+OpenDesign Token WCAG Contrast Audit</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T17:39:09Z <strong>Scope:</strong>
+<code>design-systems/helix-ota/tokens.css</code> (light
+<code>:root</code> + dark overrides) <strong>Authority:</strong> T1
+review finding <strong>M1</strong> (dark
+<code>--danger</code>/<code>--warn</code> MAY fail WCAG) — verified here
+with MEASURED contrast ratios, not opinion. <strong>Boundary
+(§11.4.6):</strong> this is analysis only. No token was edited. The
+proposed fixes below are <strong>PROPOSED (not applied)</strong> — the
+tokens are vendored byte-identical into two frontends, so any change
+requires a coordinated re-vendor pass.</p>
+<hr />
+<h2 id="method-the-exact-formula-used">1. Method — the exact formula
+used</h2>
+<p>WCAG 2.1 relative luminance + contrast ratio (SC 1.4.3 / 1.4.11),
+computed by <code>scratchpad/contrast.py</code> (session scratchpad, NOT
+committed to the repo):</p>
+<pre><code>For each sRGB 8-bit channel value c (0..255):
+    c&#39; = c / 255
+    linear(c) = c&#39;/12.92                 if c&#39; &lt;= 0.03928
+                ((c&#39; + 0.055)/1.055)^2.4  otherwise
+Relative luminance:
+    L = 0.2126*R_lin + 0.7152*G_lin + 0.0722*B_lin
+Contrast ratio (L1 = lighter, L2 = darker of the two):
+    ratio = (L1 + 0.05) / (L2 + 0.05)</code></pre>
+<p><strong>Thresholds applied.</strong> AA normal text =
+<strong>4.5:1</strong> (SC 1.4.3). AA large text (≥18pt / ≥14pt-bold)
+and non-text UI components / graphical objects = <strong>3:1</strong>
+(SC 1.4.3 large + SC 1.4.11 non-text). Each pair states which threshold
+applies and why.</p>
+<p><strong>Every ratio below is a real computed number</strong> — the
+literal script output is pasted in §2 and §5.</p>
+<hr />
+<h2 id="literal-script-output-measured">2. Literal script output
+(measured)</h2>
+<pre><code>PAIR                           THRESH |  LIGHT      |   DARK      | note
+--------------------------------------------------------------------------------------------------------------
+--fg on --bg                      4.5 |  20.01 PASS |  19.12 PASS | L:#020817on#ffffff D:#f8fafcon#020817
+--fg on --surface                 4.5 |  20.01 PASS |  19.12 PASS | L:#020817on#ffffff D:#f8fafcon#020817
+--fg on --surface-warm            4.5 |  18.26 PASS |  13.98 PASS | L:#020817on#f1f5f9 D:#f8fafcon#1e293b
+--muted on --bg                   4.5 |   4.76 PASS |   7.80 PASS | L:#64748bon#ffffff D:#94a3b8on#020817
+--muted on --surface              4.5 |   4.76 PASS |   7.80 PASS | L:#64748bon#ffffff D:#94a3b8on#020817
+--muted on --surface-warm         4.5 |   4.34 FAIL |   5.71 PASS | L:#64748bon#f1f5f9 D:#94a3b8on#1e293b
+--accent on --bg                  3.0 |   5.17 PASS |   5.44 PASS | L:#2563ebon#ffffff D:#3b82f6on#020817
+--accent-on on --accent           4.5 |   4.94 PASS |   4.85 PASS | L:#f8fafcon#2563eb D:#0f172aon#3b82f6
+--danger on --bg                  3.0 |   4.83 PASS |   2.00 FAIL | L:#dc2626on#ffffff D:#7f1d1don#020817
+--danger on --surface             3.0 |   4.83 PASS |   2.00 FAIL | L:#dc2626on#ffffff D:#7f1d1don#020817
+--danger on --surface-warm        3.0 |   4.41 PASS |   1.46 FAIL | L:#dc2626on#f1f5f9 D:#7f1d1don#1e293b
+--accent-on on --danger           4.5 |   4.62 PASS |   1.78 FAIL | L:#f8fafcon#dc2626 D:#0f172aon#7f1d1d
+--success on --bg                 3.0 |   3.30 PASS |   6.07 PASS | L:#16a34aon#ffffff D:#16a34aon#020817
+--success on --surface-warm       3.0 |   3.01 PASS |   4.44 PASS | L:#16a34aon#f1f5f9 D:#16a34aon#1e293b
+--warn on --bg                    3.0 |   1.92 FAIL |  10.43 PASS | L:#eab308on#ffffff D:#eab308on#020817
+--warn on --surface-warm          3.0 |   1.75 FAIL |   7.63 PASS | L:#eab308on#f1f5f9 D:#eab308on#1e293b
+--border on --surface             3.0 |   1.23 FAIL |   1.37 FAIL | L:#e2e8f0on#ffffff D:#1e293bon#020817
+--border on --bg                  3.0 |   1.23 FAIL |   1.37 FAIL | L:#e2e8f0on#ffffff D:#1e293bon#020817
+--border on --surface-warm        3.0 |   1.13 FAIL |   1.00 FAIL | L:#e2e8f0on#f1f5f9 D:#1e293bon#1e293b
+
+=== FLAGGED DARK SEMANTICS (M1) detail ===
+  --danger(dark #7f1d1d) on --bg(#020817): 1.997:1
+  --danger(dark #7f1d1d) on --surface(#020817): 1.997:1
+  --warn(inherited #eab308) on --bg dark(#020817): 10.432:1
+  --accent-on(dark #0f172a) on --danger(dark #7f1d1d): 1.782:1  (dark on dark)
+  --fg(dark #f8fafc) on --danger(dark #7f1d1d): 9.576:1  (light label on danger fill)</code></pre>
+<hr />
+<h2 id="per-pair-measured-results">3. Per-pair measured results</h2>
+<p>Threshold column: <strong>4.5</strong> = normal text (SC 1.4.3);
+<strong>3.0</strong> = UI component / large text (SC 1.4.11 /
+1.4.3-large).</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Pair (foreground on background)</th>
+<th>Light hex</th>
+<th>Light ratio</th>
+<th>Light verdict</th>
+<th>Dark hex</th>
+<th>Dark ratio</th>
+<th>Dark verdict</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--fg</code> on <code>--bg</code></td>
+<td><code>#020817</code>/<code>#ffffff</code> →
+<code>#f8fafc</code>/<code>#020817</code></td>
+<td>20.01</td>
+<td>PASS</td>
+<td>—</td>
+<td>19.12</td>
+<td>PASS</td>
+<td>4.5 (body text)</td>
+</tr>
+<tr>
+<td><code>--fg</code> on <code>--surface</code></td>
+<td>same as bg</td>
+<td>20.01</td>
+<td>PASS</td>
+<td>—</td>
+<td>19.12</td>
+<td>PASS</td>
+<td>4.5 (body text)</td>
+</tr>
+<tr>
+<td><code>--fg</code> on <code>--surface-warm</code></td>
+<td><code>#020817</code>/<code>#f1f5f9</code> →
+<code>#f8fafc</code>/<code>#1e293b</code></td>
+<td>18.26</td>
+<td>PASS</td>
+<td>—</td>
+<td>13.98</td>
+<td>PASS</td>
+<td>4.5 (body text on panel)</td>
+</tr>
+<tr>
+<td><code>--muted</code> on <code>--bg</code></td>
+<td><code>#64748b</code>/<code>#ffffff</code> →
+<code>#94a3b8</code>/<code>#020817</code></td>
+<td>4.76</td>
+<td>PASS</td>
+<td>—</td>
+<td>7.80</td>
+<td>PASS</td>
+<td>4.5 (secondary text)</td>
+</tr>
+<tr>
+<td><code>--muted</code> on <code>--surface</code></td>
+<td>same as bg</td>
+<td>4.76</td>
+<td>PASS</td>
+<td>—</td>
+<td>7.80</td>
+<td>PASS</td>
+<td>4.5 (secondary text)</td>
+</tr>
+<tr>
+<td><code>--muted</code> on <code>--surface-warm</code></td>
+<td><code>#64748b</code>/<code>#f1f5f9</code> →
+<code>#94a3b8</code>/<code>#1e293b</code></td>
+<td><strong>4.34</strong></td>
+<td><strong>FAIL</strong></td>
+<td>—</td>
+<td>5.71</td>
+<td>PASS</td>
+<td>4.5 (secondary text on panel)</td>
+</tr>
+<tr>
+<td><code>--accent</code> on <code>--bg</code></td>
+<td><code>#2563eb</code>/<code>#ffffff</code> →
+<code>#3b82f6</code>/<code>#020817</code></td>
+<td>5.17</td>
+<td>PASS</td>
+<td>—</td>
+<td>5.44</td>
+<td>PASS</td>
+<td>3.0 (link/UI accent)¹</td>
+</tr>
+<tr>
+<td><code>--accent-on</code> on <code>--accent</code></td>
+<td><code>#f8fafc</code>/<code>#2563eb</code> →
+<code>#0f172a</code>/<code>#3b82f6</code></td>
+<td>4.94</td>
+<td>PASS</td>
+<td>—</td>
+<td>4.85</td>
+<td>PASS</td>
+<td>4.5 (button label on fill)</td>
+</tr>
+<tr>
+<td><code>--danger</code> on <code>--bg</code></td>
+<td><code>#dc2626</code>/<code>#ffffff</code> →
+<code>#7f1d1d</code>/<code>#020817</code></td>
+<td>4.83</td>
+<td>PASS</td>
+<td>—</td>
+<td><strong>2.00</strong></td>
+<td><strong>FAIL</strong></td>
+<td>3.0 (status/icon)²</td>
+</tr>
+<tr>
+<td><code>--danger</code> on <code>--surface</code></td>
+<td>same as bg</td>
+<td>4.83</td>
+<td>PASS</td>
+<td>—</td>
+<td><strong>2.00</strong></td>
+<td><strong>FAIL</strong></td>
+<td>3.0 (status/icon)²</td>
+</tr>
+<tr>
+<td><code>--danger</code> on <code>--surface-warm</code></td>
+<td><code>#dc2626</code>/<code>#f1f5f9</code> →
+<code>#7f1d1d</code>/<code>#1e293b</code></td>
+<td>4.41</td>
+<td>PASS</td>
+<td>—</td>
+<td><strong>1.46</strong></td>
+<td><strong>FAIL</strong></td>
+<td>3.0 (status/icon)²</td>
+</tr>
+<tr>
+<td><code>--accent-on</code> on <code>--danger</code> (danger-as-fill
+label)</td>
+<td><code>#f8fafc</code>/<code>#dc2626</code> →
+<code>#0f172a</code>/<code>#7f1d1d</code></td>
+<td>4.62</td>
+<td>PASS</td>
+<td>—</td>
+<td><strong>1.78</strong></td>
+<td><strong>FAIL</strong></td>
+<td>4.5 (label on fill)³</td>
+</tr>
+<tr>
+<td><code>--success</code> on <code>--bg</code></td>
+<td><code>#16a34a</code>/<code>#ffffff</code> →
+<code>#16a34a</code>/<code>#020817</code></td>
+<td>3.30</td>
+<td>PASS</td>
+<td>—</td>
+<td>6.07</td>
+<td>PASS</td>
+<td>3.0 (status/icon)⁴</td>
+</tr>
+<tr>
+<td><code>--success</code> on <code>--surface-warm</code></td>
+<td><code>#16a34a</code>/<code>#f1f5f9</code> →
+<code>#16a34a</code>/<code>#1e293b</code></td>
+<td>3.01</td>
+<td>PASS</td>
+<td>—</td>
+<td>4.44</td>
+<td>PASS</td>
+<td>3.0 (status/icon)</td>
+</tr>
+<tr>
+<td><code>--warn</code> on <code>--bg</code></td>
+<td><code>#eab308</code>/<code>#ffffff</code> →
+<code>#eab308</code>/<code>#020817</code></td>
+<td><strong>1.92</strong></td>
+<td><strong>FAIL</strong></td>
+<td>—</td>
+<td>10.43</td>
+<td>PASS</td>
+<td>3.0 (status/icon)⁵</td>
+</tr>
+<tr>
+<td><code>--warn</code> on <code>--surface-warm</code></td>
+<td><code>#eab308</code>/<code>#f1f5f9</code> →
+<code>#eab308</code>/<code>#1e293b</code></td>
+<td><strong>1.75</strong></td>
+<td><strong>FAIL</strong></td>
+<td>—</td>
+<td>7.63</td>
+<td>PASS</td>
+<td>3.0 (status/icon)⁵</td>
+</tr>
+<tr>
+<td><code>--border</code> on <code>--surface</code></td>
+<td><code>#e2e8f0</code>/<code>#ffffff</code> →
+<code>#1e293b</code>/<code>#020817</code></td>
+<td><strong>1.23</strong></td>
+<td><strong>FAIL</strong></td>
+<td>—</td>
+<td><strong>1.37</strong></td>
+<td><strong>FAIL</strong></td>
+<td>3.0 (non-text boundary)⁶</td>
+</tr>
+<tr>
+<td><code>--border</code> on <code>--bg</code></td>
+<td>same as surface</td>
+<td><strong>1.23</strong></td>
+<td><strong>FAIL</strong></td>
+<td>—</td>
+<td><strong>1.37</strong></td>
+<td><strong>FAIL</strong></td>
+<td>3.0 (non-text boundary)⁶</td>
+</tr>
+<tr>
+<td><code>--border</code> on <code>--surface-warm</code></td>
+<td><code>#e2e8f0</code>/<code>#f1f5f9</code> →
+<code>#1e293b</code>/<code>#1e293b</code></td>
+<td><strong>1.13</strong></td>
+<td><strong>FAIL</strong></td>
+<td>—</td>
+<td><strong>1.00</strong></td>
+<td><strong>FAIL</strong></td>
+<td>3.0 (non-text boundary)⁶</td>
+</tr>
+</tbody>
+</table>
+<p>Footnotes: 1. <code>--accent</code> is measured at 3:1 (its role is
+links / UI accent / focus). If accent is ever used as
+<strong>normal-size accent-colored body text</strong>, the 4.5 bar
+applies — light 5.17 and dark 5.44 clear that too, so accent passes
+either way. 2. Dark <code>--danger</code> <code>#7f1d1d</code> is a dark
+maroon. As a <strong>foreground tone</strong> (danger text, icon, badge
+outline, chart series) on the dark background it measures
+<strong>2.00:1</strong> (bg/surface) and <strong>1.46:1</strong> (warm
+panel) — below the 3:1 UI floor and far below 4.5 for text. <strong>This
+is finding M1, CONFIRMED for <code>--danger</code> (dark).</strong> 3.
+If dark <code>--danger</code> is instead used as a
+<strong>filled</strong> surface, the on-color pairing in the tokens
+(<code>--accent-on</code> = dark <code>#0f172a</code>) gives
+<strong>1.78:1</strong> — dark-on-dark, also failing. A light label
+(<code>--fg</code> <code>#f8fafc</code>) on <code>#7f1d1d</code>
+measures 9.58:1 (passes), so today’s dark danger fill is only legible
+with a LIGHT label, which the token pairing does not provide. Either way
+the current dark danger token is broken for at least one of its two
+roles. 4. Light <code>--success</code> clears 3:1 but is tight on the
+warm panel (3.01) — acceptable for UI/icon use, would FAIL 4.5 if used
+as success <strong>body text</strong> (compute: 3.30 &lt; 4.5). Flag for
+text use, not a hard fail at the UI threshold. 5. <strong>M1 for
+<code>--warn</code> is NOT confirmed in the direction flagged.</strong>
+Dark <code>--warn</code> inherits the light value <code>#eab308</code>
+(the dark block does not override it) and measures <strong>10.43 /
+7.63</strong> on dark surfaces — comfortably PASS. It is the
+<strong>LIGHT</strong> theme where <code>--warn</code>
+<code>#eab308</code> (bright yellow) FAILS on white: <strong>1.92 /
+1.75</strong>. So warn has a real contrast defect, but in light mode,
+not dark. 6. <code>--border</code> fails 3:1 on every surface in both
+themes. <strong>Nuance (SC 1.4.11):</strong> the 3:1 non-text
+requirement applies only to borders that are the <strong>sole</strong>
+visual means of identifying a control (e.g. an un-filled input’s
+outline). Purely <strong>decorative</strong> dividers / card outlines
+are exempt and are NOT a violation. So these rows are “FAIL <em>if</em>
+the border is load-bearing for a control boundary” — see §4
+recommendation 4 for the surgical fix (a distinct strong-border token)
+rather than darkening every divider.</p>
+<h3 id="tokens-not-cleanly-computable-handled-honestly-11.4.6">Tokens
+not cleanly computable (handled honestly, §11.4.6)</h3>
+<ul>
+<li><code>--accent-hover</code> =
+<code>color-mix(in oklab, var(--accent), black 8%)</code>,
+<code>--accent-active</code> = <code>... black 14%</code> — resolve to a
+<strong>darker</strong> accent. On a light background darker = higher
+contrast, so if <code>--accent</code> passes (it does), these pass by
+construction; on a dark background they reduce contrast slightly but
+start from 5.44 with an 8–14% black mix. Exact hex depends on the
+browser’s oklab mix; not a single fixed sRGB value. Marked
+<strong>UNKNOWN (bounded — not independently failing)</strong>.</li>
+<li><code>--focus-ring</code> =
+<code>color-mix(..., var(--accent), transparent 70%)</code>,
+<code>--elev-raised</code> / <code>--elev-ring</code> use
+<code>transparent</code>/alpha — these composite over whatever is behind
+them, so their effective contrast depends on the backdrop pixel and
+cannot be reduced to one ratio. Marked <strong>UNKNOWN:
+alpha-composited, needs per-context render sampling.</strong></li>
+</ul>
+<hr />
+<h2 id="findings-summary">4. Findings summary</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Token (theme)</th>
+<th>Measured</th>
+<th>Threshold</th>
+<th>Verdict</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>M1a</strong></td>
+<td><code>--danger</code> (DARK) as foreground</td>
+<td>2.00 / 1.46</td>
+<td>3.0</td>
+<td><strong>FAIL</strong></td>
+<td>Confirmed T1 M1. Dark maroon unreadable on dark surfaces.</td>
+</tr>
+<tr>
+<td><strong>M1b</strong></td>
+<td><code>--danger</code> (DARK) as fill + token on-color</td>
+<td>1.78</td>
+<td>4.5</td>
+<td><strong>FAIL</strong></td>
+<td>Paired on-color is dark-on-dark.</td>
+</tr>
+<tr>
+<td><strong>M1c</strong></td>
+<td><code>--warn</code> — real defect is LIGHT not dark</td>
+<td>L 1.92/1.75 · D 10.43/7.63</td>
+<td>3.0</td>
+<td><strong>FAIL (light only)</strong></td>
+<td>Flag direction corrected: dark warn PASSES.</td>
+</tr>
+<tr>
+<td>F4</td>
+<td><code>--muted</code> on <code>--surface-warm</code> (LIGHT)</td>
+<td>4.34</td>
+<td>4.5</td>
+<td><strong>FAIL</strong></td>
+<td>0.16 short; only on the warm panel.</td>
+</tr>
+<tr>
+<td>F5</td>
+<td><code>--border</code> all surfaces (both themes)</td>
+<td>1.00–1.37</td>
+<td>3.0</td>
+<td><strong>FAIL (if load-bearing)</strong></td>
+<td>Exempt when decorative; fix control boundaries only.</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>--success</code> (LIGHT) as body text</td>
+<td>3.30</td>
+<td>4.5</td>
+<td>note</td>
+<td>Passes 3:1 UI; fails 4.5 text. Restrict to UI/icon use.</td>
+</tr>
+<tr>
+<td>—</td>
+<td>all <code>--fg</code>, <code>--accent</code>,
+<code>--accent-on</code>, <code>--muted</code>(bg/surface)</td>
+<td>≥4.76</td>
+<td>—</td>
+<td><strong>PASS</strong></td>
+<td>Core text + accent are solid in both themes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="proposed-fixes-not-applied">5. PROPOSED fixes — NOT APPLIED</h2>
+<blockquote>
+<p><strong>PROPOSED (not applied — coordinated re-vendor required since
+two frontends vendor <code>tokens.css</code> byte-identical).</strong>
+Do NOT edit <code>tokens.css</code> from this audit. Every candidate
+ratio below is measured (<code>scratchpad/propose.py</code> output
+pasted after the table). Candidates are chosen from the same Tailwind
+palette family the tokens are already sourced from, to stay
+on-brand.</p>
+</blockquote>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Token / theme</th>
+<th>Current</th>
+<th>Current ratio</th>
+<th>PROPOSED</th>
+<th>New ratio (measured)</th>
+<th>Now meets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1a/M1b</td>
+<td><code>--danger</code> DARK</td>
+<td><code>#7f1d1d</code></td>
+<td>2.00 bg · 1.46 warm</td>
+<td><strong><code>#dc2626</code></strong> (Tailwind red-600 — unifies
+with light)</td>
+<td>4.14 bg · 3.03 warm; light-label <code>#f8fafc</code> fill =
+4.62</td>
+<td>3:1 foreground both surfaces <strong>and</strong> 4.5
+fill-label</td>
+</tr>
+<tr>
+<td>M1a (higher margin alt)</td>
+<td><code>--danger</code> DARK</td>
+<td><code>#7f1d1d</code></td>
+<td>—</td>
+<td><code>#ef4444</code> (red-500)</td>
+<td>5.32 bg · 3.89 warm</td>
+<td>stronger 3:1; but fill-label <code>#f8fafc</code> = 3.60 (&lt;4.5)
+so fill needs dark label</td>
+</tr>
+<tr>
+<td>M1c</td>
+<td><code>--warn</code> LIGHT</td>
+<td><code>#eab308</code></td>
+<td>1.92 / 1.75</td>
+<td><strong><code>#a16207</code></strong> (amber-700)</td>
+<td>4.92 white · 4.49 warm</td>
+<td>4.5 text on white (warm 4.49 ≈ AA, treat ≥3 UI as safe)</td>
+</tr>
+<tr>
+<td>F4</td>
+<td><code>--muted</code> LIGHT</td>
+<td><code>#64748b</code></td>
+<td>4.34 warm</td>
+<td><strong><code>#475569</code></strong> (slate-600)</td>
+<td>6.92 warm · 7.58 bg</td>
+<td>4.5 on all light surfaces w/ margin</td>
+</tr>
+<tr>
+<td>F4 (minimal alt)</td>
+<td><code>--muted</code> LIGHT</td>
+<td><code>#64748b</code></td>
+<td>4.34 warm</td>
+<td><code>#556070</code> (custom)</td>
+<td>5.82 warm</td>
+<td>minimal nudge, off-Tailwind</td>
+</tr>
+<tr>
+<td>F5</td>
+<td>new <code>--border-strong</code> (both themes, for control
+boundaries)</td>
+<td>n/a</td>
+<td>—</td>
+<td>light <code>#64748b</code>, dark <code>#64748b</code></td>
+<td>L 4.76 bg · 4.34 warm; D 4.20 bg · 3.07 warm</td>
+<td>3:1 SC 1.4.11 for load-bearing boundaries; keep base
+<code>--border</code> for decorative dividers</td>
+</tr>
+</tbody>
+</table>
+<p>Recommended primary set: dark <code>--danger</code> →
+<strong><code>#dc2626</code></strong> (single value satisfies both
+foreground-3:1 and fill-label-4.5, and unifies danger across themes);
+light <code>--warn</code> → <strong><code>#a16207</code></strong>; light
+<code>--muted</code> → <strong><code>#475569</code></strong>; add
+<strong><code>--border-strong</code> <code>#64748b</code></strong>
+rather than darkening the base border. Warn/danger fills that carry a
+label must pair the correct on-color — verify the chosen label in the
+re-vendor pass (not re-checked here beyond the values shown).</p>
+<pre><code>### LIGHT --muted candidates (target &gt;=4.5 on surface-warm #f1f5f9)
+#64748b   -&gt; bg#fff=4.76  warm#f1f5f9=4.34   (current)
+#556070   -&gt; bg#fff=6.38  warm#f1f5f9=5.82
+#475569   -&gt; bg#fff=7.58  warm#f1f5f9=6.92   (slate-600)
+
+### LIGHT --warn candidates (target &gt;=4.5 text on white / &gt;=3 UI)
+#eab308   -&gt; bg#fff=1.92  warm#f1f5f9=1.75   (current, amber-500)
+#ca8a04   -&gt; bg#fff=2.94  warm#f1f5f9=2.68   (amber-600 — still &lt;3)
+#a16207   -&gt; bg#fff=4.92  warm#f1f5f9=4.49   (amber-700)
+#854d0e   -&gt; bg#fff=6.85  warm#f1f5f9=6.25   (amber-800)
+
+### DARK --danger candidates (target &gt;=3 on bg #020817; &gt;=4.5 if body text)
+#7f1d1d   -&gt; bg#020817=2.00  warm#1e293b=1.46   (current, red-900)
+#dc2626   -&gt; bg#020817=4.14  warm#1e293b=3.03   (red-600)
+#ef4444   -&gt; bg#020817=5.32  warm#1e293b=3.89   (red-500)
+#f87171   -&gt; bg#020817=7.23  warm#1e293b=5.29   (red-400)
+
+### DARK danger-as-fill: light label #f8fafc on lightened danger
+  on #dc2626: 4.62   on #ef4444: 3.60   on #b91c1c: 6.18
+
+### BORDER --border-strong candidates (target &gt;=3 vs surface)
+LIGHT on #ffffff:  #94a3b8=2.56  #64748b=4.76
+DARK  on #020817:  #475569=2.64  #64748b=4.20 (warm #1e293b: 3.07)</code></pre>
+<hr />
+<h2 id="honest-boundary">6. Honest boundary</h2>
+<p>This audit proves per-pair <strong>contrast</strong> against WCAG AA
+— it does not assert overall WCAG conformance (which also depends on
+real component composition, text sizes at render time, disabled-state
+and placeholder rules, and the alpha-composited tokens marked UNKNOWN
+above). The proposed hex values are measured but <strong>not
+applied</strong>; applying them requires the coordinated re-vendor of
+<code>tokens.css</code> into both frontends so the two copies stay
+byte-identical.</p>
+<h2 id="sources-verified">Sources verified</h2>
+<p>Sources verified 2026-07-09: - WCAG 2.1 SC 1.4.3 Contrast (Minimum) —
+https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html - WCAG
+2.1 SC 1.4.11 Non-text Contrast —
+https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html -
+WCAG relative luminance + contrast-ratio definitions —
+https://www.w3.org/TR/WCAG21/#dfn-relative-luminance and
+https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio - Audited token file:
+<code>design-systems/helix-ota/tokens.css</code> (light
+<code>:root</code> + <code>@media (prefers-color-scheme: dark)</code> /
+<code>:root[data-theme="dark"]</code> / <code>.dark</code>) -
+Computation scripts (session scratchpad, NOT committed):
+<code>contrast.py</code>, <code>propose.py</code></p>
+</body>
+</html>
