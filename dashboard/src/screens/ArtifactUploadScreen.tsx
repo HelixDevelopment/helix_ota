@@ -189,7 +189,7 @@ export function ArtifactUploadScreen() {
                 display: "flex",
                 justifyContent: "space-between",
                 padding: "6px 0",
-                borderBottom: "1px solid #eef1f5",
+                borderBottom: "1px solid var(--border)",
               }}
             >
               <span>{s.label}</span>

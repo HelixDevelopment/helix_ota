@@ -94,35 +94,43 @@ export function AppShell() {
 }
 
 const styles: Record<string, CSSProperties> = {
-  // shell tones follow the theme (var(--bg)/var(--fg)); the header stays a fixed
-  // dark-navy brand chrome bar (plan §2.3 step 4 — least visual churn), toned
-  // only at its border via var(--border) so it also inverts subtly.
-  shell: { minHeight: "100vh", background: "var(--bg)", color: "var(--fg)" }, // #f5f7fa / #111827
+  // The shell BODY follows the theme (var(--bg)/var(--fg)) — repointed to tokens.
+  //
+  // FIXED BRAND CHROME (§11.4.170 vendoring, deliberate hex retention): the
+  // header is an intentional fixed dark-navy brand-chrome bar that stays the
+  // SAME in BOTH light and dark themes (plan §2.3 step 4 — least visual churn);
+  // it is a self-contained dark surface, so its inner tones (navy bg #0f172a,
+  // white/slate text #fff/#cbd5e1/#94a3b8, active-tab #1e293b, control borders
+  // #334155) are FIXED chrome, NOT theme tokens. Tokenizing them to var(--fg)/
+  // var(--surface) etc. would break the bar in light mode (dark text on a dark
+  // bar = invisible). The ONE token here is the header's bottom border
+  // (var(--border)) so the seam between chrome and themed body inverts subtly.
+  shell: { minHeight: "100vh", background: "var(--bg)", color: "var(--fg)" },
   header: {
     display: "flex",
     alignItems: "center",
     gap: 24,
-    background: "#0f172a",
-    color: "#fff",
+    background: "#0f172a", // brand chrome (fixed both themes) — see block comment
+    color: "#fff", // brand chrome (fixed both themes)
     padding: "10px 20px",
     borderBottom: "1px solid var(--border)",
   },
   brand: { fontWeight: 700, fontSize: 16 },
   nav: { display: "flex", gap: 4, flex: 1 },
   navLink: {
-    color: "#cbd5e1",
+    color: "#cbd5e1", // brand chrome (fixed both themes)
     textDecoration: "none",
     padding: "6px 10px",
     borderRadius: 6,
     fontSize: 14,
   },
-  navLinkActive: { background: "#1e293b", color: "#fff" },
+  navLinkActive: { background: "#1e293b", color: "#fff" }, // brand chrome (fixed both themes)
   user: { display: "flex", alignItems: "center", gap: 12 },
-  userMeta: { fontSize: 12, color: "#94a3b8" },
+  userMeta: { fontSize: 12, color: "#94a3b8" }, // brand chrome (fixed both themes)
   themeToggle: {
     background: "transparent",
-    color: "#fff",
-    border: "1px solid #334155",
+    color: "#fff", // brand chrome (fixed both themes)
+    border: "1px solid #334155", // brand chrome (fixed both themes)
     borderRadius: 6,
     padding: "6px 10px",
     cursor: "pointer",
@@ -130,8 +138,8 @@ const styles: Record<string, CSSProperties> = {
   },
   logout: {
     background: "transparent",
-    color: "#fff",
-    border: "1px solid #334155",
+    color: "#fff", // brand chrome (fixed both themes)
+    border: "1px solid #334155", // brand chrome (fixed both themes)
     borderRadius: 6,
     padding: "6px 10px",
     cursor: "pointer",

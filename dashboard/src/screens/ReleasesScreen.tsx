@@ -186,10 +186,10 @@ export function ReleaseDetail() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", gap: 8, padding: "4px 0" }}>
-      <dt style={{ width: 160, color: "#6b7280" }}>{label}</dt>
+      <dt style={{ width: 160, color: "var(--muted)" }}>{label}</dt>
       <dd style={{ margin: 0, fontFamily: "monospace" }}>{value}</dd>
     </div>
   );
 }
 
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid #eef1f5" };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid var(--border)" };

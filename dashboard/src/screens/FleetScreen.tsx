@@ -173,7 +173,7 @@ export function DeviceDetail() {
                 {status.data.health.ok ? "ok" : "unhealthy"}
               </Badge>
               {status.data.health.last_error_code ? (
-                <span style={{ marginLeft: 8, fontFamily: "monospace", color: "#6b7280" }}>
+                <span style={{ marginLeft: 8, fontFamily: "monospace", color: "var(--muted)" }}>
                   {status.data.health.last_error_code}
                 </span>
               ) : null}
@@ -206,7 +206,7 @@ export function DeviceDetail() {
           </Table>
         ) : null}
         {telemetry.data?.next_cursor ? (
-          <div style={{ marginTop: 8, color: "#6b7280", fontSize: 13 }}>
+          <div style={{ marginTop: 8, color: "var(--muted)", fontSize: 13 }}>
             More events available (next_cursor: {telemetry.data.next_cursor}).
           </div>
         ) : null}
@@ -226,13 +226,13 @@ function Row({
 }) {
   return (
     <div style={{ display: "flex", gap: 8, padding: "4px 0" }}>
-      <dt style={{ width: 160, color: "#6b7280" }}>{label}</dt>
+      <dt style={{ width: 160, color: "var(--muted)" }}>{label}</dt>
       <dd style={{ margin: 0, fontFamily: "monospace" }}>{children ?? value}</dd>
     </div>
   );
 }
 
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid #eef1f5" };
-const subhead: React.CSSProperties = { fontSize: 14, color: "#374151", margin: "18px 0 8px" };
-const kpiLabel: React.CSSProperties = { fontSize: 12, color: "#6b7280", textTransform: "uppercase" };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid var(--border)" };
+const subhead: React.CSSProperties = { fontSize: 14, color: "var(--fg)", margin: "18px 0 8px" };
+const kpiLabel: React.CSSProperties = { fontSize: 12, color: "var(--muted)", textTransform: "uppercase" };
 const kpiValue: React.CSSProperties = { fontSize: 24, fontWeight: 700 };

@@ -112,7 +112,7 @@ export function AuditScreen() {
                 <td style={td}>
                   {e.actor.subject}
                   {e.actor.user_id ? (
-                    <span style={{ color: "#6b7280" }}> ({e.actor.user_id})</span>
+                    <span style={{ color: "var(--muted)" }}> ({e.actor.user_id})</span>
                   ) : null}
                 </td>
                 <td style={td}>
@@ -121,7 +121,7 @@ export function AuditScreen() {
                 <td style={td}>
                   {e.resource_type}
                   {e.resource_id ? (
-                    <span style={{ fontFamily: "monospace", color: "#6b7280" }}>
+                    <span style={{ fontFamily: "monospace", color: "var(--muted)" }}>
                       {" "}
                       {e.resource_id}
                     </span>
@@ -133,7 +133,7 @@ export function AuditScreen() {
           </Table>
         ) : null}
         {data?.next_cursor ? (
-          <div style={{ marginTop: 8, color: "#6b7280", fontSize: 13 }}>
+          <div style={{ marginTop: 8, color: "var(--muted)", fontSize: 13 }}>
             More entries available (next_cursor: {data.next_cursor}).
           </div>
         ) : null}
@@ -149,12 +149,12 @@ export function AuditScreen() {
   );
 }
 
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid #eef1f5" };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid var(--border)" };
 const dtInput: React.CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
   padding: "8px 10px",
   fontSize: 14,
-  border: "1px solid #cbd2dc",
+  border: "1px solid var(--border)",
   borderRadius: 6,
 };

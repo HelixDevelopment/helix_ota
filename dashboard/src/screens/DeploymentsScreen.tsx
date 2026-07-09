@@ -40,7 +40,7 @@ export function DeploymentList() {
         </RoleGate>
       </div>
       <Card title="Open a deployment">
-        <p style={{ color: "#6b7280", marginTop: 0 }}>
+        <p style={{ color: "var(--muted)", marginTop: 0 }}>
           A deployments-list endpoint is a documented server-side follow-up (design §6); the
           dashboard does not invent it. Open a deployment by id:
         </p>
@@ -111,7 +111,7 @@ export function DeploymentCreateScreen() {
               <option value="all-targets">all-targets</option>
             </select>
           </Field>
-          <p style={{ color: "#854d0e", fontSize: 13, marginTop: 0 }}>
+          <p style={{ color: "var(--warn)", fontSize: 13, marginTop: 0 }}>
             Staged / percentage rollout arrives in 1.0.1.
           </p>
           <Field label="group (optional)">
@@ -296,7 +296,7 @@ function RolloutPanel({ deploymentId }: { deploymentId: string }) {
           ) : null}
           <Table head={["#", "percentage", "success_threshold", "error_threshold", "auto_progress"]}>
             {data.phases.map((p, i) => (
-              <tr key={i} style={i === data.current_phase ? { background: "#eff6ff" } : undefined}>
+              <tr key={i} style={i === data.current_phase ? { background: "color-mix(in oklab, var(--accent), transparent 92%)" } : undefined}>
                 <td style={td}>{i === data.current_phase ? `▶ ${i + 1}` : i + 1}</td>
                 <td style={td}>{p.percentage}%</td>
                 <td style={td}>{p.success_threshold}</td>
@@ -306,7 +306,7 @@ function RolloutPanel({ deploymentId }: { deploymentId: string }) {
             ))}
           </Table>
           <RoleGate allow={["operator", "admin"]}>
-            <div style={{ marginTop: 16, borderTop: "1px solid #eef1f5", paddingTop: 12 }}>
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
               <strong style={{ fontSize: 13 }}>Evaluate current phase</strong>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap", marginTop: 8 }}>
                 <Field label="success_rate (0–1)">
@@ -332,7 +332,7 @@ function RolloutPanel({ deploymentId }: { deploymentId: string }) {
           {decision ? (
             <div style={{ marginTop: 8 }}>
               decision: <Badge tone="info">{decision.action}</Badge>{" "}
-              <span style={{ color: "#6b7280" }}>{decision.reason}</span>
+              <span style={{ color: "var(--muted)" }}>{decision.reason}</span>
             </div>
           ) : null}
           {cmdError ? <ErrorPanel error={cmdError} /> : null}
@@ -393,10 +393,10 @@ function RecallPanel({ deploymentId }: { deploymentId: string }) {
           </Button>
         </div>
       </RoleGate>
-      {ok ? <div style={{ marginTop: 8, color: "#166534", fontSize: 13 }}>{ok}</div> : null}
+      {ok ? <div style={{ marginTop: 8, color: "var(--success)", fontSize: 13 }}>{ok}</div> : null}
       {cmdError ? <ErrorPanel error={cmdError} /> : null}
 
-      <h3 style={{ fontSize: 14, color: "#374151", margin: "16px 0 8px" }}>Rollback history</h3>
+      <h3 style={{ fontSize: 14, color: "var(--fg)", margin: "16px 0 8px" }}>Rollback history</h3>
       {historyMissing ? (
         <EmptyState>Rollback history is not available (endpoint returned 404).</EmptyState>
       ) : null}
@@ -430,9 +430,9 @@ const selectStyle: React.CSSProperties = {
   width: "100%",
   padding: "8px 10px",
   fontSize: 14,
-  border: "1px solid #cbd2dc",
+  border: "1px solid var(--border)",
   borderRadius: 6,
-  background: "#f3f4f6",
+  background: "var(--surface-warm)",
 };
 
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid #eef1f5" };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid var(--border)" };

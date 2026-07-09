@@ -47,4 +47,4 @@ export function DashboardOverview() {
   );
 }
 
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid #eef1f5" };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid var(--border)" };

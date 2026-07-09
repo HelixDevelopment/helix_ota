@@ -236,14 +236,14 @@ function Disposition({
   );
 }
 
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid #eef1f5" };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: "1px solid var(--border)" };
 const textarea: React.CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
   padding: "8px 10px",
   fontSize: 14,
   fontFamily: "monospace",
-  border: "1px solid #cbd2dc",
+  border: "1px solid var(--border)",
   borderRadius: 6,
   resize: "vertical",
 };
