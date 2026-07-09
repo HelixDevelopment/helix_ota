@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AUDIT</h1>
+</header>
+<h1
+id="owned-submodule-build-test-health-audit-2026-07-09">Owned-Submodule
+Build + Test Health Audit — 2026-07-09</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z <strong>Scope:</strong> <code>submodules/</code>
+owned Go + Android bricks (§11.4.28 equal-codebase).
+<code>submodules/helixqa</code> EXCLUDED (pre-existing uncommitted
+changes — untouched per instruction). <strong>Authority:</strong> Helix
+Constitution §11.4.28 (owned submodules are equal codebase, must build +
+test green from their own module roots), project <code>CLAUDE.md</code>
+(“<code>go build ./...</code>, <code>gofmt</code>, <code>go vet</code>
+MUST be clean”).</p>
+<h2 id="method-captured-evidence">Method (captured evidence)</h2>
+<p>For every Go module root, from that root: <code>gofmt -l .</code>,
+<code>go build ./...</code>, <code>go vet ./...</code>,
+<code>go test ./... -count=1</code>. Go toolchain:
+<code>go1.26.4</code>. Android/Gradle bricks were statically inspected
+only (no <code>gradlew</code> wrapper present + a full AGP/Android build
+is heavy and needs the Android SDK — honest boundary per §11.4.6).
+Results below are the literal captured PASS/FAIL of those commands.</p>
+<h2 id="per-brick-health-table">Per-brick health table</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Brick</th>
+<th>Type / module root (marker)</th>
+<th>build</th>
+<th>vet</th>
+<th>gofmt clean</th>
+<th>test</th>
+<th>Evidence / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ota-protocol</code></td>
+<td>Go — <code>ota-protocol/go.mod</code>
+(<code>github.com/HelixDevelopment/ota-protocol</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 1 file</td>
+<td>✅</td>
+<td><code>go test</code>: 3/3 pkgs ok. <code>gofmt -l</code> flags
+<code>payload_fuzz_test.go</code> (comment-column drift). Pre-existing;
+NOT fixed (single-brick scope). Core brick — every OTA brick depends on
+it.</td>
+</tr>
+<tr>
+<td><code>ota-artifact-validator</code></td>
+<td>Go — <code>ota-artifact-validator/go.mod</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>ok (downloads <code>ota-protocol v0.1.0</code>); chaos+stress
+ok.</td>
+</tr>
+<tr>
+<td><code>ota-rollout-engine</code></td>
+<td>Go — <code>ota-rollout-engine/go.mod</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>ok; chaos+stress ok.</td>
+</tr>
+<tr>
+<td><code>ota-telemetry-schema</code></td>
+<td>Go — <code>ota-telemetry-schema/go.mod</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>ok; chaos+stress ok.</td>
+</tr>
+<tr>
+<td><code>challenges</code></td>
+<td>Go — <code>challenges/go.mod</code>
+(<code>digital.vasic.challenges</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ pre-existing</td>
+<td>✅ <strong>(FIXED)</strong></td>
+<td>Was <strong>RED</strong> (2 defects, below). Both fixed → full brick
+<code>go test ./...</code> rc=0. gofmt drift in other files
+pre-existing, out of scope.</td>
+</tr>
+<tr>
+<td><code>containers</code></td>
+<td>Go — <code>containers/go.mod</code>
+(<code>digital.vasic.containers</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 34 files</td>
+<td>✅</td>
+<td>ok (heavy: <code>pkg/remote</code> 18.5s). Earlier apparent timeout
+was the 2-min shell window, not a failure. gofmt drift
+pre-existing.</td>
+</tr>
+<tr>
+<td><code>doc_processor</code></td>
+<td>Go — <code>doc_processor/go.mod</code>
+(<code>digital.vasic.docprocessor</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>ok, all pkgs.</td>
+</tr>
+<tr>
+<td><code>http3</code></td>
+<td>Go — <code>http3/go.mod</code>
+(<code>digital.vasic.http3</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 1 file</td>
+<td>✅</td>
+<td>ok; chaos+stress ok.</td>
+</tr>
+<tr>
+<td><code>llm_orchestrator</code></td>
+<td>Go — <code>llm_orchestrator/go.mod</code>
+(<code>digital.vasic.llmorchestrator</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 6 files</td>
+<td>✅</td>
+<td>ok, all pkgs.</td>
+</tr>
+<tr>
+<td><code>llm_provider</code> (<code>LLMProvider</code> = symlink)</td>
+<td>Go — <code>llm_provider/go.mod</code>
+(<code>digital.vasic.llmprovider</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>ok, all provider pkgs. <code>LLMProvider</code> is a symlink →
+<code>llm_provider</code> (one module).</td>
+</tr>
+<tr>
+<td><code>llms_verifier</code></td>
+<td>Go — <code>llms_verifier/go.mod</code>
+(<code>llmsverifier</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 211 files</td>
+<td>✅</td>
+<td>ok, all pkgs (benchmark/e2e/integration/perf/security/unit).
+<code>go-sqlite3</code> cgo <code>const</code>-qualifier warnings are
+upstream-vendor, non-fatal.</td>
+</tr>
+<tr>
+<td><code>llms_verifier/llm-verifier</code></td>
+<td>Go — nested <code>llms_verifier/llm-verifier/go.mod</code>
+(<code>digital.vasic.llmsverifier</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 177 files</td>
+<td>❌ <strong>RED</strong></td>
+<td><code>go test</code> rc=1: <code>TestCommandFlagValidation</code> +
+<code>TestOutputFormats</code> FAIL in <code>.../tests</code> (CLI
+models/providers/results list, json+table). Pre-existing; DIFFERENT
+brick → NOT fixed (single-brick scope). See “Discovered, not
+fixed”.</td>
+</tr>
+<tr>
+<td><code>security</code></td>
+<td>Go — <code>security/go.mod</code>
+(<code>digital.vasic.security</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 13 files</td>
+<td>✅</td>
+<td>ok, all pkgs+test dirs.</td>
+</tr>
+<tr>
+<td><code>vision_engine</code></td>
+<td>Go — <code>vision_engine/go.mod</code>
+(<code>digital.vasic.visionengine</code>)</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️ 17 files</td>
+<td>✅</td>
+<td>ok, all pkgs.</td>
+</tr>
+<tr>
+<td><code>ota-android-agent</code></td>
+<td>Android/Kotlin — <code>build.gradle.kts</code> +
+<code>settings.gradle.kts</code> (AGP +
+<code>kotlin.android</code>)</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>STATIC ONLY: no <code>gradlew</code> wrapper at root;
+<code>android/</code>+<code>core/</code>+<code>tests/</code> dirs
+present; <code>BUILD_STATUS.md</code> shipped. Full Android build not
+run (heavy, needs SDK) per §11.4.6 honest boundary.</td>
+</tr>
+<tr>
+<td><code>ota-update-engine-bridge</code></td>
+<td>Android/Kotlin — <code>build.gradle.kts</code> +
+<code>settings.gradle.kts</code></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>STATIC ONLY: same shape as above (no <code>gradlew</code>,
+<code>android/</code>+<code>core/</code>+<code>tests/</code>,
+<code>BUILD_STATUS.md</code>). Not built.</td>
+</tr>
+</tbody>
+</table>
+<p>Legend: ✅ pass · ❌ fail · ⚠️ non-fatal drift/note · — not
+applicable/not run.</p>
+<h2 id="fix-applied-challenges-brick-red-green">Fix applied —
+<code>challenges</code> brick (RED → GREEN)</h2>
+<p>Chosen brick: <code>challenges</code> — it was the highest-value
+FIXABLE gap: the only brick whose <code>go test ./...</code> exited
+non-zero. Two genuine defects were root-caused (§11.4.102) and fixed;
+scope kept to this one brick.</p>
+<h3
+id="defect-1-testschaoschaos_test.go-testchaosconfigedgecasesextreme-long-path-deterministic-fail">Defect
+1 — <code>tests/chaos/chaos_test.go</code>
+<code>TestChaosConfigEdgeCases/extreme-long-path</code> (deterministic
+FAIL)</h3>
+<ul>
+<li><strong>Root cause:</strong> the subtest built
+<code>longPath := filepath.Join(t.TempDir(), string(make([]byte, 500)))</code>.
+<code>string(make([]byte, 500))</code> is a <strong>single path
+component of 500 NUL bytes</strong>. NUL is illegal in every Unix path
+component (→ <code>EINVAL</code>) and 500 also exceeds
+<code>NAME_MAX</code> (255). <code>BaseChallenge.Configure</code> →
+<code>os.MkdirAll(ResultsDir)</code> can therefore
+<strong>never</strong> succeed on any Linux filesystem, yet the test
+asserted success. This is a §11.4.1 FAIL-bluff: the test failed for a
+<strong>test-bug</strong> reason, not a product defect.
+<ul>
+<li>Before (captured):
+<code>chaos_test.go:151: extreme-long-path: Configure failed: create results dir .../&lt;500 NUL bytes&gt;: mkdir ...: invalid argument</code>
+→ <code>FAIL digital.vasic.challenges/tests/chaos</code>.</li>
+</ul></li>
+<li><strong>Fix:</strong> replaced the impossible input with a
+<strong>genuinely long BUT filesystem-valid</strong> path — 3 nested
+components of 200 <code>a</code>s each (each &lt; <code>NAME_MAX</code>,
+total &lt; <code>PATH_MAX</code>) so <code>Configure</code> truly
+exercises long-path handling and succeeds. Added a second subtest
+<code>invalid-path-degrades-gracefully</code> feeding a NUL-containing
+path and asserting <code>Configure</code> returns an
+<strong>error</strong> (never panics) — preserving the chaos-suite’s own
+contract (“must always degrade gracefully”) and the “extreme” intent
+(§11.4.27 real coverage, not a fake).
+<ul>
+<li>After (captured):
+<code>--- PASS: TestChaosConfigEdgeCases/extreme-long-path</code> +
+<code>--- PASS: .../invalid-path-degrades-gracefully</code> +
+<code>--- PASS: .../unconfigured-validate</code> →
+<code>ok digital.vasic.challenges/tests/chaos</code>.</li>
+</ul></li>
+</ul>
+<h3
+id="defect-2-pkgchallenge-testchaosconcurrentresultwrite-intermittent-fail-genuine-product-race">Defect
+2 — <code>pkg/challenge</code>
+<code>TestChaosConcurrentResultWrite</code> (intermittent FAIL — genuine
+product race)</h3>
+<ul>
+<li><strong>Discovery:</strong> surfaced under discovery-pressure
+(§11.4.118) on the full-brick run; the first probe run did NOT show it →
+nondeterministic. Not labelled “flaky” — root-caused per §11.4.102.</li>
+<li><strong>Root cause:</strong> exported
+<code>(*Result).RecordAction</code>
+(<code>pkg/challenge/antibluff.go</code>) did an
+<strong>unsynchronized</strong>
+<code>r.RecordedActions = append(...)</code>.
+<code>TestChaosConcurrentResultWrite</code> spawns 30 goroutines calling
+it concurrently; the un-locked append loses updates (a data race), so
+<code>len(RecordedActions) &lt; 30</code> intermittently. This is a real
+thread-safety defect in a method consumed downstream (HelixQA /
+LLMsVerifier), violating dev-principle #3 “always consider concurrent
+callers”; the action-trace is exactly what the anti-bluff validator
+counts, so a lost action can silently turn a real PASS into a bluff.
+<ul>
+<li>Before (captured):
+<code>chaos_test.go:384: expected at least 30 recorded actions, got 28</code>
+→ <code>FAIL digital.vasic.challenges/pkg/challenge</code>.</li>
+</ul></li>
+<li><strong>Fix:</strong> added an unexported <code>mu sync.Mutex</code>
+to <code>Result</code> (<code>pkg/challenge/result.go</code>) and
+wrapped the append in <code>r.mu.Lock()/Unlock()</code>. Unexported →
+<code>encoding/json</code> ignores it, so serialized
+<code>Result</code>s are byte-unchanged (verified by the
+<code>report</code>/<code>base</code> round-trip tests still passing).
+No <code>copylocks</code> risk: audited the module — <code>Result</code>
+is used by pointer everywhere (<code>return &amp;result</code>), never
+returned/copied by value, so <code>go vet</code> stays clean.
+<ul>
+<li>After (captured): <code>go vet ./pkg/challenge/</code> rc=0;
+<code>go test ./pkg/challenge/ -run 'TestChaosConcurrentResultWrite|TestRecordAction' -race -count=5</code>
+→ all PASS (deterministic + race-clean); full brick
+<code>go test ./... -count=1</code> rc=0.</li>
+</ul></li>
+</ul>
+<h3 id="files-changed-challenges-brick-only">Files changed (challenges
+brick only)</h3>
+<ul>
+<li><code>tests/chaos/chaos_test.go</code> — fixed subtest + new
+graceful-degradation subtest + <code>strings</code> import.</li>
+<li><code>pkg/challenge/antibluff.go</code> — lock the
+<code>RecordAction</code> append (+ gofmt: this file was pre-existing
+gofmt-unclean and is now clean; gofmt also normalized
+<code>•</code>→<code>-</code> doc-list bullets per Go 1.19+).</li>
+<li><code>pkg/challenge/result.go</code> — add unexported
+<code>mu sync.Mutex</code> field + <code>sync</code> import.</li>
+</ul>
+<p>Verification: <code>gofmt -l</code> clean on all three edited files;
+<code>go build ./...</code> rc=0; <code>go vet ./pkg/challenge/</code>
+rc=0; full-brick <code>go test ./... -count=1</code> rc=0.</p>
+<h2
+id="discovered-not-fixed-honest-boundary-11.4.6-11.4.118">Discovered,
+not fixed (honest boundary — §11.4.6 / §11.4.118)</h2>
+<ul>
+<li><strong><code>llms_verifier/llm-verifier</code> is RED</strong> —
+<code>TestCommandFlagValidation</code> (<code>models list</code>,
+<code>providers list</code> with flags) and
+<code>TestOutputFormats</code> (models/providers/results list,
+json+table) FAIL. Different brick; not in the single-brick fix scope
+this pass. Recommend a dedicated pass: root-cause whether the CLI
+output/flag contract changed vs the test’s expectation (build+vet are
+green, so it is a behavioral/CLI-contract mismatch, not a compile
+break).</li>
+<li><strong><code>ota-protocol</code> gofmt drift</strong> —
+<code>payload_fuzz_test.go</code> is gofmt-unclean (comment alignment)
+in the core OTA brick; a 1-command <code>gofmt -w</code> fix, left
+untouched to preserve single-brick scope. Worth a quick follow-up given
+the project mandate “gofmt MUST be clean”.</li>
+<li><strong>Pre-existing gofmt drift</strong> across
+<code>containers</code> (34), <code>security</code> (13),
+<code>vision_engine</code> (17), <code>llm_orchestrator</code> (6),
+<code>http3</code> (1), and the two <code>llms_verifier</code> modules
+(211 / 177). All build/vet/test green; formatting-only, out of scope for
+this pass.</li>
+<li><strong>Android bricks</strong> (<code>ota-android-agent</code>,
+<code>ota-update-engine-bridge</code>) verified structurally only; a
+real Gradle/AGP build was not run (heavy, needs Android SDK, no
+<code>gradlew</code> present).</li>
+</ul>
+<h2 id="sources-verified">Sources verified</h2>
+<p>Verification method for the fix was <strong>local reproduction +
+captured tool output</strong> (§11.4.123 rock-solid proof), which is
+stronger than doc citation for these claims; the standard references
+relied on: - POSIX / Linux path limits — <code>NAME_MAX</code> = 255
+bytes per component, <code>PATH_MAX</code> = 4096; NUL
+(<code>0x00</code>) is not permitted in a pathname component
+(<code>open(2)</code>/<code>path_resolution(7)</code> →
+<code>EINVAL</code>). Confirmed empirically by the captured
+<code>mkdir ...: invalid argument</code> failure. - Go <code>sync</code>
+package — <code>sync.Mutex</code> zero-value is ready-to-use; unexported
+struct fields are omitted by <code>encoding/json</code>. Confirmed by
+the unchanged JSON round-trip tests passing. - Go <code>gofmt</code> (Go
+1.19+) — normalizes doc-comment list bullets (<code>•</code> →
+<code>-</code>); observed in the captured <code>gofmt -d</code> diff. -
+Helix Constitution §11.4.1 (FAIL-bluffs forbidden), §11.4.28
+(owned-submodule equal codebase), §11.4.102 (root-cause before fix),
+§11.4.118 (discovery-pressure), §11.4.6 (no guessing / honest
+boundary).</p>
+</body>
+</html>
