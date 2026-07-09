@@ -52,22 +52,32 @@ describe("Badge", () => {
     expect(screen.getByText("active")).toBeInTheDocument();
   });
 
-  it("applies the ok-tone background colour", () => {
+  // §11.4.120 reconciliation: after the OpenDesign token vendoring the badge
+  // backgrounds are semantic var(--token)/color-mix expressions (light+dark
+  // aware), NOT the old hardcoded hex. These assert the NEW token mechanism is
+  // wired (a jsdom-supplement to the §11.4.170 host-render pixel proof, never a
+  // substitute for it).
+  it("applies the ok-tone background from the success token", () => {
     render(<Badge tone="ok">ok</Badge>);
-    // ok tone background is #dcfce7 -> rgb(220, 252, 231)
-    expect(screen.getByText("ok")).toHaveStyle({ background: "rgb(220, 252, 231)" });
+    expect(screen.getByText("ok")).toHaveStyle({
+      background: "color-mix(in oklab, var(--success), transparent 85%)",
+    });
   });
 
-  it("applies the err-tone background colour distinct from ok", () => {
+  it("applies the err-tone background distinct from ok (danger token)", () => {
     render(<Badge tone="err">err</Badge>);
-    // err tone background is #fee2e2 -> rgb(254, 226, 226)
-    expect(screen.getByText("err")).toHaveStyle({ background: "rgb(254, 226, 226)" });
+    expect(screen.getByText("err")).toHaveStyle({
+      background: "color-mix(in oklab, var(--danger), transparent 85%)",
+    });
+    // still distinct from the ok tone's success token
+    expect(screen.getByText("err")).not.toHaveStyle({
+      background: "color-mix(in oklab, var(--success), transparent 85%)",
+    });
   });
 
-  it("defaults to the neutral tone when no tone is passed", () => {
+  it("defaults to the neutral tone (surface-warm token) when no tone is passed", () => {
     render(<Badge>plain</Badge>);
-    // neutral background #eef1f5 -> rgb(238, 241, 245)
-    expect(screen.getByText("plain")).toHaveStyle({ background: "rgb(238, 241, 245)" });
+    expect(screen.getByText("plain")).toHaveStyle({ background: "var(--surface-warm)" });
   });
 });
 

@@ -49,7 +49,7 @@ export function LoginScreen() {
     <div style={{ maxWidth: 400, margin: "8vh auto" }}>
       <Card title="Helix OTA — operator login">
         {sessionExpiredNotice ? (
-          <div style={{ marginBottom: 12, color: "#854d0e" }}>
+          <div style={{ marginBottom: 12, color: "var(--warn)" }}>
             Your session expired. Please sign in again.
           </div>
         ) : null}

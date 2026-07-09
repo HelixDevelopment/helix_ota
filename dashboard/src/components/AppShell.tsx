@@ -2,10 +2,11 @@
 // AppShell (nav/header) stands in for the UNVERIFIED `UI-Components-React` brick (design §13).
 // RoleGate is UX-only; the server enforces RBAC authoritatively (design §7.3).
 
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import type { Role } from "../types/api";
+import { currentTheme, toggleTheme, type Theme } from "../theme";
 
 // Public route: only reachable while anonymous (redirects authed users home).
 export function PublicOnly({ children }: { children: ReactNode }) {
@@ -44,6 +45,11 @@ const NAV: { to: string; label: string }[] = [
 
 export function AppShell() {
   const { subject, roles, logout } = useAuth();
+  const [theme, setThemeState] = useState<Theme>(() => currentTheme());
+  // Compute the next theme (and run toggleTheme's DOM/localStorage side effect)
+  // in the handler, then hand the plain value to setThemeState — no side effect
+  // runs inside the state updater, so it is StrictMode double-invoke-safe.
+  const onToggleTheme = () => setThemeState(toggleTheme(currentTheme()));
   return (
     <div style={styles.shell}>
       <header style={styles.header}>
@@ -67,6 +73,14 @@ export function AppShell() {
           <span style={styles.userMeta}>
             {subject || "operator"} · {roles.join(", ") || "—"}
           </span>
+          <button
+            style={styles.themeToggle}
+            onClick={onToggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+          >
+            {theme === "dark" ? "☀ Light" : "☾ Dark"}
+          </button>
           <button style={styles.logout} onClick={logout}>
             Log out
           </button>
@@ -80,7 +94,10 @@ export function AppShell() {
 }
 
 const styles: Record<string, CSSProperties> = {
-  shell: { minHeight: "100vh", background: "#f5f7fa", color: "#111827" },
+  // shell tones follow the theme (var(--bg)/var(--fg)); the header stays a fixed
+  // dark-navy brand chrome bar (plan §2.3 step 4 — least visual churn), toned
+  // only at its border via var(--border) so it also inverts subtly.
+  shell: { minHeight: "100vh", background: "var(--bg)", color: "var(--fg)" }, // #f5f7fa / #111827
   header: {
     display: "flex",
     alignItems: "center",
@@ -88,6 +105,7 @@ const styles: Record<string, CSSProperties> = {
     background: "#0f172a",
     color: "#fff",
     padding: "10px 20px",
+    borderBottom: "1px solid var(--border)",
   },
   brand: { fontWeight: 700, fontSize: 16 },
   nav: { display: "flex", gap: 4, flex: 1 },
@@ -101,6 +119,15 @@ const styles: Record<string, CSSProperties> = {
   navLinkActive: { background: "#1e293b", color: "#fff" },
   user: { display: "flex", alignItems: "center", gap: 12 },
   userMeta: { fontSize: 12, color: "#94a3b8" },
+  themeToggle: {
+    background: "transparent",
+    color: "#fff",
+    border: "1px solid #334155",
+    borderRadius: 6,
+    padding: "6px 10px",
+    cursor: "pointer",
+    fontSize: 13,
+  },
   logout: {
     background: "transparent",
     color: "#fff",
