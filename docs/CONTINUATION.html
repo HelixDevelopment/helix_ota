@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 22 <strong>Last modified:</strong>
-2026-07-10T22:40:00Z</p>
+<p><strong>Revision:</strong> 23 <strong>Last modified:</strong>
+2026-07-10T23:24:48Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,9 +263,41 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>95c3a533</code> (+ containers submodule <code>1a526ab</code>)
-— all pushed to all mirrors FF §11.4.113 (verified live via
-<code>ls-remote</code>). <strong>Wave-6 (2026-07-10 cont-2):</strong>
+<td><code>6ec752cb</code> (+ containers submodule <code>a9c660d</code>)
+— pushed FF to the 3 REACHABLE mirrors (github/gitlab/gitverse+origin);
+<strong>gitflic/upstream are network-UNREACHABLE this session</strong>
+(proven via bounded <code>ls-remote</code> &gt;8s timeout) so their
+pushes fail-fast + buffer to <code>qa-results/push_failures/</code>
+(§11.4.88, retried next reachable tick, no force §11.4.113).
+<strong>Root-cause fix applied:</strong>
+<code>git config core.sshCommand "ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2"</code>
+so an unreachable gitflic can no longer HANG
+<code>git fetch --all</code> (it wedged a <code>commit_all.sh</code> ~10
+min this session; §11.4.101/§11.4.180 the wedged pre-commit process was
+proven-dead-on-fetch, killed + its lock reaped, no data written).
+<strong>Wave-7 (2026-07-10 cont-3):</strong> <code>280190e0</code>
+<strong>item I1 HSTS + upgrade-insecure gated on config-resolved
+TLS</strong>
+(<code>tlsEnabled()=(cert&amp;&amp;key)||TrustTLSProxy</code>, new
+<code>HELIX_TRUST_TLS_PROXY</code> env default-false; NO request header
+consulted → unspoofable; §11.4.115 RED→GREEN, conductor
+gofmt/vet/build/test GREEN §11.4.142) · <code>b290d945</code>
+<strong>client NON-LIST wire audit</strong> (subagent,
+conductor-verified §11.4.142: independent tsc 0 + vitest
+13-files/51-pass + 3 strongest drift claims cross-checked
+field-for-field vs real Go structs — 15/19 interfaces drifted incl
+near-total fabrications
+DeviceRegistered/DeviceStatus/DeviceHealth/ReleaseResponse/Deployment/RolloutState/RolloutDecision/Group;
+fixed 15 + added 7 + 10 hooks + guard test; follow-up: REQUEST-body
+interfaces RecallRequest/DeviceRegistrationRequest/CreateReleaseRequest
+also drifted — recall would reject every request — dispatched as its own
+stream) · <code>6ec752cb</code> <strong>dist/ SPA bundle regenerated
+from committed audit source</strong> (§11.4.108/§11.4.77 — vite build
+exit 0; an earlier untracked bundle had a non-matching JS hash,
+superseded; dist is nginx-standalone, NOT the go:embed manager-dist). 3
+IN-FLIGHT subagents: request-body wire audit +
+<code>ota-artifact-validator</code> + <code>ota-rollout-engine</code>
+audits. <strong>Wave-6 (2026-07-10 cont-2):</strong>
 <code>95c3a533</code> <strong>TEL/BUG-1 telemetry real-shape
 mapping</strong> (dashboard hook was a bare re-export casting the raw
 <code>/telemetry/overview</code> body to a FABRICATED camelCase shape →
@@ -389,6 +421,105 @@ by operator decision (§11.4.133)</strong></td>
 </tr>
 </tbody>
 </table>
+<h3
+id="latest-session-2026-07-10-cont-3-wave-7-hsts-client-non-list-wire-audit-dist-regen-gitflic-hang-root-cause-3-stream-fan-out">Latest
+session (2026-07-10, cont-3) — Wave-7: HSTS + client non-list wire audit
++ dist regen + gitflic-hang root-cause + 3-stream fan-out</h3>
+<p>Operator directive (re-sent, standing §11.4.126): continue the
+endless autonomous loop with 3-4 parallel subagents on real evidence, no
+bluff. This continuation drained the Wave-7 review+commit backlog and
+re-fanned 3 fresh disjoint streams. Every stream conductor-independently
+re-verified before commit (§11.4.142); all pushes FF, no force
+(§11.4.113).</p>
+<ul>
+<li><strong>Containers lifecycle 3-bug fix LANDED</strong>
+(<code>a9c660d</code>, submodule all 5 mirrors — verified live via
+<code>ls-remote</code>, the sibling-primitive audit prompted by the
+idle.go race): (a) <code>LazyBooter.EnsureStarted</code> panicking
+<code>startFn</code> left state stuck at <code>starting</code> AND every
+LATER caller silently got <code>nil</code> (fabricated success) — fixed
+with a recover-defer converting the panic to a retrievable error +
+settling the flag; (b) <code>DefaultManager</code> DATA RACE (caught by
+<code>-race</code>) — <code>entry.idleCtrl</code> written under
+<code>m.mu</code> but read without it in
+Stop/Acquire/release-closure/Start, fixed by capturing under lock at
+every read; (c) TOCTOU DOUBLE-BOOT — check +
+<code>state='starting'</code> were two separate lock holds → two
+concurrent <code>Start()</code> both booted (double compose-up + orphan
+timer), fixed by one atomic lock hold released BEFORE the blocking boot
+(no deadlock; proven 10 callers → <code>Up</code> 1×).
+<code>semaphore.go</code> doc-only (investigated an over-release hazard,
+PROVED a CAS guard changed nothing, reverted, documented the
+caller-discipline boundary — no fabricated fix §11.4.6). 5 new
+deterministic tests, <code>-race -count=3</code> 198/198 PASS.
+Conductor-verified §11.4.142.</li>
+<li><strong>item I1 — HSTS + upgrade-insecure gated on config-resolved
+TLS</strong> (<code>280190e0</code>): behind a TLS-terminating proxy the
+app gets plain HTTP so HSTS was silently never set. Fix
+<code>tlsEnabled()=(TLSCertFile&amp;&amp;TLSKeyFile)||cfg.TrustTLSProxy</code>,
+new <code>Config.TrustTLSProxy</code> from env
+<code>HELIX_TRUST_TLS_PROXY</code> (default FALSE = behaviour
+byte-identical). Pure operator boolean; NO request header
+(X-Forwarded-Proto) consulted → cannot be client-spoofed into forcing
+HSTS over plaintext. §11.4.115 RED→GREEN. Conductor-verified §11.4.142:
+gofmt clean, vet 0, build 0, api+config test packages PASS.
+<code>docs/qa/20260710-i1-hsts-trust-proxy/</code>.</li>
+<li><strong>client NON-LIST wire audit CLOSED</strong>
+(<code>b290d945</code>, subagent, conductor-verified §11.4.142): every
+non-list RESPONSE interface in <code>api-client.ts</code> audited vs the
+real Go structs. Far worse than the one hypothesized
+<code>TelemetryHistory.device_id</code> omission — <strong>15 of 19
+interfaces drifted</strong>, several near-total fabrications
+(DeviceRegistered, DeviceStatus, DeviceHealth, ReleaseResponse,
+Deployment, RolloutState, RolloutDecision, Group shared almost NO fields
+with the real struct → undefined field reads across the whole UI). Fixed
+15 + added 7
+(DeviceListItem/DeploymentProgress/RolloutPhaseSpec/GroupMemberView/AuditActor/RollbackView/TelemetryEventView)
++ 10 hooks + device-detail-page + 2 fixtures + new guard test
+<code>wire-shape-nonlist.test.ts</code>.
+Artifact/ArtifactUploadMetadata/DeltaView/TelemetryOverview verified
+already-correct. <strong>Conductor independently re-ran</strong> tsc 0 +
+vitest 13-files/51-pass AND cross-checked
+DeviceRegistered/Deployment/Group field-for-field vs the real Go structs
+(exact, omitempty→optional correct). §11.4.115 RED (device_id dropped →
+real TS2353/TS2578).
+<code>docs/qa/20260710-client-nonlist-wire-audit/</code>.</li>
+<li><strong>dist/ SPA bundle regenerated</strong>
+(<code>6ec752cb</code>, §11.4.108/§11.4.77): rebuilt from the committed
+audit source (<code>pnpm build</code> exit 0, 1909 modules). An earlier
+in-session UNTRACKED bundle had a JS hash NOT matching the committed
+source (would have embedded a stale bundle) — the rebuild’s
+<code>index-DGz1W2ft.js</code> supersedes it (CSS
+<code>index-BD87r2I_.css</code> reproduced identically). dist is the
+nginx-standalone variant, NOT the go:embed manager-dist. Slated for
+gitignore under item K.</li>
+<li><strong>gitflic-hang ROOT CAUSE fixed</strong>
+(§11.4.101/§11.4.102/§11.4.180): a pre-summary
+<code>commit_all.sh</code> wedged ~10 min in
+<code>git fetch --all --prune</code> because
+<code>gitflic.ru</code>/<code>upstream</code> are network-unreachable
+this session (proven: bounded <code>ls-remote</code> &gt;8s timeout;
+github/gitlab/gitverse/origin reachable) and <code>git</code> had no SSH
+ConnectTimeout → indefinite hang. The wedged process was pre-commit
+(nothing staged), proven-dead-on-fetch, so it was killed + its
+now-provably-stale lock reaped (no data written — §9.2 satisfied, NOT a
+live-writer). Applied <code>git config core.sshCommand</code> with
+ConnectTimeout=10 so any unreachable mirror now fails-fast;
+<code>commit_all.sh:661</code> already <code>|| true</code>-tolerates a
+fetch non-zero, so commits proceed and gitflic buffers to
+<code>qa-results/push_failures/</code>.</li>
+<li><strong>3 fresh disjoint streams dispatched</strong>
+(§11.4.103/§11.4.119, background): (A) client REQUEST-body wire audit +
+fix (real bug: <code>RecallRequest</code> sends
+<code>{reason,force}</code> but server needs
+<code>{to_release_id, reason?}</code> → recall rejects every request);
+(B) <code>ota-artifact-validator</code> security-sensitive validation
+correctness + coverage audit; (C) <code>ota-rollout-engine</code>
+state-machine + concurrency + coverage audit. Each: own scope, NO git,
+systematic-debugging, RED→GREEN or honest clean-audit (never a
+fabricated fix §11.4.6), captured evidence. Conductor reviews + commits
+on return.</li>
+</ul>
 <h3
 id="latest-session-2026-07-10-cont-2-bug-1-telemetry-fix-containers-idle-race-fix-follow-up-triage">Latest
 session (2026-07-10, cont-2) — BUG-1 telemetry fix + containers
