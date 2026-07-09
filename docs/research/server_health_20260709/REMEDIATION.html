@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REMEDIATION</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">REMEDIATION</h1>
+</header>
+<h1 id="helix-ota-server-health-verify-harden-remediation">Helix OTA
+Server — Health Verify + Harden Remediation</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z</p>
+<p>Companion to <code>REPORT.md</code> (the prior baseline audit). Every
+command below was actually executed in
+<code>/home/milos/Factory/projects/tools_and_research/helix_ota/server</code>
+(module <code>github.com/HelixDevelopment/helix_ota/server</code>);
+every exit code shown is verbatim. No source files were modified. No
+<code>git add</code>/<code>commit</code>/<code>push</code> was performed
+(conductor serializes per guardrails). Anti-bluff (§11.4): all verdicts
+carry captured command output; no cause is guessed (§11.4.6).</p>
+<h2 id="scope">Scope</h2>
+<p>Re-verify the four mandated project checks against the current
+working tree, systematic-debug + fix any FAILURE / non-empty gofmt list
+/ vet warning (§11.4.102 — no fix without a proven root cause), and
+record final GREEN evidence.</p>
+<h2 id="toolchain">Toolchain</h2>
+<p><code>go version go1.26.4-X:nodwarf5 linux/amd64</code></p>
+<h2 id="check-results-this-run">Check results (this run)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Check</th>
+<th>Command (from <code>server/</code>)</th>
+<th>Result</th>
+<th>Exit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Build</td>
+<td><code>go build ./...</code></td>
+<td>GREEN — no compiler output</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Vet</td>
+<td><code>go vet ./...</code></td>
+<td>GREEN — no diagnostics</td>
+<td>0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Format</td>
+<td><code>gofmt -l .</code></td>
+<td>GREEN — zero files listed</td>
+<td>0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Tests</td>
+<td><code>go test -count=1 ./...</code></td>
+<td>GREEN — 15/15 tested pkgs <code>ok</code>, 1 no-test-files, exit
+0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="go-build-....">1. <code>go build ./...</code></h3>
+<pre><code>BUILD_EXIT=0</code></pre>
+<p>No compiler output preceded the exit line — clean build.</p>
+<h3 id="go-vet-....">2. <code>go vet ./...</code></h3>
+<pre><code>VET_EXIT=0</code></pre>
+<p>No vet diagnostics — clean.</p>
+<h3 id="gofmt--l-.">3. <code>gofmt -l .</code></h3>
+<pre><code>(no files listed)
+GOFMT_LIST_ABOVE_EXIT=0</code></pre>
+<p><code>gofmt -l</code> prints a path per unformatted file. Zero paths
+were printed → tree is fully <code>gofmt</code>-clean. (Note:
+<code>gofmt -l</code> itself always exits 0; the empty file list is the
+signal.)</p>
+<h3 id="go-test--count1-....-forced-no-cache">4.
+<code>go test -count=1 ./...</code> (forced, no cache)</h3>
+<p>A first <code>go test ./...</code> returned mostly
+<code>(cached)</code>. Per §11.4.6/§11.4.5 a cached result is not fresh
+captured evidence, so the run was repeated with <code>-count=1</code> to
+force genuine re-execution. Verbatim:</p>
+<pre><code>ok      .../cmd/applyport   0.928s
+ok      .../cmd/ota-device-emu  0.925s
+ok      .../cmd/ota-server  2.439s
+ok      .../internal/api    0.264s
+?       .../internal/api/manager-dist   [no test files]
+ok      .../internal/config 0.002s
+ok      .../internal/device 0.183s
+ok      .../internal/deviceemu  0.227s
+ok      .../internal/fabric 0.004s
+ok      .../internal/health 0.002s
+ok      .../internal/rollout    0.003s
+ok      .../internal/store  0.004s
+ok      .../internal/transport  0.111s
+ok      .../tests/chaos 0.024s
+ok      .../tests/stress    0.014s
+ok      .../tools/loadtest  1.604s
+TEST_COUNT1_EXIT=0</code></pre>
+<p>15/15 tested packages PASS, 0 FAIL, 1 package
+(<code>internal/api/manager-dist</code>) has no <code>_test.go</code>
+files. Slowest package <code>cmd/ota-server</code> at 2.439s — no hang,
+no timeout, well under the 400s budget.</p>
+<h2 id="fixes-applied">Fixes applied</h2>
+<p><strong>None required.</strong> All four mandated checks were already
+GREEN on the current working tree. There was no FAILURE, no non-empty
+<code>gofmt</code> list, and no <code>go vet</code> warning to
+root-cause or repair. Per the anti-gold-plating discipline, no source
+change was invented where no defect exists (§11.4.1 — a needless change
+is a new failure-mode risk; §11.4.124 — do not touch working code
+without a proven reason). The §11.4.102 systematic-debugging arc
+therefore did not fire: its Iron Law (“no fix without a root cause”)
+means the correct action for a zero-finding tree is to change
+nothing.</p>
+<h2
+id="honesty-note-topology-gated-integration-tests-not-a-failure">Honesty
+note — topology-gated integration tests (not a failure)</h2>
+<p>The default <code>go test ./...</code> does not exercise the Postgres
+integration suite. 11 test files under <code>internal/store/</code> and
+<code>internal/rollout/</code> are gated behind
+<code>//go:build integration</code> and require a live pgx/PostgreSQL
+instance (§11.4.3 topology-dependent). This is correct SKIP-by-absence,
+not a hidden failure. Verified they are not rotting behind the tag: they
+compile + vet cleanly under the tag —</p>
+<pre><code>go vet -tags integration ./internal/store/ ./internal/rollout/
+VET_INTEG_EXIT=0</code></pre>
+<p>Gated files (evidence, for the tracker):
+<code>internal/{store,rollout}/postgres_integration_test.go</code>,
+<code>postgres_coverage_integration_test.go</code>,
+<code>postgres_fault_integration_test.go</code>,
+<code>pg_itest_lock_test.go</code>, <code>faultproxy_test.go</code>,
+plus <code>internal/store/postgres_fabric_integration_test.go</code>.
+Running them requires <code>-tags integration</code> + a Postgres
+endpoint; they are out of scope for the four default-invocation checks
+and remain a topology-gated suite, not a defect.</p>
+<h2
+id="coverage-gap-carried-forward-from-report.md-not-a-failure">Coverage
+gap carried forward (from REPORT.md — not a failure)</h2>
+<p><code>internal/api/manager-dist</code> has zero <code>_test.go</code>
+files. Flagged here as an honest tracked coverage gap (§11.4.15-class
+item), not a build/test failure. Unchanged from the baseline report.</p>
+<h2 id="verdict">Verdict</h2>
+<p>Build / vet / gofmt / test: <strong>GREEN → GREEN</strong> (no
+regression, no fix needed). Nothing remains unresolved within the four
+mandated checks. The Postgres integration suite and the
+<code>manager-dist</code> coverage gap are pre-existing,
+honestly-tracked items outside the default-invocation scope — not
+blockers.</p>
+</body>
+</html>

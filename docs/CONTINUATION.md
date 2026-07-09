@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 12
-**Last modified:** 2026-07-09T15:55:00Z
+**Revision:** 13
+**Last modified:** 2026-07-09T16:05:00Z
 
 ---
 
@@ -26,9 +26,18 @@ Landed + pushed 4/4 FF (no force §11.4.113), commits `bb3b4189` (semgrep meta-t
 - **UI/UX audit answer (`docs/research/ui_ux_opendesign_audit_20260709/FINDINGS.md`):** NO — Helix OTA is NOT OpenDesign-refined. TWO React frontends exist (`clients/ota-manager` shadcn/Tauri; `dashboard` hand-rolled+Playwright/axe); OpenDesign (§11.4.162) not installed in either; host-render visual-proof (§11.4.170) unmet in both. The project CLAUDE.md "§11.4.162 latent" note is stale.
 - Validation: pre_build PASS, inheritance PASS, regression 9/9, meta 6/6 bluff-proof, device 10× deterministic; independent review GO.
 
-**IN FLIGHT (parallel background streams, §11.4.147 registry):** (A) new-tech engine adoption plan → `docs/research/new_tech_adoption_20260709/ADOPTION_PLAN.md`; (B) server-health remediation (go build/vet/gofmt/test) → `docs/research/server_health_20260709/REMEDIATION.md`; (C) OpenDesign + §11.4.170 host-render harness prep + sharpened frontend decision → `docs/research/ui_ux_opendesign_audit_20260709/OPENDESIGN_PLAN.md`. Conductor commits their evidence on completion.
+**Three parallel streams COMPLETE (§11.4.147 registry: A/B/C all complete), evidence committed:**
+- **A — new-tech engine adoption** → `docs/research/new_tech_adoption_20260709/ADOPTION_PLAN.md`. Finding (§11.4.6/§11.4.124): server has NO LLM request path today → wiring either engine now = dead code. **token_optimizer** = adopt-as-available (first use: deterministic `log_triage` over the §11.4.128 recording corpus at first AI feature); **session_orchestrator** = needs-review (its `claim`+`scheduler` are the §11.4.176/§11.4.119 single-owner device-claim primitive — a prototype target for parallel device testing). Both build+test GREEN. Neither operator-blocked. §11.4.141 token-efficiency wins are separate Claude-Code config.
+- **B — server health** → `docs/research/server_health_20260709/REMEDIATION.md`. `go build`/`vet`/`gofmt`/`test` all GREEN, 15/15 pkgs (forced `-count=1` non-cached). **No fix required** (zero-finding tree; correctly changed nothing per §11.4.102). Tracked gap unchanged: `internal/api/manager-dist` has no `_test.go`.
+- **C — OpenDesign + §11.4.170 harness** → `docs/research/ui_ux_opendesign_audit_20260709/OPENDESIGN_PLAN.md`. Recommends **`clients/ota-manager` canonical** (already has the token/dark-mode arch OpenDesign feeds; dashboard would be a rebuild; dashboard's Playwright/axe e2e is portable). §11.4.170 harness spec: Storybook 8 + addon-themes × Playwright `toHaveScreenshot()` golden-diff + Tesseract-OCR layout oracle, self-validated golden fixtures (§11.4.107(10)).
 
-**NEXT:** land A/B/C evidence; **surface the canonical-frontend operator decision (§11.4.66)**; then OpenDesign install + §11.4.170 harness on the chosen frontend; resume the TEST-COVERAGE PROGRAM Phase 1 remainder (signed-pipeline-vs-live + challenges-bank still UNTRACKED from 2026-06-23). Known follow-up: `commit_all.sh --paths` fatals when a pre-staged **deletion** path is in the list (whole `git add` aborts) → switch to `git add -A -- $paths` or per-path add. **OPERATOR: rotate the posted password (§11.4.10).**
+**TWO PARKED OPERATOR DECISIONS (§11.4.66/§11.4.101 — documented, NOT overnight-blocked; the loop keeps progressing non-UI work):**
+1. **Canonical frontend** — options: (1, recommended) `clients/ota-manager` canonical + retire `dashboard` (§11.4.122 no-silent-removal ⇒ needs explicit yes); (2) ota-manager canonical, keep dashboard; (3) dashboard canonical, rebuild+retire ota-manager; (4) keep+refine both via shared token pkg.
+2. **Which "OpenDesign" (§11.4.162)** — UNCONFIRMED (§11.4.6): no URL in the mandate, no repo in `.gitmodules`/our orgs. Closest evidenced candidate: "Open Design" (open-design.ai / `nexu-io/open-design`, CSS-token system). MUST be operator-confirmed before any install (installing a guessed package = §11.4.6 violation). This is the plan's blocking step B0.
+
+Neither frontend was modified (§11.4.122); no OpenDesign package installed (§11.4.6). The §11.4.170 host-render harness is package-independent and could be built on the recommended frontend once decision 1 lands.
+
+**NEXT (non-UI, non-blocked):** resume TEST-COVERAGE PROGRAM Phase 1 remainder — the 2026-06-23 signed-pipeline-vs-live + challenges-bank evidence is still UNTRACKED and needs RE-validation on a fresh live-system boot before commit (§11.4.108, do not commit stale evidence); optionally prototype session_orchestrator as the device-claim registry (needs-review). Known tooling follow-up: `commit_all.sh --paths` fatals when a pre-staged **deletion** path is in the list (whole `git add` aborts, stages nothing) → switch to `git add -A -- $paths` or per-path add. **OPERATOR: (a) the two decisions above; (b) rotate the posted password (§11.4.10).**
 
 ### Latest session (2026-06-23) — Comprehensive test-coverage + anti-bluff program (Phase 0 DONE + Phase 1 mostly done)
 
