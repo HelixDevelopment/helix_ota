@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AUDIT</h1>
+</header>
+<h1 id="helix-ota-server-11.4.169-test-type-coverage-audit">Helix OTA
+Server — §11.4.169 Test-Type Coverage Audit</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z <strong>Scope:</strong> <code>server/</code> (Go
+control plane module
+<code>github.com/HelixDevelopment/helix_ota/server</code>) ONLY. This is
+a READ-ONLY audit — no test was added, no source was modified, no git
+command was run. All findings below are either (a) read directly from
+test source, or (b) captured from real command execution on this host on
+2026-07-09/10. <strong>Method:</strong> enumerate every
+<code>*_test.go</code> under <code>server/</code>, read what each
+exercises, run the real suite (<code>go build</code>,
+<code>go test ./...</code>, <code>go test ./... -race</code>,
+<code>go vet</code>, <code>gofmt -l</code>,
+<code>go test -bench</code>), classify against the §11.4.169 closed
+test-type set, and report gaps with concrete descriptions. No coverage-%
+claim is made without a captured run backing it (§11.4.6).
+<strong>Companion doc:</strong>
+<code>docs/research/test-coverage-audit-20260623/REPORT.md</code>
+(2026-06-23) covers <strong>code coverage %</strong> + mutation-proof
+from a prior round; this document covers the §11.4.169
+<strong>test-TYPE</strong> closed set specifically and is a different
+cut of the same codebase. Cross-referenced, not duplicated.</p>
+<hr />
+<h2
+id="existing-test-inventory-file-functions-test-type-classification">1.
+Existing test inventory (file → functions → test-type
+classification)</h2>
+<p><code>find server -name '*_test.go'</code> returned <strong>73
+files</strong>, <code>grep -c '^func (Test|Benchmark|Fuzz)'</code>
+returned <strong>489 functions</strong>: <strong>482 <code>Test*</code>,
+7 <code>Benchmark*</code>, 0 <code>Fuzz*</code></strong>.</p>
+<h3 id="cmd-binary-smoke-tests-unit-light-e2e">1.1 <code>cmd/</code> —
+binary smoke tests (unit + light e2e)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Representative functions</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cmd/applyport/main_test.go</code></td>
+<td><code>TestRun_UnknownCommand</code>, <code>TestBuildVerifier</code>,
+<code>TestSmoke_NoArgsUsage</code>,
+<code>TestSmoke_UnknownCommandExec</code></td>
+<td>unit (env/flag parsing) + smoke (builds+execs the real binary as a
+subprocess, asserts real exit codes)</td>
+</tr>
+<tr>
+<td><code>cmd/ota-device-emu/main_test.go</code></td>
+<td><code>TestSmoke_MissingHardwareID</code>,
+<code>TestSmoke_Help</code>, <code>TestSmoke_BadFlag</code></td>
+<td>smoke (subprocess exec, real exit codes/stderr)</td>
+</tr>
+<tr>
+<td><code>cmd/ota-server/main_test.go</code></td>
+<td><code>TestGetEnvDefault</code>,
+<code>TestSmoke_BadConfigExits</code></td>
+<td>unit + smoke</td>
+</tr>
+<tr>
+<td><code>tools/loadtest/main_test.go</code></td>
+<td><code>TestRun_AgainstRealServer</code> (drives <code>run()</code>
+against a real <code>httptest</code> server, asserts p50/p99 internally
+consistent), <code>TestSmoke_Selftest</code>,
+<code>TestRun_Non2xxCounted</code>, <code>TestPercentile</code>,
+<code>TestSummarize</code></td>
+<td>unit (percentile math) + smoke (build+exec) + light
+benchmarking-harness self-test — <strong>NOT itself a DDoS/load test of
+the real <code>ota-server</code> binary</strong>, only of a throwaway
+1-line 200-OK handler</td>
+</tr>
+</tbody>
+</table>
+<h3 id="internalapi-the-bulk-of-the-suite-46-files">1.2
+<code>internal/api/</code> — the bulk of the suite (46 files)</h3>
+<ul>
+<li><strong>Integration-style (real <code>gin.Engine</code> + real
+<code>NewServer(...)</code> + real in-memory
+<code>store.Repository</code>, driven via
+<code>httptest.ResponseRecorder</code>, no mocks of the system under
+test per §11.4.27):</strong> essentially every
+<code>handlers_*_test.go</code> file —
+<code>handlers_auth_test.go</code> (<code>TestLogin</code>,
+<code>TestRefreshRotation</code>,
+<code>TestRBACForbidsWrongRole</code>),
+<code>handlers_artifact_test.go</code>/<code>handlers_artifact_parts_test.go</code>
+(artifact upload + ed25519 signature verification),
+<code>handlers_device_test.go</code>,
+<code>handlers_release_test.go</code>,
+<code>handlers_deployment_test.go</code>,
+<code>handlers_rollout_test.go</code>,
+<code>handlers_delta_test.go</code>,
+<code>handlers_recall_test.go</code>,
+<code>handlers_telemetry_test.go</code>,
+<code>handlers_group_test.go</code>,
+<code>handlers_project_test.go</code>,
+<code>handlers_audit_test.go</code>,
+<code>handlers_branches_test.go</code>,
+<code>handlers_error_paths_test.go</code>,
+<code>handlers_widen_test.go</code>,
+<code>handlers_repo_error_test.go</code>,
+<code>handlers_client_test.go</code> /
+<code>handlers_client_antidowngrade_test.go</code>,
+<code>middleware_compression_test.go</code>,
+<code>coverage_*_test.go</code>, <code>embed_test.go</code>. This IS the
+project’s “integration” layer for the API — real router, real middleware
+chain (auth/RBAC/audit/compression), real business logic; only the
+persistence layer is the in-memory <code>Repository</code> (the actual
+MVP production implementation per architecture.md §4, not a mock).</li>
+<li><strong>Security-relevant, specifically citable:</strong>
+<ul>
+<li><code>internal/api/handlers_artifact_parts_test.go:83</code>
+<code>TestArtifactUploadIgnoresRequestSuppliedPubkey</code> — proves the
+exact trust boundary CLAUDE.md calls out
+(<code>handlers_artifact.go:resolvePublicKey</code>): an attacker-signed
+artifact with an attacker-supplied <code>pubkey</code> part is rejected
+(422), i.e. the request can never override the server-configured trusted
+key.</li>
+<li><code>internal/api/handlers_artifact_parts_test.go:110</code>
+<code>TestArtifactUploadNoTrustedKey</code>,
+<code>handlers_artifact_test.go:46</code>
+<code>TestArtifactUploadRejects</code>,
+<code>coverage_gap_test.go:342</code>
+<code>TestResolveSignatureAllBranches</code> — signature-verification
+edge cases.</li>
+<li><code>handlers_auth_test.go:96</code>
+<code>TestRBACForbidsWrongRole</code>,
+<code>handlers_group_test.go:99</code> <code>TestGroupRBAC</code>,
+<code>coverage_project_deployment_test.go</code> (8 functions covering
+<code>requireProjectAccess</code>: unauthenticated, admin-bypass,
+insufficient-role, viewer-can-view) — RBAC/authorization coverage.</li>
+<li><code>internal/api/embed_stress_chaos_test.go:376-439</code>
+(<code>dotdot_etc_passwd</code>, <code>dotdot_deep</code>,
+<code>assets_dotdot</code> cases inside
+<code>TestStressManagerSPA_BoundaryPaths</code>) — path-traversal-escape
+probe against the embedded manager-UI static file server, hard-asserts
+zero host-file leaks.</li>
+<li>No security-header test; no cross-secret token-forgery test (see
+gaps §5). Note: the token scheme is fixed HMAC-SHA256 signed-opaque, not
+a general multi-algorithm JWT parser, so classic “alg=none” confusion
+does not structurally apply (positive finding, not a gap).</li>
+</ul></li>
+<li><strong>Stress + chaos, specifically citable:</strong>
+<ul>
+<li><code>chaos_test.go</code> (4 funcs):
+<code>TestChaosAuthBadPayload</code>,
+<code>TestChaosAuthHugePayload</code>,
+<code>TestChaosConcurrentMutation</code>,
+<code>TestChaosStoreRestart</code>.</li>
+<li><code>stress_test.go</code> (3 funcs):
+<code>TestStressConcurrentAuth</code>,
+<code>TestStressConcurrentRelease</code>,
+<code>TestStressConcurrentDevice</code>.</li>
+<li><code>resilience_test.go</code> (5 funcs):
+<code>TestStressConcurrentGroupCreate</code>,
+<code>TestStressSustainedReads</code>,
+<code>TestStressConcurrentMembershipNoLostUpdates</code>,
+<strong><code>TestDDoSFloodStaysUpAndRecovers</code></strong> (6000
+requests / 64 workers against <code>/healthz</code> + a post-flood
+authenticated write, asserts 0 unexpected non-200/429 and immediate
+post-flood responsiveness — this is the file’s own <strong>explicit
+DDoS-class test</strong>),
+<code>TestChaosRepoFaultDegradesAndRecovers</code> (injected repo fault
+→ graceful 500 → clears → 200 recovery).</li>
+<li><code>embed_stress_chaos_test.go</code> (6 funcs, largest single
+stress+chaos file): <code>TestStressManagerSPA_SustainedMixedLoad</code>
+(480 concurrent requests across 4 response classes +
+<strong>goroutine-leak check</strong> via
+<code>runtime.NumGoroutine()</code> before/after,
+<code>leak-tolerance&lt;=4</code>),
+<code>TestStressManagerSPA_ConcurrentContention</code>,
+<code>TestStressManagerSPA_BoundaryPaths</code> (incl. the
+path-traversal probe above),
+<code>TestChaosManagerSPA_OddMethodsAndHeaders</code>,
+<code>TestChaosManagerSPA_RawMalformedWire</code>,
+<code>TestChaosManagerSPA_ConcurrentConnPressure</code>.</li>
+<li><code>rate_limit_test.go</code> (2 funcs):
+<code>TestMaxInflightShedsUnderFlood</code> (cap=1, 300 concurrent,
+proves 429-shedding + post-flood recovery works <strong>when the cap is
+enabled</strong>), <code>TestMaxInflightDisabledByDefault</code> (cap=0
+→ never sheds — <strong>documents that <code>HELIX_MAX_INFLIGHT</code>
+defaults to 0/disabled</strong>, confirmed at
+<code>internal/config/config.go:126</code>).</li>
+<li><code>TestDDoSFloodStaysUpAndRecovers</code>’s own doc comment
+states the <strong>honest finding</strong>, verbatim: <em>“the MVP has
+NO rate-limiting — every request is served (no 429s) … Recommendation
+(tracked): add a rate-limit / concurrency-cap middleware before public
+exposure.”</em> <code>rate_limit_test.go</code> is that follow-up: it
+proves the control <strong>works when turned on</strong>, but does not
+itself prove the shipped default deployment turns it on (see gap
+G-DDOS-1).</li>
+</ul></li>
+<li><strong>Benchmarking:</strong> <code>bench_test.go</code> —
+<code>BenchmarkHealthz</code>, <code>BenchmarkGroupCreate</code>,
+<code>BenchmarkGroupList</code>,
+<code>BenchmarkClientUpdateNoDeployment</code> (4 of the repo’s 7 total
+<code>Benchmark*</code> funcs).</li>
+<li><strong>Concurrency / race-deadlock specific:</strong>
+<ul>
+<li>Deadlock-timeout guard pattern
+(<code>select { case &lt;-done: ; case &lt;-time.After(30*time.Second): t.Fatalf("… possible deadlock") }</code>)
+present in <code>embed_stress_chaos_test.go</code>’s
+<code>TestStressManagerSPA_SustainedMixedLoad</code>.</li>
+<li><code>handlers_parked_resilience_test.go</code> (5 funcs):
+<code>TestResilienceConcurrentGroupPagination</code>,
+<code>TestResilienceConcurrentTelemetryPagination</code>,
+<code>TestResilienceConcurrentSeedAndRead</code> —
+concurrent-correctness (no lost updates / no torn reads) under real
+goroutine fan-out.</li>
+</ul></li>
+</ul>
+<h3
+id="internaldevice-applyport-ab-slot-switch-ed25519-signing-client">1.3
+<code>internal/device/</code> (applyport — A/B slot switch, ed25519
+signing, client)</h3>
+<ul>
+<li><code>applyport_test.go</code> (28 funcs) +
+<code>applyport_mutation_test.go</code> (21 funcs, explicitly named
+“mutation” — §1.1-style paired assertions) +
+<code>coverage_test.go</code> /
+<code>coverage_extra_test.go</code>.</li>
+<li>Security-relevant:
+<code>TestSignatureVerifier_ValidSignature</code>/<code>InvalidSignature</code>/<code>TamperedPayload</code>/<code>NoKeyConfigured</code>/<code>BadSignatureHex</code>/<code>BadSignatureLength</code>,
+<code>TestMutationSignatureUsesRealEd25519</code>,
+<code>TestMutationSignatureTamperedPayloadCaught</code>,
+<code>TestRealEd25519Signature</code> — real ed25519 crypto exercised,
+not mocked.</li>
+<li>Concurrency: <code>TestMutationConcurrentAccessSafe</code>,
+<code>TestSlotDevice_ConcurrentAccess</code>.</li>
+<li>e2e-ish: <code>TestFullLifecycle_LoginRegisterCheck</code> (login →
+register → check-for-update against a real <code>httptest</code>
+server).</li>
+</ul>
+<h3
+id="internaldeviceemu-device-emulator-the-client-half-of-the-ota-protocol">1.4
+<code>internal/deviceemu/</code> (device emulator — the client half of
+the OTA protocol)</h3>
+<ul>
+<li><code>emulator_test.go</code>:
+<code>TestEmulatorFullLifecycle</code>,
+<code>TestEmulatorRunOnce</code>,
+<code>TestEmulatorReportFailure</code>,
+<code>TestEmulatorSelfServesDeploymentID</code>.</li>
+<li><strong><code>recall_recovery_test.go:33</code>
+<code>TestRecallRecoveryE2E</code></strong> — the strongest single
+<strong>e2e</strong> test in the repo: boots a real in-process
+<code>httptest</code> control plane, an operator stages release v1.1.0 +
+deployment, a real <code>deviceemu.Client</code> applies it, fails its
+post-apply health-check, the operator forward-fix-recalls to v1.2.0, the
+device re-checks and recovers — every step read back over real HTTP
+responses (§11.4.107-style liveness, not a single green line).</li>
+<li><code>scaling_test.go</code>:
+<code>TestScalingConcurrentRegisterCheck</code>,
+<code>TestScalingConcurrentFullLifecycle</code> — concurrency at the
+device-fleet level.</li>
+<li><code>error_paths_test.go</code> (29 funcs) — exhaustive
+negative-path coverage (bad JSON, transport errors, unexpected status
+codes) of the emulator’s HTTP client.</li>
+</ul>
+<h3
+id="internalfabric-internalhealth-internalconfig-small-pure-unit-packages">1.5
+<code>internal/fabric/</code>, <code>internal/health/</code>,
+<code>internal/config/</code> — small, pure-unit packages</h3>
+<ul>
+<li><code>config_test.go</code> (<code>TestLoadDefaults</code>,
+<code>TestLoadOverrides</code>, <code>TestLoadInvalidValues</code>),
+<code>health_test.go</code> (<code>TestLiveAlwaysTrue</code>,
+<code>TestReadyDefaultTrue</code>, <code>TestReadyProbe</code>) —
+genuine <strong>unit</strong> tests, no HTTP, no store.</li>
+<li><code>fabric/registry_test.go</code> +
+<code>registry_branches_test.go</code> — lease-exclusivity concurrency
+(<code>TestRegistryLeaseExclusivity</code>) + evidence-store branch
+coverage.</li>
+</ul>
+<h3
+id="internalrollout-and-internalstore-the-persistence-rollout-engine-seam">1.6
+<code>internal/rollout/</code> and <code>internal/store/</code> — the
+persistence + rollout-engine seam</h3>
+<ul>
+<li><strong>Default-build (no tag), run in this audit:</strong>
+<code>scenario_test.go</code>, <code>service_test.go</code>,
+<code>store_test.go</code> (rollout); <code>contract_test.go</code>,
+<code>memory_*_test.go</code>, <code>bench_test.go</code> (store) — all
+exercise the <strong>in-memory</strong> implementations (the real
+MVP-wired <code>store.Repository</code> per architecture.md §4, not a
+mock).</li>
+<li><strong><code>//go:build integration</code>-gated (verified present,
+NOT executed in this audit — see §2):</strong>
+<code>postgres_integration_test.go</code>,
+<code>postgres_coverage_integration_test.go</code>,
+<code>postgres_fault_integration_test.go</code>,
+<code>postgres_fabric_integration_test.go</code>,
+<code>faultproxy_test.go</code>, <code>pg_itest_lock_test.go</code> in
+both <code>internal/store/</code> and <code>internal/rollout/</code>.
+These boot a <strong>real PostgreSQL</strong> via the
+<code>digital.vasic.containers</code> submodule (per §11.4.74/§11.4.76 —
+never ad-hoc podman) and prove the pgx
+<code>Repository</code>/<code>PostgresStore</code> satisfy the identical
+behavioural contract as the in-memory implementation, including a real
+TCP fault-injection proxy (<code>faultproxy_test.go</code>) for
+chaos-class driver-fault coverage
+(<code>TestPostgresStoreDriverFaults_Integration</code>,
+<code>TestPostgresDriverFaults_Integration</code>).</li>
+<li><code>TestFabricLeaseExclusivityGuard</code>,
+<code>TestReleaseFabricLeaseWithOtherActiveLease</code> —
+concurrency/exclusivity guarantees on the rollout fabric.</li>
+</ul>
+<h3 id="internaltransport-http3-http2-dual-transport">1.7
+<code>internal/transport/</code> — HTTP/3 + HTTP/2 dual transport</h3>
+<ul>
+<li><code>transport_test.go:65</code>
+<code>TestDualTransportServesH3AndH2</code> — real dual-stack serve
+test.</li>
+<li><code>transport_branches_test.go</code>,
+<code>transport_coverage_test.go</code> — construction/shutdown
+error-path branches (<code>TestNewWrapsHTTP3ConstructionError</code>,
+<code>TestShutdownReturnsHTTP2Error</code>).</li>
+</ul>
+<h3
+id="testschaos-and-testsstress-top-level-servertests-distinct-from-internalapis-own-chaosstress-files">1.8
+<code>tests/chaos/</code> and <code>tests/stress/</code> (top-level
+<code>server/tests/</code>, distinct from <code>internal/api</code>’s
+own chaos/stress files)</h3>
+<ul>
+<li><code>tests/chaos/chaos_test.go</code> (5 funcs):
+<code>TestChaosMalformedPayloads</code>,
+<code>TestChaosHugePayload</code>,
+<code>TestChaosConcurrentCreateSameResource</code>,
+<code>TestChaosConcurrentConflictingMutations</code>,
+<code>TestChaosSustainedFaultRecovery</code>.</li>
+<li><code>tests/stress/stress_test.go</code> (4 funcs):
+<code>TestStressSustainedGroupCreate</code>,
+<code>TestStressConcurrentAuth</code>,
+<code>TestStressConcurrentDeviceRegistration</code>,
+<code>TestStressBoundaryAuthPayloads</code>.</li>
+<li>Both packages explicitly document (source-comment) “Uses the real
+in-memory store (no mocks per §11.4.27)” and write captured-evidence
+logs to <code>qa-results/stress_chaos/</code>.</li>
+</ul>
+<hr />
+<h2
+id="captured-suite-run-output-real-execution-this-host-2026-07-0910">2.
+Captured suite-run output (real execution, this host,
+2026-07-09/10)</h2>
+<p>All commands run from <code>server/</code> with
+<code>go1.26.4</code>.</p>
+<pre><code>$ go build ./...
+(no output — clean build)
+
+$ go test ./... -count=1
+ok      .../server/cmd/applyport            2.293s
+ok      .../server/cmd/ota-device-emu        2.383s
+ok      .../server/cmd/ota-server            2.817s
+ok      .../server/internal/api              7.004s
+?       .../server/internal/api/manager-dist  [no test files]
+ok      .../server/internal/config           0.003s
+ok      .../server/internal/device           0.069s
+ok      .../server/internal/deviceemu         0.498s
+ok      .../server/internal/fabric            0.003s
+ok      .../server/internal/health            0.002s
+ok      .../server/internal/rollout           0.004s
+ok      .../server/internal/store             0.004s
+ok      .../server/internal/transport         0.112s
+ok      .../server/tests/chaos                0.072s
+ok      .../server/tests/stress               0.012s
+ok      .../server/tools/loadtest             2.075s</code></pre>
+<p><strong>Result: 100% package PASS, 0 failures, 0 skips</strong>,
+default (non-integration) build.</p>
+<pre><code>$ go vet ./...
+(no output — clean)
+
+$ gofmt -l .
+(no output — zero formatting drift across the whole module)
+
+$ go test ./... -race -count=1
+ok  .../server/cmd/applyport            3.805s
+ok  .../server/cmd/ota-device-emu        3.795s
+ok  .../server/cmd/ota-server            4.883s
+ok  .../server/internal/api             22.727s
+ok  .../server/internal/config           1.011s
+ok  .../server/internal/device           1.266s
+ok  .../server/internal/deviceemu         4.072s
+ok  .../server/internal/fabric            1.014s
+ok  .../server/internal/health            1.012s
+ok  .../server/internal/rollout           1.012s
+ok  .../server/internal/store             1.013s
+ok  .../server/internal/transport         1.264s
+ok  .../server/tests/chaos                1.181s
+ok  .../server/tests/stress               1.092s
+ok  .../server/tools/loadtest             3.582s</code></pre>
+<p><strong>Result: 100% package PASS under <code>-race</code>, 0
+data-race reports</strong> across every package in the module — this is
+real, direct race-detector evidence, not an inference.</p>
+<pre><code>$ go test ./... -bench=. -benchtime=1x -run &#39;^$&#39; -count=1
+BenchmarkHealthz-2                    1   78399 ns/op    9440 B/op   67 allocs/op
+BenchmarkGroupCreate-2                1   77397 ns/op   23104 B/op  184 allocs/op
+BenchmarkGroupList-2                  1   45369 ns/op   25528 B/op  136 allocs/op
+BenchmarkClientUpdateNoDeployment-2   1   18689 ns/op    9440 B/op   58 allocs/op
+BenchmarkMemoryCreateGroup-2          1    6710 ns/op    1560 B/op    9 allocs/op
+BenchmarkMemoryFindDelta-2            1     381.0 ns/op     0 B/op    0 allocs/op
+BenchmarkMemoryListAudit-2            1   43416 ns/op   92464 B/op   10 allocs/op</code></pre>
+<p><strong>Confirmed: exactly 7 real benchmark functions exist</strong>
+(4 in <code>internal/api/bench_test.go</code>, 3 in
+<code>internal/store/bench_test.go</code>); each reports real ns/op +
+B/op + allocs/op from a real run (not a stub).</p>
+<pre><code>$ go vet -tags integration ./internal/store/... ./internal/rollout/...
+(no output — the //go:build integration files type-check clean)</code></pre>
+<p><strong>Honest boundary:</strong> this confirms the
+integration-tagged test source compiles correctly against the current
+code. It does <strong>NOT</strong> confirm the tests pass — no real
+PostgreSQL / containers-submodule boot was performed in this audit run
+(that would require booting the <code>digital.vasic.containers</code>
+stack, out of scope for a read-only audit). This matches the companion
+2026-06-23 audit’s finding G1 (store/rollout Postgres path was
+“UNCONFIRMED PASS” at the Go-test level as of that date too).</p>
+<p>No <code>Fuzz*</code> function exists anywhere in the module
+(<code>grep -c '^func Fuzz'</code> = 0).</p>
+<hr />
+<h2 id="coverage-matrix">3. §11.4.169 coverage matrix</h2>
+<p>§11.4.169 enumerates a 12-item closed test-type set: unit /
+integration / e2e / full-automation / Challenges / HelixQA / DDoS /
+security / stress+chaos / concurrency / race-deadlock / memory /
+benchmarking.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Type</th>
+<th>Status</th>
+<th>Citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>unit</strong></td>
+<td><strong>COVERED</strong></td>
+<td><code>internal/config/config_test.go</code>
+(<code>TestLoadDefaults</code>/<code>TestLoadOverrides</code>/<code>TestLoadInvalidValues</code>),
+<code>internal/health/health_test.go</code>,
+<code>tools/loadtest/main_test.go</code> (<code>TestPercentile</code>,
+<code>TestSummarize</code>, <code>TestMs</code>),
+<code>internal/device/applyport_test.go</code>
+(<code>TestParseHelixSlot</code>, <code>TestSha256Hex</code>-class),
+<code>internal/api/coverage_extra_test.go</code>
+(<code>TestMethodVerb</code>, <code>TestSingular</code>,
+<code>TestTruncate</code>) — pure functions, no HTTP/store.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>integration</strong></td>
+<td><strong>COVERED</strong> (in-memory path) / <strong>PARTIAL</strong>
+(Postgres path)</td>
+<td>In-memory: virtually all
+<code>internal/api/handlers_*_test.go</code> (real Gin router + real
+middleware + real <code>store.Repository</code>). Postgres:
+<code>internal/store/postgres_integration_test.go</code> + 5 sibling
+files + <code>internal/rollout/postgres_integration_test.go</code> + 4
+siblings exist, are real (boot real Postgres via the containers
+submodule, no fakes), type-check clean under
+<code>-tags integration</code>, but were <strong>NOT executed in this
+audit</strong> (no live Postgres booted) — status for that specific path
+is UNCONFIRMED-BY-THIS-AUDIT, not MISSING.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>e2e</strong></td>
+<td><strong>COVERED</strong></td>
+<td><code>internal/deviceemu/recall_recovery_test.go:33</code>
+<code>TestRecallRecoveryE2E</code> (full stage→apply→fail→recall→recover
+lifecycle over real HTTP against an in-process control plane);
+<code>internal/device/applyport_test.go:735</code>
+<code>TestFullLifecycle_LoginRegisterCheck</code>;
+<code>internal/deviceemu/emulator_test.go</code>
+<code>TestEmulatorFullLifecycle</code>. All in-process
+(<code>httptest</code>), not a separately-deployed binary.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>full-automation</strong></td>
+<td><strong>PARTIAL</strong> (inside <code>server/</code>)</td>
+<td>Every test above is autonomous (no human in the loop,
+§11.4.98-clean) — <code>TestMain</code> in <code>cmd/*</code> builds and
+execs real binaries with real exit-code assertions. What’s absent
+<strong>inside <code>server/</code></strong> is a black-box run of the
+compiled <code>ota-server</code> binary driven over the network by an
+external harness (that exists at the <strong>project level</strong>,
+outside <code>server/</code> — see §4).</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Challenges</strong></td>
+<td><strong>MISSING inside <code>server/</code></strong></td>
+<td>No HelixQA/Challenges wiring exists under <code>server/</code>
+itself. (A real, wired Challenge bank targeting this exact server DOES
+exist at the project root —
+<code>tools/helixqa/banks/helix_ota.yaml</code> — see §4; it is out of
+the audited <code>server/</code> module boundary.)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>HelixQA</strong></td>
+<td><strong>MISSING inside <code>server/</code></strong></td>
+<td>Same as above — HelixQA integration lives at the project root, not
+inside the Go module.</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>DDoS</strong></td>
+<td><strong>PARTIAL</strong></td>
+<td><code>internal/api/resilience_test.go:268</code>
+<code>TestDDoSFloodStaysUpAndRecovers</code> (6000 req / 64 workers,
+asserts stay-up + recovery) +
+<code>internal/api/rate_limit_test.go</code>
+(<code>TestMaxInflightShedsUnderFlood</code> proves the shedding control
+works when enabled). Gap: the flood test’s own comment documents the
+shipped default has <strong>no active rate limiter</strong>
+(<code>HELIX_MAX_INFLIGHT</code> defaults to <code>0</code>,
+<code>internal/config/config.go:126</code>), and no test in
+<code>server/</code> proves the deployed default <em>configuration</em>
+(as opposed to the code path) enables it.</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>security</strong></td>
+<td><strong>PARTIAL</strong></td>
+<td>RBAC (<code>handlers_auth_test.go:96</code>
+<code>TestRBACForbidsWrongRole</code>,
+<code>coverage_project_deployment_test.go</code> 8 funcs),
+artifact-signature trust boundary
+(<code>handlers_artifact_parts_test.go:83</code>
+<code>TestArtifactUploadIgnoresRequestSuppliedPubkey</code> — direct
+proof of the exact boundary CLAUDE.md names), ed25519 signature
+tamper/no-key/bad-length guards
+(<code>internal/device/applyport_test.go</code> +
+<code>applyport_mutation_test.go</code>), path-traversal-escape probe
+(<code>embed_stress_chaos_test.go</code> dotdot cases). Gap: no
+cross-secret token-forgery test (a validly-shaped token signed with a
+different secret than configured — see §5 gap 5), no
+security-response-header test (no
+<code>X-Content-Type-Options</code>/<code>X-Frame-Options</code>/HSTS
+anywhere in <code>internal/</code>, confirmed by direct grep — none set,
+none tested), no auth brute-force/lockout test, no SQL-injection-string
+probe against the pgx path (only in-memory path is exercised in
+<code>server/</code>’s own suite). The token scheme itself is fixed
+HMAC-SHA256 signed-opaque (not a multi-algorithm JWT parser), so classic
+alg-confusion does not structurally apply — a positive finding.</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>stress+chaos</strong></td>
+<td><strong>COVERED</strong></td>
+<td><code>internal/api/chaos_test.go</code>,
+<code>stress_test.go</code>, <code>resilience_test.go</code>,
+<code>embed_stress_chaos_test.go</code> (6 funcs, incl. goroutine-leak +
+deadlock-timeout guard), <code>tests/chaos/chaos_test.go</code>,
+<code>tests/stress/stress_test.go</code> — real concurrent load, fault
+injection (repo faults, malformed/huge payloads, raw malformed wire
+bytes), all against the real in-memory store. Postgres-backed chaos
+(<code>internal/store/faultproxy_test.go</code>, real TCP
+fault-injection proxy) exists but is
+<code>-tags integration</code>-gated and not executed in this
+audit.</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>concurrency</strong></td>
+<td><strong>COVERED</strong></td>
+<td><code>TestChaosConcurrentMutation</code>,
+<code>TestStressConcurrentMembershipNoLostUpdates</code>,
+<code>TestResilienceConcurrentGroupPagination</code>/<code>ConcurrentTelemetryPagination</code>/<code>ConcurrentSeedAndRead</code>,
+<code>TestScalingConcurrentRegisterCheck</code>/<code>ConcurrentFullLifecycle</code>,
+<code>TestMutationConcurrentAccessSafe</code>,
+<code>TestSlotDevice_ConcurrentAccess</code>,
+<code>TestFabricLeaseExclusivityGuard</code> — no-lost-update /
+no-torn-read assertions under real goroutine fan-out.</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>race-deadlock</strong></td>
+<td><strong>COVERED</strong></td>
+<td><code>go test ./... -race -count=1</code> — <strong>0 data races
+across every package</strong>, captured in §2 (real, direct evidence,
+this run). Deadlock: explicit 30s-timeout <code>select</code> guard in
+<code>TestStressManagerSPA_SustainedMixedLoad</code>; every stress/chaos
+test uses bounded <code>sync.WaitGroup</code> + timeouts rather than
+unbounded blocking.</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>memory</strong></td>
+<td><strong>PARTIAL</strong></td>
+<td>Only one memory-adjacent signal exists:
+<code>embed_stress_chaos_test.go</code>’s goroutine-leak check
+(<code>runtime.NumGoroutine()</code> before/after 480-request burst,
+<code>leak-tolerance&lt;=4</code>) in
+<code>TestStressManagerSPA_SustainedMixedLoad</code>. No heap/RSS growth
+assertion (<code>runtime.ReadMemStats</code>) anywhere, no
+memory-ceiling test tied to the constitution’s §12.6 60% host-memory
+budget, no test asserting bounded memory under a large/sustained request
+volume for the core API handlers
+(groups/devices/releases/deployments/rollout) — only the embed
+static-file handler is goroutine-leak-checked.</td>
+</tr>
+<tr>
+<td>—</td>
+<td><strong>benchmarking</strong></td>
+<td><strong>COVERED</strong> (micro) / <strong>PARTIAL</strong> (no
+regression baseline)</td>
+<td>7 real <code>Benchmark*</code> functions (§2) —
+<code>BenchmarkHealthz</code>, <code>BenchmarkGroupCreate</code>,
+<code>BenchmarkGroupList</code>,
+<code>BenchmarkClientUpdateNoDeployment</code>,
+<code>BenchmarkMemoryCreateGroup</code>,
+<code>BenchmarkMemoryFindDelta</code>,
+<code>BenchmarkMemoryListAudit</code>. Gap: none of these are compared
+against a stored baseline / regression threshold — a benchmark that
+silently regresses 10× would not fail any gate.
+<code>tools/loadtest</code> provides a real macro HTTP-load harness (RPS
++ p50/p90/p99), but its own test
+(<code>TestRun_AgainstRealServer</code>) only exercises it against a
+1-line throwaway handler, not the real <code>ota-server</code> binary,
+and is not itself a benchmark gate.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Summary: 6 of 12 types fully COVERED (unit, e2e,
+stress+chaos, concurrency, race-deadlock, + integration/benchmarking
+effectively-covered-with-caveats), 5 PARTIAL (integration-Postgres,
+DDoS, security, memory, benchmarking-regression), 2 MISSING when scoped
+strictly to <code>server/</code> (Challenges, HelixQA) — though both
+exist and are wired at the project level (§4).</strong> Full-automation
+is functionally present inside <code>server/</code> (every test is
+autonomous) but the network-level black-box automation of the compiled
+binary lives outside the module.</p>
+<hr />
+<h2
+id="honest-supplementary-finding-project-level-black-box-coverage-of-the-server-outside-server">4.
+Honest supplementary finding: project-level black-box coverage of the
+server (outside <code>server/</code>)</h2>
+<p>Per §11.4.6 (no-guessing) this audit must not report a type as
+MISSING if real, wired coverage exists — even if it lives outside the
+strict <code>server/</code> directory the task scoped this audit to. The
+following were found (read-only, not re-executed by this audit) directly
+targeting the <code>server/</code> code and are germane to interpreting
+the matrix above correctly:</p>
+<ul>
+<li><code>tools/helixqa/banks/helix_ota.yaml</code> (rev 6, 1033 lines)
+— a real, wired <strong>HelixQA Challenge bank</strong> (closes types
+5/6 at the project level). It dispatches
+<code>tests/e2e/challenge_operational.sh</code> and sibling scripts
+against a <strong>live, real <code>ota-server</code> process over real
+HTTP</strong> (curl+jq, no mocks); its own doc comment states “THIS BANK
+IS NOT METADATA-ONLY.”</li>
+<li><code>tests/e2e/*.sh</code> (<code>challenge_operational.sh</code>,
+<code>challenge_filters_pagination.sh</code>,
+<code>recall_lifecycle.sh</code>, <code>rollout_halt_safety.sh</code>,
+<code>pipeline_signed.sh</code> / <code>pipeline_signed_live.sh</code>,
+<code>telemetry_schema_live.sh</code>) with committed evidence
+(<code>RUN_EVIDENCE.txt</code>: 39 passed/0 failed/1 skipped, PASS;
+<code>RECALL_EVIDENCE.txt</code>: 35/0/0 PASS;
+<code>ROLLOUT_HALT_EVIDENCE.txt</code>: 47/0/0 PASS;
+<code>FILTERS_PAGINATION_EVIDENCE.txt</code>: 50/0/0 PASS;
+<code>PIPELINE_EVIDENCE.txt</code>: 32/0/0 PASS, dated 2026-06-19
+through 2026-06-24) — real black-box <strong>e2e /
+full-automation</strong> proof against a compiled binary.</li>
+<li><code>tests/security/*.sh</code> (<code>security_probes.sh</code>,
+<code>security_probes_extended.sh</code>,
+<code>security_probes_filters.sh</code>,
+<code>trust_boundary_live.sh</code>,
+<code>recall_telemetry_probes.sh</code>,
+<code>saturation_live.sh</code>) — closes several of the
+<strong>security</strong>/<strong>DDoS</strong> gaps flagged in §3 at
+the project level: unauthenticated-access, RBAC, resource-ownership,
+malformed/tampered/reused-JWT, <strong>SQL-ish/path-traversal/NoSQL
+injection-string probes</strong> (<code>security_probes.sh</code> probe
+class E), oversized/malformed-JSON, and the exact artifact-signature
+trust-boundary proven live against real PostgreSQL
+(<code>trust_boundary_live.sh</code>, evidence under
+<code>docs/qa/20260623-trust-boundary-live/</code>, cases
+positive-accept / bad-signature-reject / request-supplied-key-ignored,
+all captured PASS). <code>saturation_live.sh</code> (evidence
+<code>docs/qa/20260623-saturation-live/</code>) is the direct closure of
+the DDoS gap: it explicitly documents (verbatim in its header) that the
+live default stack ships with <code>HELIX_MAX_INFLIGHT</code> unset (cap
+OFF) and proves BOTH that the cap works when a second capped instance is
+launched AND that the default (uncapped) live stack survives a bounded
+flood without crashing.
+<ul>
+<li><strong>Honest negative finding:</strong> the plain
+<code>tests/security/RUN_EVIDENCE.txt</code> (as opposed to the
+<code>_EXTENDED</code>/<code>_FILTERS</code>/<code>_RECALL_TELEMETRY</code>
+variants) shows its <strong>last recorded run ABORTED</strong> (“server
+not healthy” / “address already in use”, 2026-06-24) — i.e. not every
+script in this project-level suite has a clean latest run; the
+extended/filters/recall-telemetry variants do show clean PASS (26/0/0,
+39/0/0, 28/0/0 respectively, dated 2026-06-19/21).</li>
+</ul></li>
+<li><code>tests/chaos/chaos_live.sh</code> +
+<code>tests/stress/http_load_live.sh</code> — real chaos
+(<code>docs/qa/20260623-chaos-live/</code>: real
+<code>podman stop</code>/<code>podman start</code> of the live Postgres
+container mid-run, asserts clean 5xx degrade + full recovery + no data
+corruption on a survivor row) and real load
+(<code>docs/qa/20260623-http-load-live/</code>: measured 11,889 req/s,
+p50 1.945ms / p90 3.418ms / p99 5.136ms against <code>/healthz</code>) —
+this is genuine macro-benchmarking + DDoS-adjacent + chaos evidence,
+dated 2026-06-23, that a strict <code>server/</code>-only view would
+otherwise miss entirely.</li>
+<li><code>docs/qa/20260623-e2e-live-system/</code> — boots the real
+compiled <code>ota-server</code> binary against a real PostgreSQL
+(20-table schema confirmed in <code>postgres_evidence.txt</code>) via
+<code>tests/lib/boot_real_system.sh</code>, i.e. indirect but real
+evidence that the <code>-tags integration</code> Go code path (pgx
+<code>Repository</code>) functions correctly end-to-end, even though
+this audit did not itself execute the Go-level integration tests
+(§2).</li>
+</ul>
+<p><strong>Net effect on the matrix:</strong> types 5 (Challenges) and 6
+(HelixQA) are MISSING only if interpreted as “must live inside
+<code>server/</code>” — the constitution’s intent (a real,
+evidence-backed Challenge/HelixQA bank exercising the real system) is in
+fact satisfied at the project root. Types 7 (DDoS) and 8 (security) are
+better characterized as COVERED-at-project-level /
+PARTIAL-inside-<code>server/</code> once this evidence is accounted for.
+This does not change the <code>server/</code>-scoped matrix in §3 (which
+is what was asked for) but materially changes what should be prioritized
+in a production-readiness plan: the real gaps are memory-growth
+assertion and benchmark-regression-baseline, not “build a Challenge bank
+from scratch.”</p>
+<hr />
+<h2
+id="prioritized-gap-list-risk-descending-11.4.132-with-concrete-test-descriptions">5.
+Prioritized gap list (risk-descending, §11.4.132) with concrete test
+descriptions</h2>
+<ol type="1">
+<li><p><strong>[HIGHEST] Memory / heap-growth assertion for the core API
+handlers.</strong> Nothing in <code>server/</code> asserts bounded
+memory growth for the frequently-hit handlers
+(groups/devices/releases/deployments/rollout/telemetry) under sustained
+load — only the embed static-file handler has a goroutine-leak check.
+<strong>Concrete test:</strong> a
+<code>TestMemory_SustainedAPILoadNoGrowth</code>-class test that runs
+N≥1000 iterations of a representative mixed-endpoint workload (mirroring
+<code>TestStressManagerSPA_SustainedMixedLoad</code>’s pattern but
+against <code>/api/v1/groups</code>, <code>/api/v1/devices</code>,
+<code>/api/v1/releases</code>), calls <code>runtime.GC()</code> +
+<code>runtime.ReadMemStats</code> before/after, and asserts heap-in-use
+growth stays under an evidence-calibrated bound (§11.4.107(13) —
+calibrated on this project’s own fixtures, never a hardcoded literature
+threshold) plus a goroutine-count check identical to the existing embed
+pattern. <strong>Effort: small (0.5-1 day)</strong> — the pattern
+already exists in <code>embed_stress_chaos_test.go</code> and just needs
+porting to the API-handler surface.</p></li>
+<li><p><strong>[HIGH] Run the <code>-tags integration</code> Postgres
+suite for real and capture the result inside <code>server/</code>’s own
+CI-equivalent evidence trail.</strong> Currently
+<code>go vet -tags integration</code> type-checks clean but the suite
+has never been executed by this audit (and per the 2026-06-23 companion
+audit, not executed there either at the Go-test level — only the
+project-level shell e2e-live scripts exercise the compiled binary
+against real Postgres). <strong>Concrete action:</strong> boot the
+<code>digital.vasic.containers</code> Postgres stack (per
+§11.4.74/§11.4.76, never ad-hoc podman) and run
+<code>go test -tags integration ./internal/store/... ./internal/rollout/...</code>,
+capturing pass/fail + timing as committed evidence under
+<code>docs/qa/&lt;run-id&gt;/</code>. <strong>Effort: small (a few
+hours)</strong> — the harness
+(<code>digital.vasic.containers/pkg/boot</code>) is already imported and
+used by the test files; this is purely an execution/evidence-capture
+gap, not a missing-test gap.</p></li>
+<li><p><strong>[HIGH] Benchmark regression baseline.</strong> 7 real
+benchmarks exist but nothing compares a new run against a stored
+baseline — a 10× latency regression in <code>BenchmarkGroupCreate</code>
+would pass silently. <strong>Concrete test/tooling:</strong> a
+<code>benchstat</code>-based (or hand-rolled JSON-baseline) gate that
+runs <code>go test -bench=. -benchtime=&lt;fixed-N&gt;</code> against a
+committed <code>benchmarks/baseline.json</code>, fails on regression
+beyond a calibrated tolerance (e.g. ±20%), and updates the baseline only
+on deliberate operator-approved commits. <strong>Effort: medium (1-2
+days)</strong> including wiring + calibrating tolerances against this
+project’s own numbers per §11.4.107(13).</p></li>
+<li><p><strong>[MEDIUM] Security-response-header coverage.</strong> No
+<code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>, or
+HSTS header is set anywhere in <code>internal/</code> (confirmed absent
+by direct grep), and consequently nothing tests for it. <strong>Concrete
+test:</strong> once (if) a security-header middleware is added, a
+<code>TestSecurityHeadersPresentOnEveryResponse</code> asserting the
+header set on a representative sample of routes (200, 400, 401, 403,
+404, 500 paths) including error responses, not just happy-path 200s.
+<strong>Effort: small</strong> for the test once the middleware exists;
+the middleware itself is a separate (non-audit) implementation
+task.</p></li>
+<li><p><strong>[MEDIUM] Cross-secret token-forgery test.</strong>
+Correction after reading <code>internal/api/token.go</code>: this is
+<strong>not</strong> a general JWT library with an <code>alg</code>
+header (no algorithm-negotiation vector exists to confuse — it is a
+fixed HMAC-SHA256 signed-opaque <code>&lt;payload&gt;.&lt;sig&gt;</code>
+scheme), so classic “alg=none”/alg-confusion does not structurally apply
+here; that is a genuine positive finding, not a gap. The real gap:
+<code>coverage_gap_test.go:232</code>
+<code>TestTokenVerifyEdgeCases</code> covers a garbage-string signature
+(<code>"bad-signature"</code>), too-many-parts, and bad-base64-payload,
+but no test constructs a <strong>validly-formed</strong> token — correct
+JSON claims, correct base64url encoding, correct-length HMAC-SHA256
+signature — signed with a <strong>different secret</strong> than the
+server’s configured one (e.g. simulating a leaked-old-secret or
+cross-tenant forgery attempt) and asserts <code>Verify</code> rejects
+it. <strong>Concrete test:</strong>
+<code>TestTokenVerifySignedWithWrongSecretRejected</code> — mint a token
+with <code>NewTokenSigner([]byte("attacker-secret"))</code>, verify it
+against the server’s real signer, assert rejection. <strong>Effort:
+trivial (under an hour)</strong> — <code>internal/api/token.go</code>’s
+<code>Mint</code>/<code>Verify</code> already provide everything
+needed.</p></li>
+<li><p><strong>[MEDIUM] SQL/NoSQL-injection-string probe against the
+pgx-backed path, inside <code>server/</code>.</strong> The project-level
+<code>tests/security/security_probes.sh</code> probe class E already
+does this against a live (in-memory-by-default) server; nothing in
+<code>server/</code>’s own Go suite runs injection-shaped strings
+(<code>' OR '1'='1</code>, <code>{"$gt":""}</code>,
+<code>../../etc/passwd</code> in path/query/body params) against
+handlers that ultimately reach the pgx <code>Repository</code> (once
+<code>-tags integration</code> is exercised per gap 2). <strong>Concrete
+test:</strong> extend
+<code>internal/store/postgres_integration_test.go</code>’s scenario with
+a small <code>TestPostgresInjectionStringsNeverExecuteAsSQL</code>-class
+case feeding injection-shaped strings as e.g. group names / device
+hardware IDs and asserting they round-trip as literal data (pgx
+parameterized queries should already make this a formality, but there is
+currently no test proving it against the real driver). <strong>Effort:
+small (a few hours)</strong>, contingent on gap 2’s harness being
+runnable.</p></li>
+<li><p><strong>[LOW] Default-configuration DDoS-protection
+assertion.</strong> <code>rate_limit_test.go</code> proves the cap works
+when explicitly enabled; nothing in <code>server/</code> (nor, per the
+honest finding in §4, the currently-shipped
+<code>system.compose.yml</code>) proves or requires
+<code>HELIX_MAX_INFLIGHT</code> to be non-zero by default. This is
+arguably a deployment-config decision rather than a test gap, but a
+<code>TestConfig_MaxInflightHasSafeProductionDefault</code>-class test
+(or a documented, deliberate <code>Won't-fix</code>/accepted-risk
+decision per §11.4.112 if unlimited concurrency is genuinely intended
+for the MVP) would close the ambiguity. <strong>Effort: trivial (config
+decision + one assertion)</strong>, but requires an operator decision on
+the intended default posture — flagged here, not silently
+resolved.</p></li>
+<li><p><strong>[LOW] Native Go fuzzing
+(<code>func Fuzz...</code>).</strong> Zero fuzz targets exist anywhere
+in the module. Candidate surfaces: the multipart artifact-upload
+metadata parser (<code>ArtifactUploadMetadata</code> JSON decode), the
+delta/version-string parsers, and the JWT bearer-token parser
+(<code>internal/api/coverage_gap_test.go</code>’s
+<code>TestBearerTokenEdgeCases</code> already hand-enumerates edge cases
+that a fuzz corpus would discover automatically and extend).
+<strong>Effort: small per target (a few hours each)</strong> — Go’s
+built-in fuzzing (<code>go test -fuzz=Fuzz...</code>) requires no new
+dependency.</p></li>
+</ol>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>This audit is based entirely on (a) direct reading of
+<code>server/**/*_test.go</code> source files in this repository on
+2026-07-09/10, and (b) real command execution (<code>go build</code>,
+<code>go test</code>, <code>go vet</code>, <code>gofmt</code>,
+<code>go test -bench</code>) on this host on the same dates, plus
+read-only inspection of pre-existing project artifacts
+(<code>docs/research/test-coverage-audit-20260623/REPORT.md</code>,
+<code>tools/helixqa/banks/helix_ota.yaml</code>,
+<code>tests/e2e/*.sh</code>, <code>tests/security/*.sh</code>,
+<code>tests/chaos/chaos_live.sh</code>,
+<code>tests/stress/http_load_live.sh</code>, and their
+<code>docs/qa/2026062*-*-live/</code> evidence directories). No external
+web sources were consulted — this is an internal repository audit, not a
+documentation-currency check, so §11.4.99 (latest-online-source
+cross-reference) does not apply. No file outside
+<code>docs/research/server_test_type_coverage_audit_20260709/</code> was
+modified. No git command was run.</p>
+</body>
+</html>
