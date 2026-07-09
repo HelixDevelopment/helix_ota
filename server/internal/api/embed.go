@@ -31,8 +31,13 @@
 //
 // Security
 //
-//   - The manager-dist/ directory is gitignored (it is a build artifact, per
-//     §11.4.30).  Only the //go:embed directive references it at build time.
+//   - The manager-dist/ directory is a build artifact of clients/ota-manager
+//     (regenerate: `npm run build` there, then copy dist/ here).  It is
+//     currently TRACKED in git because //go:embed requires the files present
+//     at compile time and no regenerate-before-build step is wired yet.  That
+//     is a known §11.4.30 exception (build derivatives should not be versioned)
+//     pending the §11.4.173 containerized build-pipeline resolution (item K),
+//     which will gitignore this directory once the build regenerates it first.
 //   - No CORS is needed for the embedded path because both the SPA and the API
 //     are served from the same Go binary on the same origin.
 
