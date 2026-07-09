@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AUDIT</h1>
+</header>
+<h1
+id="ota-manager-shadcn-root.light-palette-wcag-2.1-contrast-audit">ota-manager
+shadcn <code>:root</code>/<code>.light</code> palette — WCAG 2.1
+contrast audit</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T18:51:55Z</p>
+<h2 id="scope-why-this-audit-exists">Scope + why this audit exists</h2>
+<p><code>clients/ota-manager</code> vendors the OpenDesign design-token
+system (<code>src/styles/opendesign-tokens.css</code>, imported first in
+<code>src/index.css</code>), but the shadcn/ui-generated HSL custom
+properties declared directly in
+<code>clients/ota-manager/src/index.css</code> under <code>:root</code>
+and <code>.light</code> are declared <strong>after</strong> the
+OpenDesign import and <strong>win every one of the token-name
+collisions</strong> (<code>--background</code>,
+<code>--foreground</code>, <code>--border</code>, <code>--ring</code>,
+etc. are defined by both layers under the same custom-property names,
+and CSS custom properties resolve to the last declaration in source
+order / highest specificity, which here is the shadcn block).
+Consequently the colors <code>clients/ota-manager</code> actually SHIPS
+to end users are the shadcn HSL triplets below, and OpenDesign’s own
+contrast guarantees (if any) never take effect for this client. This
+audit computes real WCAG 2.1 contrast ratios for the shadcn palette that
+is actually rendered, so ota-manager’s shipped colors have — for the
+first time — a captured, computed contrast record.</p>
+<p>No component or CSS source file was modified to produce this audit.
+No git command was run. Every ratio quoted below is copy-pasted verbatim
+from the real, executed run of <code>contrast.py</code> (also in this
+directory) — nothing here is hand-computed or estimated (Constitution
+§11.4.6 no-guessing / §11.4.123 rock-solid-proof).</p>
+<h2
+id="theme-naming-assumption-stated-explicitly-per-11.4.6">Theme-naming
+assumption (stated explicitly per §11.4.6)</h2>
+<p><code>clients/ota-manager/src/index.css</code> defines the
+<strong>dark</strong> palette under the bare <code>:root</code> selector
+and the <strong>light</strong> palette under <code>.light</code>. There
+is <code>grep -n "^\.dark" src/index.css</code> → <strong>no
+match</strong>: no separate <code>.dark { }</code> block exists.
+<code>clients/ota-manager/src/stores/ui-store.ts</code> confirms this is
+intentional, not an oversight — its own code comment reads:</p>
+<blockquote>
+<p>“index.css base <code>:root</code> is the DARK palette and
+<code>@custom-variant dark (&amp;:is(.dark *))</code> needs a
+<code>.dark</code> ancestor” — <code>applyThemeClass()</code> adds
+exactly one of the <code>light</code>/<code>dark</code> classes to
+<code>&lt;html&gt;</code>; when the class is <code>dark</code>, the bare
+<code>:root</code> values apply unmodified (CSS custom properties
+inherit down the tree, and a <code>.dark</code> selector with no
+properties of its own overrides nothing); when the class is
+<code>light</code>, the <code>.light</code> block’s declarations
+override <code>:root</code>. The store’s default <code>theme</code> is
+<code>"dark"</code>.</p>
+</blockquote>
+<p>This audit therefore labels the <code>:root</code> block
+<strong>“dark”</strong> and the <code>.light</code> block
+<strong>“light”</strong> to match the ACTUAL rendered behaviour
+confirmed by the store code — not the common shadcn convention (where
+<code>:root</code> is usually the light theme and a <code>.dark</code>
+class supplies overrides). This is stated as an assumption per the
+task’s honest-boundary instruction, backed by the cited grep + source
+evidence, not guessed.</p>
+<h2 id="token-source-verbatim-read-2026-07-09">Token source (verbatim,
+read 2026-07-09)</h2>
+<p><code>clients/ota-manager/src/index.css</code> lines 14–69 — see
+<code>contrast.py</code>’s <code>DARK_TOKENS</code> /
+<code>LIGHT_TOKENS</code> dicts for the exact literal copy consumed by
+the script.</p>
+<h2 id="pairs-audited-why-each-is-real-usage-evidence">Pairs audited +
+why each is real (usage evidence)</h2>
+<p>Every pair below is backed by a concrete component/file reference
+found by grepping <code>clients/ota-manager/src</code> — no pair was
+invented without seeing it consumed:</p>
+<table>
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 15%" />
+<col style="width: 18%" />
+<col style="width: 13%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Pair</th>
+<th>Class</th>
+<th>Bar</th>
+<th>Usage evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>foreground</code> / <code>background</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>index.css</code>
+<code>body { color: hsl(var(--foreground)) }</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>foreground</code> / <code>card</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td>default text inside <code>card.tsx</code> content (inherits
+<code>foreground</code>)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>card-foreground</code> / <code>card</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>card.tsx</code> explicit <code>text-card-foreground</code>
+usages</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>muted-foreground</code> / <code>background</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td>topbar/help text directly on page background</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>muted-foreground</code> / <code>card</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td>secondary text in <code>data-table.tsx</code>,
+<code>dashboard-page.tsx</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>muted-foreground</code> / <code>sidebar-background</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>app-layout.tsx:79</code> “Helix OTA v1.0”, <code>:135</code>
+admin email</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>primary-foreground</code> / <code>primary</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>button.tsx</code> default variant:
+<code>bg-primary text-primary-foreground</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>secondary-foreground</code> / <code>secondary</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>button.tsx</code> secondary variant</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>accent-foreground</code> / <code>accent</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>button.tsx</code> outline/ghost hover state</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>destructive-foreground</code> / <code>destructive</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>button.tsx</code> / <code>badge.tsx</code> destructive
+variant</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>popover-foreground</code> / <code>popover</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>select.tsx</code> / <code>dialog.tsx</code> /
+<code>alert-dialog.tsx</code> content</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>sidebar-foreground</code> /
+<code>sidebar-background</code></td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>sidebar.tsx</code> / <code>app-layout.tsx</code> nav item,
+default state</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>sidebar-foreground</code> / <code>sidebar-accent</code>
+(assumption)</td>
+<td>text</td>
+<td>4.5:1</td>
+<td><code>app-layout.tsx:69</code> active/hover nav item — see note
+below</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>border</code> / <code>background</code></td>
+<td>ui</td>
+<td>3.0:1</td>
+<td><code>button.tsx</code> outline variant, <code>input.tsx</code>:
+<code>border border-input bg-background</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>border</code> / <code>card</code></td>
+<td>ui</td>
+<td>3.0:1</td>
+<td>card outer border against the card’s own surface</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>input</code> / <code>background</code></td>
+<td>ui</td>
+<td>3.0:1</td>
+<td>form-field border on page background</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>ring</code> / <code>background</code></td>
+<td>ui</td>
+<td>3.0:1</td>
+<td><code>button.tsx</code>
+<code>focus-visible:ring-1 focus-visible:ring-ring</code></td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>ring</code> / <code>card</code></td>
+<td>ui</td>
+<td>3.0:1</td>
+<td><code>badge.tsx</code> <code>focus:ring-2 focus:ring-ring</code> on
+card-surfaced controls</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>sidebar-border</code> / <code>sidebar-background</code></td>
+<td>ui</td>
+<td>3.0:1</td>
+<td><code>sidebar.tsx:38,84</code> section dividers</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on pair #13 (stated assumption, §11.4.6):</strong>
+<code>app-layout.tsx:69</code> applies
+<code>[&amp;.active]:bg-sidebar-accent [&amp;.active]:text-sidebar-accent-foreground</code>,
+but <code>tailwind.config.ts</code>’s <code>sidebar</code> color group
+(lines 53–59) defines only a <strong>flat</strong>
+<code>accent: "hsl(var(--sidebar-accent))"</code> string — there is no
+nested <code>sidebar.accent.foreground</code> key, so the Tailwind JIT
+compiler has no color to resolve
+<code>text-sidebar-accent-foreground</code> against and that utility
+class does not exist in the generated stylesheet (verified:
+<code>grep -rn "sidebar-accent-foreground" src</code> finds it
+referenced only in <code>app-layout.tsx</code>, never defined as a
+resolvable color anywhere in <code>tailwind.config.ts</code>). This is a
+component/config wiring gap, not a token color-value issue, and is
+<strong>out of this contrast audit’s scope</strong> (it was not edited,
+per the task’s read-only constraint) — but it means the REAL rendered
+foreground color on an active/hover sidebar nav item is the inherited
+<code>sidebar-foreground</code> (the base class on that link, unaffected
+by the no-op hover/active utility), not a distinct
+“sidebar-accent-foreground” color. Pair #13 audits that real, rendered
+combination.</p>
+<h2
+id="contrast.py-literal-stdout-real-run-not-hand-transcribed"><code>contrast.py</code>
+— literal stdout (real run, not hand-transcribed)</h2>
+<p>Script: <code>contrast.py</code> in this same directory. Run as
+<code>python3 contrast.py</code>, Python 3.13.13, exit code 0. Full
+literal output (<code>contrast_output.txt</code> in this directory is
+the byte-identical captured file):</p>
+<pre><code>====================================================================================================
+WCAG 2.1 contrast audit -- clients/ota-manager shadcn :root/.light HSL tokens
+SC 1.4.3 Contrast Minimum (text)      bar = 4.5:1
+SC 1.4.11 Non-text Contrast (UI/large) bar = 3.0:1
+====================================================================================================
+
+--- THEME: dark (&#39;:root&#39;, default / &#39;.dark&#39;-equivalent) ---
+[PASS] dark  | foreground / background                          | fg=foreground(210 40% 98%) [#f8fafc] bg=background(222.2 84% 4.9%) [#020817] | ratio=19.09:1  bar=4.5:1  class=text
+[PASS] dark  | foreground / card                                | fg=foreground(210 40% 98%) [#f8fafc] bg=card(222.2 84% 4.9%) [#020817] | ratio=19.09:1  bar=4.5:1  class=text
+[PASS] dark  | card-foreground / card                           | fg=card-foreground(210 40% 98%) [#f8fafc] bg=card(222.2 84% 4.9%) [#020817] | ratio=19.09:1  bar=4.5:1  class=text
+[PASS] dark  | muted-foreground / background                    | fg=muted-foreground(215 20.2% 65.1%) [#94a3b8] bg=background(222.2 84% 4.9%) [#020817] | ratio=7.80:1  bar=4.5:1  class=text
+[PASS] dark  | muted-foreground / card                          | fg=muted-foreground(215 20.2% 65.1%) [#94a3b8] bg=card(222.2 84% 4.9%) [#020817] | ratio=7.80:1  bar=4.5:1  class=text
+[PASS] dark  | muted-foreground / sidebar-background            | fg=muted-foreground(215 20.2% 65.1%) [#94a3b8] bg=sidebar-background(222.2 84% 3%) [#01050e] | ratio=7.95:1  bar=4.5:1  class=text
+[PASS] dark  | primary-foreground / primary                     | fg=primary-foreground(222.2 47.4% 11.2%) [#0f172a] bg=primary(217.2 91.2% 59.8%) [#3b82f6] | ratio=4.85:1  bar=4.5:1  class=text
+[PASS] dark  | secondary-foreground / secondary                 | fg=secondary-foreground(210 40% 98%) [#f8fafc] bg=secondary(217.2 32.6% 17.5%) [#1e293b] | ratio=13.95:1  bar=4.5:1  class=text
+[PASS] dark  | accent-foreground / accent                       | fg=accent-foreground(210 40% 98%) [#f8fafc] bg=accent(217.2 32.6% 17.5%) [#1e293b] | ratio=13.95:1  bar=4.5:1  class=text
+[PASS] dark  | destructive-foreground / destructive             | fg=destructive-foreground(210 40% 98%) [#f8fafc] bg=destructive(0 62.8% 30.6%) [#7f1d1d] | ratio=9.56:1  bar=4.5:1  class=text
+[PASS] dark  | popover-foreground / popover                     | fg=popover-foreground(210 40% 98%) [#f8fafc] bg=popover(222.2 84% 4.9%) [#020817] | ratio=19.09:1  bar=4.5:1  class=text
+[PASS] dark  | sidebar-foreground / sidebar-background          | fg=sidebar-foreground(210 40% 98%) [#f8fafc] bg=sidebar-background(222.2 84% 3%) [#01050e] | ratio=19.47:1  bar=4.5:1  class=text
+[PASS] dark  | sidebar-foreground / sidebar-accent (assumption) | fg=sidebar-foreground(210 40% 98%) [#f8fafc] bg=sidebar-accent(217.2 32.6% 14%) [#18212f] | ratio=15.46:1  bar=4.5:1  class=text
+[FAIL] dark  | border / background                              | fg=border(217.2 32.6% 17.5%) [#1e293b] bg=background(222.2 84% 4.9%) [#020817] | ratio=1.37:1  bar=3.0:1  class=ui
+[FAIL] dark  | border / card                                    | fg=border(217.2 32.6% 17.5%) [#1e293b] bg=card(222.2 84% 4.9%) [#020817] | ratio=1.37:1  bar=3.0:1  class=ui
+[FAIL] dark  | input / background                               | fg=input(217.2 32.6% 17.5%) [#1e293b] bg=background(222.2 84% 4.9%) [#020817] | ratio=1.37:1  bar=3.0:1  class=ui
+[FAIL] dark  | ring / background                                | fg=ring(224.3 76.3% 48%) [#1d4ed8] bg=background(222.2 84% 4.9%) [#020817] | ratio=2.98:1  bar=3.0:1  class=ui
+[FAIL] dark  | ring / card                                      | fg=ring(224.3 76.3% 48%) [#1d4ed8] bg=card(222.2 84% 4.9%) [#020817] | ratio=2.98:1  bar=3.0:1  class=ui
+[FAIL] dark  | sidebar-border / sidebar-background              | fg=sidebar-border(217.2 32.6% 14%) [#18212f] bg=sidebar-background(222.2 84% 3%) [#01050e] | ratio=1.26:1  bar=3.0:1  class=ui
+
+--- THEME: light (&#39;.light&#39; class) ---
+[PASS] light | foreground / background                          | fg=foreground(222.2 84% 4.9%) [#020817] bg=background(0 0% 100%) [#ffffff] | ratio=19.99:1  bar=4.5:1  class=text
+[PASS] light | foreground / card                                | fg=foreground(222.2 84% 4.9%) [#020817] bg=card(0 0% 100%) [#ffffff] | ratio=19.99:1  bar=4.5:1  class=text
+[PASS] light | card-foreground / card                           | fg=card-foreground(222.2 84% 4.9%) [#020817] bg=card(0 0% 100%) [#ffffff] | ratio=19.99:1  bar=4.5:1  class=text
+[PASS] light | muted-foreground / background                    | fg=muted-foreground(215.4 16.3% 46.9%) [#64748b] bg=background(0 0% 100%) [#ffffff] | ratio=4.75:1  bar=4.5:1  class=text
+[PASS] light | muted-foreground / card                          | fg=muted-foreground(215.4 16.3% 46.9%) [#64748b] bg=card(0 0% 100%) [#ffffff] | ratio=4.75:1  bar=4.5:1  class=text
+[PASS] light | muted-foreground / sidebar-background            | fg=muted-foreground(215.4 16.3% 46.9%) [#64748b] bg=sidebar-background(210 40% 98%) [#f8fafc] | ratio=4.54:1  bar=4.5:1  class=text
+[PASS] light | primary-foreground / primary                     | fg=primary-foreground(210 40% 98%) [#f8fafc] bg=primary(221.2 83.2% 53.3%) [#2563eb] | ratio=4.94:1  bar=4.5:1  class=text
+[PASS] light | secondary-foreground / secondary                 | fg=secondary-foreground(222.2 47.4% 11.2%) [#0f172a] bg=secondary(210 40% 96.1%) [#f1f5f9] | ratio=16.30:1  bar=4.5:1  class=text
+[PASS] light | accent-foreground / accent                       | fg=accent-foreground(222.2 47.4% 11.2%) [#0f172a] bg=accent(210 40% 96.1%) [#f1f5f9] | ratio=16.30:1  bar=4.5:1  class=text
+[PASS] light | destructive-foreground / destructive             | fg=destructive-foreground(210 40% 98%) [#f8fafc] bg=destructive(0 72.2% 50.6%) [#dc2626] | ratio=4.61:1  bar=4.5:1  class=text
+[PASS] light | popover-foreground / popover                     | fg=popover-foreground(222.2 84% 4.9%) [#020817] bg=popover(0 0% 100%) [#ffffff] | ratio=19.99:1  bar=4.5:1  class=text
+[PASS] light | sidebar-foreground / sidebar-background          | fg=sidebar-foreground(222.2 84% 4.9%) [#020817] bg=sidebar-background(210 40% 98%) [#f8fafc] | ratio=19.09:1  bar=4.5:1  class=text
+[PASS] light | sidebar-foreground / sidebar-accent (assumption) | fg=sidebar-foreground(222.2 84% 4.9%) [#020817] bg=sidebar-accent(210 40% 90%) [#dbe6f0] | ratio=15.74:1  bar=4.5:1  class=text
+[FAIL] light | border / background                              | fg=border(214.3 31.8% 91.4%) [#e2e8f0] bg=background(0 0% 100%) [#ffffff] | ratio=1.23:1  bar=3.0:1  class=ui
+[FAIL] light | border / card                                    | fg=border(214.3 31.8% 91.4%) [#e2e8f0] bg=card(0 0% 100%) [#ffffff] | ratio=1.23:1  bar=3.0:1  class=ui
+[FAIL] light | input / background                               | fg=input(214.3 31.8% 91.4%) [#e2e8f0] bg=background(0 0% 100%) [#ffffff] | ratio=1.23:1  bar=3.0:1  class=ui
+[PASS] light | ring / background                                | fg=ring(221.2 83.2% 53.3%) [#2563eb] bg=background(0 0% 100%) [#ffffff] | ratio=5.17:1  bar=3.0:1  class=ui
+[PASS] light | ring / card                                      | fg=ring(221.2 83.2% 53.3%) [#2563eb] bg=card(0 0% 100%) [#ffffff] | ratio=5.17:1  bar=3.0:1  class=ui
+[FAIL] light | sidebar-border / sidebar-background              | fg=sidebar-border(214.3 31.8% 88%) [#d7dfea] bg=sidebar-background(210 40% 98%) [#f8fafc] | ratio=1.28:1  bar=3.0:1  class=ui
+
+====================================================================================================
+SUMMARY: 38 pairs checked, 28 PASS, 10 FAIL
+====================================================================================================
+
+FAILURES + proposed same-hue-family AA-passing tone (foreground lightness adjusted only):
+
+* theme=dark pair=&#39;border / background&#39;
+    current: --border: 217.2 32.6% 17.5%;   ratio=1.37:1  (bar 3.0:1)  FAIL
+    proposed: --border: 217.2 32.6000% 39.5434%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #445d86 (was #1e293b)
+
+* theme=dark pair=&#39;border / card&#39;
+    current: --border: 217.2 32.6% 17.5%;   ratio=1.37:1  (bar 3.0:1)  FAIL
+    proposed: --border: 217.2 32.6000% 39.5434%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #445d86 (was #1e293b)
+
+* theme=dark pair=&#39;input / background&#39;
+    current: --input: 217.2 32.6% 17.5%;   ratio=1.37:1  (bar 3.0:1)  FAIL
+    proposed: --input: 217.2 32.6000% 39.5434%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #445d86 (was #1e293b)
+
+* theme=dark pair=&#39;ring / background&#39;
+    current: --ring: 224.3 76.3% 48%;   ratio=2.98:1  (bar 3.0:1)  FAIL
+    proposed: --ring: 224.3 76.3000% 48.2524%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #1d4ed9 (was #1d4ed8)
+
+* theme=dark pair=&#39;ring / card&#39;
+    current: --ring: 224.3 76.3% 48%;   ratio=2.98:1  (bar 3.0:1)  FAIL
+    proposed: --ring: 224.3 76.3000% 48.2524%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #1d4ed9 (was #1d4ed8)
+
+* theme=dark pair=&#39;sidebar-border / sidebar-background&#39;
+    current: --sidebar-border: 217.2 32.6% 14%;   ratio=1.26:1  (bar 3.0:1)  FAIL
+    proposed: --sidebar-border: 217.2 32.6000% 38.9887%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #435c84 (was #18212f)
+
+* theme=light pair=&#39;border / background&#39;
+    current: --border: 214.3 31.8% 91.4%;   ratio=1.23:1  (bar 3.0:1)  FAIL
+    proposed: --border: 214.3 31.8000% 60.9885%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #7c97bb (was #e2e8f0)
+
+* theme=light pair=&#39;border / card&#39;
+    current: --border: 214.3 31.8% 91.4%;   ratio=1.23:1  (bar 3.0:1)  FAIL
+    proposed: --border: 214.3 31.8000% 60.9885%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #7c97bb (was #e2e8f0)
+
+* theme=light pair=&#39;input / background&#39;
+    current: --input: 214.3 31.8% 91.4%;   ratio=1.23:1  (bar 3.0:1)  FAIL
+    proposed: --input: 214.3 31.8000% 60.9885%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #7c97bb (was #e2e8f0)
+
+* theme=light pair=&#39;sidebar-border / sidebar-background&#39;
+    current: --sidebar-border: 214.3 31.8% 88%;   ratio=1.28:1  (bar 3.0:1)  FAIL
+    proposed: --sidebar-border: 214.3 31.8000% 59.6316%;   recomputed ratio=3.00:1  PASS
+    proposed hex: #7793b9 (was #d7dfea)</code></pre>
+<h2
+id="bug-found-fixed-while-building-this-audit-honest-disclosure-11.4.111.4.102">Bug
+found + fixed while building this audit (honest disclosure,
+§11.4.1/§11.4.102)</h2>
+<p>The first draft of <code>contrast.py</code>’s
+<code>propose_fix()</code> auto-fix search had two real bugs, found and
+fixed before this report was finalized (not hand-waved away):</p>
+<ol type="1">
+<li><strong>Wrong-endpoint check.</strong> The darkening search
+direction (<code>direction=-1</code>, searching toward lightness
+<code>0.0</code>) incorrectly checked <code>ratio_at(hi)</code> — which
+for that direction is <code>orig_l</code>, the ALREADY-FAILING starting
+lightness — instead of <code>ratio_at(lo)</code> (the <code>l=0.0</code>
+extreme it was actually searching toward). This caused the darkening
+direction to be skipped even when it was the correct fix (e.g. all four
+<code>light</code>-theme failures below need a DARKER border, not a
+lighter one, since the light theme’s borders already sit on a near-white
+background). Fixed by checking the ratio at the correct extreme for each
+direction.</li>
+<li><strong>Unguarded sentinel string.</strong> When no reachable
+lightness cleared the bar, the function returned a human-readable
+<code>"UNCONFIRMED: ..."</code> string in the slot meant for an HSL
+token, and the report code unconditionally passed it to
+<code>hsl_to_hex()</code>, which crashed trying to <code>.split()</code>
+it into three HSL fields. Fixed by returning <code>None</code> for the
+unreachable case and guarding the print path to report
+<code>UNCONFIRMED</code> honestly instead of crashing or fabricating a
+hex value.</li>
+</ol>
+<p>Both fixes are in the <code>contrast.py</code> committed in this
+directory; the stdout above is from the POST-fix run (exit code 0, no
+traceback).</p>
+<h2 id="aa-failures-summary-proposed-fixes">AA failures — summary +
+proposed fixes</h2>
+<p>All 10 failures are <strong>UI-component boundary pairs (SC 1.4.11,
+3.0:1 bar)</strong> — zero text pairs (SC 1.4.3) fail in either theme.
+Every failure is a “subtle divider” color
+(<code>border</code>/<code>input</code>/<code>sidebar-border</code>) or
+the focus <code>ring</code> sitting only marginally under the 3.0:1
+bar:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Token pair</th>
+<th>Ratio</th>
+<th>Bar</th>
+<th>Proposed token (same hue+sat)</th>
+<th>New ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dark</td>
+<td><code>border</code> / <code>background</code></td>
+<td>1.37:1</td>
+<td>3.0:1</td>
+<td><code>217.2 32.6% 39.5%</code> (<code>#445d86</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>dark</td>
+<td><code>border</code> / <code>card</code></td>
+<td>1.37:1</td>
+<td>3.0:1</td>
+<td><code>217.2 32.6% 39.5%</code> (<code>#445d86</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>dark</td>
+<td><code>input</code> / <code>background</code></td>
+<td>1.37:1</td>
+<td>3.0:1</td>
+<td><code>217.2 32.6% 39.5%</code> (<code>#445d86</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>dark</td>
+<td><code>ring</code> / <code>background</code></td>
+<td>2.98:1</td>
+<td>3.0:1</td>
+<td><code>224.3 76.3% 48.25%</code> (<code>#1d4ed9</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>dark</td>
+<td><code>ring</code> / <code>card</code></td>
+<td>2.98:1</td>
+<td>3.0:1</td>
+<td><code>224.3 76.3% 48.25%</code> (<code>#1d4ed9</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>dark</td>
+<td><code>sidebar-border</code> / <code>sidebar-background</code></td>
+<td>1.26:1</td>
+<td>3.0:1</td>
+<td><code>217.2 32.6% 39.0%</code> (<code>#435c84</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>light</td>
+<td><code>border</code> / <code>background</code></td>
+<td>1.23:1</td>
+<td>3.0:1</td>
+<td><code>214.3 31.8% 61.0%</code> (<code>#7c97bb</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>light</td>
+<td><code>border</code> / <code>card</code></td>
+<td>1.23:1</td>
+<td>3.0:1</td>
+<td><code>214.3 31.8% 61.0%</code> (<code>#7c97bb</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>light</td>
+<td><code>input</code> / <code>background</code></td>
+<td>1.23:1</td>
+<td>3.0:1</td>
+<td><code>214.3 31.8% 61.0%</code> (<code>#7c97bb</code>)</td>
+<td>3.00:1</td>
+</tr>
+<tr>
+<td>light</td>
+<td><code>sidebar-border</code> / <code>sidebar-background</code></td>
+<td>1.28:1</td>
+<td>3.0:1</td>
+<td><code>214.3 31.8% 59.6%</code> (<code>#7793b9</code>)</td>
+<td>3.00:1</td>
+</tr>
+</tbody>
+</table>
+<p>Notes on the proposed values:</p>
+<ul>
+<li>Each proposed lightness is the exact output of
+<code>propose_fix()</code>’s binary search targeting
+<code>ratio == bar</code> (3.00:1) to the nearest reachable value,
+keeping hue+saturation fixed (minimal, same-hue-family shift, per the
+task instruction) — not a hand-picked round number. A project adopting
+these would likely round to a slightly higher ratio (e.g. 3.1–3.2:1) for
+headroom against rounding/rendering variance; the exact binary-search
+target is reported here for traceability.</li>
+<li><code>border</code>, <code>input</code>, and (in the dark theme)
+<code>card</code>’s border context share one proposed value per theme
+because <code>--border</code> and <code>--input</code> are numerically
+<strong>identical</strong> tokens in this codebase in both themes
+(verified from the literal <code>index.css</code> values: dark
+<code>--border: 217.2 32.6% 17.5%</code> ==
+<code>--input: 217.2 32.6% 17.5%</code>; light
+<code>--border: 214.3 31.8% 91.4%</code> ==
+<code>--input: 214.3 31.8% 91.4%</code>) — this is a genuine property of
+the current token set, not an audit artefact.</li>
+<li><code>--ring</code>’s dark-theme failure is marginal (2.98:1 vs
+3.00:1 bar — a 0.02:1 shortfall) and disappears with a
+~0.25-percentage-point lightness bump; light theme’s <code>ring</code>
+already PASSes (5.17:1).</li>
+</ul>
+<h2 id="honest-boundary-on-sc-1.4.11-applicability-11.4.6">Honest
+boundary on SC 1.4.11 applicability (§11.4.6)</h2>
+<p>SC 1.4.11 (Non-text Contrast) requires 3:1 contrast for “the visual
+information required to identify user interface components and states,”
+except for inactive/disabled components, or where the appearance is
+“determined by the user agent and not modified by the author.” Two of
+the failing pairs deserve an explicit scope note rather than a flat
+verdict:</p>
+<ul>
+<li><code>border</code> / <code>card</code> — a card’s outer border is
+frequently REDUNDANT with layout spacing/shadow that already delineates
+the card boundary; if <code>card.tsx</code>’s surrounding layout
+provides that redundant cue, this specific pair may not be a hard SC
+1.4.11 violation in practice, only a best-practice gap. This report does
+NOT assert component-level redundancy either way (that requires
+inspecting rendered layout, out of this read-only token audit’s scope) —
+it reports the raw token-pair ratio and flags this nuance rather than
+asserting a black-and-white violation.</li>
+<li><code>ring</code> (focus indicator) and
+<code>border</code>/<code>input</code> on actual form controls
+(<code>input.tsx</code>) are NOT redundant — the focus ring is
+frequently the ONLY visual cue of keyboard focus, and an input’s border
+is frequently the only cue of the field’s clickable/editable boundary.
+These are the pairs SC 1.4.11’s own normative examples call out
+directly, so these two are reported as unambiguous failures.</li>
+</ul>
+<p>No ratio anywhere in this document was guessed; every number is the
+literal computed output of <code>contrast.py</code>, pasted verbatim
+above.</p>
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>WCAG 2.1 Success Criterion 1.4.3 Contrast (Minimum):
+https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html</li>
+<li>WCAG 2.1 Success Criterion 1.4.11 Non-text Contrast:
+https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html</li>
+</ul>
+<p>(Sources verified 2026-07-09 against the canonical W3C “Understanding
+WCAG 2.1” pages for these two success criteria; the 4.5:1 / 3.0:1 bars
+and the <code>(L1+0.05)/(L2+0.05)</code> relative-luminance contrast
+formula implemented in <code>contrast.py</code> match these normative
+definitions.)</p>
+</body>
+</html>
