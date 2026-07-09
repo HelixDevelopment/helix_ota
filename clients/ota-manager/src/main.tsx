@@ -4,7 +4,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { ToastProvider } from "@/components/ui/toast";
 import { routeTree } from "./route-tree.gen";
+import { useUiStore } from "@/stores/ui-store";
 import "./index.css";
+
+// §11.4.170 — apply the (persisted or default) theme to the DOM at first paint,
+// before render, so the palette is correct on load (no FOUC) even before the
+// persist middleware's onRehydrateStorage fires.
+useUiStore.getState().setTheme(useUiStore.getState().theme);
 
 const queryClient = new QueryClient({
   defaultOptions: {
