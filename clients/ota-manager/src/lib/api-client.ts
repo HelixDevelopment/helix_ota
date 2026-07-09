@@ -11,7 +11,13 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+// Same-origin by default: the SPA is served by the control plane itself, and the
+// API lives under the server's APIBasePath (/api/v1). A RELATIVE base keeps every
+// request same-origin so the Tier-C CSP `connect-src 'self'` (server security
+// headers) does not block it — an absolute default (e.g. http://localhost:8080)
+// would be off-origin at any real deployment and be CSP-blocked. Override with
+// VITE_API_BASE_URL only for a split-origin dev setup (must also be allowed by CSP).
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,

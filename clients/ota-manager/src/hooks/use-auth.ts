@@ -10,7 +10,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (credentials: LoginRequest) => {
       const { data } = await apiClient.post<TokenResponse>(
-        "/api/v1/auth/login",
+        "/auth/login",
         credentials,
       );
       return { data, email: credentials.email };
@@ -51,7 +51,7 @@ export function useRefresh() {
   return useMutation({
     mutationFn: async () => {
       const { data } = await apiClient.post<TokenResponse>(
-        "/api/v1/auth/refresh",
+        "/auth/refresh",
         { refresh_token: refreshToken },
       );
       return data;
