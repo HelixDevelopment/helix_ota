@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>VENDORING_PLAN</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">VENDORING_PLAN</h1>
+</header>
+<h1 id="opendesign-vendoring-plan-helix-ota-frontends">OpenDesign
+Vendoring Plan — Helix OTA frontends</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z <strong>Authority:</strong> consumer-side
+research/plan (§11.4.35). Does NOT modify any frontend or the token
+package — read-only analysis + ready-to-execute steps for two follow-up
+implementers. <strong>Scope:</strong> vendor
+<code>design-systems/helix-ota/{tokens.css,tailwind-v4.css}</code> into
+BOTH <code>clients/ota-manager/</code> and <code>dashboard/</code>; fix
+the ota-manager theme-toggle bug; add dark mode to the dashboard;
+re-prove both under the §11.4.170 host-render harnesses.</p>
+<blockquote>
+<p>§11.4.6 honesty note: every file path + line is cited from the tree
+as read on 2026-07-09. Items I could not prove statically are marked
+<code>UNCONFIRMED:</code> with the exact verification step the
+implementer must run.</p>
+</blockquote>
+<hr />
+<h2 id="the-token-package-being-vendored-facts">0. The token package
+being vendored (facts)</h2>
+<p><code>design-systems/helix-ota/tokens.css</code> (185 lines) ships
+OpenDesign <strong>semantic</strong> token names as
+<strong>hex</strong>, light + dark first-class:</p>
+<ul>
+<li>Base <code>:root</code> = <strong>LIGHT</strong> (full TOKEN_SCHEMA
+set).</li>
+<li>DARK re-bound three ways (tokens.css:159–184):
+<code>@media (prefers-color-scheme: dark) :root:not([data-theme="light"])</code>,
+<code>:root[data-theme="dark"]</code>, and <code>.dark</code>.</li>
+<li>Names:
+<code>--bg --surface --surface-warm --fg --fg-2 --muted --meta --border --border-soft --accent --accent-on --accent-hover --accent-active --success --warn --danger</code>
++ type/space/radius/elevation/motion/layout tokens.</li>
+</ul>
+<p><code>design-systems/helix-ota/tailwind-v4.css</code> maps those into
+a Tailwind-v4 <code>@theme</code> block
+(<code>--color-accent: var(--accent)</code> … +
+<code>@import "tailwindcss"</code>).</p>
+<p><strong>Both files are pure CSS</strong> —
+<code>grep -icE "function|=&gt;|require\("</code> returns <code>0</code>
+for each. → they carry <strong>zero JS/React dependency</strong>
+(load-bearing for the React-18-vs-19 risk below).</p>
+<hr />
+<h2 id="frontend-a-clientsota-manager-react-19-vite-6-tailwind-v4">1.
+Frontend A — <code>clients/ota-manager/</code> (React 19 + Vite 6 +
+Tailwind v4)</h2>
+<h3 id="current-state-facts">1.1 Current state (facts)</h3>
+<ul>
+<li>Tailwind v4 setup: <code>vite.config.ts:7</code> uses
+<code>@tailwindcss/vite</code>; <code>src/index.css:1</code> =
+<code>@import "tailwindcss";</code>. <code>darkMode:"class"</code> +
+shadcn color mappings live in <code>tailwind.config.ts</code> (v3-style
+config). <code>postcss.config.js</code> uses
+<code>@tailwindcss/postcss</code>.</li>
+<li>Token model in <code>src/index.css</code>: shadcn
+<strong>HSL-triple</strong> vars consumed as <code>hsl(var(--X))</code>.
+Inverted theme contract:
+<ul>
+<li>base <code>:root</code> (index.css:13–40) = <strong>DARK</strong>
+palette.</li>
+<li><code>.light</code> (index.css:42–68) = <strong>LIGHT</strong>
+palette.</li>
+<li><code>@custom-variant dark (&amp;:is(.dark *))</code> (index.css:3)
+→ Tailwind <code>dark:</code> utilities need a <code>.dark</code>
+ancestor.</li>
+<li><code>* { border-color: hsl(var(--border)); }</code>
+(index.css:70–72) — every border reads <code>--border</code>.</li>
+</ul></li>
+<li>Theme store: <code>src/stores/ui-store.ts</code> —
+<code>theme:"dark"</code> default,
+<code>setTheme</code>/<code>toggleTheme</code> mutate zustand state +
+persist (<code>helix-ota-ui</code>). <strong>Nothing writes the
+DOM.</strong></li>
+<li>Toggle UI: <code>src/features/layout/topbar.tsx:33–39</code> —
+<code>onClick={toggleTheme}</code> only swaps the
+<code>Sun</code>/<code>Moon</code> icon.</li>
+</ul>
+<h3 id="the-bug-confirmed-fact-11.4.6">1.2 THE BUG (confirmed fact,
+§11.4.6)</h3>
+<p><code>grep -rn "classList|documentElement|data-theme" clients/ota-manager/src/</code>
+→ <strong>no match</strong> (only the CSS <code>.light</code> /
+<code>@custom-variant dark</code>). The <code>ui-store.theme</code>
+value is <strong>never</strong> written to a DOM class. Because the
+palette is switched by the presence of <code>.light</code> on the root
+and nothing ever adds it, the base <code>:root</code>
+(<strong>DARK</strong>) palette applies permanently;
+<code>toggleTheme</code> flips the store value + the icon but the pixels
+never change. This is the §11.4.170 forensic class (a control that looks
+toggled while the rendered surface stays broken).</p>
+<h3 id="token-name-collision-the-central-reconciliation-fact">1.3
+Token-name COLLISION (the central reconciliation fact)</h3>
+<p>Three names exist in BOTH token sets with <strong>incompatible value
+forms</strong>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>name</th>
+<th>index.css (shadcn, HSL, consumed <code>hsl(var())</code>)</th>
+<th>helix-ota tokens.css (hex)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--accent</code></td>
+<td><code>217.2 32.6% 17.5%</code> (index.css:26)</td>
+<td><code>#2563eb</code> (tokens.css:64)</td>
+</tr>
+<tr>
+<td><code>--muted</code></td>
+<td><code>217.2 32.6% 17.5%</code> (index.css:24)</td>
+<td><code>#64748b</code> (tokens.css:49)</td>
+</tr>
+<tr>
+<td><code>--border</code></td>
+<td><code>217.2 32.6% 17.5%</code> (index.css:30)</td>
+<td><code>#e2e8f0</code> (tokens.css:55)</td>
+</tr>
+</tbody>
+</table>
+<p>If helix-ota’s hex <code>--border</code> wins the cascade,
+<code>hsl(var(--border))</code> becomes <code>hsl(#e2e8f0)</code> →
+<strong>invalid → every border breaks</strong>. This is why an unscoped
+import into the same <code>:root</code> is forbidden. (The non-colliding
+tokens —
+<code>--bg --fg --surface --surface-warm --accent-on --success --warn --danger</code>
+etc. — are safe.)</p>
+<p>Cross-check: the light <code>--border</code> in both systems is the
+<strong>same colour</strong> (<code>214.3 31.8% 91.4%</code> ==
+<code>#e2e8f0</code>); the collision is a <em>value-form</em> clash (HSL
+vs hex), not a palette disagreement — expected, since the package was
+derived from index.css.</p>
+<h3 id="recommendation-layer-coexist-do-not-replace">1.4 RECOMMENDATION:
+<strong>LAYER (coexist), do NOT replace</strong></h3>
+<p>REPLACE (rip out shadcn HSL vars) has an unbounded blast radius —
+every shadcn component + <code>tailwind.config.ts</code> reads
+<code>bg-background</code>, <code>text-muted-foreground</code>,
+<code>border</code>, <code>bg-primary</code>, …. LAYER keeps index.css
+authoritative for the existing stack and adds the OpenDesign semantic
+tokens alongside, with import order resolving the 3 collisions.</p>
+<p><strong>Do NOT import <code>tailwind-v4.css</code></strong> into
+ota-manager: its <code>@theme</code> emits <code>--color-accent</code> /
+<code>--color-border</code> / <code>--color-muted</code> Tailwind
+utilities that collide with the same-named shadcn utilities already
+defined in <code>tailwind.config.ts</code>. Vendor only
+<code>tokens.css</code> (the CSS-variable layer); keep
+<code>tailwind-v4.css</code> in the package as reference.</p>
+<h3 id="exact-steps-ota-manager">1.5 Exact steps (ota-manager)</h3>
+<ol type="1">
+<li><p><strong>Copy</strong>
+<code>design-systems/helix-ota/tokens.css</code> →
+<code>clients/ota-manager/src/styles/opendesign-tokens.css</code>
+(preserve the provenance header comment verbatim; no value
+edits).</p></li>
+<li><p><strong>Wire it collision-safely</strong> in
+<code>src/index.css</code> — add the import immediately
+<strong>after</strong> line 1 (<code>@import "tailwindcss";</code>) and
+<strong>before</strong> the shadcn <code>:root {</code> block
+(index.css:13). Because the shadcn <code>:root</code> block is later in
+source order at equal specificity, its HSL
+<code>--accent/--muted/--border</code> win the 3 collisions at runtime,
+while all non-colliding OpenDesign tokens remain live:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">@import</span> <span class="st">&quot;tailwindcss&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">@import</span> <span class="st">&quot;./styles/opendesign-tokens.css&quot;</span><span class="op">;</span>   <span class="co">/* NEW — OpenDesign semantic layer */</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">@custom-variant</span> dark <span class="fu">(</span>&amp;<span class="ch">:</span>is<span class="fu">(</span>.<span class="dv">dark</span> *<span class="fu">))</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* …existing shadcn :root / .light blocks unchanged (HSL wins the 3 collisions)… */</span></span></code></pre></div>
+<p>(No change to <code>main.tsx</code> needed — index.css is already
+imported there at main.tsx:7, and the visual harness re-imports
+index.css, so the harness stays in sync automatically — see
+1.7.)</p></li>
+<li><p><strong>Theme-invariance is preserved:</strong> the two systems
+flip in <em>opposite</em> directions relative to base <code>:root</code>
+(index.css base=dark, <code>.light</code>=light; opendesign base=light,
+<code>.dark</code>=dark). Applying <strong>exactly one of
+<code>.light</code>/<code>.dark</code></strong> matching the theme makes
+BOTH agree (light→<code>.light</code> present: shadcn light ✓,
+opendesign has no <code>.dark</code> so base=light ✓;
+dark→<code>.dark</code> present: shadcn base=dark + <code>dark:</code>
+variant active ✓, opendesign <code>.dark</code>=dark ✓). The toggle-fix
+(1.6) MUST therefore add <code>.dark</code> in dark mode too, not merely
+remove <code>.light</code>.</p></li>
+</ol>
+<h3 id="the-toggle-fix-exact-edit">1.6 THE TOGGLE-FIX — exact edit</h3>
+<p><strong>File:</strong>
+<code>clients/ota-manager/src/stores/ui-store.ts</code></p>
+<p>Add a module-level DOM applier (mirrors the harness contract at
+<code>visual/harness.tsx:32–34</code>) and call it from
+<code>setTheme</code>, <code>toggleTheme</code>, and on persist
+rehydrate:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ts"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// NEW — apply the theme to the DOM (the missing wiring). Mirrors visual/harness.tsx.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">applyThemeClass</span>(theme<span class="op">:</span> Theme) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> el <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="at">documentElement</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  el<span class="op">.</span><span class="at">classList</span><span class="op">.</span><span class="fu">remove</span>(<span class="st">&quot;light&quot;</span><span class="op">,</span> <span class="st">&quot;dark&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  el<span class="op">.</span><span class="at">classList</span><span class="op">.</span><span class="fu">add</span>(theme)<span class="op">;</span>            <span class="co">// exactly one of .light / .dark</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  el<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&quot;data-theme&quot;</span><span class="op">,</span> theme)<span class="op">;</span> <span class="co">// optional; also satisfies opendesign :root[data-theme=&quot;dark&quot;]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Change the two mutators:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ts"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>setTheme<span class="op">:</span> (theme) <span class="kw">=&gt;</span> { <span class="fu">applyThemeClass</span>(theme)<span class="op">;</span> <span class="kw">set</span>({ theme })<span class="op">;</span> }<span class="op">,</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>toggleTheme<span class="op">:</span> () <span class="kw">=&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span>((state) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> theme<span class="op">:</span> Theme <span class="op">=</span> state<span class="op">.</span><span class="at">theme</span> <span class="op">===</span> <span class="st">&quot;dark&quot;</span> <span class="op">?</span> <span class="st">&quot;light&quot;</span> <span class="op">:</span> <span class="st">&quot;dark&quot;</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">applyThemeClass</span>(theme)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> { theme }<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  })<span class="op">,</span></span></code></pre></div>
+<p>Apply the <strong>persisted</strong> value on rehydrate (persist
+config, ui-store.ts:34–41):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ts"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;helix-ota-ui&quot;</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  partialize<span class="op">:</span> (state) <span class="kw">=&gt;</span> ({ sidebarCollapsed<span class="op">:</span> state<span class="op">.</span><span class="at">sidebarCollapsed</span><span class="op">,</span> theme<span class="op">:</span> state<span class="op">.</span><span class="at">theme</span> })<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  onRehydrateStorage<span class="op">:</span> () <span class="kw">=&gt;</span> (state) <span class="kw">=&gt;</span> { <span class="cf">if</span> (state) <span class="fu">applyThemeClass</span>(state<span class="op">.</span><span class="at">theme</span>)<span class="op">;</span> }<span class="op">,</span> <span class="co">// NEW</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Belt-and-suspenders (avoid first-paint FOUC before rehydrate): append
+to <code>src/main.tsx</code> after the
+<code>import "./index.css";</code> line —
+<code>import { useUiStore } from "@/stores/ui-store"; applyThemeClass(useUiStore.getState().theme);</code>
+— OR expose <code>applyThemeClass</code> and call
+<code>useUiStore.getState()</code> there. (Optional;
+<code>onRehydrateStorage</code> already covers the persisted case.)</p>
+<p>No <code>topbar.tsx</code> change is required — it already calls
+<code>toggleTheme</code>; the fix is entirely in the store.
+<code>document</code> always exists (Vite SPA / Tauri / jsdom
+tests).</p>
+<h3 id="w2-harness-re-proof-clientsota-managervisual">1.7 W2 harness
+re-proof (<code>clients/ota-manager/visual/</code>)</h3>
+<ul>
+<li><p>The harness (<code>visual/harness.tsx:30–34</code>) applies
+<code>.light</code>/<code>.dark</code> itself from <code>?theme=</code>,
+independent of <code>ui-store</code>, and
+<code>visual/harness.css:5</code> re-imports
+<code>../src/index.css</code> — so the vendored
+<code>opendesign-tokens.css</code> is <strong>automatically</strong> in
+the harness render once step 1.5.2 lands. Re-run:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> clients/ota-manager <span class="kw">&amp;&amp;</span> <span class="ex">pnpm</span> hostrender      <span class="co"># package.json:17</span></span></code></pre></div>
+<p>It regenerates baseline/rerender/mutated PNGs +
+<code>results.json</code> under
+<code>docs/qa/20260709-ota-manager-hostrender/</code> and runs the dual
+oracle (image-diff + OCR/layout) with §11.4.107(10) self-validation for
+<strong>both</strong> themes. Expected: PASS, proving the OpenDesign
+layer renders correctly light+dark.</p></li>
+<li><p><strong>Pixel note (§11.4.170):</strong> LoginPage renders with
+the shadcn HSL palette; since the 3 collided tokens keep their HSL
+values and no component is repointed to OpenDesign tokens in this
+increment, LoginPage pixels should be <strong>unchanged</strong> →
+baselines likely stable. If any baseline differs,
+<strong>regenerate</strong> the golden PNGs (pixels changed ⇒ new
+goldens are the evidence) and re-run the dual oracle.</p></li>
+<li><p>The harness bypasses <code>ui-store</code>, so it does NOT prove
+the <em>store wiring</em>. Add the toggle-fix’s §11.4.115 RED→GREEN
+guard as a jsdom unit test (e.g.
+<code>src/stores/ui-store.test.ts</code>): assert that before the fix
+<code>toggleTheme()</code> leaves
+<code>document.documentElement.classList</code> unchanged (RED on the
+pre-fix store) and after the fix it flips
+<code>.dark</code>↔︎<code>.light</code> (+ <code>data-theme</code>). This
+is the anti-bluff proof that the toggle now moves the DOM.</p></li>
+</ul>
+<hr />
+<h2 id="frontend-b-dashboard-react-18-vite-5-no-tailwind-light-only">2.
+Frontend B — <code>dashboard/</code> (React 18 + Vite 5, no Tailwind,
+light-only)</h2>
+<h3 id="current-state-facts-1">2.1 Current state (facts)</h3>
+<ul>
+<li>No Tailwind, no global CSS, no <code>src/*.css</code>, no CSS import
+in <code>src/main.tsx</code>. All styling is <strong>inline
+<code>style</code> objects with hardcoded hex</strong>:
+<ul>
+<li><code>src/components/ui.tsx:151–220</code> — <code>styles</code> +
+<code>badgeTone</code>
+(Card/Button/Field/TextInput/Badge/ProgressBar/Table/ErrorPanel/EmptyState).</li>
+<li><code>src/components/AppShell.tsx:82–114</code> —
+shell/header/nav/logout.</li>
+<li><code>src/screens/LoginScreen.tsx:52</code> — inline
+<code>#854d0e</code> notice.</li>
+</ul></li>
+<li>8 screens routed in <code>src/App.tsx:29–71</code> (Overview,
+ArtifactUpload, Releases, Deployments, Fleet, Groups, Audit, Login) —
+all consume the <code>ui.tsx</code> primitives.</li>
+<li>No dark mode anywhere. W3 harness
+(<code>hostrender/login.hostrender.spec.ts:16–19</code>) states
+<strong>LIGHT ONLY</strong> explicitly; one committed baseline
+<code>login-card-light-chromium-linux.png</code>.</li>
+</ul>
+<h3 id="recommendation">2.2 RECOMMENDATION</h3>
+<p>Vendor <code>tokens.css</code> <strong>only</strong> (plain CSS
+custom properties — dashboard has no Tailwind, so
+<code>tailwind-v4.css</code> is inapplicable; leave it in the package).
+Map the inline hex to <code>var(--token)</code> and add a real theme
+toggle that flips the <code>&lt;html&gt;</code>
+class/<code>data-theme</code> — tokens.css already ships
+<code>.dark</code> + <code>:root[data-theme="dark"]</code> so
+<code>var(--token)</code> reads flip with zero per-component logic.</p>
+<h3 id="exact-steps-dashboard">2.3 Exact steps (dashboard)</h3>
+<ol type="1">
+<li><strong>Copy</strong>
+<code>design-systems/helix-ota/tokens.css</code> →
+<code>dashboard/src/styles/tokens.css</code>.</li>
+<li><strong>Import once</strong> at the top of <code>src/main.tsx</code>
+(before render): <code>import "./styles/tokens.css";</code></li>
+<li><strong>Map <code>ui.tsx</code> inline hex → tokens</strong>
+(<code>src/components/ui.tsx:151–220</code>). Recommended mapping: |
+style | current | → token | |—|—|—| | <code>card.background</code> |
+<code>#fff</code> | <code>var(--surface)</code> | |
+<code>card.border</code> | <code>1px solid #e2e5ea</code> |
+<code>1px solid var(--border)</code> | | <code>card.borderRadius</code>
+| <code>8</code> | <code>var(--radius-md)</code> (12px, per DESIGN.md
+cards) | | <code>cardTitle</code> (color) | inherit |
+<code>var(--fg)</code> (set explicitly) | |
+<code>btn.borderRadius</code> | <code>6</code> |
+<code>var(--radius-sm)</code> | | <code>btnPrimary.background</code> |
+<code>#2563eb</code> | <code>var(--accent)</code> | |
+<code>btnPrimary.color</code> | <code>#fff</code> |
+<code>var(--accent-on)</code> | | <code>btnSecondary.background</code> |
+<code>#fff</code> | <code>var(--surface)</code> | |
+<code>btnSecondary.color</code> | <code>#1f2937</code> |
+<code>var(--fg)</code> | | <code>btnSecondary.borderColor</code> |
+<code>#cbd2dc</code> | <code>var(--border)</code> | |
+<code>fieldLabel.color</code> | <code>#4b5563</code> |
+<code>var(--muted)</code> | | <code>input.border</code> |
+<code>1px solid #cbd2dc</code> | <code>1px solid var(--border)</code> |
+| <code>input.background</code>/<code>color</code> | (browser default) |
+<code>var(--surface)</code> / <code>var(--fg)</code> (set explicitly so
+dark inputs are legible) | | <code>input.borderRadius</code> |
+<code>6</code> | <code>var(--radius-sm)</code> | |
+<code>progressTrack.background</code> | <code>#eef1f5</code> |
+<code>var(--surface-warm)</code> | |
+<code>progressFill.background</code> | <code>#2563eb</code> |
+<code>var(--accent)</code> | | <code>th.borderBottom</code> |
+<code>2px solid #e2e5ea</code> | <code>2px solid var(--border)</code> |
+| <code>th.color</code> | <code>#4b5563</code> |
+<code>var(--muted)</code> | | <code>errorPanel.background</code> |
+<code>#fef2f2</code> |
+<code>color-mix(in oklab, var(--danger), transparent 92%)</code> | |
+<code>errorPanel.border</code> | <code>1px solid #fca5a5</code> |
+<code>1px solid color-mix(in oklab, var(--danger), transparent 55%)</code>
+| | <code>errorPanel.color</code> | <code>#991b1b</code> |
+<code>var(--danger)</code> | | <code>empty.color</code> |
+<code>#6b7280</code> | <code>var(--muted)</code> | |
+<code>badgeTone.neutral</code> |
+<code>#eef1f5</code>/<code>#374151</code> |
+<code>var(--surface-warm)</code> / <code>var(--fg)</code> | |
+<code>badgeTone.ok</code> | <code>#dcfce7</code>/<code>#166534</code> |
+<code>color-mix(…var(--success)…)</code> / <code>var(--success)</code> |
+| <code>badgeTone.warn</code> |
+<code>#fef9c3</code>/<code>#854d0e</code> |
+<code>color-mix(…var(--warn)…)</code> / <code>var(--warn)</code> | |
+<code>badgeTone.err</code> | <code>#fee2e2</code>/<code>#991b1b</code> |
+<code>color-mix(…var(--danger)…)</code> / <code>var(--danger)</code> | |
+<code>badgeTone.info</code> | <code>#dbeafe</code>/<code>#1e40af</code>
+| <code>color-mix(…var(--accent)…)</code> / <code>var(--accent)</code>
+|</li>
+<li><strong>Map <code>AppShell.tsx</code> inline hex → tokens</strong>
+(<code>src/components/AppShell.tsx:82–114</code>):
+<code>shell.background #f5f7fa → var(--bg)</code>;
+<code>shell.color #111827 → var(--fg)</code>; content-legibility tokens
+as needed. The dark navy header (<code>header.background #0f172a</code>,
+<code>#fff</code> text, <code>nav</code>/<code>logout</code> slate
+hexes) is a fixed brand chrome bar — <strong>decision point:</strong>
+keep it fixed (brand) OR map to
+<code>var(--surface-warm)</code>/<code>var(--fg)</code>/<code>var(--border)</code>
+so it also inverts. Recommend keeping the header a fixed brand bar and
+toning only its border via <code>var(--border)</code> (least visual
+churn); the <strong>toggle button</strong> (step 5) lives in this
+header’s <code>user</code> cluster.</li>
+<li><strong>Map <code>LoginScreen.tsx</code></strong> notice
+<code>#854d0e → var(--warn)</code> (LoginScreen.tsx:52).</li>
+<li><strong>ADD dark mode:</strong>
+<ul>
+<li><p>New file <code>dashboard/src/theme.ts</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> Theme <span class="op">=</span> <span class="st">&quot;light&quot;</span> <span class="op">|</span> <span class="st">&quot;dark&quot;</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">applyTheme</span>(t<span class="op">:</span> Theme) {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="at">documentElement</span><span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&quot;data-theme&quot;</span><span class="op">,</span> t)<span class="op">;</span> <span class="co">// authoritative over prefers-color-scheme</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> { localStorage<span class="op">.</span><span class="fu">setItem</span>(<span class="st">&quot;helix-ota-dash-theme&quot;</span><span class="op">,</span> t)<span class="op">;</span> } <span class="cf">catch</span> {}</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">initTheme</span>()<span class="op">:</span> Theme {</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> t<span class="op">:</span> Theme <span class="op">|</span> <span class="dt">null</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> { t <span class="op">=</span> localStorage<span class="op">.</span><span class="fu">getItem</span>(<span class="st">&quot;helix-ota-dash-theme&quot;</span>) <span class="im">as</span> Theme <span class="op">|</span> <span class="dt">null</span><span class="op">;</span> } <span class="cf">catch</span> {}</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>t) t <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">matchMedia</span><span class="op">?.</span>(<span class="st">&quot;(prefers-color-scheme: dark)&quot;</span>)<span class="op">.</span><span class="at">matches</span> <span class="op">?</span> <span class="st">&quot;dark&quot;</span> <span class="op">:</span> <span class="st">&quot;light&quot;</span><span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">applyTheme</span>(t)<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> t<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">toggleTheme</span>(cur<span class="op">:</span> Theme)<span class="op">:</span> Theme { <span class="kw">const</span> n<span class="op">:</span> Theme <span class="op">=</span> cur <span class="op">===</span> <span class="st">&quot;dark&quot;</span> <span class="op">?</span> <span class="st">&quot;light&quot;</span> <span class="op">:</span> <span class="st">&quot;dark&quot;</span><span class="op">;</span> <span class="fu">applyTheme</span>(n)<span class="op">;</span> <span class="cf">return</span> n<span class="op">;</span> }</span></code></pre></div></li>
+<li><p>In <code>src/main.tsx</code>, call <code>initTheme()</code>
+<strong>before</strong> <code>createRoot(...).render(...)</code> (and
+after the tokens.css import).</p></li>
+<li><p>In <code>AppShell.tsx</code>, add a
+<code>useState&lt;Theme&gt;</code> seeded from
+<code>localStorage</code>/current <code>data-theme</code>, and a toggle
+button in the <code>styles.user</code> cluster (AppShell.tsx:66–73)
+calling <code>setTheme(toggleTheme(theme))</code>. Because every
+primitive now reads <code>var(--token)</code>, the flip is automatic —
+no per-screen edits.</p></li>
+<li><p>Use <code>data-theme="light|dark"</code>
+<strong>explicitly</strong> (not bare <code>.dark</code>) so it
+overrides the <code>@media (prefers-color-scheme: dark)</code> block in
+tokens.css:159 (see Risk R4).</p></li>
+</ul></li>
+</ol>
+<h3 id="w3-harness-re-proof-dashboardhostrender">2.4 W3 harness re-proof
+(<code>dashboard/hostrender/</code>)</h3>
+<ul>
+<li>Parametrize <code>hostrender/login.hostrender.spec.ts</code> over
+<code>["light","dark"]</code>: before each screenshot set the theme
+deterministically — either
+<code>await page.evaluate(t =&gt; document.documentElement.setAttribute("data-theme", t), theme)</code>
+OR click the real toggle (the latter also proves the toggle) — and emit
+<code>login-card-light.png</code> <strong>and</strong>
+<code>login-card-dark.png</code>. Keep <code>injectRegression</code> +
+the pixelmatch/<code>toHaveScreenshot</code> self-validation
+(golden-good + golden-bad, §11.4.107(10)) for <strong>both</strong>
+themes. Remove the “LIGHT ONLY / dark not implemented” note (spec:16–19)
+once dark lands.</li>
+<li>Regenerate baselines:
+<code>npx playwright test --config=playwright.hostrender.config.ts --update-snapshots</code>.
+The existing <strong>light</strong> baseline WILL change —
+<code>card.border #e2e5ea</code> → <code>var(--border)</code> =
+<code>#e2e8f0</code> (a real 3-hex delta) — so the light golden
+regenerates too (§11.4.170: pixels changed ⇒ new goldens are the
+evidence), plus the new dark golden.</li>
+</ul>
+<hr />
+<h2 id="risks-11.4.92-blast-radius">3. Risks (§11.4.92
+blast-radius)</h2>
+<p><strong>R1 — React 18 (dashboard) vs 19 (ota-manager). CONFIRMED
+non-issue.</strong> The vendored tokens are <strong>pure CSS</strong>
+(<code>grep -icE "function|=&gt;|require\(" … = 0</code> for both
+<code>tokens.css</code> and <code>tailwind-v4.css</code>) — no JS, no
+npm dep, no bundler/runtime coupling to React. The only JS added is the
+theme helpers, which use plain DOM API
+(<code>classList</code>/<code>setAttribute</code>/<code>localStorage</code>)
+and are React-version-agnostic. No <code>package.json</code> dependency
+is added to either frontend.</p>
+<p><strong>R2 — Token-name collisions (ota-manager only).</strong>
+<code>--accent</code>, <code>--muted</code>, <code>--border</code> exist
+as HSL (shadcn) AND hex (helix-ota). Unscoped import → invalid
+<code>hsl(#hex)</code> → borders/accents break.
+<strong>Resolved</strong> by import order (opendesign layer imported
+before the shadcn <code>:root</code> block so HSL wins the 3 names —
+1.5.2) and by <strong>not</strong> importing
+<code>tailwind-v4.css</code> into ota-manager (its <code>@theme</code>
+<code>--color-accent/-border/-muted</code> would collide with the shadcn
+Tailwind utilities). Dashboard has <strong>no</strong> prior CSS vars →
+no name collision there.</p>
+<p><strong>R3 — §11.4.170 baseline regeneration.</strong> Vendoring
+changes pixels ⇒ goldens regenerate. ota-manager: LoginPage likely
+<strong>unchanged</strong> (HSL palette retained; no component
+repointed) — regenerate only if a diff appears. dashboard: light golden
+<strong>changes</strong> (border
+<code>#e2e5ea</code>→<code>#e2e8f0</code>) + a new dark golden is added.
+In both cases regenerate the goldens, re-run the dual oracle (image-diff
++ OCR/layout) with its golden-good/golden-bad self-validation, and
+commit the new goldens as the §11.4.170 evidence. Regeneration is
+expected and compliant, not a defect.</p>
+<p><strong>R4 — dashboard <code>prefers-color-scheme</code> auto-dark
+behavior change.</strong> Once <code>tokens.css</code> is imported, its
+<code>@media (prefers-color-scheme: dark) :root:not([data-theme="light"])</code>
+block (tokens.css:159–171) makes the dashboard <strong>auto-dark on a
+dark-preference OS even before a toggle is wired</strong>. Mitigation:
+<code>initTheme()</code>/<code>applyTheme()</code> always set an
+explicit <code>data-theme</code> on <code>&lt;html&gt;</code>, which
+takes the <code>:root[data-theme="…"]</code> path and neutralizes the
+media query. Land the toggle + <code>initTheme()</code> in the
+<strong>same</strong> change as the tokens import so no window of
+uncontrolled auto-dark ships.</p>
+<p><strong>R5 — <code>UNCONFIRMED:</code> Tailwind v4 config-loading
+mechanism (ota-manager).</strong> <code>src/index.css</code> has
+<strong>no</strong>
+<code>@config</code>/<code>@theme</code>/<code>@source</code> (grep
+confirmed), yet the shadcn utilities (<code>bg-background</code>,
+<code>text-muted-foreground</code>, …) in
+<code>tailwind.config.ts</code> clearly render. The exact mechanism (v4
+back-compat auto-detection of a root <code>tailwind.config.ts</code> by
+<code>@tailwindcss/vite</code>) is not provable by static read.
+<strong>Verification step:</strong> run
+<code>cd clients/ota-manager &amp;&amp; pnpm build</code> (or
+<code>pnpm hostrender</code>) after step 1.5 and confirm the utilities
+still emit and the added <code>opendesign-tokens.css</code> variables
+resolve. This does <strong>not</strong> block the plan (the vendored
+layer is CSS-variable only; it adds no <code>@theme</code>), but the
+implementer must confirm before considering step 1.5 done. It is the
+reason 1.4 recommends NOT importing <code>tailwind-v4.css</code>
+here.</p>
+<p><strong>R6 — theme-contract inversion (ota-manager).</strong>
+index.css base <code>:root</code>=DARK / <code>.light</code>=light;
+opendesign base <code>:root</code>=LIGHT / <code>.dark</code>=dark. The
+toggle-fix MUST add <strong>exactly one of
+<code>.light</code>/<code>.dark</code></strong> (add <code>.dark</code>
+in dark mode, not just remove <code>.light</code>) so both systems agree
+AND the <code>@custom-variant dark (&amp;:is(.dark *))</code> utilities
+activate. The 1.6 <code>applyThemeClass</code> does exactly this
+(mirrors <code>visual/harness.tsx:32–34</code>).</p>
+<hr />
+<h2 id="execution-order-both-implementers">4. Execution order (both
+implementers)</h2>
+<ol type="1">
+<li>ota-manager: 1.5 (vendor+wire) → 1.6 (toggle-fix + unit guard) → 1.7
+(re-run <code>pnpm hostrender</code>, regenerate goldens if diff, verify
+R5).</li>
+<li>dashboard: 2.3 steps 1–5 (vendor + map inline styles) → 2.3 step 6 +
+R4 (add dark, land with tokens import atomically) → 2.4 (parametrize W3
+spec, <code>--update-snapshots</code>).</li>
+<li>Each closure carries its §11.4.170 host-render evidence dir + the
+golden-good/golden-bad self-validation verdict.</li>
+</ol>
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>Files read 2026-07-09 from the working tree (paths/lines cited
+inline). No external service docs required (pure in-repo CSS/React
+vendoring).</li>
+</ul>
+</body>
+</html>
