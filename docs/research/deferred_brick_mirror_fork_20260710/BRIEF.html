@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>BRIEF</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">BRIEF</h1>
+</header>
+<h1
+id="deferred-brick-mirror-fork-analysis-safe-convergence-brief">Deferred-Brick
+Mirror-Fork Analysis &amp; Safe-Convergence Brief</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T20:33:57Z <strong>Author:</strong> Stream MF (autonomous
+READ-ONLY investigation subagent) <strong>Scope:</strong>
+<code>submodules/llm_orchestrator</code> +
+<code>submodules/vision_engine</code> <strong>Constraint
+authority:</strong> §11.4.113 (absolute no-force-push,
+merge-onto-latest-main) · §9.2 (zero commit loss) · §11.4.6 (no
+guessing)</p>
+<hr />
+<h2 id="executive-summary">0. Executive summary</h2>
+<p>Two owned Go bricks were deferred by the gofmt sweep because their
+git <strong>mirrors have diverged</strong> — a pre-existing fork, NOT
+caused by the sweep. This brief establishes the exact fork facts
+(bidirectional, with authorship + content), determines the safe lossless
+convergence per §11.4.113, and states the single operator decision each
+needs.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Brick</th>
+<th>origin unique</th>
+<th>github/upstream ahead by</th>
+<th>Merge onto github base</th>
+<th>Commit loss?</th>
+<th>gofmt residual (github tip)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>llm_orchestrator</code></td>
+<td>1 commit (<code>a484f7d</code>, <strong>ours</strong>)</td>
+<td>+34</td>
+<td><strong>add/add CONFLICT</strong> on <code>helix-deps.yaml</code>
+(trivial, content decision)</td>
+<td><strong>None</strong></td>
+<td><strong>0 files — sweep is a no-op</strong></td>
+</tr>
+<tr>
+<td><code>vision_engine</code></td>
+<td>1 commit (<code>b417a40</code>, <strong>ours</strong>)</td>
+<td>+12</td>
+<td><strong>CLEAN</strong> (disjoint paths, no conflict)</td>
+<td><strong>None</strong></td>
+<td><strong>17 files — sweep applies after converge</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Both origin-unique commits are <strong>ours</strong> (author
+<code>i@mvasic.ru</code>, Milos Vasic / Милош Васић), <strong>real
+changes</strong> (not merge artifacts), and are
+<strong>preserved</strong> by the recommended merge — nothing is lost in
+either direction. <strong>Recommended canonical base for both: the
+github/upstream tip</strong> (the most-advanced mirror; identical
+<code>github</code>==<code>upstream</code>).</p>
+<p>Neither convergence requires — nor permits — a force-push. Both are
+fast-forward pushes after the merge because the merge commit descends
+from every mirror tip.</p>
+<hr />
+<h2
+id="shared-facts-verified-2026-07-09-read-only-git-fetch---all---prune">1.
+Shared facts (verified 2026-07-09, read-only
+<code>git fetch --all --prune</code>)</h2>
+<p>Both bricks are on detached <code>HEAD</code> at their parent-pinned
+commit. Remotes for each:</p>
+<ul>
+<li><code>origin</code> fetch = <code>vasic-digital/&lt;Repo&gt;</code>
+· <code>origin</code> <strong>push</strong> =
+<code>HelixDevelopment/&lt;Repo&gt;</code></li>
+<li><code>github</code> = <code>upstream</code> =
+<code>HelixDevelopment/&lt;Repo&gt;</code> (identical tips)</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Brick</th>
+<th><code>origin/master</code></th>
+<th><code>github/master</code> = <code>upstream/master</code></th>
+<th>Parent pins</th>
+<th>Parent pin is…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>llm_orchestrator</code></td>
+<td><code>a484f7d</code></td>
+<td><code>ee229a7</code></td>
+<td><code>a484f7d</code></td>
+<td>the <strong>origin tip</strong></td>
+</tr>
+<tr>
+<td><code>vision_engine</code></td>
+<td><code>b417a40</code></td>
+<td><code>a97df79</code></td>
+<td><code>0bf75ee</code></td>
+<td>the <strong>merge-base</strong> (behind BOTH)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="llm_orchestrator-branch-master">2. <code>llm_orchestrator</code>
+(branch <code>master</code>)</h2>
+<h3 id="fork-geometry">2.1 Fork geometry</h3>
+<ul>
+<li><strong>Common ancestor (merge-base):</strong> <code>d2a2151</code>
+— <em>“cascade: chore(1.1.8-dev-rc1 cascade)…”</em>, Милош Васић,
+2026-06-02.</li>
+<li><code>git merge-base --is-ancestor origin github</code> →
+<strong>NO</strong> (genuine divergence, not a stale-behind).</li>
+<li><strong>origin = merge-base + 1</strong> commit; <strong>github =
+merge-base + 34</strong> commits.</li>
+</ul>
+<h3
+id="origins-unique-commit-github-lacks-github..origin-exactly-one">2.2
+origin’s unique commit github lacks (<code>github..origin</code>) —
+exactly ONE</h3>
+<pre><code>a484f7d  chore(deps): add §11.4.31 helix-deps.yaml dependency manifest
+         Author: Milos Vasic &lt;i@mvasic.ru&gt;   Date: 2026-06-08 21:23:28 +0500
+         Parent: d2a2151 (the merge-base)
+         Adds: helix-deps.yaml | 32 insertions (new file)   Co-Authored-By: Claude Opus 4.8</code></pre>
+<p><strong>Ours / foreign:</strong> OURS (<code>i@mvasic.ru</code>).
+<strong>Real change / artifact:</strong> real change — a new 32-line
+<code>helix-deps.yaml</code> declaring the LLMProvider own-org dep
+(<code>git@github.com:vasic-digital/LLMProvider.git</code>,
+<code>ref: main</code>, flat layout).</p>
+<h3 id="what-github-has-that-origin-lacks-origin..github-34-commits">2.3
+What github has that origin lacks (<code>origin..github</code>) — 34
+commits</h3>
+<p>github is a genuine, far-more-advanced line: a
+<code>CONSTITUTION.md</code> full rewrite + wrong-project (“HelixCode”)
+decontamination, <code>§11.4.29</code> lowercase-upstreams migration,
+anti-bluff test hardening, <code>§11.4.103–165</code> governance
+cascade, real bug-fixes (<code>a446a3d</code> protocol ctx-cancel
+message loss, <code>4e08b93</code> RoundRobinSelector,
+<code>1fac8b1</code> SimpleAgentPool.Release, <code>c6d6049</code>
+opencode Wait() hang), <strong>and <code>974d784</code> “style: gofmt -w
+hygiene across llm_orchestrator”</strong> — i.e. the gofmt work the
+sweep intended is <strong>already on github’s line</strong>. All
+authored by our org. This is <strong>not</strong> a foreign line — it is
+our own, later, decontaminated + gofmt-clean trunk that origin never
+received.</p>
+<h3
+id="the-conflict-verified-via-git-merge-tree---write-tree-github-origin">2.4
+The conflict (verified via
+<code>git merge-tree --write-tree github origin</code>)</h3>
+<pre><code>CONFLICT (add/add): Merge conflict in helix-deps.yaml</code></pre>
+<p><strong>Both mirrors independently added
+<code>helix-deps.yaml</code>:</strong> - <strong>origin</strong>
+(<code>a484f7d</code>, 2026-06-08, 32 lines): declares
+<code>LLMProvider</code> as an own-org dep. - <strong>github</strong>
+(<code>3ac8124</code>, 2026-06-17, 8 lines): <code>deps: []</code> with
+a <code>§11.4.74</code> catalogue-check note <em>“own-org deps:
+none”</em>.</p>
+<p>These two files <strong>semantically contradict</strong>
+(LLMProvider-is-a-dep vs no-own-org-dep). This is the one point that
+needs a human decision — see §4.1. It is a <strong>content
+reconciliation</strong>, NOT a commit loss: merging preserves both
+<code>a484f7d</code> and all 34 github commits in history; only the
+file’s final bytes are chosen.</p>
+<blockquote>
+<p>Honest boundary (§11.4.6): I did <strong>not</strong> open
+<code>go.mod</code> to decide which manifest is factually correct
+(whether LLMProvider is still a live <code>replace</code>). That is the
+operator/author call flagged in §4.1 — I state it as UNKNOWN rather than
+guess.</p>
+</blockquote>
+<h3 id="gofmt-residual">2.5 gofmt residual</h3>
+<p>github tip <code>ee229a7</code> → <code>gofmt -l</code> = <strong>0
+files</strong>. Once converged onto the github base the gofmt sweep is a
+<strong>no-op</strong> for this brick.</p>
+<hr />
+<h2 id="vision_engine-branch-master">3. <code>vision_engine</code>
+(branch <code>master</code>)</h2>
+<h3 id="fork-geometry-1">3.1 Fork geometry</h3>
+<ul>
+<li><strong>Common ancestor (merge-base) = the parent pin
+<code>0bf75ee</code></strong> — <em>“Merge remote-tracking branch
+‘origin/master’”</em>, Милош Васић, 2026-06-16. Ancestor of BOTH mirrors
+(verified).</li>
+<li><code>git merge-base --is-ancestor origin github</code> →
+<strong>NO</strong> (genuine divergence).</li>
+<li><strong>origin = merge-base + 1</strong>; <strong>github =
+merge-base + 12</strong>. The <strong>parent currently pins the common
+ancestor</strong> — behind github by 12 and behind origin by 1.</li>
+</ul>
+<h3
+id="origins-unique-commit-github-lacks-github..origin-exactly-one-1">3.2
+origin’s unique commit github lacks (<code>github..origin</code>) —
+exactly ONE</h3>
+<pre><code>b417a40  chore(governance): add install_upstreams.sh + Upstreams/{GitHub,GitLab} (§11.4.36 / §6.W)
+         Author: Милош Васић &lt;i@mvasic.ru&gt;   Date: 2026-07-04 16:45:18 +0300
+         Parent: 0bf75ee (the merge-base)
+         Adds: Upstreams/GitHub.sh (9) + Upstreams/GitLab.sh (9) + install_upstreams.sh (109) = 127 insertions</code></pre>
+<p><strong>Ours / foreign:</strong> OURS (<code>i@mvasic.ru</code>).
+<strong>Real change / artifact:</strong> real change — adds a root
+<code>install_upstreams.sh</code> (not present at github tip) plus
+<strong>capital-<code>Upstreams/</code></strong> recipe scripts.</p>
+<h3 id="what-github-has-that-origin-lacks-origin..github-12-commits">3.3
+What github has that origin lacks (<code>origin..github</code>) — 12
+commits</h3>
+<p>Our own later line: wrong-project decontamination,
+<code>§11.4.29</code> <strong>lowercase <code>upstreams/</code>
+migration</strong> (<code>9553a31</code> “lowercase upstream scripts;
+simplify push-all.sh”), anti-bluff test hardening, Dockerfile non-root
+hardening (<code>f3ef1f2</code>), <code>§11.4.142-165</code> cascade.
+All <code>i@mvasic.ru</code> / our org. Genuine trunk, not foreign.</p>
+<h3
+id="the-merge-verified-via-git-merge-tree---write-tree-github-origin">3.4
+The merge (verified via
+<code>git merge-tree --write-tree github origin</code>)</h3>
+<pre><code>229c431e59f16d5bced0b2fb64beb6ef82504a60   ← tree OID only, NO conflict lines, exit 0</code></pre>
+<p><strong>CLEAN merge — zero conflicts.</strong> origin’s
+<code>b417a40</code> touches <code>Upstreams/*</code> (capital U) +
+<code>install_upstreams.sh</code>; github’s line touches
+<code>upstreams/*</code> (lowercase). On the case-sensitive Linux host
+these are <strong>disjoint paths</strong>, so git auto-merges cleanly
+and both lines’ commits are preserved.</p>
+<p><strong>Caveat for the operator (not a blocker):</strong> the clean
+merge <strong>reintroduces the capital-<code>Upstreams/</code>
+directory</strong>, which is a <strong>§11.4.29 lowercase-naming
+concern</strong> — the github line deliberately migrated to lowercase
+<code>upstreams/</code>. <code>install_upstreams.sh</code> at root is
+genuinely new and wanted (§11.4.36); the capital
+<code>Upstreams/GitHub.sh</code> + <code>GitLab.sh</code> are redundant
+with the existing lowercase recipes. See §4.2.</p>
+<h3 id="gofmt-residual-1">3.5 gofmt residual</h3>
+<p>github tip <code>a97df79</code> → <code>gofmt -l</code> = <strong>17
+files</strong> (identical set on origin tip — the gofmt hygiene was
+never done on this brick’s line):
+<code>cmd/visiondescribe/main.go</code>,
+<code>pkg/analyzer/{i18n_defaults,types,types_test}.go</code>,
+<code>pkg/config/i18n_callsites_test.go</code>,
+<code>pkg/graph/{graph,graph_automation_test}.go</code>,
+<code>pkg/llmvision/{anthropic,astica,i18n_defaults,provider,provider_test}.go</code>,
+<code>pkg/opencv/{i18n_defaults,orb_vision_test}.go</code>,
+<code>pkg/remote/{deployer_test,remote,remote_test}.go</code>. The
+<strong>gofmt sweep still applies to this brick and must run AFTER
+convergence</strong> (on the merged tree).</p>
+<hr />
+<h2 id="operator-decision-needed">4. Operator decision needed</h2>
+<h3
+id="llm_orchestrator-resolve-the-helix-deps.yaml-addadd-conflict">4.1
+<code>llm_orchestrator</code> — resolve the <code>helix-deps.yaml</code>
+add/add conflict</h3>
+<p>The only real decision. Two contradictory manifests exist: -
+<strong>origin <code>a484f7d</code>:</strong> LLMProvider IS an own-org
+dep (via <code>go.mod replace</code>). - <strong>github
+<code>3ac8124</code>:</strong> <code>deps: []</code> — own-org deps:
+none.</p>
+<p>Operator (or brick author) must confirm — from the brick’s current
+<code>go.mod</code> — which is factually correct, then the merge keeps
+that content. If LLMProvider is still a live <code>replace</code>, keep
+origin’s richer 32-line manifest; if the dep was removed, keep github’s
+<code>deps: []</code>. <strong>UNKNOWN to this read-only investigation —
+flagged, not guessed (§11.4.6).</strong></p>
+<h3 id="vision_engine-capital-upstreams-vs-lowercase-upstreams">4.2
+<code>vision_engine</code> — capital <code>Upstreams/</code> vs
+lowercase <code>upstreams/</code></h3>
+<p>The merge is clean but reintroduces capital <code>Upstreams/</code>.
+Operator chooses one: - <strong>(a)</strong> Keep
+<code>install_upstreams.sh</code> (wanted, §11.4.36) but <strong>drop /
+lowercase-rename</strong> the capital
+<code>Upstreams/GitHub.sh</code>+<code>GitLab.sh</code> during the merge
+to honour §11.4.29 (the github line already has lowercase equivalents) —
+<strong>recommended</strong>; or - <strong>(b)</strong> Accept the
+capital dir as-is (clean auto-merge, but a standing §11.4.29 nit).</p>
+<hr />
+<h2
+id="recommended-safe-convergence-11.4.113-merge-onto-latest-ff-push-never-force">5.
+Recommended safe convergence (§11.4.113 — merge-onto-latest, FF-push,
+NEVER force)</h2>
+<p><strong>Canonical base for BOTH bricks: the
+<code>github</code>/<code>upstream</code> tip</strong> (most-advanced
+mirror; <code>github</code>==<code>upstream</code>; already
+decontaminated; llm_orchestrator already gofmt-clean).</p>
+<p>Per-brick procedure (executed by the conductor, not this read-only
+stream):</p>
+<ol type="1">
+<li><code>git fetch --all --prune --tags</code> (all remotes).</li>
+<li>Check out / base on the <strong>github tip</strong>
+(<code>ee229a7</code> / <code>a97df79</code>).</li>
+<li><strong>Merge the origin unique commit</strong> on top:
+<ul>
+<li><code>llm_orchestrator</code>: merge <code>a484f7d</code>; resolve
+the <code>helix-deps.yaml</code> add/add per §4.1 (no
+<code>-s ours</code>, no drop — union history, chosen content).</li>
+<li><code>vision_engine</code>: merge <code>b417a40</code> (auto-clean);
+apply the §4.2 choice.</li>
+</ul></li>
+<li><code>vision_engine</code> only: <strong>run the gofmt
+sweep</strong> on the merged tree (17 files) and commit.</li>
+<li>Audit: no conflict markers, no file silently dropped, prior tests
+still green.</li>
+<li><strong>Fast-forward push to ALL upstreams</strong>
+(<code>origin</code> push→HelixDevelopment, <code>github</code>,
+<code>upstream</code>, + GitLab/GitFlic/GitVerse fan-out). Each push is
+a fast-forward because the merge commit descends from every mirror tip —
+<strong>no force is ever needed</strong>.</li>
+<li>Advance the parent <code>.gitmodules</code> pointer to the new
+merged tip in the same change window.</li>
+</ol>
+<p><strong>Commit-loss check (§9.2):</strong> NONE in either direction.
+The merge preserves origin’s 1 commit AND github’s 34 / 12 commits. The
+recommended base flips each parent pin FORWARD (llm_orchestrator
+a484f7d→merged, vision_engine 0bf75ee→merged) with zero history
+rewrite.</p>
+<p><strong>Force-push:</strong> not required and forbidden (§11.4.113) —
+the merge-onto-latest path makes every push a fast-forward.</p>
+<hr />
+<h2 id="verification-trail-read-only-commands-run">6. Verification trail
+(read-only commands run)</h2>
+<ul>
+<li><code>git fetch --all --prune</code> (both bricks) — remote tips
+captured.</li>
+<li><code>git merge-base</code> / <code>--is-ancestor</code> —
+divergence + ancestor facts.</li>
+<li><code>git log --oneline &lt;a&gt;..&lt;b&gt;</code> both directions
+— unique-commit sets.</li>
+<li><code>git show --stat --format=…</code> — authorship + content of
+each origin-unique commit.</li>
+<li><code>git ls-tree -r --name-only &lt;tip&gt;</code> — file presence
+(helix-deps.yaml, upstreams paths).</li>
+<li><code>git merge-tree --write-tree &lt;github&gt; &lt;origin&gt;</code>
+— conflict simulation (no working-tree or ref mutation):
+llm_orchestrator = add/add CONFLICT; vision_engine = clean.</li>
+<li><code>git archive &lt;tip&gt; | tar -x</code> to scratchpad +
+<code>gofmt -l</code> — residual gofmt (0 / 17), scratch cleaned
+after.</li>
+</ul>
+<p>No ref, file, or working tree in either submodule or the parent was
+modified. Only this document was written.</p>
+</body>
+</html>
