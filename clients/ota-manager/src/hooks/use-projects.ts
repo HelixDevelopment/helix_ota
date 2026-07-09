@@ -30,8 +30,8 @@ export function useProjects() {
         project_id: 'default',
         name: 'Default Project',
         description: 'Single-project mode — all resources live here.',
-        os_types: ['android'],
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
     ],
     // Retry once silently; on 404 the placeholderData kicks in.

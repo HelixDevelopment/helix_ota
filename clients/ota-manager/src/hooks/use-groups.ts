@@ -52,7 +52,8 @@ export function useCreateGroup() {
       apiPost<Group>('/groups', req),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      queryClient.setQueryData(groupKeys.detail(data.id), data);
+      // Group's real primary key is `group_id`, never `id` (§11.4.6/§11.4.108).
+      queryClient.setQueryData(groupKeys.detail(data.group_id), data);
     },
   });
 }
@@ -67,7 +68,8 @@ export function useUpdateGroup() {
       apiPatch<Group>(`/groups/${vars.groupId}`, vars.req),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: groupKeys.lists() });
-      queryClient.setQueryData(groupKeys.detail(data.id), data);
+      // Group's real primary key is `group_id`, never `id` (§11.4.6/§11.4.108).
+      queryClient.setQueryData(groupKeys.detail(data.group_id), data);
     },
   });
 }

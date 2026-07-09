@@ -26,11 +26,15 @@ export function useReleases(filters?: ReleasesFilter) {
     status: filters?.status || undefined,
   });
 
+  // r.release_id/r.os/r.target_model are the REAL Release fields —
+  // server/internal/api/wire.go:147-156 (§11.4.6/§11.4.108: previously
+  // `r.id`/`r.firmware_version`/`r.target_board`, none of which exist on the
+  // wire).
   const data: Release[] = (query.data?.items ?? []).map((r) => ({
-    id: r.id,
+    id: r.release_id,
     version: r.version,
-    os: r.firmware_version,
-    targetModel: r.target_board,
+    os: r.os,
+    targetModel: r.target_model,
     status: r.status,
     createdAt: r.created_at,
   }));

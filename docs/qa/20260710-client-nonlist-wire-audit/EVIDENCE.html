@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1 id="client-non-list-wire-shape-audit-ota-manager">Client non-list
+wire-shape audit — ota-manager</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T04:10:00Z</p>
+<p>Anti-bluff discovery-pressure sweep (§11.4.6 no-guessing, §11.4.108
+source-truth, §11.4.118 discovery-pressure) over every NON-LIST response
+interface in <code>clients/ota-manager/src/lib/api-client.ts</code>,
+following the two confirmed shape-drift bugs already fixed in this
+client (BUG-1 <code>TelemetryOverview</code> fabrication; the six
+list-interface <code>{items,total,cursor}</code> vs real
+<code>{items,next_cursor}</code> drift, commit
+<code>f711b1f9</code>).</p>
+<h2 id="headline-finding">Headline finding</h2>
+<p>The completeness sweep this task was designed to run
+<strong>did</strong> turn up the predicted class of defect, at a scale
+much larger than the conductor’s working hypothesis (“one confirmed
+omission — <code>TelemetryHistory.device_id</code> — plus a spot-check
+of the rest”). Every real, returned-by-a-handler non-list interface
+checked against its Go struct — 15 of them — was found to have genuine
+field-level drift, ranging from a single missing optional field
+(<code>TokenResponse.roles</code>) to entire fabricated shapes with
+almost no field overlap (<code>DeviceRegistered</code>,
+<code>DeviceStatus</code>, <code>DeviceHealth</code>,
+<code>ReleaseResponse</code>, <code>Deployment</code>,
+<code>RolloutState</code>, <code>RolloutDecision</code>,
+<code>Group</code>). Two of the fabricated shapes
+(<code>Deployment</code>, <code>AuditEntry</code>) were ALSO the
+per-item type nested inside an already-“fixed” list interface
+(<code>DeploymentList.items</code>, <code>AuditLogList.items</code>), so
+the earlier list-pagination fix (commit <code>f711b1f9</code>) corrected
+the outer envelope while the item contents underneath stayed wrong.</p>
+<h2 id="per-interface-audit-table">Per-interface audit table</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Verdict</th>
+<th>Real server citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TokenResponse</code></td>
+<td>DRIFT — missing <code>roles?: string[]</code></td>
+<td><code>server/internal/api/wire.go:29-36</code></td>
+</tr>
+<tr>
+<td><code>DeviceRegistered</code></td>
+<td>DRIFT — fabricated <code>{id, board, status, created_at}</code>;
+real shape
+<code>{device_id, hardware_id, device_token, token_type, expires_in, registered_at}</code></td>
+<td><code>server/internal/api/wire.go:52-59</code> via
+<code>handlers_device.go:192-202</code></td>
+</tr>
+<tr>
+<td><code>DeviceList.items</code> (new <code>DeviceListItem</code>)</td>
+<td>DRIFT — typed as <code>DeviceRegistered[]</code> (the one-time
+registration-response shape); real per-item shape is
+<code>DeviceListItem</code>
+(<code>device_id, hardware_id, model, os, os_version?, current_version?, target_version, group?, update_state, active_slot?, health_ok, last_seen?, registered_at</code>)</td>
+<td><code>server/internal/api/wire.go:81-95</code> via
+<code>handlers_device.go:167-190</code></td>
+</tr>
+<tr>
+<td><code>DeviceStatus</code></td>
+<td>DRIFT — fabricated
+<code>{device_id, online, current_release_id, last_seen, ip_address}</code>;
+real shape
+<code>{device_id, hardware_id, current_version?, target_version, last_seen?, update_state, active_slot?, health}</code></td>
+<td><code>server/internal/api/wire.go:69-78</code> via
+<code>handlers_device.go:204-230</code></td>
+</tr>
+<tr>
+<td><code>DeviceHealth</code></td>
+<td>DRIFT — fabricated top-level
+<code>{device_id, online, battery_percent, storage_used_percent, temperature_celsius, uptime_seconds, last_reported}</code>;
+real shape is the NESTED <code>{ok, last_error_code}</code> block of
+<code>DeviceStatus.health</code> — no such standalone endpoint
+exists</td>
+<td><code>server/internal/api/wire.go:62-65</code></td>
+</tr>
+<tr>
+<td><code>Release</code>/<code>ReleaseResponse</code></td>
+<td>DRIFT — fabricated
+<code>{id, project_id, file_url, file_hash, changelog, target_board, firmware_version, created_by}</code>;
+real shape
+<code>{release_id, artifact_id, version, os, target_model, status, notes?, created_at}</code></td>
+<td><code>server/internal/api/wire.go:147-156</code> via
+<code>handlers_release.go:126-138</code></td>
+</tr>
+<tr>
+<td><code>Deployment</code></td>
+<td>DRIFT — fabricated
+<code>{group_ids: string[], rollout_percentage, staged, created_by}</code>;
+real shape
+<code>{deployment_id, release_id, strategy, group?, status, target_count, created_at}</code></td>
+<td><code>server/internal/api/wire.go:174-182</code> via
+<code>handlers_deployment.go:226-237</code></td>
+</tr>
+<tr>
+<td><code>DeploymentStatus</code> (new
+<code>DeploymentProgress</code>)</td>
+<td>DRIFT — fabricated
+<code>{rollout_state?, failed_devices?, completed_devices?, total_devices?}</code>;
+real shape is
+<code>Deployment &amp; {progress: {pending, downloading, installed, succeeded, failed}}</code></td>
+<td><code>server/internal/api/wire.go:193-205</code> via
+<code>handlers_deployment.go:121-132,190-224</code></td>
+</tr>
+<tr>
+<td><code>RolloutState</code> (new <code>RolloutPhaseSpec</code>)</td>
+<td>DRIFT — fabricated
+<code>{progress, success_rate, error_rate, total_devices, completed_devices, failed_devices}</code>;
+real shape
+<code>{deployment_id, status, current_phase, phases[], updated_at}</code></td>
+<td><code>server/internal/api/handlers_rollout.go:16-44,67-75</code></td>
+</tr>
+<tr>
+<td><code>RolloutDecision</code></td>
+<td>DRIFT — fabricated <code>{approved: boolean, reason}</code>; real
+shape <code>{action, reason, state: RolloutState}</code></td>
+<td><code>server/internal/api/handlers_rollout.go:47-51,129-160</code></td>
+</tr>
+<tr>
+<td><code>Project</code></td>
+<td>DRIFT — fabricated <code>os_types: string[]</code> field; missing
+real <code>updated_at</code></td>
+<td><code>server/internal/api/wire.go:260-266</code> via
+<code>handlers_project.go:95-103</code></td>
+</tr>
+<tr>
+<td><code>Group</code> (list item of <code>GroupList</code>)</td>
+<td>DRIFT — fabricated
+<code>{id, project_id, device_count, labels}</code>; real shape
+<code>{group_id, name, description?, member_count, created_at}</code>
+(groups are NOT project-scoped)</td>
+<td><code>server/internal/api/handlers_group.go:54-60,97-115</code></td>
+</tr>
+<tr>
+<td><code>GroupMembers</code> (new <code>GroupMemberView</code>)</td>
+<td>DRIFT — fabricated
+<code>{group_id, devices: DeviceRegistered[]}</code>; real shape
+<code>{group_id, items: {device_id, added_at}[], next_cursor}</code>
+(cursor-paginated)</td>
+<td><code>server/internal/api/handlers_group.go:84-95</code></td>
+</tr>
+<tr>
+<td><code>AddGroupMembersResult</code></td>
+<td>DRIFT — fabricated <code>{added: number, failed: number}</code>;
+real shape
+<code>{added: string[], already_member: string[], not_found: string[]}</code></td>
+<td><code>server/internal/api/handlers_group.go:77-81</code></td>
+</tr>
+<tr>
+<td><code>Artifact</code></td>
+<td><strong>VERIFIED CORRECT</strong> — no drift</td>
+<td><code>server/internal/api/wire.go:122-132</code></td>
+</tr>
+<tr>
+<td><code>ArtifactUploadMetadata</code></td>
+<td><strong>VERIFIED CORRECT</strong> — no drift</td>
+<td><code>server/internal/api/wire.go:107-119</code></td>
+</tr>
+<tr>
+<td><code>DeltaView</code></td>
+<td><strong>VERIFIED CORRECT</strong> — no drift</td>
+<td><code>server/internal/api/handlers_delta.go:24-32</code></td>
+</tr>
+<tr>
+<td><code>AuditEntry</code> (new <code>AuditActor</code>, list item of
+<code>AuditLogList</code>)</td>
+<td>DRIFT — <code>actor</code> was a bare <code>string</code>; real
+shape nests <code>{user_id?, subject}</code>; <code>user_agent</code>
+entirely missing</td>
+<td><code>server/internal/api/audit_wire.go:9-31</code> via
+<code>:39-55</code></td>
+</tr>
+<tr>
+<td><code>TelemetryHistory</code> (new
+<code>TelemetryEventView</code>)</td>
+<td>DRIFT — missing required <code>device_id</code> (the
+conductor-flagged omission); <code>items</code> was untyped
+<code>Record&lt;string, unknown&gt;[]</code> instead of the real
+<code>TelemetryEventView</code> shape</td>
+<td><code>server/internal/api/handlers_telemetry.go:15-38,66-78</code></td>
+</tr>
+<tr>
+<td><code>TelemetryOverview</code></td>
+<td><strong>VERIFIED CORRECT</strong> (already fixed under BUG-1) — no
+further drift</td>
+<td><code>server/internal/api/handlers_telemetry.go:56-64</code></td>
+</tr>
+<tr>
+<td><code>RollbackList.items</code> (new <code>RollbackView</code>)</td>
+<td>DRIFT — inline item shape
+<code>{id, deployment_id, reason, created_at}</code> dropped
+<code>kind</code>, <code>from_release_id</code>,
+<code>to_release_id</code>, <code>recall_deployment_id</code>,
+<code>triggered_by</code>, <code>details</code></td>
+<td><code>server/internal/api/handlers_recall.go:23-39</code> via
+<code>:41-48</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Result: 15 of 19 checked interfaces had real field-level
+drift; 4 (<code>Artifact</code>, <code>ArtifactUploadMetadata</code>,
+<code>DeltaView</code>, <code>TelemetryOverview</code>) were already
+correct.</strong></p>
+<h2 id="out-of-scope-discoveries-flagged-not-fixed">Out-of-scope
+discoveries (flagged, not fixed)</h2>
+<p>This task’s charter is RESPONSE-shape interfaces. While reading every
+real handler to verify each response, the following REQUEST-body
+interfaces were also found drifted from the real Go request structs.
+They are flagged here as follow-up work items — fixing them was judged
+out of scope (tight-scope discipline, §11.4.20) because correcting a
+request body also requires correcting the create-wizard/dialog code that
+builds it, a materially larger change surface than this response-shape
+audit:</p>
+<ul>
+<li><code>DeviceRegistrationRequest</code> vs real
+<code>DeviceRegistration</code>
+(<code>server/internal/api/wire.go:41-49</code>) — no field overlap at
+all.</li>
+<li><code>CreateReleaseRequest</code> vs real <code>ReleaseCreate</code>
+(<code>server/internal/api/wire.go:136-144</code>) — no field overlap;
+the create-release wizard’s own code comment already flags this
+submission path as non-functional.</li>
+<li><code>RecallRequest</code> vs real <code>RecallRequest</code>
+(<code>server/internal/api/handlers_recall.go:17-20</code>) — sends
+<code>{reason, force}</code>, server requires
+<code>{to_release_id, reason?}</code>; the real endpoint would reject
+every recall request this client currently sends.</li>
+<li><code>CreateDeploymentRequest</code>/<code>CreateRolloutRequest</code>
+— not cross-checked in detail (out of scope), but given the pattern
+above are very likely similarly drifted; noted for the same follow-up
+item.</li>
+</ul>
+<p>Each of these has an inline comment added at its declaration site in
+<code>api-client.ts</code> (except the two Create* request types, noted
+here only, to avoid ballooning the diff) citing the real struct and
+file:line.</p>
+<h2 id="files-changed">Files changed</h2>
+<ul>
+<li><code>clients/ota-manager/src/lib/api-client.ts</code> — all
+interface fixes listed in the table above; added
+<code>DeviceListItem</code>, <code>DeploymentProgress</code>,
+<code>RolloutPhaseSpec</code>, <code>GroupMemberView</code>,
+<code>AuditActor</code>, <code>RollbackView</code>,
+<code>TelemetryEventView</code>.</li>
+<li><code>clients/ota-manager/src/types/api.ts</code> — re-export the
+new interfaces.</li>
+<li><code>clients/ota-manager/src/hooks/useDevices.ts</code> —
+device-list adapter: <code>DeviceListItem</code> field remap
+(<code>device_id/hardware_id/os/current_version</code>), new
+<code>deriveViewStatus</code> honestly derived from
+<code>health_ok</code>/<code>update_state</code> (previously matched a
+<code>status</code> field that never existed on the wire, so every
+device rendered “unknown”), <code>targetModel</code> now wired from the
+real <code>model</code> field (previously never populated).</li>
+<li><code>clients/ota-manager/src/features/devices/device-detail-page.tsx</code>
+— <code>DeviceStatus</code> field remap
+(<code>hardware_id/current_version/health.ok/ update_state/active_slot</code>);
+<code>currentSlot</code>/<code>healthStatus</code> now wired from real
+fields (previously permanent placeholders); dropped the never-real
+<code>ipAddress</code>.</li>
+<li><code>clients/ota-manager/src/hooks/useDeployments.ts</code> —
+<code>d.group</code> (real singular field) instead of
+<code>d.group_ids[0]</code> (never existed).</li>
+<li><code>clients/ota-manager/src/hooks/useDeployment.ts</code> —
+dropped <code>created_by</code>/<code>rollout_percentage</code> sourcing
+(no real field), made both optional on the shim’s own view-model
+interface; <code>targetGroupName</code> now from
+<code>d.group</code>.</li>
+<li><code>clients/ota-manager/src/hooks/use-groups.ts</code> —
+<code>data.group_id</code> (real primary key) instead of
+<code>data.id</code> in
+<code>useCreateGroup</code>/<code>useUpdateGroup</code>.</li>
+<li><code>clients/ota-manager/src/hooks/useGroups.ts</code> —
+<code>g.group_id</code>/<code>g.member_count</code> instead of
+<code>g.id</code>/<code>g.device_count</code>.</li>
+<li><code>clients/ota-manager/src/hooks/use-releases.ts</code> —
+<code>data.release_id</code> instead of <code>data.id</code> in
+<code>useCreateRelease</code>.</li>
+<li><code>clients/ota-manager/src/hooks/useReleases.ts</code> —
+<code>r.release_id/r.os/ r.target_model</code> instead of
+<code>r.id/r.firmware_version/r.target_board</code>.</li>
+<li><code>clients/ota-manager/src/hooks/useAuditLog.ts</code> —
+<code>e.actor.subject</code> instead of <code>e.actor</code> (now a
+nested object).</li>
+<li><code>clients/ota-manager/src/hooks/use-projects.ts</code> —
+placeholder <code>Project</code> fixture: dropped fabricated
+<code>os_types</code>, added real <code>updated_at</code>.</li>
+<li><code>clients/ota-manager/src/__tests__/wire-shape-pagination.test.ts</code>
+— added the now-required <code>device_id</code> to its pre-existing
+<code>TelemetryHistory</code> fixture (this file’s own scope is the
+list/pagination shape; it needed a one-field update to keep compiling
+under the corrected interface).</li>
+<li><code>clients/ota-manager/src/__tests__/use-telemetry-overview.test.tsx</code>
+— its <code>deploymentsFixture</code> used the old fabricated
+<code>Deployment</code> fields
+(<code>group_ids</code>/<code>rollout_percentage</code>/<code>staged</code>);
+replaced with the real <code>target_count</code> field (the fixture’s
+assertions only ever depended on <code>.items.length</code>,
+unaffected).</li>
+<li><code>clients/ota-manager/src/__tests__/wire-shape-nonlist.test.ts</code>
+(NEW) — the guard test for this audit; compile-time-only,
+<code>tsc --noEmit</code> is the oracle, same pattern as
+<code>wire-shape-pagination.test.ts</code>.</li>
+</ul>
+<p>No caller needed changes for:
+<code>Artifact</code>/<code>ArtifactUploadMetadata</code>/<code>DeltaView</code>
+(unchanged, verified correct), <code>TelemetryOverview</code>
+(unchanged, already fixed), <code>features/audit/audit-page.tsx</code>
+and <code>features/dashboard/dashboard-page.tsx</code> (consume the
+already-mapped <code>AuditView</code>/<code>TelemetryOverviewView</code>
+shim types, which absorbed the
+<code>AuditEntry</code>/nothing-changed-here field changes at the
+adapter boundary),
+<code>features/deployments/deployments-page.tsx</code>,
+<code>features/deployments/ deployment-detail-page.tsx</code> (consume
+the local shim <code>Deployment</code> view types, whose fields stayed
+the same — only the shim’s internal mapping changed),
+<code>features/releases/releases-page.tsx</code>,
+<code>features/groups/ groups-page.tsx</code> (same pattern — shim
+absorbs the wire change).</p>
+<h2 id="red-evidence-captured-11.4.115">RED evidence (captured,
+§11.4.115)</h2>
+<p>Temporarily reverted <code>TelemetryHistory</code> in
+<code>api-client.ts</code> to drop the required <code>device_id</code>
+field, then ran <code>npx tsc --noEmit</code>:</p>
+<pre><code>src/__tests__/wire-shape-nonlist.test.ts(174,5): error TS2353: Object literal may only specify known properties, and &#39;device_id&#39; does not exist in type &#39;TelemetryHistory&#39;.
+src/__tests__/wire-shape-nonlist.test.ts(180,3): error TS2578: Unused &#39;@ts-expect-error&#39; directive.
+src/__tests__/wire-shape-pagination.test.ts(60,48): error TS2353: Object literal may only specify known properties, and &#39;device_id&#39; does not exist in type &#39;TelemetryHistory&#39;.</code></pre>
+<p>Restored the fix; <code>npx tsc --noEmit</code> exit 0 (GREEN,
+reconfirmed below).</p>
+<p>Additionally, during authoring, the FULL set of
+<code>@ts-expect-error</code> “old fabricated shape” assertions in
+<code>wire-shape-nonlist.test.ts</code> were verified to actually fire
+(not silently pass) by the intermediate <code>tsc</code> run that
+surfaced <code>TS2578: Unused '@ts-expect-error' directive</code> for
+six of them (before the object literals were reformatted to single-line
+so the directive aligned with the reported error line) — i.e. every
+“this OLD shape should be a compile error” assertion was proven to
+genuinely reproduce a TS error against the corrected interfaces, not
+merely assumed.</p>
+<h2 id="verification">Verification</h2>
+<ul>
+<li><code>npx tsc --noEmit</code> — <strong>exit 0</strong> (GREEN, full
+project, all interfaces + all callers + all test fixtures).</li>
+<li><code>npx vitest run</code> — <strong>13 test files passed (13), 51
+tests passed (51)</strong>, 9.26s.</li>
+</ul>
+<h2 id="constraints-honored">Constraints honored</h2>
+<ul>
+<li>No <code>server/*.go</code> files modified (read-only, source of
+truth).</li>
+<li>No submodule, <code>dist/</code>, or other <code>docs/qa/</code>
+directories modified.</li>
+<li>No git commands run by this agent; conductor commits.</li>
+</ul>
+</body>
+</html>

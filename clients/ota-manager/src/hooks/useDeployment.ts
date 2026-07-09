@@ -6,13 +6,19 @@
 // the page.
 import { useDeployment as useDeploymentQuery } from "./use-deployments";
 
+// createdBy/rolloutPercentage are OPTIONAL: the real DeploymentStatus
+// (server/internal/api/wire.go:202-205 = Deployment + progress) carries
+// neither `created_by` nor a `rollout_percentage` — those concepts do not
+// exist on Deployment itself (a staged rollout's percentage lives on the
+// separate RolloutState resource). Previously typed as required with values
+// sourced from fields that never existed on the wire (§11.4.6/§11.4.108).
 export interface Deployment {
   id: string;
   strategy: string;
   status: string;
   createdAt: string;
-  createdBy: string;
-  rolloutPercentage: number;
+  createdBy?: string;
+  rolloutPercentage?: number;
   releaseVersion: string;
   targetGroupName?: string;
 }
@@ -30,10 +36,8 @@ export function useDeployment(
         strategy: query.data.strategy,
         status: query.data.status,
         createdAt: query.data.created_at,
-        createdBy: query.data.created_by,
-        rolloutPercentage: query.data.rollout_percentage,
         releaseVersion: query.data.release_id,
-        targetGroupName: query.data.group_ids[0],
+        targetGroupName: query.data.group || undefined,
       }
     : undefined;
 

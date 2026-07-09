@@ -56,7 +56,8 @@ export function useCreateRelease() {
       apiPost<Release>('/releases', req),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: releaseKeys.lists() });
-      queryClient.setQueryData(releaseKeys.detail(data.id), data);
+      // Release's real primary key is `release_id`, never `id` (§11.4.6/§11.4.108).
+      queryClient.setQueryData(releaseKeys.detail(data.release_id), data);
     },
   });
 }

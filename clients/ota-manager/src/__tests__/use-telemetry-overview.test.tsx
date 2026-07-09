@@ -60,11 +60,14 @@ const telemetryOverviewFixture = {
   },
 }
 
+// Real Deployment shape (server/internal/api/wire.go:174-182): no
+// `group_ids`/`rollout_percentage`/`staged` — those never existed on the
+// wire (§11.4.6/§11.4.108); `target_count` is the real device-count field.
 const deploymentsFixture = {
   items: [
-    { deployment_id: 'dep-1', release_id: 'rel-1', group_ids: [], strategy: 'all-targets', rollout_percentage: 100, staged: false, status: 'active', created_at: '2026-07-01T00:00:00Z' },
-    { deployment_id: 'dep-2', release_id: 'rel-2', group_ids: [], strategy: 'all-targets', rollout_percentage: 100, staged: false, status: 'active', created_at: '2026-07-02T00:00:00Z' },
-    { deployment_id: 'dep-3', release_id: 'rel-3', group_ids: [], strategy: 'all-targets', rollout_percentage: 100, staged: false, status: 'active', created_at: '2026-07-03T00:00:00Z' },
+    { deployment_id: 'dep-1', release_id: 'rel-1', strategy: 'all-targets', target_count: 10, status: 'active', created_at: '2026-07-01T00:00:00Z' },
+    { deployment_id: 'dep-2', release_id: 'rel-2', strategy: 'all-targets', target_count: 10, status: 'active', created_at: '2026-07-02T00:00:00Z' },
+    { deployment_id: 'dep-3', release_id: 'rel-3', strategy: 'all-targets', target_count: 10, status: 'active', created_at: '2026-07-03T00:00:00Z' },
   ],
   next_cursor: null,
 }

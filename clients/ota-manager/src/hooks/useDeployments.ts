@@ -17,10 +17,12 @@ export interface Deployment {
 export function useDeployments(filters?: Record<string, string>) {
   const query = useDeploymentsQuery(filters);
 
+  // d.group is the REAL single optional target-group field (Deployment has no
+  // `group_ids` array on the wire — server/internal/api/wire.go:174-182).
   const data: Deployment[] = (query.data?.items ?? []).map((d) => ({
     id: d.deployment_id,
     releaseVersion: d.release_id,
-    targetGroupName: d.group_ids[0],
+    targetGroupName: d.group || undefined,
     strategy: d.strategy,
     status: d.status,
     createdAt: d.created_at,

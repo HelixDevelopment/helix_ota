@@ -52,7 +52,12 @@ function assertRealServerShapesTypeCheck(): void {
   const deviceList: DeviceList = { items: [], next_cursor: null };
   const releaseList: ReleaseList = { items: [], next_cursor: "cursor-abc" };
   const groupList: GroupList = { items: [], next_cursor: null };
-  const telemetryHistory: TelemetryHistory = { items: [], next_cursor: null };
+  // device_id is REQUIRED on the real TelemetryHistory wire shape
+  // (server/internal/api/handlers_telemetry.go:30-38) — added here per the
+  // §11.4.108/§11.4.115 non-list wire-shape audit
+  // (docs/qa/20260710-client-nonlist-wire-audit/EVIDENCE.md); this file's own
+  // scope stays the list/pagination shape it already asserts.
+  const telemetryHistory: TelemetryHistory = { device_id: "dev-1", items: [], next_cursor: null };
   const deploymentList: DeploymentList = { items: [], next_cursor: null };
   const rollbackList: RollbackList = { items: [] };
 

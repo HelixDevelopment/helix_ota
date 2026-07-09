@@ -15,11 +15,14 @@ export interface Group {
 export function useGroups() {
   const query = useGroupsQuery();
 
+  // g.group_id/g.member_count are the REAL Group fields — server/internal/
+  // api/handlers_group.go:54-60 (§11.4.6/§11.4.108: previously `g.id`/
+  // `g.device_count`, neither of which exists on the wire).
   const data: Group[] = (query.data?.items ?? []).map((g) => ({
-    id: g.id,
+    id: g.group_id,
     name: g.name,
     description: g.description || null,
-    memberCount: g.device_count,
+    memberCount: g.member_count,
     createdAt: g.created_at,
   }));
 

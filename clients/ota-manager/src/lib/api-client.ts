@@ -107,14 +107,31 @@ export interface LoginRequest {
   password: string;
 }
 
+// TokenResponse mirrors the REAL POST /auth/login + /auth/refresh wire shape
+// — server/internal/api/wire.go:29-36 (TokenResponse struct): `{access_token,
+// token_type, expires_in, refresh_token, roles}`. Roles is `[]string` with
+// `omitempty` — the key is entirely ABSENT when the server issues no roles
+// claim, never `null` (§11.4.6/§11.4.108: this previously omitted the
+// `roles` field the server actually sends).
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
   expires_in: number;
   token_type: string;
+  roles?: string[];
 }
 
 // Devices
+//
+// NOTE (§11.4.6 — out-of-scope discovery, not fixed in this pass): the REAL
+// POST /devices/register request body — server/internal/api/wire.go:41-49
+// (DeviceRegistration struct) — is `{hardware_id, model, os, os_version?,
+// current_version?, group?, metadata?}`. This client-declared
+// `DeviceRegistrationRequest` shape (`{device_id, board, firmware_version,
+// hardware_revision, serial_number}`) matches none of the real request
+// fields. REQUEST-body interfaces are out of scope for this response-shape
+// audit (see EVIDENCE.md) — flagged here as a discovered, unfixed defect for
+// a follow-up work item.
 export interface DeviceRegistrationRequest {
   device_id: string;
   board: string;
@@ -123,12 +140,49 @@ export interface DeviceRegistrationRequest {
   serial_number: string;
 }
 
+// DeviceRegistered mirrors the REAL POST /devices/register (+ idempotent
+// replay) wire shape — server/internal/api/wire.go:52-59 (DeviceRegistered
+// struct) via toDeviceRegistered (handlers_device.go:192-202): `{device_id,
+// hardware_id, device_token, token_type, expires_in, registered_at}`.
+// (§11.4.6/§11.4.108: the previous `{id, device_id, board, status,
+// created_at}` shape was fabricated — the server never sends `id`, `board`,
+// or `status` on this response; `device_token`/`token_type`/`expires_in` —
+// the freshly-minted device bearer credential — were entirely missing from
+// the client type.)
 export interface DeviceRegistered {
-  id: string;
   device_id: string;
-  board: string;
-  status: string;
-  created_at: string;
+  hardware_id: string;
+  device_token: string;
+  token_type: string;
+  expires_in: number;
+  registered_at: string;
+}
+
+// DeviceListItem is the REAL per-item shape of GET /devices and GET
+// /devices/by-hardware/{hardwareId} — server/internal/api/wire.go:81-95
+// (DeviceListItem struct) via toDeviceListItem (handlers_device.go:167-190).
+// TargetVersion is `*string` with NO `omitempty` — the key is always
+// present, `null` when unset. LastSeen is `*time.Time` WITH `omitempty` —
+// the key is entirely absent until the device has reported once.
+// OSVersion/CurrentVersion/Group/ActiveSlot are plain `string,omitempty` —
+// absent when empty. (§11.4.6/§11.4.108: DeviceList.items previously typed
+// its entries as `DeviceRegistered` — the one-time registration-response
+// shape — instead of this real per-item list shape; none of
+// DeviceRegistered's fields exist on this response.)
+export interface DeviceListItem {
+  device_id: string;
+  hardware_id: string;
+  model: string;
+  os: string;
+  os_version?: string;
+  current_version?: string;
+  target_version: string | null;
+  group?: string;
+  update_state: string;
+  active_slot?: string;
+  health_ok: boolean;
+  last_seen?: string;
+  registered_at: string;
 }
 
 export interface DeviceRegistration extends DeviceRegistrationRequest {
@@ -152,26 +206,42 @@ export interface DeviceListFilter {
 // shape the server never sends — both fields were always `undefined` at
 // runtime).
 export interface DeviceList {
-  items: DeviceRegistered[];
+  items: DeviceListItem[];
   next_cursor: string | null;
 }
 
-export interface DeviceStatus {
-  device_id: string;
-  online: boolean;
-  current_release_id: string;
-  last_seen: string;
-  ip_address: string;
+// DeviceHealth is the REAL nested health block of DeviceStatus —
+// server/internal/api/wire.go:62-65 (DeviceHealth struct): `{ok,
+// last_error_code}`. LastErrorCode is `*string` with NO `omitempty` — the
+// key is always present, `null` when the device has no recorded error.
+// (§11.4.6/§11.4.108: the previous top-level `{device_id, online,
+// battery_percent, storage_used_percent, temperature_celsius,
+// uptime_seconds, last_reported}` shape was entirely fabricated — the server
+// has no such standalone health endpoint or field set; this block only ever
+// nests inside DeviceStatus.)
+export interface DeviceHealth {
+  ok: boolean;
+  last_error_code: string | null;
 }
 
-export interface DeviceHealth {
+// DeviceStatus mirrors the REAL GET /devices/{id}/status wire shape —
+// server/internal/api/wire.go:69-78 (DeviceStatus struct) via toDeviceStatus
+// (handlers_device.go:204-230). TargetVersion is `*string` with NO
+// `omitempty` — always present, `null` when unset. LastSeen is
+// `*time.Time` WITH `omitempty` — absent until the device has reported once.
+// CurrentVersion/ActiveSlot are `string,omitempty` — absent when empty.
+// (§11.4.6/§11.4.108: the previous `{device_id, online, current_release_id,
+// last_seen, ip_address}` shape was fabricated — none of `online`,
+// `current_release_id`, or `ip_address` exist on the real wire.)
+export interface DeviceStatus {
   device_id: string;
-  online: boolean;
-  battery_percent: number;
-  storage_used_percent: number;
-  temperature_celsius: number;
-  uptime_seconds: number;
-  last_reported: string;
+  hardware_id: string;
+  current_version?: string;
+  target_version: string | null;
+  last_seen?: string;
+  update_state: string;
+  active_slot?: string;
+  health: DeviceHealth;
 }
 
 // Telemetry
@@ -183,14 +253,34 @@ export interface TelemetryFilter {
   limit?: number;
 }
 
+// TelemetryEventView is the REAL per-item shape of TelemetryHistory.items —
+// server/internal/api/handlers_telemetry.go:15-28 (TelemetryEventView
+// struct) via toTelemetryView (:66-78). Version/DeploymentID/ErrorCode/Detail
+// are `string,omitempty` — absent when empty; DurationMS/BytesTransferred
+// are `*int64,omitempty` — absent when the device never reported them.
+export interface TelemetryEventView {
+  event: string;
+  version?: string;
+  deployment_id?: string;
+  error_code?: string;
+  detail?: string;
+  timestamp: string;
+  received_at: string;
+  duration_ms?: number;
+  bytes_transferred?: number;
+}
+
 // TelemetryHistory mirrors the REAL GET /devices/{id}/telemetry wire shape —
 // server/internal/api/handlers_telemetry.go:30-38 (TelemetryHistory struct):
 // `{device_id, items, next_cursor}`, cursor-paginated. NextCursor is a
 // `*string` with NO `omitempty` tag, so the key is ALWAYS present — `null` on
 // the last page (§11.4.6/§11.4.108: this previously declared a fabricated
-// `{total, cursor}` shape the server never sends).
+// `{total, cursor}` shape the server never sends AND omitted the real
+// `device_id` field + typed `items` as an opaque `Record<string, unknown>[]`
+// instead of the real TelemetryEventView[] shape).
 export interface TelemetryHistory {
-  items: Record<string, unknown>[];
+  device_id: string;
+  items: TelemetryEventView[];
   next_cursor: string | null;
 }
 
@@ -229,19 +319,30 @@ export interface CreateReleaseRequest {
   firmware_version: string;
 }
 
+// ReleaseResponse mirrors the REAL release wire shape — server/internal/api/
+// wire.go:147-156 (Release struct) via toRelease (handlers_release.go:126-138),
+// returned by POST /releases, GET /releases/{id}, and (as list items) GET
+// /releases. Notes is `string,omitempty` — absent when empty.
+// (§11.4.6/§11.4.108: the previous `{id, release_id?, project_id, version,
+// file_url, file_hash, changelog, target_board, firmware_version, status,
+// created_at, created_by}` shape was almost entirely fabricated — the server
+// has no `project_id`/`file_url`/`file_hash`/`changelog`/`target_board`/
+// `firmware_version`/`created_by` field on this response, and the real
+// primary key is `release_id`, never `id`. NOTE (out-of-scope discovery):
+// `CreateReleaseRequest` — the POST /releases request body this client sends
+// — is a SEPARATELY drifted interface (real ReleaseCreate is
+// `{artifact_id, version, os, target_model, notes?, min_current_version?}`);
+// REQUEST-body interfaces are out of scope for this response-shape audit —
+// see EVIDENCE.md.)
 export interface ReleaseResponse {
-  id: string;
-  release_id?: string;
-  project_id: string;
+  release_id: string;
+  artifact_id: string;
   version: string;
-  file_url: string;
-  file_hash: string;
-  changelog: string;
-  target_board: string;
-  firmware_version: string;
+  os: string;
+  target_model: string;
   status: string;
+  notes?: string;
   created_at: string;
-  created_by: string;
 }
 
 export type Release = ReleaseResponse;
@@ -265,16 +366,26 @@ export interface ReleaseList {
 }
 
 // Deployments
+//
+// Deployment mirrors the REAL deployment wire shape — server/internal/api/
+// wire.go:174-182 (Deployment struct) via toDeployment
+// (handlers_deployment.go:226-237), returned by POST /deployments and (as
+// list items) GET /deployments. Group is `string,omitempty` (a single
+// optional target-group name — the MVP has no multi-group `group_ids`
+// array). (§11.4.6/§11.4.108: the previous `{..., group_ids: string[],
+// rollout_percentage, staged, ..., created_by}` shape was fabricated — the
+// server has no `group_ids` array (only a single optional `group` string),
+// no `rollout_percentage`/`staged` on Deployment itself (those concepts live
+// on RolloutState for a staged rollout), no `created_by`; `target_count` —
+// the real device-count field — was entirely missing from the client type.)
 export interface Deployment {
   deployment_id: string;
   release_id: string;
-  group_ids: string[];
   strategy: string;
-  rollout_percentage: number;
-  staged: boolean;
+  group?: string;
   status: string;
+  target_count: number;
   created_at: string;
-  created_by: string;
 }
 
 // DeploymentList mirrors the REAL GET /deployments wire shape —
@@ -295,11 +406,28 @@ export interface DeploymentList {
   next_cursor: string | null;
 }
 
+// DeploymentProgress is the REAL aggregate progress block of
+// DeploymentStatus — server/internal/api/wire.go:193-199 (DeploymentProgress
+// struct), derived from telemetry by deriveProgress
+// (handlers_deployment.go:190-224).
+export interface DeploymentProgress {
+  pending: number;
+  downloading: number;
+  installed: number;
+  succeeded: number;
+  failed: number;
+}
+
+// DeploymentStatus mirrors the REAL GET /deployments/{id} wire shape —
+// server/internal/api/wire.go:202-205 (DeploymentStatus struct: an embedded
+// Deployment + a `progress` block), returned by handleGetDeployment
+// (handlers_deployment.go:121-132). (§11.4.6/§11.4.108: the previous
+// `Deployment & {rollout_state?, failed_devices?, completed_devices?,
+// total_devices?}` shape was fabricated — the server nests a `progress:
+// DeploymentProgress` object, not a flat `rollout_state`/`failed_devices`/
+// `completed_devices`/`total_devices` set.)
 export interface DeploymentStatus extends Deployment {
-  rollout_state?: RolloutState;
-  failed_devices?: number;
-  completed_devices?: number;
-  total_devices?: number;
+  progress: DeploymentProgress;
 }
 
 export interface CreateRolloutRequest {
@@ -309,25 +437,81 @@ export interface CreateRolloutRequest {
   staged: boolean;
 }
 
+// RolloutPhaseSpec is the REAL per-phase shape inside RolloutState.phases —
+// server/internal/api/handlers_rollout.go:16-22 (RolloutPhaseSpec struct).
+export interface RolloutPhaseSpec {
+  percentage: number;
+  success_threshold: number;
+  error_threshold: number;
+  duration_seconds: number;
+  auto_progress: boolean;
+}
+
+// RolloutState mirrors the REAL rollout-state wire shape —
+// server/internal/api/handlers_rollout.go:38-44 (RolloutState struct) via
+// toRolloutState (:67-75), returned by POST/GET
+// /deployments/{id}/rollout. (§11.4.6/§11.4.108: the previous `{deployment_id,
+// status, progress, success_rate, error_rate, total_devices,
+// completed_devices, failed_devices}` shape was fabricated — the server
+// sends `current_phase` + the full `phases` plan + `updated_at`, none of
+// `progress`/`success_rate`/`error_rate`/`total_devices`/`completed_devices`/
+// `failed_devices` exist on this response.)
 export interface RolloutState {
   deployment_id: string;
   status: string;
-  progress: number;
-  success_rate: number;
-  error_rate: number;
-  total_devices: number;
-  completed_devices: number;
-  failed_devices: number;
+  current_phase: number;
+  phases: RolloutPhaseSpec[];
+  updated_at: string;
 }
 
+// RolloutDecision mirrors the REAL POST /deployments/{id}/rollout/evaluate
+// response — server/internal/api/handlers_rollout.go:47-51 (RolloutDecision
+// struct) via handleEvaluateRollout (:129-160): `{action, reason, state}`.
+// (§11.4.6/§11.4.108: the previous `{approved: boolean, reason: string}`
+// shape was fabricated — the server sends an `action` string
+// (advance/hold/halt/complete) + the full post-evaluation `state`, never a
+// boolean `approved`.)
 export interface RolloutDecision {
-  approved: boolean;
+  action: string;
   reason: string;
+  state: RolloutState;
 }
 
+// NOTE (§11.4.6 — out-of-scope discovery, not fixed in this pass): the REAL
+// POST /deployments/{id}/recall request body — server/internal/api/
+// handlers_recall.go:17-20 (RecallRequest struct) — is `{to_release_id,
+// reason?}`. This client-declared `{reason, force}` shape sends neither the
+// field the server requires (`to_release_id` is mandatory) nor matches its
+// optional `reason` semantics; the real endpoint would reject this body.
+// REQUEST-body interfaces are out of scope for this response-shape audit
+// (see EVIDENCE.md) — flagged here as a discovered, unfixed defect for a
+// follow-up work item.
 export interface RecallRequest {
   reason: string;
   force: boolean;
+}
+
+// RollbackView mirrors the REAL rollback/abort history row —
+// server/internal/api/handlers_recall.go:23-34 (RollbackView struct) via
+// toRollbackView (:41-48), returned by POST /deployments/{id}/recall (single
+// object) and as items of GET /deployments/{id}/rollbacks. Kind/
+// FromReleaseID/ToReleaseID/RecallDeploymentID/Reason/TriggeredBy are
+// `,omitempty` — absent when empty; Details is `map[string]string,omitempty`
+// — absent when nil. (§11.4.6/§11.4.108: the previous inline `{id,
+// deployment_id, reason, created_at}` item shape dropped `kind`,
+// `from_release_id`, `to_release_id`, `recall_deployment_id`,
+// `triggered_by`, and `details` — all real fields the server sends.)
+export interface RollbackView {
+  id: string;
+  deployment_id: string;
+  kind: string;
+  from_release_id?: string;
+  to_release_id?: string;
+  recall_deployment_id?: string;
+  reason?: string;
+  triggered_by?: string;
+  details?: Record<string, string>;
+  created_at: string;
 }
 
 // RollbackList mirrors the REAL GET /deployments/{id}/rollbacks wire shape —
@@ -336,15 +520,22 @@ export interface RecallRequest {
 // (§11.4.6/§11.4.108: this previously declared a fabricated `total` field the
 // server never sends).
 export interface RollbackList {
-  items: { id: string; deployment_id: string; reason: string; created_at: string }[];
+  items: RollbackView[];
 }
 
+// Project mirrors the REAL project wire shape — server/internal/api/
+// wire.go:260-266 (ProjectResponse struct) via toProjectResponse
+// (handlers_project.go:95-103), returned by POST/GET/PATCH
+// /projects(/{id}). Description is `string,omitempty` — absent when empty.
+// (§11.4.6/§11.4.108: the previous shape had a fabricated `os_types:
+// string[]` field the server never sends, and was missing the real
+// `updated_at` field.)
 export interface Project {
   project_id: string;
   name: string;
-  description: string;
-  os_types: string[];
+  description?: string;
   created_at: string;
+  updated_at: string;
 }
 export interface CreateDeploymentRequest {
   release_id: string;
@@ -384,24 +575,54 @@ export interface AddGroupMembersRequest {
   device_ids: string[];
 }
 
+// AddGroupMembersResult mirrors the REAL POST /groups/{id}/members response —
+// server/internal/api/handlers_group.go:77-81 (MemberAddResult struct):
+// which submitted device ids were newly added, already members, or unknown.
+// (§11.4.6/§11.4.108: the previous `{added: number, failed: number}` shape
+// was fabricated — the server returns three ID arrays, never aggregate
+// counts.)
 export interface AddGroupMembersResult {
-  added: number;
-  failed: number;
+  added: string[];
+  already_member: string[];
+  not_found: string[];
 }
 
+// GroupMemberView is the REAL per-item shape of GroupMembers.items —
+// server/internal/api/handlers_group.go:84-87 (GroupMemberView struct).
+export interface GroupMemberView {
+  device_id: string;
+  added_at: string;
+}
+
+// GroupMembers mirrors the REAL GET /groups/{id}/members wire shape —
+// server/internal/api/handlers_group.go:89-95 (GroupMembers struct):
+// `{group_id, items, next_cursor}`, cursor-paginated (oldest-first).
+// (§11.4.6/§11.4.108: the previous `{group_id, devices: DeviceRegistered[]}`
+// shape was fabricated — the field is `items`, never `devices`; each item is
+// `{device_id, added_at}`, never a full device-registration object; the
+// response is cursor-paginated and the client type carried no `next_cursor`
+// at all.)
 export interface GroupMembers {
   group_id: string;
-  devices: DeviceRegistered[];
+  items: GroupMemberView[];
+  next_cursor: string | null;
 }
 
+// Group mirrors the REAL device-group wire shape — server/internal/api/
+// handlers_group.go:54-60 (GroupView struct) via toGroupView/
+// toGroupViewWithCount (:97-115), returned by POST/GET/PATCH
+// /groups(/{id}) and (as list items) GET /groups. Description is
+// `string,omitempty` — absent when empty.
+// (§11.4.6/§11.4.108: the previous `{id, group_id?, project_id, name,
+// description, device_count, labels, created_at}` shape was fabricated —
+// groups are NOT project-scoped on the server (no `project_id`), there is no
+// `labels` field, the real primary key is `group_id` (never bare `id`), and
+// the real member-count field is `member_count`, never `device_count`.)
 export interface Group {
-  id: string;
-  group_id?: string;
-  project_id: string;
+  group_id: string;
   name: string;
-  description: string;
-  device_count: number;
-  labels: Record<string, string>;
+  description?: string;
+  member_count: number;
   created_at: string;
 }
 
@@ -468,14 +689,30 @@ export interface DeltaFindParams {
 }
 
 // Audit
+// AuditActor identifies who performed an audited action — server/internal/
+// api/audit_wire.go:28-31 (AuditActor struct): the durable users-row key
+// (UserID, nullable) plus the token Subject (always set).
+export interface AuditActor {
+  user_id?: string;
+  subject: string;
+}
+
+// AuditEntry mirrors the REAL audit_logs response projection —
+// server/internal/api/audit_wire.go:9-22 (AuditLogEntry struct) via
+// toAuditLogEntry (:39-55), returned as items of GET /audit.
+// ResourceID/Details/IPAddress/UserAgent are `,omitempty` — absent when
+// empty/nil. (§11.4.6/§11.4.108: the previous `actor: string` field was
+// fabricated — the server nests `{user_id?, subject}`, never a bare string;
+// `user_agent` was entirely missing from the client type.)
 export interface AuditEntry {
   id: string;
-  actor: string;
+  actor: AuditActor;
   action: string;
   resource_type: string;
-  resource_id: string;
-  details: Record<string, unknown>;
-  ip_address: string;
+  resource_id?: string;
+  details?: Record<string, unknown>;
+  ip_address?: string;
+  user_agent?: string;
   created_at: string;
 }
 

@@ -20,10 +20,16 @@ interface DeviceInfo {
   version: string;
   status: DeviceStatus;
   lastSeen: string;
-  // Fields below are not carried by the current device-status wire contract
-  // (GET /devices/:id/status returns device_id/online/current_release_id/
-  // last_seen/ip_address only). They are optional and render as honest
-  // placeholders until a richer device-detail endpoint exists.
+  // Fields below are not carried by the REAL device-status wire contract —
+  // server/internal/api/wire.go:69-78 (DeviceStatus struct) returns
+  // device_id/hardware_id/current_version/target_version/last_seen/
+  // update_state/active_slot/health only (§11.4.6/§11.4.108: the previous
+  // comment here described a FABRICATED contract —
+  // device_id/online/current_release_id/last_seen/ip_address — that the
+  // server never actually sent). `currentSlot` and `healthStatus` ARE real
+  // (sourced from `active_slot` / `health.ok` below); the rest remain
+  // optional and render as honest placeholders until a richer device-detail
+  // endpoint exists.
   os?: string;
   buildId?: string;
   firstSeen?: string;
@@ -34,7 +40,6 @@ interface DeviceInfo {
   targetModel?: string;
   imei?: string;
   serial?: string;
-  ipAddress?: string;
 }
 
 interface TelemetryEntry {
@@ -464,16 +469,30 @@ export default function DeviceDetailPage() {
   const statusQuery = useDeviceStatus(deviceId);
   const telemetryQuery = useDeviceTelemetry(deviceId);
 
-  // Map the device-status wire result onto the rich view model. Fields the
-  // contract does not carry are left undefined and shown as honest placeholders.
+  // Map the REAL device-status wire result (server/internal/api/wire.go:69-78)
+  // onto the rich view model. Fields the real contract does not carry are
+  // left undefined and shown as honest placeholders.
   const device: DeviceInfo | null = statusQuery.data
     ? {
         id: statusQuery.data.device_id,
-        hardwareId: statusQuery.data.device_id,
-        version: statusQuery.data.current_release_id || "—",
-        status: statusQuery.data.online ? "online" : "offline",
-        lastSeen: statusQuery.data.last_seen,
-        ipAddress: statusQuery.data.ip_address,
+        hardwareId: statusQuery.data.hardware_id,
+        version: statusQuery.data.current_version || "—",
+        status: !statusQuery.data.health.ok
+          ? "error"
+          : statusQuery.data.update_state === "download_started" ||
+              statusQuery.data.update_state === "installing" ||
+              statusQuery.data.update_state === "installed" ||
+              statusQuery.data.update_state === "verifying"
+            ? "updating"
+            : statusQuery.data.update_state === "failure"
+              ? "error"
+              : "online",
+        lastSeen: statusQuery.data.last_seen ?? "",
+        currentSlot:
+          statusQuery.data.active_slot === "a" || statusQuery.data.active_slot === "b"
+            ? statusQuery.data.active_slot
+            : undefined,
+        healthStatus: statusQuery.data.health.ok ? "healthy" : "critical",
       }
     : null;
 
