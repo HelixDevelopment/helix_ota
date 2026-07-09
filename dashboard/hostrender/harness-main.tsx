@@ -12,7 +12,8 @@
 //      RoleGate-gated actions render exactly as in production.
 // This is a component-render stub (permitted §11.4.27) — no view logic is
 // faked; every pixel is the real component under the real token layer. The
-// screen is selected with ?screen=audit|releases|artifact-upload|appshell.
+// screen is selected with
+// ?screen=audit|releases|artifact-upload|appshell|deployments|fleet|groups|overview.
 //
 // Theme: seeded to light here; the Playwright spec stamps the authoritative
 // data-theme (light/dark) on <html> before sampling — the same attribute
@@ -28,7 +29,18 @@ import { Card } from "../src/components/ui";
 import { AuditScreen } from "../src/screens/AuditScreen";
 import { ReleaseList } from "../src/screens/ReleasesScreen";
 import { ArtifactUploadScreen } from "../src/screens/ArtifactUploadScreen";
-import type { AuditList, ReleaseList as ReleaseListT, TokenResponse } from "../src/types/api";
+import { DeploymentList } from "../src/screens/DeploymentsScreen";
+import { FleetHealth } from "../src/screens/FleetScreen";
+import { GroupList } from "../src/screens/GroupsScreen";
+import { DashboardOverview } from "../src/screens/OverviewScreen";
+import type {
+  AuditList,
+  DeviceGroupList,
+  HealthStatus,
+  ReleaseList as ReleaseListT,
+  TelemetryOverview,
+  TokenResponse,
+} from "../src/types/api";
 
 // ── canned data ─────────────────────────────────────────────────────────────
 // A crafted UNSIGNED JWT: header.payload.sig. AuthContext.decodeClaims reads
@@ -101,6 +113,37 @@ const RELEASES: ReleaseListT = {
   ],
 };
 
+// GET /healthz — best-effort server-health badge on DashboardOverview.
+const HEALTH: HealthStatus = { status: "ok" };
+
+// GET /telemetry/overview — fleet-wide aggregates for FleetHealth.
+const TELEMETRY_OVERVIEW: TelemetryOverview = {
+  event_counts: { success: 12, failure: 2, installing: 3 },
+  total: 17,
+  failure_rate: 0.12,
+  by_state: { success: 10, failure: 2, installing: 3, idle: 2 },
+};
+
+// GET /groups — device-group roster for GroupList.
+const GROUPS: DeviceGroupList = {
+  items: [
+    {
+      group_id: "grp_1",
+      name: "canary-fleet",
+      description: "Canary rollout devices",
+      member_count: 12,
+      created_at: "2026-06-01T00:00:00Z",
+    },
+    {
+      group_id: "grp_2",
+      name: "production-fleet",
+      description: "Main production fleet",
+      member_count: 340,
+      created_at: "2026-06-02T00:00:00Z",
+    },
+  ],
+};
+
 // ── window.fetch stub (installed before mount) ──────────────────────────────
 function jsonRes(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -121,6 +164,9 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
   if (path.endsWith("/auth/login")) return jsonRes(TOKENS);
   if (path.endsWith("/audit")) return jsonRes(AUDIT);
   if (path.endsWith("/releases")) return jsonRes(RELEASES);
+  if (path.endsWith("/healthz")) return jsonRes(HEALTH);
+  if (path.endsWith("/telemetry/overview")) return jsonRes(TELEMETRY_OVERVIEW);
+  if (path.endsWith("/groups")) return jsonRes(GROUPS);
   // Any other /api path is not needed by the harnessed screens.
   if (path.startsWith("/api/")) return jsonRes({ error: { code: "NOT_STUBBED", message: path } }, 404);
   return realFetch(input, init);
@@ -172,6 +218,18 @@ function ScreenHost({ screen }: { screen: string }) {
       break;
     case "artifact-upload":
       el = <ArtifactUploadScreen />;
+      break;
+    case "deployments":
+      el = <DeploymentList />;
+      break;
+    case "fleet":
+      el = <FleetHealth />;
+      break;
+    case "groups":
+      el = <GroupList />;
+      break;
+    case "overview":
+      el = <DashboardOverview />;
       break;
     case "audit":
     default:

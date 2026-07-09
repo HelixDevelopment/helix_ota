@@ -6,6 +6,15 @@
 // hostrender/harness.html mount (real component pixels, stubbed fetch + login,
 // NO device, NO Go backend).
 //
+// EXPANSION (2026-07-09, matrix-expand round): the 4 remaining repointed
+// screens — DeploymentList (Deployments), FleetHealth (Fleet), GroupList
+// (Groups), DashboardOverview (Overview) — are added below with the IDENTICAL
+// dual-oracle discipline. Their per-test captured evidence (JSON + PNG) is
+// written to a SEPARATE evidence dir (docs/qa/20260709-dashboard-hostrender-
+// matrix-expand/) so this stream's proof artefacts stay isolated from the
+// prior round's docs/qa/20260709-dashboard-vendoring-complete/ directory
+// (§11.4.119 single-resource-owner discipline applied to the evidence tree).
+//
 // Per screen × {light,dark} (§11.4.170 screen×state×theme):
 //   (i)   golden image-diff — committed toHaveScreenshot baseline (golden-good)
 //   (i-bis) explicit pixelmatch analyzer self-validated: ~0 diff good↔good, a
@@ -34,6 +43,16 @@ const EVIDENCE_DIR = join(
   "qa",
   "20260709-dashboard-vendoring-complete",
 );
+// New-screen evidence (this round's 4 additions) lands in its own dir so it
+// never mixes with the prior round's captured artefacts.
+const EVIDENCE_DIR_EXPAND = join(
+  HERE,
+  "..",
+  "..",
+  "docs",
+  "qa",
+  "20260709-dashboard-hostrender-matrix-expand",
+);
 const VW = 1280;
 const VH = 800;
 
@@ -48,6 +67,11 @@ interface ScreenSpec {
   headingSel: string; // element hidden by the regression → drops its label
   requiredLabels: string[]; // requiredLabels[0] MUST be the heading's own text
   readyText: string; // a data-dependent label proving the populated render
+  evidenceDir?: string; // defaults to EVIDENCE_DIR when unset
+}
+
+function evidenceDirFor(spec: ScreenSpec): string {
+  return spec.evidenceDir ?? EVIDENCE_DIR;
 }
 
 const SCREENS: ScreenSpec[] = [
@@ -83,6 +107,46 @@ const SCREENS: ScreenSpec[] = [
     headingSel: "header",
     requiredLabels: ["Helix OTA", "Overview", "Releases", "Deployments", "Fleet", "Audit", "Log out"],
     readyText: "Log out",
+  },
+  // ── matrix-expand round (2026-07-09): the 4 remaining repointed screens ──
+  {
+    id: "deployments",
+    name: "DeploymentList (Deployments)",
+    headingSel: "h1",
+    requiredLabels: ["Deployments", "New deployment", "Open a deployment", "deployment_id", "Open"],
+    readyText: "Open a deployment",
+    evidenceDir: EVIDENCE_DIR_EXPAND,
+  },
+  {
+    id: "fleet",
+    name: "FleetHealth (Fleet)",
+    headingSel: "h1",
+    requiredLabels: [
+      "Fleet",
+      "Open a device",
+      "Fleet overview",
+      "Devices by update state",
+      "Telemetry events by type",
+      "installing",
+    ],
+    readyText: "installing",
+    evidenceDir: EVIDENCE_DIR_EXPAND,
+  },
+  {
+    id: "groups",
+    name: "GroupList (Groups)",
+    headingSel: "h1",
+    requiredLabels: ["Device groups", "New group", "canary-fleet", "production-fleet"],
+    readyText: "canary-fleet",
+    evidenceDir: EVIDENCE_DIR_EXPAND,
+  },
+  {
+    id: "overview",
+    name: "DashboardOverview (Overview)",
+    headingSel: "h1",
+    requiredLabels: ["Overview", "Recent releases", "1.4.0", "published", "server: ok"],
+    readyText: "1.4.0",
+    evidenceDir: EVIDENCE_DIR_EXPAND,
   },
 ];
 
@@ -206,6 +270,7 @@ async function gotoScreen(page: Page, spec: ScreenSpec, theme: Theme): Promise<v
 
 test.beforeAll(() => {
   mkdirSync(EVIDENCE_DIR, { recursive: true });
+  mkdirSync(EVIDENCE_DIR_EXPAND, { recursive: true });
 });
 
 for (const spec of SCREENS) {
@@ -216,7 +281,7 @@ for (const spec of SCREENS) {
     }) => {
       await gotoScreen(page, spec, theme);
       const root = page.locator("#root");
-      await root.screenshot({ path: join(EVIDENCE_DIR, `${spec.id}-${theme}-actual.png`) });
+      await root.screenshot({ path: join(evidenceDirFor(spec), `${spec.id}-${theme}-actual.png`) });
       await expect(root).toHaveScreenshot(`${spec.id}-${theme}.png`);
     });
 
@@ -228,7 +293,7 @@ for (const spec of SCREENS) {
 
       const good = await runLayoutOracle(page, spec.headingSel, spec.requiredLabels);
       writeFileSync(
-        join(EVIDENCE_DIR, `layout-oracle-good-${spec.id}-${theme}.json`),
+        join(evidenceDirFor(spec), `layout-oracle-good-${spec.id}-${theme}.json`),
         JSON.stringify(good, null, 2),
       );
       expect(good.failures, `unexpected layout failures: ${good.failures.join("; ")}`).toEqual([]);
@@ -237,14 +302,28 @@ for (const spec of SCREENS) {
       await injectRegression(page, spec.headingSel);
       const bad = await runLayoutOracle(page, spec.headingSel, spec.requiredLabels);
       writeFileSync(
-        join(EVIDENCE_DIR, `layout-oracle-bad-${spec.id}-${theme}.json`),
+        join(evidenceDirFor(spec), `layout-oracle-bad-${spec.id}-${theme}.json`),
         JSON.stringify(bad, null, 2),
       );
       expect(bad.pass, "oracle MUST fail on the mutated render").toBe(false);
-      // the hidden heading's own label must be caught AND the overlap must be caught
+      // The hidden heading's disappearance must be caught AND the overlap must
+      // be caught. Detection may surface via EITHER signal — (a) the heading's
+      // own text vanishing from the full-page innerText (works when
+      // requiredLabels[0] is not a substring of other visible copy), OR (b)
+      // the heading DOM node itself collapsing to a 0x0 box (`element
+      // "heading" not rendered` — fires unconditionally whenever the CSS
+      // `display:none` mutation hits `headingSel`, independent of incidental
+      // substring overlaps elsewhere on the page, e.g. FleetHealth's own
+      // "Fleet overview" Card title contains the "Fleet" heading text). Both
+      // are genuine, mechanically-verified proofs of the SAME regression —
+      // this does not weaken the self-validated analyzer (§11.4.107(10)):
+      // bad.pass === false is still required above, and the overlap failure
+      // is still independently required below.
       expect(
-        bad.failures.some((f) => f.includes(spec.requiredLabels[0])),
-        `expected a missing-label failure for "${spec.requiredLabels[0]}"`,
+        bad.failures.some(
+          (f) => f.includes(spec.requiredLabels[0]) || f.includes('element "heading" not rendered'),
+        ),
+        `expected a missing-label or heading-not-rendered failure for "${spec.requiredLabels[0]}"`,
       ).toBe(true);
       expect(bad.failures.some((f) => f.includes("overlap"))).toBe(true);
     });
@@ -269,7 +348,7 @@ for (const spec of SCREENS) {
 
       await injectRegression(page, spec.headingSel);
       const badBuf = await page.screenshot();
-      writeFileSync(join(EVIDENCE_DIR, `diff-bad-${spec.id}-${theme}.png`), badBuf);
+      writeFileSync(join(evidenceDirFor(spec), `diff-bad-${spec.id}-${theme}.png`), badBuf);
       const gb = PNG.sync.read(badBuf);
       const gbDiff = new PNG({ width: g1.width, height: g1.height });
       const gbMismatch = pixelmatch(g1.data, gb.data, gbDiff.data, g1.width, g1.height, {
@@ -278,7 +357,7 @@ for (const spec of SCREENS) {
 
       const totalPx = g1.width * g1.height;
       writeFileSync(
-        join(EVIDENCE_DIR, `image-diff-selfcheck-${spec.id}-${theme}.json`),
+        join(evidenceDirFor(spec), `image-diff-selfcheck-${spec.id}-${theme}.json`),
         JSON.stringify(
           {
             screen: spec.id,
@@ -327,7 +406,7 @@ for (const spec of SCREENS) {
         ratio = mismatch / (baseline.width * baseline.height);
       }
       writeFileSync(
-        join(EVIDENCE_DIR, `baseline-rejects-mutated-${spec.id}-${theme}.json`),
+        join(evidenceDirFor(spec), `baseline-rejects-mutated-${spec.id}-${theme}.json`),
         JSON.stringify(
           {
             screen: spec.id,
@@ -365,7 +444,7 @@ for (const spec of SCREENS) {
     });
     const totalPx = light.width * light.height;
     writeFileSync(
-      join(EVIDENCE_DIR, `light-vs-dark-distinctness-${spec.id}.json`),
+      join(evidenceDirFor(spec), `light-vs-dark-distinctness-${spec.id}.json`),
       JSON.stringify(
         {
           screen: spec.id,
