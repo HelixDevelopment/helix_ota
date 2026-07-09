@@ -33,7 +33,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 HAVE_PANDOC=0; have pandoc && HAVE_PANDOC=1
 HAVE_MMDC=0;   have mmdc   && HAVE_MMDC=1
 PDF_ENGINE=""
-for e in tectonic xelatex pdflatex lualatex wkhtmltopdf; do
+for e in tectonic xelatex pdflatex lualatex wkhtmltopdf weasyprint; do
   if have "$e"; then PDF_ENGINE="$e"; break; fi
 done
 

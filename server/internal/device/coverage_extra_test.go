@@ -19,8 +19,44 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 )
+
+// execStubMu serializes every "write an executable stub then immediately
+// exec it" critical section in this file.
+//
+// ROOT CAUSE (confirmed, §11.4.6 FACT — not a guess): TestFwEnvManager_
+// GetEnv_HardError intermittently failed with ETXTBSY ("text file busy").
+// Each fwEnvManager-backed subtest below already writes its stub to a
+// UNIQUE path (a fresh t.TempDir() + a distinct stub filename per test), so
+// this is NOT a shared-filename collision. It is the well-known Go
+// fork+exec race (golang/go#22315): os.WriteFile opens a file for write,
+// writes, and closes it, but for the brief window before Close() returns,
+// that file descriptor is open in this OS process. If, during that exact
+// window, ANY OTHER goroutine in the same test binary calls exec.Command
+// (which internally fork()s), the fork() duplicates the ENTIRE fd table of
+// the process — including the first goroutine's still-open write-fd —
+// into the new child. That child holds the inherited fd open until its
+// OWN execve() runs (which is what finally closes CLOEXEC-flagged fds).
+// If, in that narrow window, the FIRST goroutine tries to execve its own
+// just-written stub, the kernel finds an open write-fd on that inode
+// (held by the second goroutine's not-yet-exec'd child) and returns
+// ETXTBSY — even though the two goroutines target completely different
+// files and paths. This file has 7 t.Parallel() subtests
+// (TestFwEnvManager_SetEnv_Success/Error, GetEnv_Value,
+// GetEnv_UnsetIsEmpty x2, GetEnv_HardError, SaveEnv) that all write a
+// stub via writeStub() and immediately shell out through fwEnvManager —
+// they are the ONLY tests in this package that exec real (non-mocked)
+// stub binaries, so any two of them running concurrently under
+// `-count=N` can hit this race. Confirmed via repeated `-count=20` runs
+// reproducing sporadic ETXTBSY on this exact test.
+//
+// Fix: serialize the write+exec critical section across all of them with
+// this mutex, so no fork() from one subtest can ever overlap another
+// subtest's open-for-write window. This does not reduce real concurrency
+// with the rest of the package's (non-exec) parallel tests.
+var execStubMu sync.Mutex
 
 // writeStub writes an executable shell script at dir/name and returns its
 // absolute path. Skips the whole test on non-POSIX hosts where /bin/sh stubs
@@ -70,6 +106,10 @@ func TestFwEnvManager_SetEnv_Success(t *testing.T) {
 
 	dir := t.TempDir()
 	out := filepath.Join(dir, "args.txt")
+
+	execStubMu.Lock()
+	defer execStubMu.Unlock()
+
 	// Stub records its args so we can prove SetEnv passed key+value.
 	setenv := writeStub(t, dir, "fw_setenv_stub", `echo "$@" > "`+out+`"; exit 0`)
 
@@ -91,6 +131,10 @@ func TestFwEnvManager_SetEnv_Error(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
+
+	execStubMu.Lock()
+	defer execStubMu.Unlock()
+
 	setenv := writeStub(t, dir, "fw_setenv_fail", `echo "device not found" >&2; exit 1`)
 
 	m := NewFwEnvManager(setenv, "")
@@ -115,6 +159,10 @@ func TestFwEnvManager_GetEnv_Value(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
+
+	execStubMu.Lock()
+	defer execStubMu.Unlock()
+
 	// Stub echoes a value with trailing whitespace to prove trimming.
 	printenv := writeStub(t, dir, "fw_printenv_val", `echo "B A   "; exit 0`)
 
@@ -143,6 +191,10 @@ func TestFwEnvManager_GetEnv_UnsetIsEmpty(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			dir := t.TempDir()
+
+			execStubMu.Lock()
+			defer execStubMu.Unlock()
+
 			printenv := writeStub(t, dir, "fw_printenv_unset", tc.stderr)
 
 			m := NewFwEnvManager("", printenv)
@@ -161,6 +213,10 @@ func TestFwEnvManager_GetEnv_HardError(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
+
+	execStubMu.Lock()
+	defer execStubMu.Unlock()
+
 	// Non-zero exit whose stderr is NOT an "unset" message → hard error.
 	printenv := writeStub(t, dir, "fw_printenv_err", `echo "cannot access env device" >&2; exit 2`)
 
@@ -182,6 +238,10 @@ func TestFwEnvManager_SaveEnv(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
+
+	execStubMu.Lock()
+	defer execStubMu.Unlock()
+
 	// Even a failing save returns nil (best-effort flush).
 	setenv := writeStub(t, dir, "fw_setenv_save", `exit 1`)
 

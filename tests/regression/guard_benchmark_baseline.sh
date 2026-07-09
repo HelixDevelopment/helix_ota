@@ -10,6 +10,11 @@
 # Inputs:    docs/benchmarks/baseline/internal_api.txt
 #            docs/benchmarks/baseline/internal_store.txt   (raw go test -bench output)
 # Outputs:   stdout PASS/FAIL per benchmark + overall exit 0 (PASS) / 1 (FAIL).
+#            If benchstat is genuinely absent from the host (not installed on
+#            PATH or at $(go env GOPATH)/bin), the guard emits an honest
+#            SKIP-with-reason (§11.4.3 topology SKIP) and exits 0 — a missing
+#            host tool is a topology gap, not a benchmark regression, and a
+#            hard FAIL here would mask real signal from run_all.sh (§11.4.1).
 #            Fresh run raw output left under a temp dir (path printed).
 # Side-eff:  Runs `go test -bench` in server/ (no source mutation, no network).
 # Deps:      go (go1.26+), benchstat (golang.org/x/perf/cmd/benchstat) on PATH or
@@ -42,6 +47,14 @@ ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 SERVER="$ROOT/server"
 BASELINE_DIR="$ROOT/docs/benchmarks/baseline"
 
+# skip <reason> — honest §11.4.3 topology SKIP marker (same convention as
+# guard_healthcheck_binary_present.sh's skip()). run_all.sh has no distinct
+# SKIP exit code, so a guard SKIPs by printing this marker and exiting 0 —
+# the least-disruptive convention that still leaves an unambiguous, greppable
+# "this was not actually validated" trail in the log (distinct from a real
+# GUARD-GREEN pass).
+skip() { echo "  SKIP-with-reason (§11.4.3): $*"; }
+
 # Locate benchstat.
 BENCHSTAT=$(command -v benchstat 2>/dev/null || true)
 if [ -z "$BENCHSTAT" ]; then
@@ -49,9 +62,10 @@ if [ -z "$BENCHSTAT" ]; then
   if [ -x "$GP/bin/benchstat" ]; then
     BENCHSTAT="$GP/bin/benchstat"
   else
-    echo "FAIL: benchstat not found on PATH or in \$(go env GOPATH)/bin." >&2
-    echo "      install: go install golang.org/x/perf/cmd/benchstat@latest" >&2
-    exit 1
+    skip "benchstat not installed on host (§11.4.3 topology SKIP) — not found on PATH or at \$(go env GOPATH)/bin."
+    echo "      install: go install golang.org/x/perf/cmd/benchstat@latest"
+    echo "GUARD-SKIP: benchmark regression guard not run (missing host tool: benchstat)"
+    exit 0
   fi
 fi
 

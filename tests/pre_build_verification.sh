@@ -31,9 +31,14 @@ run_gate() {
 run_gate "constitution-inheritance" bash "${SCRIPT_DIR}/test_constitution_inheritance.sh"
 run_gate "helixqa-bank-runner-self-test" bash "${SCRIPT_DIR}/../tools/helixqa/run_bank.sh" --self-test
 
-# §11.4.153–§11.4.166 propagation gates (feature video recording + Status doc
+# §11.4.153–§11.4.165 propagation gates (feature video recording + Status doc
 # mandates + universal media-validation / verification / propagation mandates).
 # Each verifies the literal `11.4.1XX` anchor is present in the project context carriers.
+# NOTE (§11.4.120 gate reconciliation): §11.4.166 (Semgrep mandate) was REPEALED
+# by the constitution on 2026-06-22 — the repeal text explicitly names
+# `CM-COVENANT-114-166-PROPAGATION` as removed alongside `CM-SEMGREP-WIRED`.
+# The propagation gate for 166 is therefore deleted here, not weakened to
+# always-pass (a tautology gate would itself be a §11.4 bluff).
 run_gate "CM-COVENANT-114-153-PROPAGATION" grep -qF '11.4.153' "${SCRIPT_DIR}/../CLAUDE.md"
 run_gate "CM-COVENANT-114-154-PROPAGATION" grep -qF '11.4.154' "${SCRIPT_DIR}/../CLAUDE.md"
 run_gate "CM-COVENANT-114-155-PROPAGATION" grep -qF '11.4.155' "${SCRIPT_DIR}/../CLAUDE.md"
@@ -47,7 +52,82 @@ run_gate "CM-COVENANT-114-162-PROPAGATION" grep -qF '11.4.162' "${SCRIPT_DIR}/..
 run_gate "CM-COVENANT-114-163-PROPAGATION" grep -qF '11.4.163' "${SCRIPT_DIR}/../CLAUDE.md"
 run_gate "CM-COVENANT-114-164-PROPAGATION" grep -qF '11.4.164' "${SCRIPT_DIR}/../CLAUDE.md"
 run_gate "CM-COVENANT-114-165-PROPAGATION" grep -qF '11.4.165' "${SCRIPT_DIR}/../CLAUDE.md"
-run_gate "CM-COVENANT-114-166-PROPAGATION" grep -qF '11.4.166' "${SCRIPT_DIR}/../CLAUDE.md"
+
+# §11.4.167–§11.4.186 propagation gates (feature work-stream lifecycle, exported-
+# doc visual validation, mandatory test-type coverage, host-rendered UI proof,
+# workable-item descriptions, production planning, containerized/distributed
+# builds, shared-host process ownership, multi-track work-division, git
+# hardening, and the SonarQube tooling mandate). §11.4.175 does not exist as an
+# anchor in constitution/Constitution.md (verified — no gate emitted for it, per
+# the same skip-if-non-existent discipline used for the retired §11.4.166 slot).
+# Each verifies the literal `11.4.1XX` anchor is present in the project context
+# carriers (CLAUDE.md, AGENTS.md, GEMINI.md).
+run_gate "CM-COVENANT-114-167-PROPAGATION" grep -qF '11.4.167' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-167-PROPAGATION-AGENTS" grep -qF '11.4.167' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-167-PROPAGATION-GEMINI" grep -qF '11.4.167' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-168-PROPAGATION" grep -qF '11.4.168' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-168-PROPAGATION-AGENTS" grep -qF '11.4.168' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-168-PROPAGATION-GEMINI" grep -qF '11.4.168' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-169-PROPAGATION" grep -qF '11.4.169' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-169-PROPAGATION-AGENTS" grep -qF '11.4.169' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-169-PROPAGATION-GEMINI" grep -qF '11.4.169' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-170-PROPAGATION" grep -qF '11.4.170' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-170-PROPAGATION-AGENTS" grep -qF '11.4.170' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-170-PROPAGATION-GEMINI" grep -qF '11.4.170' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-171-PROPAGATION" grep -qF '11.4.171' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-171-PROPAGATION-AGENTS" grep -qF '11.4.171' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-171-PROPAGATION-GEMINI" grep -qF '11.4.171' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-172-PROPAGATION" grep -qF '11.4.172' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-172-PROPAGATION-AGENTS" grep -qF '11.4.172' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-172-PROPAGATION-GEMINI" grep -qF '11.4.172' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-173-PROPAGATION" grep -qF '11.4.173' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-173-PROPAGATION-AGENTS" grep -qF '11.4.173' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-173-PROPAGATION-GEMINI" grep -qF '11.4.173' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-174-PROPAGATION" grep -qF '11.4.174' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-174-PROPAGATION-AGENTS" grep -qF '11.4.174' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-174-PROPAGATION-GEMINI" grep -qF '11.4.174' "${SCRIPT_DIR}/../GEMINI.md"
+# §11.4.175 intentionally skipped — verified non-existent in Constitution.md.
+run_gate "CM-COVENANT-114-176-PROPAGATION" grep -qF '11.4.176' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-176-PROPAGATION-AGENTS" grep -qF '11.4.176' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-176-PROPAGATION-GEMINI" grep -qF '11.4.176' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-177-PROPAGATION" grep -qF '11.4.177' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-177-PROPAGATION-AGENTS" grep -qF '11.4.177' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-177-PROPAGATION-GEMINI" grep -qF '11.4.177' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-178-PROPAGATION" grep -qF '11.4.178' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-178-PROPAGATION-AGENTS" grep -qF '11.4.178' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-178-PROPAGATION-GEMINI" grep -qF '11.4.178' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-179-PROPAGATION" grep -qF '11.4.179' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-179-PROPAGATION-AGENTS" grep -qF '11.4.179' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-179-PROPAGATION-GEMINI" grep -qF '11.4.179' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-180-PROPAGATION" grep -qF '11.4.180' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-180-PROPAGATION-AGENTS" grep -qF '11.4.180' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-180-PROPAGATION-GEMINI" grep -qF '11.4.180' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-181-PROPAGATION" grep -qF '11.4.181' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-181-PROPAGATION-AGENTS" grep -qF '11.4.181' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-181-PROPAGATION-GEMINI" grep -qF '11.4.181' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-182-PROPAGATION" grep -qF '11.4.182' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-182-PROPAGATION-AGENTS" grep -qF '11.4.182' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-182-PROPAGATION-GEMINI" grep -qF '11.4.182' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-183-PROPAGATION" grep -qF '11.4.183' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-183-PROPAGATION-AGENTS" grep -qF '11.4.183' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-183-PROPAGATION-GEMINI" grep -qF '11.4.183' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-184-PROPAGATION" grep -qF '11.4.184' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-184-PROPAGATION-AGENTS" grep -qF '11.4.184' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-184-PROPAGATION-GEMINI" grep -qF '11.4.184' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-185-PROPAGATION" grep -qF '11.4.185' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-185-PROPAGATION-AGENTS" grep -qF '11.4.185' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-185-PROPAGATION-GEMINI" grep -qF '11.4.185' "${SCRIPT_DIR}/../GEMINI.md"
+run_gate "CM-COVENANT-114-186-PROPAGATION" grep -qF '11.4.186' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-114-186-PROPAGATION-AGENTS" grep -qF '11.4.186' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-114-186-PROPAGATION-GEMINI" grep -qF '11.4.186' "${SCRIPT_DIR}/../GEMINI.md"
+
+# §12.12 host-safety check (Process/thread-limit RLIMIT_NPROC awareness for
+# parallel subagent/multi-process work). Verifies the literal `12.12` anchor is
+# present in the project context carriers, mirroring the §11.4.1XX propagation
+# gate pattern above.
+run_gate "CM-COVENANT-12-12-PROPAGATION" grep -qF '12.12' "${SCRIPT_DIR}/../CLAUDE.md"
+run_gate "CM-COVENANT-12-12-PROPAGATION-AGENTS" grep -qF '12.12' "${SCRIPT_DIR}/../AGENTS.md"
+run_gate "CM-COVENANT-12-12-PROPAGATION-GEMINI" grep -qF '12.12' "${SCRIPT_DIR}/../GEMINI.md"
 
 # ---- gate: CM-COVERAGE-MINIMUM ----
 # Enforce minimum test coverage for server/internal packages.
@@ -72,49 +152,14 @@ else
 fi
 rm -f "$COVER_OUT"
 
-# ---- gate: CM-SEMGREP-WIRED (§11.4.166) ----
-# Asserts (1) the commit_all.sh semgrep wiring exists and is NOT fail-open
-# (an absent semgrep must NOT silently return clean), and (2) semgrep is on
-# PATH. If semgrep is genuinely not installed, the gate reports OPERATOR-BLOCKED
-# honestly (§11.4.6) rather than silently passing.
-echo ">>> gate: CM-SEMGREP-WIRED"
-COMMIT_ALL="${SCRIPT_DIR}/../scripts/commit_all.sh"
-semgrep_wired_ok=1
-if [[ ! -f "$COMMIT_ALL" ]]; then
-    echo "  scripts/commit_all.sh missing — §11.4.166 wiring absent"
-    semgrep_wired_ok=0
-else
-    # Wiring present: the semgrep scan function + the blocking invocation.
-    if ! grep -q '_semgrep_scan_check' "$COMMIT_ALL"; then
-        echo "  _semgrep_scan_check wiring removed from commit_all.sh (§11.4.166 hole)"
-        semgrep_wired_ok=0
-    fi
-    if ! grep -q 'semgrep scan --config auto --error' "$COMMIT_ALL"; then
-        echo "  blocking 'semgrep scan --config auto --error' invocation removed (§11.4.166 hole)"
-        semgrep_wired_ok=0
-    fi
-    # Not fail-open: the not-installed branch must NOT silently 'return 0' clean.
-    # The honest fix emits an error + (in block mode) returns 1.
-    if ! grep -q 'semgrep NOT installed' "$COMMIT_ALL"; then
-        echo "  semgrep not-installed path is fail-open (no honest blocker message) — §11.4.166 silent SKIP hole"
-        semgrep_wired_ok=0
-    fi
-fi
-if [[ "$semgrep_wired_ok" -eq 1 ]]; then
-    if command -v semgrep >/dev/null 2>&1; then
-        echo "  semgrep on PATH ($(command -v semgrep)); wiring present + not fail-open"
-        echo "<<< gate: CM-SEMGREP-WIRED OK"
-    else
-        # Honest OPERATOR-BLOCKED, not a silent pass (§11.4.6 / §11.4.166).
-        echo "  OPERATOR-BLOCKED: semgrep wiring present but semgrep NOT on PATH — install via constitution/scripts/semgrep/semgrep_setup.sh"
-        echo "<<< gate: CM-SEMGREP-WIRED FAIL (OPERATOR-BLOCKED: semgrep install needed)"
-        rc=1
-    fi
-else
-    echo "<<< gate: CM-SEMGREP-WIRED FAIL (wiring broken / fail-open)"
-    rc=1
-fi
-echo
+# NOTE: the former CM-SEMGREP-WIRED gate (§11.4.166) was REMOVED here per the
+# constitution's explicit 2026-06-22 repeal of §11.4.166 (Constitution.md states
+# the repeal removes `CM-COVENANT-114-166-PROPAGATION` / `CM-SEMGREP-WIRED`
+# together). This is a §11.4.120 gate reconciliation — the gate is deleted
+# outright, not weakened to always-pass, since a tautology gate would itself be
+# a §11.4 bluff. `tests/meta/meta_test_semgrep_wired.sh` still references
+# CM-SEMGREP-WIRED as of this change and needs its own reconciliation by its
+# owner (out of scope here — tests/meta/* is not edited by this change).
 
 # ---- gate: CM-INDEPENDENT-VERIFICATION-AGENT (§11.4.165) ----
 # §11.4.165 mandates every batch/artifact pass an INDEPENDENT verifier

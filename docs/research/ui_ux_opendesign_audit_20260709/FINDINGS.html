@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDINGS</h1>
+</header>
+<h1
+id="helix-ota-uiux-opendesign-11.4.162-host-render-visual-proof-11.4.170-audit">Helix
+OTA — UI/UX + OpenDesign (§11.4.162) + Host-Render Visual-Proof
+(§11.4.170) Audit</h1>
+<p><strong>Date:</strong> 2026-07-09 <strong>Trigger:</strong> Operator
+question — “Does Helix OTA have properly designed UI/UX for all client
+apps and all frontends on all OSes/platforms, and is it
+OpenDesign-refined and production-polished?” <strong>Method:</strong>
+Read-only file evidence (manifest inspection + exhaustive grep). No
+fabrication (§11.4.6). <strong>Author:</strong> background audit
+subagent (findings relayed + persisted by conductor; subagent Write was
+blocked by a plugin policy).</p>
+<hr />
+<h2 id="verdict">Verdict</h2>
+<p><strong>Real UI surfaces DO exist — two independent React
+frontends.</strong> OpenDesign (§11.4.162) and host-render visual-proof
+(§11.4.170) are therefore <strong>active, currently-UNMET obligations —
+not latent.</strong> The project CLAUDE.md note “§11.4.162 latent until
+this project ships a UI surface” is <strong>stale</strong>: two UIs have
+shipped.</p>
+<h2 id="surfaces-found-file-evidence">Surfaces found (file
+evidence)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Surface</th>
+<th>Path</th>
+<th>User-facing</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>OTA Manager SPA</strong></td>
+<td><code>clients/ota-manager/</code></td>
+<td><strong>YES</strong></td>
+<td>React 19 + Vite 6 + React Router v7 + Zustand + <strong>shadcn/ui
+(Radix + Tailwind CSS 4)</strong> + TanStack Query. Tauri v2 desktop
+shell (<code>src-tauri/</code>) + experimental Tauri Android/iOS mobile
+shell. Modules: auth, layout, dashboard, devices, releases, deployments,
+groups, audit.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Same SPA embedded in Go server</td>
+<td><code>server/internal/api/embed.go</code> +
+<code>manager-dist/</code></td>
+<td>YES (2nd delivery path of #1)</td>
+<td><code>//go:embed manager-dist/*</code>,
+<code>MountManagerUI()</code> serves it at <code>/manager</code>.
+<code>manager-dist/</code> is the gitignored build output of #1. Not a
+separate UI.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>“Operator Dashboard” MVP</strong></td>
+<td><code>dashboard/</code></td>
+<td><strong>YES — a second, distinct impl</strong></td>
+<td>React 18 + Vite, hand-rolled <code>src/components/ui.tsx</code>
+primitives (not shadcn/ui), 8 screens
+(Login/ArtifactUpload/Releases/Deployments/Fleet/Overview/Groups/Audit).
+Named in root README + design doc
+<code>docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.md</code>.
+Has real Playwright e2e + <code>@axe-core/playwright</code> a11y +
+captured <code>BROWSER_TEST_EVIDENCE.md</code> (5/5 PASS vs a real Go
+server).</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>submodules/ota-android-agent/android/</code></td>
+<td>—</td>
+<td><strong>NO</strong></td>
+<td>Manifest <code>sharedUserId="android.uid.system"</code> + 3
+permissions, <strong>zero</strong> <code>&lt;activity&gt;</code>;
+“system-image, not a Play-Store app.” No <code>res/layout/</code>, no
+<code>@Composable</code>.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>submodules/ota-update-engine-bridge/android/</code></td>
+<td>—</td>
+<td><strong>NO</strong></td>
+<td>Bare <code>&lt;manifest/&gt;</code>, “carries no components.”</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>ota-artifact-validator</code>, <code>ota-protocol</code>,
+<code>ota-rollout-engine</code>, <code>ota-telemetry-schema</code></td>
+<td>—</td>
+<td><strong>NO</strong></td>
+<td>Only tests + docs; no frontend.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Go server</td>
+<td><code>server/</code></td>
+<td>NO (API only)</td>
+<td>No <code>html/template</code>/<code>LoadHTMLGlob</code>, no mounted
+Swagger-UI; only HTML served is the embedded SPA (#2).</td>
+</tr>
+<tr>
+<td>8</td>
+<td>CLI/TUI client</td>
+<td>—</td>
+<td>Not found</td>
+<td>No such surface exists.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Count: 2 real user-facing UI codebases</strong>
+(<code>clients/ota-manager</code>, <code>dashboard</code>) + 1 duplicate
+delivery channel of #1.</p>
+<h2 id="opendesign-11.4.162">OpenDesign (§11.4.162)</h2>
+<p><code>grep -rli "open-design|opendesign|open_design"</code> hits
+<strong>only governance files</strong> (where the rule text lives).
+<strong>Zero hits</strong> in <code>dashboard/</code>,
+<code>clients/ota-manager/</code>, <code>server/</code>, or any
+<code>package.json</code>/<code>tailwind.config</code>. OpenDesign is
+<strong>not installed or referenced</strong> in product code.</p>
+<p>Used instead: <code>ota-manager</code> = shadcn/ui + Tailwind CSS 4
+with <code>darkMode:"class"</code> + HSL CSS-variable tokens (a real
+light/dark token system, but not OpenDesign’s). <code>dashboard</code> =
+hand-rolled <code>ui.tsx</code>, no dark-mode.</p>
+<h2 id="host-render-visual-proof-11.4.170">Host-render visual-proof
+(§11.4.170)</h2>
+<p><code>grep -rli "toMatchSnapshot|toHaveScreenshot|storybook|chromatic|percy|roborazzi|paparazzi"</code>
+→ <strong>zero</strong>. <code>dashboard/e2e/*.spec.ts</code> gives
+genuine live-app Playwright screenshot/video/axe evidence (satisfies
+§11.4.153/.158/.159) — but NOT §11.4.170’s specific ask (host-side,
+no-running-app, component-level PNG per screen×state×{light,dark} +
+golden diff + OCR/vision layout oracle). <code>ota-manager</code> has NO
+visual/e2e harness (only Vitest/RTL unit tests) — the richer frontend is
+the less-tested one. <strong>§11.4.170 unmet in both.</strong></p>
+<h2 id="recency-canonical-status-data-conductor">Recency /
+canonical-status data (conductor)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Last commit</th>
+<th>Commits</th>
+<th>Named in README/spec?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>clients/ota-manager</code></td>
+<td>2026-06-20 (<code>5b0ac61c</code> Auto-commit)</td>
+<td>11</td>
+<td>Not prominently; is the one embedded at <code>/manager</code></td>
+</tr>
+<tr>
+<td><code>dashboard</code></td>
+<td>2026-06-20 (<code>a9f732dc</code> window-scoped recordings)</td>
+<td>14</td>
+<td><strong>Yes</strong> — README:103 “Dashboard: React (login, upload,
+rollout, fleet health)” + formal <code>dashboard_design.md</code>
+(2026-06-08)</td>
+</tr>
+</tbody>
+</table>
+<p>→ Ambiguous which is canonical. <strong>Operator decision required
+(§11.4.66/§11.4.122)</strong> before sinking OpenDesign effort into a
+frontend that might be retired.</p>
+<h2 id="prioritized-recommendations">Prioritized recommendations</h2>
+<ol type="1">
+<li><strong>[OPERATOR DECISION]</strong> Resolve the two-frontend
+duplication: is <code>dashboard/</code> a retired MVP scaffold
+superseded by <code>clients/ota-manager</code>, or are both
+intentionally maintained? (§11.4.122 — no silent removal.)</li>
+<li>Wire OpenDesign into the surface-of-record: install as a dependency,
+migrate the token surface onto OpenDesign light+dark tokens from Helix
+brand assets, extend upstream (§11.4.74) for gaps.</li>
+<li>Add a host-render visual-proof harness (§11.4.170): component render
+to PNG per screen×state×{light,dark}, golden image-diff + OCR/vision
+layout oracle.</li>
+<li>Repeat 2–3 for the second frontend if both are kept; else mark the
+retired one <code>Obsolete (→ Fixed.md)</code> (§11.4.90) after explicit
+operator approval.</li>
+<li>Do <strong>not</strong> apply OpenDesign/§11.4.170 to
+<code>ota-android-agent</code> / <code>ota-update-engine-bridge</code> —
+confirmed UI-less system libraries.</li>
+</ol>
+<h2 id="follow-up-governance-note">Follow-up governance note</h2>
+<p>The project CLAUDE.md’s “§11.4.162 latent until this project ships a
+UI surface” line should be corrected — the surfaces exist; §11.4.162 +
+§11.4.170 are now active obligations. (Tracked as an adoption item.)</p>
+</body>
+</html>
