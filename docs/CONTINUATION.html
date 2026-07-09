@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 18 <strong>Last modified:</strong>
-2026-07-09T19:26:31Z</p>
+<p><strong>Revision:</strong> 19 <strong>Last modified:</strong>
+2026-07-10T00:35:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,8 +263,30 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>ca3860d8</code> — 29 commits this session, all pushed 4/4 FF
-§11.4.113. <strong>Wave-2 (S/T/U/V) all landed:</strong>
+<td><code>660e8e6d</code> — 38 parent commits this session (+5 submodule
+gofmt commits), all pushed 4/4 FF §11.4.113. <strong>Wave-4 (2026-07-10
+— Postgres + review-remediation + gofmt sweep + operator
+briefs):</strong> <code>720ef748</code> READINESS Rev3 + <strong>M2
+Postgres integration RAN e2e</strong> (15/15 <code>ok</code> +
+<code>-race</code> clean, real pgx
+TCP-kill/<code>SQLSTATE 23514</code>/<code>uq_fabric_lease_active</code>
+fault evidence, self-booting <code>postgres:16-alpine</code> rootless
+podman) · <code>1df9a649</code> <strong>memory-leak discriminator
+fix</strong> (whole-branch-review Important-1: per-batch-delta was blind
+to a steady leak → rewrote to retention-scales-with-load, self-validated
+classifier + §11.4.115 RED on a real 4 KB/iter injected leak
+<code>leak=true</code>, healthy <code>leak=false</code>) + N-sec server
+hardening (security suite PASS under <code>-race</code>+fuzz 115k execs;
+benchmark baseline + new <code>token_bench_test.go</code>) ·
+<code>f7846319</code> <strong>5-brick gofmt sweep</strong> pointer bump
+(challenges/containers/llms_verifier/ota-protocol/security FF-pushed;
+gofmt-equivalence proven; llm_orchestrator+vision_engine DEFERRED for
+pre-existing mirror fork) · <code>63095b03</code> Stream FS
+full-server-suite <strong>GREEN</strong> on HEAD + gofmt reconciliation
++ whole-branch review GO-WITH-FIXES · <code>660e8e6d</code> operator
+decision briefs (security-headers/DDoS-default O/Q + ota-manager router
+C). <strong>Prior wave-2/3 HEAD <code>ca3860d8</code></strong> — 29
+commits: <strong>Wave-2 (S/T/U/V) all landed:</strong>
 <code>a8c12d9a</code> ota-manager shadcn AA fix (S — closes A2; S caught
 a rounding trap in M’s audit, used precise values, 38/38 verified) ·
 <code>870ca9ff</code> dashboard screen×STATE empty+error for
@@ -324,6 +346,79 @@ by operator decision (§11.4.133)</strong></td>
 </tr>
 </tbody>
 </table>
+<h3
+id="latest-session-2026-07-10-postgres-e2e-review-driven-anti-bluff-fix-gofmt-sweep-operator-briefs">Latest
+session (2026-07-10) — Postgres e2e + review-driven anti-bluff fix +
+gofmt sweep + operator briefs</h3>
+<p>Operator directive (re-sent): continue the endless autonomous loop
+with 3-4 parallel subagents on real evidence, no bluff. Ran multiple
+parallel-subagent waves; 5 parent commits
+(<code>720ef748</code>→<code>660e8e6d</code>) + 5 submodule gofmt
+commits, all pushed 4/4 FF (no force §11.4.113). Every subagent stream
+conductor-re-verified before commit (§11.4.142).</p>
+<ul>
+<li><strong>M2 — Postgres production path RAN e2e</strong>
+(<code>720ef748</code>): the pgx/PostgreSQL persistence path
+(architecture.md §4) now runs end-to-end via rootless podman
+self-booting <code>postgres:16-alpine</code> from
+<code>submodules/containers</code>; 15/15 integration packages
+<code>ok</code> + <code>-race</code> clean; real-DB fault evidence (pgx
+TCP-kill EOF, <code>SQLSTATE 23514</code> CHECK,
+<code>uq_fabric_lease_active</code> lease conflict); teardown clean.
+Closes the Stream V audit gap (suite previously only type-checked).
+<code>docs/qa/20260709-server-postgres-integration/EVIDENCE.md</code>.</li>
+<li><strong>Whole-branch review
+(<code>docs/research/session_wholebranch_review_20260710/REVIEW.md</code>)
+— GO-WITH-FIXES</strong> (0 Critical, 2 Important, 2 Minor). Verified
+clean: challenges <code>RecordAction</code> mutex (pointer-only
+<code>Result</code>, no copy hazard), <code>FuzzTokenSignerVerify</code>
+(faithful), artifact trust boundary (<code>resolvePublicKey</code>
+config-only). Important-1 FIXED ⤵.</li>
+<li><strong>Memory-leak discriminator fix</strong>
+(<code>1df9a649</code>, §11.4.4/§11.4.123): review found
+<code>TestMemory_SustainedAPILoadNoGrowth</code>’s per-equal-batch-delta
+threshold could not detect a STEADY leak (reference contaminated by the
+leak) + the evidence OVERCLAIMED. Rewrote to a
+<strong>retention-scales-with-load</strong> discriminator (1× vs ~8×
+cumulative requests), extracted a pure <code>classifyHeapGrowth</code>,
+self-validated it (§11.4.107(10)), and PROVED detection on a real 4
+KB/iter injected leak (§11.4.115 RED:
+<code>retainedSmall≈8 MB retainedLarge≈65 MB → leak=true</code>; healthy
+real router <code>leak=false</code>).
+<code>docs/qa/20260710-memory-leak-discriminator-fix/EVIDENCE.md</code>.</li>
+<li><strong>N-sec server hardening</strong> (<code>1df9a649</code>,
+test-only): security suite re-run PASS under <code>-race</code> + fuzz
+(115k execs, 0 crashes; item P cleared); benchmark baseline + new
+<code>internal/api/token_bench_test.go</code> (Mint 803ns / Verify
+1682ns / VerifyReject 481ns; item N).
+<code>docs/qa/20260710-server-security-and-benchmark-baseline/</code>.</li>
+<li><strong>Stream FS — full server suite GREEN</strong>
+(<code>63095b03</code>): independent re-run on HEAD —
+build/vet/<code>test ./...</code> clean, 0 data races, memory +
+benchmark + determinism confirmed, no regression from the session’s
+server changes.
+<code>docs/qa/20260710-server-fullsuite-regression/</code>.</li>
+<li><strong>gofmt canonicalization sweep</strong> (<code>f7846319</code>
++ 5 brick commits): 291 files across 7 bricks, gofmt-equivalence PROVEN
+(<code>gofmt(committed)==current</code> byte-for-byte — the correct
+oracle; <code>git diff -w</code> is wrong for gofmt). <strong>5
+LANDED</strong> (challenges <code>32f6ef0</code>, containers
+<code>367d39d</code>, llms_verifier <code>02ac454d</code>, ota-protocol
+<code>8afcf07</code>, security <code>96adc8b</code> — all FF-pushed to
+mirrors). <strong>2 DEFERRED</strong> for pre-existing mirror fork
+(operator decision): llm_orchestrator (github tip already gofmt-clean,
+origin forked +1), vision_engine (mirrors forked).
+<code>docs/research/submodule_gofmt_vet_sweep_20260710/FINDINGS.md</code>
+Rev 2.</li>
+<li><strong>Operator decision briefs</strong> (<code>660e8e6d</code>,
+proposal-only/un-wired, §11.4.101/§11.4.122): (O) NO security headers
+set today + <code>HELIX_MAX_INFLIGHT</code>=0=UNLIMITED (OOM risk) →
+tiered-headers + 256-default proposal; (C) the 85 ota-manager tsc errors
+are a MIX (router migration alone fixes ~1/4); unrouted pages are
+INTENDED features (git <code>a0552d8e</code> + design spec §4) → WIRE
+not delete. Both need operator decisions.
+<code>docs/research/operator_brief_{security_headers_ddos,ota_manager_router}_20260710/</code>.</li>
+</ul>
 <h3
 id="latest-session-2026-07-09-late-opendesign-adoption-complete-both-frontends-hardening">Latest
 session (2026-07-09, late) — OpenDesign adoption COMPLETE (both
@@ -1220,14 +1315,18 @@ cluster (<code>routes/index.tsx</code>, <code>*-page.tsx</code>,
 they await the tanstack-router reconciliation (item C). Evidence:
 <code>docs/qa/20260709-ota-manager-typecheck-triage/</code>. C.
 <strong>Router-wiring of ota-manager feature pages — OPERATOR-GATED
-(§11.4.101).</strong> The restored feature pages
-(devices/releases/deployments) are importable+tested but unrouted;
-wiring needs a
-<code>react-router-dom</code>→<code>@tanstack/react-router</code>
-<code>useNavigate</code> reconciliation in
-<code>dashboard-page.tsx</code> + a UX decision (which dashboard, nav
-links). Do NOT auto-wire. D. <strong>Guard-hook fix — §11.4.26
-constitution workflow.</strong> Tighten the force-push regex per
+(§11.4.101). Decision brief READY (<code>660e8e6d</code>, Stream
+OB2):</strong>
+<code>docs/research/operator_brief_ota_manager_router_20260710/BRIEF.md</code>.
+Key facts: the 85 tsc errors are a MIX (router-API ~19 /
+hook-return-shape ~15 / API-type ~22 / toast 6 / select-form 10 / unused
+8) — router migration alone fixes ~1/4. Pages are INTENDED shipping
+features (git <code>a0552d8e</code> + design spec §4), so <strong>WIRE,
+not delete</strong> (§11.4.124). Recommended: Option A (wire, as an
+isolated feature work-stream). <strong>Operator UX decision
+needed:</strong> which v1 routes/sub-routes ship. Do NOT auto-wire. D.
+<strong>Guard-hook fix — §11.4.26 constitution workflow.</strong>
+Tighten the force-push regex per
 <code>docs/research/guard_hook_false_positive_20260709/FINDINGS.md</code>
 (fuller split-on-separators + scoped-inner; minimal regex has a
 documented <code>git -c k=v push</code> false-negative) + update the
@@ -1237,18 +1336,22 @@ Operator-aware. E. <strong>§11.4.30 hygiene:</strong> untrack
 blocked on the <code>commit_all.sh --paths</code> deletion-pathspec bug
 (a deletion path in <code>--paths</code> fatals the whole
 <code>git add</code>); fix that wrapper bug first. Also gitignore
-<code>toPdfViaTempFile*</code> export residue. F. <strong>Expand
-§11.4.170 screen×state matrix.</strong> Stream <strong>R</strong> DONE
-(<code>df2784ec</code>): dashboard now proves <strong>9</strong> screens
-×{light,dark} (added Deployments/Fleet/Groups/Overview; 45→81
-host-render pass; found+fixed a real layout-oracle substring bug).
-Stream <strong>U</strong> in flight adding empty+error STATE variations
-for 2 core dashboard screens (screen×STATE×theme). ota-manager still
-owes its matrix beyond LoginPage (unrouted pages + 85 router-cluster
-errors block it; bundle after C). G. <strong>OpenDesign author-time
-daemon</strong> (<code>od</code> MCP + Next.js UI) setup —
-rootless/containerized (§11.4.161/§11.4.173), operator-review-gated
-(heavy product).</p>
+<code>toPdfViaTempFile*</code> export residue. <strong>Still
+open</strong> (the wrapper fix touches the very tool used for every
+commit — do carefully, isolated, with independent review §11.4.142). F.
+<strong>Expand §11.4.170 screen×state matrix.</strong> Stream
+<strong>R</strong> DONE (<code>df2784ec</code>): dashboard now proves
+<strong>9</strong> screens ×{light,dark} (added
+Deployments/Fleet/Groups/Overview; 45→81 host-render pass; found+fixed a
+real layout-oracle substring bug). Stream <strong>U</strong> DONE
+(<code>870ca9ff</code>): empty+error STATE variations for Releases/Fleet
+(81→117 host-render pass). ota-manager host-render now at
+<strong>2</strong> screens (LoginPage + shipped <code>/dashboard</code>,
+<code>01947d8e</code>); the remaining feature pages are unrouted dead
+code pending the router decision C (not honest gaps until wired). G.
+<strong>OpenDesign author-time daemon</strong> (<code>od</code> MCP +
+Next.js UI) setup — rootless/containerized (§11.4.161/§11.4.173),
+operator-review-gated (heavy product).</p>
 <p><strong>Submodule-brick health follow-ups (from Stream K audit,
 <code>docs/research/submodules_health_audit_20260709/AUDIT.md</code>):</strong></p>
 <p>H. <strong><code>challenges</code> brick fix — DONE + committed
@@ -1273,13 +1376,23 @@ condition as the §11.4.3 no-compatible-server SKIP it already documents
 FF-pushed; pointer → <code>8a184dab</code>. Follow-up: these CLI tests
 SKIP here (no compatible server on 8080) — a future §11.4.98 improvement
 could spin up an ephemeral server to actually exercise the CLI. J.
-<strong>gofmt drift across bricks (formatting-only, pre-existing, all
-otherwise green):</strong> <code>ota-protocol</code> (1),
-<code>http3</code> (1), <code>llm_orchestrator</code> (6),
-<code>security</code> (13), <code>vision_engine</code> (17),
-<code>containers</code> (34), <code>llms_verifier</code> (211/177). A
-<code>gofmt -w</code> sweep per owned brick (each its own submodule
-commit + push). K. <strong>Android bricks static-only</strong>
+<strong>gofmt sweep — Stream J DONE / 5 of 7 landed
+(<code>f7846319</code> + 5 brick commits).</strong> 291 files,
+gofmt-equivalence PROVEN (<code>gofmt(committed)==current</code>
+byte-for-byte). <strong>LANDED + FF-pushed:</strong> ota-protocol
+<code>8afcf07</code>, challenges <code>32f6ef0</code>, llms_verifier
+<code>02ac454d</code>, security <code>96adc8b</code>, containers
+<code>367d39d</code>. <strong>DEFERRED (pre-existing mirror fork —
+operator decision):</strong> <code>llm_orchestrator</code>
+(github/upstream tip <code>ee229a7</code> already gofmt-clean, origin
+<code>a484f7d</code> forked +1 — sweep is a no-op there) and
+<code>vision_engine</code> (origin <code>b417a40</code> forked from
+github <code>a97df79</code>). Converging forked mirrors for whitespace
+is disproportionate risk; both restored to parent-pinned, nothing
+consumed changed.
+<code>docs/research/submodule_gofmt_vet_sweep_20260710/FINDINGS.md</code>
+Rev 2. <code>http3</code> untouched (dirty foreign, §11.4.84). K.
+<strong>Android bricks static-only</strong>
 (<code>ota-android-agent</code>, <code>ota-update-engine-bridge</code>):
 no <code>gradlew</code> wrapper committed → full AGP build not run
 (needs Android SDK). Honest §11.4.6 boundary; a real build pass is owed
@@ -1287,27 +1400,48 @@ when the toolchain is available.</p>
 <p><strong>Server §11.4.169 test-type gaps (from Stream V audit,
 <code>docs/research/server_test_type_coverage_audit_20260709/AUDIT.md</code>;
 suite is 100% PASS + 0 races today):</strong></p>
-<p>L. <strong>Memory + Fuzz gaps — Stream W in flight:</strong> add a
-heap/goroutine-growth assertion for core API handlers (only the embed
-handler has a leak check) + a native Go <code>Fuzz*</code> target
-(currently ZERO fuzz targets in server/). M2. <strong>Postgres
-integration suite unexecuted</strong> — the
-<code>-tags integration</code> pgx path TYPE-CHECKS clean but was never
-run (no live PG/containers booted). Boot Postgres via the containers
-submodule (§11.4.161 rootless) + capture real evidence. N.
-<strong>Benchmark regression baseline</strong> — 7 real benchmarks exist
-but nothing gates regression; add a baseline + comparison. O.
-<strong>Security follow-ups</strong> — no security-response-headers set
-anywhere (product decision: add headers + test); a cross-secret
-token-forgery test (V corrected: scheme is fixed HMAC-SHA256, not
-multi-alg JWT, so <code>alg=none</code> doesn’t apply — positive
-finding); SQL/NoSQL-injection probe against the real pgx path inside
-<code>server/</code>. P. <strong>Aborted security-suite run</strong> —
-<code>tests/security/RUN_EVIDENCE.txt</code> last run ABORTED on a port
-conflict (unlike its clean-PASS siblings); re-run resolving the conflict
-+ capture fresh evidence. Q. <strong>DDoS default posture</strong> — the
-rate-limit cap is disabled by default
-(<code>HELIX_MAX_INFLIGHT=0</code>); decide the shipped default.</p>
+<p>L. <strong>Memory + Fuzz gaps — DONE (<code>f82a77e4</code>) +
+review-hardened (<code>1df9a649</code>).</strong> Stream W added the
+heap-growth assertion + <code>FuzzTokenSignerVerify</code>. The
+whole-branch review (Important-1) found the memory test’s
+per-batch-delta threshold blind to a STEADY leak + overclaiming;
+<strong>rewritten to a retention-scales-with-load discriminator</strong>
+(self-validated <code>classifyHeapGrowth</code> §11.4.107(10) +
+§11.4.115 RED on a real 4 KB/iter injected leak <code>leak=true</code>;
+healthy real router <code>leak=false</code>).
+<code>docs/qa/20260710-memory-leak-discriminator-fix/EVIDENCE.md</code>.
+M2. <strong>Postgres integration suite — DONE, RAN e2e
+(<code>720ef748</code>).</strong> Self-booting
+<code>postgres:16-alpine</code> via rootless podman
+(<code>submodules/containers</code>); 15/15 packages <code>ok</code> +
+<code>-race</code> clean; real pgx
+TCP-kill/<code>SQLSTATE 23514</code>/<code>uq_fabric_lease_active</code>
+fault evidence; teardown clean.
+<code>docs/qa/20260709-server-postgres-integration/EVIDENCE.md</code>.
+N. <strong>Benchmark regression baseline — DONE (<code>1df9a649</code>,
+Stream N-sec).</strong> Existing benchmarks captured -count=3 + new
+<code>internal/api/token_bench_test.go</code> isolating the crypto hot
+path (Mint 803 / Verify 1682 / VerifyReject 481 ns/op).
+<code>docs/qa/20260710-server-security-and-benchmark-baseline/</code>.
+O. <strong>Security follow-ups — OPERATOR-GATED; decision brief READY
+(<code>660e8e6d</code>, Stream OB1).</strong> Confirmed NO
+security-response-headers set today (chain:
+recovery→request-id→max-inflight→compression). Tiered header proposal
+(SPA-CSP deferred to avoid white-screening the UI) drafted un-wired in
+<code>docs/research/operator_brief_security_headers_ddos_20260710/BRIEF.md</code>.
+Operator decides which headers to enable. (V’s positive finding stands:
+HMAC-SHA256, not multi-alg — no <code>alg=none</code>.) P.
+<strong>Aborted security-suite run — DONE (<code>1df9a649</code>, Stream
+N-sec):</strong> re-ran the security subset PASS under
+<code>-race</code> + fuzz (115k execs, 0 crashes), fresh evidence
+captured. Cleared. Q. <strong>DDoS default posture — OPERATOR-GATED;
+decision brief READY (<code>660e8e6d</code>, Stream OB1).</strong>
+Confirmed <code>HELIX_MAX_INFLIGHT</code> defaults to
+<code>0</code>=UNLIMITED today (flood → unbounded goroutines/memory →
+OOM). Proposal: conservative <code>256</code> default — a §11.4.122
+behavior change (makes <code>0</code> an explicit unlimited opt-out)
+needing operator sign-off + <code>.env.example</code>/deploy-guide note.
+Same brief as O.</p>
 <p><strong>Prior (A/B path):</strong></p>
 <ol type="1">
 <li><strong>OTA-003 — DONE (VERIFIED on nezha 2026-06-23).</strong> Real
