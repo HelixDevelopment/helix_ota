@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>READINESS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">READINESS</h1>
+</header>
+<h1 id="helix-ota-frontend-ui-production-readiness-ledger">Helix OTA —
+Frontend / UI Production-Readiness Ledger</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-09T18:43:54Z <strong>Scope:</strong> Every Helix OTA user-facing
+UI surface (<code>clients/ota-manager</code>, <code>dashboard</code>) +
+the server SPA-serve seam + the headless Android bricks. Consolidates
+the §11.4.25 per-feature × platform × invariant coverage ledger with the
+§11.4.172 living production-readiness planning document into one
+artifact for the UI/frontend scope. <strong>Authority:</strong> §11.4.25
+(full-automation coverage ledger), §11.4.170 (device-independent
+host-rendered UI visual proof), §11.4.172 (production-readiness
+planning), §11.4.162 (OpenDesign tokens), §11.4.6 (no guessing — every
+cell cites a file/evidence path).</p>
+<p><strong>Honest boundary (§11.4.6):</strong> this ledger CONSOLIDATES
+verified evidence from <strong>static inspection of committed
+artifacts</strong> (result JSONs, EVIDENCE.md files, the Go test source,
+the audit docs). It does <strong>not</strong> itself run any build or
+test — another work stream owns the live build (§11.4.119
+single-resource-owner; this stream stayed read-only). Every PASS below
+cites a <strong>prior</strong> captured-evidence artifact that the
+owning stream produced; anything not independently verifiable from a
+committed artifact is marked <code>UNKNOWN:</code> /
+<code>PENDING</code>, never assumed. <strong>Rev 2 update:</strong> the
+WCAG token-contrast re-vendor in flight at Rev 1 has
+<strong>LANDED</strong> — committed <code>dbc20d51</code> (token values
++ computed-ratio EVIDENCE.md + host-render re-proof) plus
+<code>cdce12c7</code> (dashboard light-golden evidence re-sync, 45/45
+host-render pass). Its items below are updated to <strong>done</strong>,
+with one honest finding from A’s own evidence: the token-value change is
+<strong>inert for <code>ota-manager</code></strong> (its
+<code>--muted</code>/<code>--border</code> collide with shadcn
+<code>:root</code> HSL tokens that win the cascade, per A’s EVIDENCE.md
+§4), so the contrast fix benefits <code>dashboard</code> only —
+<code>ota-manager</code>’s shadcn palette still owes its own audit.</p>
+<hr />
+<h2 id="per-surface-11.4.25-six-invariant-coverage-ledger">1.
+Per-surface × §11.4.25 six-invariant coverage ledger</h2>
+<p>Surfaces = each UI surface. Invariants (§11.4.25): 1.
+<strong>anti-bluff captured evidence</strong>
+(§11.4.5/§11.4.69/§11.4.107) 2. <strong>works end-to-end on
+target</strong> 3. <strong>matches documented promise</strong> 4.
+<strong>no open bugs</strong> 5. <strong>documented</strong>
+(§11.4.12/§11.4.18) 6. <strong>four-layer test floor</strong> (pre-build
++ post-build + runtime + paired mutation)</p>
+<p>Cell values: <strong>PASS</strong> / <strong>PARTIAL</strong> /
+<strong>PENDING</strong> / <strong>N-A</strong>, each with a cited
+path.</p>
+<h3
+id="clientsota-manager-react-19-tauri-v2-desktop-manager-web-spa">1.1
+<code>clients/ota-manager</code> (React 19 + Tauri v2; desktop +
+<code>/manager</code> web SPA)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Inv</th>
+<th>Verdict</th>
+<th>Evidence (cited)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 anti-bluff evidence</td>
+<td><strong>PASS</strong></td>
+<td><code>docs/qa/20260709-ota-manager-vendoring/hostrender-results.json</code>
+→
+<code>self_validation.image_diff_analyzer_sound / layout_analyzer_sound / ocr_analyzer_sound</code>
+= <strong>true</strong>; golden-bad flagged both themes (light 0.7789%,
+dark 1.5193%); <code>EVIDENCE.md</code> §3.</td>
+</tr>
+<tr>
+<td>2 works end-to-end on target</td>
+<td><strong>PARTIAL</strong></td>
+<td>LoginPage host-rendered <strong>both themes</strong>
+(<code>results.json</code> themes.light/dark image_diff.good
+<code>ratio 0</code> PASS). BUT coverage = <strong>1 screen
+only</strong> (LoginPage); restored feature pages
+(devices/releases/deployments) are importable+tested but
+<strong>UNROUTED</strong> (CONTINUATION §5.C, operator-gated). Full
+desktop-Tauri packaged run: <code>UNKNOWN:</code> (not exercised in
+committed evidence).</td>
+</tr>
+<tr>
+<td>3 matches documented promise</td>
+<td><strong>PARTIAL</strong></td>
+<td>Tokens vendored byte-identical (<code>EVIDENCE.md</code> §1:
+<code>src/styles/opendesign-tokens.css</code>
+<code>cmp == IDENTICAL</code>); theme-toggle bug FIXED + pixel-proven
+(light↔︎dark = 98.96% differ, <code>EVIDENCE.md</code> §5). Gap: 118 type
+errors surfaced by the fixed <code>tsc</code> gate (CONTINUATION §5.B,
+commit <code>94fb10a2</code>).</td>
+</tr>
+<tr>
+<td>4 no open bugs</td>
+<td><strong>PARTIAL</strong> (tracked)</td>
+<td>Theme-toggle bug closed (<code>EVIDENCE.md</code> §4/§5). WCAG
+re-vendor <strong>landed</strong> (<code>dbc20d51</code>) but proven
+<strong>INERT for ota-manager</strong> — shadcn <code>:root</code> HSL
+tokens win the cascade (A’s
+<code>20260709-wcag-token-revendor/EVIDENCE.md</code> §4: new-vs-old
+ota-manager render = 0.0000%); ota-manager’s shadcn palette owes its
+<strong>own</strong> contrast audit (new tracked item). OPEN + tracked:
+118 TS type errors (§5.B); unrouted pages (§5.C). No silent
+unknowns.</td>
+</tr>
+<tr>
+<td>5 documented</td>
+<td><strong>PASS</strong></td>
+<td><code>docs/qa/20260709-ota-manager-vendoring/EVIDENCE.md</code> (Rev
+2) +
+<code>docs/research/opendesign_ui_surface_audit_20260709/AUDIT.md</code>
+row #1 + CONTINUATION §1 (late).</td>
+</tr>
+<tr>
+<td>6 four-layer test floor</td>
+<td><strong>PARTIAL</strong></td>
+<td>Post-build: <code>pnpm build</code> exit 0 (<code>EVIDENCE.md</code>
+§2). Runtime/unit: store DOM-write unit test 4/4
+(<code>unit-test.log</code>, <code>EVIDENCE.md</code> §4). Host-render
+dual+self-validated oracle 1 screen (§3). MISSING: full screen×state
+matrix; type-gate not clean; no frontend-layer paired §1.1 mutation
+beyond analyzer self-validation.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dashboard-react-18-spa-web-over-apiv1">1.2
+<code>dashboard</code> (React 18 SPA; web over
+<code>/api/v1</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Inv</th>
+<th>Verdict</th>
+<th>Evidence (cited)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 anti-bluff evidence</td>
+<td><strong>PASS</strong></td>
+<td><code>docs/qa/20260709-dashboard-vendoring-complete/</code> —
+<code>image-diff-selfcheck-*.json</code> (good↔︎good ≈0, good↔︎mutated
+≈0.50), <code>baseline-rejects-mutated-*.json</code>,
+<code>layout-oracle-good/bad-*.json</code>,
+<code>light-vs-dark-distinctness-*.json</code>; <code>EVIDENCE.md</code>
+(Rev 2) §4. Self-validated per §11.4.107(10).</td>
+</tr>
+<tr>
+<td>2 works end-to-end on target</td>
+<td><strong>PARTIAL</strong></td>
+<td>5 screens host-rendered <strong>both themes</strong> (login +
+appshell + audit + releases + artifact-upload; distinctness ratios
+0.90–0.97 = DISTINCT, <code>EVIDENCE.md</code> §4). Host-render uses
+<strong>stubbed <code>window.fetch</code> + stubbed login</strong>
+(component-render stub permitted §11.4.27, <code>EVIDENCE.md</code> §4)
+— full-stack e2e vs the <strong>real Go backend</strong> is a separate
+concern, <code>UNKNOWN:</code> from this evidence.</td>
+</tr>
+<tr>
+<td>3 matches documented promise</td>
+<td><strong>PASS</strong></td>
+<td>ALL 27 live screen inline-hex repointed to <code>var(--token)</code>
+across 8 screens; 9 justified AppShell brand-chrome hex kept + annotated
+(<code>EVIDENCE.md</code> §1/§2/§3); real light/dark theme added
+(<code>theme.ts</code>, CONTINUATION §1).</td>
+</tr>
+<tr>
+<td>4 no open bugs</td>
+<td><strong>PASS</strong> (with note)</td>
+<td>WCAG re-vendor <strong>landed + proven for dashboard</strong>
+(<code>dbc20d51</code>+<code>cdce12c7</code>): light
+<code>--warn</code>→<code>#854d0e</code> (6.85 bg / 5.46 badgeTint),
+<code>--success</code>→<code>#166534</code> (7.13 / 5.66 — closes the
+<code>--success</code>-as-text regression),
+<code>--muted</code>→<code>#475569</code> (7.58), dark
+<code>--danger</code>→<code>#ef4444</code> (5.32),
+<code>--border-strong</code> <code>#64748b</code> added; every value ≥
+its AA bar (A EVIDENCE.md §2). Note: light <code>--danger</code>
+<code>#dc2626</code> 3.81 on its own badge-tint is a documented honest
+follow-up (A EVIDENCE.md §2, not over-changed). No silent unknowns.</td>
+</tr>
+<tr>
+<td>5 documented</td>
+<td><strong>PASS</strong></td>
+<td><code>docs/qa/20260709-dashboard-vendoring-complete/EVIDENCE.md</code>
++ <code>docs/qa/20260709-dashboard-vendoring/EVIDENCE.md</code> +
+AUDIT.md row #2 + CONTINUATION §1.</td>
+</tr>
+<tr>
+<td>6 four-layer test floor</td>
+<td><strong>PASS</strong> (for covered screens)</td>
+<td><code>EVIDENCE.md</code> §5: build <code>npm run build</code> exit
+0; <code>npm run test:run</code> <strong>107 passed (12 files)</strong>;
+<code>npm run e2e:hostrender</code> <strong>45 passed</strong> (9 login
++ 36 new). Analyzer self-validation is the §1.1-class mutation proof at
+the visual layer. Note: broader screens beyond the 5 remain owed.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="server-spa-serve-seam-server-gogin-no-independent-ui">1.3 Server
+SPA-serve seam (<code>server/</code>, Go/Gin — no independent UI)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Inv</th>
+<th>Verdict</th>
+<th>Evidence (cited)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 anti-bluff evidence</td>
+<td><strong>PASS</strong></td>
+<td><code>server/internal/api/embed_test.go</code> — 5 tests drive the
+REAL Gin router (<code>MountManagerUI</code>), open served bytes, assert
+present + non-degenerate (§11.4.38); honest §11.4.3 SKIP when the embed
+is only a placeholder (<code>requireBuiltEmbed</code>).</td>
+</tr>
+<tr>
+<td>2 works end-to-end on target</td>
+<td><strong>N-A (own UI) → serves #1.1</strong></td>
+<td><code>embed_test.go</code> header: <code>GET /manager/</code> → 200
+index.html; <code>/manager/assets/&lt;hash&gt;.{js,css}</code> → 200
+real bundle; client-route fallback → 200; missing asset → 404
+(§11.4.120-reconciled). Serves the ota-manager SPA, not an independent
+UI.</td>
+</tr>
+<tr>
+<td>3 matches documented promise</td>
+<td><strong>PASS</strong></td>
+<td><code>TestManagerSPA_AssetChain_ServesRealBundle</code> +
+<code>TestManagerSPA_MissingAsset_Returns404</code> +
+<code>TestManagerSPA_MissingExtensionlessAssetLikePath_Returns404</code>
+assert the documented asset-aware SPA fallback.</td>
+</tr>
+<tr>
+<td>4 no open bugs</td>
+<td><strong>PASS</strong> (with note)</td>
+<td>Greedy-fallback bug closed + guarded
+(<code>embed_test.go:217-265</code>). NOTE: <code>manager-dist/</code>
+is a <strong>stale build artifact</strong> (AUDIT row #3) — served bytes
+match source only after an ota-manager rebuild + re-embed.</td>
+</tr>
+<tr>
+<td>5 documented</td>
+<td><strong>PASS</strong></td>
+<td><code>embed_test.go</code> header block + AUDIT.md row #3 +
+<code>docs/research/server_health_20260709/REMEDIATION.md</code> (cited
+in CONTINUATION §1).</td>
+</tr>
+<tr>
+<td>6 four-layer test floor</td>
+<td><strong>PARTIAL</strong></td>
+<td>Go httptest suite present + SKIP-honest. Tracked gap
+(REMEDIATION.md, CONTINUATION §1.B):
+<code>internal/api/manager-dist</code> has no dedicated
+<code>_test.go</code> coverage of the embedded artifact freshness.</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="android-bricks-submodulesota-android-agent-ota-update-engine-bridge">1.4
+Android bricks (<code>submodules/ota-android-agent</code>,
+<code>ota-update-engine-bridge</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Inv</th>
+<th>Verdict</th>
+<th>Evidence (cited)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–6</td>
+<td><strong>N-A (no visual UI)</strong></td>
+<td>AUDIT.md rows #4/#5: <code>grep</code> for
+<code>androidx.compose</code> / <code>@Composable</code> /
+<code>MaterialTheme</code> / <code>Color(</code> → <strong>0</strong>
+matches; no <code>res/**/*.xml</code>; AndroidManifest declares only
+permissions + <code>sharedUserId</code> (headless poll worker /
+<code>ApplyPort</code>), no Activity/LAUNCHER. No UI surface exists to
+theme or host-render today. A future on-device Activity would need a
+Kotlin <code>Color.kt</code>/<code>Theme.kt</code> token bridge (NOT
+CSS) + Roborazzi/Paparazzi host-render per §11.4.170 (AUDIT §3).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="host-render-sub-matrix-screen-light-dark">2. §11.4.170
+host-render sub-matrix (screen × {light, dark})</h2>
+<p>Which screens are host-render-PROVEN per frontend (real component →
+host PNG → dual oracle: image-diff golden-good/bad + DOM-bounds/OCR
+layout oracle, self-validated §11.4.107(10)). ✔ = proven with committed
+goldens/EVIDENCE; ✘ = not yet proven (owed).</p>
+<h3 id="ota-manager">ota-manager</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th style="text-align: center;">light</th>
+<th style="text-align: center;">dark</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoginPage</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td><code>docs/qa/20260709-ota-manager-vendoring/hostrender-results.json</code>
++ <code>docs/qa/20260709-ota-manager-hostrender/results.json</code>
+(good <code>ratio 0</code>, bad flagged, OCR golden-bad present, layout
+collapse detected; <code>self_validation</code> all true)</td>
+</tr>
+<tr>
+<td>devices / releases / deployments / dashboard (other screens)</td>
+<td style="text-align: center;">✘</td>
+<td style="text-align: center;">✘</td>
+<td>Not host-rendered — owed (CONTINUATION §5.F; pages currently
+unrouted §5.C).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>ota-manager host-render coverage = 1 screen ×
+{light,dark}.</strong></p>
+<h3 id="dashboard">dashboard</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th style="text-align: center;">light</th>
+<th style="text-align: center;">dark</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Login</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td><code>docs/qa/20260709-dashboard-hostrender/</code>
+(login-{light,dark}-actual.png,
+<code>light-vs-dark-distinctness.json</code>, self-check JSONs)</td>
+</tr>
+<tr>
+<td>AppShell frame</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td><code>docs/qa/20260709-dashboard-vendoring-complete/</code>
+appshell-{light,dark}-actual.png; distinctness 0.904 DISTINCT</td>
+</tr>
+<tr>
+<td>AuditScreen</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td>same dir; audit-{light,dark}-actual.png; distinctness 0.947</td>
+</tr>
+<tr>
+<td>ReleaseList (releases)</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td>same dir; releases-{light,dark}-actual.png; distinctness 0.972</td>
+</tr>
+<tr>
+<td>ArtifactUploadScreen</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td>same dir; artifact-upload-{light,dark}-actual.png; distinctness
+0.967</td>
+</tr>
+<tr>
+<td>Deployments / Fleet / Groups / Overview</td>
+<td style="text-align: center;">✘</td>
+<td style="text-align: center;">✘</td>
+<td>Repointed to tokens but not yet host-render-proven (EVIDENCE.md §1
+lists them repointed; §4 proves 4 screens + login). Owed.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>dashboard host-render coverage = 5 screens ×
+{light,dark}.</strong> Honest caveat: renders use stubbed fetch/login
+(§11.4.27 permitted); backend-independent by design (§11.4.170).</p>
+<hr />
+<h2 id="production-readiness-assessment-11.4.172">3.
+Production-readiness assessment (§11.4.172)</h2>
+<h3 id="production-ready-now">3.1 Production-ready NOW</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>State</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenDesign tokens adopted on <strong>both</strong> web
+frontends</td>
+<td>READY</td>
+<td>AUDIT.md rows #1 (ADOPTED) + #2 (PARTIAL→completed by
+vendoring-complete EVIDENCE.md);
+<code>design-systems/helix-ota/tokens.css</code> canonical.</td>
+</tr>
+<tr>
+<td>ota-manager theme toggle (was broken)</td>
+<td>READY</td>
+<td>Fixed + pixel-proven 98.96% light↔︎dark
+(<code>…ota-manager-vendoring/EVIDENCE.md</code> §5).</td>
+</tr>
+<tr>
+<td>dashboard real light/dark theme + full hex→token repoint</td>
+<td>READY</td>
+<td>vendoring-complete EVIDENCE.md §1–§5 (27/27 screen hex repointed;
+test:run 107; e2e 45).</td>
+</tr>
+<tr>
+<td>Host-render visual proof harness on both frontends</td>
+<td>READY (partial coverage)</td>
+<td>§2 sub-matrix — self-validated dual oracle live on both; 1
+(ota-manager) + 5 (dashboard) screens proven.</td>
+</tr>
+<tr>
+<td>Server SPA-serve seam (asset chain + asset-aware 404)</td>
+<td>READY</td>
+<td><code>embed_test.go</code> 5 real-router tests.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="not-yet-production-ready-with-riskpriority">3.2 NOT yet
+production-ready (with risk/priority)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>State</th>
+<th>Risk / priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>WCAG token-contrast re-vendor</strong></td>
+<td><strong>DONE for dashboard</strong>
+(<code>dbc20d51</code>+<code>cdce12c7</code>); <strong>ota-manager still
+owes its own shadcn audit</strong></td>
+<td>Landed: all three token copies byte-identical (<code>cmp</code>
+IDENTICAL, sha256 <code>14a006da…</code>), dark
+<code>--danger</code>→<code>#ef4444</code> (5.32 surface / 4.72
+badgeTint), light <code>--warn</code>→<code>#854d0e</code> (6.85 /
+5.46), light <code>--success</code>→<code>#166534</code> (7.13 / 5.66),
+light <code>--muted</code>→<code>#475569</code> (7.58),
+<code>--border-strong</code> <code>#64748b</code> (4.76/4.34/4.20/3.07)
+— every value ≥ its AA bar under BOTH the 3:1 UI and stricter 4.5:1 text
+bars (A EVIDENCE.md §2, <code>contrast_final.py</code>). Host-render
+re-proof: dashboard 45/45 pass (this Rev-2 re-sync
+<code>cdce12c7</code>), ota-manager <code>OVERALL: PASS</code>
+self-validated. <strong>Finding (§11.4.6):</strong> inert for
+ota-manager (shadcn <code>:root</code> HSL wins the cascade → new-vs-old
+render 0.0000%); a <strong>separate ota-manager shadcn-palette WCAG
+audit</strong> is now the outstanding UI-polish item. Residual honest
+follow-up: light <code>--danger</code> <code>#dc2626</code> = 3.81 on
+its own badge-tint (documented, not over-changed).</td>
+</tr>
+<tr>
+<td><strong>ota-manager 118 type errors</strong></td>
+<td>OPEN, tracked</td>
+<td>Surfaced by the repaired <code>tsc</code> gate
+(<code>94fb10a2</code>). ~57 are on the dead unrouted feature pages.
+MEDIUM: does not block the shipped LoginPage render but blocks a clean
+type gate; bundle with router-wiring.</td>
+</tr>
+<tr>
+<td><strong>ota-manager feature pages unrouted</strong></td>
+<td>OPERATOR-GATED (§11.4.101)</td>
+<td>Importable+tested but unwired; needs
+<code>react-router-dom</code>→<code>@tanstack/react-router</code>
+<code>useNavigate</code> reconciliation + a UX decision. Do NOT
+auto-wire (CONTINUATION §5.C). MEDIUM, operator decision.</td>
+</tr>
+<tr>
+<td><strong>Host-render matrix incomplete on ota-manager</strong></td>
+<td>OPEN</td>
+<td>Only LoginPage proven; other screens owed (§5.F). MEDIUM — the
+visual-proof guarantee is per-screen; unproven screens are honest gaps,
+not silent PASS.</td>
+</tr>
+<tr>
+<td><strong>Server <code>manager-dist/</code> stale
+artifact</strong></td>
+<td>OPEN, tracked</td>
+<td>Served bytes lag source until ota-manager rebuild + re-embed (AUDIT
+row #3). LOW-MEDIUM: correctness of served UI depends on a fresh
+re-embed at release.</td>
+</tr>
+<tr>
+<td><strong><code>--success</code>-as-text contrast regression
+(dashboard)</strong></td>
+<td>OPEN, tracked</td>
+<td>Correct semantic repoint newly lowered success-text contrast to
+~3.1:1 (fails 4.5 for 13px); inherits the token re-vendor fix
+(EVIDENCE.md §3). LOW, folded into the WCAG re-vendor.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="critical-path-to-a-shippable-ui-release">3.3 Critical path to a
+shippable UI release</h3>
+<ol type="1">
+<li><del><strong>Finish the WCAG token re-vendor</strong></del>
+<strong>DONE</strong> (<code>dbc20d51</code>+<code>cdce12c7</code>) for
+dashboard; both host-render harnesses re-proven green. <strong>Remaining
+contrast work:</strong> ota-manager’s shadcn <code>:root</code> palette
+(the vendored OpenDesign tokens are inert there) still owes its own WCAG
+audit + fix before a fully contrast-clean release.</li>
+<li><strong>Clear/triage the 118 ota-manager type errors</strong> +
+resolve the <strong>operator-gated</strong> router-wiring decision
+(bundled — ~57 errors live on the unrouted pages).</li>
+<li><strong>Re-embed a fresh ota-manager build into
+<code>server/manager-dist/</code></strong> so the served SPA matches
+source (then <code>embed_test.go</code> exercises real fresh
+bytes).</li>
+<li><strong>Expand the ota-manager host-render matrix</strong> beyond
+LoginPage (dashboard already at 5 screens).</li>
+<li><strong>§11.4.185 manual-QA final confirmation</strong> — every
+automated gate above is necessary but not sufficient; the release is not
+“done” until QA manually confirms.</li>
+</ol>
+<h3 id="danger-zone">3.4 Danger zone</h3>
+<ul>
+<li><strong>Two byte-identical token copies</strong>
+(<code>clients/ota-manager/src/styles/opendesign-tokens.css</code>,
+<code>dashboard/src/styles/tokens.css</code>) vendored from one source —
+any token edit is a <strong>coordinated re-vendor</strong> or the copies
+silently diverge. The in-flight WCAG stream is exactly this operation;
+committing one copy without the other is the divergence risk (§11.4.86
+fingerprint discipline applies).</li>
+<li><del><strong>Goldens mid-regeneration in the working
+tree</strong></del> <strong>RESOLVED</strong> — the WCAG stream’s
+goldens landed (<code>dbc20d51</code>) and the dashboard light evidence
+was re-synced (<code>cdce12c7</code>, 45/45 verdict-pass). Working tree
+is clean of host-render PNGs; committed evidence now matches committed
+tokens (§11.4.86 no-drift).</li>
+<li><strong>ota-manager <code>dist/</code> tracked build
+artifact</strong> — §11.4.30 hygiene debt, blocked on a
+<code>commit_all.sh --paths</code> deletion-pathspec bug (CONTINUATION
+§5.E).</li>
+</ul>
+<hr />
+<h2 id="open-follow-ups-mirrors-continuation-5-ag-new-closures">4. Open
+follow-ups (mirrors CONTINUATION §5 A–G + new closures)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Item</th>
+<th>Status</th>
+<th>Owning next-step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>WCAG contrast token re-vendor (dark <code>--danger</code>, light
+<code>--warn</code>, light <code>--muted</code>, <code>--success</code>
+text, <code>--border-strong</code>) + regenerate both frontends’
+goldens</td>
+<td><strong>done</strong></td>
+<td><code>dbc20d51</code> (tokens +
+<code>docs/qa/20260709-wcag-token-revendor/EVIDENCE.md</code> +
+host-render re-proof) + <code>cdce12c7</code> (dashboard light-golden
+re-sync, 45/45).</td>
+</tr>
+<tr>
+<td>A2</td>
+<td><strong>NEW:</strong> ota-manager shadcn <code>:root</code> HSL
+palette WCAG audit — the vendored OpenDesign tokens are inert there
+(shadcn wins the cascade), so ota-manager’s shipped colors are still
+un-audited for contrast</td>
+<td><strong>open</strong></td>
+<td>Compute real WCAG 2.1 ratios for the shadcn
+<code>:root</code>/<code>.dark</code> palette in
+<code>clients/ota-manager</code>; propose + apply AA-passing tones;
+re-prove via the ota-manager host-render harness.</td>
+</tr>
+<tr>
+<td>B</td>
+<td>ota-manager 118 type errors</td>
+<td><strong>deferred</strong> (tracked)</td>
+<td>Dedicated cleanup; bundle ~57 dead-page errors with C.</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Router-wiring of ota-manager feature pages</td>
+<td><strong>operator-gated</strong> (§11.4.101)</td>
+<td>Await operator UX decision; <code>useNavigate</code> reconciliation
+in <code>dashboard-page.tsx</code>. Do NOT auto-wire.</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Guard-hook force-push-regex false positive</td>
+<td><strong>deferred</strong> (§11.4.26 constitution workflow)</td>
+<td>Tighten regex per
+<code>guard_hook_false_positive_20260709/FINDINGS.md</code> + ≥20-case
+hook test; push to constitution upstreams.</td>
+</tr>
+<tr>
+<td>E</td>
+<td>§11.4.30 untrack <code>clients/ota-manager/dist/</code> +
+gitignore</td>
+<td><strong>blocked</strong></td>
+<td>Fix <code>commit_all.sh --paths</code> deletion-pathspec bug
+first.</td>
+</tr>
+<tr>
+<td>F</td>
+<td>Expand §11.4.170 screen×state matrix on ota-manager</td>
+<td><strong>open</strong></td>
+<td>Host-render remaining ota-manager screens (dashboard at 5).</td>
+</tr>
+<tr>
+<td>G</td>
+<td>OpenDesign author-time <code>od</code> daemon (MCP + Next.js
+UI)</td>
+<td><strong>operator-review-gated</strong></td>
+<td>Rootless/containerized setup (§11.4.161/§11.4.173); heavy
+product.</td>
+</tr>
+<tr>
+<td>H</td>
+<td>dashboard OpenDesign vendoring completion (27/27 screen hex
+repointed, dark mode, 4+login screens host-render-proven)</td>
+<td><strong>done</strong></td>
+<td><code>docs/qa/20260709-dashboard-vendoring-complete/EVIDENCE.md</code>
+(Rev 2).</td>
+</tr>
+<tr>
+<td>I</td>
+<td>Server SPA greedy-fallback → asset-aware 404 (§11.4.120) +
+real-router asset-chain tests</td>
+<td><strong>done</strong></td>
+<td><code>server/internal/api/embed_test.go</code> (5 tests).</td>
+</tr>
+<tr>
+<td>J</td>
+<td>ota-manager theme-toggle DOM-class bug</td>
+<td><strong>done</strong></td>
+<td><code>docs/qa/20260709-ota-manager-vendoring/EVIDENCE.md</code>
+§4/§5 (unit test + 98.96% pixel proof).</td>
+</tr>
+<tr>
+<td>K</td>
+<td>Re-embed fresh ota-manager build into
+<code>server/manager-dist/</code></td>
+<td><strong>open</strong></td>
+<td>Rebuild ota-manager; copy
+<code>dist/</code>→<code>internal/api/manager-dist/</code>; re-run
+<code>embed_test.go</code> (currently SKIP-honest if placeholder).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="honest-boundary-11.4.6">5. Honest boundary (§11.4.6)</h2>
+<ul>
+<li>This is a <strong>consolidation of committed evidence</strong>,
+produced read-only. It ran <strong>no</strong> build or test — verdicts
+cite the owning stream’s captured artifacts. Cells that cannot be
+confirmed from a committed artifact (packaged-Tauri run, full-stack
+dashboard-vs-real-Go-backend e2e) are marked <code>UNKNOWN:</code>,
+never assumed PASS.</li>
+<li>The WCAG re-vendor is <strong>done for dashboard</strong>
+(<code>dbc20d51</code>+<code>cdce12c7</code>, computed ratios + 45/45
+host-render). It is honestly <strong>NOT</strong> a contrast fix for
+ota-manager — A’s own evidence (§4) proves the token change is inert
+there (shadcn cascade wins); claiming ota-manager is contrast-clean
+would be a §11.4 status bluff, so A2 tracks that gap.</li>
+<li>Host-render proof is <strong>per-screen</strong>; unproven screens
+are stated as gaps (§2), never implied clean.</li>
+<li>Per §11.4.185, none of the “READY” rows is <em>fully</em> complete
+until manual QA-team confirmation — automated gates are necessary but
+not sufficient.</li>
+</ul>
+<h2 id="sources-verified">Sources verified</h2>
+<p>Files read from the working tree on 2026-07-09 (no network, no
+build):</p>
+<ul>
+<li><code>docs/research/opendesign_ui_surface_audit_20260709/AUDIT.md</code></li>
+<li><code>docs/research/opendesign_token_contrast_audit_20260709/CONTRAST.md</code></li>
+<li><code>docs/qa/20260709-ota-manager-vendoring/EVIDENCE.md</code></li>
+<li><code>docs/qa/20260709-ota-manager-hostrender/results.json</code></li>
+<li><code>docs/qa/20260709-dashboard-vendoring-complete/EVIDENCE.md</code>
++ its <code>*.json</code> / <code>*-actual.png</code> listing</li>
+<li><code>docs/qa/20260709-dashboard-vendoring/EVIDENCE.md</code>
+(presence)</li>
+<li><code>docs/qa/20260709-dashboard-hostrender/</code> (file listing:
+login-{light,dark}-actual.png, distinctness/self-check JSONs)</li>
+<li><code>docs/qa/20260709-wcag-token-revendor/</code> (in-flight:
+<code>contrast_final.py</code> + <code>screenshots/</code>, no
+EVIDENCE.md)</li>
+<li><code>server/internal/api/embed_test.go</code></li>
+<li><code>design-systems/helix-ota/tokens.css</code> (working-tree token
+values, lines 44–208)</li>
+<li><code>docs/CONTINUATION.md</code> §1 (latest sessions) + §5 (next
+actions A–G) + §6 (binding constraints)</li>
+<li><code>git status --porcelain</code> (working-tree state — confirmed
+the three token files + host-render PNGs are <code>M</code> on another
+stream)</li>
+</ul>
+</body>
+</html>
