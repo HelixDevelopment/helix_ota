@@ -8,7 +8,9 @@ import "github.com/gin-gonic/gin"
 //   - Tier A — securityHeadersMiddleware — set on EVERY response (API, SPA,
 //     probes, and error/shed paths). Origin-isolation + anti-clickjacking +
 //     MIME-sniff defence + a deny-all Permissions-Policy. HSTS is emitted ONLY
-//     when TLS is configured (meaningless / harmful over plaintext HTTP).
+//     when TLS is configured OR the operator has declared a trusted
+//     TLS-terminating reverse-proxy topology (cfg.TrustTLSProxy; see
+//     tlsEnabled below) — never over genuinely plaintext HTTP.
 //   - Tier B — apiSecurityHeadersMiddleware — applied to the API base-path group
 //     only: a maximally-strict CSP for JSON (needs no resources at all) plus
 //     `Cache-Control: no-store` (never cache tokens / device lists / audit logs).
@@ -117,10 +119,26 @@ func apiSecurityHeadersMiddleware() gin.HandlerFunc {
 	}
 }
 
-// tlsEnabled reports whether the control plane is configured to serve over TLS
-// (both cert and key supplied). This gates the TLS-only response headers (HSTS
-// and the SPA CSP's upgrade-insecure-requests) so they are never emitted on the
-// plaintext-HTTP development listener.
+// tlsEnabled reports whether the client-facing connection is genuinely HTTPS,
+// gating the TLS-only response headers (HSTS and the SPA CSP's
+// upgrade-insecure-requests) so they are never emitted on a truly-plaintext
+// listener. It is true in either of two cases:
+//
+//   - the control plane terminates TLS itself (both TLSCertFile and TLSKeyFile
+//     supplied — the original, still-default-safe gate); OR
+//   - the operator has explicitly declared, via cfg.TrustTLSProxy, that this
+//     process sits behind a trusted TLS-terminating reverse proxy (nginx /
+//     cloud load balancer) that receives the real HTTPS connection and
+//     forwards plain HTTP here (docs/research/security_headers_adversarial_
+//     review_20260710/ finding I1 — without this gate, that common production
+//     topology never has a local cert/key configured, so HSTS was silently
+//     never sent even though the real client<->proxy hop is HTTPS).
+//
+// cfg.TrustTLSProxy is an operator-set boolean assertion, never derived from
+// any request header (e.g. X-Forwarded-Proto) — trusting a client-supplied
+// header unconditionally would let a client spoof HSTS emission over an
+// actually-plaintext connection. Default (TrustTLSProxy=false) preserves the
+// original cert/key-only gate byte-for-byte.
 func (s *Server) tlsEnabled() bool {
-	return s.cfg.TLSCertFile != "" && s.cfg.TLSKeyFile != ""
+	return (s.cfg.TLSCertFile != "" && s.cfg.TLSKeyFile != "") || s.cfg.TrustTLSProxy
 }

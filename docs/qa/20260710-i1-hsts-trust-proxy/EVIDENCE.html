@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1
+id="i1-security-review-follow-up-config-gated-hsts-for-tls-terminating-proxy-topology">I1
+security-review follow-up — config-gated HSTS for TLS-terminating-proxy
+topology</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T00:00:00Z</p>
+<h2 id="finding-i1">Finding (I1)</h2>
+<p>From
+<code>docs/research/security_headers_adversarial_review_20260710/</code>:
+<code>server/internal/api/security_headers.go</code> gated HSTS (and the
+SPA CSP’s <code>upgrade-insecure-requests</code>) SOLELY on
+<code>cfg.TLSCertFile != "" &amp;&amp; cfg.TLSKeyFile != ""</code>. In
+the common production topology the Go control plane sits BEHIND a
+TLS-terminating reverse proxy (nginx / cloud load balancer) and receives
+PLAIN HTTP — so no local cert/key is ever configured — meaning HSTS was
+silently NEVER sent even though the real client&lt;-&gt;proxy connection
+is genuinely HTTPS.</p>
+<h2 id="fix">Fix</h2>
+<p>Added a config-gated trust flag, <code>Config.TrustTLSProxy</code>
+(env <code>HELIX_TRUST_TLS_PROXY</code>, boolean via
+<code>strconv.ParseBool</code>, default <code>false</code>).
+<code>Server.tlsEnabled()</code> now returns true when EITHER the app
+terminates TLS itself (unchanged cert/key gate) OR the operator has
+explicitly set <code>TrustTLSProxy=true</code>. The flag is a pure
+operator assertion — no request header
+(e.g. <code>X-Forwarded-Proto</code>) is ever consulted, so a client
+cannot spoof HSTS emission over an actually-plaintext hop.</p>
+<h2 id="files-changed">Files changed</h2>
+<ul>
+<li><code>server/internal/config/config.go</code> — added
+<code>TrustTLSProxy bool</code> field +
+<code>HELIX_TRUST_TLS_PROXY</code> env read (via new
+<code>getBool</code> helper, mirroring the existing
+<code>getInt64</code>/<code>getDuration</code> pattern).</li>
+<li><code>server/internal/api/security_headers.go</code> —
+<code>tlsEnabled()</code> gate:
+<code>return (s.cfg.TLSCertFile != "" &amp;&amp; s.cfg.TLSKeyFile != "") || s.cfg.TrustTLSProxy</code>.
+Doc comments updated (file-header Tier-A summary +
+<code>tlsEnabled</code> doc).</li>
+<li><code>server/internal/api/security_headers_test.go</code> — added
+<code>newSecHeadersRouterTrustProxy</code> helper (parameterises
+<code>TrustTLSProxy</code>; <code>newSecHeadersRouter</code> now
+delegates to it with <code>false</code>) + new test
+<code>TestSecurityHeaders_HSTS_TrustTLSProxy</code>.</li>
+<li><code>server/internal/config/config_test.go</code> — added
+<code>TrustTLSProxy</code> default-false assertion to
+<code>TestLoadDefaults</code>, new
+<code>TestLoadTrustTLSProxyOverride</code>, and a
+<code>bad_trust_tls_proxy_bool</code> case to
+<code>TestLoadInvalidValues</code>.</li>
+<li><code>.env.example</code> — documented
+<code>HELIX_TRUST_TLS_PROXY</code> (repo root; there is no
+<code>server/.env.example</code> — env vars are documented at the
+repo-root file only, matching the existing
+<code>HELIX_MAX_INFLIGHT</code> section style. Note:
+<code>HELIX_TLS_CERT</code>/<code>HELIX_TLS_KEY</code> themselves are
+not yet documented there either — out of scope for this fix, which only
+adds the new var).</li>
+</ul>
+<h2 id="default-off-byte-identical-confirmation">Default-OFF
+byte-identical confirmation</h2>
+<p>With <code>HELIX_TRUST_TLS_PROXY</code> unset,
+<code>getBool(..., false)</code> returns <code>false</code> (same as
+<code>getInt64</code>/<code>getDuration</code> fallback semantics on
+empty env), so <code>cfg.TrustTLSProxy == false</code> and
+<code>tlsEnabled()</code> reduces to the exact original expression
+<code>s.cfg.TLSCertFile != "" &amp;&amp; s.cfg.TLSKeyFile != ""</code>.
+Proven by <code>TestLoadDefaults</code> (config package) and case (a) of
+<code>TestSecurityHeaders_HSTS_TrustTLSProxy</code> (api package)
+below.</p>
+<h2 id="red-green">§11.4.115 RED → GREEN</h2>
+<p><strong>RED</strong> (fix reverted — <code>tlsEnabled()</code>
+mutated back to the original cert/key-only expression,
+<code>TrustTLSProxy</code> ignored):</p>
+<pre><code>=== RUN   TestSecurityHeaders_HSTS_TrustTLSProxy
+    security_headers_test.go:289: TrustTLSProxy=true, no local TLS: HSTS = &quot;&quot;, want &quot;max-age=63072000; includeSubDomains&quot;
+--- FAIL: TestSecurityHeaders_HSTS_TrustTLSProxy (0.00s)
+FAIL
+FAIL    github.com/HelixDevelopment/helix_ota/server/internal/api   0.005s</code></pre>
+<p>Case (b) — trust flag ON, no local TLS — fails exactly as expected:
+without the fix, <code>TrustTLSProxy</code> is ignored and HSTS is never
+emitted. Cases (a) and (c) are unaffected by the mutation (both reduce
+to the pre-existing cert/key gate), so only (b) fails, precisely
+isolating the fix’s effect.</p>
+<p>Immediately after capturing the above, the mutation was reverted (the
+real fix restored) — confirmed no <code>MUTATED</code> marker remains in
+the committed file (<code>grep -c MUTATED security_headers.go</code> →
+<code>0</code>), per §11.4.84/§11.4.115.</p>
+<p><strong>GREEN</strong> (fix in place — all three cases + full
+targeted suite):</p>
+<pre><code>=== RUN   TestSecurityHeaders_TierA_OnEveryResponseClass
+--- PASS: TestSecurityHeaders_TierA_OnEveryResponseClass (0.00s)
+=== RUN   TestSecurityHeaders_TierA_OnShed429
+--- PASS: TestSecurityHeaders_TierA_OnShed429 (0.00s)
+=== RUN   TestSecurityHeaders_TierA_OnShed429_RealRouter
+--- PASS: TestSecurityHeaders_TierA_OnShed429_RealRouter (0.00s)
+=== RUN   TestSecurityHeaders_TierA_OnPanic500_RealRouter
+--- PASS: TestSecurityHeaders_TierA_OnPanic500_RealRouter (0.00s)
+=== RUN   TestSecurityHeaders_HSTS_TLSGated
+--- PASS: TestSecurityHeaders_HSTS_TLSGated (0.00s)
+=== RUN   TestSecurityHeaders_HSTS_TrustTLSProxy
+--- PASS: TestSecurityHeaders_HSTS_TrustTLSProxy (0.00s)
+=== RUN   TestSecurityHeaders_TierB_ScopedToAPI
+--- PASS: TestSecurityHeaders_TierB_ScopedToAPI (0.00s)
+=== RUN   TestSecurityHeaders_TierB_NotOnSPAAssets
+--- PASS: TestSecurityHeaders_TierB_NotOnSPAAssets (0.01s)
+=== RUN   TestSecurityHeaders_TierC_SPADocumentCSP
+--- PASS: TestSecurityHeaders_TierC_SPADocumentCSP (0.00s)
+=== RUN   TestSecurityHeaders_TierC_UpgradeInsecureWhenTLS
+--- PASS: TestSecurityHeaders_TierC_UpgradeInsecureWhenTLS (0.00s)
+=== RUN   TestSPACSP_CompatibleWithRealBundle
+--- PASS: TestSPACSP_CompatibleWithRealBundle (0.00s)
+PASS
+ok      github.com/HelixDevelopment/helix_ota/server/internal/api   1.050s</code></pre>
+<p><code>TestSecurityHeaders_HSTS_TrustTLSProxy</code> exercises all
+three cases against the REAL router (<code>srv.Router()</code>, via
+<code>newSecHeadersRouterTrustProxy</code>):</p>
+<ul>
+<li><ol type="a">
+<li>default (<code>TrustTLSProxy</code> unset/false) + no local TLS →
+HSTS absent (current/original behavior preserved byte-for-byte);</li>
+</ol></li>
+<li><ol start="2" type="a">
+<li><code>TrustTLSProxy=true</code> + no local TLS → HSTS present (the
+fix);</li>
+</ol></li>
+<li><ol start="3" type="a">
+<li>local TLS configured (<code>TrustTLSProxy=false</code>) → HSTS
+present (unchanged pre-existing path).</li>
+</ol></li>
+</ul>
+<h2 id="verification-this-cycle-fix-in-place">Verification (this cycle,
+fix in place)</h2>
+<pre><code>$ cd server &amp;&amp; GOMAXPROCS=2 nice -n 19 go build ./...
+(exit 0)
+
+$ go vet ./...
+(exit 0, no output)
+
+$ gofmt -l internal/api/ internal/config/
+(empty — clean)
+
+$ GOMAXPROCS=2 nice -n 19 go test -race ./internal/api/ -run &#39;SecurityHeaders|HSTS|CSP&#39; -count=1 -v
+... (11/11 PASS, see GREEN block above)
+PASS
+ok      github.com/HelixDevelopment/helix_ota/server/internal/api   1.050s
+
+$ GOMAXPROCS=2 nice -n 19 go test -race ./internal/api/ -count=1
+ok      github.com/HelixDevelopment/helix_ota/server/internal/api   13.474s
+
+$ GOMAXPROCS=2 nice -n 19 go test ./internal/config/ -count=1 -v
+=== RUN   TestLoadDefaults
+--- PASS: TestLoadDefaults (0.00s)
+=== RUN   TestLoadOverrides
+--- PASS: TestLoadOverrides (0.00s)
+=== RUN   TestLoadTrustTLSProxyOverride
+--- PASS: TestLoadTrustTLSProxyOverride (0.00s)
+=== RUN   TestLoadInvalidValues
+    --- PASS: TestLoadInvalidValues/bad_duration (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_poll_jitter (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_access_token_ttl (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_device_token_ttl (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_max_inflight (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_int (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_base64_pubkey (0.00s)
+    --- PASS: TestLoadInvalidValues/bad_trust_tls_proxy_bool (0.00s)
+PASS
+ok      github.com/HelixDevelopment/helix_ota/server/internal/config    0.002s</code></pre>
+<h2 id="scope-discipline">Scope discipline</h2>
+<p>No git commands were run by this agent (conductor commits per
+instructions). No files outside the declared scope were touched:
+<code>server/internal/config/ config.go</code> +
+<code>config_test.go</code>,
+<code>server/internal/api/security_headers.go</code> +
+<code>security_headers_test.go</code>, <code>.env.example</code> (repo
+root), and this EVIDENCE.md. No production-only test hook was added —
+the new test attaches to the real router via the existing
+<code>srv.Router()</code> / <code>NewServer(Options{...})</code> public
+seam, following the pre-existing <code>newSecHeadersRouter</code>
+pattern exactly.</p>
+</body>
+</html>

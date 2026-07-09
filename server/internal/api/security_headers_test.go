@@ -52,12 +52,22 @@ func assertTierA(t *testing.T, where string, h http.Header) {
 // the HSTS TLS-gating can be exercised both ways.
 func newSecHeadersRouter(t testing.TB, tlsCert, tlsKey string) *gin.Engine {
 	t.Helper()
+	return newSecHeadersRouterTrustProxy(t, tlsCert, tlsKey, false)
+}
+
+// newSecHeadersRouterTrustProxy builds a real server router with the given TLS
+// config AND TrustTLSProxy setting, so the I1 config-gated trusted-proxy HSTS
+// path (docs/qa/20260710-i1-hsts-trust-proxy/EVIDENCE.md) can be exercised
+// independently of local cert/key configuration.
+func newSecHeadersRouterTrustProxy(t testing.TB, tlsCert, tlsKey string, trustProxy bool) *gin.Engine {
+	t.Helper()
 	var ctr int64
 	srv := NewServer(Options{
 		Config: config.Config{
 			APIBasePath: "/api/v1", AccessTokenTTL: time.Hour, DeviceTokenTTL: 24 * time.Hour,
 			TokenSecret: []byte("sec-headers-secret"),
 			TLSCertFile: tlsCert, TLSKeyFile: tlsKey,
+			TrustTLSProxy: trustProxy,
 		},
 		Repo:   store.NewMemoryRepository(),
 		Users:  NewStaticUserDirectory(),
@@ -249,6 +259,41 @@ func TestSecurityHeaders_HSTS_TLSGated(t *testing.T) {
 	tlsR := newSecHeadersRouter(t, "/tmp/cert.pem", "/tmp/key.pem")
 	if got := getReq(tlsR, "/healthz").Header().Get("Strict-Transport-Security"); got != hstsValue {
 		t.Errorf("TLS configured: HSTS = %q, want %q", got, hstsValue)
+	}
+}
+
+// TestSecurityHeaders_HSTS_TrustTLSProxy closes the I1 security-review finding
+// (docs/research/security_headers_adversarial_review_20260710/): in the common
+// production topology the control plane sits BEHIND a trusted TLS-terminating
+// reverse proxy (nginx / cloud LB) and receives plain HTTP, so no local
+// cert/key is ever configured on the app itself. Without a config-gated
+// trust flag, tlsEnabled() was cert/key-only and HSTS was silently NEVER sent
+// even though the real client<->proxy connection is genuinely HTTPS. Proves
+// all three cases against the REAL router (srv.Router()):
+//
+//	(a) default (TrustTLSProxy unset/false) + no local TLS -> NO HSTS
+//	    (current/original behavior preserved byte-for-byte);
+//	(b) TrustTLSProxy=true + no local TLS -> HSTS IS emitted (the fix);
+//	(c) local TLS configured (TrustTLSProxy irrelevant) -> HSTS emitted
+//	    (unchanged pre-existing path).
+func TestSecurityHeaders_HSTS_TrustTLSProxy(t *testing.T) {
+	// (a) Safe default: flag unset, no local TLS -> HSTS absent.
+	defaultOff := newSecHeadersRouterTrustProxy(t, "", "", false)
+	if got := getReq(defaultOff, "/healthz").Header().Get("Strict-Transport-Security"); got != "" {
+		t.Errorf("default (TrustTLSProxy=false), no local TLS: HSTS = %q, want absent (empty)", got)
+	}
+
+	// (b) The fix: trust flag ON, no local TLS -> HSTS present.
+	trustProxyOn := newSecHeadersRouterTrustProxy(t, "", "", true)
+	if got := getReq(trustProxyOn, "/healthz").Header().Get("Strict-Transport-Security"); got != hstsValue {
+		t.Errorf("TrustTLSProxy=true, no local TLS: HSTS = %q, want %q", got, hstsValue)
+	}
+
+	// (c) Unchanged path: local TLS configured -> HSTS present regardless of the
+	// (here false, i.e. default) trust-flag value.
+	localTLS := newSecHeadersRouterTrustProxy(t, "/tmp/cert.pem", "/tmp/key.pem", false)
+	if got := getReq(localTLS, "/healthz").Header().Get("Strict-Transport-Security"); got != hstsValue {
+		t.Errorf("local TLS configured: HSTS = %q, want %q", got, hstsValue)
 	}
 }
 

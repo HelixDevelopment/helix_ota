@@ -85,6 +85,30 @@ type Config struct {
 	// HTTPSPort is the port for the TLS HTTP/2 (TCP) + HTTP/3 (UDP) listeners.
 	HTTPSPort string
 
+	// TrustTLSProxy declares that this control-plane process is deployed BEHIND
+	// a trusted TLS-terminating reverse proxy (nginx / cloud load balancer) that
+	// receives HTTPS from the real client and forwards PLAIN HTTP to this
+	// process. In that topology TLSCertFile/TLSKeyFile are intentionally unset
+	// (the app never terminates TLS itself), so the TLS-only response headers
+	// (HSTS + the SPA CSP's upgrade-insecure-requests) would otherwise never be
+	// emitted even though the client-facing connection genuinely is HTTPS
+	// (docs/research/security_headers_adversarial_review_20260710/ finding I1).
+	//
+	// Setting this to true is an explicit operator assertion — it does NOT
+	// inspect any request header (X-Forwarded-Proto or otherwise); trusting a
+	// client-supplied header unconditionally would let a client spoof HSTS
+	// emission over an actually-plaintext hop. The operator is the one who
+	// knows the real deployment topology, so the trust is expressed as a
+	// boolean config flag, never inferred from request data.
+	//
+	// Default is false (OFF), which preserves the pre-existing behavior
+	// byte-for-byte: with TrustTLSProxy unset, HSTS/upgrade-insecure-requests
+	// gating depends solely on TLSCertFile/TLSKeyFile exactly as before this
+	// field was added. Supplied via HELIX_TRUST_TLS_PROXY (any of "1", "true",
+	// "TRUE", "t" is truthy per strconv.ParseBool; unset/empty/anything else is
+	// false).
+	TrustTLSProxy bool
+
 	// DatabaseURL, when set (HELIX_DATABASE_URL), switches the control plane onto
 	// the pgx/PostgreSQL Repository + rollout StoragePort (the production target,
 	// architecture.md §4). Unset = the in-memory implementations (dev/MVP default).
@@ -111,6 +135,9 @@ func Load() (Config, error) {
 	}
 
 	var err error
+	if c.TrustTLSProxy, err = getBool("HELIX_TRUST_TLS_PROXY", false); err != nil {
+		return Config{}, err
+	}
 	if c.PollInterval, err = getDuration("HELIX_POLL_INTERVAL", DefaultPollInterval); err != nil {
 		return Config{}, err
 	}
@@ -182,4 +209,19 @@ func getInt64(key string, fallback int64) (int64, error) {
 		return 0, fmt.Errorf("config: %s is not a valid integer: %w", key, err)
 	}
 	return n, nil
+}
+
+// getBool parses a boolean env var (strconv.ParseBool: "1"/"t"/"T"/"TRUE"/
+// "true"/"True" and their "0"/"f"/... false counterparts), returning fallback
+// when unset/empty.
+func getBool(key string, fallback bool) (bool, error) {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback, nil
+	}
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		return false, fmt.Errorf("config: %s is not a valid boolean: %w", key, err)
+	}
+	return b, nil
 }

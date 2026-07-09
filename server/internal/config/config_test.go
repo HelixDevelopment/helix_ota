@@ -12,6 +12,7 @@ func TestLoadDefaults(t *testing.T) {
 		"HELIX_PORT", "HELIX_API_BASE_PATH", "HELIX_POLL_INTERVAL", "HELIX_POLL_JITTER",
 		"HELIX_ACCESS_TOKEN_TTL", "HELIX_DEVICE_TOKEN_TTL", "HELIX_MAX_UPLOAD_BYTES",
 		"HELIX_ARTIFACT_BASE_URL", "HELIX_TOKEN_SECRET", "HELIX_ARTIFACT_PUBKEY",
+		"HELIX_TRUST_TLS_PROXY",
 	} {
 		t.Setenv(k, "")
 	}
@@ -34,6 +35,9 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if len(cfg.TokenSecret) == 0 {
 		t.Fatalf("token secret should have a dev fallback")
+	}
+	if cfg.TrustTLSProxy {
+		t.Fatalf("TrustTLSProxy default must be false (safe default per §11.4.6/§11.4.115 — HELIX_TRUST_TLS_PROXY unset)")
 	}
 }
 
@@ -67,6 +71,21 @@ func TestLoadOverrides(t *testing.T) {
 	}
 }
 
+// TestLoadTrustTLSProxyOverride proves HELIX_TRUST_TLS_PROXY is read and
+// parsed into cfg.TrustTLSProxy (the I1 trusted-TLS-proxy config seam
+// consumed by api.tlsEnabled — see internal/api/security_headers.go and
+// docs/qa/20260710-i1-hsts-trust-proxy/EVIDENCE.md).
+func TestLoadTrustTLSProxyOverride(t *testing.T) {
+	t.Setenv("HELIX_TRUST_TLS_PROXY", "true")
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !cfg.TrustTLSProxy {
+		t.Fatalf("TrustTLSProxy override: want true, got false")
+	}
+}
+
 func TestLoadInvalidValues(t *testing.T) {
 	tests := []struct {
 		name string
@@ -80,6 +99,7 @@ func TestLoadInvalidValues(t *testing.T) {
 		{"bad max inflight", "HELIX_MAX_INFLIGHT", "not-an-int"},
 		{"bad int", "HELIX_MAX_UPLOAD_BYTES", "not-an-int"},
 		{"bad base64 pubkey", "HELIX_ARTIFACT_PUBKEY", "!!!not-base64!!!"},
+		{"bad trust tls proxy bool", "HELIX_TRUST_TLS_PROXY", "not-a-bool"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
