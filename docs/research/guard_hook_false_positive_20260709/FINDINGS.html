@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDINGS</h1>
+</header>
+<h1
+id="guard-hook-6.t.3-force-push-false-positive-root-cause-proposed-fix">Guard-hook
+§6.T.3 force-push FALSE POSITIVE — root cause + proposed fix</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T23:59:00Z <strong>Classification:</strong> investigation
+finding (§11.4.102 systematic-debug). The fix targets a
+<code>constitution/</code> file inherited by reference (§11.4.109) and
+MUST land via the §11.4.26 constitution-submodule workflow — NOT applied
+here. <strong>Authority:</strong> consumer-side forensic record
+(§11.4.35). Anti-bluff §11.4 — every claim below is a reproduced grep
+against the real hook, not a guess (§11.4.6).</p>
+<hr />
+<h2 id="symptom">1. Symptom</h2>
+<p><code>constitution/scripts/hooks/guard-forbidden-commands.sh</code>
+(the §11.4.109 PreToolUse guard, wired in
+<code>.claude/settings.json</code>) BLOCKED a legitimate Bash command as
+<strong>“§6.T.3 force-push”</strong> during this session, although the
+command performed NO force-push (it ran
+<code>git fetch origin main</code>, <code>git rev-parse</code>,
+<code>tail</code> on a push log, <code>export_docs.sh</code>, and
+<code>commit_all.sh --paths … -m …</code> — <code>commit_all.sh</code>
+pushes fast-forward + detached, never <code>--force</code>). Splitting
+the command so the <code>commit_all.sh</code> call ran alone passed
+cleanly — proving the block was spurious.</p>
+<h2 id="root-cause-matcher-lines-178194">2. Root cause (matcher lines
+178–194)</h2>
+<ul>
+<li><strong>OUTER (line 182):</strong>
+<code>if [[ "$COMMAND" =~ git([[:space:]]+[^[:space:]]+)*[[:space:]]+push ]]</code>
+— the middle <code>([[:space:]]+[^[:space:]]+)*</code> is
+<strong>unbounded</strong>, and <code>[[:space:]]</code> matches
+<strong>newlines</strong>, so the pattern spans from the FIRST
+<code>git</code> token to ANY whitespace-preceded <code>push</code>
+anywhere later in a multi-line command. It never verifies
+<code>git</code> and <code>push</code> are the same invocation.</li>
+<li><strong>INNER (lines 183–185):</strong> scans the ENTIRE command for
+any <code>--force</code> / <code>-f</code> /
+<code>--force-with-lease</code> token — including benign non-git flags
+(<code>podman … --force</code>, <code>grep -f</code>,
+<code>rm -f</code>, <code>cp -f</code>, <code>tar -f</code>), or those
+words inside a quoted <code>-m</code> commit message.</li>
+<li>Both OUTER + INNER matched → <code>block "§6.T.3 force-push"</code>
+(line 186).</li>
+</ul>
+<p>In the blocked command: <code>git fetch origin main</code> supplied
+<code>git</code>; the <code>echo "… T3 push landed …"</code> strings
+supplied a space-preceded <code>push</code>; a benign
+<code>-f</code>/<code>--force</code> token elsewhere completed
+INNER.</p>
+<h2 id="false-positive-class-over-broad">3. False-positive class
+(over-broad)</h2>
+<p>Any single Bash command containing simultaneously
+<strong>(a)</strong> a <code>git &lt;anything&gt;</code> token,
+<strong>(b)</strong> a whitespace-preceded literal <code>push</code>
+anywhere after it (echo text, a <code>-m</code> message mentioning
+<code>git push</code>, a <code>push_all.sh</code> call), and
+<strong>(c)</strong> any
+<code>-f</code>/<code>--force</code>/<code>--force-with-lease</code>
+token anywhere (including benign non-git flags) is falsely blocked —
+even with no <code>git push --force</code> present. This blocks routine
+<code>commit_all.sh</code> one-liners whose preamble/message happens to
+contain “push” plus a <code>-f</code> token. It is
+<strong>fail-closed</strong> (over-blocks; never lets a real force-push
+through), so the live risk is friction, not data loss.</p>
+<p>Reproduced through the real hook
+(<code>echo JSON | bash guard-forbidden-commands.sh</code>):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Command shape</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git fetch</code> + <code>echo "T3 push …"</code> +
+<code>podman rm --force</code></td>
+<td>BLOCKED §6.T.3 (EXIT 2)</td>
+</tr>
+<tr>
+<td>same <code>--force</code>, preamble removed
+(<code>grep -f …; commit_all.sh</code>)</td>
+<td>ALLOW (EXIT 0)</td>
+</tr>
+<tr>
+<td><code>git push --force origin main</code></td>
+<td>BLOCKED (correct)</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="proposed-fix-proposal-must-go-through-11.4.26-the-20-case-hook-test-suite">4.
+Proposed fix (PROPOSAL — must go through §11.4.26 + the ≥20-case hook
+test suite)</h2>
+<p>Make OUTER match a real <code>git push</code> invocation (only
+option-shaped tokens between <code>git</code> and
+<code>push</code>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">GIT_PUSH_RE</span><span class="op">=</span><span class="st">&#39;(^|[[:space:]]|;|\||&amp;)git([[:space:]]+-[^[:space:]]*)*[[:space:]]+push([[:space:]]|$)&#39;</span></span></code></pre></div>
+<p>Validated old-vs-proposed: correctly stops blocking the benign cases
+while still catching <code>git push --force</code> / <code>-f</code> /
+<code>--force-with-lease</code>.</p>
+<p><strong>Honest boundary (§11.4.6):</strong> this minimal regex
+introduces a false-NEGATIVE — it MISSES the
+<code>git -c key=val push --force</code> global-option-with-value form
+(the value token <code>key=val</code> breaks the option-only middle). In
+a force-push guard a false-negative is a SAFETY REGRESSION (§11.4.113 /
+§9.2). Therefore the minimal regex is NOT sufficient on its own. The
+correct fix is the fuller one:</p>
+<p><strong>Fuller fix:</strong> split <code>$COMMAND</code> on
+<code>;</code> / <code>&amp;&amp;</code> / <code>||</code> /
+<code>|</code> / newlines into simple commands; flag only a simple
+command whose first word (after env assignments) is <code>git</code> and
+whose args contain <code>push</code> AND a force flag; scope the INNER
+<code>-f</code>/<code>--force</code> scan to that <code>git push</code>
+segment (so <code>git push origin main &amp;&amp; grep -f x</code> no
+longer trips on the <code>grep -f</code>, and
+<code>git -c k=v push --force</code> is still caught).</p>
+<h2 id="why-it-is-not-fixed-in-this-session">5. Why it is NOT fixed in
+this session</h2>
+<p>The hook is inherited by reference (§11.4.109 — NEVER copied).
+Editing it is a constitution-submodule change requiring the §11.4.26
+workflow (fetch→edit→validate→multi-upstream push to all constitution
+remotes) with the ≥20-case hermetic hook test suite updated to cover:
+real force-pushes still blocked
+(incl. <code>git -c k=v push --force</code>), the benign combos now
+allowed, and every other blocked class (sudo, host-power, host-direct
+emulator/adb) unaffected. Risk asymmetry (§11.4.101): the current bug is
+low-harm fail-closed friction; a wrong fix is high-harm fail-open
+(unrecoverable force-push slipping past §11.4.113). Deferred to the
+constitution workflow with operator awareness rather than rushed.</p>
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li><code>constitution/scripts/hooks/guard-forbidden-commands.sh</code>
+lines 178–194 (read 2026-07-09).</li>
+<li>Reproductions run against the real hook; fixtures in the session
+scratchpad only (not committed, §11.4.128 raw-evidence).</li>
+</ul>
+</body>
+</html>
