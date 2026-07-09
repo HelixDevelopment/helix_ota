@@ -1,0 +1,78 @@
+=== MODULE: submodules/containers ===
+--- go build ./... ---
+BUILD_EXIT=0
+--- go vet ./... ---
+VET_EXIT=0
+--- gofmt -l . ---
+GOFMT_EXIT=CLEAN
+--- go test ./... -count=1 ---
+ok  	digital.vasic.containers/challenges	0.028s
+?   	digital.vasic.containers/cmd/applesim	[no test files]
+?   	digital.vasic.containers/cmd/boot	[no test files]
+?   	digital.vasic.containers/cmd/ctop	[no test files]
+?   	digital.vasic.containers/cmd/deploy-stack	[no test files]
+?   	digital.vasic.containers/cmd/distributed-build	[no test files]
+?   	digital.vasic.containers/cmd/distributed-test	[no test files]
+?   	digital.vasic.containers/cmd/emulator-canary	[no test files]
+?   	digital.vasic.containers/cmd/emulator-cleanup	[no test files]
+?   	digital.vasic.containers/cmd/emulator-matrix	[no test files]
+?   	digital.vasic.containers/cmd/genymotion	[no test files]
+?   	digital.vasic.containers/cmd/ota-device-emu-boot	[no test files]
+?   	digital.vasic.containers/cmd/vm-matrix	[no test files]
+ok  	digital.vasic.containers/internal/buildpkg	0.005s
+ok  	digital.vasic.containers/internal/exec	0.271s
+ok  	digital.vasic.containers/internal/platform	0.004s
+ok  	digital.vasic.containers/pkg/applesim	0.002s
+ok  	digital.vasic.containers/pkg/boot	0.006s
+ok  	digital.vasic.containers/pkg/brokertest	17.889s
+ok  	digital.vasic.containers/pkg/cache	0.006s
+ok  	digital.vasic.containers/pkg/compose	12.205s
+ok  	digital.vasic.containers/pkg/crossbuild	0.007s
+ok  	digital.vasic.containers/pkg/ctop	0.006s
+ok  	digital.vasic.containers/pkg/cuttlefish	17.658s
+ok  	digital.vasic.containers/pkg/discovery	0.113s
+ok  	digital.vasic.containers/pkg/distribution	30.020s
+ok  	digital.vasic.containers/pkg/egress	0.005s
+ok  	digital.vasic.containers/pkg/emulator	26.916s
+ok  	digital.vasic.containers/pkg/endpoint	0.004s
+ok  	digital.vasic.containers/pkg/envconfig	0.004s
+ok  	digital.vasic.containers/pkg/event	0.347s
+ok  	digital.vasic.containers/pkg/genymotion	2.004s
+ok  	digital.vasic.containers/pkg/health	1.212s
+ok  	digital.vasic.containers/pkg/i18n	0.002s
+ok  	digital.vasic.containers/pkg/lazyservice	5.006s
+--- FAIL: TestIdleShutdown_TouchResets (0.37s)
+    idle_test.go:37: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_ota/submodules/containers/pkg/lifecycle/idle_test.go:37
+        	Error:      	Not equal: 
+        	            	expected: 0
+        	            	actual  : 1
+        	Test:       	TestIdleShutdown_TouchResets
+FAIL
+FAIL	digital.vasic.containers/pkg/lifecycle	2.184s
+ok  	digital.vasic.containers/pkg/logging	0.004s
+ok  	digital.vasic.containers/pkg/metrics	0.005s
+ok  	digital.vasic.containers/pkg/monitor	0.864s
+ok  	digital.vasic.containers/pkg/network	0.007s
+ok  	digital.vasic.containers/pkg/orchestrator	0.006s
+ok  	digital.vasic.containers/pkg/policy	0.002s
+ok  	digital.vasic.containers/pkg/remote	19.033s
+ok  	digital.vasic.containers/pkg/remote/connection	0.003s
+ok  	digital.vasic.containers/pkg/remoteexec	6.643s
+ok  	digital.vasic.containers/pkg/runtime	0.021s
+ok  	digital.vasic.containers/pkg/scheduler	0.005s
+ok  	digital.vasic.containers/pkg/serviceregistry	0.186s
+ok  	digital.vasic.containers/pkg/vm	2.965s
+ok  	digital.vasic.containers/pkg/vm/ios	0.004s
+ok  	digital.vasic.containers/pkg/vm/macos	0.004s
+ok  	digital.vasic.containers/pkg/volume	0.004s
+ok  	digital.vasic.containers/scripts/anti-bluff/tests/fixtures	0.004s
+ok  	digital.vasic.containers/tests/benchmark	0.004s [no tests to run]
+ok  	digital.vasic.containers/tests/integration	0.004s
+FAIL
+TEST_EXIT=1
+
+--- REPRODUCIBILITY CHECK (re-run, read-only, no source changes) ---
+TestIdleShutdown_TouchResets isolated -run, -count=3: PASS PASS PASS (0.30s each)
+pkg/lifecycle full package, -count=1, x3 additional runs: PASS PASS PASS (~2.12s each)
+FINDING: TestIdleShutdown_TouchResets FAILed exactly once, during the full `go test ./... -count=1` sweep run alongside all other containers packages (host under concurrent test load). 6/6 subsequent isolated/package-level re-runs PASSed. This is captured empirical evidence of a load/timing-sensitive test; root cause is UNCONFIRMED (no source was modified to investigate further — out of scope per read-only mandate). Reported honestly per §11.4.1/§11.4.6 rather than smoothed over.

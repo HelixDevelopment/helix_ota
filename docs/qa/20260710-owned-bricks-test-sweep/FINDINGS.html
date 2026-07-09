@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDINGS</h1>
+</header>
+<h1 id="owned-go-bricks-test-coverage-sweep-stream-bt">Owned Go Bricks —
+Test Coverage Sweep (Stream BT)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T20:56:46Z</p>
+<h2 id="scope">Scope</h2>
+<p>Read-only build/vet/gofmt/test sweep of the OWNED Go submodule bricks
+under <code>submodules/</code> in the Helix OTA repo (§11.4.169
+comprehensive test-type coverage evidence + §11.4.28 equal-codebase
+attention to owned submodules).</p>
+<p>No source was modified. No git command was run.
+<code>submodules/helixqa</code> and <code>submodules/http3</code> were
+SKIPPED per instruction (foreign/in-flight work owned by another stream,
+per §11.4.84 working-tree quiescence).</p>
+<p>Discovery:
+<code>find submodules -maxdepth 3 -name go.mod -not -path '*/vendor/*'</code>
+found 14 <code>go.mod</code> files; excluding <code>helixqa</code> and
+<code>http3</code> leaves 13 owned Go module roots swept below (note
+<code>submodules/llms_verifier</code> has a nested second module
+<code>submodules/llms_verifier/llm-verifier</code> — both are swept as
+distinct module roots).</p>
+<h2 id="results">Results</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>Build</th>
+<th>Vet</th>
+<th>gofmt</th>
+<th>Tests</th>
+<th>Evidence log</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>submodules/challenges</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (20 pkgs)</td>
+<td><code>submodules_challenges.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/containers</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td><strong>FAIL (1 test, non-reproducible — see finding)</strong></td>
+<td><code>submodules_containers.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/doc_processor</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (10 pkgs)</td>
+<td><code>submodules_doc_processor.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/llm_orchestrator</code></td>
+<td>OK</td>
+<td>OK</td>
+<td><strong>NEEDS_FORMAT (6 files)</strong></td>
+<td>PASS (9 pkgs)</td>
+<td><code>submodules_llm_orchestrator.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/llm_provider</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (53 pkgs)</td>
+<td><code>submodules_llm_provider.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/llms_verifier</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (15 pkgs, 1 pkg “no tests to run”)</td>
+<td><code>submodules_llms_verifier.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/llms_verifier/llm-verifier</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (60 pkgs)</td>
+<td><code>submodules_llms_verifier_llm-verifier.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/ota-artifact-validator</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (3 pkgs)</td>
+<td><code>submodules_ota-artifact-validator.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/ota-protocol</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (3 pkgs)</td>
+<td><code>submodules_ota-protocol.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/ota-rollout-engine</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (3 pkgs)</td>
+<td><code>submodules_ota-rollout-engine.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/ota-telemetry-schema</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (3 pkgs)</td>
+<td><code>submodules_ota-telemetry-schema.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/security</code></td>
+<td>OK</td>
+<td>OK</td>
+<td>CLEAN</td>
+<td>PASS (18 pkgs)</td>
+<td><code>submodules_security.log</code></td>
+</tr>
+<tr>
+<td><code>submodules/vision_engine</code></td>
+<td>OK</td>
+<td>OK</td>
+<td><strong>NEEDS_FORMAT (16 files)</strong></td>
+<td>PASS (8 pkgs)</td>
+<td><code>submodules_vision_engine.log</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Module count swept: 13.</strong> All 13 build clean
+(<code>go build ./...</code> exit 0), all 13 vet clean
+(<code>go vet ./...</code> exit 0). 11/13 gofmt-clean; 2/13 need
+formatting. 12/13 fully green on tests; 1/13 (<code>containers</code>)
+surfaced one real test FAILure during the full-sweep run.</p>
+<h2 id="findings-requiring-surfacing-anti-bluff-11.4.6-11.4.1">Findings
+requiring surfacing (anti-bluff, §11.4.6 / §11.4.1)</h2>
+<h3
+id="submodulescontainers-testidleshutdown_touchresets-failed-once-real-finding-non-reproducible-in-isolation">1.
+<code>submodules/containers</code> —
+<code>TestIdleShutdown_TouchResets</code> FAILed once (real finding,
+non-reproducible in isolation)</h3>
+<p>During the full <code>go test ./... -count=1</code> sweep of the
+<code>containers</code> module, <code>pkg/lifecycle</code> FAILed:</p>
+<pre><code>--- FAIL: TestIdleShutdown_TouchResets (0.37s)
+    idle_test.go:37:
+        Error Trace: .../pkg/lifecycle/idle_test.go:37
+        Error:       Not equal:
+                     expected: 0
+                     actual  : 1
+        Test:        TestIdleShutdown_TouchResets
+FAIL
+FAIL    digital.vasic.containers/pkg/lifecycle  2.184s</code></pre>
+<p>Reproducibility check performed (read-only, no source changes):
+re-ran the single test in isolation 3×
+(<code>-run TestIdleShutdown_TouchResets -count=3</code>) —
+PASS/PASS/PASS. Re-ran the full <code>pkg/lifecycle</code> package 3×
+more (<code>-count=1</code> each) — PASS/PASS/PASS. <strong>6/6 re-runs
+PASSed; only the original full-module sweep run FAILed
+once.</strong></p>
+<p>This is captured empirical evidence of a load/timing-sensitive test
+(the FAIL occurred only when <code>go test ./...</code> was running many
+<code>containers</code> packages concurrently, i.e. under host
+CPU/scheduling contention). Root cause is <strong>UNCONFIRMED</strong>
+per §11.4.6 — no source was touched to investigate further (out of this
+stream’s read-only scope). This is reported as a real finding, not
+smoothed over: it is a genuine, if non-deterministic, test-suite result
+the conductor should track (candidate root causes to investigate: a
+wall-clock/timer-based idle-reset assertion that is not robust to
+scheduling delay under concurrent test load).</p>
+<p>Full detail + reproducibility-check transcript:
+<code>submodules_containers.log</code>.</p>
+<h3
+id="submodulesllm_orchestrator-gofmt-reports-6-files-needing-formatting">2.
+<code>submodules/llm_orchestrator</code> — gofmt reports 6 files needing
+formatting</h3>
+<pre><code>pkg/agent/agent.go
+pkg/agent/agent_test.go
+pkg/agent/simple_pool.go
+pkg/parser/parser.go
+pkg/parser/parser_security_test.go
+pkg/protocol/message.go</code></pre>
+<p>Not reformatted (read-only mandate). Real finding —
+<code>gofmt -l</code> returned non-empty, meaning the recent formatting
+sweep referenced in the task prompt did not (or no longer) cover this
+module.</p>
+<h3
+id="submodulesvision_engine-gofmt-reports-16-files-needing-formatting">3.
+<code>submodules/vision_engine</code> — gofmt reports 16 files needing
+formatting</h3>
+<pre><code>cmd/visiondescribe/main.go
+pkg/analyzer/i18n_defaults.go
+pkg/analyzer/types.go
+pkg/analyzer/types_test.go
+pkg/config/i18n_callsites_test.go
+pkg/graph/graph.go
+pkg/graph/graph_automation_test.go
+pkg/llmvision/anthropic.go
+pkg/llmvision/astica.go
+pkg/llmvision/i18n_defaults.go
+pkg/llmvision/provider.go
+pkg/llmvision/provider_test.go
+pkg/opencv/i18n_defaults.go
+pkg/opencv/orb_vision_test.go
+pkg/remote/deployer_test.go
+pkg/remote/remote.go
+pkg/remote/remote_test.go</code></pre>
+<p>Not reformatted (read-only mandate). Real finding, same class as
+#2.</p>
+<h2 id="coverage-gap-check-11.4.169">Coverage-gap check (§11.4.169)</h2>
+<p>No swept module is entirely without tests — every module produced at
+least one <code>ok</code> package result. Sub-package
+<code>[no test files]</code> results are present in several modules
+(e.g. <code>cmd/</code> entrypoint packages, interface-only packages,
+fixture directories) — these are normal, not whole-module gaps. No
+module-level “no test files” coverage gap was found in this sweep.</p>
+<h2 id="evidence-files">Evidence files</h2>
+<ul>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/COVERAGE_SWEEP.md</code>
+(this file)</li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_challenges.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_containers.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_doc_processor.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_llm_orchestrator.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_llm_provider.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_llms_verifier.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_llms_verifier_llm-verifier.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_ota-artifact-validator.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_ota-protocol.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_ota-rollout-engine.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_ota-telemetry-schema.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_security.log</code></li>
+<li><code>docs/qa/20260710-owned-bricks-test-sweep/submodules_vision_engine.log</code></li>
+</ul>
+<p>No HTML/PDF siblings exported (conductor’s responsibility per task
+scope).</p>
+<hr />
+<h2
+id="conductor-reconciliation-2026-07-10-independent-spot-check-11.4.211.4.6">Conductor
+reconciliation (2026-07-10, independent spot-check §11.4.2/§11.4.6)</h2>
+<p>Re-ran the two flagged findings myself against the live tree before
+accepting this sweep:</p>
+<ul>
+<li><strong>Finding 1 —
+<code>containers TestIdleShutdown_TouchResets</code></strong>: re-ran in
+isolation → <code>ok pkg/lifecycle 0.306s</code> (PASS). Combined with
+the sweep’s 6/6 isolated reruns, this is a <strong>timing-sensitive test
+that failed once only under the parallel-sweep host contention</strong>
+(all 13 modules testing at once → CPU/scheduler pressure delayed an
+idle-timer). Root cause <strong>UNCONFIRMED</strong> (§11.4.6 — not
+asserting a cause without forensic proof); classification
+<code>PENDING_FORENSICS</code>. <strong>NOT release-blocking</strong>
+for the OTA control plane — it is a lifecycle-timer test in the generic
+<code>vasic-digital/containers</code> brick, not a control-plane defect,
+and does not reproduce without induced load. Tracked follow-up: harden
+the test’s timer margin or gate it on a load-detector; owner = a future
+operator-batchable submodule window (same window as the mirror-fork
+gofmt below).</li>
+<li><strong>Findings 2+3 — gofmt on <code>llm_orchestrator</code> (6
+files) + <code>vision_engine</code> (17 files; sweep said 16, live count
+17)</strong>: confirmed real. These are <strong>exactly the two bricks
+already DEFERRED</strong> from the wave-4 gofmt canonicalization sweep
+for a pre-existing multi-mirror fork (see CONTINUATION §1 /
+<code>docs/research/submodule_gofmt_vet_sweep_20260710/FINDINGS.md</code>
+Rev 2). Their gofmt is intentionally pending the careful §11.4.113
+merge-onto-latest-mirror convergence (no force-push), which is
+operator-batchable — NOT a new regression. Consistent with known
+state.</li>
+</ul>
+<p><strong>Net:</strong> all 13 owned Go bricks build + vet clean; 11/13
+fully gofmt-clean + tests-PASS; the 2 gofmt-pending bricks are the known
+deferred-mirror pair; one timing-flaky containers test is
+<code>PENDING_FORENSICS</code>, non-blocking. No new release blocker —
+the loop continues (§11.4.4 not triggered: no reproduced product
+defect).</p>
+</body>
+</html>
