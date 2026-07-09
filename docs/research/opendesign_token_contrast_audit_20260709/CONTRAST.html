@@ -181,8 +181,8 @@
 </header>
 <h1 id="helix-ota-opendesign-token-wcag-contrast-audit">Helix OTA —
 OpenDesign Token WCAG Contrast Audit</h1>
-<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
-2026-07-09T17:39:09Z <strong>Scope:</strong>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-09T18:30:01Z <strong>Scope:</strong>
 <code>design-systems/helix-ota/tokens.css</code> (light
 <code>:root</code> + dark overrides) <strong>Authority:</strong> T1
 review finding <strong>M1</strong> (dark
@@ -621,15 +621,44 @@ alpha-composited, needs per-context render sampling.</strong></li>
 </tbody>
 </table>
 <hr />
-<h2 id="proposed-fixes-not-applied">5. PROPOSED fixes — NOT APPLIED</h2>
+<h2 id="proposed-fixes-applied-2026-07-09-revision-2">5. PROPOSED fixes
+— <strong>APPLIED 2026-07-09</strong> (Revision 2)</h2>
 <blockquote>
-<p><strong>PROPOSED (not applied — coordinated re-vendor required since
-two frontends vendor <code>tokens.css</code> byte-identical).</strong>
-Do NOT edit <code>tokens.css</code> from this audit. Every candidate
-ratio below is measured (<code>scratchpad/propose.py</code> output
-pasted after the table). Candidates are chosen from the same Tailwind
-palette family the tokens are already sourced from, to stay
-on-brand.</p>
+<p><strong>APPLIED</strong> in the coordinated re-vendor pass —
+evidence: <code>docs/qa/20260709-wcag-token-revendor/EVIDENCE.md</code>
+(byte-identity <code>cmp</code> of all three copies, per-token computed
+ratios, both frontends’ host-render clean pass + builds + unit tests).
+The three <code>tokens.css</code> copies now carry the applied values
+byte-identically (sha256 <code>14a006da…4fdcb86</code>).</p>
+<p><strong>Applied values (final), and where they differ from the
+proposal below:</strong> the frontends render
+<code>--danger</code>/<code>--warn</code>/<code>--success</code> as
+small bold <strong>TEXT</strong> (status badges + error/status
+messages), so the <strong>4.5:1 text bar</strong> governs, not the 3:1
+“status/icon” bar assumed here. Two proposed values were escalated one
+Tailwind step because the proposal fails 4.5 on the real rendered
+background (measured): - dark <code>--danger</code>:
+<strong><code>#ef4444</code></strong> (red-500), NOT
+<code>#dc2626</code> — <code>#dc2626</code> as text = 4.14 bg / 3.82
+badge-tint (&lt;4.5); <code>#ef4444</code> = 5.32 / 4.72 ✓. - light
+<code>--warn</code>: <strong><code>#854d0e</code></strong> (amber-800),
+NOT <code>#a16207</code> — <code>#a16207</code> = 4.49 warm / 4.03
+badge-tint (&lt;4.5); <code>#854d0e</code> = 6.85 / 5.46 ✓. Matches the
+dashboard’s original pre-vendoring text hex. - light
+<code>--success</code>: <strong><code>#166534</code></strong>
+(green-800) — text-usable (5.66 badge-tint). Matches the dashboard’s
+original pre-vendoring text hex. - light <code>--muted</code>:
+<strong><code>#475569</code></strong> (as proposed), 6.92 warm ✓. - new
+<code>--border-strong</code>: <strong><code>#64748b</code></strong> (as
+proposed), ≥3:1 all surfaces both themes ✓. - dark
+<code>--warn</code>/<code>--success</code> pinned explicitly
+(<code>#eab308</code> / <code>#16a34a</code>) so the light text-tone
+change does not leak into dark (they were inherited from
+<code>:root</code>).</p>
+<p>Original proposal (unchanged, for the record): Every candidate ratio
+below is measured (<code>scratchpad/propose.py</code> output pasted
+after the table). Candidates are chosen from the same Tailwind palette
+family the tokens are already sourced from, to stay on-brand.</p>
 </blockquote>
 <table style="width:100%;">
 <colgroup>

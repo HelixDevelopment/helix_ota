@@ -1,7 +1,7 @@
 # Helix OTA — OpenDesign Token WCAG Contrast Audit
 
-**Revision:** 1
-**Last modified:** 2026-07-09T17:39:09Z
+**Revision:** 2
+**Last modified:** 2026-07-09T18:30:01Z
 **Scope:** `design-systems/helix-ota/tokens.css` (light `:root` + dark overrides)
 **Authority:** T1 review finding **M1** (dark `--danger`/`--warn` MAY fail WCAG) —
 verified here with MEASURED contrast ratios, not opinion.
@@ -159,10 +159,32 @@ Footnotes:
 
 ---
 
-## 5. PROPOSED fixes — NOT APPLIED
+## 5. PROPOSED fixes — **APPLIED 2026-07-09** (Revision 2)
 
-> **PROPOSED (not applied — coordinated re-vendor required since two frontends
-> vendor `tokens.css` byte-identical).** Do NOT edit `tokens.css` from this audit.
+> **APPLIED** in the coordinated re-vendor pass — evidence:
+> `docs/qa/20260709-wcag-token-revendor/EVIDENCE.md` (byte-identity `cmp` of all
+> three copies, per-token computed ratios, both frontends' host-render clean pass +
+> builds + unit tests). The three `tokens.css` copies now carry the applied values
+> byte-identically (sha256 `14a006da…4fdcb86`).
+>
+> **Applied values (final), and where they differ from the proposal below:** the
+> frontends render `--danger`/`--warn`/`--success` as small bold **TEXT** (status
+> badges + error/status messages), so the **4.5:1 text bar** governs, not the 3:1
+> "status/icon" bar assumed here. Two proposed values were escalated one Tailwind
+> step because the proposal fails 4.5 on the real rendered background (measured):
+> - dark `--danger`: **`#ef4444`** (red-500), NOT `#dc2626` — `#dc2626` as text = 4.14
+>   bg / 3.82 badge-tint (<4.5); `#ef4444` = 5.32 / 4.72 ✓.
+> - light `--warn`: **`#854d0e`** (amber-800), NOT `#a16207` — `#a16207` = 4.49 warm /
+>   4.03 badge-tint (<4.5); `#854d0e` = 6.85 / 5.46 ✓. Matches the dashboard's original
+>   pre-vendoring text hex.
+> - light `--success`: **`#166534`** (green-800) — text-usable (5.66 badge-tint). Matches
+>   the dashboard's original pre-vendoring text hex.
+> - light `--muted`: **`#475569`** (as proposed), 6.92 warm ✓.
+> - new `--border-strong`: **`#64748b`** (as proposed), ≥3:1 all surfaces both themes ✓.
+> - dark `--warn`/`--success` pinned explicitly (`#eab308` / `#16a34a`) so the light
+>   text-tone change does not leak into dark (they were inherited from `:root`).
+>
+> Original proposal (unchanged, for the record):
 > Every candidate ratio below is measured (`scratchpad/propose.py` output pasted
 > after the table). Candidates are chosen from the same Tailwind palette family the
 > tokens are already sourced from, to stay on-brand.
