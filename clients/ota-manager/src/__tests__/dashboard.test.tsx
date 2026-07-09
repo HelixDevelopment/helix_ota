@@ -7,7 +7,15 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => vi.fn(),
 }))
 
-vi.mock('@/hooks/use-devices', () => ({
+// §11.4.115: mock at the module dashboard-page.tsx ACTUALLY imports
+// (`@/hooks/useTelemetryOverview`, the mapping adapter) rather than the raw
+// `@/hooks/use-devices` react-query hook it wraps. Mocking `use-devices`
+// directly with an already-camelCase shape used to pass ONLY because the old
+// `useTelemetryOverview.ts` was a bare, un-mapping re-export of it — the
+// mapping logic itself is now covered separately (and RED->GREEN, per BUG-1)
+// by `src/__tests__/use-telemetry-overview.test.tsx`. This test stays a pure
+// "dashboard renders given an already-mapped view model" component test.
+vi.mock('@/hooks/useTelemetryOverview', () => ({
   useTelemetryOverview: () => ({
     data: { totalDevices: 42, activeDeployments: 3, pendingUpdates: 7, failedDevices: 1 },
     isLoading: false,

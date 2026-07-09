@@ -183,11 +183,21 @@ export interface TelemetryHistory {
   cursor?: string;
 }
 
+// TelemetryOverview mirrors the REAL GET /telemetry/overview wire shape —
+// server/internal/api/handlers_telemetry.go:56-64 (TelemetryOverview struct):
+// fleet-wide event counts by type, the running total, the terminal
+// failure rate, and the fleet device count keyed by last-known update state.
+// (§11.4.6 / BUG-1 fix: this previously declared a fabricated camelCase shape
+// — {totalDevices, activeDeployments, pendingUpdates, failedDevices} — that
+// the real server never sends; every dashboard stat card silently read
+// `undefined` at runtime. The dashboard-facing camelCase view model now lives
+// in `useTelemetryOverview.ts` as `TelemetryOverviewView`, mapped from this
+// real shape.)
 export interface TelemetryOverview {
-  totalDevices: number;
-  activeDeployments: number;
-  pendingUpdates: number;
-  failedDevices: number;
+  event_counts: Record<string, number>;
+  total: number;
+  failure_rate: number;
+  by_state: Record<string, number>;
 }
 
 // Releases
