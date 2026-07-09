@@ -344,6 +344,15 @@ stage_changes() {
     [[ "$DRY_RUN" == "true" ]] && { git -C "$PROJECT_ROOT" status --short; return 0; }
 
     if [[ -n "${COMMIT_EXPLICIT_PATHS:-}" ]]; then
+        # §11.4.84 index isolation (item E fix, incident 2026-07-10):
+        # do_commit ends in a BARE `git commit`, which snapshots the WHOLE index.
+        # Without clearing it first, anything another actor pre-staged in this
+        # shared checkout (e.g. a subagent's `git rm` deletions) would leak into
+        # this --paths commit. Reset the parent index to HEAD (working tree
+        # untouched — non-listed changes stay uncommitted), then stage ONLY the
+        # explicitly-listed paths, so the bare commit can contain exactly those.
+        # See docs/scripts/commit_all.sh.md + docs/research/incident_1184_paths_leak_20260710/.
+        git -C "$PROJECT_ROOT" reset -q
         git -C "$PROJECT_ROOT" add -- $COMMIT_EXPLICIT_PATHS
     else
         git -C "$PROJECT_ROOT" add -A
