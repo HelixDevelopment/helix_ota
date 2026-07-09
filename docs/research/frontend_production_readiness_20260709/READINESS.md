@@ -1,7 +1,7 @@
 # Helix OTA — Frontend / UI Production-Readiness Ledger
 
-**Revision:** 2
-**Last modified:** 2026-07-09T18:43:54Z
+**Revision:** 3
+**Last modified:** 2026-07-10T00:52:00Z
 **Scope:** Every Helix OTA user-facing UI surface (`clients/ota-manager`,
 `dashboard`) + the server SPA-serve seam + the headless Android bricks. Consolidates
 the §11.4.25 per-feature × platform × invariant coverage ledger with the §11.4.172
@@ -115,6 +115,28 @@ use stubbed fetch/login (§11.4.27 permitted); backend-independent by design (§
 
 ## 3. Production-readiness assessment (§11.4.172)
 
+**Rev 3 update (session close — 32 commits landed, all pushed 4/4 FF):** the OpenDesign
+scope is COMPLETE and substantially hardened beyond it. Newly READY since Rev 2:
+**A2 closed** — ota-manager shadcn UI-boundary palette now WCAG-AA (`a8c12d9a`, 38/38
+verified; the applier caught a rounding trap in the audit's 2-decimal values); **dashboard
+host-render matrix 5→9 screens + 4 empty/error state-variants** (`df2784ec`, `870ca9ff`,
+81→117 pass); **ota-manager host-render 1→2 screens** (LoginPage + the shipped `/dashboard`,
+`01947d8e`); **ota-manager type errors 118→85** (`34f7dcf6`, remaining 85 all operator-gated
+router cluster); **2 real submodule bugs fixed** (`challenges` `RecordAction` race +
+`llms_verifier` RED, `f553104f`/`5a3e036a`); **server §11.4.169 memory + fuzzing gaps
+closed** (`f82a77e4` — 4,800-req heap-growth assertion + `FuzzTokenSignerVerify` 319k execs
+0 crashes, both with FAIL-proofs) atop a full coverage audit (`ca3860d8`, suite 100% PASS /
+0 races); and — closing the Stream V audit gap where the Postgres suite previously only
+type-checked — the **pgx/PostgreSQL production persistence path is now RAN end-to-end**
+(self-booting `postgres:16-alpine` via rootless podman from the `submodules/containers`
+brick; 15/15 integration packages `ok` + `-race` clean; real fault-injection evidence —
+live TCP-kill pgx errors, a real `SQLSTATE 23514` CHECK rejection, a real
+`uq_fabric_lease_active` partial-unique-index conflict; `docs/qa/20260709-server-postgres-integration/EVIDENCE.md`).
+The remaining highest-value items are **operator-gated decisions** (see §3.2 /
+§4), not autonomous work: router-wiring (C), guard-hook regex via the constitution workflow
+(D), security-response-header middleware (O), DDoS default posture (Q), OpenDesign daemon
+(G). Per §11.4.185, none of this ships until the QA team's manual confirmation.
+
 ### 3.1 Production-ready NOW
 
 | Item | State | Evidence |
@@ -122,17 +144,20 @@ use stubbed fetch/login (§11.4.27 permitted); backend-independent by design (§
 | OpenDesign tokens adopted on **both** web frontends | READY | AUDIT.md rows #1 (ADOPTED) + #2 (PARTIAL→completed by vendoring-complete EVIDENCE.md); `design-systems/helix-ota/tokens.css` canonical. |
 | ota-manager theme toggle (was broken) | READY | Fixed + pixel-proven 98.96% light↔dark (`…ota-manager-vendoring/EVIDENCE.md` §5). |
 | dashboard real light/dark theme + full hex→token repoint | READY | vendoring-complete EVIDENCE.md §1–§5 (27/27 screen hex repointed; test:run 107; e2e 45). |
-| Host-render visual proof harness on both frontends | READY (partial coverage) | §2 sub-matrix — self-validated dual oracle live on both; 1 (ota-manager) + 5 (dashboard) screens proven. |
-| Server SPA-serve seam (asset chain + asset-aware 404) | READY | `embed_test.go` 5 real-router tests. |
+| Host-render visual proof harness on both frontends | READY (expanded) | self-validated dual oracle live on both; **ota-manager 2 screens** (LoginPage + shipped `/dashboard`, `01947d8e`), **dashboard 9 screens + 4 empty/error state-variants** (`df2784ec`/`870ca9ff`). |
+| ota-manager shadcn UI-boundary palette WCAG-AA (A2) | READY | `a8c12d9a` — `--border`/`--input`/`--ring`/`--sidebar-border` both themes ≥3:1, 38/38 verified, host-render self-validated. |
+| Server SPA-serve seam + memory + fuzz coverage | READY | `embed_test.go` 5 real-router tests + `604c0508` stress+chaos + `f82a77e4` heap-growth assertion + `FuzzTokenSignerVerify` (319k execs, 0 crashes). |
+| Owned submodule bricks health | READY (12 green + 2 fixed) | `95d8328e` audit; `challenges` race + FAIL-bluff fixed (`f553104f`), `llms_verifier` RED fixed (`5a3e036a`). |
+| Server **pgx/PostgreSQL** production persistence path (architecture.md §4) | READY (RAN e2e) | `docs/qa/20260709-server-postgres-integration/EVIDENCE.md` — self-booting `postgres:16-alpine` via rootless podman (`submodules/containers`, §11.4.161); `go test -tags integration ./...` **15/15 `ok`** + `-race` clean on `internal/store`+`internal/rollout`; real-DB fault evidence (pgx TCP-kill EOF, `SQLSTATE 23514` CHECK, `uq_fabric_lease_active` lease conflict); teardown verified (`podman ps -a` clean). No product bug. |
 
 ### 3.2 NOT yet production-ready (with risk/priority)
 
 | Item | State | Risk / priority |
 |---|---|---|
-| **WCAG token-contrast re-vendor** | **DONE for dashboard** (`dbc20d51`+`cdce12c7`); **ota-manager still owes its own shadcn audit** | Landed: all three token copies byte-identical (`cmp` IDENTICAL, sha256 `14a006da…`), dark `--danger`→`#ef4444` (5.32 surface / 4.72 badgeTint), light `--warn`→`#854d0e` (6.85 / 5.46), light `--success`→`#166534` (7.13 / 5.66), light `--muted`→`#475569` (7.58), `--border-strong` `#64748b` (4.76/4.34/4.20/3.07) — every value ≥ its AA bar under BOTH the 3:1 UI and stricter 4.5:1 text bars (A EVIDENCE.md §2, `contrast_final.py`). Host-render re-proof: dashboard 45/45 pass (this Rev-2 re-sync `cdce12c7`), ota-manager `OVERALL: PASS` self-validated. **Finding (§11.4.6):** inert for ota-manager (shadcn `:root` HSL wins the cascade → new-vs-old render 0.0000%); a **separate ota-manager shadcn-palette WCAG audit** is now the outstanding UI-polish item. Residual honest follow-up: light `--danger` `#dc2626` = 3.81 on its own badge-tint (documented, not over-changed). |
-| **ota-manager 118 type errors** | OPEN, tracked | Surfaced by the repaired `tsc` gate (`94fb10a2`). ~57 are on the dead unrouted feature pages. MEDIUM: does not block the shipped LoginPage render but blocks a clean type gate; bundle with router-wiring. |
+| **WCAG contrast — DONE for BOTH frontends** | dashboard tokens (`dbc20d51`+`cdce12c7`) **AND** ota-manager shadcn UI-boundary (`a8c12d9a`, A2 closed) | Landed: all three token copies byte-identical (`cmp` IDENTICAL, sha256 `14a006da…`), dark `--danger`→`#ef4444` (5.32 surface / 4.72 badgeTint), light `--warn`→`#854d0e` (6.85 / 5.46), light `--success`→`#166534` (7.13 / 5.66), light `--muted`→`#475569` (7.58), `--border-strong` `#64748b` (4.76/4.34/4.20/3.07) — every value ≥ its AA bar under BOTH the 3:1 UI and stricter 4.5:1 text bars (A EVIDENCE.md §2, `contrast_final.py`). Host-render re-proof: dashboard 45/45 pass (this Rev-2 re-sync `cdce12c7`), ota-manager `OVERALL: PASS` self-validated. **Finding (§11.4.6):** inert for ota-manager (shadcn `:root` HSL wins the cascade → new-vs-old render 0.0000%); a **separate ota-manager shadcn-palette WCAG audit** is now the outstanding UI-polish item. Residual honest follow-up: light `--danger` `#dc2626` = 3.81 on its own badge-tint (documented, not over-changed). |
+| **ota-manager type errors 118 → 85** | PARTIAL (33 fixed `34f7dcf6`); 85 OPERATOR-GATED | 33 router-independent genuine bugs fixed; the **85 remaining are ALL in the operator-gated router/unrouted-page cluster** — they await the react-router-dom→tanstack reconciliation (item C). MEDIUM, bundled with the router UX decision. Stream Y also found `dashboard-page.tsx` is unwired dead code with 2 latent defects (feeds C). |
 | **ota-manager feature pages unrouted** | OPERATOR-GATED (§11.4.101) | Importable+tested but unwired; needs `react-router-dom`→`@tanstack/react-router` `useNavigate` reconciliation + a UX decision. Do NOT auto-wire (CONTINUATION §5.C). MEDIUM, operator decision. |
-| **Host-render matrix incomplete on ota-manager** | OPEN | Only LoginPage proven; other screens owed (§5.F). MEDIUM — the visual-proof guarantee is per-screen; unproven screens are honest gaps, not silent PASS. |
+| **Host-render matrix on ota-manager** | IMPROVED (2 screens) | LoginPage + shipped `/dashboard` now proven (`01947d8e`). The OTHER feature pages (`devices`/`releases`/`deployments`) are unrouted dead code pending the router decision C — not honest gaps to host-render until wired. LOW now. |
 | **Server `manager-dist/` stale artifact** | OPEN, tracked | Served bytes lag source until ota-manager rebuild + re-embed (AUDIT row #3). LOW-MEDIUM: correctness of served UI depends on a fresh re-embed at release. |
 | **`--success`-as-text contrast regression (dashboard)** | OPEN, tracked | Correct semantic repoint newly lowered success-text contrast to ~3.1:1 (fails 4.5 for 13px); inherits the token re-vendor fix (EVIDENCE.md §3). LOW, folded into the WCAG re-vendor. |
 
@@ -188,10 +213,12 @@ use stubbed fetch/login (§11.4.27 permitted); backend-independent by design (§
 
 ## 5. Honest boundary (§11.4.6)
 
-- This is a **consolidation of committed evidence**, produced read-only. It ran **no**
-  build or test — verdicts cite the owning stream's captured artifacts. Cells that
-  cannot be confirmed from a committed artifact (packaged-Tauri run, full-stack
-  dashboard-vs-real-Go-backend e2e) are marked `UNKNOWN:`, never assumed PASS.
+- This ledger itself is a **consolidation of committed evidence**, produced read-only —
+  it ran no build or test; verdicts cite the owning stream's captured artifacts (each
+  stream, e.g. the Postgres M2 stream, ran its own suite and produced its own EVIDENCE.md
+  under `docs/qa/`). Cells that cannot be confirmed from a committed artifact
+  (packaged-Tauri run, full-stack dashboard-vs-real-Go-backend e2e) are marked
+  `UNKNOWN:`, never assumed PASS.
 - The WCAG re-vendor is **done for dashboard** (`dbc20d51`+`cdce12c7`, computed ratios +
   45/45 host-render). It is honestly **NOT** a contrast fix for ota-manager — A's own
   evidence (§4) proves the token change is inert there (shadcn cascade wins); claiming

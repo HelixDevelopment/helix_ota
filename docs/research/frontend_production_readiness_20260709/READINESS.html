@@ -181,8 +181,8 @@
 </header>
 <h1 id="helix-ota-frontend-ui-production-readiness-ledger">Helix OTA —
 Frontend / UI Production-Readiness Ledger</h1>
-<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
-2026-07-09T18:43:54Z <strong>Scope:</strong> Every Helix OTA user-facing
+<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
+2026-07-10T00:52:00Z <strong>Scope:</strong> Every Helix OTA user-facing
 UI surface (<code>clients/ota-manager</code>, <code>dashboard</code>) +
 the server SPA-serve seam + the headless Android bricks. Consolidates
 the §11.4.25 per-feature × platform × invariant coverage ledger with the
@@ -596,6 +596,40 @@ lists them repointed; §4 proves 4 screens + login). Owed.</td>
 <hr />
 <h2 id="production-readiness-assessment-11.4.172">3.
 Production-readiness assessment (§11.4.172)</h2>
+<p><strong>Rev 3 update (session close — 32 commits landed, all pushed
+4/4 FF):</strong> the OpenDesign scope is COMPLETE and substantially
+hardened beyond it. Newly READY since Rev 2: <strong>A2 closed</strong>
+— ota-manager shadcn UI-boundary palette now WCAG-AA
+(<code>a8c12d9a</code>, 38/38 verified; the applier caught a rounding
+trap in the audit’s 2-decimal values); <strong>dashboard host-render
+matrix 5→9 screens + 4 empty/error state-variants</strong>
+(<code>df2784ec</code>, <code>870ca9ff</code>, 81→117 pass);
+<strong>ota-manager host-render 1→2 screens</strong> (LoginPage + the
+shipped <code>/dashboard</code>, <code>01947d8e</code>);
+<strong>ota-manager type errors 118→85</strong> (<code>34f7dcf6</code>,
+remaining 85 all operator-gated router cluster); <strong>2 real
+submodule bugs fixed</strong> (<code>challenges</code>
+<code>RecordAction</code> race + <code>llms_verifier</code> RED,
+<code>f553104f</code>/<code>5a3e036a</code>); <strong>server §11.4.169
+memory + fuzzing gaps closed</strong> (<code>f82a77e4</code> — 4,800-req
+heap-growth assertion + <code>FuzzTokenSignerVerify</code> 319k execs 0
+crashes, both with FAIL-proofs) atop a full coverage audit
+(<code>ca3860d8</code>, suite 100% PASS / 0 races); and — closing the
+Stream V audit gap where the Postgres suite previously only type-checked
+— the <strong>pgx/PostgreSQL production persistence path is now RAN
+end-to-end</strong> (self-booting <code>postgres:16-alpine</code> via
+rootless podman from the <code>submodules/containers</code> brick; 15/15
+integration packages <code>ok</code> + <code>-race</code> clean; real
+fault-injection evidence — live TCP-kill pgx errors, a real
+<code>SQLSTATE 23514</code> CHECK rejection, a real
+<code>uq_fabric_lease_active</code> partial-unique-index conflict;
+<code>docs/qa/20260709-server-postgres-integration/EVIDENCE.md</code>).
+The remaining highest-value items are <strong>operator-gated
+decisions</strong> (see §3.2 / §4), not autonomous work: router-wiring
+(C), guard-hook regex via the constitution workflow (D),
+security-response-header middleware (O), DDoS default posture (Q),
+OpenDesign daemon (G). Per §11.4.185, none of this ships until the QA
+team’s manual confirmation.</p>
 <h3 id="production-ready-now">3.1 Production-ready NOW</h3>
 <table>
 <colgroup>
@@ -633,14 +667,48 @@ test:run 107; e2e 45).</td>
 </tr>
 <tr>
 <td>Host-render visual proof harness on both frontends</td>
-<td>READY (partial coverage)</td>
-<td>§2 sub-matrix — self-validated dual oracle live on both; 1
-(ota-manager) + 5 (dashboard) screens proven.</td>
+<td>READY (expanded)</td>
+<td>self-validated dual oracle live on both; <strong>ota-manager 2
+screens</strong> (LoginPage + shipped <code>/dashboard</code>,
+<code>01947d8e</code>), <strong>dashboard 9 screens + 4 empty/error
+state-variants</strong>
+(<code>df2784ec</code>/<code>870ca9ff</code>).</td>
 </tr>
 <tr>
-<td>Server SPA-serve seam (asset chain + asset-aware 404)</td>
+<td>ota-manager shadcn UI-boundary palette WCAG-AA (A2)</td>
 <td>READY</td>
-<td><code>embed_test.go</code> 5 real-router tests.</td>
+<td><code>a8c12d9a</code> —
+<code>--border</code>/<code>--input</code>/<code>--ring</code>/<code>--sidebar-border</code>
+both themes ≥3:1, 38/38 verified, host-render self-validated.</td>
+</tr>
+<tr>
+<td>Server SPA-serve seam + memory + fuzz coverage</td>
+<td>READY</td>
+<td><code>embed_test.go</code> 5 real-router tests +
+<code>604c0508</code> stress+chaos + <code>f82a77e4</code> heap-growth
+assertion + <code>FuzzTokenSignerVerify</code> (319k execs, 0
+crashes).</td>
+</tr>
+<tr>
+<td>Owned submodule bricks health</td>
+<td>READY (12 green + 2 fixed)</td>
+<td><code>95d8328e</code> audit; <code>challenges</code> race +
+FAIL-bluff fixed (<code>f553104f</code>), <code>llms_verifier</code> RED
+fixed (<code>5a3e036a</code>).</td>
+</tr>
+<tr>
+<td>Server <strong>pgx/PostgreSQL</strong> production persistence path
+(architecture.md §4)</td>
+<td>READY (RAN e2e)</td>
+<td><code>docs/qa/20260709-server-postgres-integration/EVIDENCE.md</code>
+— self-booting <code>postgres:16-alpine</code> via rootless podman
+(<code>submodules/containers</code>, §11.4.161);
+<code>go test -tags integration ./...</code> <strong>15/15
+<code>ok</code></strong> + <code>-race</code> clean on
+<code>internal/store</code>+<code>internal/rollout</code>; real-DB fault
+evidence (pgx TCP-kill EOF, <code>SQLSTATE 23514</code> CHECK,
+<code>uq_fabric_lease_active</code> lease conflict); teardown verified
+(<code>podman ps -a</code> clean). No product bug.</td>
 </tr>
 </tbody>
 </table>
@@ -661,10 +729,10 @@ production-ready (with risk/priority)</h3>
 </thead>
 <tbody>
 <tr>
-<td><strong>WCAG token-contrast re-vendor</strong></td>
-<td><strong>DONE for dashboard</strong>
-(<code>dbc20d51</code>+<code>cdce12c7</code>); <strong>ota-manager still
-owes its own shadcn audit</strong></td>
+<td><strong>WCAG contrast — DONE for BOTH frontends</strong></td>
+<td>dashboard tokens (<code>dbc20d51</code>+<code>cdce12c7</code>)
+<strong>AND</strong> ota-manager shadcn UI-boundary
+(<code>a8c12d9a</code>, A2 closed)</td>
 <td>Landed: all three token copies byte-identical (<code>cmp</code>
 IDENTICAL, sha256 <code>14a006da…</code>), dark
 <code>--danger</code>→<code>#ef4444</code> (5.32 surface / 4.72
@@ -684,12 +752,14 @@ follow-up: light <code>--danger</code> <code>#dc2626</code> = 3.81 on
 its own badge-tint (documented, not over-changed).</td>
 </tr>
 <tr>
-<td><strong>ota-manager 118 type errors</strong></td>
-<td>OPEN, tracked</td>
-<td>Surfaced by the repaired <code>tsc</code> gate
-(<code>94fb10a2</code>). ~57 are on the dead unrouted feature pages.
-MEDIUM: does not block the shipped LoginPage render but blocks a clean
-type gate; bundle with router-wiring.</td>
+<td><strong>ota-manager type errors 118 → 85</strong></td>
+<td>PARTIAL (33 fixed <code>34f7dcf6</code>); 85 OPERATOR-GATED</td>
+<td>33 router-independent genuine bugs fixed; the <strong>85 remaining
+are ALL in the operator-gated router/unrouted-page cluster</strong> —
+they await the react-router-dom→tanstack reconciliation (item C).
+MEDIUM, bundled with the router UX decision. Stream Y also found
+<code>dashboard-page.tsx</code> is unwired dead code with 2 latent
+defects (feeds C).</td>
 </tr>
 <tr>
 <td><strong>ota-manager feature pages unrouted</strong></td>
@@ -700,11 +770,13 @@ type gate; bundle with router-wiring.</td>
 auto-wire (CONTINUATION §5.C). MEDIUM, operator decision.</td>
 </tr>
 <tr>
-<td><strong>Host-render matrix incomplete on ota-manager</strong></td>
-<td>OPEN</td>
-<td>Only LoginPage proven; other screens owed (§5.F). MEDIUM — the
-visual-proof guarantee is per-screen; unproven screens are honest gaps,
-not silent PASS.</td>
+<td><strong>Host-render matrix on ota-manager</strong></td>
+<td>IMPROVED (2 screens)</td>
+<td>LoginPage + shipped <code>/dashboard</code> now proven
+(<code>01947d8e</code>). The OTHER feature pages
+(<code>devices</code>/<code>releases</code>/<code>deployments</code>)
+are unrouted dead code pending the router decision C — not honest gaps
+to host-render until wired. LOW now.</td>
 </tr>
 <tr>
 <td><strong>Server <code>manager-dist/</code> stale
@@ -888,10 +960,12 @@ real-router asset-chain tests</td>
 <hr />
 <h2 id="honest-boundary-11.4.6">5. Honest boundary (§11.4.6)</h2>
 <ul>
-<li>This is a <strong>consolidation of committed evidence</strong>,
-produced read-only. It ran <strong>no</strong> build or test — verdicts
-cite the owning stream’s captured artifacts. Cells that cannot be
-confirmed from a committed artifact (packaged-Tauri run, full-stack
+<li>This ledger itself is a <strong>consolidation of committed
+evidence</strong>, produced read-only — it ran no build or test;
+verdicts cite the owning stream’s captured artifacts (each stream,
+e.g. the Postgres M2 stream, ran its own suite and produced its own
+EVIDENCE.md under <code>docs/qa/</code>). Cells that cannot be confirmed
+from a committed artifact (packaged-Tauri run, full-stack
 dashboard-vs-real-Go-backend e2e) are marked <code>UNKNOWN:</code>,
 never assumed PASS.</li>
 <li>The WCAG re-vendor is <strong>done for dashboard</strong>

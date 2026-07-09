@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1
+id="server-postgresql-integration-suite-executed-against-real-rootless-postgres">Server
+PostgreSQL Integration Suite — Executed Against Real Rootless
+Postgres</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T19:45:00Z</p>
+<h2 id="scope">Scope</h2>
+<p>Stream M2 task: previously the server’s
+<code>-tags integration</code> Postgres suite
+(<code>server/internal/store/*_integration_test.go</code>,
+<code>server/internal/rollout/*_integration_test.go</code>) was known to
+type-check (<code>go vet -tags integration</code> /
+<code>go build -tags integration</code> clean) but had <strong>never
+been executed against a live PostgreSQL</strong> — a Stream V audit
+finding. <code>architecture.md</code> §4 names the pgx/PostgreSQL
+<code>Repository</code> the production persistence target, so this suite
+is the only test evidence that the production path (as opposed to the
+in-memory MVP store that ships wired by default) actually behaves
+correctly against a real database.</p>
+<p>This run closes that gap: the suite was executed twice, end-to-end,
+against a real, rootless-podman-booted PostgreSQL 16, with the container
+brought up and torn down entirely by the test code itself (no manual
+<code>podman run</code> needed — see “Boot method” below).</p>
+<h2 id="result-summary">Result summary</h2>
+<p><strong>RAN — did not SKIP.</strong> All Postgres integration tests
+<strong>PASSED</strong> on both runs. No findings, no product bugs
+discovered.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Run</th>
+<th>Command</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>go test -tags integration ./... -count=1 -v</code> (full
+server module)</td>
+<td><strong>PASS</strong> — 15/15 packages <code>ok</code>, 0
+<code>FAIL</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>go test -tags integration -race -count=1 ./internal/store/... ./internal/rollout/... -v</code></td>
+<td><strong>PASS</strong> — 2/2 packages <code>ok</code>, 0
+<code>FAIL</code>, 0 <code>DATA RACE</code> reports</td>
+</tr>
+</tbody>
+</table>
+<p>Postgres-backed integration tests executed (both
+<code>internal/store</code> and <code>internal/rollout</code> packages
+boot their OWN dedicated Postgres container on distinct host ports —
+55432 and 55445 respectively — so they can run in parallel without
+contention, serialized only by the <code>pg_itest_lock_test.go</code>
+flock per §11.4.119):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test</th>
+<th>Package</th>
+<th>Run 1 (no -race)</th>
+<th>Run 2 (-race)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TestPostgresRepositoryContract_Integration</code></td>
+<td><code>internal/store</code></td>
+<td>PASS 4.28s</td>
+<td>PASS 8.20s</td>
+</tr>
+<tr>
+<td><code>TestPostgresCoveragePaths_Integration</code></td>
+<td><code>internal/store</code></td>
+<td>PASS 8.05s</td>
+<td>PASS 8.44s</td>
+</tr>
+<tr>
+<td><code>TestPostgresFabricRegistry_Integration</code></td>
+<td><code>internal/store</code></td>
+<td>PASS 8.25s</td>
+<td>PASS 8.15s</td>
+</tr>
+<tr>
+<td><code>TestPostgresDriverFaults_Integration</code> (+3 subtests:
+<code>query_connection_failure</code>,
+<code>mid_iteration_rows_err</code>,
+<code>pool_acquire_failure</code>)</td>
+<td><code>internal/store</code></td>
+<td>PASS 4.87s</td>
+<td>PASS 9.06s</td>
+</tr>
+<tr>
+<td><code>TestPostgresStoreScenario_Integration</code></td>
+<td><code>internal/rollout</code></td>
+<td>PASS 8.10s</td>
+<td>PASS 8.82s</td>
+</tr>
+<tr>
+<td><code>TestPostgresStoreCoveragePaths_Integration</code></td>
+<td><code>internal/rollout</code></td>
+<td>PASS 4.06s</td>
+<td>PASS 8.44s</td>
+</tr>
+<tr>
+<td><code>TestPostgresStoreDriverFaults_Integration</code> (+3 subtests:
+<code>connection_failure</code>,
+<code>mid_transaction_commit_failure</code>,
+<code>pool_acquire_failure</code>)</td>
+<td><code>internal/rollout</code></td>
+<td>PASS 4.12s</td>
+<td>PASS 8.39s</td>
+</tr>
+</tbody>
+</table>
+<p>Package-level timings:</p>
+<pre><code>Run 1 (full suite, no -race):
+ok      .../server/internal/store   25.469s
+ok      .../server/internal/rollout 16.294s
+(13 other non-DB packages also ok, 0 FAIL — full module green)
+
+Run 2 (-race, store+rollout only):
+ok      .../server/internal/store   30.987s
+ok      .../server/internal/rollout 26.670s
+10.02user 5.01system 0:33.96elapsed 44%CPU</code></pre>
+<p><code>grep -c "DATA RACE"</code> on the <code>-race</code> log:
+<strong>0</strong>.</p>
+<h2 id="boot-method-rootless-podman-no-manual-step">Boot method —
+rootless podman, no manual step</h2>
+<p>The suite is self-booting: <code>postgres_integration_test.go</code>
+/ <code>postgres_coverage_integration_test.go</code> /
+<code>postgres_fabric_integration_test.go</code> /
+<code>postgres_fault_integration_test.go</code> in both packages call
+<code>runtime.AutoDetect(ctx)</code> then
+<code>compose.NewDefaultOrchestrator</code> +
+<code>boot.NewBootManager</code> from the project’s own
+<code>submodules/containers</code>
+(<code>digital.vasic.containers</code>, wired via
+<code>server/go.mod</code>’s
+<code>replace digital.vasic.containers =&gt; ../containers</code>) — the
+constitution’s mandated on-demand-infra path (§11.4.76/§11.4.161), never
+an ad-hoc <code>podman run</code>. No manual container boot was
+performed by this stream; the Go test process invoked the orchestrator
+itself for every run.</p>
+<p>Compose files consumed:
+<code>server/deploy/postgres.compose.yml</code> (host port
+<code>55432</code>, project <code>internal/store</code>) and
+<code>server/deploy/postgres-rollout.compose.yml</code> (host port
+<code>55445</code>, project <code>internal/rollout</code>), both
+<code>docker.io/library/postgres:16-alpine</code>.</p>
+<p><strong>Rootless proof</strong> (captured before the run):</p>
+<pre><code>$ podman info | grep -iE &quot;rootless|graphRoot|runRoot&quot;
+  rootlessNetworkCmd: pasta
+  security:
+    rootless: true
+  graphRoot: /home/milos/.local/share/containers/storage
+  runRoot: /run/user/1000/containers
+
+$ id
+uid=1000(milos) gid=1000(milos) groups=1000(milos),... (no root, no sudo)
+
+$ podman --version
+podman version 5.7.1
+$ podman-compose --version
+podman-compose version 1.5.0</code></pre>
+<p>No <code>sudo</code> was used anywhere in this stream. No rootful
+docker was used. The <code>postgres:16-alpine</code> image was already
+present in local podman image storage (<code>podman images</code> showed
+it cached), so no network pull was required for this run — a genuinely
+offline-capable rootless boot.</p>
+<p>Real captured boot-summary lines from the test’s own logging (proving
+the container actually started, not a stub):</p>
+<pre><code>postgres_integration_test.go:48: container runtime: podman
+postgres_integration_test.go:81: boot summary: started=1 discovered=0 failed=0 in 648.75759ms
+postgres_coverage_integration_test.go:49: container runtime: podman
+postgres_coverage_integration_test.go:80: boot summary: started=1 discovered=0 failed=0 in 647.637616ms
+postgres_fabric_integration_test.go:37: container runtime: podman</code></pre>
+<h2 id="dsn-migration-no-manual-step-required">DSN / migration — no
+manual step required</h2>
+<p>Each test hardcodes its own dedicated DSN (distinct ports keep the
+two packages non-contending):</p>
+<ul>
+<li><code>internal/store</code>:
+<code>postgres://helix:helix@localhost:55432/helix_ota?sslmode=disable</code></li>
+<li><code>internal/rollout</code>:
+<code>postgres://helix:helix@localhost:55445/helix_ota?sslmode=disable</code></li>
+</ul>
+<p>No separate <code>DATABASE_URL</code> env var needed to be set by
+this stream — the integration tests are self-contained and
+construct/consume their own DSN constants. Schema migration is driven by
+the tests themselves against the freshly-booted container (verified live
+by <code>TestPostgresFabricRegistry_Integration</code>, which asserts
+the <code>fabric_nodes</code> / <code>fabric_targets</code> /
+<code>fabric_leases</code> / <code>fabric_runs</code> /
+<code>fabric_evidence</code> tables and the
+<code>uq_fabric_lease_active</code> unique partial index actually exist
+post-migration in the real database — not asserted against a mock).</p>
+<h2
+id="real-findings-surfaced-by-the-suite-proof-it-exercises-the-real-driver-not-a-stub">Real
+findings surfaced by the suite (proof it exercises the real driver, not
+a stub)</h2>
+<p><code>TestPostgresDriverFaults_Integration</code> /
+<code>TestPostgresStoreDriverFaults_Integration</code> genuinely kill
+the live TCP connection to the real Postgres mid-query/mid-transaction
+and assert the pgx driver surfaces a clean, categorized error rather
+than a panic or silent hang. Captured real driver output (not
+synthesized):</p>
+<pre><code>postgres_fault_integration_test.go:102: ListDevices surfaced clean driver error: unexpected EOF
+postgres_fault_integration_test.go:106: ListReleases surfaced clean driver error: failed to connect to `user=helix database=helix_ota`: 127.0.0.1:46025 (127.0.0.1): failed to receive message: unexpected EOF
+postgres_fault_integration_test.go:195: mid-iteration rows.Err captured cleanly after 66 rows: unexpected EOF
+postgres_fabric_integration_test.go:122: EVIDENCE-CHECK: raw 0-byte INSERT REJECTED by DB CHECK -&gt; ERROR: new row for relation &quot;fabric_evidence&quot; violates check constraint &quot;fabric_evidence_byte_size_check&quot; (SQLSTATE 23514)
+postgres_fabric_integration_test.go:101: LEASE-UNIQUENESS: second lease L2 on t1 REJECTED by DB -&gt; store: conflict (mapped to ErrConflict)</code></pre>
+<p>These are genuine DB-enforced constraints (a real <code>CHECK</code>
+constraint rejection with a real Postgres <code>SQLSTATE 23514</code>, a
+real partial-unique-index conflict) — not achievable against an
+in-memory fake. This is exactly the production-path assurance the suite
+exists to provide.</p>
+<h2 id="findings-product-bugs">Findings / product bugs</h2>
+<p><strong>None.</strong> No test failed, no data race was detected, and
+no unexpected behavior was observed against the real database on either
+run. The production pgx/PostgreSQL persistence path
+(<code>architecture.md</code> §4) is confirmed working end-to-end by
+this execution, including its documented fault-handling behavior under
+injected connection loss and its schema constraints (fabric lease
+uniqueness, evidence byte-size check).</p>
+<h2 id="clean-teardown">Clean teardown</h2>
+<p><code>t.Cleanup(func() { _ = mgr.Shutdown(context.Background()) })</code>
+is registered by each test and runs at the end of every test (both the
+success path here and any future failure path), tearing the compose
+project down. Verified post-run:</p>
+<pre><code>$ podman ps -a --format &quot;{{.Names}}\t{{.Status}}&quot; | grep -iE &quot;helix.ota|55432|55445|postgres.compose&quot;
+(no leftover integration containers)</code></pre>
+<p>No orphaned containers, networks, or volumes from either run remained
+on the host after the suite completed (checked after both Run 1 and Run
+2).</p>
+<h2 id="environment">Environment</h2>
+<ul>
+<li><code>go version go1.26.4-X:nodwarf5 linux/amd64</code></li>
+<li><code>podman version 5.7.1</code>,
+<code>podman-compose version 1.5.0</code>, rootless
+(<code>security.rootless: true</code>)</li>
+<li>Working directory:
+<code>/home/milos/Factory/projects/tools_and_research/helix_ota/server</code></li>
+<li>Full raw logs (kept in scratchpad, not committed — regeneratable by
+re-running the commands above):
+<ul>
+<li>Run 1: <code>go test -tags integration ./... -count=1 -v</code></li>
+<li>Run 2:
+<code>go test -tags integration -race -count=1 ./internal/store/... ./internal/rollout/... -v</code></li>
+</ul></li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>The production Postgres persistence path is now proven with real,
+captured, DB-backed evidence rather than type-checked-only assurance. No
+conductor action required — no bugs found, no product code touched by
+this stream.</p>
+</body>
+</html>
