@@ -102,8 +102,19 @@ export interface PaginatedResponse<T> {
 }
 
 // Auth
+//
+// LoginRequest mirrors the REAL POST /auth/login request body —
+// server/internal/api/wire.go:19-22 (LoginRequest struct): `{username,
+// password}`. (§11.4.6/§11.4.115/§11.4.108 — request-body wire-shape audit,
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md: this previously
+// declared `{email, password}` — the server has no `email` field and
+// requires `username`; every login submission from this client would fail
+// `handleLogin`'s `req.Username == "" || req.Password == ""` check with a
+// 400 VALIDATION_FAILED. The login FORM still collects an email-shaped
+// string (UX decision, unchanged); `use-auth.ts`'s `useLogin` now maps that
+// value onto this wire field's real name at the request boundary.)
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -123,21 +134,28 @@ export interface TokenResponse {
 
 // Devices
 //
-// NOTE (§11.4.6 — out-of-scope discovery, not fixed in this pass): the REAL
-// POST /devices/register request body — server/internal/api/wire.go:41-49
-// (DeviceRegistration struct) — is `{hardware_id, model, os, os_version?,
-// current_version?, group?, metadata?}`. This client-declared
-// `DeviceRegistrationRequest` shape (`{device_id, board, firmware_version,
-// hardware_revision, serial_number}`) matches none of the real request
-// fields. REQUEST-body interfaces are out of scope for this response-shape
-// audit (see EVIDENCE.md) — flagged here as a discovered, unfixed defect for
-// a follow-up work item.
+// DeviceRegistrationRequest mirrors the REAL POST /devices/register request
+// body — server/internal/api/wire.go:41-49 (DeviceRegistration struct):
+// `{hardware_id, model, os, os_version?, current_version?, group?,
+// metadata?}`. (§11.4.6/§11.4.115/§11.4.108 — request-body wire-shape audit,
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md: this previously
+// declared `{device_id, board, firmware_version, hardware_revision,
+// serial_number}` — none of those fields exist on the real request; every
+// field the server requires — `hardware_id`, `model`, `os` — was absent, so
+// the real endpoint would reject this body outright. DISCOVERED-BUT-UNUSED:
+// no caller in this client currently builds a body with this interface —
+// `use-devices.ts`'s `useRegisterDevice` already sends the correctly-shaped
+// `DeviceRegistration` type below, so this fix has zero runtime behavior
+// change; it is corrected here for wire-shape correctness of the exported
+// type itself.)
 export interface DeviceRegistrationRequest {
-  device_id: string;
-  board: string;
-  firmware_version: string;
-  hardware_revision: string;
-  serial_number: string;
+  hardware_id: string;
+  model: string;
+  os: string;
+  os_version?: string;
+  current_version?: string;
+  group?: string;
+  metadata?: Record<string, string>;
 }
 
 // DeviceRegistered mirrors the REAL POST /devices/register (+ idempotent
@@ -309,14 +327,24 @@ export interface ProjectAccess {
   role: Role;
 }
 
+// CreateReleaseRequest mirrors the REAL POST /releases request body —
+// server/internal/api/wire.go:137-144 (ReleaseCreate struct): `{artifact_id,
+// version, os, target_model, notes?, min_current_version?}`.
+// (§11.4.6/§11.4.115/§11.4.108 — request-body wire-shape audit,
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md: this previously
+// declared `{project_id, version, file_url, file_hash, changelog,
+// target_board, firmware_version}` — none of `project_id`/`file_url`/
+// `file_hash`/`changelog`/`target_board`/`firmware_version` exist on the
+// real request, and the real required `artifact_id`/`os`/`target_model`
+// fields were entirely absent — every release-creation submission from this
+// client would fail server-side.)
 export interface CreateReleaseRequest {
-  project_id: string;
+  artifact_id: string;
   version: string;
-  file_url: string;
-  file_hash: string;
-  changelog: string;
-  target_board: string;
-  firmware_version: string;
+  os: string;
+  target_model: string;
+  notes?: string;
+  min_current_version?: string;
 }
 
 // ReleaseResponse mirrors the REAL release wire shape — server/internal/api/
@@ -328,12 +356,10 @@ export interface CreateReleaseRequest {
 // created_at, created_by}` shape was almost entirely fabricated — the server
 // has no `project_id`/`file_url`/`file_hash`/`changelog`/`target_board`/
 // `firmware_version`/`created_by` field on this response, and the real
-// primary key is `release_id`, never `id`. NOTE (out-of-scope discovery):
-// `CreateReleaseRequest` — the POST /releases request body this client sends
-// — is a SEPARATELY drifted interface (real ReleaseCreate is
-// `{artifact_id, version, os, target_model, notes?, min_current_version?}`);
-// REQUEST-body interfaces are out of scope for this response-shape audit —
-// see EVIDENCE.md.)
+// primary key is `release_id`, never `id`. `CreateReleaseRequest` — the
+// POST /releases request body this client sends — was a SEPARATELY drifted
+// interface, fixed in the request-body wire-shape audit; see its own
+// comment above and docs/qa/20260710-client-request-body-audit/EVIDENCE.md.)
 export interface ReleaseResponse {
   release_id: string;
   artifact_id: string;
@@ -430,11 +456,19 @@ export interface DeploymentStatus extends Deployment {
   progress: DeploymentProgress;
 }
 
+// CreateRolloutRequest mirrors the REAL POST /deployments/{id}/rollout
+// request body — server/internal/api/handlers_rollout.go:24-27 (RolloutCreate
+// struct): `{phases}` ONLY — the deployment id comes from the URL path
+// param, never the body. (§11.4.6/§11.4.115/§11.4.108 — request-body
+// wire-shape audit, docs/qa/20260710-client-request-body-audit/EVIDENCE.md:
+// this previously declared `{deployment_id, groups, rollout_percentage?,
+// staged}` — none of those fields exist on the real request; the real
+// required `phases` array (each phase matching RolloutPhaseSpec) was
+// entirely absent, so every create-rollout submission from this client
+// would fail `handleCreateRollout`'s `len(req.Phases) == 0` check with a 400
+// VALIDATION_FAILED.)
 export interface CreateRolloutRequest {
-  deployment_id: string;
-  groups: string[];
-  rollout_percentage?: number;
-  staged: boolean;
+  phases: RolloutPhaseSpec[];
 }
 
 // RolloutPhaseSpec is the REAL per-phase shape inside RolloutState.phases —
@@ -477,18 +511,19 @@ export interface RolloutDecision {
   state: RolloutState;
 }
 
-// NOTE (§11.4.6 — out-of-scope discovery, not fixed in this pass): the REAL
-// POST /deployments/{id}/recall request body — server/internal/api/
-// handlers_recall.go:17-20 (RecallRequest struct) — is `{to_release_id,
-// reason?}`. This client-declared `{reason, force}` shape sends neither the
-// field the server requires (`to_release_id` is mandatory) nor matches its
-// optional `reason` semantics; the real endpoint would reject this body.
-// REQUEST-body interfaces are out of scope for this response-shape audit
-// (see EVIDENCE.md) — flagged here as a discovered, unfixed defect for a
-// follow-up work item.
+// RecallRequest mirrors the REAL POST /deployments/{id}/recall request body
+// — server/internal/api/handlers_recall.go:17-20 (RecallRequest struct):
+// `{to_release_id, reason?}`. (§11.4.6/§11.4.115/§11.4.108 — request-body
+// wire-shape audit, docs/qa/20260710-client-request-body-audit/EVIDENCE.md:
+// this previously declared `{reason, force}` — the server has no `force`
+// field and the real required `to_release_id` field (the release to roll
+// back to) was entirely absent, so every recall submission from this client
+// would fail `handleRecall`'s `req.ToReleaseID == ""` check with a 400
+// VALIDATION_FAILED — the recall endpoint rejected EVERY request this client
+// sent. See EVIDENCE.md for the RED/GREEN `tsc --noEmit` transcript.)
 export interface RecallRequest {
-  reason: string;
-  force: boolean;
+  to_release_id: string;
+  reason?: string;
 }
 
 // RollbackView mirrors the REAL rollback/abort history row —
@@ -537,12 +572,30 @@ export interface Project {
   created_at: string;
   updated_at: string;
 }
+// CreateDeploymentRequest mirrors the REAL POST /deployments request body —
+// server/internal/api/wire.go:167-171 (DeploymentCreate struct):
+// `{release_id, strategy, group?}` — a SINGLE optional target-group name,
+// never a `group_ids` array. (§11.4.6/§11.4.115/§11.4.108 — request-body
+// wire-shape audit, docs/qa/20260710-client-request-body-audit/EVIDENCE.md:
+// this previously declared `{release_id, group_ids: string[], strategy:
+// "rolling"|"canary"|"blue_green", rollout_percentage?, staged}` — the
+// server has no `group_ids` array (only a single optional `group` string),
+// no `rollout_percentage`/`staged` field on this request (those staged-
+// rollout concepts are configured separately via POST
+// /deployments/{id}/rollout, see CreateRolloutRequest). `strategy` is typed
+// as plain `string` here (matching the Go field's type exactly) rather than
+// a client-invented union — KNOWN GAP, discovered but not fixed in this
+// wire-shape pass: `handleCreateDeployment`
+// (server/internal/api/handlers_deployment.go:39-42) accepts ONLY the
+// literal `"all-targets"` for this MVP; every other value — including every
+// option `useCreateDeployment.ts`'s strategy picker currently offers — is a
+// 400 VALIDATION_FAILED. That is a business-rule/value-domain mismatch, not
+// a JSON structural drift, and is out of scope for this shape audit; see
+// EVIDENCE.md.)
 export interface CreateDeploymentRequest {
   release_id: string;
-  group_ids: string[];
-  strategy: "rolling" | "canary" | "blue_green";
-  rollout_percentage?: number;
-  staged: boolean;
+  strategy: string;
+  group?: string;
 }
 
 export interface DeploymentResponse {
@@ -558,19 +611,41 @@ export interface DeploymentResponse {
 }
 
 // Groups
+//
+// CreateGroupRequest mirrors the REAL POST /groups request body —
+// server/internal/api/handlers_group.go:42-45 (GroupCreate struct):
+// `{name, description?}` ONLY. (§11.4.6/§11.4.115/§11.4.108 — request-body
+// wire-shape audit, docs/qa/20260710-client-request-body-audit/EVIDENCE.md:
+// this previously declared `{name, description, device_ids, labels}` — the
+// server has no `device_ids` or `labels` field on group CREATION; a client
+// sending them was silently ignored by Go's JSON unmarshal (ExtractFields is
+// forgiving of unknown keys) — a silent-data-loss bug, not a rejected
+// request: the operator believed a new group started with the given
+// members/labels, but the server always creates an empty group. Group
+// membership is a SEPARATE endpoint (POST /groups/{id}/members, see
+// AddGroupMembersRequest below); groups have no `labels` concept at all.)
 export interface CreateGroupRequest {
   name: string;
-  description: string;
-  device_ids: string[];
-  labels: Record<string, string>;
+  description?: string;
 }
 
+// UpdateGroupRequest mirrors the REAL PATCH /groups/{id} request body —
+// server/internal/api/handlers_group.go:48-51 (GroupUpdate struct):
+// `{name, description?}` ONLY. (§11.4.6/§11.4.115/§11.4.108 — request-body
+// wire-shape audit, docs/qa/20260710-client-request-body-audit/EVIDENCE.md:
+// this previously declared an additional `labels?` field — groups have no
+// `labels` concept anywhere on the server; a client sending it was silently
+// ignored.)
 export interface UpdateGroupRequest {
   name?: string;
   description?: string;
-  labels?: Record<string, string>;
 }
 
+// AddGroupMembersRequest — VERIFIED CORRECT against the REAL POST
+// /groups/{id}/members request body — server/internal/api/
+// handlers_group.go:71-73 (MemberAdd struct): `{device_ids}`. No drift found
+// (§11.4.6 request-body wire-shape audit,
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md).
 export interface AddGroupMembersRequest {
   device_ids: string[];
 }
@@ -637,6 +712,14 @@ export interface GroupList {
 }
 
 // Artifacts (server/internal/api/wire.go: ArtifactUploadMetadata, Artifact)
+//
+// ArtifactUploadMetadata — VERIFIED CORRECT against the REAL multipart
+// upload metadata part — server/internal/api/wire.go:107-119
+// (ArtifactUploadMetadata struct): `{sha256, signature, version, os,
+// target_model, file_hash?, file_size?, metadata_hash?, metadata_size?,
+// payload_offset?, payload_size?}`. Field-for-field match, no drift found
+// (§11.4.6 request-body wire-shape audit,
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md).
 export interface ArtifactUploadMetadata {
   sha256: string;
   signature: string;
@@ -664,6 +747,13 @@ export interface Artifact {
 }
 
 // Deltas (server/internal/api/handlers_delta.go: DeltaRegister, DeltaView)
+//
+// DeltaRegisterRequest — VERIFIED CORRECT against the REAL POST /deltas
+// request body — server/internal/api/handlers_delta.go:15-21 (DeltaRegister
+// struct): `{base_artifact_id, target_artifact_id, sha256?, size?,
+// storage_ref?}`. Field-for-field match, no drift found (§11.4.6
+// request-body wire-shape audit,
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md).
 export interface DeltaRegisterRequest {
   base_artifact_id: string;
   target_artifact_id: string;
@@ -682,7 +772,13 @@ export interface DeltaView {
   created_at: string;
 }
 
-// GET /deltas?base=<id>&target=<id> (server/internal/api/handlers_delta.go handleFindDelta)
+// GET /deltas?base=<id>&target=<id> (server/internal/api/handlers_delta.go
+// handleFindDelta). NOTE: this is a query-STRING params shape (`base`,
+// `target` read via `c.Query(...)`), not a JSON request BODY — out of scope
+// for the request-body wire-shape audit (docs/qa/20260710-client-request-
+// body-audit/EVIDENCE.md), but VERIFIED CORRECT against the real handler's
+// `c.Query("base")`/`c.Query("target")` reads while auditing its sibling
+// DeltaRegisterRequest above.
 export interface DeltaFindParams {
   base: string;
   target: string;

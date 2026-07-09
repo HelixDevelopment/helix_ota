@@ -1,13 +1,12 @@
 // Adapter shim: the create-release wizard collects an artifact selection plus
-// version/os/target-model. Map those onto the wire CreateReleaseRequest.
-//
-// KNOWN GAP (§11.4.6): the server exposes no list-artifacts endpoint (only
-// POST /artifacts/upload + GET /artifacts/:id), so the wizard cannot resolve a
-// selected artifact into its file_url/file_hash, and there is no project picker
-// yet. Those wire fields are therefore submitted empty until an artifact-list
-// (and project-context) source lands — the create-release SUBMISSION is not yet
-// end-to-end functional and is reported as deferred in EVIDENCE.md. The wizard
-// itself is wired and renders; only its final submit is incomplete.
+// version/os/target-model. Map those onto the wire CreateReleaseRequest
+// (server/internal/api/wire.go:137-144 ReleaseCreate: `{artifact_id,
+// version, os, target_model, notes?, min_current_version?}`; see
+// CreateReleaseRequest's own comment in api-client.ts and
+// docs/qa/20260710-client-request-body-audit/EVIDENCE.md — this shim
+// previously built a fabricated `{project_id, file_url, file_hash,
+// changelog, target_board, firmware_version}` body that matched none of the
+// real request fields and omitted the real required `artifact_id`).
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { releaseKeys } from "./use-releases";
 import { apiPost } from "../lib/api-client";
@@ -18,10 +17,8 @@ export interface CreateReleaseInput {
   version: string;
   os: string;
   targetModel: string;
-  projectId?: string;
-  fileUrl?: string;
-  fileHash?: string;
-  changelog?: string;
+  notes?: string;
+  minCurrentVersion?: string;
 }
 
 export function useCreateRelease() {
@@ -29,13 +26,12 @@ export function useCreateRelease() {
   return useMutation({
     mutationFn: (input: CreateReleaseInput) =>
       apiPost<Release>("/releases", {
-        project_id: input.projectId ?? "",
+        artifact_id: input.artifactId,
         version: input.version,
-        file_url: input.fileUrl ?? "",
-        file_hash: input.fileHash ?? "",
-        changelog: input.changelog ?? "",
-        target_board: input.targetModel,
-        firmware_version: input.os,
+        os: input.os,
+        target_model: input.targetModel,
+        notes: input.notes,
+        min_current_version: input.minCurrentVersion,
       } satisfies CreateReleaseRequest),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: releaseKeys.lists() });

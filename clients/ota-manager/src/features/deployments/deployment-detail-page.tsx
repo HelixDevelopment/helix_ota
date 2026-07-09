@@ -352,11 +352,20 @@ function RolloutControlPanel({ deploymentId, currentPercentage, currentStatus }:
 interface RecallSectionProps {
   deploymentId: string;
   currentStatus: string;
+  recallToReleaseId: string;
+  onRecallToReleaseIdChange: (releaseId: string) => void;
   recallReason: string;
   onRecallReasonChange: (reason: string) => void;
 }
 
-function RecallSection({ deploymentId, currentStatus, recallReason, onRecallReasonChange }: RecallSectionProps) {
+function RecallSection({
+  deploymentId,
+  currentStatus,
+  recallToReleaseId,
+  onRecallToReleaseIdChange,
+  recallReason,
+  onRecallReasonChange,
+}: RecallSectionProps) {
   const { toast } = useToast();
   const recallMutation = useRecall();
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -365,7 +374,13 @@ function RecallSection({ deploymentId, currentStatus, recallReason, onRecallReas
 
   const handleRecall = async () => {
     try {
-      await recallMutation.mutateAsync({ deploymentId, reason: recallReason });
+      // RecallRequest requires `to_release_id` — server/internal/api/
+      // handlers_recall.go:17-20; see EVIDENCE.md (§11.4.6/§11.4.108).
+      await recallMutation.mutateAsync({
+        deploymentId,
+        toReleaseId: recallToReleaseId,
+        reason: recallReason || undefined,
+      });
       toast({
         title: "Deployment recalled",
         description: "The deployment has been recalled successfully.",
@@ -391,8 +406,20 @@ function RecallSection({ deploymentId, currentStatus, recallReason, onRecallReas
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <label htmlFor="recall-to-release-id" className="text-sm font-medium">
+              Target release ID
+            </label>
+            <Input
+              id="recall-to-release-id"
+              placeholder="release_id to roll back to"
+              value={recallToReleaseId}
+              onChange={(e) => onRecallToReleaseIdChange(e.target.value)}
+              disabled={isTerminal}
+            />
+          </div>
+          <div className="space-y-2">
             <label htmlFor="recall-reason" className="text-sm font-medium">
-              Reason for recall
+              Reason for recall (optional)
             </label>
             <Input
               id="recall-reason"
@@ -405,7 +432,7 @@ function RecallSection({ deploymentId, currentStatus, recallReason, onRecallReas
           <Button
             variant="destructive"
             onClick={() => setConfirmDialogOpen(true)}
-            disabled={isTerminal || recallMutation.isPending || !recallReason.trim()}
+            disabled={isTerminal || recallMutation.isPending || !recallToReleaseId.trim()}
             className="w-full"
           >
             {recallMutation.isPending ? "Recalling…" : "Recall Deployment"}
@@ -505,6 +532,7 @@ export default function DeploymentDetailPage() {
   const navigate = useNavigate();
 
   const [recallReason, setRecallReason] = useState("");
+  const [recallToReleaseId, setRecallToReleaseId] = useState("");
 
   const {
     data: deployment,
@@ -611,6 +639,8 @@ export default function DeploymentDetailPage() {
           <RecallSection
             deploymentId={deployment.id}
             currentStatus={deployment.status}
+            recallToReleaseId={recallToReleaseId}
+            onRecallToReleaseIdChange={setRecallToReleaseId}
             recallReason={recallReason}
             onRecallReasonChange={setRecallReason}
           />

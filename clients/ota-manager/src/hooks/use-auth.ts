@@ -3,15 +3,28 @@ import { useNavigate } from "@tanstack/react-router";
 import { apiClient, type LoginRequest, type TokenResponse } from "@/lib/api-client";
 import { useAuthStore } from "@/stores/auth-store";
 
+// LoginCredentials is the UI-facing input shape — the login form collects an
+// email-shaped identifier (unchanged UX). The wire LoginRequest the server
+// actually decodes (server/internal/api/wire.go:19-22) keys that same value
+// under `username`, never `email` (§11.4.6/§11.4.115/§11.4.108 — request-
+// body wire-shape audit, docs/qa/20260710-client-request-body-audit/
+// EVIDENCE.md). This adapter maps the UI field onto the real wire field at
+// the request boundary, same pattern as useCreateDeployment.ts /
+// useCreateRelease.ts.
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 export function useLogin() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   return useMutation({
-    mutationFn: async (credentials: LoginRequest) => {
+    mutationFn: async (credentials: LoginCredentials) => {
       const { data } = await apiClient.post<TokenResponse>(
         "/auth/login",
-        credentials,
+        { username: credentials.email, password: credentials.password } satisfies LoginRequest,
       );
       return { data, email: credentials.email };
     },
