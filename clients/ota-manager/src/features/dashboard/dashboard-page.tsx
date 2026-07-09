@@ -189,7 +189,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground text-sm max-w-md text-center">
           {(statsErrorObj as Error)?.message ?? "An unexpected error occurred while fetching telemetry data."}
         </p>
-        <Button variant="outline" onClick={() => refetch()}>
+        <Button variant="outline" onClick={() => refetchStats()}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Retry
         </Button>
