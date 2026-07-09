@@ -15,6 +15,15 @@
 // screen is selected with
 // ?screen=audit|releases|artifact-upload|appshell|deployments|fleet|groups|overview.
 //
+// STATE VARIATION (2026-07-10, §11.4.170 screen×STATE gap): an optional
+// &state=empty|error query param swaps the canned /api response for the
+// SPECIFIC endpoint the requested screen depends on, so the REAL empty-list /
+// REAL error-panel branch in the component renders — no fabricated UI, no
+// synthetic DOM injection. Only `releases` (GET /releases) and `fleet` (GET
+// /telemetry/overview) declare a state variant below; every other screen
+// param ignores `state` and behaves exactly as before (backward-compatible
+// default `state=default`).
+//
 // Theme: seeded to light here; the Playwright spec stamps the authoritative
 // data-theme (light/dark) on <html> before sampling — the same attribute
 // theme.ts writes — so every var(--token) pixel flips deterministically.
@@ -124,6 +133,21 @@ const TELEMETRY_OVERVIEW: TelemetryOverview = {
   by_state: { success: 10, failure: 2, installing: 3, idle: 2 },
 };
 
+// state=empty variant: a genuine 200 response with zero rows in EVERY
+// aggregate — exercises FleetHealth's "No device states reported yet." /
+// "No telemetry events yet." EmptyState branches (real component code path,
+// not a synthetic DOM injection).
+const TELEMETRY_OVERVIEW_EMPTY: TelemetryOverview = {
+  event_counts: {},
+  total: 0,
+  failure_rate: 0,
+  by_state: {},
+};
+
+// state=empty variant: a genuine 200 response with zero releases — exercises
+// ReleaseList's "No releases yet." EmptyState branch.
+const RELEASES_EMPTY: ReleaseListT = { items: [] };
+
 // GET /groups — device-group roster for GroupList.
 const GROUPS: DeviceGroupList = {
   items: [
@@ -152,6 +176,11 @@ function jsonRes(body: unknown, status = 200): Response {
   });
 }
 
+// ?state=empty|error (default: "default") — read once at module load, same as
+// `screen`. Only consulted for the endpoints declared below; every other
+// endpoint is unaffected regardless of its value.
+const harnessState = new URLSearchParams(window.location.search).get("state") ?? "default";
+
 const realFetch = window.fetch.bind(window);
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   const raw = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -163,9 +192,33 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
   }
   if (path.endsWith("/auth/login")) return jsonRes(TOKENS);
   if (path.endsWith("/audit")) return jsonRes(AUDIT);
-  if (path.endsWith("/releases")) return jsonRes(RELEASES);
+  if (path.endsWith("/releases")) {
+    if (harnessState === "empty") return jsonRes(RELEASES_EMPTY);
+    if (harnessState === "error") {
+      // A genuine non-404 failure (500) so ReleaseList's `error` branch
+      // (ErrorPanel) renders — 404 has no special-cased meaning for this
+      // screen, unlike FleetHealth's telemetry-overview 404 degrade path.
+      return jsonRes(
+        { error: { code: "INTERNAL", message: "Releases backend unavailable." } },
+        500,
+      );
+    }
+    return jsonRes(RELEASES);
+  }
   if (path.endsWith("/healthz")) return jsonRes(HEALTH);
-  if (path.endsWith("/telemetry/overview")) return jsonRes(TELEMETRY_OVERVIEW);
+  if (path.endsWith("/telemetry/overview")) {
+    if (harnessState === "empty") return jsonRes(TELEMETRY_OVERVIEW_EMPTY);
+    if (harnessState === "error") {
+      // A genuine non-404 failure (500) — FleetHealth treats 404 specially
+      // (endpoint-not-available EmptyState per design), so the ERROR-state
+      // proof MUST use a different status to reach the real ErrorPanel branch.
+      return jsonRes(
+        { error: { code: "INTERNAL", message: "Telemetry overview backend unavailable." } },
+        500,
+      );
+    }
+    return jsonRes(TELEMETRY_OVERVIEW);
+  }
   if (path.endsWith("/groups")) return jsonRes(GROUPS);
   // Any other /api path is not needed by the harnessed screens.
   if (path.startsWith("/api/")) return jsonRes({ error: { code: "NOT_STUBBED", message: path } }, 404);

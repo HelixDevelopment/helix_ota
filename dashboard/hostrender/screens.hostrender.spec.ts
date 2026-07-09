@@ -15,6 +15,17 @@
 // prior round's docs/qa/20260709-dashboard-vendoring-complete/ directory
 // (§11.4.119 single-resource-owner discipline applied to the evidence tree).
 //
+// STATE-VARIATION EXPANSION (2026-07-10, §11.4.170 screen×STATE gap): the 8
+// screens above are proven ONLY in their DEFAULT (populated) state. Two core
+// screens — ReleaseList (Releases) and FleetHealth (Fleet) — get an EMPTY and
+// an ERROR state variant each, × {light,dark}, reusing the IDENTICAL dual-
+// oracle discipline via the SAME generic test loop below (each variant is
+// just another ScreenSpec whose `screenParam`/`stateParam` point the harness
+// at the real empty-list / real error-panel branch — see harness-main.tsx's
+// &state=empty|error handling — never a fabricated DOM injection). Evidence
+// lands in its own dir (docs/qa/20260709-dashboard-state-variations/), kept
+// isolated from the prior rounds' evidence trees (§11.4.119).
+//
 // Per screen × {light,dark} (§11.4.170 screen×state×theme):
 //   (i)   golden image-diff — committed toHaveScreenshot baseline (golden-good)
 //   (i-bis) explicit pixelmatch analyzer self-validated: ~0 diff good↔good, a
@@ -53,6 +64,15 @@ const EVIDENCE_DIR_EXPAND = join(
   "qa",
   "20260709-dashboard-hostrender-matrix-expand",
 );
+// This round's state-variation evidence (empty-list + error-panel proofs).
+const EVIDENCE_DIR_STATES = join(
+  HERE,
+  "..",
+  "..",
+  "docs",
+  "qa",
+  "20260709-dashboard-state-variations",
+);
 const VW = 1280;
 const VH = 800;
 
@@ -62,12 +82,14 @@ const THEMES: Theme[] = ["light", "dark"];
 type Box = { x: number; y: number; width: number; height: number } | null;
 
 interface ScreenSpec {
-  id: string; // ?screen=<id>
+  id: string; // unique test/evidence key
   name: string;
   headingSel: string; // element hidden by the regression → drops its label
   requiredLabels: string[]; // requiredLabels[0] MUST be the heading's own text
   readyText: string; // a data-dependent label proving the populated render
   evidenceDir?: string; // defaults to EVIDENCE_DIR when unset
+  screenParam?: string; // ?screen=<value>; defaults to `id` when unset
+  stateParam?: string; // &state=<value>; defaults to "default" (omitted) when unset
 }
 
 function evidenceDirFor(spec: ScreenSpec): string {
@@ -147,6 +169,55 @@ const SCREENS: ScreenSpec[] = [
     requiredLabels: ["Overview", "Recent releases", "1.4.0", "published", "server: ok"],
     readyText: "1.4.0",
     evidenceDir: EVIDENCE_DIR_EXPAND,
+  },
+  // ── state-variation round (2026-07-10): EMPTY + ERROR for 2 core screens ──
+  // Each reuses the real component's own empty-list / error-panel branch
+  // (harness-main.tsx &state=empty|error) — never a synthetic DOM injection.
+  {
+    id: "releases-empty",
+    name: "ReleaseList (Releases) — EMPTY state",
+    headingSel: "h1",
+    requiredLabels: ["Releases", "New release", "No releases yet."],
+    readyText: "No releases yet.",
+    evidenceDir: EVIDENCE_DIR_STATES,
+    screenParam: "releases",
+    stateParam: "empty",
+  },
+  {
+    id: "releases-error",
+    name: "ReleaseList (Releases) — ERROR state",
+    headingSel: "h1",
+    requiredLabels: ["Releases", "500", "INTERNAL", "Releases backend unavailable."],
+    readyText: "Releases backend unavailable.",
+    evidenceDir: EVIDENCE_DIR_STATES,
+    screenParam: "releases",
+    stateParam: "error",
+  },
+  {
+    id: "fleet-empty",
+    name: "FleetHealth (Fleet) — EMPTY state",
+    headingSel: "h1",
+    requiredLabels: [
+      "Fleet",
+      "Open a device",
+      "Fleet overview",
+      "No device states reported yet.",
+      "No telemetry events yet.",
+    ],
+    readyText: "No device states reported yet.",
+    evidenceDir: EVIDENCE_DIR_STATES,
+    screenParam: "fleet",
+    stateParam: "empty",
+  },
+  {
+    id: "fleet-error",
+    name: "FleetHealth (Fleet) — ERROR state",
+    headingSel: "h1",
+    requiredLabels: ["Fleet", "500", "INTERNAL", "Telemetry overview backend unavailable."],
+    readyText: "Telemetry overview backend unavailable.",
+    evidenceDir: EVIDENCE_DIR_STATES,
+    screenParam: "fleet",
+    stateParam: "error",
   },
 ];
 
@@ -257,7 +328,9 @@ async function applyTheme(page: Page, theme: Theme): Promise<void> {
 }
 
 async function gotoScreen(page: Page, spec: ScreenSpec, theme: Theme): Promise<void> {
-  await page.goto(`/hostrender/harness.html?screen=${spec.id}`);
+  const screenParam = spec.screenParam ?? spec.id;
+  const stateParam = spec.stateParam ?? "default";
+  await page.goto(`/hostrender/harness.html?screen=${screenParam}&state=${stateParam}`);
   // Wait for the authenticated + data-populated render (the harness flips
   // [data-harness="ready"] once the stubbed login resolves).
   await expect(page.locator('[data-harness="ready"]')).toBeAttached();
@@ -271,6 +344,7 @@ async function gotoScreen(page: Page, spec: ScreenSpec, theme: Theme): Promise<v
 test.beforeAll(() => {
   mkdirSync(EVIDENCE_DIR, { recursive: true });
   mkdirSync(EVIDENCE_DIR_EXPAND, { recursive: true });
+  mkdirSync(EVIDENCE_DIR_STATES, { recursive: true });
 });
 
 for (const spec of SCREENS) {
