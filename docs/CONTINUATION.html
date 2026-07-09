@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 14 <strong>Last modified:</strong>
-2026-07-09T16:45:00Z</p>
+<p><strong>Revision:</strong> 15 <strong>Last modified:</strong>
+2026-07-09T18:15:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,28 +263,34 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td>constitution <code>e60cbde</code> adopted
-(<code>bb3b4189</code>+<code>634fcb50</code>) + CONTINUATION Rev13
-(<code>b346323e</code>) + A/B/C stream evidence (<code>de71a634</code>),
-all pushed 4/4 FF §11.4.113. THIS batch (pending): W1 OpenDesign
-ground-truth + W2/W3 §11.4.170 host-render harnesses on both frontends
-(independent-review GO each) + CONTINUATION Rev 14. Prior test-coverage
-HEAD <code>21338527</code>.</td>
+<td><code>444b68f4</code> — OpenDesign adoption COMPLETE on BOTH
+frontends + hardening. 11 commits this session, all pushed 4/4 FF
+§11.4.113: <code>35035ba4</code> brand tokens · <code>cc3f5dc8</code>
+vendoring plan · <code>26e98390</code>/<code>d7491292</code>
+device-claim+signed-pipeline · <code>74b94bb8</code> ota-manager
+vendor+toggle-fix · <code>4c6b201d</code> dashboard
+vendor+dark-mode+controller-tests · <code>961ec31c</code> UI audit+WCAG
+contrast · <code>6466edc2</code> guard-hook root-cause ·
+<code>28ce6fd6</code> ota-manager RED-suite restore+latent-bugfix ·
+<code>94fb10a2</code> typecheck-gate-fixed · <code>444b68f4</code>
+dashboard hex-completion. Prior constitution-adoption HEAD
+<code>634fcb50</code>.</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
-<td><strong>OPENDESIGN ADOPTION (2026-07-09)</strong> — autonomous loop
-(§11.4.126). Both operator decisions RESOLVED (keep+improve both
-frontends; OpenDesign=<code>nexu-io/open-design</code>). §11.4.170
-host-render harnesses now live on <code>clients/ota-manager</code> +
-<code>dashboard</code> (both proven light/dark or light+honest-gap,
-self-validated). NEXT: <code>feature/opendesign-adoption</code> — author
-<code>design-systems/helix-ota/</code> brand tokens, vendor into both
-frontends, wire ota-manager theme-toggle DOM class + dashboard dark
-mode, prove via harnesses. Prior: <strong>TEST-COVERAGE PROGRAM</strong>
-(2026-06-23) Phase 0 DONE + Phase 1 mostly done
-(<code>docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md</code>).
-Cuttlefish Tier-2 A/B VERIFIED (F112/F55).</td>
+<td><strong>OPENDESIGN ADOPTION — COMPLETE (2026-07-09)</strong> —
+autonomous loop (§11.4.126). Both web frontends fully ADOPTED:
+<code>design-systems/helix-ota/</code> brand tokens authored → vendored
+byte-identical into <code>clients/ota-manager</code> +
+<code>dashboard</code> → ota-manager theme-toggle DOM-class bug FIXED →
+dashboard real light/dark theme added + controller tested → all screen
+hex repointed to tokens → proven light+dark by §11.4.170 host-render
+(self-validated oracles) on both. UI-surface audit:
+ota-manager+dashboard ADOPTED, server N/A (serves SPA), Android agents
+N/A/headless. Remaining = polish/hardening follow-ups (see §5), all
+non-blocking. Prior: <strong>TEST-COVERAGE PROGRAM</strong> (2026-06-23)
+Phase 0 DONE + Phase 1 mostly done. Cuttlefish Tier-2 A/B VERIFIED
+(F112/F55).</td>
 </tr>
 <tr>
 <td><strong>Terminal goal</strong></td>
@@ -296,6 +302,62 @@ by operator decision (§11.4.133)</strong></td>
 </tr>
 </tbody>
 </table>
+<h3
+id="latest-session-2026-07-09-late-opendesign-adoption-complete-both-frontends-hardening">Latest
+session (2026-07-09, late) — OpenDesign adoption COMPLETE (both
+frontends) + hardening</h3>
+<p>Operator directive: continue the endless autonomous loop with 3-4
+parallel subagents on real evidence, no bluff; keep improving OpenDesign
+(<code>nexu-io/open-design</code>). Executed the entire vendoring plan
+end-to-end; 11 commits, all pushed 4/4 FF (no force §11.4.113), every
+review that raised a finding iterated to a zero-finding GO (§11.4.134)
+before commit.</p>
+<p><strong>OpenDesign adoption — DONE on both web frontends:</strong> -
+<strong><code>design-systems/helix-ota/</code></strong>
+(<code>35035ba4</code>) — OpenDesign-schema brand token package
+(manifest + <code>tokens.css</code> 56 props light+dark +
+<code>tailwind-v4.css</code> byte-exact with OpenDesign
+<code>renderTailwindV4Css</code>), palette derived from ota-manager’s
+index.css. Reviewed GO. - <strong>ota-manager</strong>
+(<code>74b94bb8</code>) — vendored tokens byte-identical; FIXED the
+theme-toggle bug (store never wrote a DOM class → base dark palette
+stuck; now <code>applyThemeClass</code> writes
+<code>.light</code>/<code>.dark</code> + <code>data-theme</code> from
+setTheme/toggleTheme/onRehydrate, + jsdom unit test). Pixel-proven:
+light vs dark = 98.96% differ. - <strong>dashboard</strong>
+(<code>4c6b201d</code> base + <code>444b68f4</code> completion) —
+vendored tokens; added a REAL light/dark theme (<code>theme.ts</code>:
+data-theme + localStorage + prefers-color-scheme seed,
+<code>initTheme</code> before render) + header toggle; repointed ALL 27
+live screen-hex across 8 screens → <code>var(--token)</code> (9
+justified fixed brand-chrome hex kept in the header). Controller
+test-covered (<code>theme.test.tsx</code> 13 +
+<code>AppShell.test.tsx</code> RTL). test:run 107, e2e:hostrender 45
+(both themes, self-validated oracles), card
+<code>#ffffff</code>→<code>#020817</code> dark-surface pixel proof.</p>
+<p><strong>Hardening landed alongside:</strong> - <strong>UI-surface
+audit + WCAG contrast</strong> (<code>961ec31c</code>) —
+ota-manager+dashboard ADOPTED, server N/A, Android agents N/A/headless;
+measured contrast fails: dark <code>--danger</code> 2.00:1, light
+<code>--warn</code> 1.92:1, <code>--success</code> text 3.1:1 (proposed
+re-vendor recorded, NOT applied). - <strong>ota-manager RED-suite
+restored</strong> (<code>28ce6fd6</code>, §11.4.124/§11.4.114) — commit
+<code>94246322</code> had mistakenly deleted 18 camelCase hook re-export
+shims (bundled into a dist/ cleanup), breaking 4 test files; restored
+from git history (byte-match) + fixed a latent
+<code>refetch</code>→<code>refetchStats</code> ReferenceError; vitest
+4-fail→9-pass/36. - <strong>Typecheck gate fixed</strong>
+(<code>94fb10a2</code>, §11.4.120) — <code>tsconfig.node.json</code>
+invalid project-ref made <code>tsc</code> bail before checking source
+(why the refetch bug slipped); now functional, surfaces 118 pre-existing
+errors (tracked follow-up; ~57 on the dead unrouted pages). -
+<strong>Guard-hook false-positive root-caused</strong>
+(<code>6466edc2</code>, §11.4.102) — the §11.4.109 PreToolUse guard’s
+OUTER regex spans any <code>git</code>…<code>push</code> across newlines
++ INNER matches any <code>-f</code> including benign flags → blocks
+legitimate multi-line commits. Fail-closed (safe). Fix deferred to
+§11.4.26 constitution workflow (evidence + validated proposal in
+FINDINGS.md).</p>
 <h3
 id="latest-session-2026-07-09-constitution-e60cbde-adoption-uiuxopendesign-audit">Latest
 session (2026-07-09) — Constitution e60cbde adoption + UI/UX/OpenDesign
@@ -1067,15 +1129,60 @@ an x86_64 KVM host.</p>
 <hr />
 <h2 id="whats-running">4. What’s running</h2>
 <ul>
-<li><strong>Main stream:</strong> Emulator Tier-2 validation (remote on
-nezha.local)</li>
-<li><strong>Background agents:</strong> None currently dispatched</li>
+<li><strong>Main stream:</strong> OpenDesign adoption COMPLETE (both
+frontends); autonomous loop continuing on polish/hardening follow-ups
+(§5).</li>
+<li><strong>Background agents:</strong> None currently dispatched (last
+batch: T2/T3 vendoring, B restore, G typecheck, C/D/F audits — all
+landed).</li>
 <li><strong>Recording directory:</strong> <code>$HOME/Downloads</code>
 per §11.4.158(D) (default; no project-level override)</li>
 </ul>
 <hr />
 <h2 id="next-actions-priority-ordered">5. Next actions
 (priority-ordered)</h2>
+<p><strong>OpenDesign polish/hardening follow-ups (from the
+2026-07-09-late session — all non-blocking):</strong></p>
+<p>A. <strong>WCAG contrast token re-vendor (highest UI-polish
+value).</strong> Coordinated change: edit
+<code>design-systems/helix-ota/tokens.css</code> values (dark
+<code>--danger</code>→<code>#dc2626</code>, light
+<code>--warn</code>→<code>#a16207</code>, light
+<code>--muted</code>→<code>#475569</code>, <code>--success</code> text
+tone, add <code>--border-strong</code>), then re-vendor byte-identical
+into <code>clients/ota-manager/src/styles/opendesign-tokens.css</code> +
+<code>dashboard/src/styles/tokens.css</code>, then REGENERATE both
+frontends’ §11.4.170 goldens (pixels change) + re-prove. Measured
+evidence + proposed values:
+<code>docs/research/opendesign_token_contrast_audit_20260709/CONTRAST.md</code>.
+B. <strong>ota-manager 118 type errors</strong> now surfaced by the
+functional gate (<code>94fb10a2</code>) — dedicated cleanup; ~57 are on
+the dead unrouted feature pages (bundle with C). C.
+<strong>Router-wiring of ota-manager feature pages — OPERATOR-GATED
+(§11.4.101).</strong> The restored feature pages
+(devices/releases/deployments) are importable+tested but unrouted;
+wiring needs a
+<code>react-router-dom</code>→<code>@tanstack/react-router</code>
+<code>useNavigate</code> reconciliation in
+<code>dashboard-page.tsx</code> + a UX decision (which dashboard, nav
+links). Do NOT auto-wire. D. <strong>Guard-hook fix — §11.4.26
+constitution workflow.</strong> Tighten the force-push regex per
+<code>docs/research/guard_hook_false_positive_20260709/FINDINGS.md</code>
+(fuller split-on-separators + scoped-inner; minimal regex has a
+documented <code>git -c k=v push</code> false-negative) + update the
+≥20-case hook test suite; push to all constitution upstreams.
+Operator-aware. E. <strong>§11.4.30 hygiene:</strong> untrack
+<code>clients/ota-manager/dist/</code> (build artifact) + gitignore —
+blocked on the <code>commit_all.sh --paths</code> deletion-pathspec bug
+(a deletion path in <code>--paths</code> fatals the whole
+<code>git add</code>); fix that wrapper bug first. Also gitignore
+<code>toPdfViaTempFile*</code> export residue. F. <strong>Expand
+§11.4.170 screen×state matrix</strong> on ota-manager (only LoginPage
+host-rendered there; dashboard now has 5 screens). G. <strong>OpenDesign
+author-time daemon</strong> (<code>od</code> MCP + Next.js UI) setup —
+rootless/containerized (§11.4.161/§11.4.173), operator-review-gated
+(heavy product).</p>
+<p><strong>Prior (A/B path):</strong></p>
 <ol type="1">
 <li><strong>OTA-003 — DONE (VERIFIED on nezha 2026-06-23).</strong> Real
 Android A/B (<code>update_engine</code> apply → slot flip
