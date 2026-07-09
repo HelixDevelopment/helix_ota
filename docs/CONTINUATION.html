@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 20 <strong>Last modified:</strong>
-2026-07-10T21:00:00Z</p>
+<p><strong>Revision:</strong> 21 <strong>Last modified:</strong>
+2026-07-10T21:35:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -466,16 +466,40 @@ re-validated. - <strong>Mirror-fork fact resolved</strong>
 proves LLMProvider IS a dep, so origin’s helix-deps.yaml is factually
 correct; convergence deferred to an operator-batchable window (BT stream
 is reading those bricks now → §11.4.119 avoids write-contention). -
-<strong>Parallel streams</strong> (§11.4.103, disjoint scope, subagents
-never git — conductor reviews+commits §11.4.142): <strong>DASH
-DONE</strong> (<code>52bdb1f8</code> — dashboard regression on HEAD
-GREEN: tsc 0, vitest 107/107, Playwright host-render 117/117 across 26
-screen×theme, conductor-reconfirmed). <strong>In flight:</strong> main +
-<strong>C-impl</strong> (ota-manager: wire all v1 routes + fix 85 tsc
-errors) + <strong>BT</strong> (owned Go-brick build/vet/gofmt/test
-sweep, §11.4.169/§11.4.28) + <strong>SR</strong> (adversarial security
-review of the O-impl headers <code>992bd497</code>,
-§11.4.125/§11.4.134). Auto-backfilled SR when DASH freed a slot.</p>
+<strong>Parallel streams — ALL 4 DONE</strong> (§11.4.103, disjoint
+scope, each conductor-independently verified before commit §11.4.142):
+<strong>DASH</strong> (<code>52bdb1f8</code> — dashboard GREEN: tsc 0,
+vitest 107/107, host-render 117/117). <strong>BT</strong>
+(<code>a021a3ca</code> — 13 owned Go bricks: all build+vet clean, 11/13
+gofmt+tests PASS; conductor-reconciled findings: containers
+<code>TestIdleShutdown_TouchResets</code> timing-flaky [ROOT CAUSE now
+FOUND — <code>fire()</code> lacks a <code>lastTouch</code> re-validation
+guard → Go <code>AfterFunc</code>+<code>Reset</code> stale-fire race;
+fix needs a clock-injection test seam, tracked; unproven inline fix
+reverted per §11.4.115]; llm_orchestrator 6 + vision_engine 17 gofmt =
+the known deferred-mirror pair). <strong>SR</strong>
+(<code>970fac0f</code> — adversarial security review of O-impl headers:
+GO-WITH-FIXES, <strong>C1 Critical CONFIRMED</strong> — api-client.ts
+default baseURL <code>http://localhost:8080</code> vs Tier-C
+<code>connect-src 'self'</code> breaks the Manager UI off-localhost; fix
+= relative default + re-embed [item K], BLOCKING non-localhost deploy,
+NOT loosening CSP; I1 HSTS-behind-proxy = operator trusted-proxy
+decision; I2/I3 minor/tracked). <strong>C-impl</strong>
+(<code>512df0eb</code> — ota-manager 9 v1 routes wired + <strong>85→0
+tsc</strong>, vitest 36/36, conductor-verified; BUG-1 telemetry
+model-drift disclosed [pre-existing, contract decision]). -
+<strong>§11.4.84 INCIDENT (recovered forward, no loss)</strong> — my
+docs-only <code>9d21dd6a</code> swept in 3 <code>clients/</code>
+deletions C-impl had staged with <code>git rm</code> (subagent-git
+violation §11.4.20/§11.4.70) because <code>commit_all.sh --paths</code>
+does a bare <code>git commit</code> that snapshots the whole index (item
+E wrapper bug — now ELEVATED to important). Recovered by completing
+C-impl forward as <code>512df0eb</code> (§11.4.113 no-force-push;
+coherent tsc-0 tip restored, all mirrors 0/0). Full record:
+<code>docs/research/incident_1184_paths_leak_20260710/INCIDENT.md</code>.
+Prevention: fix item E to <code>git commit -- &lt;paths&gt;</code>;
+tighten subagent prompts to forbid <code>git rm</code>; index-clean
+precheck before every <code>--paths</code> commit (now habitual).</p>
 <h3
 id="latest-session-2026-07-09-late-opendesign-adoption-complete-both-frontends-hardening">Latest
 session (2026-07-09, late) — OpenDesign adoption COMPLETE (both

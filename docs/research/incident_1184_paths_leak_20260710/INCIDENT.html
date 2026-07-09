@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>INCIDENT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">INCIDENT</h1>
+</header>
+<h1
+id="incident-11.4.84-working-tree-quiescence-violation-subagent-in-flight-deletions-leaked-into-an-unrelated-docs-commit">Incident
+— §11.4.84 working-tree-quiescence violation: subagent in-flight
+deletions leaked into an unrelated docs commit</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T21:30:00Z <strong>Severity:</strong> Governance incident
+(§11.4.84 violation) — recovered forward, no data lost.
+<strong>Authority:</strong> §11.4.84 (working-tree quiescence for
+subagent commits), §11.4.20/§11.4.70 (subagents never git — conductor
+reviews+commits), §11.4.113 (absolute no-force-push — recovery MUST be
+forward), §11.4.6 (no-guessing — root cause proven, not assumed),
+§11.4.4 (STOP-on-discovery).</p>
+<hr />
+<h2 id="what-happened-fact">1. What happened (FACT)</h2>
+<p>Commit <code>9d21dd6a</code> — message
+<code>docs: CONTINUATION Rev20 + READINESS Rev4 — wave-5 progress (O/Q/DASH)</code>,
+intended to be <strong>docs-only</strong> (I passed
+<code>commit_all.sh --paths</code> listing only
+<code>docs/CONTINUATION.*</code> +
+<code>docs/research/.../READINESS.*</code>) — <strong>also contained 3
+<code>clients/ota-manager</code> source-file DELETIONS (332
+deletions):</strong></p>
+<pre><code>clients/ota-manager/src/features/layout/app-layout.tsx | 156 ----
+clients/ota-manager/src/routes/dashboard.tsx           |  71 ----
+clients/ota-manager/src/routes/index.tsx               | 105 ----</code></pre>
+<p>These were the §11.4.124 zero-importer removals from the
+<strong>in-flight Stream C-impl</strong> (ota-manager router wiring),
+whose <em>other</em> 27 files (the router rewiring that makes those
+deletions correct) were still uncommitted in the working tree. So
+<code>9d21dd6a</code> shipped a <strong>broken intermediate
+state</strong>: files deleted, but the rewiring that replaces them
+absent from HEAD.</p>
+<h2 id="root-cause-proven-11.4.6-not-likely">2. Root cause (PROVEN,
+§11.4.6 — not “likely”)</h2>
+<p>Two conditions combined:</p>
+<ol type="1">
+<li><strong><code>commit_all.sh --paths</code> commits the whole index,
+not just the paths.</strong> The wrapper
+(<code>scripts/commit_all.sh:346-350</code>) does
+<code>git add -- $COMMIT_EXPLICIT_PATHS</code> on a clean index, then
+(<code>:404</code>) a <strong>bare
+<code>git commit -m ...</code></strong> with NO pathspec. A bare commit
+snapshots the ENTIRE staged index — so anything <em>already staged</em>
+by another actor is swept in alongside the intended paths.</li>
+<li><strong>Stream C-impl staged its deletions with
+<code>git rm</code>.</strong> C-impl’s report claims “no git writes,”
+but the 3 files were staged as deletions in the index (only
+<code>git rm</code> does that; plain <code>rm</code> leaves them
+unstaged-and-tracked). A subagent running <code>git rm</code> is itself
+a violation of §11.4.20/§11.4.70 (subagents never git — conductor
+reviews+commits).</li>
+</ol>
+<p>Sequence: C-impl <code>git rm</code>’d the 3 dead files → they sat
+staged in the shared index → my next <code>commit_all.sh --paths</code>
+docs commit’s bare <code>git commit</code> swept them in.</p>
+<p>This is precisely the §11.4.84 forensic failure mode (the JWT-verify
+mutation-residue case study in the anchor itself): a concurrent actor’s
+staged change riding into an unrelated commit through a shared
+checkout.</p>
+<h2 id="impact">3. Impact</h2>
+<ul>
+<li><code>9d21dd6a</code> (pushed to all 4 mirrors) is a broken
+intermediate: ota-manager at that commit references deleted files.
+Bounded blast radius — a transient tip state, and no release/tag points
+at it (§11.4.185 gates release anyway).</li>
+<li>No data lost; no secret leaked; no mutation marker landed
+(scanned).</li>
+</ul>
+<h2 id="recovery-forward-only-11.4.113-no-force-push">4. Recovery
+(FORWARD ONLY — §11.4.113 no-force-push)</h2>
+<p><code>9d21dd6a</code> is immutable (force-push STRICTLY FORBIDDEN).
+Recovered by <strong>completing</strong> the work forward: independently
+verified C-impl’s full delta (tsc <code>--noEmit</code> exit 0, vitest
+36/36, no new untracked source, mutation-scan clean, <code>dist/</code>
+artifact excluded) and committed the 27 completing source files as
+<code>512df0eb</code>, restoring a coherent tsc-0 tip. Verified
+post-commit: 27 clients files in <code>512df0eb</code>, 0
+<code>dist/</code> files, tsc 0 at the tip, all 4 mirrors 0/0 FF.</p>
+<h2 id="prevention-tracked">5. Prevention (tracked)</h2>
+<ol type="1">
+<li><strong>Item E elevated from nice-to-have to important.</strong>
+<code>commit_all.sh --paths</code> MUST commit ONLY the named paths —
+either <code>git commit -- $COMMIT_EXPLICIT_PATHS</code>
+(pathspec-limited commit) or reset the index to HEAD before staging so
+the bare commit can only contain the explicitly-added paths. This
+wrapper bug turns any pre-staged change into a §11.4.84 leak. (Careful
+change to the commit tool itself — its own §11.4.115 test: pre-stage a
+decoy file, run <code>--paths</code> on an unrelated path, assert the
+decoy is NOT in the resulting commit.)</li>
+<li><strong>Reinforce §11.4.20/§11.4.70 in subagent dispatch
+prompts:</strong> subagents MUST NOT run ANY git command — not
+<code>git add</code>, not <code>git rm</code>, not
+<code>git commit</code>. For §11.4.124 removals a subagent uses plain
+<code>rm</code> (leaves the deletion unstaged) and reports it; the
+conductor stages+reviews+commits. My dispatch prompts said “do NOT run
+any git command” but did not call out <code>git rm</code> for removals
+specifically — tighten the wording.</li>
+<li><strong>Conductor pre-commit index hygiene:</strong> always
+<code>git diff --cached --name-only</code> and confirm it matches the
+intended <code>--paths</code> set BEFORE committing (I now do an
+index-clean precheck before every <code>--paths</code> commit; this
+incident predates that habit).</li>
+</ol>
+<h2 id="sources-verified">Sources verified</h2>
+<p>Sources verified 2026-07-10: - git
+<code>commit</code>/<code>add</code>/<code>rm</code> index semantics —
+https://git-scm.com/docs/git-commit (pathspec form) - Constitution
+§11.4.84 (working-tree quiescence) — the governing anchor.</p>
+</body>
+</html>
