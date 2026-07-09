@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>INTEGRATION_GROUND_TRUTH</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">INTEGRATION_GROUND_TRUTH</h1>
+</header>
+<h1 id="opendesign-helix-ota-integration-ground-truth">OpenDesign →
+Helix OTA Integration — GROUND TRUTH</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T00:00:00Z <strong>Status:</strong> active — supersedes the
+earlier guessed <code>OPENDESIGN_PLAN.md</code> <strong>Scope:</strong>
+How Helix OTA adopts OpenDesign
+(<code>github.com/nexu-io/open-design</code>) to design/refine its two
+React frontends (<code>clients/ota-manager</code>,
+<code>dashboard</code>) per Constitution §11.4.162 (mandatory OpenDesign
+UI design system) + §11.4.74 (extend-upstream) + §11.4.28 (decoupling).
+<strong>Authority:</strong> Evidence read directly from the
+operator-confirmed READ-ONLY clone at git <code>81b20dc</code>
+(2026-07-09), tag/version <code>open-design@0.14.1</code>. Every claim
+below cites a file path or captured command output. Nothing here is
+guessed (§11.4.6 — items I could not verify are marked
+<code>UNCONFIRMED:</code>).</p>
+<hr />
+<h2 id="tldr-the-real-adoption-model">0. TL;DR (the real adoption
+model)</h2>
+<p>OpenDesign is <strong>NOT</strong> a CSS-token npm package and
+<strong>NOT</strong> a React component library you
+<code>npm install</code> into an app. It is a <strong>local-first design
+PRODUCT</strong> (pnpm monorepo, Electron desktop app + <code>od</code>
+daemon + web UI) that exposes itself <strong>to coding agents over a
+stdio MCP server + <code>od</code> CLI</strong>, and ships a large
+corpus of <strong>design-system token packages</strong> (153) +
+<strong>skills</strong> (163) + <strong>plugins/templates</strong> as
+<strong>plain files</strong> (<code>tokens.css</code>,
+<code>tailwind-v4.css</code>, <code>design-tokens.json</code>,
+<code>components.html</code>, <code>DESIGN.md</code>).</p>
+<p>For Helix OTA (React19+Vite6+shadcn/Tailwind4 and React18+Vite), the
+adoption is a <strong>combination</strong>: 1. <strong>Install the
+<code>od</code> daemon + wire the MCP plugin into the agent</strong>
+(Claude Code) so the agent can read/generate designs
+(<code>od mcp install claude</code>), AND 2. <strong>Consume the
+design-system TOKEN FILES directly</strong> (<code>tokens.css</code> +
+<code>tailwind-v4.css</code> as <code>:root</code> custom properties + a
+Tailwind v4 <code>@theme</code>) as the project’s light/dark design
+tokens — these are static, framework-agnostic files usable by BOTH Vite
+apps.</p>
+<p>You do <strong>NOT</strong> consume
+<code>@open-design/components</code> — it is a private,
+workspace-internal, React-18.3.1-pinned package for OpenDesign’s OWN app
+(evidence §3).</p>
+<p><strong>Verdict: NEEDS-REVIEW before adoption</strong> (not blocked).
+Rationale in §6.</p>
+<hr />
+<h2 id="what-opendesign-actually-provides-its-consumption-model">1. WHAT
+OpenDesign actually provides + its consumption model</h2>
+<h3 id="it-is-a-productapp-not-a-library">1.1 It is a product/app, not a
+library</h3>
+<ul>
+<li><code>package.json</code>: <code>"name": "open-design"</code>,
+<code>"version": "0.14.1"</code>, <code>"private": true</code>,
+<code>"packageManager": "pnpm@10.33.2"</code>,
+<code>"description": "Local-first design product: detects your installed code-agent CLI, runs design skills + design systems, streams artifacts into a sandboxed preview."</code>,
+<code>"bin": { "od": "./apps/daemon/bin/od.mjs" }</code>,
+<code>engines: node ~24, pnpm &gt;=10.33.2 &lt;11</code>.</li>
+<li>Workspaces (<code>pnpm-workspace.yaml</code>):
+<code>packages/*</code>, <code>apps/*</code>, <code>tools/*</code>,
+<code>e2e</code>. <code>apps/</code> = <code>daemon</code>
+(Express+SQLite <code>od</code> server), <code>web</code> (Next.js),
+<code>desktop</code> (Electron), <code>landing-page</code>,
+<code>packaged</code>, <code>telemetry-worker</code>.</li>
+<li>Web-confirmed (github.com/nexu-io/open-design, fetched 2026-07-09):
+“open-source design application and platform — not a component library …
+Not published as external npm dependencies — consumed as standalone
+applications or integrated via MCP protocol.” License
+<strong>Apache-2.0</strong> (<code>LICENSE</code> line 1).</li>
+</ul>
+<h3 id="four-consumption-surfaces-readme.md300-395-quickstart.md">1.2
+Four consumption surfaces (README.md:300-395, QUICKSTART.md)</h3>
+<ol type="1">
+<li><strong>Desktop app</strong> (Electron) / <strong>web UI</strong> at
+<code>http://localhost:7456</code>.</li>
+<li><strong>stdio MCP server</strong> —
+<code>od mcp install &lt;agent&gt;</code> (16+ CLIs: claude, codex,
+cursor, copilot, gemini…). Installs
+<code>~/.config/&lt;agent&gt;/open-design.json</code>; Claude Code gets
+a <code>claude mcp add-json</code> one-liner (README.md:389). The agent
+then reads <code>skills/</code>, binds a <code>DESIGN.md</code>, and
+emits a previewable <code>&lt;artifact&gt;</code>.</li>
+<li><strong><code>od</code> CLI</strong> — <code>od search-files</code>,
+<code>od get-file &lt;path&gt;</code>,
+<code>od get-artifact &lt;slug&gt;</code>, <code>od plugin run</code>,
+<code>od skill list</code>, <code>od plugin install</code>
+(README.md:380-497). Requires a built daemon: <code>od.mjs</code> throws
+<code>Open Design daemon dist entry not found … Run "pnpm --filter @open-design/daemon build" first.</code>
+(captured — see §Verified).</li>
+<li><strong>Docker</strong> (<code>deploy/</code>,
+<code>docker compose up -d</code>).</li>
+</ol>
+<h3
+id="the-design-system-token-packages-the-reusable-asset-for-helix">1.3
+The design-system TOKEN packages (the reusable asset for Helix)</h3>
+<p><code>design-systems/</code> holds <strong>153</strong> brand token
+packages (apple, ant, cal, linear, arc, bmw, canva, cisco…). Each is a
+self-contained folder emitting a canonical contract (evidence
+<code>design-systems/apple/</code>): - <code>manifest.json</code> —
+<code>schemaVersion: "od-design-system-project/v1"</code>, declares the
+file set (<code>design</code>, <code>tokens</code>,
+<code>designTokens</code>, <code>tailwind</code>,
+<code>components</code>), <code>preview/</code> pages,
+<code>craft</code> (color, accessibility-baseline). -
+<code>tokens.css</code> — the <strong>machine-readable
+<code>:root { … }</code> custom-property block</strong> (56 standard
+tokens for apple). Header literally says agents must “paste the
+<code>:root { … }</code> block verbatim into the first
+<code>&lt;style&gt;</code> of every artifact … then reference everything
+via <code>var(--name)</code>”. - <code>tailwind-v4.css</code> —
+<code>@import "tailwindcss"; @import "./tokens.css"; @theme { --color-*:   var(--*) … }</code>
+— a ready <strong>Tailwind v4 <code>@theme</code></strong> mapping over
+the tokens (matches Helix’s Tailwind 4 stack). -
+<code>design-tokens.json</code> —
+<code>format: "od-design-tokens/v1"</code>,
+<code>contract: "TOKEN_SCHEMA"</code>, per-token
+value/type/layer/confidence/source. - <code>components.html</code> +
+<code>components.manifest.json</code> — rendered component
+recipes/selectors. - <code>system/kit.html</code> +
+<code>system/kit.dark.html</code> — <strong>light AND dark component
+kits</strong> (both re-declare the token <code>:root</code>), plus
+<code>preview/{colors,typography,spacing}.html</code>. -
+<code>DESIGN.md</code> (+ ~20 i18n translations), <code>USAGE.md</code>
+(read-order + Do/Avoid).</p>
+<p>The <strong>cross-brand standard token schema</strong> is
+<code>packages/contracts/src/design-systems/ token-schema.ts</code>
+(re-exported by <code>design-systems/_schema/tokens.schema.ts</code>).
+Standard token names include:
+<code>--bg --surface --surface-warm --fg --fg-2 --muted --meta --border --border-soft --accent --accent-on --accent-hover --accent-active --accent-light --success --warn --danger --font-display --font-body --font-mono --text-xs…--text-4xl --leading-* --space-1…--space-22 --radius-xs…--radius-pill --elev-flat/ring/raised --focus-ring --motion-fast/base --ease-standard --container-max --section-y-* --container-gutter-*</code>.
+This is the <strong>component-level + theme token vocabulary</strong>
+§11.4.162 refers to; brand switching = swap the <code>:root</code>
+block, keep the names.</p>
+<h3 id="skills-plugins">1.4 Skills + plugins</h3>
+<ul>
+<li><code>skills/</code> = <strong>163</strong> <code>SKILL.md</code>
+folders (Claude Code SKILL convention + <code>od:</code> frontmatter:
+<code>mode/surface/platform/preview/design_system.requires/outputs</code>).
+Example <code>skills/8-bit-orbit-video-template/SKILL.md</code>.</li>
+<li><code>plugins/</code> = MCP plugin + marketplace + registry +
+<code>spec/SPEC.md</code> (portable plugin contract: a dir with
+<code>SKILL.md</code> + optional <code>open-design.json</code>).</li>
+<li><code>.claude-plugin/marketplace.json</code> — publishes the
+“open-design” Claude Code plugin (stdio MCP, “139 skills +
+projects/files/preview tools, served by your local <code>od</code>
+daemon. Requires <code>od</code> on PATH”).</li>
+</ul>
+<p><strong>Intended consumption model for an EXTERNAL React
+app:</strong> the agent (Claude Code) talks to the local <code>od</code>
+daemon over MCP to browse/generate/preview designs; the <strong>durable,
+framework-neutral artifact you keep in your repo is the design-system’s
+<code>tokens.css</code> + <code>tailwind-v4.css</code> (+
+<code>DESIGN.md</code> as design intent)</strong>. OpenDesign emits
+HTML/CSS artifacts (“real HTML/CSS — drop it into Cursor/Codex/Claude
+Code to keep building as code”, README.md:322); it does not hand you a
+React component dependency.</p>
+<hr />
+<h2 id="concrete-adoption-path-for-helix-ota-11.4.162">2. Concrete
+adoption path for Helix OTA (§11.4.162)</h2>
+<p>§11.4.162 requires: install as a project dependency; use its
+tokens/themes (light+dark); component-level tokens; extend upstream for
+gaps; light+dark variants; no overlap. The <strong>evidenced</strong>
+path is a <strong>combination of (a) agent/MCP wiring + (b) direct
+token-file consumption</strong> — because that is the only model the
+artifact actually supports:</p>
+<h3 id="author-time-agent-driven-design-mcp-plugin-daemon">2.1
+Author-time (agent-driven design) — MCP plugin + daemon</h3>
+<p>Exact commands (from README.md:300-390, requires Node ~24 + pnpm
+10.33.2, both present on this host — captured §Verified):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-time, from the OpenDesign checkout (build the daemon the `od` bin needs):</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> enable</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @open-design/daemon build      <span class="co"># od.mjs REQUIRES this (captured error proves it)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Wire the stdio MCP server into Claude Code (agent used by Helix):</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">od</span> mcp install claude                          <span class="co"># writes ~/.config/claude/open-design.json + claude mcp add-json snippet</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># then, inside the agent:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   &gt; Use open-design to generate the ota-manager settings screen with the &lt;chosen&gt; design system</span></span></code></pre></div>
+<p>Per §11.4.161 rootless-container / §11.4.173 containerized-build
+posture, prefer the Docker path (<code>deploy/</code>,
+<code>docker compose up -d</code>, <code>http://localhost:7456</code>)
+over a bare <code>pnpm install</code> on the host when running the full
+product.</p>
+<h3 id="build-time-what-lands-in-the-helix-repo-direct-token-files">2.2
+Build-time (what lands in the Helix repo) — direct token files</h3>
+<p>Pick a design system
+(e.g. <code>design-systems/&lt;brand&gt;/</code>), then vendor its
+<strong>static</strong> token files into each frontend and load them: -
+Files to copy (framework-agnostic, no OpenDesign runtime dep):
+<code>design-systems/&lt;brand&gt;/tokens.css</code> (the
+<code>:root</code> light+dark custom properties),
+<code>design-systems/&lt;brand&gt;/tailwind-v4.css</code> (the Tailwind
+v4 <code>@theme</code>),
+<code>design-systems/&lt;brand&gt;/DESIGN.md</code> (intent),
+<code>components.manifest.json</code> (recipes). -
+<code>clients/ota-manager</code> (React19 + Vite6 + Tailwind4 + shadcn):
+import <code>tailwind-v4.css</code> as the Tailwind entry (it already
+does <code>@import "tailwindcss"</code>), so shadcn components read
+<code>--accent</code>, <code>--bg</code>, <code>--fg</code>,
+<code>--border</code> etc. from the OpenDesign <code>:root</code>. -
+<code>dashboard</code> (React18 + Vite): import <code>tokens.css</code>
+for the <code>:root</code> custom properties; add a Tailwind v4
+<code>@theme</code> (from <code>tailwind-v4.css</code>) if/when it
+adopts Tailwind, else reference <code>var(--…)</code> directly. -
+<strong>Light+dark:</strong> use <code>system/kit.html</code> (light) +
+<code>system/kit.dark.html</code> (dark) as the authoritative per-theme
+<code>:root</code> value sets and the visual golden for §11.4.170
+host-rendered visual proof.</p>
+<p><code>UNCONFIRMED:</code> I have NOT yet read
+<code>clients/ota-manager/</code> or <code>dashboard/</code> (out of
+scope per guardrails), so the exact Tailwind entry filenames and current
+theme wiring in those two apps are unverified here; confirm before
+editing.</p>
+<h3 id="why-not-just-npm-install-a-package">2.3 Why not “just npm
+install a package”</h3>
+<p><code>@open-design/components</code> is <code>"private": true</code>,
+<code>"version": "0.8.0"</code>,
+<code>peerDependencies.react": "18.3.1"</code>,
+<code>main: ./dist/index.mjs</code>, consumed as
+<code>workspace:*</code> by the root and <code>apps/*</code> (evidence
+<code>packages/components/package.json</code>). It is OpenDesign’s
+INTERNAL app UI, not a distributable dependency, and it pins React
+18.3.1 (conflicts with ota-manager’s React 19). Do not depend on it.</p>
+<hr />
+<h2 id="extend-upstream-11.4.28-decoupling">3. §11.4.74 extend-upstream
++ §11.4.28 decoupling</h2>
+<ul>
+<li><strong>Extend path (§11.4.74):</strong> gaps are added the
+OpenDesign-native way — as a <strong>new design-system folder</strong>
+(its own <code>manifest.json</code> + <code>tokens.css</code> +
+<code>tailwind-v4.css</code> + <code>DESIGN.md</code>, validated by
+<code>pnpm guard</code> →
+<code>check-design-system-manifests.test.ts</code>) or a <strong>new
+plugin/skill</strong> per <code>plugins/spec/SPEC.md</code> (a dir with
+<code>SKILL.md</code> [+ optional <code>open-design.json</code>]).
+Apache-2.0 permits forking + upstream PRs. A <strong>Helix-branded
+design system</strong> (Helix OTA brand colors, light+dark,
+<code>--accent</code> = Helix brand) is the natural §11.4.162 “project
+brand colors from canonical assets” instantiation — authored as one new
+<code>design-systems/helix-ota/</code> package.</li>
+<li><strong>Decoupling (§11.4.28):</strong> OpenDesign is a third-party
+(org <code>nexu-io</code>), NOT an owned-org submodule, so §11.4.28(A)
+equal-engineering does NOT apply; it is a reusable, project-not-aware
+upstream. Two decoupled consumption options:
+<ol type="i">
+<li><strong>vendor the static token files</strong> into Helix (no
+runtime coupling — cleanest for the two frontends), and/or</li>
+<li><strong>add it as a git submodule / pinned checkout</strong> used
+only at author-time via the <code>od</code> daemon (never inject
+Helix-specific context into the OpenDesign tree). Nested owned-org
+chains are irrelevant (it is third-party). Recommend <strong>(i)
+vendored token files as the shipped dependency + (ii) submodule/checkout
+only for the agent-time daemon</strong>, keeping Helix runtime free of
+any OpenDesign code.</li>
+</ol></li>
+</ul>
+<p><code>UNCONFIRMED:</code> whether the operator wants OpenDesign as a
+tracked git submodule vs an external tool checkout — that is a §11.4.66
+operator decision.</p>
+<hr />
+<h2 id="safe-to-adopt-verdict">4. Safe-to-adopt verdict</h2>
+<p><strong>NEEDS-REVIEW (adopt in a controlled feature stream — NOT
+blocked, NOT adopt-blindly-now).</strong> Reasons, evidenced:</p>
+<ul>
+<li><strong>GREEN signals:</strong> Apache-2.0
+(redistribution/fork/vendor OK); the token layer is plain static
+CSS/JSON with <strong>native Tailwind v4 <code>@theme</code>
+output</strong> matching Helix’s Tailwind 4 stack; light+dark are
+first-class (<code>kit.html</code>/<code>kit.dark.html</code>); Node 24
++ pnpm 10.33.2 already present on this host (captured); the design-token
+contract is stable + documented (<code>TOKEN_SCHEMA</code>).</li>
+<li><strong>REVIEW/RISK signals (why not “adopt now”):</strong>
+<ol type="1">
+<li>Adopting the FULL product (daemon/desktop/web) is heavy: Electron,
+Next.js, SQLite,
+<code>better-sqlite3</code>/<code>sharp</code>/<code>electron</code>
+native builds (<code>onlyBuiltDependencies</code>), a
+<code>pnpm install</code> of a 422 KB-lockfile monorepo — must run under
+the §11.4.161 rootless / §11.4.173 containerized-build posture, not a
+bare host install.</li>
+<li>The <code>od</code> daemon binds <code>127.0.0.1</code> and does
+SSRF/model-endpoint gating (README.md:395) — a network service to
+security-review before running (§11.4.133 target-safety is about
+devices, but a new local daemon still needs review).</li>
+<li><code>@open-design/components</code> React-18.3.1 pin conflicts with
+ota-manager React 19 — confirmed do-not-use, but a reviewer must ensure
+nobody wires it in.</li>
+<li><code>clients/ota-manager</code> + <code>dashboard</code> current
+theme wiring UNCONFIRMED (not read) — must be inspected before choosing
+the token-import seam.</li>
+<li>§11.4.162 also mandates OpenDesign for <strong>any</strong> UI
+surface + visual-regression coverage (§11.4.170) — a real integration is
+a BIG feature-stream item (§11.4.167), not a drive-by edit.</li>
+</ol></li>
+</ul>
+<p><strong>Recommended next step:</strong> open a §11.4.167 feature
+work-stream <code>feature/opendesign-adoption</code> that (1) authors a
+<code>design-systems/helix-ota/</code> brand package (light+dark), (2)
+vendors its <code>tokens.css</code> + <code>tailwind-v4.css</code> into
+both frontends behind the existing Tailwind entry, (3) wires the
+<code>od</code> MCP plugin for author-time only, (4) proves it with
+§11.4.170 host-rendered light+dark pixels. Hold the full-daemon/desktop
+adoption until the containerized-build + security review lands.</p>
+<hr />
+<h2 id="verified-evidence-commands-run-key-output">Verified evidence
+(commands run + key output)</h2>
+<ul>
+<li><code>node --version</code> → <code>v24.18.0</code>;
+<code>pnpm --version</code> → <code>10.33.2</code> (host meets
+<code>engines: node ~24, pnpm &gt;=10.33.2 &lt;11</code>).</li>
+<li><code>git -C open-design remote -v</code> →
+<code>git@github.com:nexu-io/open-design.git</code>;
+<code>git log -1</code> →
+<code>81b20dc … 2026-07-09 14:34:45 +0000 fix(web): avoid missing design-system preview assets (#5381)</code>.</li>
+<li><code>cat package.json</code> → <code>name=open-design</code>,
+<code>version=0.14.1</code>, <code>private=true</code>,
+<code>bin.od=./apps/daemon/bin/od.mjs</code>,
+<code>description="Local-first design product…"</code>.</li>
+<li><code>node apps/daemon/bin/od.mjs --help</code> →
+<code>Error: Open Design daemon dist entry not found at …/apps/daemon/dist/cli.js. Run "pnpm --filter @open-design/daemon build" first.</code>
+(proves <code>od</code> needs a build; clone left
+unbuilt/read-only).</li>
+<li><code>cat packages/components/package.json</code> →
+<code>@open-design/components@0.8.0</code>, <code>private=true</code>,
+<code>peerDependencies.react=18.3.1</code>, consumed
+<code>workspace:*</code> (internal).</li>
+<li><code>ls design-systems | wc -l</code> → <code>153</code>;
+<code>ls design-templates | wc -l</code> → <code>115</code>;
+<code>ls skills | wc -l</code> → <code>163</code>.</li>
+<li><code>cat design-systems/apple/manifest.json</code> →
+<code>schemaVersion od-design-system-project/v1</code>, files map
+(<code>tokens: tokens.css</code>,
+<code>tailwind: tailwind-v4.css</code>,
+<code>designTokens: design-tokens.json</code>,
+<code>components: components.html</code>), <code>preview/</code>
+colors+typography+spacing.</li>
+<li><code>cat design-systems/apple/tailwind-v4.css</code> →
+<code>@import "tailwindcss"; @import "./tokens.css"; @theme { --color-accent: var(--accent); … }</code>
+(Tailwind v4 theme).</li>
+<li><code>head design-systems/apple/tokens.css</code> → header instructs
+agents to paste the <code>:root { … }</code> block verbatim; lint
+<code>apps/daemon/src/lint-artifact.ts</code> (raw-hex → P1, non-token
+accent → P0).</li>
+<li><code>ls design-systems/apple/system</code> → <code>kit.html</code>,
+<code>kit.dark.html</code> (light + dark kits).</li>
+<li><code>grep '"--…"' packages/contracts/src/design-systems/token-schema.ts</code>
+→ the standard <code>TOKEN_SCHEMA</code> names
+(accent/bg/surface/fg/border/space/radius/text/elev/motion…).</li>
+<li><code>.claude-plugin/marketplace.json</code> → publishes stdio MCP
+plugin “open-design” (“139 skills + projects/files/preview tools …
+Requires <code>od</code> on PATH”).</li>
+<li>README.md:300-395 → <code>od mcp install &lt;agent&gt;</code>;
+Claude Code <code>claude mcp add-json</code>; artifacts preview at
+<code>http://localhost:7456</code>; “real HTML/CSS — drop it into
+Cursor/Codex/Claude Code”; read-only, <code>127.0.0.1</code>-bound
+daemon, SSRF-gated.</li>
+<li>WebFetch github.com/nexu-io/open-design (2026-07-09): “design
+application and platform — not a component library … Not published as
+external npm dependencies — consumed as standalone applications or
+integrated via MCP protocol”; Apache-2.0.</li>
+</ul>
+<hr />
+<h2 id="sources-verified-2026-07-09">Sources verified 2026-07-09</h2>
+<ul>
+<li>https://github.com/nexu-io/open-design — repo README + About
+(fetched 2026-07-09): identity (design product/app, not a component
+lib), MCP/<code>od</code>/desktop/Docker consumption, Apache-2.0, pnpm
+monorepo, not published as external npm dep.</li>
+<li>Local READ-ONLY clone at git <code>81b20dc</code> /
+<code>open-design@0.14.1</code> (commit dated 2026-07-09) — all
+file-path citations above.</li>
+<li>Constitution §11.4.162 (OpenDesign UI mandate), §11.4.74
+(extend-upstream), §11.4.28 (decoupling), §11.4.161/§11.4.173
+(rootless/containerized build), §11.4.167 (feature work-stream),
+§11.4.170 (host-rendered visual proof), §11.4.66 (operator decision),
+§11.4.6 (no-guessing).</li>
+</ul>
+</body>
+</html>

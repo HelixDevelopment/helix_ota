@@ -1,7 +1,7 @@
 # Helix OTA — Continuation
 
-**Revision:** 13
-**Last modified:** 2026-07-09T16:05:00Z
+**Revision:** 14
+**Last modified:** 2026-07-09T16:45:00Z
 
 ---
 
@@ -9,8 +9,8 @@
 
 | Field | Value |
 |---|---|
-| **HEAD** | `634fcb50` (constitution adopted `fc4e9b8→e60cbde`, 59 commits: carriers append §11.4.167-186+§12.12; pre-build +propagation gates 167-186/§12.12, −semgrep gate (§11.4.166 REPEALED); §11.4.109 PreToolUse guard-hook wired; ETXTBSY mutex + weasyprint export fixes — 2 commits `bb3b4189`+`634fcb50` pushed 4/4 FF §11.4.113). Prior test-coverage HEAD `21338527`. |
-| **Phase** | **CONSTITUTION e60cbde ADOPTED (2026-07-09)** — autonomous loop (§11.4.126). NEXT actionable (parallel §11.4.103): adopt pulled nested engines token_optimizer+session_orchestrator (§11.4.141/§11.4.106); UI/UX OpenDesign refinement (§11.4.162/§11.4.170). **OPERATOR DECISION PENDING (§11.4.66/§11.4.122):** canonical frontend — `clients/ota-manager` (React 19+shadcn+Tauri) vs `dashboard` (React 18+Playwright/axe) — before sinking OpenDesign effort. Prior: **TEST-COVERAGE PROGRAM** (mandate 2026-06-23) Phase 0 DONE + Phase 1 mostly done; plan+ledger `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`. Cuttlefish Tier-2 A/B remains VERIFIED (F112/F55). |
+| **HEAD** | constitution `e60cbde` adopted (`bb3b4189`+`634fcb50`) + CONTINUATION Rev13 (`b346323e`) + A/B/C stream evidence (`de71a634`), all pushed 4/4 FF §11.4.113. THIS batch (pending): W1 OpenDesign ground-truth + W2/W3 §11.4.170 host-render harnesses on both frontends (independent-review GO each) + CONTINUATION Rev 14. Prior test-coverage HEAD `21338527`. |
+| **Phase** | **OPENDESIGN ADOPTION (2026-07-09)** — autonomous loop (§11.4.126). Both operator decisions RESOLVED (keep+improve both frontends; OpenDesign=`nexu-io/open-design`). §11.4.170 host-render harnesses now live on `clients/ota-manager` + `dashboard` (both proven light/dark or light+honest-gap, self-validated). NEXT: `feature/opendesign-adoption` — author `design-systems/helix-ota/` brand tokens, vendor into both frontends, wire ota-manager theme-toggle DOM class + dashboard dark mode, prove via harnesses. Prior: **TEST-COVERAGE PROGRAM** (2026-06-23) Phase 0 DONE + Phase 1 mostly done (`docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`). Cuttlefish Tier-2 A/B VERIFIED (F112/F55). |
 | **Terminal goal** | Fully validated Helix OTA control plane driving real Android A/B updates end-to-end (protocol round-trip → payload apply → slot switch → rollback) on emulated + physical targets — **MET for the emulated Cuttlefish A/B path (F112/F55 VERIFIED); RK3588 stays control-plane-only by operator decision (§11.4.133)** |
 
 ### Latest session (2026-07-09) — Constitution e60cbde adoption + UI/UX/OpenDesign audit
@@ -31,13 +31,21 @@ Landed + pushed 4/4 FF (no force §11.4.113), commits `bb3b4189` (semgrep meta-t
 - **B — server health** → `docs/research/server_health_20260709/REMEDIATION.md`. `go build`/`vet`/`gofmt`/`test` all GREEN, 15/15 pkgs (forced `-count=1` non-cached). **No fix required** (zero-finding tree; correctly changed nothing per §11.4.102). Tracked gap unchanged: `internal/api/manager-dist` has no `_test.go`.
 - **C — OpenDesign + §11.4.170 harness** → `docs/research/ui_ux_opendesign_audit_20260709/OPENDESIGN_PLAN.md`. Recommends **`clients/ota-manager` canonical** (already has the token/dark-mode arch OpenDesign feeds; dashboard would be a rebuild; dashboard's Playwright/axe e2e is portable). §11.4.170 harness spec: Storybook 8 + addon-themes × Playwright `toHaveScreenshot()` golden-diff + Tesseract-OCR layout oracle, self-validated golden fixtures (§11.4.107(10)).
 
-**TWO PARKED OPERATOR DECISIONS (§11.4.66/§11.4.101 — documented, NOT overnight-blocked; the loop keeps progressing non-UI work):**
-1. **Canonical frontend** — options: (1, recommended) `clients/ota-manager` canonical + retire `dashboard` (§11.4.122 no-silent-removal ⇒ needs explicit yes); (2) ota-manager canonical, keep dashboard; (3) dashboard canonical, rebuild+retire ota-manager; (4) keep+refine both via shared token pkg.
-2. **Which "OpenDesign" (§11.4.162)** — UNCONFIRMED (§11.4.6): no URL in the mandate, no repo in `.gitmodules`/our orgs. Closest evidenced candidate: "Open Design" (open-design.ai / `nexu-io/open-design`, CSS-token system). MUST be operator-confirmed before any install (installing a guessed package = §11.4.6 violation). This is the plan's blocking step B0.
+**BOTH OPERATOR DECISIONS RESOLVED (2026-07-09):**
+1. **Canonical frontend → KEEP + IMPROVE BOTH** (`clients/ota-manager` + `dashboard`). Nothing retired (§11.4.122 satisfied). OpenDesign adopted across both.
+2. **OpenDesign = `nexu-io/open-design`** (`git@github.com:nexu-io/open-design.git`) CONFIRMED by operator.
 
-Neither frontend was modified (§11.4.122); no OpenDesign package installed (§11.4.6). The §11.4.170 host-render harness is package-independent and could be built on the recommended frontend once decision 1 lands.
+**OpenDesign ground truth (W1 evidence, `docs/research/opendesign_integration_20260709/INTEGRATION_GROUND_TRUTH.md`):** it is NOT a CSS-token npm package — it is a local-first design PRODUCT (Electron + `od` daemon + Next.js UI) exposing itself to coding agents over stdio-MCP + `od` CLI, shipping 153 design-system token packages as static files. **Adoption = combination:** (author-time) build daemon + wire its MCP plugin into Claude Code; (build-time, what ships) vendor a design system's static `tokens.css` (~56 `:root` custom props) + `tailwind-v4.css` (Tailwind-v4 `@theme`, matches ota-manager's Tailwind 4), light+dark first-class. Do NOT consume `@open-design/components` (private, React-18.3.1-pinned ⇒ conflicts with ota-manager React 19). §11.4.74 path: author a `design-systems/helix-ota/` brand package. Verdict NEEDS-REVIEW (heavy product; `od` daemon = network service ⇒ rootless/containerized §11.4.161/§11.4.173; keep React-18 components out).
 
-**NEXT (non-UI, non-blocked):** resume TEST-COVERAGE PROGRAM Phase 1 remainder — the 2026-06-23 signed-pipeline-vs-live + challenges-bank evidence is still UNTRACKED and needs RE-validation on a fresh live-system boot before commit (§11.4.108, do not commit stale evidence); optionally prototype session_orchestrator as the device-claim registry (needs-review). Known tooling follow-up: `commit_all.sh --paths` fatals when a pre-staged **deletion** path is in the list (whole `git add` aborts, stages nothing) → switch to `git add -A -- $paths` or per-path add. **OPERATOR: (a) the two decisions above; (b) rotate the posted password (§11.4.10).**
+**§11.4.170 host-render harnesses LANDED on BOTH frontends (W2/W3, independent-review GO each):**
+- **ota-manager** (`docs/qa/20260709-ota-manager-hostrender/`, harness `clients/ota-manager/visual/`): LoginPage × {light,dark} rendered host-side (Playwright+Vite+Tailwind4+pixelmatch+**Tesseract OCR**); dual oracle image-diff good 0% / bad flagged both themes + layout oracle flags collapsed-submit; self-validation `image_diff_analyzer_sound`+`layout_analyzer_sound`=true (golden-good/golden-bad §11.4.107(10)); reviewer re-ran byte-identical, GO.
+- **dashboard** (`docs/qa/20260709-dashboard-hostrender/`, harness `dashboard/hostrender/`): Login host-rendered (vite-only, backend-independent), pixelmatch good 0% / bad 13% + layout oracle + committed golden REJECTs mutation; reviewer's adversarial negative-control (mutation-disabled → self-checks correctly FAIL) proves non-rubber-stamp, GO. Existing suite baselined: vitest 93/93, Playwright 22/1-pre-existing-flake, axe 0 critical/serious.
+
+**NEW TRACKED BUG (real, surfaced by W2 host-render proof — §11.4.170 working as designed):** ota-manager's `ui-store` theme value is **never wired to a DOM `.dark`/`.light` class** (`ui-store.ts:27-32` mutates zustand only; `topbar.tsx` swaps just the Sun/Moon icon; no `document.documentElement.classList` writer in `src/`) → the toggle changes only the icon, `:root`(dark) always applies. To be FIXED by the OpenDesign light/dark wiring.
+
+**§11.4.170 ledger / Minor follow-ups (tracked, non-blocking):** (a) OCR oracle not yet mutation-validated on ota-manager — add an OCR golden-bad; (b) coverage is 1 screen/state on each frontend — remaining screen×state×{light,dark} matrix owed; (c) dashboard has NO dark mode in code (light-only proven, honest gap); (d) pre-existing ota-manager tsconfig TS6306/6310 (`tsconfig.node.json` lacks `composite:true`) — pre-existing, unrelated.
+
+**NEXT (feature/opendesign-adoption, §11.4.167):** author `design-systems/helix-ota/` brand tokens (light+dark, brand colors) → vendor `tokens.css`+`tailwind-v4.css` into BOTH frontends → **wire the ota-manager theme toggle to the DOM class + add dashboard dark mode** → prove light+dark via the two harnesses → expand the screen×state matrix + add OCR golden-bad. Also queued (non-UI): TEST-COVERAGE Phase 1 remainder (2026-06-23 signed-pipeline + challenges-bank still UNTRACKED, needs re-validation §11.4.108); `commit_all.sh --paths` deletion-pathspec fix. **OPERATOR: rotate the posted password (§11.4.10).**
 
 ### Latest session (2026-06-23) — Comprehensive test-coverage + anti-bluff program (Phase 0 DONE + Phase 1 mostly done)
 
