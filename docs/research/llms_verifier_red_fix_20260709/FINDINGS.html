@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDINGS</h1>
+</header>
+<h1
+id="llms_verifierllm-verifier-red-test-root-cause-fix-2026-07-09">llms_verifier/llm-verifier
+— RED test root-cause + fix (2026-07-09)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-09T19:15:53Z</p>
+<h2 id="scope">Scope</h2>
+<p>Module: <code>submodules/llms_verifier/llm-verifier/</code> (nested
+Go module, <code>digital.vasic.llmsverifier</code>). Parent module
+<code>submodules/llms_verifier/</code> was already GREEN and was not
+touched.</p>
+<p>Failing tests reported by the brick health audit:
+<code>TestCommandFlagValidation</code> and
+<code>TestOutputFormats</code> in
+<code>tests/automation_test.go</code>.</p>
+<h2 id="step-1-reproduce-captured-red-output">Step 1 — Reproduce
+(captured RED output)</h2>
+<pre><code>$ cd submodules/llms_verifier/llm-verifier &amp;&amp; go test ./... -count=1
+...
+--- FAIL: TestCommandFlagValidation (1.21s)
+    --- FAIL: TestCommandFlagValidation/models_list_with_valid_flags (0.14s)
+        automation_test.go:249: Command failed unexpectedly: exit status 1
+            Output: 2026/07/10 00:09:43 Failed to fetch models: request failed: Get &quot;https://localhost:8080&quot;: tls: failed to verify certificate: x509: certificate is not valid for any names, but wanted to match localhost
+            exit status 1
+    --- FAIL: TestCommandFlagValidation/providers_list_with_filter (0.13s)
+        automation_test.go:249: Command failed unexpectedly: exit status 1
+            Output: 2026/07/10 00:09:43 Failed to fetch providers: request failed: Get &quot;https://localhost:8080&quot;: tls: failed to verify certificate: x509: certificate is not valid for any names, but wanted to match localhost
+            exit status 1
+--- FAIL: TestOutputFormats (1.33s)
+    --- FAIL: TestOutputFormats/models_list_format_json (0.31s)
+        automation_test.go:285: Command failed unexpectedly: exit status 1
+            Output: 2026/07/10 00:09:43 Failed to fetch models: request failed: Get &quot;https://localhost:8080&quot;: tls: failed to verify certificate: x509: certificate is not valid for any names, but wanted to match localhost
+            exit status 1
+    --- FAIL: TestOutputFormats/models_list_format_table (0.14s)
+        ... (same TLS error)
+    --- FAIL: TestOutputFormats/providers_list_format_json (0.21s)
+        ... (same TLS error, &quot;Failed to fetch providers&quot;)
+    --- FAIL: TestOutputFormats/providers_list_format_table (0.33s)
+        ... (same TLS error, &quot;Failed to fetch providers&quot;)
+    --- FAIL: TestOutputFormats/results_list_format_json (0.19s)
+        ... (same TLS error, &quot;Failed to fetch verification results&quot;)
+    --- FAIL: TestOutputFormats/results_list_format_table (0.14s)
+        ... (same TLS error, &quot;Failed to fetch verification results&quot;)
+FAIL
+FAIL    digital.vasic.llmsverifier/tests    21.780s</code></pre>
+<p>All other packages in the module (<code>providers</code>,
+<code>verification</code>, <code>tests/integration</code>,
+<code>tests/unit</code>, <code>testsuite</code>, <code>tui</code>,
+<code>tui/screens</code>) were already GREEN.
+<code>go build ./...</code> and <code>go vet ./...</code> were already
+clean per the brick health audit — confirmed independently in Step 4
+below (unchanged: still clean after the fix).</p>
+<h2
+id="step-2-root-cause-investigation-systematic-debugging-11.4.102">Step
+2 — Root-cause investigation (systematic-debugging, §11.4.102)</h2>
+<h3 id="what-is-the-cli-actually-doing">2.1 What is the CLI actually
+doing?</h3>
+<p><code>cmd/main.go</code> defines the
+<code>--server</code>/<code>-s</code> flag with default
+<code>"http://localhost:8080"</code> (plain HTTP, no TLS) — see
+<code>cmd/main.go:42</code>. The HTTP client
+(<code>client/client.go: doRequest</code>) builds the request URL as
+<code>c.baseURL + path</code> and issues a plain
+<code>http.Client.Do(req)</code> — there is no
+TLS/<code>ListenAndServeTLS</code> anywhere in this repository’s own API
+server (<code>api/server.go</code>) or client code. This project’s CLI
+and server never speak HTTPS to each other.</p>
+<h3 id="what-is-actually-listening-on-localhost8080">2.2 What is
+actually listening on <code>localhost:8080</code>?</h3>
+<pre><code>$ ss -ltnp 2&gt;/dev/null | grep &#39;:8080&#39;
+LISTEN 0      100                *:8080             *:*</code></pre>
+<pre><code>$ curl -sv -o /dev/null http://localhost:8080/api/v1/models
+* Established connection to localhost (::1 port 8080)
+&gt; GET /api/v1/models HTTP/1.1
+&gt; Host: localhost:8080
+&lt; HTTP/1.1 302 Found
+&lt; location: https://localhost:8080
+&lt; connection: close</code></pre>
+<p>FACT (captured, not guessed, per §11.4.6): something is listening on
+TCP port 8080 on this shared host that (a) is not this project’s server
+(no redirect/TLS logic exists in this repo’s server code), and (b)
+302-redirects any plain HTTP request to
+<code>https://localhost:8080</code> with no path, and (c) presents a TLS
+certificate that is not valid for hostname <code>localhost</code> —
+which is exactly the
+<code>x509: certificate is not valid for any names, but wanted to match localhost</code>
+error captured in the RED run. This is a foreign, unrelated,
+incompatible service occupying a commonly-used port on the shared
+development host (§11.4.174 — never assumed ours; verified by direct
+reproduction that our own server has no such redirect/TLS behavior at
+all).</p>
+<h3 id="test-vs-product-which-is-wrong">2.3 Test vs product — which is
+wrong?</h3>
+<p>The CLI dispatched a completely correct, real HTTP request to the
+configured <code>--server</code> URL
+(<code>http://localhost:8080/api/v1/models</code>) using its documented
+plain-HTTP default. The failure is not a CLI defect: no panic, no
+bad-flag parse, no build error — the client built and sent the request
+exactly as designed, and correctly surfaced the transport-level failure
+via a wrapped error (<code>request failed: %w</code>).</p>
+<p><code>tests/automation_test.go</code> already has a purpose-built
+<code>serverUnavailable()</code> helper (added under ticket
+<code>#HXV-001</code>) whose own doc comment explicitly states the
+test’s intent: SKIP-OK when either (1) nothing is listening on the port,
+or (2) <em>something</em> is listening that is not a compatible
+LLM-Verifier API server. The TLS/x509 failure observed here is squarely
+within intent (2) — a foreign, incompatible listener on the port — it
+just manifests as a TLS handshake error rather than an HTTP status code,
+a failure shape the marker list had not yet been extended to
+recognise.</p>
+<p><strong>Root cause: the TEST is incomplete, not the product.</strong>
+<code>serverUnavailable()</code>’s marker list did not include TLS/x509
+certificate-validation error strings, so a real (and, on this shared
+host, reproducible) “foreign incompatible service on the port” condition
+was mis-classified as “CLI defect” and the test asserted
+<code>t.Errorf</code> instead of the documented <code>t.Skipf</code>.
+This is a §11.4.1-class test bug (test asserting an incomplete/outdated
+environment contract), not a product bug — the product needed no
+change.</p>
+<h2 id="step-3-fix-applied">Step 3 — Fix applied</h2>
+<p><strong>File changed:</strong>
+<code>submodules/llms_verifier/llm-verifier/tests/automation_test.go</code></p>
+<p>Extended <code>serverUnavailable()</code>’s closed marker set with
+the TLS/x509 failure class, and extended its doc comment to describe the
+newly-recognised third condition (foreign/incompatible listener surfaced
+via TLS handshake failure rather than an HTTP status), citing the
+concrete evidence (plain-HTTP defaults in <code>cmd/main.go</code>, no
+TLS anywhere in <code>api/server.go</code>) for why a TLS failure while
+dialing this CLI’s own <code>--server</code> URL is proof the port
+belongs to a foreign service:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;tls: failed to verify certificate&quot;</span><span class="op">,</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;tls: failed to&quot;</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;x509:&quot;</span><span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;certificate is not valid&quot;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;certificate signed by unknown authority&quot;</span><span class="op">,</span></span></code></pre></div>
+<p>This is NOT a tautology/weakening per §11.4.120 — the test still
+fails hard on any other exit-status-1 output (panics,
+<code>flag provided but not defined</code>, build errors, genuine
+4xx/5xx from a real-but-wrong LLM-Verifier server, etc.); it only
+additionally recognises the specific, evidence-confirmed transport
+failure mode of “a non-LLM-Verifier TLS-redirecting service is bound to
+the configured port on this host.”</p>
+<p>No production/CLI/client code was touched — the fix is entirely
+confined to the test file, consistent with the proven root cause.</p>
+<h2 id="step-4-green-verification-captured">Step 4 — GREEN verification
+(captured)</h2>
+<pre><code>$ gofmt -l tests/automation_test.go
+(empty — clean)
+
+$ go build ./...
+(exit 0, no output)
+
+$ go vet ./...
+(exit 0, no output)
+
+$ go test ./tests/... -run &#39;TestCommandFlagValidation|TestOutputFormats&#39; -v -count=1
+--- PASS: TestCommandFlagValidation (1.53s)
+    --- SKIP: TestCommandFlagValidation/models_list_with_valid_flags (0.27s)
+        automation_test.go:264: SKIP-OK: #HXV-001 — no compatible LLM-Verifier API
+        server reachable; CLI dispatched correctly. Output: ... tls: failed to
+        verify certificate: x509: certificate is not valid for any names, but
+        wanted to match localhost
+    --- SKIP: TestCommandFlagValidation/providers_list_with_filter (0.25s)
+        (same TLS evidence)
+--- PASS: TestOutputFormats (1.08s)
+    --- SKIP: TestOutputFormats/models_list_format_json (0.38s)
+    --- SKIP: TestOutputFormats/models_list_format_table (0.16s)
+    --- SKIP: TestOutputFormats/providers_list_format_json (0.14s)
+    --- SKIP: TestOutputFormats/providers_list_format_table (0.14s)
+    --- SKIP: TestOutputFormats/results_list_format_json (0.13s)
+    --- SKIP: TestOutputFormats/results_list_format_table (0.14s)
+PASS
+ok      digital.vasic.llmsverifier/tests    2.621s
+
+$ go test ./tests/... -run &#39;TestCommandFlagValidation|TestOutputFormats&#39; -race -count=3
+ok      digital.vasic.llmsverifier/tests    13.924s
+ok      digital.vasic.llmsverifier/tests/integration    1.018s [no tests to run]
+ok      digital.vasic.llmsverifier/tests/unit   1.016s [no tests to run]
+
+$ go test ./... -count=1
+(0 FAIL lines across the entire module — every package ok or &quot;no test files&quot;)</code></pre>
+<p>Both previously-RED tests now PASS deterministically (verified
+<code>-race -count=3</code>, identical outcome every run per §11.4.50),
+with an honest SKIP-OK verdict on the six subtests that hit the
+shared-host TLS-redirecting service — never a bluffed PASS, and the SKIP
+carries the real captured transport-error text as its evidence per
+§11.4.3/§11.4.69.</p>
+<h2 id="summary">Summary</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test</th>
+<th>Root cause</th>
+<th>Fix location</th>
+<th>Fix type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TestCommandFlagValidation</code></td>
+<td>Foreign, incompatible TLS-redirecting service on shared host’s port
+8080; <code>serverUnavailable()</code> marker list didn’t recognise
+TLS/x509 failures as the documented “incompatible server” SKIP-OK
+condition</td>
+<td><code>tests/automation_test.go</code></td>
+<td><strong>Test fix</strong> (marker-list extension + doc-comment
+update)</td>
+</tr>
+<tr>
+<td><code>TestOutputFormats</code></td>
+<td>Same root cause (same helper, same shared-host condition)</td>
+<td><code>tests/automation_test.go</code></td>
+<td><strong>Test fix</strong> (same edit)</td>
+</tr>
+</tbody>
+</table>
+<p>No product/CLI code changed. <code>go build ./...</code>,
+<code>go vet ./...</code>, <code>gofmt -l</code> all clean. Full
+<code>go test ./... -count=1</code> is GREEN with zero FAIL lines.</p>
+</body>
+</html>
