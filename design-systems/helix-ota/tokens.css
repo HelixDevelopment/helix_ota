@@ -1,0 +1,184 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * design-systems/helix-ota/tokens.css
+ *
+ * Structured token bindings for the "Helix OTA" brand, authored against the
+ * OpenDesign TOKEN_SCHEMA (packages/contracts/src/design-systems/token-schema.ts).
+ * This is the machine-readable form of the values described in DESIGN.md.
+ *
+ * PROVENANCE (§11.4.6 — no invented colors):
+ *   Every brand-identity COLOR token below is derived from the de-facto
+ *   canonical Helix token set in `clients/ota-manager/src/index.css`
+ *   (shadcn/ui "blue" theme, expressed there as HSL CSS variables). Each
+ *   HSL triple was converted to hex losslessly. See DESIGN.md + the
+ *   EVIDENCE.md provenance table for the exact source line of each value.
+ *
+ *   Structural, spacing, radius, elevation, motion, and type-scale tokens
+ *   have NO brand-specific value in the canonical source (ota-manager relies
+ *   on Tailwind defaults + `--radius: 0.5rem`). Those tokens use the
+ *   OpenDesign schema A2 fallbacks (`_schema/defaults.css`) and the
+ *   `default` brand's A1-structure scale — sourced, not invented.
+ *
+ * LIGHT + DARK are both first-class:
+ *   - The base `:root` block is the LIGHT theme (full TOKEN_SCHEMA set) and
+ *     is what the OpenDesign manifest guard parses.
+ *   - DARK overrides ship three ways so the package works under any toggle:
+ *       1. `@media (prefers-color-scheme: dark)` — system preference
+ *       2. `:root[data-theme="dark"]` — explicit opt-in
+ *       3. `.dark` — class toggle (matches ota-manager's
+ *          `@custom-variant dark (&:is(.dark *))`)
+ *     Only the color tokens that change between themes are overridden;
+ *     structural tokens are theme-invariant and live once in `:root`.
+ * ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ─── Surface — LIGHT ─────────────────────────────────────────────
+   * --bg / --surface from index.css `--background` / `--card`
+   * (0 0% 100%). --surface-warm from `--secondary` (210 40% 96.1%) —
+   * the canonical elevated-panel tone, giving cards a non-degenerate
+   * tertiary tier. */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-warm: #f1f5f9;
+
+  /* ─── Foreground — LIGHT ──────────────────────────────────────────
+   * --fg from `--foreground` (222.2 84% 4.9%); --muted from
+   * `--muted-foreground` (215.4 16.3% 46.9%). ota-manager has only two
+   * text tiers, so the richer B-slots alias to their siblings. */
+  --fg: #020817;
+  --fg-2: var(--fg);                /* alias — no secondary text tier in source */
+  --muted: #64748b;
+  --meta: var(--muted);             /* alias — no tertiary text tier in source */
+
+  /* ─── Border — LIGHT ──────────────────────────────────────────────
+   * --border from `--border` (214.3 31.8% 91.4%). One border weight in
+   * source, so --border-soft aliases. */
+  --border: #e2e8f0;
+  --border-soft: var(--border);     /* alias — single border weight in source */
+
+  /* ─── Accent — LIGHT ──────────────────────────────────────────────
+   * Helix brand blue. --accent from `--primary` (221.2 83.2% 53.3% =
+   * Tailwind blue-600); --accent-on from `--primary-foreground`
+   * (210 40% 98%). Hover/active use the schema-sanctioned color-mix
+   * formulas (no explicit hover value exists in the source) and adapt
+   * automatically per theme via var(--accent). */
+  --accent: #2563eb;
+  --accent-on: #f8fafc;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+
+  /* ─── Semantic ────────────────────────────────────────────────────
+   * --danger from index.css `--destructive` (0 72.2% 50.6% = #dc2626).
+   * --success / --warn are NOT defined in the canonical source; they use
+   * the OpenDesign schema A2 fallbacks from `_schema/defaults.css`. */
+  --success: #16a34a;
+  --warn: #eab308;
+  --danger: #dc2626;
+
+  /* ─── Typography — fonts ──────────────────────────────────────────
+   * ota-manager uses Tailwind's `font-sans` utility (no custom brand
+   * face). Display + body therefore bind the Tailwind default sans
+   * stack; mono uses the schema default. */
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+
+  /* ─── Type scale ──────────────────────────────────────────────────
+   * No brand-specific scale in the canonical source; adopts the
+   * OpenDesign `default` A1-structure scale (Tailwind-aligned). */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+  --text-4xl: 64px;
+
+  --leading-body: 1.5;
+  --leading-tight: 1.2;
+  --tracking-display: -0.01em;
+
+  /* ─── Spacing (4px base) ──────────────────────────────────────────
+   * Schema A2 defaults. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --section-y-desktop: 80px;
+  --section-y-tablet: 48px;
+  --section-y-phone: 32px;
+
+  /* ─── Radius ──────────────────────────────────────────────────────
+   * --radius-sm = 8px matches index.css `--radius: 0.5rem` exactly; the
+   * remaining tiers are schema A2 defaults. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* ─── Elevation (schema A2 defaults) ──────────────────────────────*/
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
+
+  /* ─── Focus (schema A2 default; references --accent) ──────────────*/
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+
+  /* ─── Motion (schema A2 defaults) ─────────────────────────────────*/
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ─── Layout (schema/default A1-structure) ────────────────────────*/
+  --container-max: 1200px;
+  --container-gutter-desktop: 24px;
+  --container-gutter-tablet: 16px;
+  --container-gutter-phone: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * DARK theme overrides.
+ *
+ * Only the color tokens that differ between themes are re-bound; every
+ * structural / spacing / motion token above is theme-invariant. The
+ * var()-aliased B-slots (--fg-2, --meta, --border-soft) and the formula
+ * tokens (--accent-hover/-active, --focus-ring, --elev-*) follow their
+ * siblings automatically, so they do not need to be repeated here.
+ *
+ * Values below are the DARK column of clients/ota-manager/src/index.css
+ * (its default `:root`, HSL → hex). These selectors are deliberately
+ * scoped so the OpenDesign manifest guard (which parses the base `:root`
+ * only) treats the LIGHT block as the canonical token set.
+ * ─────────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #020817;               /* --background 222.2 84% 4.9% */
+    --surface: #020817;          /* --card 222.2 84% 4.9% */
+    --surface-warm: #1e293b;     /* --secondary 217.2 32.6% 17.5% */
+    --fg: #f8fafc;               /* --foreground 210 40% 98% */
+    --muted: #94a3b8;            /* --muted-foreground 215 20.2% 65.1% */
+    --border: #1e293b;           /* --border 217.2 32.6% 17.5% */
+    --accent: #3b82f6;           /* --primary 217.2 91.2% 59.8% (blue-500) */
+    --accent-on: #0f172a;        /* --primary-foreground 222.2 47.4% 11.2% */
+    --danger: #7f1d1d;           /* --destructive 0 62.8% 30.6% */
+  }
+}
+
+:root[data-theme="dark"],
+.dark {
+  --bg: #020817;                 /* --background 222.2 84% 4.9% */
+  --surface: #020817;            /* --card 222.2 84% 4.9% */
+  --surface-warm: #1e293b;       /* --secondary 217.2 32.6% 17.5% */
+  --fg: #f8fafc;                 /* --foreground 210 40% 98% */
+  --muted: #94a3b8;              /* --muted-foreground 215 20.2% 65.1% */
+  --border: #1e293b;             /* --border 217.2 32.6% 17.5% */
+  --accent: #3b82f6;             /* --primary 217.2 91.2% 59.8% (blue-500) */
+  --accent-on: #0f172a;          /* --primary-foreground 222.2 47.4% 11.2% */
+  --danger: #7f1d1d;             /* --destructive 0 62.8% 30.6% */
+}
