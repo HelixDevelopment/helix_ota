@@ -42,6 +42,7 @@ import (
 	"embed"
 	"io/fs"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -69,21 +70,42 @@ func (s *Server) MountManagerUI(r *gin.Engine) {
 	// SPA fallback: any GET request under /manager that does not match a file
 	// serves the SPA's index.html so client-side routing works.
 	r.NoRoute(func(c *gin.Context) {
-		path := c.Request.URL.Path
+		reqPath := c.Request.URL.Path
 		// Only handle GET requests under /manager (or at root when the SPA is the
 		// only frontend).  Skip non-GET methods and non-frontend paths.
 		if c.Request.Method != http.MethodGet {
 			c.Next()
 			return
 		}
-		if !strings.HasPrefix(path, "/manager") && path != "/" {
+		if !strings.HasPrefix(reqPath, "/manager") && reqPath != "/" {
 			c.Next()
 			return
 		}
 		// Avoid catching API routes: anything matching the API base path passes
 		// through to the next handler.
-		if strings.HasPrefix(path, s.cfg.APIBasePath) {
+		if strings.HasPrefix(reqPath, s.cfg.APIBasePath) {
 			c.Next()
+			return
+		}
+
+		// Reaching here means StaticFS found no real embedded file for this GET.
+		// Distinguish a genuinely-missing ASSET from an SPA CLIENT ROUTE, because
+		// only client routes must fall back to index.html:
+		//
+		//   asset-like  := path is under /manager/assets/  OR  its last path
+		//                  segment has a file extension (e.g. .js/.css/.png/.svg/
+		//                  .map/.woff2).  path.Ext returns "" for extension-less
+		//                  segments, so a bare client route (e.g. /manager/devices)
+		//                  is NOT asset-like.
+		//
+		// An asset-like path that did not resolve to a real file 404s: serving
+		// index.html (text/html) at a hashed .js/.css URL would make the browser
+		// parse HTML as a script ("Unexpected token '<'") and mask the real
+		// load failure.  A client route keeps the 200 + index.html SPA fallback
+		// so the React router can take over.
+		if strings.HasPrefix(reqPath, "/manager/assets/") || path.Ext(path.Base(reqPath)) != "" {
+			c.Data(http.StatusNotFound, "text/plain; charset=utf-8", []byte("404 asset not found"))
+			c.Abort()
 			return
 		}
 

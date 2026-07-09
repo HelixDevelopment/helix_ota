@@ -17,17 +17,21 @@ import (
 //
 // Discovered handler: internal/api/embed.go
 //   - //go:embed manager-dist/*                          (embed.go:50-51)
-//   - (*Server).MountManagerUI: StaticFS("/manager", ...) (embed.go:56-67)
-//   - r.NoRoute greedy SPA fallback -> index.html for any
-//     GET under /manager that does not resolve to a file   (embed.go:71-99)
+//   - (*Server).MountManagerUI: StaticFS("/manager", ...) (embed.go:57-68)
+//   - r.NoRoute asset-aware SPA fallback: for a GET under /manager with no real
+//     embedded file it 404s an ASSET-LIKE path (under /manager/assets/ OR whose
+//     last segment has a file extension) and serves index.html for an
+//     extension-less CLIENT ROUTE.                          (embed.go:72-118)
 //
-// Observed real routing (probed 2026-07-09, gin v1.x, Go net/http FileServer):
+// Observed real routing (re-probed 2026-07-09 after the §11.4.120 fix, gin v1.x,
+// Go net/http FileServer):
 //   GET /manager/                          -> 200 text/html  (index.html)
 //   GET /manager/assets/<hash>.js          -> 200 text/javascript (real bundle)
 //   GET /manager/assets/<hash>.css         -> 200 text/css        (real stylesheet)
 //   GET /manager/devices  (client route)   -> 200 text/html  (SPA fallback)
-//   GET /manager/assets/does-not-exist.js  -> 200 text/html  (GREEDY fallback,
-//        see the honest finding in TestManagerSPA_MissingAsset_GreedyFallback)
+//   GET /manager/assets/does-not-exist.js  -> 404 text/plain (asset-aware:
+//        a missing asset no longer masquerades as index.html — see
+//        TestManagerSPA_MissingAsset_Returns404)
 
 // assetRefRe matches an absolute asset reference emitted by the Vite build in
 // index.html, e.g.  src="/assets/index-BCUfw0_g.js"  or
@@ -210,29 +214,53 @@ func TestManagerSPA_ClientRouteFallback(t *testing.T) {
 	}
 }
 
-// TestManagerSPA_MissingAsset_GreedyFallback documents + asserts the REAL,
-// discovered behavior for a clearly-absent asset under /manager: the NoRoute
-// fallback does NOT distinguish asset paths from client routes, so a missing
-// /manager/assets/*.js is answered with 200 + index.html (text/html), NOT a 404.
+// TestManagerSPA_MissingAsset_Returns404 asserts the §11.4.120-reconciled
+// behavior: a clearly-absent ASSET under /manager (a hashed /manager/assets/*.js
+// that resolves to no real embedded file) is answered with a 404 — NOT the
+// greedy 200 + index.html the handler previously returned.
 //
-// HONEST FINDING (§11.4.6): this greedy fallback means a browser that requests a
-// stale/renamed hashed asset receives an HTML document with a JS/CSS URL — a
-// latent correctness concern (a 404 for a missing /assets/* path would be more
-// correct so the browser surfaces the load error). The test asserts the real
-// behavior as-is; changing it is a product decision outside this test's scope.
-func TestManagerSPA_MissingAsset_GreedyFallback(t *testing.T) {
+// PRIOR BEHAVIOR (superseded, embed.go pre-fix): the NoRoute fallback did not
+// distinguish asset paths from client routes, so a missing /manager/assets/*.js
+// returned 200 + index.html (text/html). A browser requesting a stale/renamed
+// hashed asset then received an HTML document at a .js URL and failed to parse
+// it ("Unexpected token '<'"), masking the real load failure. The fix makes an
+// asset-like miss 404 so the browser surfaces the failure honestly; this test
+// FAILS if that fix regresses back to serving index.html for a missing asset.
+func TestManagerSPA_MissingAsset_Returns404(t *testing.T) {
 	requireBuiltEmbed(t)
 	env := newTestEnv(t)
 
 	w := env.do("GET", "/manager/assets/does-not-exist-"+randToken()+".js", "", nil, "")
 
-	// Real behavior: greedy SPA fallback -> 200 + index.html.
-	if w.Code != 200 {
-		t.Fatalf("GET missing asset = %d; discovered design is a greedy fallback returning 200+index.html", w.Code)
+	// Reconciled behavior: a missing asset 404s — it must NOT serve index.html.
+	if w.Code != 404 {
+		t.Fatalf("GET missing /manager/assets/*.js = %d, want 404 (asset-aware fallback must not serve index.html for a missing asset)", w.Code)
 	}
 	body := w.Body.String()
-	if !strings.Contains(strings.ToLower(body), `<div id="root"`) {
-		t.Fatalf("missing asset did not fall back to the SPA index.html; body head=%q", head(body))
+	if strings.Contains(strings.ToLower(body), `<div id="root"`) {
+		t.Fatalf("GET missing asset served the SPA index.html body — greedy-fallback regression; body head=%q", head(body))
+	}
+	if ct := w.Header().Get("Content-Type"); strings.Contains(ct, "text/html") {
+		t.Fatalf("GET missing asset content-type = %q, want a non-HTML type (must not masquerade as index.html)", ct)
+	}
+}
+
+// TestManagerSPA_MissingExtensionlessAssetLikePath_Returns404 guards the second
+// half of the asset-like rule: a missing path OUTSIDE /manager/assets/ whose
+// last segment carries a file extension (e.g. /manager/favicon.ico) is still
+// asset-like and MUST 404, not fall back to index.html. This proves the fix
+// keys on the extension, not merely on the /assets/ prefix, and FAILS if the
+// rule narrows to the prefix alone.
+func TestManagerSPA_MissingExtensionlessAssetLikePath_Returns404(t *testing.T) {
+	requireBuiltEmbed(t)
+	env := newTestEnv(t)
+
+	w := env.do("GET", "/manager/does-not-exist-"+randToken()+".svg", "", nil, "")
+	if w.Code != 404 {
+		t.Fatalf("GET missing /manager/*.svg = %d, want 404 (extension makes it asset-like)", w.Code)
+	}
+	if strings.Contains(strings.ToLower(w.Body.String()), `<div id="root"`) {
+		t.Fatalf("missing extensioned path fell back to index.html — asset-like rule regressed to the /assets/ prefix only")
 	}
 }
 
