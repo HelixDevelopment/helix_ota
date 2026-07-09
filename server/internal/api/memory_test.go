@@ -267,13 +267,13 @@ func TestMemoryGrowthClassifier(t *testing.T) {
 		small, large int64
 		wantLeak     bool
 	}{
-		{"flat-below-floor", 120 * kb, 140 * kb, false},              // healthy plateau, below floor
-		{"one-time-growth-no-scaling", 800 * kb, 900 * kb, false},    // grew once above floor but did not scale
-		{"negative-small-flat-large", -50 * kb, 100 * kb, false},     // GC freed in small phase; large below floor
-		{"steady-leak-scales-8x", 800 * kb, 6400 * kb, true},         // retention ~8x with 8x load → leak
-		{"subfloor-small-scaling-large", 300 * kb, 2400 * kb, true},  // small below floor, large scales far past it
-		{"exactly-at-3x-ref-not-leak", 800 * kb, 2400 * kb, false},   // == ref*3, strictly-greater test → not a leak
-		{"just-over-3x-ref-leak", 800 * kb, 2400*kb + 1, true},       // one byte over the 3x bound → leak
+		{"flat-below-floor", 120 * kb, 140 * kb, false},             // healthy plateau, below floor
+		{"one-time-growth-no-scaling", 800 * kb, 900 * kb, false},   // grew once above floor but did not scale
+		{"negative-small-flat-large", -50 * kb, 100 * kb, false},    // GC freed in small phase; large below floor
+		{"steady-leak-scales-8x", 800 * kb, 6400 * kb, true},        // retention ~8x with 8x load → leak
+		{"subfloor-small-scaling-large", 300 * kb, 2400 * kb, true}, // small below floor, large scales far past it
+		{"exactly-at-3x-ref-not-leak", 800 * kb, 2400 * kb, false},  // == ref*3, strictly-greater test → not a leak
+		{"just-over-3x-ref-leak", 800 * kb, 2400*kb + 1, true},      // one byte over the 3x bound → leak
 	}
 	for _, c := range cases {
 		leak, reason := classifyHeapGrowth(c.small, c.large, floor, sn, sd)

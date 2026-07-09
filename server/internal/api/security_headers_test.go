@@ -17,9 +17,13 @@ import (
 	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
 
-// Item O — security response headers. These tests exercise the REAL wired router
-// (Server.Router() -> the global chain, the API group, and MountManagerUI), not
-// a hand-rolled stand-in, so a PASS proves the headers reach real responses.
+// Item O — security response headers. Most of these tests exercise the REAL
+// wired router (Server.Router() -> the global chain, the API group, and
+// MountManagerUI), not a hand-rolled stand-in, so a PASS proves the headers
+// reach real responses. Two are hand-composed minimal chains kept as fast
+// isolation smoke checks (TestSecurityHeaders_TierA_OnShed429); their
+// real-router siblings (_RealRouter suffix) are the SR-review I2/I3 gap
+// closures — see docs/qa/20260710-server-header-test-seams/EVIDENCE.md.
 // Evidence: docs/qa/20260710-server-security-headers/EVIDENCE.md.
 
 // tierAExpect is the Tier-A header set every response must carry (HSTS excepted —
@@ -105,10 +109,11 @@ func TestSecurityHeaders_TierA_OnEveryResponseClass(t *testing.T) {
 }
 
 // TestSecurityHeaders_TierA_OnShed429 proves the Tier-A headers survive the
-// in-flight-limiter 429 shed — the headers are set before the limiter in the
-// real chain order, so a shed response still carries them. It mirrors the real
-// middleware order (securityHeaders -> maxInflight) with a controllable blocking
-// handler so the shed is deterministic.
+// in-flight-limiter 429 shed on a hand-composed two-middleware chain (kept as
+// a fast, minimal-dependency smoke check of the ordering property in
+// isolation). It does NOT exercise the real Server.Router() wiring — see
+// TestSecurityHeaders_TierA_OnShed429_RealRouter below for the
+// production-wiring proof (SR-review I2).
 func TestSecurityHeaders_TierA_OnShed429(t *testing.T) {
 	started := make(chan struct{}, 1)
 	release := make(chan struct{})
@@ -138,6 +143,97 @@ func TestSecurityHeaders_TierA_OnShed429(t *testing.T) {
 	if ra := shed.Header().Get("Retry-After"); ra != "1" {
 		t.Errorf("429 shed Retry-After = %q, want 1", ra)
 	}
+}
+
+// TestSecurityHeaders_TierA_OnShed429_RealRouter closes SR-review I2: it
+// proves the Tier-A headers survive an in-flight-limiter 429 shed against the
+// REAL production wiring — Server.Router() built with the actual
+// r.Use(recoveryMiddleware(), requestIDMiddleware(), securityHeadersMiddleware(...),
+// maxInflightMiddleware(...), compressionMiddleware()) chain from server.go,
+// with Config.MaxInflight set so the shed is real (not the newTestEnv default
+// of 0, under which maxInflightMiddleware is a permanent no-op).
+//
+// No production source file is touched to make this deterministic. gin's
+// RouterGroup.handle (routergroup.go:88-90) calls combineHandlers
+// (routergroup.go:241-248), which concatenates the group's CURRENTLY
+// -REGISTERED Handlers slice — already populated by Router()'s r.Use(...)
+// call, in the exact production order — with whatever handler is attached to
+// the group next. So a GET route attached directly to the *gin.Engine
+// returned by srv.Router() (this test, after Router() has already run its
+// Use() call) inherits the identical middleware chain every real production
+// route gets. This is the "test-only seam": a test-file-only route
+// registered via gin's own public API on the already-built engine, not a
+// change to server.go — so a future reordering of r.Use(...) in server.go
+// changes what THIS test exercises too, closing the I2 gap.
+func TestSecurityHeaders_TierA_OnShed429_RealRouter(t *testing.T) {
+	var ctr int64
+	srv := NewServer(Options{
+		Config: config.Config{
+			APIBasePath: "/api/v1", AccessTokenTTL: time.Hour, DeviceTokenTTL: 24 * time.Hour,
+			TokenSecret: []byte("sec-headers-secret"),
+			MaxInflight: 1, // real shed, unlike newTestEnv's default 0 (no-op).
+		},
+		Repo:   store.NewMemoryRepository(),
+		Users:  NewStaticUserDirectory(),
+		Health: health.New(func(context.Context) bool { return true }),
+		Now:    time.Now,
+		NewID:  func() string { return fmt.Sprintf("id-%d", atomic.AddInt64(&ctr, 1)) },
+	})
+	r := srv.Router()
+
+	started := make(chan struct{}, 1)
+	release := make(chan struct{})
+	defer close(release)
+
+	// Test-only blocking route attached to the real, already-built engine (see
+	// doc comment above) — inherits the production chain, not a hand-rolled one.
+	r.GET("/__red_review_i2_block", func(c *gin.Context) {
+		started <- struct{}{}
+		<-release
+		c.String(http.StatusOK, "ok")
+	})
+
+	// Request 1 enters the handler and holds the single in-flight slot.
+	go func() {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/__red_review_i2_block", nil))
+	}()
+	<-started
+
+	// Request 2 is shed with 429 before reaching the handler, via the REAL
+	// production maxInflightMiddleware(1) wired by Router().
+	shed := getReq(r, "/__red_review_i2_block")
+	if shed.Code != http.StatusTooManyRequests {
+		t.Fatalf("second concurrent request (real router) = %d, want 429 (shed)", shed.Code)
+	}
+	assertTierA(t, "429 shed (real Server.Router())", shed.Header())
+	if ra := shed.Header().Get("Retry-After"); ra != "1" {
+		t.Errorf("429 shed (real router) Retry-After = %q, want 1", ra)
+	}
+}
+
+// TestSecurityHeaders_TierA_OnPanic500_RealRouter closes SR-review I3: it
+// proves the Tier-A headers survive a genuine panic -> recoveryMiddleware ->
+// 500 response against the REAL production wiring (Server.Router()), not a
+// hand-rolled chain. Uses the identical test-only-route technique as
+// TestSecurityHeaders_TierA_OnShed429_RealRouter above (see that test's doc
+// comment for why this exercises the production middleware chain and is not
+// a change to server.go): recoveryMiddleware's deferred recover() sits
+// outermost in the real chain (registered first in server.go's r.Use(...)),
+// so it catches a panic from any handler registered afterward — including one
+// attached directly to the already-built engine — exactly as it would a panic
+// in a real production handler.
+func TestSecurityHeaders_TierA_OnPanic500_RealRouter(t *testing.T) {
+	r := newSecHeadersRouter(t, "", "") // plain HTTP; TLS-gating is irrelevant here.
+	r.GET("/__red_review_i3_panic", func(c *gin.Context) {
+		panic("deliberate test panic to exercise recoveryMiddleware")
+	})
+
+	w := getReq(r, "/__red_review_i3_panic")
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("GET /__red_review_i3_panic = %d, want 500 (recovered panic)", w.Code)
+	}
+	assertTierA(t, "panic -> 500 (real Server.Router())", w.Header())
 }
 
 // TestSecurityHeaders_HSTS_TLSGated proves HSTS is present ONLY when TLS is
