@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Helix OTA — Continuation</title>
+  <title>CONTINUATION</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -242,11 +242,11 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Helix OTA — Continuation</h1>
+<h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 27 <strong>Last modified:</strong>
-2026-07-10T03:15:26Z</p>
+<p><strong>Revision:</strong> 28 <strong>Last modified:</strong>
+2026-07-10T09:52:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,17 +263,42 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><code>1a2109e8</code> (cont-7 Wave-9/10/11 audit batch, 2026-07-10 —
-6 owned-brick/main-repo defects fixed, each RED→GREEN + conductor
-polarity §11.4.115 + independent review §11.4.142, all FF-pushed
-no-force §11.4.113: <strong>W11a</strong> ota-artifact-validator
-<code>707f876</code>/parent <code>1c75fd42</code> (ValidateHash
-nil-<code>io.Reader</code> panic → reject verdict, reachable via
-exported <code>Validate(Input{})</code>) · <strong>W11-server</strong>
-<code>7a68a8e5</code> (handleCreateProject now seeds creator
-<code>ProjectRoleAdmin</code> ACL — creator was 403-locked-out of own
-project, entire per-project RBAC was silently dead; no route-gate
-change, no escalation) · <strong>W11-bridge</strong>
+<td><strong>Wave-13 consolidation (cont-8, 2026-07-10)</strong> — this
+commit lands the multipart spill temp-file-leak fix
+(<code>server/internal/api/handlers_artifact.go</code>
+<code>RemoveAll</code> defer) + 3 owned-submodule gitlink bumps
+(docs_chain <code>9a5bd32→394270e</code>, ota-android-agent
+<code>de5d0e7→4e9dd89</code>, ota-rollout-engine
+<code>23da1cd→3284620</code>) +
+<code>docs/qa/wave13-20260710/EVIDENCE.{md,html,pdf}</code>.
+<strong>Wave-13 batch (§11.4.118 loop-until-dry): 5 real fixes + 5
+independent NO-DEFECT passes</strong>, each fix RED→GREEN + conductor
+polarity §11.4.115 + independent review §11.4.142, all FF no-force
+§11.4.113: compression truncated-gzip-on-panic <code>d15e7465</code>
+(4/4) · docs_chain verify nil-corrupt-state SIGSEGV <code>394270e</code>
+(github+gitlab) · android OtaPollWorker
+thrown-transient-IOException→Retry <code>4e9dd89</code> (github) ·
+ota-rollout-engine halted-rollout re-poll reason misreport
+<code>3284620</code> (github) · multipart spill leak (this commit);
+CLEAN (enumerated coverage, fuzz+race probes, no fabrication §11.4.6):
+ota-artifact-validator, ota-telemetry-schema, ota-protocol,
+server/internal/config, server/internal/fabric. <strong>Wave-12 (cont-7
+tail, landed):</strong> security KeywordFilter empty-keyword block-all
+<code>a0dad7d</code>/parent <code>11c6b21b</code> · server 2 TOCTOU
+races <code>5e4674c0</code> · containers 3 concurrency
+<code>f25228f</code>/parent <code>1970c851</code> · server signature
+verifier fail-closed on malformed key <code>2cfb6b91</code>.
+<strong>Prior — <code>1a2109e8</code> cont-7 Wave-9/10/11 audit batch
+(2026-07-10):</strong> 6 owned-brick/main-repo defects fixed, each
+RED→GREEN + conductor polarity §11.4.115 + independent review §11.4.142,
+all FF-pushed no-force §11.4.113: <strong>W11a</strong>
+ota-artifact-validator <code>707f876</code>/parent <code>1c75fd42</code>
+(ValidateHash nil-<code>io.Reader</code> panic → reject verdict,
+reachable via exported <code>Validate(Input{})</code>) ·
+<strong>W11-server</strong> <code>7a68a8e5</code> (handleCreateProject
+now seeds creator <code>ProjectRoleAdmin</code> ACL — creator was
+403-locked-out of own project, entire per-project RBAC was silently
+dead; no route-gate change, no escalation) · <strong>W11-bridge</strong>
 ota-update-engine-bridge <code>33ab77d</code>/parent
 <code>3c6da835</code> (<code>UpdateEngine.bind()</code> boolean was
 swallowed → <code>observeStatus</code> cold Flow hung forever on
@@ -488,6 +513,68 @@ by operator decision (§11.4.133)</strong></td>
 </tr>
 </tbody>
 </table>
+<h3
+id="latest-session-2026-07-10-cont-8-wave-12-wave-13-landed-11.4.118-loop-measurably-drying-5-fixes-5-clean">Latest
+session (2026-07-10, cont-8) — Wave-12 + Wave-13 landed; §11.4.118 loop
+measurably drying (5 fixes + 5 clean)</h3>
+<p>Standing directive (§11.4.126): endless autonomous loop, 3-4 parallel
+subagents, rock-solid physical evidence, no bluff. This continuation ran
+deep 2nd/3rd-pass adversarial audits (§11.4.118 discovery-pressure)
+across owned bricks + server packages, each closure
+conductor-independently re-verified (§11.4.142 + §11.4.115 polarity:
+compile-safe mutation → guard FAILs → sha256 byte-identical restore →
+GREEN). All submodule fixes FF-pushed to their mirrors (no force
+§11.4.113); the Wave-13 consolidation parent commit lands the gitlink
+bumps + evidence.</p>
+<ul>
+<li><strong>Wave-13 — 5 real fixes, each RED→GREEN + conductor polarity,
+all published:</strong> compression truncated-gzip-on-panic
+<code>d15e7465</code> (4/4 github/gitlab/gitflic/gitverse) · docs_chain
+<code>verify</code> nil-corrupt-state SIGSEGV <code>394270e</code>
+(github+gitlab) · android <code>OtaPollWorker</code>
+thrown-transient-IOException degrades to Retry not
+<code>Result.failure()</code> <code>4e9dd89</code> (github) ·
+ota-rollout-engine halted-rollout re-poll misreports halt cause
+<code>3284620</code> (github) · server multipart spill temp-file leak
+<code>RemoveAll</code> (this consolidation commit). Evidence:
+<code>docs/qa/wave13-20260710/EVIDENCE.{md,html,pdf}</code> +
+<code>scratchpad/polarity_*.py</code> harnesses.</li>
+<li><strong>Wave-13 — 5 independent NO-DEFECT passes (§11.4.118,
+enumerated coverage, no fabrication §11.4.6):</strong>
+ota-artifact-validator · ota-telemetry-schema (fuzz 257k execs) ·
+ota-protocol (fuzz+chaos) · server/internal/config (artifact-pubkey
+trust boundary fail-closed by FACT —
+<code>len==ed25519.PublicKeySize</code> gate, never from request) ·
+server/internal/fabric (80-goroutine <code>-race</code> probe;
+<code>CompleteRun</code> PASS-requires-evidence TOCTOU proven NOT
+violable — evidence is append-only, no removal path).</li>
+<li><strong>Wave-12 (cont-7 tail, landed):</strong> security
+KeywordFilter stray-empty-keyword block-all <code>a0dad7d</code>/parent
+<code>11c6b21b</code> · server 2 business-invariant TOCTOU races
+(<code>handleCreateDeployment</code>+<code>handleCreateRelease</code> —
+check-then-act across two individually-locked store calls, invisible to
+<code>-race</code>, proven by N=10 barrier-released outcome tests)
+<code>5e4674c0</code> (subject garbled to “-F”;
+<code>commit_all.sh</code> takes
+<code>-m</code>/<code>COMMIT_MESSAGE</code> not git’s <code>-F</code> —
+recovered in <code>docs/qa/wave12-20260710/EVIDENCE.md</code>) ·
+containers 3 concurrency (overlay unguarded map / scheduler placements
+race / bus Close-under-lock deadlock) <code>f25228f</code>/parent
+<code>1970c851</code> · server <code>SignatureVerifier</code>
+fail-closed on malformed ed25519 key (was panic)
+<code>2cfb6b91</code>.</li>
+<li><strong>Convergence status:</strong> the §11.4.118 loop is drying
+but NOT declared dry — <code>server/internal/deviceemu</code> (~2537 LOC
+emulation harness) + several
+containers/docs_chain/ota-update-engine-bridge packages remain
+un-deep-audited; a further targeted round (Wave-14) is warranted before
+claiming the known-issue set complete. <strong>Release tag remains gated
+on §11.4.185 QA-team manual confirmation</strong> + the 3
+OPERATOR-BLOCKED mirror-fork publishes (vision_engine
+<code>1ec0c57</code> / llm_orchestrator O-fixes / llm_provider nil-ctx
+crash-fix — one fleet-wide operator canonical-mirror decision, never
+keep-ours/force §11.4.113).</li>
+</ul>
 <h3
 id="latest-session-2026-07-10-cont-6-wave-8-3-stream-results-verifiedlanded-parent-batch-published-44-wave-9-both-clean">Latest
 session (2026-07-10, cont-6) — Wave-8 3-stream results verified+landed;

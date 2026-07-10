@@ -64,6 +64,16 @@ func (s *Server) handleUploadArtifact(c *gin.Context) {
 		respondValidation(c, "could not parse multipart upload")
 		return
 	}
+	// Clean up any spill-to-disk temp files that mime/multipart created when a
+	// part exceeded the in-memory threshold (engine.MaxMultipartMemory). Without
+	// this, every upload whose parts spilled leaves an orphaned os.TempDir()
+	// "multipart-*" file — an unbounded disk leak on a long-running server.
+	// Registered here (err == nil) so it runs on EVERY subsequent exit path.
+	defer func() {
+		if c.Request.MultipartForm != nil {
+			_ = c.Request.MultipartForm.RemoveAll()
+		}
+	}()
 
 	// --- read the file part ---
 	fileBytes, ok := readFilePart(form, "file")
