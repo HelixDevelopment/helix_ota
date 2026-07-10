@@ -30,6 +30,15 @@ func (s *Server) handleCreateRelease(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
+	// Serialize the check-then-act sequence below (the version-monotonicity
+	// read via LatestRelease + the actual CreateRelease) against every other
+	// concurrent call to this handler — see the releaseMu field doc in
+	// server.go for why: without this lock, two concurrent POST /releases
+	// requests for the same os+target_model can both pass the monotonicity
+	// check before either creates its release.
+	s.releaseMu.Lock()
+	defer s.releaseMu.Unlock()
+
 	// Referenced artifact must exist and be verified.
 	art, err := s.repo.GetArtifact(ctx, req.ArtifactID)
 	if err != nil {

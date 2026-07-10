@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
+	"sync"
 	"time"
 
 	otavalidator "github.com/HelixDevelopment/ota-artifact-validator"
@@ -37,6 +38,35 @@ type Server struct {
 	rollout *rollout.Service
 	nowFn   func() time.Time
 	newIDFn func() string
+
+	// deployMu serializes the deployment-creation critical section (endpoints.md
+	// §11.1's check-then-act invariant "at most one active deployment per
+	// os+target_model+group"). store.Repository.ActiveDeploymentForTarget (the
+	// check) and CreateDeployment (the act) each lock the store independently but
+	// atomically only within themselves — two concurrent POST /deployments
+	// requests targeting the same release can both observe "no active
+	// deployment" via ActiveDeploymentForTarget before either has called
+	// CreateDeployment, so both proceed to create an active deployment for the
+	// same target (a TOCTOU business-invariant violation, not a data race the
+	// race detector flags, since every individual store call is itself
+	// correctly locked). deployMu makes the whole check+create+idempotency-key
+	// sequence atomic relative to itself, closing that window.
+	deployMu sync.Mutex
+
+	// releaseMu serializes the release-creation critical section (endpoints.md
+	// §10.1's check-then-act invariant "version must be strictly greater than
+	// the latest published release for this target"). The exact same TOCTOU
+	// shape as deployMu above: store.Repository.LatestRelease (the check) and
+	// CreateRelease (the act) are two separate, individually-locked store
+	// calls — two concurrent POST /releases requests for the same
+	// os+target_model (including two requests carrying the IDENTICAL version)
+	// can both observe the same "latest" before either has called
+	// CreateRelease, so both pass the monotonicity check and both create a
+	// release, defeating the documented "strictly greater than latest"
+	// invariant (and, when the two submitted versions are equal, silently
+	// storing a duplicate (os, target_model, version) release row). releaseMu
+	// makes the whole check+create sequence atomic relative to itself.
+	releaseMu sync.Mutex
 }
 
 // Options configures a Server. Fields left nil/zero fall back to sensible

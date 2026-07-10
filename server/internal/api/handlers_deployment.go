@@ -44,6 +44,18 @@ func (s *Server) handleCreateDeployment(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
+	// Serialize the whole check-then-act sequence below (idempotent replay +
+	// the "at most one active deployment per target" conflict check + the
+	// actual create) against every other concurrent call to this handler. Each
+	// store call is individually locked, but ActiveDeploymentForTarget (check)
+	// and CreateDeployment (act) are two separate store calls — without this
+	// handler-level lock, two concurrent requests for the same target could
+	// both pass the conflict check before either creates its deployment,
+	// yielding two simultaneously-active deployments for one target (see the
+	// deployMu field doc in server.go).
+	s.deployMu.Lock()
+	defer s.deployMu.Unlock()
+
 	// Idempotent replay.
 	idemKey := c.GetHeader("Idempotency-Key")
 	if idemKey != "" {
