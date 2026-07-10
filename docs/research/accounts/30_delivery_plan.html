@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>30_delivery_plan</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">30_delivery_plan</h1>
+</header>
+<h1
+id="multi-account-multi-tenant-helix-ota-phased-delivery-plan-11.4.167-11.4.172">Multi-Account
+(Multi-Tenant) Helix OTA — Phased Delivery Plan (§11.4.167 /
+§11.4.172)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Scope.</strong> This is the phased DELIVERY PLAN for adding
+an ACCOUNT (tenant) layer to the Helix OTA control plane
+(<code>server/</code>, Go/Gin modular monolith) and every client
+surface, delivered as an <strong>isolated big-feature
+work-stream</strong> (§11.4.167) with a <strong>living
+production-readiness plan</strong> (§11.4.172). It synthesizes the
+authoritative design set — it does <strong>not</strong> invent
+conflicting content. Reading order for anyone resuming:
+<code>00_INDEX.md</code> (mandate + open questions) →
+<code>10_/11_/12_*</code> (as-is discovery) →
+<code>20_target_multitenancy_data_model.md</code> (SSOT data model) →
+<code>21_authz_rbac_superadmin.md</code> →
+<code>22_api_surface.md</code> → <code>23_ui_ux_all_surfaces.md</code> →
+<code>24_project_side_cli.md</code> →
+<code>25_device_side_update_client.md</code> →
+<code>26_security_threat_model.md</code> →
+<code>27_test_strategy.md</code> → this doc.</p>
+<p><strong>This plan is APPROVAL-GATED (§11.4.6 / §11.4.66).</strong> No
+production code is written under this directive until the operator
+approves the plan AND resolves the §5 decision gate. Every milestone
+cites the design doc(s) it derives from. Every estimate is marked as an
+estimate (§11.4.6 — no false precision). Nothing here is a §11.4
+completion claim: the whole feature is a to-be proposal across
+<code>20_*</code>–<code>27_*</code>.</p>
+</blockquote>
+<hr />
+<h2
+id="work-stream-setup-isolated-big-feature-lifecycle-11.4.167-11.4.179-11.4.181">1.
+Work-stream setup — isolated big-feature lifecycle (§11.4.167 /
+§11.4.179 / §11.4.181)</h2>
+<p>This is a BIG feature (a new tenancy layer touching the data model,
+authZ, every OTA route, two SPAs, a new CLI binary, the device agent,
+security, and object storage). Per §11.4.167 it develops as its
+<strong>own isolated feature work-stream</strong>, kept separate from
+trunk until operator-approved after a full retest, with trunk merged in
+regularly.</p>
+<h3 id="canonical-branch-one-name-everywhere-11.4.181">1.1 Canonical
+branch (one name, everywhere — §11.4.181)</h3>
+<p>One feature maps to <strong>exactly ONE canonical branch name used
+identically on the main repo AND every touched owned submodule</strong>
+(§11.4.181):</p>
+<ul>
+<li><strong>Branch:</strong> <code>feature/multi-tenant-accounts</code>
+(lowercase kebab per §11.4.29).</li>
+<li><strong>Touched owned submodules</strong> (each branches under the
+SAME name when first touched, never a per-repo variant):
+<code>submodules/ota-android-agent</code> (M6 — the net-new setup wizard
+UI + the concrete <code>ControlPlaneClient</code> that <code>11_*</code>
+§Honest-gaps 2 / <code>25_*</code> §5 say is absent) and the
+<strong>containers submodule</strong> (§11.4.76/§11.4.161 — new
+rootless- podman compose recipes for the M7 object-storage MinIO dev
+backend + the <code>27_*</code>-§0.1 live-PostgreSQL RLS test topology).
+An untouched submodule stays on its base branch.
+<code>server/cmd/helix-ota</code> (M5 CLI) is in the main repo, not a
+submodule.</li>
+<li>The canonical name is recorded ONCE in the
+claim/<code>logic_group→branch</code> registry (§11.4.176/§11.4.181) and
+looked up, never re-invented. A recommended gate
+<code>CM-BRANCH-NAME-CONSISTENCY</code> fails on any divergent submodule
+branch name.</li>
+</ul>
+<h3 id="corruption-isolated-cow-cheap-checkout-11.4.167-11.4.179">1.2
+Corruption-isolated, CoW-cheap checkout (§11.4.167 / §11.4.179)</h3>
+<ul>
+<li>The work-stream develops in an <strong>independent repo with its OWN
+<code>.git</code></strong> (own object store, own index, own lock
+namespace) — NOT a <code>git worktree</code> sharing one common
+<code>.git</code> (§11.4.179: a shared common-dir is a single point of
+failure — one stale lock freezes every stream). Where disk-feasibility
+is a concern, use the §11.4.167 D
+reflink/CoW-clone-with-own-<code>.git</code> path (btrfs/XFS/ZFS/APFS
+reflink shares extents on disk while keeping a per-stream
+<code>.git</code>), so isolation + disk-feasibility both hold.</li>
+<li>Regular <strong>trunk-merge-in</strong> cadence (§11.4.167):
+<code>main</code> is merged into the feature branch at each milestone
+boundary and on any material trunk change, integrated by the §11.4.113
+merge-onto-latest-main procedure — <strong>force-push is strictly
+forbidden</strong> (§11.4.113); every commit/push wrapper auto-reaps
+only provably-dead locks (§11.4.180) and fans out to all four upstreams
+(§2.1).</li>
+</ul>
+<h3 id="release-identity-operator-approval-merge-gate">1.3 Release
+identity + operator-approval merge gate</h3>
+<ul>
+<li><strong>Release-tag / version naming (§11.4.151):</strong> tags on
+the main repo AND every touched owned submodule are prefixed
+<code>helix_ota-&lt;version&gt;</code> (prefix resolved from
+<code>HELIX_RELEASE_PREFIX</code> in <code>.env</code> — the tracked
+<code>.env.example:21</code> documents
+<code>HELIX_RELEASE_PREFIX=helix_ota</code>; else the lowercased
+project-root dir name <code>helix_ota</code>). The same prefix is
+greppable across main + submodules for one release. No tags exist yet
+(verified this session — greenfield naming).</li>
+<li><strong>Operator-approval merge gate (§11.4.167 /
+§11.4.126).</strong> The feature branch merges to <code>main</code> ONLY
+after: (a) the §5 decision gate is resolved; (b) the M8 full-suite
+retest (§11.4.40) is GREEN with captured evidence; (c) an independent
+code review reaches a zero-finding GO (§11.4.125/§11.4.134/§11.4.142);
+(d) the operator explicitly approves; and (e) — because a release is the
+terminal condition — the §11.4.185 <strong>manual QA-team
+confirmation</strong> lands as the FINAL step. The submodule branch/tag
+cascade (§11.4.167) merges + tags each touched submodule under the same
+name/prefix in the same window.</li>
+<li><strong>Build + test discipline (§11.4.167):</strong> single-builder
++ per-device exclusive test queues; builds run via the containers
+submodule where applicable (§11.4.173); the server
+<code>go build ./...</code> / <code>gofmt</code> / <code>go vet</code>
+stay clean (project MANDATORY constraint).</li>
+</ul>
+<hr />
+<h2 id="phased-milestones-dependency-ordered">2. Phased milestones
+(dependency-ordered)</h2>
+<p>Eight milestones, dependency-ordered. Each cites its design doc(s),
+the <code>27_*</code> tests that prove it, and a captured-evidence exit
+criterion (§11.4.69 — every PASS cites an artefact under
+<code>docs/qa/&lt;run-id&gt;/</code>, never a metadata-only PASS).
+<strong>One cross-cutting reorder is called out in §3 and honored here:
+the object-storage seam (M7) is a prerequisite for the byte-level e2e
+layers of M5/M6</strong> — those milestones’ <em>control-plane</em> work
+lands on schedule, but their “device downloads + applies the exact
+bytes” e2e proof is <code>SKIP-with-reason: object_storage_absent</code>
+until M7’s Storage seam lands (<code>24_*</code> §4, <code>25_*</code>
+§5, <code>27_*</code> §0.2).</p>
+<h3
+id="m1-data-model-migrations-store.repository-extension-derives-from-20_-10_-as-is">M1
+— Data model + migrations + <code>store.Repository</code> extension ·
+derives from <code>20_*</code> (+ <code>10_*</code> as-is)</h3>
+<ul>
+<li><strong>Scope.</strong> The keystone. Add the four new/lifted
+entities — <code>Account</code>, persisted <code>User</code> (closes the
+<code>10_*</code> §3 no-persisted-user gap), <code>Membership</code>,
+and the minimal per-account <code>Role</code> skeleton — and scope the
+existing OTA model
+(Device/Artifact/Release/Deployment/Telemetry/Group/Audit) with a
+denormalized <code>account_id</code> (RLS key) + <code>project_id</code>
+(<code>20_*</code> §1–§2). Tenancy model: <strong>shared schema +
+<code>account_id</code> column + PostgreSQL RLS</strong>
+(<code>20_*</code> §0).</li>
+<li><strong>Deliverables.</strong> (a) New <code>store.Repository</code>
+methods mirroring the Projects block — Accounts CRUD, the User CRUD that
+does not exist today, Memberships, and the atomic
+<code>CreateAccountWithOwner</code> seam that closes the orphan-tenant
+hole (<code>20_*</code> §3.1/§3.3), implemented by BOTH
+<code>MemoryRepository</code> and <code>PostgresRepository</code>. (b)
+Scope the existing accessors — explicit <code>accountID</code> param on
+single-entity get/create/update +
+<code>AccountID</code>/<code>ProjectID</code> fields on the
+<code>*Filter</code> structs (<code>20_*</code> §3.2 hybrid). (c) The
+additive migration <code>002_accounts_multitenancy</code> (opaque
+<code>TEXT</code> ids to mirror the shipped store; <code>UUID</code> in
+the canonical <code>001</code>-style schema) + the <code>003</code>
+NOT-NULL/uniqueness/ composite-FK/index/RLS follow-up (<code>20_*</code>
+§4). (d) Re-scope the 7 single-global-tenant assumptions (project/group
+name, device <code>hardware_id</code>, release monotonicity,
+active-deploy uniqueness, <code>CallerID</code>→<code>user_id</code>,
+token tenant dimension) (<code>20_*</code> §2.2).</li>
+<li><strong>Dependencies.</strong> None upstream (this is the root).
+<strong>Decision-gate inputs it needs first:</strong> OQ-4 migration
+path (§5) and the TEXT-vs-UUID id-type divergence (<code>20_*</code>
+§1).</li>
+<li><strong>Tests that prove it (<code>27_*</code>).</strong>
+Data-model/RLS surface (<code>27_*</code> §1): unit (memory) +
+integration (BOTH backends) + the <strong>RLS-isolation</strong>
+flagship layer A (<code>27_*</code> §2.1, pgx-only, live Postgres via
+rootless podman §11.4.161 — else honest
+<code>SKIP: topology_unsupported</code>) + concurrency/race on the
+re-scoped monotonicity/active- deploy keys and
+<code>CreateAccountWithOwner</code> atomicity + the
+<strong>migration/backfill</strong> correctness matrix
+(<code>27_*</code> §5). Each isolation assertion is three-part (A’s rows
+present, B’s absent, mutation flips both — <code>27_*</code> §2 shared
+design) with a paired §1.1 mutation that drops the scope and makes the
+test FAIL.</li>
+<li><strong>Exit criteria.</strong> Both backends pass the app-layer
+scope suite; RLS layer green on the pgx path (or explicitly
+SKIP-with-reason where Postgres absent); the <code>002</code>→backfill→
+<code>003</code> migration is idempotent + crash-safe with
+<code>COUNT(account_id IS NULL)=0</code> and
+<code>COUNT(outside __default__)=0</code> captured (<code>27_*</code>
+§5); composite-FK integrity holds. No cross-account read returns data.
+Evidence under <code>docs/qa/&lt;run-id&gt;/isolation_rls/</code> +
+<code>.../migration/</code>.</li>
+</ul>
+<h3
+id="m2-authz-token-account-claim-super-admin-derives-from-21_-owns-oq-2-20_-6">M2
+— AuthZ / token account-claim / super-admin · derives from
+<code>21_*</code> (owns OQ-2) (+ <code>20_*</code> §6)</h3>
+<ul>
+<li><strong>Scope.</strong> The authorization model over M1’s entities:
+the <strong>RBAC-first role+scope hybrid</strong> (tenant-isolation
+predicate → RBAC matrix → thin attribute deny-override, evaluated in
+that fixed order — <code>21_*</code> §1.2), the sign-in +
+account-selection exchange flow (<code>21_*</code> §2), token scoping
+(add the server-minted immutable <code>account_id</code> claim,
+device/CLI also <code>project_id</code> — <code>21_*</code> §3), the
+L1-middleware/L2-scoped-store/L3-RLS enforcement stack
+(<code>21_*</code> §4), and the super-admin as a <strong>global
+<code>is_super_admin</code> flag</strong> (not a per-account role)
+bypassing scope via a <strong>policy-based RLS bypass, never a
+<code>BYPASSRLS</code> role</strong> (<code>21_*</code> §1.4/§4,
+<code>20_*</code> §6).</li>
+<li><strong>Deliverables.</strong> (a) <code>Claims</code> extended with
+<code>account_id</code> (+ device/CLI <code>project_id</code>), signing
+still config-only (§11.4.10; <code>21_*</code> §3.2); legacy tokens
+without the claim are <strong>fail-closed on scoped routes, super-admin
+exempt</strong> (<code>21_*</code> §3.3 Option A). (b) The
+server-authoritative permission matrix promoted from the shipped
+client-side <code>RESOURCE_PERMISSIONS</code> grid (<code>21_*</code>
+§1.3). (c) <code>requireAccountAccess</code> +
+<code>requireSuperAdmin</code> middlewares (the analogues of
+<code>requireProjectAccess</code>/<code>requireRole</code>).
+<ol start="4" type="a">
+<li>The <strong>single canonical role vocabulary</strong> reconciliation
+(§11.4.186): add <code>super_admin</code> to the server
+<code>token.go</code> set (the new SSOT) and to the dashboard
+<code>Role</code> union, and fix the OTA-Manager
+<code>sidebar.tsx</code> <code>"developer"</code> literal that is not in
+the union (<code>21_*</code> §5). (e) Least-privilege defaults +
+revocation semantics (<code>21_*</code> §6).</li>
+</ol></li>
+<li><strong>Dependencies.</strong> M1 (entities + membership lookups +
+<code>is_super_admin</code> column). <strong>Decision-gate
+input:</strong> OQ-2 permission-model shape (§5) — the RBAC-first hybrid
+is recommended; the reserved roles/permissions tables stay an additive
+escalation.</li>
+<li><strong>Tests that prove it (<code>27_*</code>).</strong> Server-API
+surface (<code>27_*</code> §1) + the <strong>super-admin test
+set</strong> (<code>27_*</code> §4): bypass works only for super-admin;
+the RLS bypass is policy-based + immediately revocable (clear the GUC →
+session re-scopes same request); audit written with the affected
+<code>account_id</code>; no request-side escalation (forged
+<code>is_super_admin</code> claim/field ignored). Each with a paired
+§1.1 mutation (grant bypass to a non-super-admin / make the bypass
+survive GUC-clear / drop <code>account_id</code> from the audit write /
+honor a request-supplied <code>is_super_admin</code>) that makes the
+gate FAIL.</li>
+<li><strong>Exit criteria.</strong> Scoped tokens authorize only their
+account; super-admin bypass is scoped-audited-revocable with captured
+GUC-on/GUC-off row-set evidence
+(<code>docs/qa/&lt;run-id&gt;/superadmin/</code>); the role vocabulary
+is single-source across server + both SPAs; legacy tokens fail-closed.
+No forged-claim escalation succeeds.</li>
+</ul>
+<h3
+id="m3-account-scope-every-ota-route-super-admin-admin-api-derives-from-22_-20_21_">M3
+— Account-scope every OTA route + super-admin admin API · derives from
+<code>22_*</code> (+ <code>20_*</code>/<code>21_*</code>)</h3>
+<ul>
+<li><strong>Scope.</strong> Wire the model + authZ onto the HTTP
+surface: make the existing OTA routes account-scoped via the
+<strong>token claim on the hot path</strong> (paths unchanged), add the
+<strong>super-admin admin API</strong>
+(accounts/users/memberships/roles) as an additive <code>/admin/*</code>
+namespace gated by <code>requireSuperAdmin</code>, add the
+<strong>account-selection API</strong> (<code>GET /auth/accounts</code>
++ <code>POST /auth/select-account</code> token exchange), and the
+<strong>credentials API</strong> (API-key mint/list/revoke +
+<code>POST /auth/token-exchange</code>) (<code>22_*</code> §1–§4).
+Cross-account operations use <strong>path tenancy for admin
+only</strong> (<code>22_*</code> §2.0).</li>
+<li><strong>Deliverables.</strong> (a) <code>requireAccountAccess</code>
+wired onto every currently-unscoped
+device/artifact/release/deployment/group/audit/client route
+(<code>22_*</code> §2.1), scope derived from the verified claim, project
+validated against the claim’s authorized set — never widened. (b) The
+<code>/admin/*</code> route table (<code>22_*</code> §1.2). (c)
+<code>GET /auth/accounts</code> + <code>POST /auth/select-account</code>
+(<code>22_*</code> §3). (d) The <strong>missing
+<code>GET /artifacts</code> (list) endpoint</strong> the SPA + CLI block
+on (<code>22_*</code> §5.1). (e) <code>/projects</code> becomes
+account-scoped; cross-tenant denial returns
+<strong><code>NOT_FOUND</code></strong> (anti-enumeration) reusing the
+existing <code>ErrorBody</code> envelope + closed code set — no new
+codes, no <code>/api/v2</code> (<code>22_*</code> §6). (f) Legacy-token
+default-account fallback for a bounded transition, then
+<code>Sunset</code> header (<code>22_*</code> §6.1) — composed with the
+OQ-4 Option-A backfill.</li>
+<li><strong>Dependencies.</strong> M1 (scoped store) + M2 (the claim +
+middlewares + super-admin gate).</li>
+<li><strong>Tests that prove it (<code>27_*</code>).</strong> The
+<strong>flagship cross-account isolation</strong> at the API layer
+(<code>27_*</code> §2.2, both backends — the memory MVP’s only isolation
+is L2 here): scoped list returns only the caller’s account; a known
+cross-account id is denied (404 vs 403 choice deferred to
+<code>26_*</code>); a cross-project/-account key on write is 403;
+account is taken from the resolved scope, never a request field. Paired
+§1.1 mutation removes <code>requireAccountAccess</code> (or the
+<code>AccountID</code> filter) → A sees/mutates B → FAIL. Plus DDoS
+(auth/upload flood per-account rate posture), concurrency/race,
+benchmarking (scope- resolution overhead) per <code>27_*</code> §1.</li>
+<li><strong>Exit criteria.</strong> Every OTA route rejects
+cross-account access at the API layer on both backends with captured
+HTTP transcripts + before/after store dumps
+(<code>docs/qa/&lt;run-id&gt;/isolation_api/</code>); the admin +
+selection + list-artifacts endpoints exist and are
+super-admin/scoped-gated; <code>/api/v1</code> stays backward-compatible
+(additive).</li>
+</ul>
+<h3
+id="m4-ui-sign-in-split-account-switcher-super-admin-console-derives-from-23_-11.4.162-11.4.170">M4
+— UI: sign-in split + account switcher + super-admin console · derives
+from <code>23_*</code> (+ §11.4.162 / §11.4.170)</h3>
+<ul>
+<li><strong>Scope.</strong> Extend the two in-scope SPAs — the operator
+<strong>dashboard</strong> (<code>dashboard/</code>) and the <strong>OTA
+Manager</strong> (<code>clients/ota-manager/</code>, doubling as the
+server <code>/manager</code> web console) — with: the <strong>post-auth
+routing split</strong> (super-admin → global console; user → account
+selection — <code>23_*</code> §1.2 Option A recommended), the
+<strong>post-login account picker</strong> (auto-select single,
+persist-last, always-available switcher — <code>23_*</code> §2), the
+<strong><code>AccountSwitcher</code></strong> mounted above the existing
+<code>ProjectSwitcher</code> (two-level context — <code>23_*</code>
+§2.2), account-scoped cache keys + re-scope-on-switch (<code>23_*</code>
+§2.3), and the <strong>super-admin console</strong>
+(accounts/users/memberships/permissions matrix — <code>23_*</code>
+§3).</li>
+<li><strong>Deliverables.</strong> (a) OTA Manager:
+<code>activeAccountId</code> + <code>accounts[]</code> in
+<code>auth-store</code>, a new <code>AccountSwitcher</code> mirroring
+<code>project-switcher.tsx</code>, a <code>use-accounts.ts</code> hook,
+the <code>/admin/*</code> route + <code>isSuperAdmin</code>-gated nav,
+the <code>src/features/admin/</code> screens, the permissions-matrix UI
+over the <code>RESOURCE_PERMISSIONS</code> shape (<code>23_*</code>
+§6.1). (b) Dashboard: add <code>super_admin</code> to its
+<code>Role</code> union FIRST (§5/<code>23_*</code> §5 — the console
+cannot gate without it), port the switcher/picker pattern, finish the
+58-hardcoded-hex token vendoring before layering new screens
+(<code>23_*</code> §6.2). <strong>MANDATORY:</strong> every new/changed
+element consumes the <code>helix-ota</code> <strong>OpenDesign tokens
+(§11.4.162)</strong>, light + dark, no hardcoded hex, no label
+overlap.</li>
+<li><strong>Dependencies.</strong> M2 (role vocabulary +
+<code>super_admin</code> + the account claim/exchange the UI state
+mirrors) + M3 (the real <code>GET /accounts</code> /
+<code>/admin/*</code> / account-selection endpoints the switcher/console
+call). <strong>Decision-gate input:</strong> OpenCode-vs-OpenDesign
+confirmation (§5) — does not block token guidance (targets the
+already-vendored tokens).</li>
+<li><strong>Tests that prove it (<code>27_*</code>).</strong>
+<strong>Device-independent host-rendered pixel proof
+(§11.4.170)</strong> per screen × state × {light, dark},
+<strong>dual-validated</strong> by golden image-diff AND the OCR/vision
+layout oracle (<code>27_*</code> §3) — value/token-equality tests are
+FORBIDDEN as the sole proof. The harnesses ALREADY EXIST
+(<code>clients/ota-manager/visual/</code> with
+<code>oracle-diff.mjs</code> + <code>oracle-ocr.mjs</code>;
+<code>dashboard/hostrender/</code> Playwright specs) — the tenancy
+screens add fixtures (<code>27_*</code> §3.1). Oracles self-validated
+golden-good/ golden-bad (§11.4.107(10), <code>27_*</code> §3.3). Plus
+the wire proof that switching account re-scopes the project list +
+invalidates caches (<code>27_*</code> §1 OTA-Manager row).</li>
+<li><strong>Exit criteria.</strong> Every tenancy screen renders
+correctly per state × theme, dual-oracle GREEN with PNG + OCR JSON
+evidence (<code>docs/qa/&lt;run-id&gt;/</code>); switching account
+re-scopes data (captured); dashboard <code>super_admin</code> union
+landed; no hardcoded hex in new screens.</li>
+</ul>
+<h3
+id="m5-project-side-integration-cli-helix-ota-derives-from-24_-22_-45-26_-3">M5
+— Project-side integration CLI (<code>helix-ota</code>) · derives from
+<code>24_*</code> (+ <code>22_*</code> §4/§5, <code>26_*</code> §3)</h3>
+<ul>
+<li><strong>Scope.</strong> A production project-integration CLI — a
+single static Go binary (<code>server/cmd/helix-ota/</code>, beside
+<code>ota-server</code>) — that a consuming project’s CI/CD uses to
+authenticate to <strong>one account + one project</strong> and publish
+OTA updates, <strong>extending</strong> the existing upload/publish
+mechanism (<code>24_*</code> §0), not reinventing it.</li>
+<li><strong>Deliverables.</strong> (a) Non-interactive auth: an
+account+project-scoped, revocable, hash-stored <strong>API key</strong>
+used as an <strong>exchange credential</strong> (<code>24_*</code> §1.3
+Option B recommended) — <code>helix-ota login --token $KEY</code> →
+<code>POST /auth/token-exchange</code> → short- lived scoped bearer. (b)
+The command surface
+(<code>login</code>/<code>whoami</code>/<code>config set-context</code>/
+<code>upload</code>/<code>artifacts list</code>/<code>release create</code>/<code>deploy create</code>/<code>status</code>/<code>doctor</code>)
+with a <code>kubectl</code>-style local context, reusing the server’s
+<code>wire.go</code> structs (<code>24_*</code> §2). (c) §11.4.10
+no-leak: env <code>HELIX_OTA_TOKEN</code> primary,
+<code>chmod 600</code> credential file, redaction to
+<code>helixk_…&lt;last4&gt;</code>, <code>.gitignore</code> fragment +
+<code>.env.example</code> (§11.4.77), a <code>doctor</code> token-leak
+audit. (d) The consuming-project incorporation recipe (<code>24_*</code>
+§5 — the snippets are the consumer’s pipeline; no <code>.yml</code> is
+added to helix_ota per §11.4.156).</li>
+<li><strong>Dependencies.</strong> M3 (the account/project-scoped
+upload/release/deploy routes + the API- key/token-exchange endpoints +
+the <code>GET /artifacts</code> list endpoint). <strong>The e2e layer
+additionally depends on M7’s object-storage Storage seam</strong> (see
+§3): until it lands, <code>helix-ota</code> can
+authenticate/validate/register/release/deploy, but “device downloads +
+applies the exact bytes” is
+<code>SKIP-with-reason: object_storage_absent</code>, never faked
+(<code>24_*</code> §4/§6).</li>
+<li><strong>Tests that prove it (<code>27_*</code>).</strong> CLI
+surface (<code>27_*</code> §1): unit (flag/arg parse, <strong>token
+redaction</strong> §11.4.10, exit-code map — mocks OK here only) +
+integration (real server: artifact persists under the correct
+<code>(account_id, project_id)</code>; a <strong>cross- project key is
+rejected 403</strong>; a cross-account key cannot list another account’s
+artifacts) + e2e (real server + real object storage + Go device emulator
+— blocked on M7) + stress+chaos (concurrent cross-account uploads with
+no bleed, kill-mid-upload) + full-automation <code>-count=3</code>
+(§11.4.98) + a HelixQA Challenge bank entry. Cross-project/ -account
+negative matrix is a first-class suite (<code>24_*</code> §6).</li>
+<li><strong>Exit criteria.</strong> Integration + security layers GREEN
+with captured server JSON + store dumps + a redaction proof (raw token
+never in any log line); the e2e layer explicitly SKIP-with-reason until
+M7 — the coverage ledger is honest, not green-over-a-gap
+(<code>24_*</code> §6 recommendation).</li>
+</ul>
+<h3
+id="m6-devicesystem-side-update-client-setup-wizard-derives-from-25_-11.4.162-11.4.170-26_-4">M6
+— Device/System-side update client + setup wizard · derives from
+<code>25_*</code> (+ §11.4.162 / §11.4.170, <code>26_*</code> §4)</h3>
+<ul>
+<li><strong>Scope.</strong> Extend
+<code>submodules/ota-android-agent</code> (today a headless 15-min poll
+worker, <code>11_*</code> §4) to multi-account production: a
+server-minted <strong><code>(account, project, device)</code>
+identity</strong> so a device only ever sees its own account’s offer; a
+<strong>hybrid transport</strong> (poll stays the reliable floor + an
+optional push “wake” that carries no payload — never
+push-as-source-of-truth, <code>25_*</code> §2.3); a per-account/project
+<strong><code>silent</code>/<code>interactive</code> notification
+policy</strong>; and the <strong>net-new setup wizard</strong> (notify →
+wizard → consent → download → verify-before-apply →
+<code>update_engine.applyPayload</code> A/B handoff → reboot-to- switch
+with auto-rollback, <code>25_*</code> §3/§4).</li>
+<li><strong>Deliverables.</strong> (a) Device token gains server-minted
+<code>account_id</code>/<code>project_id</code> (client can never assert
+its own tenancy — the <code>resolvePublicKey</code> trust boundary,
+<code>25_*</code> §1.2); <code>ActiveDeploymentForTarget</code> gains
+the account+project filter. (b) Provisioning: <strong>Option A
+operator-minted scoped token</strong> first, Option B bootstrap→rotate
+when self-service/fleet-scale is required (<code>25_*</code> §1.3). (c)
+The concrete
+<code>ControlPlaneClient</code>/<code>Downloader</code>/<code>Verifier</code>/<code>Telemetry</code>
++ device config that <code>11_*</code> §Honest-gaps 2 says are absent —
+token in Android Keystore, config by injection (never hardcoded,
+§11.4.28), offline availability-following (§11.4.144), per-account
+signature verify key provisioned from server config (<code>25_*</code>
+§5). (d) The wizard as a net-new Compose UI on the <code>:android</code>
+layer — <strong>OpenDesign tokens (§11.4.162)</strong> light+dark +
+<strong>Roborazzi/Paparazzi host-render proof (§11.4.170)</strong>;
+kiosk <code>silent</code> path unchanged. A small server addition: a
+release <code>notes</code> field passed through the
+<code>UpdateAvailable</code> offer (<code>25_*</code> §3).</li>
+<li><strong>Dependencies.</strong> M1–M3 (scoped device token + scoped
+update-check). <strong>The byte-level download-and-apply e2e depends on
+M7’s object-storage Storage seam + signed URLs</strong>
+(<code>25_*</code> §5 #6) — until then the routing/offer isolation is
+provable, byte-apply is not.</li>
+<li><strong>Tests that prove it (<code>27_*</code>).</strong> Device
+surface (<code>27_*</code> §1): unit (core Kotlin —
+<code>VerifyBeforeApply</code> order, wizard state machine,
+offline/resume) + integration (real <code>ota-server</code>) + the
+<strong>device-layer flagship isolation</strong> (<code>27_*</code>
+§2.3: device A gets A’s offer and <code>204</code>/deny for B’s
+deployment even at matching <code>(os, model, group)</code>; paired §1.1
+mutation reverts to the global key → device A offered B’s deployment →
+FAIL) + UI host-render (§11.4.170) + stress+chaos (offline→resume,
+corrupt→reject, power-loss→ A/B rollback) + the push-wake latency
+test.</li>
+<li><strong>Exit criteria.</strong> Cross-account device isolation
+proven with captured poll transcripts
+(<code>docs/qa/&lt;run-id&gt;/isolation_e2e/</code>); the wizard renders
+correctly per state × theme (host-render dual-oracle); byte-apply e2e
+SKIP-with-reason until M7; the headless kiosk path is unregressed.</li>
+</ul>
+<h3
+id="m7-security-hardening-object-storage-derives-from-26_-24_-4-11_-honest-gaps">M7
+— Security hardening + object storage · derives from <code>26_*</code>
+(+ <code>24_*</code> §4, <code>11_*</code> §Honest-gaps)</h3>
+<ul>
+<li><strong>Scope.</strong> Close the <code>26_*</code> threat controls
+that are not already covered by M1–M3’s isolation, and land the
+<strong>object-storage seam</strong> that M5/M6 e2e depend on.
+<strong>Sequencing note (§3):</strong> the object-storage seam is a
+<em>prerequisite</em> the operator may pull EARLIER than the rest of M7
+— the security-hardening items can trail, but the Storage seam gates
+every byte-level e2e claim (<code>27_*</code> §0.2).</li>
+<li><strong>Deliverables.</strong> (a) <strong>Object storage:</strong>
+a <code>Storage</code> interface seam (like
+<code>store.Repository</code>) — dev uses rootless-podman
+<strong>MinIO</strong> (§11.4.161 via the containers submodule), prod
+S3/GCS; stream accepted bytes to durable storage, persist the
+<strong>real</strong> <code>StorageRef</code> (replacing the
+<code>handlers_artifact.go:184</code> placeholder), <strong>per-account
+bucket/key-prefix isolation</strong>, and <strong>signed, time-bounded
+download URLs</strong> with the
+<code>account_id</code>/<code>project_id</code> derived from the
+verified device token (<code>26_*</code> §5, <code>24_*</code> §4).
+<ol start="2" type="a">
+<li><strong>Per-account signing-key registry:</strong>
+<code>resolvePublicKey(accountID)</code> from a config-/ KMS-backed
+registry with a global fallback for un-migrated accounts — <strong>the
+verify key still comes only from server config/registry, never the
+request; only the lookup key gains an account dimension</strong>
+(<code>26_*</code> §4). Rotation with an overlap window; TUF-style
+M-of-N flagged as the hardening horizon (§11.4.112, not claimed
+shipped). (c) <strong>The predictable dev-secret fix:</strong> fail-fast
+(refuse to start) when <code>HELIX_TOKEN_SECRET</code> is unset in a
+multi-account build — the single highest-severity as-is finding
+(<code>26_*</code> §3.4/ §6). (d) Credential hardening:
+argon2id/HMAC-keyed hashing, shortened device-token TTL, §11.4.10.A
+pre-store leak audit before any secret lands.</li>
+</ol></li>
+<li><strong>Dependencies.</strong> M1 (scoping + RLS) for the isolation
+controls; M5/M6 consume the Storage seam + signed URLs + per-account
+key.</li>
+<li><strong>Tests that prove it (<code>27_*</code> + <code>26_*</code>
+proofs).</strong> The DB-layer forged-<code>WHERE</code> RLS proof
+(<code>26_*</code> §1.3, <code>27_*</code> §2.1); the super-admin
+no-<code>BYPASSRLS</code>/revocability proof (<code>26_*</code> §2.4,
+<code>27_*</code> §4); credential redaction + expiry/revocation; the
+per-account signing-key negative test (A’s key verifies for A, FAILs for
+B; a request-supplied verify key is structurally impossible —
+<code>26_*</code> §4.4); the object-storage cross-account byte-access +
+signed-URL IDOR controls (<code>26_*</code> §5). Once the Storage seam
+lands, the M5/M6 byte-level e2e SKIPs flip to captured PASS (downloaded
+artifact hash matches the published one).</li>
+<li><strong>Exit criteria.</strong> Fail-fast on unset secret;
+per-account key registry with rotation + global fallback; real
+per-account object storage with signed URLs; the byte-level e2e
+isolation proofs GREEN (no longer SKIP); every control carries its
+paired-mutation proof.</li>
+</ul>
+<h3
+id="m8-full-test-sweep-manual-qa-final-gate-derives-from-27_-11.4.40-11.4.185">M8
+— Full test sweep + manual-QA final gate · derives from
+<code>27_*</code> (+ §11.4.40 / §11.4.185)</h3>
+<ul>
+<li><strong>Scope.</strong> The §11.4.40 <strong>complete retest from a
+clean baseline</strong> after every prior milestone is done +
+individually verified — NOT a spot-check of touched tests. This is the
+release-readiness gate for the whole work-stream.</li>
+<li><strong>Deliverables.</strong> (a) The full <code>27_*</code>
+test-type set across all six surfaces run GREEN with captured evidence,
+including the flagship three-layer isolation (RLS + app-scope + e2e,
+<code>27_*</code> §2), super-admin (§4), migration/backfill (§5), and UI
+host-render (§3). (b) The <code>27_*</code> §6 anti-bluff discipline
+enforced: <code>ab_pass_with_evidence</code> everywhere, every gate with
+a paired §1.1 mutation that FAILs, <code>-count=3</code> determinism, no
+fakes beyond unit, the real PostgreSQL + real <code>ota-server</code> +
+real device emulator + real MinIO. (c) The completed <strong>coverage
+ledger</strong> (§6 below) with every row classified, the two
+by-construction SKIPs now resolved (Postgres present, object storage
+landed). (d) Independent verification/review of the test code itself
+iterating to a zero-finding GO (§11.4.142/§11.4.165/§11.4.134).</li>
+<li><strong>Dependencies.</strong> M1–M7 all done + individually
+verified (§11.4.40 precondition).</li>
+<li><strong>Tests that prove it.</strong> The entire <code>27_*</code>
+suite; risk-ordered per §11.4.132 (most- recently-worked +
+most-problematic + highest-blast-radius + most-reopened first — the
+isolation + super-admin sets lead).</li>
+<li><strong>Exit criteria.</strong> Every automated gate GREEN with
+captured physical evidence; the coverage ledger has no unresolved
+<code>OPERATOR_ATTENDED_ONLY</code>; then — the FINAL step (§11.4.185) —
+the <strong>QA team’s manual testing confirms</strong> the feature. Only
+after that confirmation is the work-stream tag-eligible +
+merge-to-main-eligible (§1.3). The agent hands off and waits for manual
+QA; it never self-certifies that step.</li>
+</ul>
+<hr />
+<h2 id="critical-path-danger-zones-and-risks-11.4.172">3. Critical path,
+danger zones, and risks (§11.4.172)</h2>
+<h3 id="critical-path">3.1 Critical path</h3>
+<p><code>M1 (data model + RLS) → M2 (claim + super-admin) → M3 (scoped routes + admin API)</code>
+is a <strong>hard serial spine</strong> — each strictly depends on the
+prior. From M3, three tracks fan out and can run in parallel
+(§11.4.58/§11.4.103, disjoint file scope): <strong>M4 (UI)</strong>,
+<strong>M5 (CLI)</strong>, <strong>M6 (device)</strong>. <strong>M7’s
+object-storage seam is the load-bearing cross-cut</strong>: it does not
+sit “after” M5/M6 — its <strong>Storage seam is a prerequisite</strong>
+for the byte-level e2e proofs of BOTH (<code>24_*</code> §4,
+<code>25_*</code> §5, <code>27_*</code> §0.2).
+<strong>Recommendation:</strong> pull the M7 object-storage seam EARLY
+(right after M3, in parallel with M4) so M5/M6 e2e are not left in
+permanent SKIP; the rest of M7’s hardening can trail. M8 (full retest +
+manual QA) gates the merge. The longest path is therefore
+<code>M1→M2→M3→M7(storage seam)→M5/M6 e2e→M8</code>.</p>
+<h3 id="danger-zones-irreversible-or-high-blast-radius-decisions">3.2
+Danger zones (irreversible or high-blast-radius decisions)</h3>
+<ul>
+<li><strong>Irreversible schema decisions (M1).</strong> The
+<strong><code>account_id</code> NOT-NULL + composite-FK + RLS
+<code>003</code> cutover</strong> and the <strong>TEXT-vs-UUID
+id-type</strong> choice (<code>20_*</code> §1) are expensive to reverse
+once data exists. Mitigation: the
+<code>002</code>(nullable)→backfill→<code>003</code>(NOT NULL) sequence
+is designed to make the invariant clean on day one (<code>20_*</code> §5
+Option A); every destructive migration step carries a §9.2 hardlinked
+backup + a defined expected post-op state + a restore-on-fail gate;
+target/System safety per §11.4.133. This is the top danger zone
+precisely because M1 is the root of the serial spine.</li>
+<li><strong>The predictable dev-fallback HMAC secret (<code>26_*</code>
+§3.4 / §6 Spoofing).</strong> The token secret falls back to the literal
+<code>"helix-ota-dev-token-secret-change-me"</code> when
+<code>HELIX_TOKEN_SECRET</code> is unset
+(<code>config.go:180-184</code>). Under multi-account this is
+<strong>catastrophic</strong> — a predictable signing key lets an
+attacker mint a token with ANY <code>account_id</code> claim and defeat
+tenant isolation entirely. <strong>This is the single highest-severity
+as-is finding.</strong> Mitigation: M7’s fail-fast (refuse to start
+unset) — but flagged here because it is a danger zone the moment M2
+introduces the account claim, earlier than M7; consider pulling the
+fail-fast into M2.</li>
+<li><strong>The RLS-needs-Postgres gap (<code>27_*</code>
+§0.1).</strong> RLS (the database-enforced belt) exists ONLY on the pgx
+path; the default store is in-memory (<code>main.go:80</code>). On the
+memory MVP backend, L1+L2 (middleware + compile-time
+explicit-<code>accountID</code> scope) are the WHOLE isolation
+guarantee. Danger: a test run without Postgres proves only L1+L2; the
+RLS layer is an honest <code>SKIP: topology_unsupported</code>, never
+PASS-by-default. Mitigation: boot a real PostgreSQL on-demand via the
+containers submodule (rootless podman §11.4.161) for every RLS/migration
+test; the coverage ledger marks the SKIP explicitly.</li>
+<li><strong>The object-storage gap (<code>11_*</code> §Honest-gaps 1 /
+<code>26_*</code> §5).</strong> Artifact bytes are validated then
+<strong>discarded</strong> — <code>StorageRef</code> is a placeholder
+and no real object store is in-repo. Consequence: an end-to-end “device
+downloads + applies the exact bytes” cannot be proven from in-repo code
+until M7’s Storage seam lands. Danger: any “full e2e” claim before then
+would be a §11.4 PASS-bluff. Mitigation: M5/M6 e2e byte-apply is
+<code>SKIP-with-reason: object_storage_absent</code> until M7; the
+Storage seam is pulled early (§3.1); MinIO dev backend behind the
+<code>Storage</code> interface (§11.4.161).</li>
+<li><strong>Role-vocabulary divergences (<code>21_*</code> §5).</strong>
+The same role vocabulary lives in FIVE places and they diverge: the
+server <code>token.go</code> set omits <code>super_admin</code>; the
+dashboard <code>Role</code> union omits <code>super_admin</code> (so the
+super-admin console cannot be gated there); the OTA-Manager
+<code>sidebar.tsx</code> gates on a <code>"developer"</code> literal
+that is not in the union at all (a latent gate bug — the class already
+bit). Danger: a divergent role literal is a latent gate bug; the
+dashboard super-admin UI is BLOCKED on the union fix. Mitigation: M2
+makes the server <code>token.go</code> set the single SSOT and
+reconciles both SPAs in one sweep BEFORE any super-admin UI lands (M4
+dashboard fixtures depend on it — <code>27_*</code> §3.2).</li>
+</ul>
+<h3 id="other-tracked-risks">3.3 Other tracked risks</h3>
+<ul>
+<li><strong>The rollout subsystem’s tenancy is
+<code>UNCONFIRMED:</code></strong> (<code>internal/rollout/</code>,
+<code>10_*</code> Honest-gaps / <code>26_*</code> §Honest-boundary 4) —
+its store was not audited; on the evidence read it takes deployment ids,
+not account ids, but this is an unscoped path this plan cannot certify.
+<strong>Action:</strong> audit <code>rollout/store.go</code> before
+scoping its routes (an early M1/M3 sub-task, not deferred
+silently).</li>
+<li><strong>Memory-backend isolation rests entirely on L1+L2</strong>
+(no RLS) — the explicit-<code>accountID</code> compile-time param
+(chosen over ctx-implicit precisely for this reason, <code>20_*</code>
+§3.2 / <code>26_*</code> §1.2) is what makes the default backend safe;
+<code>27_*</code> §2.2 proves both backends.</li>
+<li><strong>Legacy-token / migration window</strong> — the
+default-account fallback keeps a <code>__default__</code>-scoping path
+alive during transition; the <code>Sunset</code>-header deprecation
+(<code>22_*</code> §6.1) and the Option-B NULL-scoping guard
+(<code>20_*</code> §5, <code>27_*</code> §5 Option-B variant) bound the
+isolation caveat.</li>
+</ul>
+<hr />
+<h2
+id="timeline-projection-framing-velocity-based-estimates-are-estimates-11.4.6-11.4.172">4.
+Timeline projection framing (velocity-based; estimates are estimates —
+§11.4.6 / §11.4.172)</h2>
+<p><strong>§11.4.172 requires realistic timeline projections from
+MEASURED velocity.</strong> This work-stream has <strong>no measured
+velocity yet</strong> (it is unstarted, and the plan is approval-gated),
+so <strong>absolute calendar dates would be false precision</strong> and
+are deliberately NOT asserted (§11.4.6). Instead this section gives (a)
+relative sizing per milestone, (b) the projection METHOD to apply once
+velocity is measured, and (c) the critical-path ordering — all marked as
+estimates.</p>
+<p><strong>Relative sizing (T-shirt, ESTIMATE — not calendar
+time):</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Relative size (estimate)</th>
+<th>Why (dominant cost)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1 data model + migrations + store</td>
+<td><strong>XL</strong></td>
+<td>keystone; touches every OTA table + both store backends + the
+<code>002</code>/<code>003</code> migration + RLS + the
+migration/backfill test matrix</td>
+</tr>
+<tr>
+<td>M2 authZ + token claim + super-admin</td>
+<td><strong>L</strong></td>
+<td>claim + two middlewares + the policy-based RLS bypass +
+role-vocabulary reconciliation</td>
+</tr>
+<tr>
+<td>M3 scope routes + admin API</td>
+<td><strong>L</strong></td>
+<td>every OTA route gated + the <code>/admin/*</code> + selection +
+list-artifacts endpoints + both-backend isolation tests</td>
+</tr>
+<tr>
+<td>M4 UI (2 SPAs)</td>
+<td><strong>L</strong></td>
+<td>switcher + picker + super-admin console + permissions matrix, ×2
+surfaces, all host-render-proven light+dark</td>
+</tr>
+<tr>
+<td>M5 project CLI</td>
+<td><strong>M</strong></td>
+<td>new binary but reuses <code>wire.go</code>; the hard part (object
+storage) is M7</td>
+</tr>
+<tr>
+<td>M6 device client + wizard</td>
+<td><strong>XL</strong></td>
+<td>net-new concrete client + net-new Compose wizard UI + push-wake +
+per-account key verify + A/B handoff + host-render proof</td>
+</tr>
+<tr>
+<td>M7 security hardening + object storage</td>
+<td><strong>L</strong></td>
+<td>Storage seam + MinIO + per-account key registry + fail-fast + signed
+URLs</td>
+</tr>
+<tr>
+<td>M8 full retest + manual QA</td>
+<td><strong>M–L</strong> (elapsed, mostly machine + QA wait)</td>
+<td>§11.4.40 is typically 12–48 h elapsed; plus the §11.4.185 manual-QA
+hand-off wait (not agent-controllable)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Projection method to apply once velocity exists
+(§11.4.172):</strong> (1) after M1–M2 land, measure actual effort per
+completed workable item to derive a velocity; (2) project the remaining
+milestones as <strong>ranges</strong> (optimistic / expected /
+pessimistic), never a single date; (3) re-project <strong>monthly OR on
+any ≥10% item-count change</strong> (§11.4.172); (4) treat the M1 serial
+spine (§3.1) and the M7-storage-seam prerequisite as the schedule’s
+fixed constraints; (5) the M8 manual-QA wait (§11.4.185) is an external
+dependency the agent cannot compress — model it as a hand-off, not
+billable agent time. <strong>All figures above are estimates and will be
+replaced by measured-velocity ranges; do not treat the T-shirt sizes as
+commitments.</strong></p>
+<hr />
+<h2
+id="operator-decision-gate-resolve-before-implementation-11.4.66-11.4.6">5.
+Operator-decision gate — resolve BEFORE implementation (§11.4.66 /
+§11.4.6)</h2>
+<p><strong>This plan is APPROVAL-GATED.</strong> The following decisions
+MUST be resolved before the corresponding milestone starts — each is
+presented here with the design set’s <strong>recommended
+option</strong>, never silently decided. These consolidate into the
+forthcoming <strong><code>28_*</code> open-questions/decisions
+doc</strong> (referenced per the task; not yet authored — verified
+absent this session), which will be the single decision-record
+surface.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Blocks</th>
+<th>Recommended option (from the design docs)</th>
+<th>Tradeoff to accept</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OQ-2</strong></td>
+<td>Permission-model shape (RBAC vs ABAC vs role+scope hybrid)</td>
+<td>M2</td>
+<td><strong>RBAC-first role+scope hybrid</strong> (tenant-isolation
+predicate → RBAC matrix → thin attribute deny-override), ABAC-capable by
+growth via the reserved roles/permissions tables — <code>21_*</code>
+§1.2</td>
+<td>fixed 3-role enum caps flexibility at first ship; custom-per-account
+roles are a later additive escalation (no 2nd data-model change)</td>
+</tr>
+<tr>
+<td><strong>OQ-3</strong></td>
+<td>Identity source (local super-admin-provisioned users vs federated
+OIDC/SAML)</td>
+<td>M1/M2</td>
+<td><strong>Local accounts only</strong> for now — the mandate implies
+local super-admin-provisioned users; no self-registration
+(<code>00_INDEX</code> §1.2/§5, <code>10_*</code> §7)</td>
+<td>federation (OIDC/SAML) is a future addition, not built now</td>
+</tr>
+<tr>
+<td><strong>OQ-4</strong></td>
+<td>Migration/backfill path for existing data</td>
+<td>M1</td>
+<td><strong>Option A — default-account big-bang backfill, then NOT
+NULL</strong> (removes the nullable-isolation-hole window; the as-is
+store is in-memory-by-default + barely populated, making backfill nearly
+free) — <code>20_*</code> §5</td>
+<td>requires a coordinated <code>003</code> cutover; flips to Option B
+ONLY if a target already holds meaningful prod data AND zero-downtime is
+mandatory</td>
+</tr>
+<tr>
+<td><strong>OpenCode vs OpenDesign</strong></td>
+<td>Confirm the mandate’s literal “build UI with OpenCode”</td>
+<td>M4</td>
+<td><strong>OpenCode = the coding AGENT used to build UI; OpenDesign =
+the mandated design-TOKEN system the UI consumes</strong> (§11.4.162) —
+both true, not in conflict; evidence-resolved in <code>12_*</code> §3
+(3299 OpenCode hits are all an LLM coding-agent adapter; zero in any UI
+dir)</td>
+<td>flagged for confirmation only because the mandate used the literal
+word “OpenCode”; does not block M4 token guidance (targets the
+already-vendored <code>helix-ota/tokens.css</code>)</td>
+</tr>
+<tr>
+<td><strong>Per-account signing keys</strong></td>
+<td>Global key vs per-account key registry</td>
+<td>M7 (device/CLI verify)</td>
+<td><strong>Per-account ed25519 key in a server-side registry, global
+key as fallback during migration</strong> — the verify key still comes
+ONLY from server config/registry, never the request; only the lookup key
+gains an account dimension — <code>24_*</code> §3 / <code>26_*</code>
+§4</td>
+<td>a registry lookup + per-account key lifecycle vs one global key; a
+shared global key lets any account’s signer sign for the platform
+(unacceptable long-term for tenant isolation)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Secondary decisions also for <code>28_*</code>
+(recommendation noted, not blocking a whole milestone):</strong> the
+<strong>id type</strong> TEXT-vs-UUID (<code>20_*</code> §1 — recommend
+TEXT to mirror the shipped store); the <strong>sign-in split</strong>
+Option A (post-auth routing) vs Option B (separate super-admin door)
+(<code>23_*</code> §1.2 — recommend A now, B open as hardening); the
+<strong>CLI auth</strong> direct-key (A) vs token-exchange (B)
+(<code>24_*</code> §1.3 — recommend B); the <strong>device
+enrollment</strong> operator-minted (A) vs bootstrap→rotate (B)
+(<code>25_*</code> §1.3 — recommend A now, B at scale); the
+<strong>cross-tenant denial</strong> <code>NOT_FOUND</code> vs
+<code>FORBIDDEN</code> (<code>22_*</code> §6.2 / <code>26_*</code> —
+recommend <code>NOT_FOUND</code> anti-enumeration, hard rule owned by
+<code>26_*</code>); the atomic-bootstrap seam
+<code>CreateAccountWithOwner</code> (A) vs generic <code>WithTx</code>
+(B) (<code>20_*</code> §3.3 — recommend A now).</p>
+<hr />
+<h2 id="test-type-coverage-ledger-skeleton-11.4.25-11.4.169-11.4.52">6.
+Test-type coverage ledger skeleton (§11.4.25 / §11.4.169 /
+§11.4.52)</h2>
+<p>Feature × surface × test-type × status. <strong>Status
+vocabulary</strong> (§11.4.52 + <code>27_*</code> §6):
+<code>PLANNED</code> (design-only, nothing built — the state of every
+row today), later <code>AUTONOMOUS_DESIGNED</code> →
+<code>AUTONOMOUS_VERIFIED</code> (captured evidence),
+<code>OPERATOR_ATTENDED_ONLY</code> (release blocker until promoted),
+<code>NOT_APPLICABLE</code>, or <code>SKIP:&lt;reason&gt;</code> for the
+two by-construction gaps (<code>topology_unsupported</code> = no live
+Postgres; <code>object_storage_absent</code> = no real object store).
+<strong>Every row is <code>PLANNED</code> at this revision</strong> —
+the feature is a to-be proposal; this skeleton is filled in as M1–M8
+land, each cell citing its <code>docs/qa/&lt;run-id&gt;/</code> evidence
+path. The six surfaces + closed test-type set are from <code>27_*</code>
+§1.</p>
+<p><strong>Surfaces:</strong> SVR = Server API · DATA = Data model/RLS ·
+CLI = <code>helix-ota</code> · DEV = device client · DASH = dashboard
+SPA · MGR = OTA-Manager SPA.</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test type (§11.4.169 closed set + §11.4.170)</th>
+<th>SVR</th>
+<th>DATA</th>
+<th>CLI</th>
+<th>DEV</th>
+<th>DASH</th>
+<th>MGR</th>
+<th>Notes / anti-bluff proof (<code>27_*</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unit</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>mocks OK here only (§11.4.27): redaction,
+<code>VerifyBeforeApply</code> order, rank-compare, scope helpers</td>
+</tr>
+<tr>
+<td>integration (real server + real store)</td>
+<td>PLANNED</td>
+<td>PLANNED (both backends)</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>scoped token reads only its account (<code>27_*</code> §2.2)</td>
+</tr>
+<tr>
+<td>e2e</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>SKIP:object_storage_absent → PLANNED@M7</td>
+<td>SKIP:object_storage_absent → PLANNED@M7</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>byte-apply blocked on M7 storage seam (<code>27_*</code>
+§0.2/§2.3)</td>
+</tr>
+<tr>
+<td>full-automation (§11.4.98)</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>self-driving, <code>-count=3</code>, self-cleaning</td>
+</tr>
+<tr>
+<td>Challenges / HelixQA (§11.4.27)</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>one bank entry per user-visible feature driving the real
+journey</td>
+</tr>
+<tr>
+<td>DDoS</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>—</td>
+<td>auth-login brute-force + per-account upload-flood vs rate
+posture</td>
+</tr>
+<tr>
+<td><strong>security / tenant-isolation (FLAGSHIP)</strong></td>
+<td>PLANNED</td>
+<td>PLANNED (RLS)</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>PLANNED</td>
+<td>the primary threat; 3-layer (RLS+app+e2e), each with a paired §1.1
+mutation (<code>27_*</code> §2)</td>
+</tr>
+<tr>
+<td>stress + chaos (§11.4.85)</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>—</td>
+<td>concurrent cross-account writes (no bleed),
+kill/offline/corrupt/power-loss→A/B rollback</td>
+</tr>
+<tr>
+<td>concurrency / race-deadlock</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>—</td>
+<td>scoped monotonicity + active-deploy uniqueness under concurrent
+cross-account writes; <code>CreateAccountWithOwner</code> atomicity</td>
+</tr>
+<tr>
+<td>memory</td>
+<td>PLANNED</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>—</td>
+<td>no leak under sustained scoped-session / RLS-GUC set-reset
+churn</td>
+</tr>
+<tr>
+<td>benchmarking</td>
+<td>PLANNED</td>
+<td>PLANNED (RLS vs no-RLS baseline)</td>
+<td>PLANNED</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>scope-resolution overhead (Option A key-hash+lookup vs Option B
+token)</td>
+</tr>
+<tr>
+<td><strong>UI host-render (§11.4.170)</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>PLANNED (Compose/Paparazzi)</td>
+<td>PLANNED (Playwright)</td>
+<td>PLANNED (Storybook-class)</td>
+<td>per screen×state×{light,dark}, dual-oracle (golden-diff +
+OCR/vision); value-equality FORBIDDEN as sole proof (<code>27_*</code>
+§3)</td>
+</tr>
+<tr>
+<td>migration / backfill</td>
+<td>—</td>
+<td>PLANNED (pgx)</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>OQ-4 Option-A correctness matrix: <code>COUNT(NULL)=0</code>,
+<code>COUNT(outside __default__)=0</code>, composite-FK integrity,
+idempotent + crash-safe (<code>27_*</code> §5)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Two rows are honestly non-green by construction today (§0 of
+<code>27_*</code>), tracked in the ledger, never faked green:</strong>
+the <strong>DATA/RLS</strong> layer is
+<code>SKIP:topology_unsupported</code> without a live PostgreSQL (M1/M7
+boot it via rootless podman §11.4.161), and the <strong>byte-level
+e2e</strong> on CLI + DEV is <code>SKIP:object_storage_absent</code>
+until M7’s Storage seam lands. Every <code>SKIP</code> carries its
+reason; a bare <code>ab_pass</code> is deprecated → FAIL (§11.4.69);
+each gate ships a paired §1.1 mutation that must make it FAIL
+(<code>27_*</code> §6); the whole ledger is reviewed by an independent
+verifier iterating to a zero-finding GO (§11.4.142/§11.4.165) before the
+§11.4.185 manual-QA final confirmation.</p>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>Plan-only, approval-gated, not implemented.</strong> This is
+a delivery PLAN synthesizing the design set (<code>00_INDEX</code> +
+<code>10_/11_/12_*</code> as-is + <code>20_*</code>–<code>27_*</code>
+to-be). No production code, migration, endpoint, UI component, CLI,
+device client, or test described here exists yet — the entire
+multi-account feature is a to-be proposal, and no work starts until the
+operator approves this plan AND resolves the §5 decision gate
+(§11.4.66). This plan is not a §11.4 completion claim.</li>
+<li><strong>Estimates are estimates (§11.4.6 / §11.4.172).</strong> §4
+gives relative T-shirt sizing and a projection METHOD, NOT calendar
+dates — there is no measured velocity yet, and asserting dates would be
+the false precision §11.4.6 forbids. The sizes are estimates to be
+replaced by measured-velocity ranges (optimistic/expected/pessimistic),
+re-projected monthly or on ≥10% item-count change (§11.4.172). No
+forbidden certainty vocabulary is used for any unproven claim.</li>
+<li><strong>SSOT deference (§11.4.186).</strong>
+Entity/role/claim/API/UI/CLI/device/threat/test shapes are owned by
+their respective design docs (<code>20_*</code> is the data-model SSOT;
+<code>21_*</code> owns OQ-2 + the token-claim shape; <code>22_*</code>
+the routes; <code>23_*</code> the UI;
+<code>24_*</code>/<code>25_*</code> the CLI/ device; <code>26_*</code>
+the threat model + the 404-vs-403 hard rule; <code>27_*</code> the test
+strategy). This plan <strong>sequences and cross-references</strong>
+them; it invents no conflicting shape, and where an owner doc finalizes
+a different shape, the owner doc wins and this plan is reconciled to
+it.</li>
+<li><strong>The two by-construction gaps are real, not deferred
+silently.</strong> RLS requires a live PostgreSQL (the default store is
+in-memory — memory-backend isolation rests on L1+L2 only); and “device
+downloads + applies the exact bytes” requires real object storage that
+is absent in-repo (bytes are validated then discarded,
+<code>StorageRef</code> is a placeholder). Both are surfaced in §3.2
+(danger zones), §6 (ledger <code>SKIP</code>s), and every milestone that
+touches them — the honest state is visible, never green-over-a-gap.</li>
+<li><strong><code>28_*</code> (decision-consolidation doc) is not yet
+authored</strong> (verified absent this session) — §5’s decisions are
+recorded here with recommendations and will consolidate into
+<code>28_*</code> as the operator resolves them. <strong>The rollout
+subsystem’s tenancy remains <code>UNCONFIRMED:</code></strong>
+(<code>internal/rollout/</code>, <code>10_*</code> Honest-gaps) — a
+tracked pre-scoping audit, not certified by this plan.</li>
+<li><strong>No external research was performed for this plan</strong> —
+it synthesizes the already- verified design set, whose own
+<code>## Sources verified 2026-07-10</code> footers carry the external
+citations. No new external claim is made here, so no
+<code>## Sources verified</code> footer is added (nothing external is
+cited that the design set did not already verify).</li>
+</ul>
+</body>
+</html>

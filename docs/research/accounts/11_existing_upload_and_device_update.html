@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>11_existing_upload_and_device_update</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">11_existing_upload_and_device_update</h1>
+</header>
+<h1
+id="existing-upload-device-update-mechanisms-grounded-inventory">Existing
+Upload + Device-Update Mechanisms (grounded inventory)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:06:45Z</p>
+<blockquote>
+<p>READ-ONLY codebase discovery for the multi-account feature. Every
+claim below cites <code>file:line</code>. Where a mechanism does NOT
+exist, that is stated as a fact with the searches performed — never a
+guess (§11.4.6). Scope: what EXISTS today, so a to-be plan can EXTEND it
+rather than reinvent it.</p>
+</blockquote>
+<p><strong>One-paragraph bottom line.</strong> Mechanism <strong>(A)
+upload/publish</strong> EXISTS on the server as a real, validated
+multipart pipeline (<code>POST /artifacts/upload</code> →
+<code>POST /releases</code> → <code>POST /deployments</code>) and on the
+project side as an operator <strong>web SPA</strong>
+(<code>clients/ota-manager</code>, React + Tauri) that drives those
+endpoints — but it is <strong>single-tenant</strong>: nothing about
+upload/release/deployment/device is scoped to a project or account
+today. Mechanism <strong>(B) device-side update client</strong> EXISTS
+as the <code>ota-android-agent</code> submodule (a headless WorkManager
+<strong>poll</strong> worker) plus the server’s
+<code>GET /client/update</code> endpoint — the device identifies itself
+<strong>only</strong> by its bearer-token subject
+(<code>deviceId</code>), with no account/project. There is
+<strong>no</strong> notification/push channel (poll-only) and
+<strong>no</strong> device-side “new version” setup/consent wizard (the
+only “wizard” is the operator-side create-release dialog). A
+<code>Project</code> + per-project-ACL model is
+<strong>declared</strong> in the store but is <strong>not wired</strong>
+into the OTA data model, and the SPA’s project switcher is a hardcoded
+mock.</p>
+<hr />
+<h2 id="upload-publish-path-server-side">1. UPLOAD / PUBLISH path
+(server side)</h2>
+<h3 id="route-table-all-under-cfg.apibasepath-default-apiv1">Route table
+(all under <code>cfg.APIBasePath</code>, default
+<code>/api/v1</code>)</h3>
+<p><code>server/internal/api/server.go</code>: -
+<code>server.go:197</code> —
+<code>auth.POST("/artifacts/upload", requireRole(RoleOperator, RoleAdmin), s.handleUploadArtifact)</code>
+- <code>server.go:198</code> —
+<code>auth.GET("/artifacts/:artifactId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetArtifact)</code>
+(metadata only — see §Honest gaps) - <code>server.go:205-207</code> —
+<code>POST /releases</code>, <code>GET /releases</code>,
+<code>GET /releases/:releaseId</code> - <code>server.go:209-211</code> —
+<code>POST /deployments</code>, <code>GET /deployments</code>,
+<code>GET /deployments/:deploymentId</code> -
+<code>server.go:215-217</code> — staged rollout create/get/evaluate -
+Auth wrapper: <code>server.go:189-190</code> —
+<code>auth := v1.Group(""); auth.Use(s.authMiddleware(), s.auditMiddleware())</code>.
+Every write is bearer-token authenticated + audited.</p>
+<h3
+id="upload-handler-request-shape-auth-validation-where-bytes-land">Upload
+handler — request shape, auth, validation, where bytes land</h3>
+<p><code>server/internal/api/handlers_artifact.go</code>: -
+<code>handleUploadArtifact</code> —
+<code>handlers_artifact.go:47</code>. Requires
+<code>multipart/form-data</code> (<code>:51</code>), enforces upload cap
+(<code>:49</code>, <code>s.cfg.MaxUploadBytes</code>). - Multipart parts
+(<code>:78-144</code>): <code>file</code> (payload bytes),
+<code>metadata</code> (JSON <code>ArtifactUploadMetadata</code>),
+optional <code>sha256</code>, optional <code>signature</code>. -
+Required metadata fields (<code>:101-109</code>): <code>sha256</code>,
+<code>signature</code>, <code>version</code>, <code>os</code>,
+<code>target_model</code> (wire struct
+<code>ArtifactUploadMetadata</code> in
+<code>server/internal/api/wire.go</code>; client mirror
+<code>clients/ota-manager/src/types/api.ts:723-735</code>). - Validation
+pipeline S1–S6: - S1 structure (must be ZIP, <code>payload.bin</code>
+STORED) — <code>handlers_artifact.go:111-123</code>,
+<code>validateStructure</code> <code>:253-272</code>. - S3 trusted key
+resolved from server config ONLY — <code>:126</code> →
+<code>resolvePublicKey</code> <code>:283-288</code> (see §3). - S3
+detached signature resolved — <code>:134</code>,
+<code>resolveSignature</code> <code>:293-310</code>. - S2 hash file
+resolved — <code>:144</code>, <code>resolveHashFile</code>
+<code>:315-323</code>. - S4 prior version for monotonicity read via
+<code>LatestRelease(os, target_model)</code> — <code>:148</code> (keyed
+on OS+model, NOT project). - S2..S6 run in
+<code>otavalidator.Validate(in)</code> — <code>:152-173</code> (brick
+<code>github.com/HelixDevelopment/ota-artifact-validator</code>). -
+<strong>Accept path (where the record lands)</strong> —
+<code>:176-204</code>: builds <code>store.Artifact</code> and calls
+<code>s.repo.CreateArtifact</code>. <code>StorageRef</code> is a
+<strong>synthesized placeholder</strong>
+<code>fmt.Sprintf("s3://helix-artifacts/%s", artifactID)</code>
+(<code>:184</code>) — the actual <strong>payload BYTES are validated
+then discarded</strong>; only metadata + the verified base64 signature
+(<code>:196</code>) + payload headers are persisted. Both store impls
+persist metadata only: <code>server/internal/store/memory.go:198</code>
+and <code>server/internal/store/postgres.go:209-226</code>.</p>
+<h3 id="release-deployment-publish">Release + deployment publish</h3>
+<ul>
+<li><code>handleCreateRelease</code> —
+<code>server/internal/api/handlers_release.go:16</code>. Referenced
+artifact must exist + be <code>Verified</code> (<code>:43-52</code>);
+version strictly-monotonic vs
+<code>LatestRelease(os, target_model)</code> (<code>:56-69</code>);
+creates <code>store.Release</code> status <code>published</code>
+(<code>:71-86</code>).</li>
+<li><code>handleCreateDeployment</code> —
+<code>server/internal/api/handlers_deployment.go:28</code>. MVP accepts
+only <code>strategy == "all-targets"</code> (<code>:39-43</code>);
+conflict if an active deployment already targets
+<code>(os, model, group)</code> (<code>:78-83</code>); stamps target
+version on matching devices (<code>:104</code>,
+<code>assignTargetVersion :162</code>).</li>
+</ul>
+<h3 id="is-upload-scoped-to-a-project-already-no.">Is upload scoped to a
+project already? <strong>NO.</strong></h3>
+<ul>
+<li><code>store.Artifact</code>
+(<code>server/internal/store/store.go:58-75</code>),
+<code>store.Release</code> (<code>:77-88</code>),
+<code>store.Deployment</code> (<code>:90-99</code>),
+<code>store.Device</code> (<code>:35-56</code>) carry <strong>no
+<code>ProjectID</code> / account field</strong>.</li>
+<li>The <code>Repository</code> artifact/release/deployment/device
+methods take <strong>no project argument</strong>
+(<code>store.go:334-360</code>); device/deployment resolution keys on
+<code>(OS, target_model, group)</code> only.</li>
+<li>Token claims carry only <code>sub</code>, <code>roles</code>,
+<code>iat</code>, <code>exp</code> — <strong>no account/project
+claim</strong> (<code>server/internal/api/token.go:31-36</code>).</li>
+<li>A <code>Project</code> + <code>ProjectAccess</code> (per-project
+RBAC ACL) model DOES exist (<code>store.go:287-332</code>; handlers
+<code>server/internal/api/handlers_project.go</code>) but is a
+<strong>separate, parallel construct not attached to the OTA data
+model</strong> — see §7.</li>
+</ul>
+<hr />
+<h2 id="upload-client-cli-project-side">2. UPLOAD client / CLI (project
+side)</h2>
+<h3
+id="what-exists-the-operator-web-spa-clientsota-manager-react-tauri-desktop-shell">What
+exists: the operator web SPA <code>clients/ota-manager</code> (React +
+Tauri desktop shell)</h3>
+<ul>
+<li>Upload mutation —
+<code>clients/ota-manager/src/hooks/use-artifacts.ts:35-51</code>
+(<code>useUploadArtifact</code>): builds a <code>FormData</code> with
+<code>file</code> + <code>metadata</code> (+ optional
+<code>sha256</code>/<code>signature</code>) and calls
+<code>apiMultipartPost&lt;Artifact&gt;('/artifacts/upload', formData)</code>.</li>
+<li>Transport wrapper —
+<code>clients/ota-manager/src/lib/api-client.ts:74-85</code>
+(<code>apiMultipartPost</code>). Base URL is same-origin
+<code>/api/v1</code> by default (<code>:20</code>).</li>
+<li>Auth — <code>api-client.ts:28-36</code>: an axios request
+interceptor attaches <code>Authorization: Bearer &lt;token&gt;</code>
+from the auth store. <strong>No project/account header, query, or path
+segment is added on any request.</strong></li>
+<li>Publish “wizard” — the multi-step create-release flow:
+<code>docs/superpowers/specs/2026-06-19-ota-management-client-design.md:170</code>
+(“CreateReleaseDialog (multi-step wizard)”); adapter shims
+<code>clients/ota-manager/src/hooks/useCreateRelease.ts:1</code> and
+<code>useArtifact.ts:1</code>. This is the OPERATOR publish wizard, not
+a device wizard (see §6).</li>
+<li>Serve/embed path — the SPA is embedded into the Go binary
+(<code>server/internal/api/embed.go</code>, <code>MountManagerUI</code>
+at <code>server.go:253</code>); build/embed procedure in
+<code>clients/ota-manager/server-integration.md</code>.</li>
+</ul>
+<h3 id="what-is-a-stub-not-real">What is a stub, not real</h3>
+<ul>
+<li><strong>Project switcher is a MOCK</strong> —
+<code>clients/ota-manager/src/features/layout/project-switcher.tsx:13-19</code>:
+<code>MOCK_PROJECTS</code> hardcoded (<code>ATMOSphere</code>,
+<code>Helix OTA</code>) held in local <code>useState</code>; <strong>no
+API call, no effect on any request</strong>.</li>
+<li><strong>Projects hook is a stub</strong> —
+<code>clients/ota-manager/src/hooks/use-projects.ts:21-45</code>:
+<code>useProjects</code> returns <code>placeholderData</code> of a
+single <code>"Default Project"</code> (“Single-project mode — all
+resources live here”) and treats a 404 from <code>/projects</code> as
+expected.</li>
+<li><strong>No list-artifacts source</strong> —
+<code>clients/ota-manager/src/hooks/useUploadArtifact.ts:4-7</code>
+documents the KNOWN GAP that the server exposes no list-artifacts
+endpoint, so the release picker’s artifact list is empty.</li>
+</ul>
+<h3
+id="is-there-a-project-side-cli-sdk-to-push-updates-no-dedicated-one.">Is
+there a project-side CLI / SDK to push updates? <strong>NO dedicated
+one.</strong></h3>
+<ul>
+<li><code>server/cmd/</code> binaries: <code>ota-server</code> (the
+control plane), <code>ota-device-emu</code> (a DEVICE emulator, not an
+uploader — see §4), <code>applyport</code>. There is <strong>no</strong>
+<code>cli/</code> or <code>client/</code> upload tool and
+<strong>no</strong> publish SDK; the only publish surfaces are the SPA
+and raw REST.</li>
+</ul>
+<h3
+id="missing-for-a-production-project-authenticates-to-accountproject-and-uploads">Missing
+for a production “project authenticates to account+project and
+uploads”</h3>
+<ul>
+<li>No account/project binding in auth (login/token — §7).</li>
+<li>No project scoping on artifact/release/deployment (§1).</li>
+<li>No real artifact object storage (bytes discarded;
+<code>StorageRef</code> placeholder — §1, §Honest gaps).</li>
+<li>No list-artifacts endpoint; no CLI/SDK; project switcher/hook are
+mocks.</li>
+</ul>
+<hr />
+<h2 id="artifact-signing-trust-boundary">3. Artifact signing / trust
+boundary</h2>
+<ul>
+<li><strong>Trust boundary (verification key from server config
+ONLY):</strong> <code>resolvePublicKey</code> —
+<code>server/internal/api/handlers_artifact.go:283-288</code>. The key
+comes solely from <code>s.pubKey</code>; the request can never supply a
+key (security comment <code>:274-282</code>; matches project CLAUDE.md’s
+stated trust boundary).</li>
+<li><strong>Key source (single, GLOBAL):</strong>
+<code>server/internal/config/config.go:72-77</code>
+<code>ArtifactPublicKey</code>, loaded base64 from env
+<code>HELIX_ARTIFACT_PUBKEY</code> (<code>config.go:187-192</code>);
+wired into the server at <code>server.go:109-112</code>. It is
+<strong>one ed25519 key for the whole control plane</strong> — not
+per-account/per-project (the seam for per-account key scoping —
+§7).</li>
+<li><strong>Verification:</strong> S3 runs inside
+<code>otavalidator.Validate</code> with
+<code>Input.PublicKey = pubKey</code>
+(<code>handlers_artifact.go:153-169</code>).</li>
+<li><strong>Verified signature is the single source of truth stored +
+served:</strong> the exact detached signature that S3 verified is
+persisted (<code>handlers_artifact.go:196</code>,
+<code>store.Artifact.Signature</code> <code>store.go:70-72</code>) and
+later handed to the device in the update offer
+(<code>handlers_client.go:81</code>).</li>
+<li><strong>Device re-verifies before apply:</strong> the agent’s
+<code>VerifyBeforeApply</code> gate re-checks SHA-256 + signature
+validity before any apply, ordered
+<code>MALFORMED_DIGEST → HASH_MISMATCH → SIGNATURE_INVALID</code>
+(<code>submodules/ota-android-agent/README.md:37</code>;
+<code>core/.../verify/VerifyBeforeApply.kt</code>), and a rejected
+artifact never reaches <code>update_engine</code>
+(<code>OtaPollWorker.kt:99-113</code>).</li>
+</ul>
+<hr />
+<h2 id="device-side-update-client">4. Device-side update client</h2>
+<h3
+id="where-it-lives-submodulesota-android-agent-headless-workmanager-worker">Where
+it lives: <code>submodules/ota-android-agent</code> (headless
+WorkManager worker)</h3>
+<ul>
+<li><code>:core</code> = pure Kotlin/JVM logic; <code>:android</code> =
+WorkManager wiring (<code>README.md:13-47</code>).</li>
+<li><strong>Transport = POLL</strong> (no push):
+<code>PollScheduler.schedule(...)</code> runs a 15-min periodic worker
+with jitter + exponential backoff (<code>README.md:46</code>, usage
+<code>:64-68</code>; source
+<code>android/.../poll/PollScheduler.kt</code>).</li>
+<li>The poll port calls the server:
+<code>ControlPlaneClient.pollForUpdate()</code> → “GET
+/api/v1/client/update -&gt; 200 manifest | 204 no update | transient
+error” (<code>android/.../poll/Ports.kt:29-33</code>).</li>
+<li>One cycle = poll → download → <strong>verify-before-apply</strong> →
+apply → telemetry: <code>OtaPollWorker.runCycle</code>
+(<code>android/.../poll/OtaPollWorker.kt:59-126</code>). Verify-reject
+deletes the artifact and never applies (<code>:99-113</code>).</li>
+</ul>
+<h3 id="server-endpoint-the-device-contacts">Server endpoint the device
+contacts</h3>
+<ul>
+<li><code>handleClientUpdate</code> —
+<code>server/internal/api/handlers_client.go:21</code>. Route
+<code>server.go:223</code> (<code>GET /client/update</code>,
+<code>requireRole(RoleDevice)</code>). Returns <code>204</code> when
+on-target, else <code>200</code> with <code>UpdateAvailable</code>
+(<code>handlers_client.go:70-101</code>).</li>
+<li>Active-deployment resolution keys on
+<code>(dev.OSType, dev.Model, dev.Group)</code> —
+<code>handlers_client.go:43</code> (no project/account).</li>
+</ul>
+<h3 id="what-the-device-sends-to-identify-itself">What the device sends
+to identify itself</h3>
+<ul>
+<li><strong>Device id comes from the bearer-token subject</strong> —
+<code>handlers_client.go:22-23</code>
+(<code>deviceID := claims.Subject</code>). Optional
+<code>current_version</code> query short-circuit —
+<code>:38</code>.</li>
+<li>Agent DTO confirms the same:
+<code>UpdateCheckRequest { deviceId, currentVersion? }</code> where “the
+calling deviceId comes from the token <code>sub</code>” —
+<code>submodules/ota-android-agent/core/.../protocol/Dtos.kt:33-36</code>.</li>
+<li><strong>No project / account / org / tenant is ever
+transmitted</strong> by the device.</li>
+<li>Device token is minted at registration: <code>mintDeviceToken</code>
+(role=<code>device</code>, sub=<code>deviceId</code>) —
+<code>handlers_device.go:157-159</code>; issued by
+<code>handleRegisterDevice</code>
+(<code>handlers_device.go:16-85</code>), which itself requires an
+<strong>operator/admin</strong> token (<code>server.go:192</code>). So
+enrollment is operator-driven; <code>store.Device</code> has no
+<code>ProjectID</code> (<code>store.go:35-56</code>).</li>
+</ul>
+<h3 id="concrete-http-client-device-config">Concrete HTTP client /
+device config</h3>
+<ul>
+<li>In the submodule, <code>ControlPlaneClient</code>,
+<code>Downloader</code>, <code>Verifier</code>, <code>Telemetry</code>
+are <strong>abstract interfaces</strong> — “conceptually over the http3
+transport / Auth-KMP / Security-KMP” — with no concrete impl and no
+server-URL/credential config bundled (<code>Ports.kt:1-6, 29-73</code>;
+README §Public API <code>:41-47</code>).</li>
+<li>The concrete reference device client that performs real login +
+register + poll + telemetry is the Go emulator:
+<code>server/internal/deviceemu</code> driven by
+<code>server/cmd/ota-device-emu/main.go</code> (purpose
+<code>:1-19</code>; flags <code>-base</code>,
+<code>-admin-user/-admin-pass</code> (operator login),
+<code>-hardware-id</code>, <code>-current-version</code>,
+<code>-loop/-interval</code> at <code>:36-51</code>). It flashes only in
+emulation; login/register/poll/telemetry are real HTTP.</li>
+</ul>
+<hr />
+<h2 id="notification-mechanism">5. NOTIFICATION mechanism</h2>
+<p><strong>There is none — the system is pull-only.</strong> - Devices
+learn of a new version by <strong>polling</strong>
+<code>GET /client/update</code> and receiving
+<code>200 UpdateAvailable</code> vs <code>204</code>
+(<code>handlers_client.go:21-101</code>; agent
+<code>OtaPollWorker.kt:59-69</code>). - Searches for a server→device /
+server→user push found nothing: no webhook, FCM/Firebase-messaging,
+WebSocket, push-notification, or OneSignal wiring in
+<code>server/internal</code>, <code>submodules/ota-android-agent</code>,
+or <code>submodules/ota-protocol</code> (the only grep hits were the
+word inside <code>server/internal/api/security_headers.go</code>
+comments and the bundled toast library in the built
+<code>manager-dist</code> JS — no push transport). - The only
+device→server flow is telemetry: <code>POST /client/telemetry</code>
+(<code>handlers_client.go:106</code>), and deployment progress is
+<strong>derived server-side</strong> from that telemetry
+(<code>handlers_deployment.go:202</code> <code>deriveProgress</code>) —
+the operator UI observes progress by polling
+<code>GET /deployments/:id</code>.</p>
+<hr />
+<h2 id="setup-wizard-device-consent">6. SETUP WIZARD (device /
+consent)</h2>
+<p><strong>No device-side setup/consent/“new version available” wizard
+exists.</strong> - The <code>ota-android-agent</code> is a
+<strong>headless</strong> WorkManager worker that
+<strong>auto-applies</strong> a verified package with no user-facing
+consent UI (<code>OtaPollWorker.kt:116-124</code>; README overview
+<code>:15-26</code>). <code>ota-update-engine-bridge</code> is likewise
+headless (apply/boot-state only: <code>EngineStatus.kt</code>,
+<code>ApplyRequest.kt</code>, <code>BootStateObserver.kt</code>). -
+Searches for <code>onboarding</code> / <code>first-run</code> /
+<code>enrollment</code> / <code>provisioning wizard</code> in the agent
+and SPA returned no UI (the single <code>wizard</code>-adjacent hit in
+the agent was a scheduling comment in <code>PollScheduler.kt</code>, not
+a UI). - The only “wizard” in the codebase is the <strong>operator
+publish</strong> flow — the multi-step <code>CreateReleaseDialog</code>
+in the SPA design
+(<code>docs/superpowers/specs/2026-06-19-ota-management-client-design.md:170</code>;
+shims <code>useCreateRelease.ts:1</code>,
+<code>useArtifact.ts:1</code>). It is a publish wizard, not a device
+“informs users of a new version” wizard.</p>
+<hr />
+<h2 id="extension-points-for-multi-account">7. Extension points for
+multi-account</h2>
+<h3 id="upload-cli-publish-path-project-side">Upload-CLI / publish path
+(project side)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Seam</th>
+<th>Concrete <code>file:line</code></th>
+<th>Current readiness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auth token claims (add
+<code>account</code>/<code>project</code>)</td>
+<td><code>server/internal/api/token.go:31-36</code>
+(<code>Claims{sub,roles,iat,exp}</code>)</td>
+<td>present-but-prototype (static <code>UserDirectory</code>,
+HMAC-opaque token; <code>server.go:24-26</code>,
+<code>handlers_auth.go:77-98</code>)</td>
+</tr>
+<tr>
+<td>Login → token issuance (bind account+project)</td>
+<td><code>server/internal/api/handlers_auth.go:77</code>
+(<code>handleLogin</code>), <code>:123</code>
+(<code>issueTokenPair</code>)</td>
+<td>present-but-prototype</td>
+</tr>
+<tr>
+<td>Artifact record (add <code>ProjectID</code>)</td>
+<td><code>handlers_artifact.go:176-198</code> (build
+<code>store.Artifact</code> + <code>CreateArtifact</code>); type
+<code>store.go:58-75</code></td>
+<td>absent (no project field)</td>
+</tr>
+<tr>
+<td>Release / deployment scoping</td>
+<td><code>handlers_release.go:71-86</code>;
+<code>handlers_deployment.go:88-100</code>; types
+<code>store.go:77-99</code></td>
+<td>absent (no project field)</td>
+</tr>
+<tr>
+<td>Per-project RBAC ACL (already built)</td>
+<td><code>store.go:287-332</code> (<code>Project</code>,
+<code>ProjectAccess</code>); <code>handlers_project.go:37-92</code>
+(<code>requireProjectAccess</code>, <code>isRoleAtLeast</code>)</td>
+<td>present-but-prototype (memory-backed; <strong>not enforced</strong>
+on artifact/release/deployment routes — those routes carry no
+<code>:projectId</code>, <code>server.go:197-217</code>)</td>
+</tr>
+<tr>
+<td>Signing-key scoping (per-account key registry)</td>
+<td><code>handlers_artifact.go:283-288</code>
+(<code>resolvePublicKey</code>); config <code>config.go:72-77</code> +
+<code>server.go:109-112</code></td>
+<td>present-but-GLOBAL (one <code>HELIX_ARTIFACT_PUBKEY</code>; needs a
+per-account/project key lookup)</td>
+</tr>
+<tr>
+<td>SPA project selection + request scoping</td>
+<td><code>clients/ota-manager/src/features/layout/project-switcher.tsx:13-19</code>
+(mock); <code>src/hooks/use-projects.ts:21-45</code> (stub);
+<code>src/lib/api-client.ts:28-36</code> (no project header)</td>
+<td>present-but-prototype / absent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="device-update-client">Device-update client</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Seam</th>
+<th>Concrete <code>file:line</code></th>
+<th>Current readiness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Device registration (add <code>ProjectID</code>/account)</td>
+<td><code>handlers_device.go:16-85</code>
+(<code>handleRegisterDevice</code>); type <code>store.Device</code>
+<code>store.go:35-56</code></td>
+<td>absent (no project field)</td>
+</tr>
+<tr>
+<td>Device token claim (carry project/account)</td>
+<td><code>handlers_device.go:157-159</code>
+(<code>mintDeviceToken</code>) → <code>token.go:61</code>
+(<code>Mint</code>)</td>
+<td>absent</td>
+</tr>
+<tr>
+<td>Update-check scoping</td>
+<td><code>handlers_client.go:43</code>
+(<code>ActiveDeploymentForTarget(os,model,group)</code>) — add project
+filter</td>
+<td>absent</td>
+</tr>
+<tr>
+<td>Agent identity DTO + device config</td>
+<td><code>submodules/ota-android-agent/core/.../protocol/Dtos.kt:33-36</code>
+(<code>UpdateCheckRequest</code> has no account); concrete
+<code>ControlPlaneClient</code> + server-URL/creds config not in
+submodule (<code>Ports.kt:29-33</code>)</td>
+<td>absent (concrete client + config unimplemented)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="honest-production-readiness-ratings">Honest production-readiness
+ratings</h3>
+<ul>
+<li>Upload endpoint + S1–S6 validation pipeline:
+<strong>present</strong> and robust, BUT the full publish is
+<strong>present-but-prototype</strong> because artifact <strong>bytes
+are not stored</strong> (placeholder <code>StorageRef</code>,
+<code>handlers_artifact.go:184</code>) and there is <strong>no
+list-artifacts endpoint</strong>
+(<code>useUploadArtifact.ts:4-7</code>).</li>
+<li>Project-side upload client (SPA):
+<strong>present-but-prototype</strong> (drives real REST; project
+switcher/hook are mocks; no CLI/SDK).</li>
+<li>Multi-tenant project model: <strong>present-but-prototype</strong>
+(ACL + CRUD exist; <strong>not wired</strong> into the OTA data model or
+the SPA data flow).</li>
+<li>Device update client (<code>ota-android-agent</code>):
+<strong>present-but-prototype</strong> (<code>:core</code> logic real +
+unit-tested; concrete HTTP client, device config, and real on-device
+Android build are not in-repo — see
+<code>submodules/ota-android-agent/BUILD_STATUS.md</code>).</li>
+<li>Notification / push: <strong>absent</strong> (poll-only by
+design).</li>
+<li>Device-side setup/consent wizard: <strong>absent</strong>.</li>
+</ul>
+<hr />
+<h2 id="files-read-provenance">Files read (provenance)</h2>
+<p>Server (Go, <code>server/internal/api/</code>):
+<code>server.go</code>, <code>handlers_artifact.go</code>,
+<code>handlers_client.go</code>, <code>handlers_auth.go</code>,
+<code>handlers_device.go</code>, <code>handlers_project.go</code>,
+<code>handlers_release.go</code>, <code>handlers_deployment.go</code>,
+<code>token.go</code>. Store:
+<code>server/internal/store/store.go</code> (interface + all domain
+types); grep of <code>memory.go</code>/<code>postgres.go</code> for
+<code>CreateArtifact</code>/<code>StorageRef</code>. Config:
+<code>server/internal/config/config.go</code> (grep for
+<code>ArtifactPublicKey</code>/<code>ArtifactBaseURL</code>/<code>MaxUploadBytes</code>/<code>HELIX_ARTIFACT_PUBKEY</code>).
+Server binaries: <code>server/cmd/ota-device-emu/main.go</code> (listed
+<code>server/cmd/{ota-server,ota-device-emu,applyport}</code>).</p>
+<p>Client (<code>clients/ota-manager/</code>):
+<code>src/hooks/use-artifacts.ts</code>,
+<code>src/hooks/useUploadArtifact.ts</code>,
+<code>src/hooks/use-projects.ts</code>,
+<code>src/lib/api-client.ts</code>, <code>src/types/api.ts</code>,
+<code>src/features/layout/project-switcher.tsx</code>,
+<code>server-integration.md</code>; <code>src</code> tree listing.</p>
+<p>Device agent (<code>submodules/ota-android-agent/</code>):
+<code>README.md</code>, <code>CLAUDE.md</code>,
+<code>android/.../poll/OtaPollWorker.kt</code>,
+<code>android/.../poll/Ports.kt</code>,
+<code>core/.../protocol/Dtos.kt</code>; file tree of agent +
+<code>ota-update-engine-bridge</code>.</p>
+<p>Design/search:
+<code>docs/superpowers/specs/2026-06-19-ota-management-client-design.md</code>
+(wizard reference); repo-wide greps for
+<code>wizard</code>/<code>push</code>/<code>webhook</code>/<code>fcm</code>/<code>websocket</code>/<code>notification</code>/<code>onboarding</code>/<code>enrollment</code>;
+<code>docs/research/accounts/</code> directory listing (only
+<code>00_INDEX.md</code> present).</p>
+<hr />
+<h2
+id="honest-gaps-undeterminable-from-code-explicitly-not-implemented-11.4.6">Honest
+gaps (undeterminable from code / explicitly not implemented) —
+§11.4.6</h2>
+<ol type="1">
+<li><strong>Artifact byte storage is not implemented in this
+repo.</strong> <code>handleUploadArtifact</code> validates the uploaded
+bytes then discards them; <code>StorageRef</code> is a synthesized
+placeholder string (<code>handlers_artifact.go:184</code>) and the
+device download URL is <code>ArtifactBaseURL/&lt;id&gt;.zip</code>
+(<code>handlers_client.go:232-234</code>) pointing at an external
+“Storage brick” that is not present here. Whether a real object store
+exists in deployment cannot be determined from this codebase.</li>
+<li><strong>Concrete device HTTP client is not in the agent
+submodule.</strong> The agent ports (<code>ControlPlaneClient</code>,
+<code>Downloader</code>, <code>Verifier</code>, <code>Telemetry</code>)
+are interfaces only (<code>Ports.kt</code>); the real Android impl
+(server-URL config, token storage, credential source, account binding)
+is not in-repo. The Go <code>deviceemu</code> is the only concrete
+reference client.</li>
+<li><strong><code>Project</code> intent vs reality.</strong> The
+<code>Project</code> type comment claims it is “a named container for
+devices, releases, and deployments, providing multi-tenant isolation”
+(<code>store.go:287-288</code>), but no
+artifact/release/deployment/device type or repository method references
+a project. The gap between the stated intent and the wired reality is
+the core of the multi-account work.</li>
+<li><strong>No <code>account</code>/<code>organization</code> concept at
+all.</strong> The codebase models <code>Project</code> (+ per-project
+role ACL) but there is no higher
+<code>account</code>/<code>org</code>/<code>tenant</code> entity
+anywhere in <code>store.go</code> or the API. A multi-account plan must
+decide whether “account” maps onto the existing <code>Project</code> or
+introduces a new parent entity.</li>
+<li><strong>Whether the SPA/agent are meant to be the production
+clients</strong> (vs the Go emulator being throwaway tooling) is a
+product decision not derivable from code; both SPA project scoping and
+the agent’s concrete client are unfinished.</li>
+</ol>
+</body>
+</html>

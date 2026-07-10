@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>28_reconciliation_and_open_decisions</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">28_reconciliation_and_open_decisions</h1>
+</header>
+<h1
+id="cross-document-reconciliation-consolidated-operator-decision-register-multi-account-research-set">Cross-Document
+Reconciliation + Consolidated Operator-Decision Register — Multi-Account
+Research Set</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Scope.</strong> This document performs the §11.4.186
+<strong>CROSS-DOC + INTEGRITY</strong> consistency pass over the
+multi-account to-be research set (<code>20_</code>…<code>27_</code>) and
+consolidates the still-open operator decisions into one approval-gate
+register. It is a <strong>reconciliation report, not a rewrite</strong>:
+per §11.4.186 it <em>finds and records</em> divergence — it does
+<strong>not</strong> silently edit any source doc. The only file written
+under this task is this one (<code>28_*</code>).</p>
+<p><strong>SSOT.</strong>
+<code>20_target_multitenancy_data_model.md</code> is the declared single
+source of truth for entity / claim / column shapes;
+<code>21_authz_rbac_superadmin.md</code> owns the permission-model shape
++ token-claim + role-vocabulary reconciliation (OQ-2);
+<code>22_api_surface.md</code> owns the route shapes + the path-vs-token
+scoping decision; <code>26_security_threat_model.md</code> owns the
+per-account signing-key threat/registry. <code>23_/24_/25_</code> were
+authored <strong>before</strong> <code>20_</code> landed and their
+explicitly-marked <strong>illustrative</strong> shapes are the primary
+reconciliation targets; <code>21_/22_/26_/27_</code> were authored
+<strong>after</strong> <code>20_</code> and cite it.</p>
+<p><strong>Reading order.</strong> <code>00_INDEX.md</code> (mandate +
+OQ-1…OQ-4) → <code>10_/11_/12_</code> (as-is) → <code>20_</code> (entity
+SSOT) → <code>21_/22_</code> → <code>23_/24_/25_</code> →
+<code>26_/27_</code>. Every divergence claim below is grounded in a
+<code>doc §section</code> or a <code>file:line</code> those docs
+established; no new external research was performed (§11.4.99 — this is
+an internal-consistency pass).</p>
+</blockquote>
+<hr />
+<h2 id="divergence-audit-11.4.186-cross-doc-integrity-families">1.
+Divergence audit (§11.4.186 CROSS-DOC + INTEGRITY families)</h2>
+<p>Method: for each entity / claim / role / endpoint that appears in
+more than one doc, verify the pre-SSOT docs (<code>23_/24_/25_</code>)
+and the post-SSOT docs (<code>21_/22_/26_</code>) agree with
+<code>20_</code> (SSOT). Status vocabulary: <strong>CONSISTENT</strong>
+(no action) · <strong>RECONCILE</strong> (low-risk wording/name/citation
+alignment) · <strong>RESIDUAL-BLOCKING</strong> (a real contradiction
+that MUST be fixed before implementation).</p>
+<h3 id="the-five-explicitly-mandated-cross-checks">1.1 The five
+explicitly-mandated cross-checks</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Item</th>
+<th>Authoritative source</th>
+<th>Divergent doc:section</th>
+<th>The divergence</th>
+<th>Recommended resolution (align to SSOT)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td><strong>Token claim set</strong> <code>{sub,roles,iat,exp}</code> +
+<code>account_id</code>/<code>project_id</code></td>
+<td><code>20_</code> §2.2 #7 (defers token shape to <code>21_</code>);
+<code>21_</code> §3 (defines the claim)</td>
+<td><code>22_</code> §3 / §2.0; <code>23_</code> §1.3; <code>24_</code>
+§1.3; <code>25_</code> §1.2</td>
+<td><strong>None substantive.</strong> All docs converge: base
+<code>{sub,roles,iat,exp}</code> + <code>account_id</code> (user tokens)
++ <code>project_id</code> (device/CLI tokens); server-minted,
+server-verified, never self-asserted. <code>20_</code> §2.2 #7 said
+“resolve membership per-request”; <code>21_</code> §2.2 explicitly
+<strong>reconciles</strong> this to “stamp the <code>account_id</code>
+claim AND re-verify <code>GetAccountMembership</code> per request”
+(claim = routing hint, membership row = authority).</td>
+<td>No action — reconciliation already performed in <code>21_</code>
+§2.2.</td>
+<td><strong>CONSISTENT</strong></td>
+</tr>
+<tr>
+<td>B</td>
+<td><strong><code>Account</code> shape</strong></td>
+<td><code>20_</code> §1.1
+(<code>account_id</code>,<code>name</code>,<code>slug</code>,<code>status</code>,<code>created_at</code>,<code>updated_at</code>)</td>
+<td><code>22_</code> §3.2; <code>23_</code> §0/§3.1 (marked
+<em>illustrative</em>)</td>
+<td><code>22_</code> §3.2 returns
+<code>[{account_id,name,slug,role,is_owner}]</code> —
+<code>role</code>/<code>is_owner</code> come from
+<code>Membership</code> (<code>20_</code> §1.3), not
+<code>Account</code>; correctly composed. <code>23_</code> treats
+<code>Account{…}</code> as opaque/illustrative.</td>
+<td>No action; <code>23_</code> reconciles to <code>20_</code> when it
+wires.</td>
+<td><strong>CONSISTENT</strong></td>
+</tr>
+<tr>
+<td>C</td>
+<td><strong><code>User</code> shape</strong></td>
+<td><code>20_</code> §1.2
+(<code>user_id</code>,<code>username</code>,<code>email</code>,<code>password_hash</code>,<code>is_super_admin</code>,<code>is_active</code>)</td>
+<td><code>23_</code> §0 UI
+<code>user{id,email,display_name,avatar_url,roles[],permissions[]}</code></td>
+<td>The UI <strong>session view</strong> (<code>auth-store.ts</code>,
+cited <code>23_</code> §0) carries
+<code>display_name</code>/<code>avatar_url</code> <strong>not
+present</strong> in <code>20_</code>’s persisted <code>User</code>, and
+uses <code>id</code> where <code>20_</code> uses <code>user_id</code>.
+This is the existing codebase’s UI shape, not an invented entity.</td>
+<td>Reconcile UI ↔︎ entity: <code>user.id</code> →
+<code>20_.user_id</code>; treat
+<code>display_name</code>/<code>avatar_url</code> as UI-derived unless
+the operator wants them persisted — if persisted, <code>20_</code> §1.2
+<code>User</code> must gain optional profile columns. Flag for
+<code>20_</code>.</td>
+<td><strong>RECONCILE</strong> (low)</td>
+</tr>
+<tr>
+<td>D</td>
+<td><strong><code>Membership</code> shape</strong></td>
+<td><code>20_</code> §1.3
+<code>AccountMembership{AccountID,UserID,Role,IsOwner}</code> / table
+<code>account_members</code> (composite PK
+<code>(user_id,account_id)</code>)</td>
+<td><code>23_</code> §3.1 / §6.1
+<code>AccountAccess{account_id, role}</code> (marked
+<em>illustrative</em>)</td>
+<td>(1) <strong>Name + fields</strong>: <code>23_</code> names the type
+<code>AccountAccess</code> and lists only
+<code>{account_id, role}</code> — omitting <code>user_id</code> and
+<code>is_owner</code>. (2) <strong>Layering</strong>: <code>23_</code>
+§3.1 frames it as “<strong>generalises</strong>
+<code>ProjectAccess{project_id,role}</code> →
+<code>AccountAccess</code>”, which reads as <em>replacing</em>
+project-access; <code>20_</code> §1.2 keeps <code>ProjectAccess</code>
+(migrating <code>CallerID</code>→<code>user_id</code>) AND adds
+<code>AccountMembership</code>, and <code>21_</code> §2.3 wires
+<strong>both</strong> (<code>requireAccountAccess</code> →
+<code>requireProjectAccess</code>).</td>
+<td>Reconcile <code>23_</code>’s illustrative <code>AccountAccess</code>
+→ <code>20_</code>’s <code>AccountMembership</code> (add
+<code>user_id</code>, <code>is_owner</code>); restate as an
+<strong>account layer ABOVE</strong> <code>ProjectAccess</code>, not a
+replacement. <code>23_</code> §5 already <strong>defers</strong> the
+“replace?” question to <code>21_</code>, and <code>21_</code> §2.3
+<strong>resolves</strong> it (both layers coexist).</td>
+<td><strong>RECONCILE</strong> (low; <code>23_</code> pre-committed to
+reconcile, <code>21_</code> resolved the layering)</td>
+</tr>
+<tr>
+<td>E</td>
+<td><strong>Role vocabulary</strong></td>
+<td><code>20_</code> §1.4
+<code>Membership.role ∈ {viewer,operator,admin}</code>; <code>21_</code>
+§5.1 token-roles set
+<code>{viewer,operator,admin,device,super_admin}</code> (server
+<code>token.go</code> = SSOT)</td>
+<td>Codebase: <code>dashboard/src/types/api.ts:12</code> OMITS
+<code>super_admin</code>;
+<code>clients/ota-manager/.../sidebar.tsx:20-21</code> literal
+<code>"developer"</code> not in the <code>Role</code> union
+(<code>api-client.ts:323</code>)</td>
+<td><strong>Doc-level CONSISTENT</strong>: <code>20_</code> (per-account
+subset) and <code>21_</code> (token set) agree; <code>23_</code> §0/§5
+aligns to <code>21_</code> and flags both codebase divergences. The
+divergence lives in the <strong>codebase</strong>, not between the
+docs.</td>
+<td>Implement <code>21_</code> §5.1: server <code>token.go</code> gains
+<code>super_admin</code>; dashboard <code>Role</code> union +
+<code>TokenResponse.roles</code> gain <code>super_admin</code>
+(<code>api.ts:12,24</code>); replace <code>sidebar.tsx</code>
+<code>"developer"</code> with a real union role (<code>21_</code> §5.2
+flags candidate <code>operator</code>, <strong>not</strong> silently
+guessed). <code>21_</code> §5 <strong>owns</strong> this fix;
+<code>23_</code> §5 flags it.</td>
+<td><strong>CONSISTENT (docs)</strong> / codebase fix tracked in
+<code>21_</code> §5</td>
+</tr>
+<tr>
+<td>F</td>
+<td><strong>Account-scoping approach</strong> (path vs token-claim)</td>
+<td><code>22_</code> §2.0 (decides: token-claim on the hot path,
+path-based only for the admin cross-account API)</td>
+<td><code>20_</code> §3.2; <code>21_</code> §2.3; <code>23_</code> §1.3;
+<code>24_</code> §1.3; <code>25_</code> §1.2</td>
+<td><strong>None.</strong> Every doc puts tenancy in the <strong>signed
+token claim</strong> on the hot path (never a request path/header), and
+uses <code>/admin/accounts/:id/…</code> path-tenancy only for
+super-admin cross-account ops. <code>20_</code> §2.2 #7 left the
+token-shape to <code>21_</code>; <code>22_</code> §2.0 binds it; the
+trust boundary (<code>resolvePublicKey</code>-class) is preserved
+everywhere.</td>
+<td>No action.</td>
+<td><strong>CONSISTENT</strong></td>
+</tr>
+<tr>
+<td>G</td>
+<td><strong>Per-account signing keys</strong></td>
+<td><code>26_</code> §4 (per-account key REGISTRY keyed on resolved
+<code>account_id</code>, global fallback,
+verify-key-from-config-only)</td>
+<td><code>24_</code> §3 step 4; <code>25_</code> §5 #5; <code>22_</code>
+§4.1 (endpoint
+<code>/admin/accounts/:accountId/signing-keys</code>)</td>
+<td><strong>None substantive.</strong> All four agree:
+<code>resolvePublicKey(accountID)</code> from a server-side registry,
+global key as migration fallback, the trust boundary unchanged (only the
+<em>lookup key</em> gains an account dimension). Device side verifies
+against its account’s key provisioned from server config, never the
+offer.</td>
+<td>No action on shape; the <strong>rollout</strong> (one global key now
+vs registry) is an operator decision — see §2 register row 5.</td>
+<td><strong>CONSISTENT</strong></td>
+</tr>
+</tbody>
+</table>
+<h3
+id="additional-divergences-found-during-the-pass-not-in-the-mandated-five">1.2
+Additional divergences found during the pass (not in the mandated
+five)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Item</th>
+<th>Authoritative source</th>
+<th>Divergent doc:section</th>
+<th>The divergence</th>
+<th>Recommended resolution (align to SSOT)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H</td>
+<td><strong><code>api_keys.project_id</code> scope column</strong></td>
+<td><code>20_</code> §4 (SSOT <code>api_keys</code> DDL)</td>
+<td><code>21_</code> §6.1; <code>22_</code> §4.1; <code>24_</code>
+§1.1</td>
+<td><code>21_</code> §6.1 (“a key binds to exactly one
+<code>account_id</code> and <strong>optionally one
+<code>project_id</code></strong>”), <code>22_</code> §4.1 (“gains the
+<code>account_id</code> + <strong>nullable
+<code>project_id</code></strong> scope columns
+<code>20_*</code>/<code>24_*</code> own”), and <code>24_</code> §1.1
+(nullable <code>project_id</code>, “<strong><code>20_*</code> owns this
+shape</strong>”) ALL treat <code>api_keys.project_id</code> as
+SSOT-owned — but the SSOT’s actual <code>api_keys</code> DDL
+(<code>20_</code> §4, lines 402-414) declares only
+<code>account_id</code> and <strong>omits <code>project_id</code>
+entirely</strong>. Two post-SSOT docs
+(<code>21_</code>,<code>22_</code>) and one pre-SSOT doc
+(<code>24_</code>) depend on a column the SSOT does not carry.</td>
+<td><strong>Amend <code>20_</code> §4</strong> <code>api_keys</code> DDL
+to add <code>project_id TEXT</code> (nullable,
+<code>REFERENCES projects(project_id)</code>, <code>NULL</code> = “any
+project in the account the caller is authorized for”, per
+<code>24_</code> §1.1). The SSOT is incomplete, not the consumers —
+completing the SSOT is the align-to-SSOT fix.</td>
+<td><strong>RESIDUAL-BLOCKING</strong></td>
+</tr>
+<tr>
+<td>J</td>
+<td><strong>Legacy-token (no <code>account_id</code> claim)
+handling</strong></td>
+<td><code>21_</code> §3.3 (authZ SSOT; <code>22_</code> cedes authZ to
+it, <code>22_</code> Honest-boundary)</td>
+<td><code>22_</code> §6.1</td>
+<td><strong>Opposite recommendations for the same request path.</strong>
+<code>21_</code> §3.3 recommends <strong>Option A —
+fail-closed</strong>: a token with no <code>account_id</code> claim is
+denied on every account-scoped route (super-admin exempt), and it
+<strong>explicitly rejects</strong> the default-account fallback as “an
+isolation-softening special case … the exact NULL-scoping hole
+<code>20_</code> §5 rejects” (noting 15-min access-TTL self-heals).
+<code>22_</code> §6.1 recommends the <strong>default-account
+(<code>__default__</code>) fallback</strong> for a legacy token “for a
+bounded transition window” + <code>Sunset</code> header — i.e. exactly
+<code>21_</code>’s rejected Option B.</td>
+<td>Align <code>22_</code> §6.1 to <code>21_</code> §3.3 <strong>Option
+A (fail-closed)</strong>; <code>22_</code>’s own Honest boundary already
+cedes token/claim/authZ decisions to <code>21_</code>. Keep the
+<code>20_</code> §5 default-account <strong>data backfill</strong>
+(existing <em>rows</em> → <code>__default__</code>); strike the
+legacy-<strong>token</strong> → <code>__default__</code> mapping.</td>
+<td><strong>RESIDUAL-BLOCKING</strong></td>
+</tr>
+<tr>
+<td>I</td>
+<td><strong><code>api_keys</code> PK column name</strong></td>
+<td><code>20_</code> §4 (<code>api_key_id</code>)</td>
+<td><code>24_</code> §0 / §1.1 (<code>id</code>, quoting the
+<code>001_initial_schema.up.sql:57-71</code> sketch)</td>
+<td><code>24_</code> carries the pre-SSOT <code>001</code>-sketch column
+name <code>id</code>; <code>20_</code> §4 renames the PK to
+<code>api_key_id</code>.</td>
+<td>Align <code>24_</code> to <code>20_</code>
+(<code>api_key_id</code>); <code>24_</code> already delegates the shape
+to <code>20_</code>.</td>
+<td><strong>RECONCILE</strong> (low)</td>
+</tr>
+<tr>
+<td>K</td>
+<td><strong>Id type — <code>TEXT</code> vs
+<code>UUID</code></strong></td>
+<td><code>20_</code> §1 (self-flags + resolves: impl seam = opaque
+<code>TEXT</code> mirroring the shipped store; canonical
+<code>001</code>-style schema keeps <code>UUID</code>; §4 states the
+<code>TEXT ↔︎ UUID</code> mapping)</td>
+<td><code>24_</code> §0/§1.1 cite the <code>UUID</code>-oriented
+<code>001</code> sketch for <code>api_keys</code> columns</td>
+<td>Not a true cross-doc contradiction — <code>20_</code> §1 already
+reconciles the two representations internally and states the mapping.
+Consumers citing the <code>001</code> sketch must use <code>20_</code>’s
+<code>TEXT</code> names (see #I).</td>
+<td>Consumers use <code>20_</code>’s <code>TEXT</code> column names; the
+<code>TEXT↔︎UUID</code> mapping is <code>20_</code> §4’s stated
+reconciliation.</td>
+<td><strong>CONSISTENT (self-reconciled in SSOT)</strong></td>
+</tr>
+<tr>
+<td>L</td>
+<td><strong><code>resolvePublicKey</code> file:line
+citation</strong></td>
+<td>The one function <code>handlers_artifact.go</code></td>
+<td><code>20_</code> §6 / <code>21_</code> §1.4 / <code>22_</code>
+§1.2,§4.1 = <code>274-283</code>; <code>24_</code> §0,§3 /
+<code>25_</code> §5 = <code>283-288</code>; <code>26_</code> §0,§4 =
+<code>274-288</code></td>
+<td>Three different line ranges cite the <strong>same</strong> function
+— an INTEGRITY-family “same referent, divergent representation” nit
+(non-load-bearing; every doc agrees on the <em>behaviour</em>: verify
+key from server config only).</td>
+<td>Pick one canonical range (the function’s true span) and use it
+across the set.</td>
+<td><strong>RECONCILE</strong> (low, INTEGRITY nit)</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="the-two-load-bearing-residuals-must-fix-before-implementation">1.3
+The two load-bearing residuals (must fix before implementation)</h3>
+<ul>
+<li><strong>#H — <code>api_keys.project_id</code> absent from the SSOT
+DDL.</strong> The project-CLI’s entire “account-scoped, optionally
+project-narrowed key” model (<code>24_</code> §1.1, <code>21_</code>
+§6.1, <code>22_</code> §4.1) — including “<code>NULL project_id</code> =
+any project in the account” — has no column to live on in
+<code>20_</code> §4. Left unfixed, implementers would either invent the
+column ad hoc (re-introducing the divergence §11.4.186 forbids) or drop
+project-narrowing silently. Fix is a one-line additive column in
+<code>20_</code> §4.</li>
+<li><strong>#J — legacy-token handling contradiction.</strong>
+<code>21_</code> (fail-closed) and <code>22_</code> (default-account
+fallback) prescribe <strong>opposite security postures</strong> for a
+legacy token on a scoped route. This is precisely the “same tracked
+data, two divergent representations” §11.4.186 exists to catch: shipping
+both as-written yields either a fail-closed <em>or</em> a
+silently-scoped-to-<code>__default__</code> route depending on which doc
+the implementer follows. <code>22_</code> cedes authZ to
+<code>21_</code>, so <code>21_</code> §3.3 Option A wins.</li>
+</ul>
+<hr />
+<h2 id="consolidated-operator-decision-register-approval-gate">2.
+Consolidated operator-decision register (approval-gate)</h2>
+<p>The single table to act on at the approval gate. Each decision is
+presented with its options, the design’s recommendation + rationale,
+blast-radius/reversibility, and the milestone it gates (sequenced by the
+delivery plan <code>30_</code>, planned per 00_INDEX §3).</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision (source)</th>
+<th>Options</th>
+<th>Design recommendation + rationale</th>
+<th>Blast-radius / reversibility</th>
+<th>Gates milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>OQ-1 — “OpenCode” vs OpenDesign</strong> (00_INDEX §5;
+resolved <code>12_</code>, carried <code>23_</code> Honest-boundary as
+UNCONFIRMED)</td>
+<td>(a) OpenCode = the coding <strong>agent</strong> used to BUILD UI
+(3299 hits, only in
+<code>llm_orchestrator</code>/<code>vision_engine</code> adapters,
+<strong>zero</strong> UI hits); OpenDesign = the mandated
+<strong>design-token system</strong> (§11.4.162) the built UI CONSUMES
+(already vendored <code>design-systems/helix-ota/</code>). (b) some
+other tool</td>
+<td><strong>Confirm (a).</strong> Evidence-grounded in <code>12_</code>;
+both statements are simultaneously true, flagged only because the
+mandate used the literal word “OpenCode” (§11.4.66).</td>
+<td>Near-zero; a naming clarification. Fully reversible.</td>
+<td>None hard — the UI milestone consumes OpenDesign tokens regardless
+of the OQ-1 label.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>OQ-2 — permission-model shape</strong> (00_INDEX §5; owner
+<code>21_</code> §1)</td>
+<td>(a) pure tenant-scoped RBAC; (b) full ABAC policy engine
+(Cedar/OPA/Cerbos); (c) <strong>role+scope hybrid</strong></td>
+<td><strong>Adopt (c), delivered RBAC-first</strong> (<code>21_</code>
+§1.2): a 3-step decision — tenant-isolation predicate (first) → RBAC
+role×resource matrix (the shipped <code>RESOURCE_PERMISSIONS</code> grid
+promoted server-authoritative) → thin ABAC deny-override (suspended
+account / inactive user / revoked key). Reuses the shipped role
+hierarchy + rank tooling verbatim; closes the cross-account hole by
+construction; grows to custom-per-account roles via <code>20_</code>
+§1.4’s reserved
+<code>roles</code>/<code>permissions</code>/<code>role_permissions</code>
+tables with <strong>no second data-model change</strong>.</td>
+<td><strong>High design reach</strong> (the whole authZ stack) but
+<strong>reversible-additive</strong>: fixed enum now, reserved tables
+ship as commented DDL, full ABAC engine stays a documented future
+escalation.</td>
+<td>The authZ / permission-enforcement milestone (gates
+<code>requireAccountAccess</code> + the server-authoritative
+matrix).</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>OQ-3 — identity source</strong> (00_INDEX §5)</td>
+<td>(a) <strong>local accounts only</strong> (super-admin-provisioned);
+(b) federated (OIDC/SAML)</td>
+<td><strong>(a) local super-admin-provisioned users for now.</strong>
+The directive implies it (00_INDEX §1.2 — no self-registration), and
+<code>20_</code> §1.2 <code>User.password_hash</code> models local
+credentials; no to-be doc designs federation. Federation is a future
+escalation (a <code>User</code> identity-provider column + an IdP seam)
+— flag for the operator if a launch IdP is required.</td>
+<td>Moderate; local-first is <strong>additive-compatible</strong> with
+later federation (<code>User</code> gains an
+<code>external_idp</code>/<code>subject</code> column; no rework of the
+account/membership model).</td>
+<td>The auth / user-provisioning milestone (super-admin
+<code>POST /admin/users</code>, <code>22_</code> §1.2).</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>OQ-4 — migrate existing data under accounts</strong>
+(00_INDEX §5; owner <code>20_</code> §5)</td>
+<td>(a) <strong>default-account backfill</strong> (big-bang →
+<code>NOT NULL</code>); (b) additive-nullable-until-backfill
+(gradual)</td>
+<td><strong>(a) default-account backfill</strong> (<code>20_</code> §5):
+<code>002</code> adds <code>account_id</code> nullable → backfill every
+legacy row to a seeded <code>__default__</code> account →
+<code>003</code> sets <code>NOT NULL</code> + per-account uniques +
+composite FKs + leading-column indexes + enables RLS. Removes the
+nullable-isolation-hole window entirely; near-free because the store is
+an in-memory MVP barely populated. <strong>Flip to (b)</strong> only if
+a target already holds meaningful prod data AND zero-downtime is
+mandatory (accept the interim NULL-scoping window, super-admin-only
+visibility). <strong>Couples to #J</strong>: whichever is chosen, a
+legacy <em>token</em> is fail-closed (<code>21_</code> §3.3), not mapped
+to <code>__default__</code>.</td>
+<td>One coordinated <code>003</code> cutover; additive columns then
+constraints (recoverable, backups per §9.2).</td>
+<td>The data-migration milestone — <strong>must precede</strong> RLS
+enable, per-account uniques, and any e2e isolation claim
+(<code>27_</code> §5).</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Per-account signing-key rollout</strong> (owner
+<code>26_</code> §4; consumers <code>24_</code> §3, <code>25_</code> §5,
+<code>22_</code> §4.1)</td>
+<td>(a) keep one global <code>HELIX_ARTIFACT_PUBKEY</code>; (b)
+<strong>per-account key registry + global fallback</strong>; (c)
+TUF-style M-of-N thresholds (horizon)</td>
+<td><strong>(b) per-account ed25519 verify-key registry</strong> keyed
+on the resolved <code>account_id</code>, config-/KMS-backed, with the
+global key as a <strong>migration fallback</strong>; the trust boundary
+is unchanged (verify key from server config/registry only, never the
+request — only the <em>lookup key</em> gains an account dimension).
+Device side verifies against its account’s key provisioned at enrollment
+from server config. TUF thresholds noted as the hardening horizon
+(§11.4.112), not built now.</td>
+<td>Moderate; <strong>staged behind the global fallback</strong>
+(additive, reversible per account). A shared global key is unacceptable
+long-term (any signer signs for the platform).</td>
+<td>The signing-key milestone — composes with per-account object storage
++ upload scoping; <code>22_</code> §4.1 adds
+<code>/admin/accounts/:accountId/signing-keys</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="additional-recommendation-with-tradeoffs-decisions-the-set-surfaces-secondary">2.1
+Additional recommendation-with-tradeoffs decisions the set surfaces
+(secondary)</h3>
+<p>These are already recommended-with-tradeoffs in the owner docs (not
+open contradictions); listed so the approval gate is complete. Each is
+reversible/additive along its recommended path.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Decision (owner)</th>
+<th>Recommended path</th>
+<th>Alternative (condition to flip)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sign-in split (<code>23_</code> §1.2)</td>
+<td><strong>Option A</strong> — one form, post-auth role routing</td>
+<td>Option B (physically separate super-admin door + stronger MFA) if
+the operator wants a separate console</td>
+</tr>
+<tr>
+<td>CLI key auth (<code>24_</code> §1.3)</td>
+<td><strong>Option B</strong> — key is an exchange credential
+(short-lived scoped token)</td>
+<td>Option A (direct-key Bearer) if the tenant claim is out of scope for
+milestone 1</td>
+</tr>
+<tr>
+<td>Device enrollment (<code>25_</code> §1.3, <code>22_</code>
+§4.2)</td>
+<td><strong>Option A</strong> — operator-minted scoped token</td>
+<td>Option B (bootstrap-claim → per-device token) for self-service /
+fleet scale</td>
+</tr>
+<tr>
+<td>Cross-tenant denial response (<code>22_</code> §6.2; hard rule
+deferred to <code>26_</code>)</td>
+<td><strong><code>404</code></strong> (anti-enumeration) for
+cross-account; <code>403</code> for in-account role gaps</td>
+<td><code>403</code> throughout if diagnostic clarity is preferred —
+<code>26_</code> binds the final rule</td>
+</tr>
+<tr>
+<td>Dev-secret handling (<code>26_</code> §3.4/§6)</td>
+<td><strong>Fail-fast</strong> on unset <code>HELIX_TOKEN_SECRET</code>
+in a multi-account build</td>
+<td>(none recommended — the predictable dev fallback
+<code>config.go:180-184</code> is a tenant-isolation break
+multi-tenant)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="no-divergence-verdict">3. No-divergence verdict</h2>
+<p><strong>Verdict: CONDITIONAL PASS — internally consistent AFTER two
+blocking reconciliations land; three low-risk RECONCILE items should
+follow.</strong></p>
+<p>The set is <strong>internally consistent</strong> on every mandated
+cross-check where it matters most: the <strong>token claim set</strong>
+(A), <strong>account-scoping approach</strong> (F), <strong>role
+vocabulary at the doc level</strong> (E), the
+<strong><code>Account</code> shape</strong> (B), and <strong>per-account
+signing keys</strong> (G) all agree across every doc that touches them,
+and the two framing tensions that could have diverged —
+<code>20_</code>’s “resolve-per-request” vs “stamp-claim” (reconciled in
+<code>21_</code> §2.2) and <code>23_</code>’s “replace ProjectAccess?”
+(resolved in <code>21_</code> §2.3, both layers coexist) — were
+<strong>already reconciled in-doc</strong>. The role-vocabulary and
+<code>"developer"</code>-literal issues are <strong>codebase</strong>
+fixes owned by <code>21_</code> §5 / flagged by <code>23_</code> §5, not
+doc-to-doc contradictions.</p>
+<p><strong>Two residual divergences MUST be fixed before
+implementation</strong> (they are genuine “same tracked data, two
+divergent representations” of the §11.4.186 class):</p>
+<ol type="1">
+<li><strong>#H — add <code>api_keys.project_id</code> (nullable) to
+<code>20_</code> §4.</strong> Three docs (<code>21_</code> §6.1,
+<code>22_</code> §4.1, <code>24_</code> §1.1) rely on a scope column the
+SSOT DDL omits.</li>
+<li><strong>#J — reconcile legacy-token handling: align <code>22_</code>
+§6.1 to <code>21_</code> §3.3 (fail-closed).</strong> The two docs
+prescribe opposite security postures for a legacy no-account-claim
+token; <code>22_</code> cedes authZ to <code>21_</code>, so fail-closed
+wins and the token→<code>__default__</code> fallback is struck.</li>
+</ol>
+<p><strong>Three low-risk RECONCILE items</strong> should be applied in
+the same sweep (non-blocking but divergence-eliminating): #D
+(<code>23_</code> <code>AccountAccess</code> → <code>20_</code>
+<code>AccountMembership</code>), #I (<code>24_</code> <code>id</code> →
+<code>20_</code> <code>api_key_id</code>), #L (single canonical
+<code>resolvePublicKey</code> line range); plus the #C
+UI-<code>User</code> field note. With #H and #J fixed and #D/#I/#L/#C
+applied, the set carries <strong>no residual cross-document
+divergence</strong> and is ready for the operator approval gate.</p>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>This proves internal CONSISTENCY, not plan CORRECTNESS
+(§11.4.186 boundary).</strong> The verdict certifies that the docs do
+not contradict each other about the same tracked data after the named
+fixes — it does <strong>NOT</strong> certify that the shared-schema+RLS
+model, the RBAC-first hybrid, the default-account backfill, or the
+per-account key registry are the <em>right</em> choices, achievable on
+the target timeline, or free of design flaws. Those remain
+operator/management + implementation-review decisions the register
+<strong>surfaces</strong>, never makes.</li>
+<li><strong>This is a reconciliation report, not a rewrite.</strong> Per
+the task and §11.4.186, no source doc
+(<code>20_</code>…<code>27_</code>) was edited; the recommended
+alignments (#H amend <code>20_</code> §4, #J align <code>22_</code> §6.1
+to <code>21_</code> §3.3, #D/#I/#L/#C) are <strong>proposals for the
+owner docs</strong>, to be applied by their owners before implementation
+— this file only records them.</li>
+<li><strong>Grounding scope.</strong> Every divergence claim is grounded
+in a <code>doc §section</code> (or a <code>file:line</code> those docs
+established). The underlying <code>file:line</code> facts (e.g.
+<code>api-client.ts:323</code>,
+<code>dashboard/src/types/api.ts:12</code>,
+<code>sidebar.tsx:20-21</code>, <code>handlers_artifact.go</code>
+ranges, <code>20_</code> §4 DDL lines) are <strong>inherited from the
+eight docs as they cite them</strong> and were not independently re-read
+against source under this task — a citation the source docs got wrong
+would propagate here (the docs’ own §11.4.6 boundaries note their
+<code>file:line</code> set was established against non-test source
+only).</li>
+<li><strong><code>21_</code> / <code>26_</code> were authored after
+<code>20_</code> and cite it;
+<code>23_</code>/<code>24_</code>/<code>25_</code> predate it and
+self-mark their shapes illustrative</strong> — so most pre-SSOT
+divergences are already soft-committed to reconcile. The two
+RESIDUAL-BLOCKING items (#H, #J) are the exceptions: #H is a <strong>gap
+in the SSOT itself</strong> (not a pre-SSOT drift), and #J is a
+<strong>post-SSOT contradiction between two docs that both cite
+<code>20_</code></strong> — exactly the class that survives
+“authored-after-SSOT” and needs the explicit gate this report
+provides.</li>
+<li><strong>No new external research</strong> was performed (this is a
+§11.4.186 internal cross-document pass, not a §11.4.99 latest-source
+verification); all five docs’
+<code>## Sources verified 2026-07-10</code> footers stand as
+authored.</li>
+</ul>
+</body>
+</html>

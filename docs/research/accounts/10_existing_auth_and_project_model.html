@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>10_existing_auth_and_project_model</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">10_existing_auth_and_project_model</h1>
+</header>
+<h1
+id="existing-auth-authorization-identity-project-model-as-is-audit">Existing
+Auth, Authorization, Identity &amp; Project Model — As-Is Audit</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:06:45Z</p>
+<blockquote>
+<p>Scope: a READ-ONLY, evidence-grounded audit of how the Helix OTA
+control plane (<code>server/</code>, Go/Gin modular monolith)
+authenticates, authorizes, models identity, and models the existing
+PROJECT concept — so a to-be ACCOUNT (tenant) layer can be designed
+ABOVE project (account → projects → OTA updates). Every claim below
+cites a <code>file:line</code> actually read. Where the mandate assumes
+a mechanism that does NOT exist, that is stated plainly with evidence
+(§11.4.6 — no guessing).</p>
+</blockquote>
+<hr />
+<h2 id="authentication">1. Authentication</h2>
+<p><strong>Scheme: an HMAC-SHA256 signed-opaque bearer token
+(JWT-<em>shaped</em>, not a real JWT).</strong></p>
+<ul>
+<li>The token is a two-part
+<code>base64url(payload).base64url(HMAC-SHA256(payload))</code> blob —
+NOT a standard three-part JWT
+(<code>server/internal/api/token.go:72-74</code> for mint;
+<code>:80-89</code> for the two-part split + constant-time
+<code>hmac.Equal</code> verify).</li>
+<li>Claims carried: <code>sub</code> (subject), <code>roles</code>,
+<code>iat</code>, <code>exp</code>
+(<code>server/internal/api/token.go:31-36</code>). <code>HasRole</code>
+at <code>:39-46</code>.</li>
+<li><code>TokenSigner</code> mints (<code>token.go:60-75</code>) and
+verifies (<code>token.go:77-102</code>) over a symmetric
+<code>secret []byte</code> (<code>token.go:51-58</code>). It is
+explicitly documented as the seam the production
+<code>auth</code>/<code>security</code> brick replaces
+(<code>token.go:26-30, 48-50</code>).</li>
+<li>Bearer extraction from the <code>Authorization: Bearer …</code>
+header: <code>server/internal/api/middleware.go:99-111</code>
+(<code>bearerToken</code>); <code>authMiddleware</code> verifies and
+stashes claims in the Gin context under <code>helix.claims</code>
+(<code>middleware.go:58-77</code>, key const
+<code>middleware.go:14-17</code>).</li>
+</ul>
+<p><strong>A login/sign-in endpoint DOES exist (this is present, not
+absent):</strong></p>
+<ul>
+<li><code>POST /api/v1/auth/login</code> → <code>handleLogin</code> and
+<code>POST /api/v1/auth/refresh</code> → <code>handleRefresh</code> are
+wired as PUBLIC (pre-auth) routes
+(<code>server/internal/api/server.go:183-185</code>).</li>
+<li><code>handleLogin</code>
+(<code>server/internal/api/handlers_auth.go:77-99</code>) exchanges
+username+password for an access+refresh pair via the injected
+<code>UserDirectory</code> (<code>s.users.Authenticate</code>,
+<code>handlers_auth.go:93</code>).</li>
+<li><code>issueTokenPair</code> mints the access token with
+<code>cfg.AccessTokenTTL</code> and issues an opaque refresh token
+(<code>handlers_auth.go:123-137</code>).</li>
+<li>Refresh tokens are random 32-byte opaque strings held in an
+IN-MEMORY, single-use-rotation, TTL-bounded store
+(<code>refreshStore</code>, <code>handlers_auth.go:28-72</code>;
+<code>randomOpaque</code> <code>:139-148</code>). Default refresh TTL is
+a hard-coded 30 days — there is NO config field for it yet
+(<code>handlers_auth.go:13-19</code>).</li>
+</ul>
+<p><strong>Where credentials come from — config/env, never the request
+body’s own trust:</strong></p>
+<ul>
+<li>The token signing secret comes ONLY from config:
+<code>HELIX_TOKEN_SECRET</code>, with a development fallback string when
+unset (<code>server/internal/config/config.go:66-70</code> and
+<code>:178-184</code>). The fallback
+<code>"helix-ota-dev-token-secret-change-me"</code> is a known prod risk
+(unset env ⇒ predictable signing key).</li>
+<li>Access-token TTL: <code>HELIX_ACCESS_TOKEN_TTL</code> / default 15
+min (<code>config.go:30-31, 54-55, 153-158</code>). Device-token TTL:
+<code>HELIX_DEVICE_TOKEN_TTL</code> / default 24 h
+(<code>config.go:32-34, 56-57</code>).</li>
+<li>The login user directory is seeded from the ENVIRONMENT at process
+start, never from a request: <code>HELIX_ADMIN_PASSWORD</code> (+
+optional <code>HELIX_ADMIN_USERNAME</code>, default
+<code>admin@helix.example</code>) → one <code>StaticUser</code> holding
+all three roles (<code>server/cmd/ota-server/main.go:96-104</code>). An
+unset admin password disables the static user entirely
+(<code>main.go:98</code>).</li>
+</ul>
+<p><strong>Is there an API-key scheme? No (not implemented).</strong>
+The implemented persistence schema has no <code>api_keys</code> table
+(<code>server/internal/store/schema_postgres.sql</code>, whole file —
+none present). An <code>api_keys</code> table exists ONLY in the
+design-target migration
+(<code>docs/research/main_specs/1.0.0-mvp/database/migrations/001_initial_schema.up.sql:57-68</code>),
+not in the shipped store. Devices authenticate with the SAME
+signed-token scheme (role <code>device</code>,
+<code>token.go:19</code>), gated on routes like
+<code>client/update</code> / <code>client/telemetry</code>
+(<code>server.go:223-224</code>).</p>
+<hr />
+<h2 id="authorization">2. Authorization</h2>
+<p>There are <strong>two distinct, independent authorization
+layers</strong>:</p>
+<p><strong>(a) Global RBAC from token roles.</strong> Closed role set
+<code>admin | operator | viewer | device</code>
+(<code>server/internal/api/token.go:14-20</code>).
+<code>requireRole(allowed…)</code> is a per-route middleware that admits
+a principal carrying at least one allowed role, else 403
+(<code>middleware.go:79-97</code>). It is applied on EVERY protected
+route explicitly — e.g. device register operator/admin
+(<code>server.go:192</code>), artifact upload operator/admin
+(<code>server.go:197</code>), audit read admin-only
+(<code>server.go:242</code>), the full route table
+<code>server.go:189-251</code>.</p>
+<p><strong>(b) Per-PROJECT ACL (a second, finer layer that exists ONLY
+for project routes).</strong> - <code>ProjectRole</code> hierarchy
+<code>viewer &lt; operator &lt; admin</code>
+(<code>store.go:297-304</code>; rank compare
+<code>handlers_project.go:78-92</code>). -
+<code>ProjectAccess{ProjectID, CallerID, Role}</code>
+(<code>store.go:306-311</code>) ties a caller (token subject) to a role
+within ONE project. - <code>requireProjectAccess</code>
+(<code>handlers_project.go:37-74</code>) looks up the caller’s
+per-project role via <code>repo.GetProjectAccess</code> and denies below
+<code>minRole</code>. A GLOBAL <code>admin</code> role bypasses the ACL
+and implicitly accesses every project
+(<code>handlers_project.go:43-60</code>; list-all path
+<code>handlers_project.go:162-199</code>).</p>
+<p><strong>What is ABSENT / the load-bearing gap:</strong> the
+per-project ACL is enforced ONLY on <code>/projects/{projectId}</code>
+GET/PATCH/DELETE (<code>handlers_project.go:204-274</code>). ALL other
+resources — devices, artifacts, releases, deployments, groups,
+telemetry, audit — are gated SOLELY by the global
+<code>requireRole</code> (<code>server.go:192-242</code>); none of them
+consult project membership, because none of them carry a project id (see
+§4 and §8). Net effect: <strong>there is no data-level tenant isolation
+today</strong> — any principal with the global
+<code>operator</code>/<code>viewer</code> role sees and mutates the
+entire fleet regardless of any project ACL. The project ACL currently
+governs project <em>metadata rows</em> only.</p>
+<hr />
+<h2 id="identity-user-model">3. Identity / User model</h2>
+<p><strong>There is NO persisted User/identity entity in the implemented
+control plane.</strong></p>
+<ul>
+<li>The <code>store.Repository</code> interface
+(<code>store.go:315-429</code>) has NO user/identity CRUD of any kind —
+no <code>CreateUser</code>, <code>GetUser</code>, etc.</li>
+<li>The implemented store schema has NO <code>users</code> table
+(<code>server/internal/store/schema_postgres.sql</code>, whole
+file).</li>
+<li>The only “identity” at runtime is the token <strong>Subject
+string</strong> (<code>token.go:32</code>), an opaque username set at
+login from <code>StaticUser.Username</code>
+(<code>main.go:100-101</code>), propagated through the Gin context
+(<code>middleware.go:74</code>) and read back via
+<code>getCallerID</code> (<code>handlers_project.go:16-31</code>).
+<code>ProjectAccess.CallerID</code> IS that bare subject string
+(<code>store.go:307-311</code>; grant on project-create
+<code>handlers_project.go:146-154</code>).</li>
+<li>The only identity abstraction is the <code>UserDirectory</code>
+INTERFACE (<code>server/internal/api/server.go:24-26</code>),
+implemented by <code>StaticUserDirectory</code> — an in-memory
+<code>username → {password, roles}</code> map with constant-time
+password compare (<code>server/internal/api/users.go:8-48</code>),
+seeded from env (<code>main.go:97-104</code>). There is no sign-up, no
+persisted per-user record, no user lifecycle.</li>
+<li>Vestige: <code>AuditEntry.UserID</code> exists as a nullable field
+(<code>store.go:123-134</code>; column
+<code>schema_postgres.sql:118</code>) intended to key a durable users
+row, but it is NEVER populated — <code>auditMiddleware</code> sets only
+<code>ActorSubject</code> (<code>handlers_audit.go:37-46</code>) and
+<code>toAuditLogEntry</code> falls back to the subject when UserID is
+empty (<code>audit_wire.go:39-55</code>).</li>
+</ul>
+<p><strong>Design-target contrast (valuable for the to-be
+design):</strong> the canonical normalized schema DOES define a
+<code>users</code> table (id, username, email, role — RBAC subjects)
+plus <code>api_keys</code>, with FKs from
+artifacts/releases/deployments/audit back to <code>users</code>
+(<code>docs/research/main_specs/1.0.0-mvp/database/migrations/001_initial_schema.up.sql:39-50</code>
+for users; <code>:57-68</code> api_keys; FK examples
+<code>:156, :220, :266, :378</code>). None of that users infrastructure
+was carried into the shipped <code>schema_postgres.sql</code> (its
+header explicitly calls itself “the leaner mapping the Repository
+contract needs”, <code>schema_postgres.sql:1-9</code>). So “where would
+a User live” has an answer already sketched in the design docs but
+UNIMPLEMENTED in code.</p>
+<hr />
+<h2 id="project-concept-as-is">4. Project concept (as-is)</h2>
+<p><strong>What a “project” IS today:</strong></p>
+<ul>
+<li><code>store.Project{ProjectID, Name, Description, CreatedAt, UpdatedAt}</code>
+(<code>store.go:287-295</code>). <code>Name</code> is UNIQUE. There is
+NO owner field, NO account field, and — despite the struct’s own doc
+comment claiming “OS targets, hardware targets”
+(<code>store.go:287-288</code>) — NO OS/hardware/target fields on the
+struct at all. The doc comment is aspirational; the shipped struct is
+just an id + name + description + timestamps.</li>
+<li>CRUD:
+<code>handleCreateProject / List / Get / Update / Delete</code>
+(<code>handlers_project.go:108-274</code>); wire shape
+<code>ProjectResponse</code> (<code>wire.go:266-273</code>).</li>
+<li>Ownership is modeled ONLY through the <code>ProjectAccess</code>
+ACL: the creator is auto-granted per-project <code>admin</code> on
+create (<code>handlers_project.go:146-154</code>); a global
+<code>admin</code> sees all projects
+(<code>handlers_project.go:162-199</code>).</li>
+</ul>
+<p><strong>How projects relate to
+devices/rollouts/artifacts/deployments: THEY DON’T.</strong></p>
+<ul>
+<li>The <code>Device</code>, <code>Artifact</code>,
+<code>Release</code>, <code>Deployment</code>,
+<code>TelemetryRecord</code>, <code>Group</code> structs carry NO
+<code>ProjectID</code> field (<code>store.go:36-178</code> — inspect
+each; none present).</li>
+<li>A repo-wide grep for <code>ProjectID</code>/<code>project_id</code>
+finds hits ONLY in the Project/ ProjectAccess code paths
+(<code>store.go</code>, <code>handlers_project.go</code>,
+<code>memory.go:716-850</code>, <code>postgres.go:863-974</code>) — ZERO
+in <code>handlers_device.go</code> / <code>handlers_release.go</code> /
+<code>handlers_deployment.go</code> / <code>handlers_artifact.go</code>
+(confirmed: those handlers contain no <code>Project</code>
+reference).</li>
+<li>The store tables for devices/artifacts/releases/deployments have NO
+<code>project_id</code> column or FK
+(<code>schema_postgres.sql:14-70</code>).</li>
+</ul>
+<p><strong>Conclusion:</strong> a “project” is an isolated, named
+metadata row plus a per-project ACL that governs <em>only that row</em>.
+Projects do NOT contain, scope, or partition any OTA resource today. The
+<code>account → projects → OTA updates</code> hierarchy the to-be design
+wants has its TOP-of-project link entirely missing at the data layer —
+projects are empty containers.</p>
+<p><strong>Namespace note:</strong> project <code>Name</code> uniqueness
+is GLOBAL, not per-tenant (<code>memory.go:39</code>
+<code>prjByName</code>; <code>schema_postgres.sql:241</code>
+<code>name TEXT NOT NULL UNIQUE</code>).</p>
+<hr />
+<h2 id="persistence-seam-store.repository">5. Persistence seam
+(<code>store.Repository</code>)</h2>
+<p><strong>Entities the interface persists</strong>
+(<code>store.go:315-429</code>): Projects + ProjectAccess
+(<code>:317-332</code>), Devices (<code>:336-340</code>), Artifacts
+(<code>:343-344</code>), Releases (<code>:347-353</code>), Deployments
+(<code>:356-360</code>), Telemetry (<code>:363-373</code>), Audit
+(<code>:376-377</code>), Rollback history (<code>:380-381</code>), Delta
+artifacts (<code>:384-385</code>), Groups + members
+(<code>:390-399</code>), Idempotency keys (<code>:402-403</code>), and
+the emulation test-fabric registry Nodes/Targets/Leases/Runs/Evidence
+(<code>:410-428</code>).</p>
+<p><strong>Two implementations:</strong> <code>MemoryRepository</code>
+(<code>store/memory.go</code>), wired by DEFAULT
+(<code>main.go:80</code>); <code>PostgresRepository</code>
+(<code>store/postgres.go</code>), wired when
+<code>HELIX_DATABASE_URL</code> is set (<code>main.go:46-78</code>,
+selection <code>config.go:112-115</code>).</p>
+<p><strong>Is the interface additive-friendly for an
+account/user/membership layer? Yes.</strong></p>
+<ul>
+<li>It is one flat interface; the Projects + ProjectAccess methods
+(<code>store.go:317-332</code>) were themselves added as a
+self-contained block and are the exact template to mirror for
+<code>Account</code> CRUD + <code>AccountMembership</code> + a real
+<code>User</code> CRUD (which is currently absent — see §3).</li>
+<li>Memory-side attachment mirrors the project maps
+(<code>memory.go:36-41</code>:
+<code>projects</code>/<code>prjByName</code>/<code>prjAccess</code>;
+init <code>memory.go:60-62</code>; impl
+<code>memory.go:716-850</code>).</li>
+<li>Postgres-side attachment mirrors the <code>projects</code> +
+<code>project_access</code> tables
+(<code>schema_postgres.sql:238-258</code>; impl
+<code>postgres.go:863-974</code>; DDL applied by <code>Migrate</code>
+<code>postgres.go:49-51</code>).</li>
+</ul>
+<p><strong>One caveat for account bootstrap:</strong> the seam has NO
+transaction primitive — the code explicitly notes “there is no
+cross-call transaction in the Repository seam” and therefore does a
+best-effort (non-atomic) two-call create-then-grant
+(<code>handlers_project.go:137-154</code>). An “create account + its
+first super-admin membership atomically” flow would need either a new
+transactional method on the seam or the same best-effort compensation
+pattern.</p>
+<hr />
+<h2 id="audit">6. Audit</h2>
+<ul>
+<li><code>auditMiddleware</code> records every SUCCESSFUL (2xx) MUTATING
+admin/operator action AFTER the handler runs; reads and failed mutations
+are not audited (<code>handlers_audit.go:21-50</code>). Fields captured:
+<code>ActorSubject</code> (= token subject), <code>Action</code>
+(derived SCREAMING_SNAKE verb, <code>:64-93</code>),
+<code>ResourceType</code>, <code>ResourceID</code> (most-specific path
+param, <code>:108-116</code>), <code>IPAddress</code>
+(<code>c.ClientIP()</code>), <code>UserAgent</code>,
+<code>CreatedAt</code> (<code>:37-46</code>).</li>
+<li><code>AuditEntry</code> domain struct <code>store.go:123-134</code>;
+table <code>audit_logs</code> <code>schema_postgres.sql:115-129</code>.
+Read endpoint <code>handleListAudit</code>
+(<code>handlers_audit.go:133-175</code>), ADMIN-only
+(<code>server.go:242</code>), filterable by action / resource_type /
+since / until — <strong>no account or project filter
+exists.</strong></li>
+<li><strong>Account-scoping need:</strong> audit rows carry NO
+<code>account_id</code>/<code>project_id</code>
+(<code>store.go:123-134</code>,
+<code>schema_postgres.sql:115-127</code>). To make the audit trail
+tenant-aware, an <code>account_id</code> (and likely
+<code>project_id</code>) column + struct field must be added and
+populated from the resolved account context. Separately,
+<code>UserID</code> is currently always empty
+(<code>audit_wire.go:41-43</code>); a real user layer would finally
+populate it. IP provenance is already hardened (trusted-proxy parsing
+disabled so <code>ClientIP()</code> is the true peer,
+<code>server.go:143-159</code>).</li>
+</ul>
+<hr />
+<h2 id="config-where-super-admin-bootstrap-credentials-live">7. Config
+&amp; where super-admin bootstrap credentials live</h2>
+<ul>
+<li>Config is env-based, fail-fast on malformed values
+(<code>config.go:118-196</code>); the <code>config</code> brick owns
+TTLs, limits, base path, secrets-from-env.</li>
+<li><strong>The super-admin bootstrap is NOT in <code>config.go</code> —
+it is in the entrypoint</strong>
+(<code>server/cmd/ota-server/main.go:96-104</code>):
+<code>HELIX_ADMIN_PASSWORD</code> (+ optional
+<code>HELIX_ADMIN_USERNAME</code>) mints a single static
+admin/operator/viewer user; unset password ⇒ no static user. This is
+§11.4.10-compliant: the credential comes from the environment, never
+from a request, and is never hard-coded.</li>
+<li>The signing secret is env-supplied with a dev fallback
+(<code>config.go:180-184</code>).</li>
+<li><strong>Trust-boundary precedent already established in config
+(important for the account layer):</strong> the code deliberately
+refuses to derive trust from request headers — the
+<code>TrustTLSProxy</code> flag is an explicit operator config boolean,
+NOT inferred from <code>X-Forwarded-Proto</code>
+(<code>config.go:88-110</code>), and the artifact-signature public key
+comes ONLY from server config, never the request
+(<code>resolvePublicKey</code>,
+<code>handlers_artifact.go:274-283</code>, doc <code>:36</code>). An
+account super-admin bootstrap must follow the same rule: seed the first
+account owner from config/env (alongside <code>main.go:96-104</code> or
+a new <code>HELIX_*</code> field), never from a self-asserted
+request.</li>
+</ul>
+<hr />
+<h2 id="account-layer-attachment-points-concrete-seam-list">8.
+Account-layer attachment points (concrete seam list)</h2>
+<p>To add an ACCOUNT (tenant) layer ABOVE project
+(<code>account → projects → OTA updates</code>), these seams change:</p>
+<ol type="1">
+<li><strong><code>server/internal/store/store.go:315-429</code>
+(Repository interface)</strong> — add an <code>Account</code> block
+(Create/Get/List/Update/Delete) + <code>AccountMembership</code>
+(Set/Get/List/Remove) + a real <code>User</code> CRUD (none exists, §3),
+mirroring the existing Projects block (<code>:317-332</code>).</li>
+<li><strong><code>server/internal/store/store.go:287-295</code>
+(<code>Project</code> struct)</strong> — add <code>AccountID</code>
+(owning account) so projects hang off an account. New
+<code>Account</code> struct alongside.</li>
+<li><strong><code>server/internal/store/store.go:36-178</code>
+(Device/Artifact/Release/Deployment/ Telemetry/Group structs)</strong> —
+decide whether OTA resources gain an <code>AccountID</code> (or inherit
+it via a <code>ProjectID</code> that is added first). Today they carry
+neither; without one, tenancy isolation is impossible (§4).</li>
+<li><strong><code>server/internal/store/schema_postgres.sql:14-70, 96-129, 238-258</code></strong>
+— add <code>accounts</code> + <code>account_members</code> tables
+(mirror <code>projects</code>/<code>project_access</code>
+<code>:238-258</code>); add <code>account_id</code> (and/or
+<code>project_id</code>) FK columns to
+devices/artifacts/releases/deployments/audit/groups.</li>
+<li><strong><code>server/internal/store/memory.go:36-41, 60-62, 716-850</code></strong>
+— add account/membership maps + methods mirroring the project maps.</li>
+<li><strong><code>server/internal/store/postgres.go:863-974</code></strong>
+— add account/membership SQL mirroring the project queries; ensure
+<code>Migrate</code> applies the new DDL (<code>:49-51</code>).</li>
+<li><strong><code>server/internal/api/token.go:31-36</code>
+(<code>Claims</code>)</strong> — decide account/tenant scoping: either
+add an <code>account_id</code>/<code>tenant</code> claim to the minted
+token, or resolve membership per-request from the subject. Today the
+token has roles but NO tenant dimension.</li>
+<li><strong><code>server/internal/api/handlers_project.go:37-74</code>
+(<code>requireProjectAccess</code>) +
+<code>server/internal/api/middleware.go:79-97</code>
+(<code>requireRole</code>)</strong> — extend to enforce account
+membership, and add an analogous <code>requireAccountAccess</code>. Wire
+it onto the currently-unscoped device/artifact/release/deployment/group
+routes (<code>server.go:192-242</code>), which today have NO tenant
+gate.</li>
+<li><strong><code>server/internal/api/server.go:183-251</code> (route
+table)</strong> — add <code>/accounts</code> CRUD + membership routes;
+nest project routes under an account.</li>
+<li><strong><code>server/internal/api/handlers_audit.go:21-50</code> +
+<code>store.go:123-134</code> +
+<code>schema_postgres.sql:115-127</code></strong> — add
+<code>account_id</code> to <code>AuditEntry</code> and populate it (and
+finally the unused <code>UserID</code>) so the audit trail is
+tenant-attributable.</li>
+<li><strong><code>server/cmd/ota-server/main.go:96-104</code> (or a new
+<code>config.go</code> field)</strong> — bootstrap the first account +
+its super-admin owner from env/config (§11.4.10 / §7 trust boundary),
+never from a request.</li>
+</ol>
+<p><strong>Single-global-tenant assumptions to flag (each becomes wrong
+under multi-account):</strong></p>
+<ul>
+<li><strong>Project name is globally unique</strong>
+(<code>schema_postgres.sql:241</code>; <code>memory.go:39</code>) → must
+become unique-per-account.</li>
+<li><strong>Device <code>hardware_id</code> is globally unique</strong>
+(<code>schema_postgres.sql:30</code>; <code>store.go:338</code>
+<code>GetDeviceByHardwareID</code>) → likely must become
+unique-per-account.</li>
+<li><strong>Release monotonicity / “latest” is keyed only on
+<code>(os_type, target_model)</code></strong> (<code>store.go:349</code>
+<code>LatestRelease</code>; the <code>releaseMu</code> invariant
+<code>server.go:56-69</code>) — global across all tenants; must be
+scoped per account/project.</li>
+<li><strong>Active-deployment uniqueness keyed
+<code>(os, target_model, group)</code></strong>
+(<code>store.go:359</code> <code>ActiveDeploymentForTarget</code>;
+<code>deployMu</code> <code>server.go:42-54</code>) — global; must be
+scoped.</li>
+<li><strong><code>ProjectAccess.CallerID</code> is a bare subject
+string</strong> with no account qualifier
+(<code>store.go:307-311</code>) — under multi-account the same subject
+may belong to several accounts with different roles.</li>
+<li><strong>Group name is globally unique</strong>
+(<code>schema_postgres.sql:102</code>; <code>memory.go</code>
+<code>grpByName</code>).</li>
+<li><strong>Token <code>Claims</code> carry roles but no tenant/account
+dimension</strong> (<code>token.go:31-36</code>).</li>
+</ul>
+<hr />
+<h2 id="files-read-provenance">Files read (provenance)</h2>
+<ul>
+<li><code>server/internal/api/token.go:14-20, 25-36, 39-46, 48-109</code>
+— token scheme, Claims, roles, HMAC signer.</li>
+<li><code>server/internal/api/handlers_auth.go:13-19, 28-72, 77-99, 102-137, 139-148</code>
+— login, refresh, refresh store, token-pair issue.</li>
+<li><code>server/internal/api/middleware.go:14-17, 58-77, 79-97, 99-111, 113-121</code>
+— auth middleware, requireRole, bearer extraction, claims context
+key.</li>
+<li><code>server/internal/api/server.go:20-26, 28-70, 89-130, 141-256, 258-271</code>
+— Server struct, UserDirectory interface, wiring, route table, default
+policy.</li>
+<li><code>server/internal/api/users.go:1-48</code> — StaticUserDirectory
+/ Authenticate.</li>
+<li><code>server/internal/api/handlers_project.go:16-31, 33-92, 96-274</code>
+— getCallerID, requireProjectAccess, project CRUD + creator ACL
+grant.</li>
+<li><code>server/internal/api/handlers_audit.go:21-50, 52-116, 133-175</code>
+— audit middleware + list.</li>
+<li><code>server/internal/api/audit_wire.go:9-55</code> — AuditLogEntry
+/ AuditActor / toAuditLogEntry.</li>
+<li><code>server/internal/api/wire.go:16-36, 245-273</code> — auth +
+project wire shapes.</li>
+<li><code>server/internal/api/handlers_artifact.go:36, 126, 274-283</code>
+— resolvePublicKey trust boundary.</li>
+<li><code>server/internal/store/store.go:22-33, 36-178, 287-311, 315-429</code>
+— sentinels, domain structs, Project/ProjectRole/ProjectAccess,
+Repository interface.</li>
+<li><code>server/internal/store/memory.go:34-64, 716-850</code> — memory
+fields + project/access impl.</li>
+<li><code>server/internal/store/postgres.go:49-51, 863-974</code> —
+Migrate + project/access SQL.</li>
+<li><code>server/internal/store/schema_postgres.sql:1-9, 14-70, 96-129, 238-258</code>
+— shipped DDL (no users table, no project_id FKs,
+projects/project_access).</li>
+<li><code>server/internal/config/config.go:16-116, 118-196</code> — env
+config, TokenSecret, TrustTLSProxy, DatabaseURL selection.</li>
+<li><code>server/cmd/ota-server/main.go:33-104, 106-114</code> — repo
+selection, admin-user bootstrap from env, server wiring.</li>
+<li><code>docs/research/main_specs/1.0.0-mvp/database/migrations/001_initial_schema.up.sql:35-68, 156, 220, 266, 378</code>
+— design-target users + api_keys tables + user FKs (UNIMPLEMENTED in the
+shipped store).</li>
+</ul>
+<hr />
+<h2 id="honest-gaps">Honest gaps</h2>
+<ul>
+<li><strong>Whether an account/tenant concept was ever intended in the
+shipped MVP:</strong> the <code>Project</code> struct doc comment
+mentions “multi-tenant isolation” (<code>store.go:287-288</code>), but
+no <code>account</code>/<code>tenant</code> table or field exists
+anywhere in code or shipped schema. I could NOT find any account
+abstraction — I state its ABSENCE as fact, not the intent behind the
+absence.</li>
+<li><strong>PostgreSQL project/access read paths beyond the query
+text:</strong> I read the SQL strings in
+<code>postgres.go:863-974</code> and confirmed the tables in
+<code>schema_postgres.sql</code>, but did not execute against a live DB;
+the “additive-friendly” claim is about the interface shape, not a
+runtime migration test.</li>
+<li><strong>Rollout service identity/tenancy:</strong> the
+staged-rollout service (<code>internal/rollout/</code>) is referenced
+from <code>server.go:38, 213-217</code> but I did not audit its store
+for any tenant field; on the evidence read it takes deployment ids, not
+account ids — but I did not open <code>rollout/store.go</code>, so I
+mark this <code>UNCONFIRMED:</code> for the rollout subsystem
+specifically.</li>
+<li><strong>Device-token issuance path:</strong> device registration
+returns a <code>DeviceToken</code> (<code>wire.go:52-59</code>) and
+<code>RoleDevice</code> exists (<code>token.go:19</code>), but I did not
+read <code>handlers_device.go</code> in full, so the exact device-token
+mint call site is <code>UNCONFIRMED:</code> here (it is not needed for
+the account-layer attachment analysis, which concerns admin/operator
+identity).</li>
+<li><strong>Whether any test wires project-scoped resources:</strong>
+the audit covered non-test source only (per task scope); a test may
+exercise a path I did not see. I did not read
+<code>*_test.go</code>.</li>
+</ul>
+</body>
+</html>

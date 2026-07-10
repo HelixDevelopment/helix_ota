@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>21_authz_rbac_superadmin</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">21_authz_rbac_superadmin</h1>
+</header>
+<h1
+id="authorization-rbac-super-admin-token-scoping-model-to-be-design">Authorization
+/ RBAC / Super-Admin / Token-Scoping Model — To-Be Design</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Scope.</strong> This is the AUTHORIZATION design for the
+multi-account Helix OTA control plane (<code>server/</code>, Go/Gin
+modular monolith). It owns <strong>OQ-2</strong> (the permission-model
+shape — 00_INDEX §5) that
+<code>20_target_multitenancy_data_model.md</code> deliberately deferred
+here. It designs: the permission model (RBAC vs ABAC vs role+scope
+hybrid), the sign-in + account-selection authZ flow, token scoping (the
+<code>account_id</code> / project claim), the app-layer-middleware +
+DB-layer-RLS enforcement stack, the single canonical role vocabulary
+(§11.4.186 divergence reconciliation), and least-privilege +
+revocation.</p>
+<p><strong>SSOT deference.</strong>
+<code>20_target_multitenancy_data_model.md</code> is the <strong>single
+source of truth</strong> for the Account / User / Membership /
+Role/Permission entity shapes. This doc <strong>defers to and cites it —
+it never invents a conflicting entity shape</strong> (§11.4.186). Where
+a field is named here it is quoted from 20_* (or from the shipped code)
+and marked as such; the authorization <em>behaviour</em> over those
+entities is this doc’s to design.</p>
+<p><strong>Reading order.</strong> <code>00_INDEX.md</code> (mandate +
+OQ-2) → <code>10_existing_auth_and_project_model.md</code> (as-is auth
+facts, every <code>file:line</code> grounded there) →
+<code>20_target_multitenancy_data_model.md</code> (entity SSOT) →
+<code>12_existing_ui_surfaces_and_design_system.md</code> (the role
+divergences §5 reconciles). Sibling wiring:
+<code>23_ui_ux_all_surfaces.md</code> (sign-in/switcher UI),
+<code>24_project_side_cli.md</code> (CLI API-key scope),
+<code>25_device_side_update_client.md</code> (device token scope),
+<code>26_security_threat_model.md</code> (owns the cross-account-leakage
+paired-mutation proof), <code>22_api_surface.md</code> (owns the
+endpoint shapes).</p>
+<p>Every open choice is a <strong>recommendation-with-tradeoffs for
+operator decision</strong>, never a silent pick (§11.4.6 / §11.4.66).
+This is a <strong>design proposal, not implemented</strong> (§11.4.6
+honest boundary at the foot).</p>
+</blockquote>
+<hr />
+<h2 id="permission-model-oq-2-ultimate-flexibility-to-the-maximum">1.
+Permission model (OQ-2 — “ultimate flexibility to the maximum”)</h2>
+<p>The mandate (00_INDEX §1 item 6) wants “ultimate flexibility to the
+maximum”: the super-admin assigns “who can access / do what” per
+account. OQ-2 is <em>which</em> model delivers that. Three canonical
+models, then a recommendation.</p>
+<h3 id="the-three-candidate-models">1.1 The three candidate models</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>What it is</th>
+<th>Fit for Helix OTA</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RBAC (tenant-scoped)</strong></td>
+<td>fixed roles, each membership carries a role <em>within one
+account</em>; a resource×action→min-role matrix decides access</td>
+<td>maps <strong>1:1</strong> onto the shipped
+<code>ROLE_HIERARCHY</code>
+(<code>clients/ota-manager/src/lib/permissions.ts:12-18</code>) + the
+<code>RESOURCE_PERMISSIONS</code> grid
+(<code>permissions.ts:30-42</code>) AND onto 20_*
+<code>Membership.role CHECK IN ('viewer','operator','admin')</code></td>
+<td>lowest; caps flexibility at a fixed role set</td>
+</tr>
+<tr>
+<td><strong>ABAC (policy engine)</strong></td>
+<td>access is a policy over <em>attributes</em> of (user, resource,
+environment) evaluated by an engine (Cedar / OPA / Cerbos)</td>
+<td>maximum expressiveness; but introduces a policy-engine dependency +
+a policy language the whole team must own</td>
+<td>highest; heaviest to build/test/operate</td>
+</tr>
+<tr>
+<td><strong>Role+scope hybrid</strong></td>
+<td>RBAC base <strong>+</strong> a mandatory tenant-isolation scope
+predicate at the top of every decision <strong>+</strong> a thin ABAC
+attribute-override layer (e.g. suspended-account / locked-user
+deny)</td>
+<td>the industry default for multi-tenant B2B (AWS, Auth0, Cerbos —
+§Sources) — “roles are coarse; attributes cover the exceptions”</td>
+<td>moderate; grows into ABAC only where needed</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why not pure RBAC alone:</strong> it forces every exception
+into a new role, and roles “explode … you end up with hundreds of roles
+per tenant” (Cerbos — §Sources). <strong>Why not pure ABAC now:</strong>
+a full policy engine is over-scoped for a control plane whose entire
+permission surface today is one coarse <code>requireRole</code> check
+per route (10_* §2) — it would be a large new dependency before a single
+tenant exists.</p>
+<h3
+id="recommendation-rbac-first-rolescope-hybrid-abac-capable-by-growth-not-day-one">1.2
+Recommendation — RBAC-first <strong>role+scope hybrid</strong>,
+ABAC-capable by growth (not day-one)</h3>
+<p><strong>Recommend the role+scope hybrid, delivered
+RBAC-first</strong>, composed as three stacked decisions evaluated in
+this fixed order (AWS’s “keep tenant isolation at the top” + Auth0’s
+“roles checked within the tenant context” — §Sources):</p>
+<ol type="1">
+<li><strong>Tenant-isolation predicate (always first).</strong> The
+principal’s active <code>account_id</code> (§3 claim) MUST equal the
+resource’s <code>account_id</code>; a super-admin (§1.4) is the only
+principal that bypasses this. This is the non-negotiable top gate — AWS
+Verified Permissions expresses exactly this as
+<code>resource in principal.Tenant</code> on <em>every</em> policy
+(§Sources). It is the authZ-layer twin of 20_*’s data-layer RLS
+(§4).</li>
+<li><strong>RBAC role check.</strong> Within the account, the membership
+role (<code>viewer &lt; operator &lt; admin</code>, 20_* §1.4, mirroring
+the shipped <code>ProjectRole</code> rank-compare
+<code>handlers_project.go:78-92</code>) must meet the resource×action
+minimum from the permission matrix (§1.3).</li>
+<li><strong>ABAC attribute-override (deny-only, thin).</strong> A small
+closed set of attribute conditions can only ever <em>subtract</em>
+access: account <code>status='suspended'</code> (20_* §1.1), user
+<code>is_active=false</code> (20_* §1.2), or an API-key
+<code>revoked_at IS NOT NULL</code> (§6). This is the AWS
+<code>account_lockout_flag</code> pattern (§Sources) — attributes that
+DENY, never a parallel grant path.</li>
+</ol>
+<p><strong>The “ultimate flexibility” growth seam (no second data-model
+change).</strong> 20_* §1.4 already emits the RBAC skeleton now
+(<code>Membership.role</code> enum) <strong>and</strong> ships the
+reserved <code>roles</code> / <code>permissions</code> /
+<code>role_permissions</code> tables as commented DDL. When an account
+genuinely needs custom roles beyond the three, this doc’s model
+escalates by turning on those tables — <code>Membership.role</code>
+becomes a <code>role_id</code> FK, and the resource×action matrix (§1.3)
+moves from a fixed map into <code>role_permissions</code> rows — WITHOUT
+touching the enforcement stack (§4) or re-migrating. That is the
+“maximum flexibility” the mandate asks for, reachable additively (20_*
+§1.4 tradeoff). <strong>Full ABAC (arbitrary per-user resource:action
+grants via an engine) stays a documented future escalation</strong>, not
+built now.</p>
+<p><strong>Tradeoffs of the recommendation.</strong> RBAC-first reuses
+the entire shipped role-hierarchy + matrix and the existing rank-compare
+tooling verbatim (smallest build, least risk), and the
+tenant-isolation-first ordering closes the cross-account hole by
+construction. The cost: custom-per-account roles and true attribute
+policies are a later escalation, not available at first ship. If the
+operator needs arbitrary custom roles on day one, escalate straight to
+the 20_* reserved-tables path (still no engine); if true policy-as-code
+is a launch requirement, adopt Cedar/OPA — heavier, flagged for operator
+decision (§11.4.66).</p>
+<h3 id="the-per-account-roles-the-permission-set-resource-action">1.3
+The per-account roles + the permission set (resource × action)</h3>
+<p><strong>Per-account roles (RBAC, from 20_* §1.4 — cited, not
+redefined):</strong> <code>viewer &lt; operator &lt; admin</code>,
+carried on <code>Membership.role</code> per (user, account). The same
+user is <code>admin</code> in account A and <code>viewer</code> in
+account B — the whole point of per-account scoping (20_* §1.3; Auth0
+“admin in Tenant A, viewer in Tenant B” — §Sources).</p>
+<p><strong>The permission set = the shipped
+<code>RESOURCE_PERMISSIONS</code> grid, promoted to
+server-authoritative.</strong> The grid already exists as the exact
+resource×action→min-role matrix
+(<code>clients/ota-manager/src/lib/permissions.ts:30-42</code>) — but
+<strong>today it is client-side UX only</strong>; the server enforces
+solely the coarse per-route <code>requireRole</code> (10_* §2,
+<code>middleware.go:79-97</code>), so the grid is advisory, not a
+security boundary. This design <strong>promotes that same matrix to the
+server as the authoritative permission set</strong> (the RBAC step
+§1.2(2) evaluates it), keeping the client copy as UX pre-filtering
+only:</p>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>view</th>
+<th>create</th>
+<th>update</th>
+<th>delete</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>devices</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>artifacts</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>deltas</td>
+<td>viewer</td>
+<td>operator</td>
+<td>admin</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>releases</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>deployments</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>rollouts</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>groups</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>group_members</td>
+<td>viewer</td>
+<td>operator</td>
+<td>operator</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>audit</td>
+<td>admin</td>
+<td>admin</td>
+<td>admin</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>telemetry</td>
+<td>viewer</td>
+<td>device</td>
+<td>admin</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>viewer</td>
+<td>admin</td>
+<td>admin</td>
+<td>super_admin</td>
+</tr>
+</tbody>
+</table>
+<p>(Verbatim from <code>permissions.ts:30-42</code>; <code>device</code>
+and <code>super_admin</code> appear as cell minimums and are handled by
+§1.4 + §5 — <code>telemetry.create=device</code> is the device-token
+path, <code>projects.delete=super_admin</code> is the global-flag
+path.)</p>
+<p><strong>Recommendation:</strong> adopt this grid unchanged as the
+server-side permission set for the RBAC step, so client and server share
+one matrix (a §11.4.186 single-representation win).
+<strong>Tradeoff:</strong> the grid is a <em>minimum-role</em> model
+(coarse) — fine for the RBAC-first ship; per-permission granularity is
+the §1.2 growth seam.</p>
+<h3 id="super-admin-a-global-identity-flag-not-a-per-account-role">1.4
+Super-admin = a GLOBAL identity flag, not a per-account role</h3>
+<p>Per 20_* §6 (cited, not redefined): the super-admin is the
+<strong>global <code>users.is_super_admin</code> boolean</strong> — a
+property of the <em>identity</em>, NOT a membership role, and NOT a
+value of <code>Membership.role</code>. A super-admin need not be a
+member of any account and <strong>bypasses the §1.2(1) tenant-isolation
+predicate</strong> entirely (sees/controls every account — 00_INDEX §1
+item 4). This generalizes the <em>exact precedent already in the
+code</em>: a global <code>admin</code> bypasses the per-project ACL and
+implicitly reaches every project
+(<code>handlers_project.go:43-60</code>; list-all
+<code>:162-199</code>). <code>is_super_admin</code> is settable
+<strong>only via config/env bootstrap, never a request</strong> (20_*
+§6; the same trust boundary as <code>resolvePublicKey</code>,
+<code>handlers_artifact.go:274-283</code>). Its blast radius,
+auditability, and revocation are §4/§6; the cross-account-leakage proof
+is <code>26_*</code>’s.</p>
+<hr />
+<h2 id="sign-in-account-selection-authorization-flow">2. Sign-in +
+account-selection authorization flow</h2>
+<p>Both SPAs already ship a working sign-in + session + RBAC (12_* §4).
+The multi-account delta is <strong>which account a session is acting
+in</strong>, and how the server proves
+<code>(account, project, role)</code> on every route — today gated only
+by the global role (10_* §2).</p>
+<h3
+id="the-flow-identity-token-account-scoped-access-token-exchange">2.1
+The flow (identity token → account-scoped access token exchange)</h3>
+<p>The shipped flow: <code>POST /api/v1/auth/login</code> →
+<code>handleLogin</code> authenticates via the injected
+<code>UserDirectory</code> and calls <code>issueTokenPair</code>
+(<code>handlers_auth.go:77-99,123-137</code>), returning a short-lived
+access token + an opaque, single-use-rotating, in-memory refresh token
+(<code>handlers_auth.go:28-72</code>). The multi-account flow keeps that
+and inserts an <strong>account-selection exchange</strong> (the WorkOS
+pattern 23_<em>/24_</em>/25_* already reference):</p>
+<pre><code>1. LOGIN (identity)        POST /auth/login   user+pass → identity access token (roles, NO account_id)
+                                              + identity-scoped refresh token (unchanged shipped flow)
+2. RESOLVE MEMBERSHIPS      server: ListUserAccounts(userID) (20_* §3.1)   → the user&#39;s accounts[]
+3. SELECT ACCOUNT           client: pick active account (23_* §2 — auto-select if exactly 1)
+4. EXCHANGE (account-scope) POST /auth/token-exchange   identity token + chosen account_id
+                                              → short-lived access token WITH account_id claim (§3)
+5. ACT                      every OTA request carries the account-scoped bearer on the existing hot path
+6. SWITCH                   re-exchange for a different account_id (23_* §2.3); refresh token stays identity-scoped</code></pre>
+<ul>
+<li><strong>Super-admin</strong> skips account selection → the exchange
+(or login) yields a <strong>System-scope</strong> token (no single
+<code>account_id</code>, or an explicit super-admin marker) that
+bypasses §1.2(1) and lands on the global console (23_* §1.1). An
+explicit “act within account X” affordance re-exchanges for a specific
+<code>account_id</code> so even super-admin actions are attributable to
+one tenant when scoped (audit §4).</li>
+<li><strong>Regular user, 0 memberships</strong> → the exchange returns
+no scope → fail-closed dead-end (23_* §2.1); never a silent unscoped
+session.</li>
+</ul>
+<h3
+id="recommendation-on-demand-exchange-membership-re-verified-per-request">2.2
+Recommendation — on-demand exchange, membership re-verified per
+request</h3>
+<p><strong>Recommend the on-demand exchange</strong> (step 4): the
+account claim is <strong>derived at selection time, never embedded in
+the long-lived credential</strong> (WorkOS — §Sources; 23_* §1.3). This
+composes with <strong>20_* §2.2 #7’s recommendation</strong> (resolve
+membership per-request to support account switching without re-minting)
+as a deliberate <strong>belt-and-suspenders</strong>: the
+<code>account_id</code> claim is stamped at exchange (the belt — fast,
+no per-request account lookup on the hot path for the common case), AND
+<code>requireAccountAccess</code> (§4) <strong>re-verifies the
+<code>GetAccountMembership(userID, account_id)</code> row on every
+request</strong> (the suspenders — a stale/forged claim cannot outlive
+the membership). This is the reconciliation of the two docs’ framings:
+20_* says “resolve per-request”; this doc says “stamp the claim AND
+still verify per-request” — the claim is a routing hint, the membership
+row is the authority.</p>
+<p><strong>Tradeoffs.</strong> On-demand exchange costs one extra
+round-trip at account-selection/switch (24_* Option B con) and requires
+the <code>account_id</code> claim in <code>Claims</code> (§3). The
+alternative — embed a long-lived multi-account token — is rejected: a
+compromised or rotated session could then act in the wrong account, and
+lateral movement across a flat multi-account token is “the pattern to
+avoid” (multi-tenant-saas.com — §Sources). The per-request membership
+re-verify adds one indexed lookup per request
+(<code>GetAccountMembership</code>, indexed 20_* §4) — accepted as the
+price of not trusting a claim snapshot.</p>
+<h3 id="enforcing-account-project-role-on-every-ota-route">2.3 Enforcing
+<code>(account, project, role)</code> on every OTA route</h3>
+<p>Today OTA routes
+(<code>device/artifact/release/deployment/group/telemetry</code>) are
+gated ONLY by the global <code>requireRole</code>
+(<code>server.go:192-242</code>) and carry no tenant gate — the
+load-bearing gap (10_* §2). The design wires a middleware chain onto
+every scoped route:</p>
+<p><code>authMiddleware</code> (verify token, extract
+<code>account_id</code> claim — <code>middleware.go:58-77</code>) →
+<strong><code>requireAccountAccess(minRole)</code></strong> (NEW —
+verify <code>GetAccountMembership</code>, reject suspended
+account/inactive user, put <code>{AccountID, ProjectID}</code> scope in
+context) → <code>requireProjectAccess</code> (existing pattern
+<code>handlers_project.go:37-74</code>, now wired onto ALL resource
+routes, keyed on the resource’s <code>project_id</code> from 20_* §2) →
+the coarse <code>requireRole</code> remains as the outer role gate.
+<code>requireAccountAccess</code> is the new analogue of
+<code>requireProjectAccess</code>, one level up (10_* §8 seam #8).</p>
+<hr />
+<h2 id="token-scoping-extend-the-sub-roles-iat-exp-claim-set">3. Token
+scoping (extend the <code>{sub, roles, iat, exp}</code> claim set)</h2>
+<h3 id="the-new-claim">3.1 The new claim</h3>
+<p>Extend the shipped <code>Claims{sub, roles, iat, exp}</code>
+(<code>token.go:31-36</code>) with an
+<strong><code>account_id</code></strong> claim. Per
+multi-tenant-saas.com (§Sources): make it a <strong>custom, top-level,
+immutable claim</strong> (not a reused standard OIDC field),
+<strong>validated at the one gateway</strong>
+(<code>authMiddleware</code> — the only place raw bytes become a trusted
+<code>account_id</code>) and read by every downstream layer from that
+verified payload only — never from a spoofable header (the same trust
+boundary as the device claim, 25_* §1.2, and
+<code>resolvePublicKey</code>).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Source</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sub</code></td>
+<td>shipped (<code>token.go:32</code>)</td>
+<td>subject/username → resolves to <code>user_id</code> (20_* §1.2)</td>
+</tr>
+<tr>
+<td><code>roles</code></td>
+<td>shipped (<code>token.go:33</code>)</td>
+<td>canonical vocabulary §5; carries <code>super_admin</code> when
+<code>is_super_admin</code></td>
+</tr>
+<tr>
+<td><code>iat</code> / <code>exp</code></td>
+<td>shipped</td>
+<td>short access TTL (15 min default, <code>config.go</code>) bounds
+staleness (§Sources, §6)</td>
+</tr>
+<tr>
+<td><strong><code>account_id</code></strong></td>
+<td><strong>NEW</strong></td>
+<td>the active account; absent = unscoped (§3.3); super-admin
+System-scope = absent-or-marker (§2.1)</td>
+</tr>
+<tr>
+<td><strong><code>project_id</code></strong></td>
+<td><strong>NEW, device/CLI only</strong></td>
+<td>device tokens (25_* §1.2) + optionally CLI keys (24_* §1.1) narrow
+to one project</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Device + CLI tokens</strong> additionally carry
+<code>project_id</code>: the device token stamps
+<code>(account_id, project_id)</code> at registration
+(<code>mintDeviceToken</code>, server-minted/server-verified — 25_*
+§1.2), and the CLI’s account+project-scoped API key resolves to
+<code>(account_id, project_id, permissions)</code> — either directly per
+call or via a token-exchange (24_* §1.3, the same exchange as §2.1).
+Admin/operator/viewer <em>user</em> tokens carry <code>account_id</code>
+and select the project via the request path/context, not a token
+claim.</p>
+<h3 id="signing-stays-config-only-11.4.10">3.2 Signing stays config-only
+(§11.4.10)</h3>
+<p>Adding claims does NOT touch the trust boundary: the HMAC-SHA256
+signing secret continues to come ONLY from config
+(<code>HELIX_TOKEN_SECRET</code>, <code>config.go:66-70,178-184</code>),
+never from a request, and the two-part sign/verify
+(<code>token.go:60-102</code>) is unchanged — a larger payload, same
+symmetric MAC. The dev-fallback secret remains the known prod risk (10_*
+§1) — out of scope here, flagged. <strong>No per-tenant signing
+key</strong> is proposed for MVP (one global secret, simplest);
+per-tenant signing-key rotation (multi-tenant-saas.com — §Sources) is a
+documented hardening escalation <code>26_*</code> may take, not built
+now.</p>
+<h3
+id="backward-compatibility-for-legacy-tokens-no-account_id-claim">3.3
+Backward-compatibility for legacy tokens (no <code>account_id</code>
+claim)</h3>
+<p>A token minted before the cutover (or by the current code path) has
+no <code>account_id</code>. The <code>account_id</code> claim MUST be
+<strong>optional in the struct</strong> so legacy tokens still <em>parse
+and verify</em> (mirrors 20_* — legacy fixtures WITHOUT new fields must
+still parse). Three handling options at the enforcement layer:</p>
+<ul>
+<li><strong>Option A — fail-closed (RECOMMENDED).</strong> A token with
+no <code>account_id</code> claim is denied on every account-scoped route
+(<code>requireAccountAccess</code> finds no scope → 403), EXCEPT a
+<code>super_admin</code> token (which is legitimately account-unscoped,
+§2.1). The user simply re-authenticates + selects an account to get a
+scoped token; the 15-min access TTL means legacy tokens age out within
+one TTL window anyway.</li>
+<li><strong>Option B — default-account fallback.</strong> Treat a
+missing <code>account_id</code> as the seeded <code>__default__</code>
+account (20_* §5 Option A). <em>Con:</em> silently grants the default
+account’s scope to any legacy token — an isolation-softening special
+case littering every read path (the exact NULL-scoping hole 20_* §5
+rejects).</li>
+<li><strong>Option C — reject outright.</strong> Any token lacking
+<code>account_id</code> fails verification. <em>Con:</em> a hard
+flag-day; needlessly breaks in-flight refresh during the cutover.</li>
+</ul>
+<p><strong>Recommendation: Option A (fail-closed on scoped routes,
+super-admin exempt).</strong> It never widens scope (Option B’s fault),
+never hard-breaks the cutover (Option C’s fault), and self-heals within
+one short TTL. It composes with <strong>20_* §5 Option A</strong>
+(default-account backfill): once every row has a non-NULL
+<code>account_id</code>, a legacy unscoped token has nothing to
+legitimately act on anyway. <strong>Tradeoff:</strong> users with a live
+legacy token must re-select an account once — a one-time, self-clearing
+friction.</p>
+<hr />
+<h2 id="enforcement-layers-app-layer-middleware-db-layer-rls">4.
+Enforcement layers — app-layer middleware + DB-layer RLS</h2>
+<p>Two independent layers that compose as <strong>defense in
+depth</strong> — a forgotten scope in one is caught by the other. This
+is the authorization realization of 20_* §0/§6.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Mechanism</th>
+<th>What it enforces</th>
+<th>What it catches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L1 App — middleware</strong></td>
+<td><code>authMiddleware</code> → <code>requireAccountAccess</code> →
+<code>requireProjectAccess</code> → <code>requireRole</code> (§2.3)</td>
+<td>the §1.2 3-step decision: tenant-isolation predicate, RBAC matrix,
+attribute deny-override</td>
+<td>a request whose token account ≠ target, or whose role &lt; matrix
+minimum, or whose account is suspended</td>
+</tr>
+<tr>
+<td><strong>L2 App — scoped store</strong></td>
+<td>explicit <code>accountID</code> param on get/create/update +
+<code>AccountID</code>/<code>ProjectID</code> on <code>*Filter</code>
+structs (20_* §3.2 hybrid)</td>
+<td>every <code>store.Repository</code> read/write carries scope — a
+missed scope is a <strong>compile error</strong>, not a runtime
+leak</td>
+<td>a handler that forgot to pass scope (build fails)</td>
+</tr>
+<tr>
+<td><strong>L3 DB — RLS</strong></td>
+<td>pgx sets <code>app.current_account</code> GUC per request;
+<code>CREATE POLICY … USING (account_id = current_setting('app.current_account', true))</code>
+(20_* §4/§6)</td>
+<td>database-enforced row scoping — “works even when your application
+code has bugs” (AWS — §Sources)</td>
+<td>a bug that slipped L1+L2 — the DB still refuses cross-account
+rows</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How they compose.</strong> L1 decides <em>may this principal
+act</em>; L2 makes <em>scope non-optional in the code</em>; L3 makes
+<em>scope non-optional in the database</em>. A super-admin bypasses L1’s
+tenant predicate (§1.4) and L3 via a <strong>policy-based
+bypass</strong> — a super-admin GUC the RLS <code>USING</code> clause
+also honors — NOT a <code>BYPASSRLS</code> role, because AWS is explicit
+that policy-based admin access “keeps admin access auditable and
+revocable” whereas a <code>BYPASSRLS</code> role is invisible to the
+policy (20_* §6 — cited). The MemoryRepository (the default MVP backend,
+<code>main.go:80</code>) has no RLS; there L1+L2 are the whole
+guarantee, so the explicit-param L2 (compile-time scope) is what makes
+the memory backend safe — flagged: <strong>RLS is a Postgres-only second
+layer; the memory backend leans entirely on L1+L2</strong> (26_* must
+test both backends).</p>
+<h3 id="audit-of-super-admin-and-all-scoped-actions">4.1 Audit of
+super-admin (and all scoped) actions</h3>
+<p>The shipped audit records only <code>ActorSubject</code>, never
+<code>account_id</code>, and <code>UserID</code> is always empty
+(<code>handlers_audit.go:37-46</code>; <code>audit_wire.go:41-43</code>;
+10_* §6). This design:</p>
+<ul>
+<li><strong>Populates <code>account_id</code> (the affected tenant) +
+<code>project_id</code> + <code>UserID</code></strong> on every audited
+mutation (20_* §2.1) — the audit trail becomes tenant-attributable, and
+<code>handleListAudit</code> (admin-only, <code>server.go:242</code>)
+gains an account filter.</li>
+<li><strong>Tags super-admin actions explicitly.</strong> Because the DB
+bypass is <strong>policy-based, not a <code>BYPASSRLS</code>
+role</strong>, every super-admin query still names the account it
+touched — so a super-admin acting “within account X” (§2.1) writes an
+audit row naming X + the super-admin <code>user_id</code>. A
+cross-account super-admin action is attributable per query, not an
+anonymous god-mode (20_* §6; the break-glass “every use logged +
+alerted” principle — §Sources).</li>
+</ul>
+<p><strong>Recommendation:</strong> treat super-admin like a
+<strong>break-glass / emergency-access identity</strong> (§Sources) —
+emergency-and-administration-only, isolated from normal admin,
+<strong>every use audited with the affected
+<code>account_id</code></strong>, credentials config-seeded + rotatable
+(§6). A super-admin action with no audit row naming the affected tenant
+is a §11.4 audit-layer bluff. <strong>Tradeoff:</strong> full
+break-glass rigor (real-time alerting on every super-admin use,
+mandatory approval workflow) is a hardening layer <code>26_*</code>
+scopes; the MVP floor is <strong>per-query attributable audit
+rows</strong>, which the policy-based bypass already guarantees.</p>
+<hr />
+<h2
+id="role-vocabulary-reconciliation-11.4.186-single-canonical-vocabulary">5.
+Role-vocabulary reconciliation (§11.4.186 — single canonical
+vocabulary)</h2>
+<p>The same role vocabulary is represented in <strong>five
+places</strong> and they diverge — exactly the “more than one
+representation of the same tracked data” §11.4.186 forbids drifting. The
+divergences (12_* §6 + 23_* §5, re-verified this session):</p>
+<ul>
+<li><strong>Server</strong> closed role set
+<code>admin | operator | viewer | device</code>
+(<code>token.go:14-20</code>) — <strong>no
+<code>super_admin</code></strong>.</li>
+<li><strong>OTA Manager</strong>
+<code>Role = 'viewer' | 'operator' | 'admin' | 'device' | 'super_admin'</code>
+(<code>api-client.ts:323</code>) + <code>ROLE_HIERARCHY</code> with
+<code>super_admin:3</code> (<code>permissions.ts:12-18</code>) —
+<strong>has <code>super_admin</code></strong> (the fullest set).</li>
+<li><strong>Dashboard</strong>
+<code>Role = "admin" | "operator" | "viewer" | "device"</code>
+(<code>dashboard/src/types/api.ts:12</code>) +
+<code>TokenResponse.roles</code> (<code>:24</code>) — <strong>omits
+<code>super_admin</code></strong> → the super-admin console cannot be
+gated on the dashboard until fixed.</li>
+<li><strong>OTA Manager sidebar</strong> nav gates on a literal
+<strong><code>"developer"</code></strong>
+(<code>sidebar.tsx:20-21</code>,
+<code>roles: ["admin","developer"]</code>) that is <strong>not a member
+of the <code>Role</code> union at all</strong> — a latent nav-gate bug
+(RoleGate is UX-only, so not an auth hole, but those items never match
+by that literal).</li>
+<li>20_*
+<code>Membership.role CHECK IN ('viewer','operator','admin')</code> —
+the <strong>per-account membership</strong> subset.</li>
+</ul>
+<h3 id="the-single-canonical-role-vocabulary">5.1 The single canonical
+role vocabulary</h3>
+<p>Two distinct axes must be named precisely (conflating them is the
+root of the drift):</p>
+<ul>
+<li><strong>Token <code>roles</code> claim (authentication
+vocabulary):</strong>
+<code>viewer | operator | admin | device | super_admin</code> — the OTA
+Manager set (<code>api-client.ts:323</code>) is canonical.
+<code>device</code> is a token-only role (<code>token.go:19</code>);
+<code>super_admin</code> is <strong>derived from the global
+<code>users.is_super_admin</code> flag</strong> (§1.4, 20_* §6) and
+surfaced as a role value <strong>for token routing + UI gating
+only</strong> — it is NOT a <code>Membership.role</code>.</li>
+<li><strong><code>Membership.role</code> (per-account authorization
+vocabulary):</strong> <code>viewer | operator | admin</code> (20_* §1.4)
+— the per-account subset; <code>device</code> and
+<code>super_admin</code> are deliberately absent (a device is not an
+account member; a super-admin is global, not per-account).</li>
+</ul>
+<h3 id="where-each-surface-aligns">5.2 Where each surface aligns</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Current</th>
+<th>Canonical alignment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server <code>token.go:14-20</code></td>
+<td><code>admin\|operator\|viewer\|device</code></td>
+<td><strong>add <code>super_admin</code></strong> as a token role value
+derived from <code>is_super_admin</code> — server becomes the SSOT the
+SPAs mirror</td>
+</tr>
+<tr>
+<td>OTA Manager <code>api-client.ts:323</code> +
+<code>permissions.ts:12-18</code></td>
+<td>full set incl. <code>super_admin</code></td>
+<td>already canonical — <strong>no change</strong></td>
+</tr>
+<tr>
+<td>Dashboard <code>types/api.ts:12,24</code></td>
+<td>omits <code>super_admin</code></td>
+<td><strong>add <code>super_admin</code></strong> to <code>Role</code> +
+<code>TokenResponse.roles</code> (23_* §5 — must precede any dashboard
+super-admin UI)</td>
+</tr>
+<tr>
+<td>OTA Manager <code>sidebar.tsx:20-21</code></td>
+<td>literal <code>"developer"</code> (not in union)</td>
+<td><strong>replace <code>"developer"</code> with a real union
+role</strong> during the sweep — reconciled to the intended role
+(candidate: <code>operator</code>), not silently guessed here (§11.4.6)
+— flagged for the implementer</td>
+</tr>
+<tr>
+<td>20_* <code>Membership.role</code></td>
+<td><code>viewer\|operator\|admin</code></td>
+<td>already canonical (the per-account subset) — <strong>no
+change</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> make the <strong>server
+<code>token.go</code> role set the single source of truth</strong> for
+the authentication vocabulary; both SPAs’ <code>Role</code> unions
+mirror it (a §11.4.186 single-representation contract), and a lint/type
+check (or the §11.4.186 cross-document consistency gate) fails if a
+surface’s union diverges. Do the dashboard <code>super_admin</code>
+addition + the <code>sidebar.tsx</code> <code>"developer"</code> fix in
+one reconciliation sweep before any super-admin UI lands.
+<strong>Tradeoff:</strong> this is a small, low-risk type + literal
+change, but load-bearing — a divergent role literal is a latent gate bug
+(the <code>"developer"</code> case proves the class already bit).</p>
+<hr />
+<h2 id="least-privilege-revocation">6. Least-privilege + revocation</h2>
+<h3 id="least-privilege-defaults">6.1 Least-privilege defaults</h3>
+<ul>
+<li><strong>New membership defaults to <code>viewer</code></strong>
+(20_* §1.3 <code>Membership.role DEFAULT 'viewer'</code>) — the lowest
+privilege; grants are explicit escalations.</li>
+<li><strong>CLI API keys are account-scoped, optionally
+project-narrowed</strong> (24_* §1.1): a key binds to exactly one
+<code>account_id</code> and (optionally) one <code>project_id</code>;
+scope is <strong>authoritative from the stored key, never asserted by
+the request</strong> (24_* §1.2). NULL <code>project_id</code> = any
+project the caller is authorized for in that account.</li>
+<li><strong>Device tokens are scoped to
+<code>(account, project, device)</code></strong> (25_* §1.2),
+server-minted, never self-asserted.</li>
+<li><strong>Super-admin is the sole global identity</strong> (§1.4) —
+everything else is scope-bounded; the tenant-isolation predicate
+(§1.2(1)) is the default-deny for cross-account.</li>
+</ul>
+<h3 id="revocation-semantics">6.2 Revocation semantics</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Revocation event</th>
+<th>Mechanism</th>
+<th>Effect + latency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API key revoked</strong> (20_*
+<code>api_keys.revoked_at</code>)</td>
+<td>middleware checks <code>revoked_at IS NULL</code> on every key
+resolution</td>
+<td><strong>direct-key path (24_* Option A):</strong> immediate (row
+checked each call). <strong>exchange path (24_* Option B):</strong> the
+already-minted short-lived access token survives to its TTL (15 min) —
+bounded, not immediate (24_* con); the key can mint no <em>new</em>
+tokens</td>
+</tr>
+<tr>
+<td><strong>Refresh token revoked / logout</strong></td>
+<td>in-memory single-use-rotating store
+(<code>handlers_auth.go:28-72</code>)</td>
+<td>refresh invalidated immediately; the outstanding access token
+expires within its short TTL</td>
+</tr>
+<tr>
+<td><strong>Membership removed</strong>
+(<code>RemoveAccountMembership</code>, 20_* §3.1)</td>
+<td><code>requireAccountAccess</code> re-verifies the membership row
+<strong>per request</strong> (§2.2)</td>
+<td>the account-scoped token is rejected at the <strong>next
+request</strong> (not TTL-bounded) — because the claim is a hint and the
+membership row is the authority; a removed member cannot re-exchange for
+that account</td>
+</tr>
+<tr>
+<td><strong>Account suspended</strong> (20_*
+<code>status='suspended'</code>)</td>
+<td>attribute deny-override (§1.2(3)) at
+<code>requireAccountAccess</code> + gate login/exchange</td>
+<td>all sign-in, exchange, and account-scoped access fail-closed for
+that account immediately</td>
+</tr>
+<tr>
+<td><strong>Super-admin revoked</strong>
+(<code>users.is_super_admin=false</code>, config/bootstrap only)</td>
+<td>clears the flag → clears the super-admin GUC</td>
+<td>the session <strong>immediately re-scopes</strong> — the
+policy-based (not <code>BYPASSRLS</code>) bypass is why revocation takes
+effect at once (20_* §6; a bypass that survives revocation is a §11.4
+bluff — <code>26_*</code>’s paired-mutation proof)</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="recommendation-pair-short-ttl-with-a-membershipclaim-version-check">6.3
+Recommendation — pair short TTL with a membership/claim-version
+check</h3>
+<p>The only non-immediate revocation vectors above (API-key
+exchange-token, and generally any minted short token) are
+<strong>bounded by the short access TTL</strong>
+(multi-tenant-saas.com’s “short lifetime bounds the window” — §Sources).
+To tighten membership-removal specifically below the TTL,
+<strong>recommend a per-(user, account) claim-version</strong> (the
+<code>claim_ver</code> pattern — §Sources) reconciled by
+<code>requireAccountAccess</code>: bumping the version on membership
+removal/role-change rejects a removed member’s outstanding short token
+at the next request rather than at TTL expiry.
+<strong>Tradeoff:</strong> the version bump adds one field + one
+comparison; without it, the worst-case window for a removed member is
+one access TTL (15 min) — small, and already the belt to the per-request
+membership re-verify’s suspenders (§2.2). For the MVP the per-request
+membership re-verify alone is sufficient (removal takes effect next
+request); the claim-version is the hardening escalation
+<code>26_*</code> may adopt. <strong>Super-admin credential
+rotation</strong> follows the break-glass norm (§Sources) —
+config-seeded, isolated, rotatable, every use audited (§4.1).</p>
+<hr />
+<h2 id="sources-verified-2026-07-10">Sources verified 2026-07-10</h2>
+<p>External best-practice research per §11.4.8 / §11.4.99 — full pages
+fetched + cross-checked this session (not from memory); each is the
+ground for the section noted.</p>
+<ul>
+<li><strong>Auth0 — “How to Choose the Right Authorization Model for
+Your Multi-Tenant SaaS Application.”</strong> <a
+href="https://auth0.com/blog/how-to-choose-the-right-authorization-model-for-your-multi-tenant-saas-application/"
+class="uri">https://auth0.com/blog/how-to-choose-the-right-authorization-model-for-your-multi-tenant-saas-application/</a>
+— verified: RBAC is the starting point; roles MUST be checked <em>within
+the tenant context</em> (“admin in Tenant A, viewer in Tenant B”); ABAC
+for dynamic/context-aware decisions; ReBAC for relationship-heavy
+sharing. Grounds §1.1 / §1.2 / §1.3. Negative finding (§11.4.99): this
+page does <strong>not</strong> endorse combining models in one app — the
+hybrid recommendation rests on the AWS + Cerbos sources, not this
+one.</li>
+<li><strong>AWS Prescriptive Guidance — “Multi-tenant access control
+with RBAC and ABAC” (Verified Permissions / Cedar).</strong> <a
+href="https://docs.aws.amazon.com/prescriptive-guidance/latest/saas-multitenant-api-access-authorization/avp-mt-abac-rbac-examples.html"
+class="uri">https://docs.aws.amazon.com/prescriptive-guidance/latest/saas-multitenant-api-access-authorization/avp-mt-abac-rbac-examples.html</a>
+— verified: the RBAC+ABAC hybrid puts a <strong>tenant-isolation
+condition on every policy</strong>
+(<code>resource in principal.Tenant</code>) composed WITH role
+membership AND an attribute deny
+(<code>account_lockout_flag == false</code>), over one shared
+multi-tenant policy store. Grounds the §1.2 3-step ordering
+(tenant-isolation first, then role, then attribute-deny) + §4.</li>
+<li><strong>Multi-Tenant SaaS Architecture Hub — “JWT Claims for Tenant
+Scoping: Best Practices.”</strong> <a
+href="https://www.multi-tenant-saas.com/auth-isolation-cross-tenant-access-control/tenant-aware-jwt-token-management/jwt-claims-for-tenant-scoping-best-practices/"
+class="uri">https://www.multi-tenant-saas.com/auth-isolation-cross-tenant-access-control/tenant-aware-jwt-token-management/jwt-claims-for-tenant-scoping-best-practices/</a>
+— verified: use a <strong>custom, top-level, immutable
+<code>tenant_id</code> claim</strong> (not reused OIDC fields),
+validated once at the gateway and read only from the signed payload;
+bound staleness with <strong>short TTL + a <code>claim_ver</code>
+version claim + key rotation</strong>; for multi-tenant users, one token
+per active tenant session OR a <code>tenants</code> array —
+<strong>avoid a flat global role list (lateral movement)</strong>.
+Grounds §3 + §6.3.</li>
+<li><strong>Britive — “Break Glass Account Management Best
+Practices.”</strong> <a
+href="https://www.britive.com/resource/blog/break-glass-account-management-best-practices"
+class="uri">https://www.britive.com/resource/blog/break-glass-account-management-best-practices</a>
+— verified: emergency-only use, isolation from normal admin,
+<strong>every use logged + alerted + audited</strong>, eliminate
+standing privilege (just-in-time + rotate credentials), approval
+workflow, periodic testing. Grounds the §1.4 / §4.1 / §6.3 super-admin =
+break-glass-class treatment.</li>
+<li><strong>WorkOS — “How to design an RBAC model for multi-tenant
+SaaS”</strong> (multi-tenant RBAC data model: membership join keyed
+<code>(user, tenant, role)</code>; shared default roles + per-tenant
+customization) and <strong>“Multi-tenant session management”</strong>
+(one identity-scoped session; active org is separate state exchanged on
+demand for a short-lived access token carrying the chosen org id). <a
+href="https://workos.com/blog/how-to-design-multi-tenant-rbac-saas"
+class="uri">https://workos.com/blog/how-to-design-multi-tenant-rbac-saas</a>
++ <a href="https://workos.com/blog/multi-tenant-session-management"
+class="uri">https://workos.com/blog/multi-tenant-session-management</a>
+— verified in-doc-set (cited by 20_* and 23_*, dated 2026-07-10); reused
+here for the §1 role model + the §2 exchange flow (cross-document
+consistency, §11.4.186).</li>
+</ul>
+<p>No source prescribes Helix-OTA-specific choices — the promotion of
+the shipped <code>RESOURCE_PERMISSIONS</code> grid to a
+server-authoritative permission set (§1.3), the belt-and-suspenders
+“stamp the claim AND re-verify membership per request” (§2.2), and the
+fail-closed legacy-token handling (§3.3) are <strong>original
+work</strong> applied to this codebase’s shape, following from the
+shipped
+<code>token.go</code>/<code>permissions.ts</code>/<code>middleware.go</code>
+seams.</p>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>This is a design proposal, not implemented.</strong> No
+claim, middleware, RLS policy, role reconciliation, or revocation
+mechanism described here exists in the codebase yet. Every “as-is” fact
+carries a <code>file:line</code> (grounded by 10_* / 12_* / 20_*); every
+“to-be” element is a proposal. Nothing here is a §11.4 completion
+claim.</li>
+<li>**Entity shapes are 20_*’s, never this doc’s (§11.4.186).** Account
+/ User / Membership / api_keys / the reserved roles-permissions tables
+are quoted from <code>20_target_multitenancy_data_model.md</code> and
+never redefined. Where the two docs framed the token differently, §2.2
+states the reconciliation explicitly (stamp-claim-AND-verify) so they do
+not silently diverge — this doc designs authZ <em>behaviour</em>, 20_*
+owns the shapes.</li>
+<li><strong>Every open choice is a recommendation + tradeoffs for
+operator decision, never silently decided:</strong> the permission-model
+shape (§1.2 RBAC-first hybrid vs full ABAC engine), the
+exchange-vs-embedded token (§2.2), the legacy-token handling (§3.3
+Option A/B/C), the role-vocabulary SSOT + the <code>"developer"</code>
+fix (§5), the claim-version hardening (§6.3), and per-tenant signing
+keys (§3.2). Each names its cost.</li>
+<li><strong>The endpoint shapes are <code>22_*</code>’s; the isolation
+PROOF is <code>26_*</code>’s.</strong> This doc names a
+<code>/auth/token-exchange</code> flow and a
+<code>requireAccountAccess</code> middleware conceptually — the concrete
+route table, request/response DTOs, and status codes are
+<code>22_api_surface.md</code>’s; the paired-mutation proof that a
+non-scoped session cannot read another account’s rows (L1/L2/L3 all
+held, both backends) is <code>26_security_threat_model.md</code>’s. This
+doc proves neither — it specifies the model they realize + test.</li>
+<li><strong>What the recommendation does NOT prove.</strong> RBAC-first
++ tenant-isolation-predicate is the correct <em>default</em>, not a
+guarantee of isolation — isolation is only as good as the L1 ordering +
+the L3 policies + the scope-resolution code, which is exactly why
+<code>26_*</code> owns the adversarial proof. The
+<code>MemoryRepository</code> MVP backend has no L3/RLS — its isolation
+rests entirely on L1+L2 (§4), a fact flagged, not glossed.</li>
+<li><strong>Scope of the underlying audit.</strong> The
+<code>file:line</code> references were established against non-test
+source only (10_* / 12_* scope); a test path may exercise a detail not
+seen. The rollout subsystem’s tenancy (<code>internal/rollout/</code>)
+is <code>UNCONFIRMED:</code> in 10_* and is not scoped here — its authZ
+must be audited before its routes are gated. The device-token mint call
+site is <code>UNCONFIRMED:</code> in 10_* (device claim design leans on
+25_*’s reading, not a re-audit here).</li>
+</ul>
+</body>
+</html>

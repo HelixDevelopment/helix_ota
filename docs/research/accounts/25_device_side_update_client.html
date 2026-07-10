@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>25_device_side_update_client</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">25_device_side_update_client</h1>
+</header>
+<h1
+id="device-system-side-update-client-production-multi-account-design-to-be">Device
+/ System-Side Update Client — Production + Multi-Account Design
+(to-be)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Design proposal (§11.4.6 honest boundary applies — see the
+closing section).</strong> This is a <strong>to-be</strong> design for
+the device/System-side update client, extending it for multi-account. It
+does <strong>not</strong> write code and does <strong>not</strong>
+contradict the authoritative as-is inventory
+<code>11_existing_upload_and_device_update.md</code> (hereafter
+<strong>11_*</strong>) — every current-state claim below is cited to
+11_* (which itself cites <code>file:line</code>). The mandate framing is
+<code>00_INDEX.md</code> item 10 (“device/System-side update client —
+contacts the configured Helix OTA system, receives new-OTA-update
+notifications, informs users of a new System version via a setup wizard;
+<em>we have it already most likely</em> → catalogue-first discovery;
+extend to production + full test coverage”). Account / project /
+device-identity <strong>shapes</strong> are owned by
+<code>20_target_multitenancy_data_model.md</code> as the single source
+of truth (SSOT); at the time of writing that file is <strong>planned but
+not yet authored</strong> (00_INDEX §3), so this doc uses only the
+direction 00_INDEX already fixes —
+<code>account → projects → OTA updates</code>, a <strong>server-minted
+token account/project claim</strong>, and
+<code>account_id</code>/<code>project_id</code> scoping columns — and
+defers every canonical entity field to <code>20_*</code>. It invents no
+conflicting shape.</p>
+</blockquote>
+<p><strong>Anchoring facts from 11_* (current state — do not
+contradict):</strong> the device client <strong>EXISTS</strong> =
+<code>submodules/ota-android-agent</code>, a <strong>headless</strong>
+WorkManager <strong>poll</strong> worker (15-min periodic +
+jitter/backoff, <code>PollScheduler.kt</code>, README.md:46) that hits
+<code>GET /client/update</code> and runs one cycle
+poll→download→<strong>verify-before-apply</strong>
+→<strong>auto-apply</strong>→telemetry
+(<code>OtaPollWorker.kt:59-126</code>, auto-apply
+<code>:116-124</code>). The device identifies itself
+<strong>only</strong> by its bearer-token subject <code>deviceId</code>
+(<code>handlers_client.go:22-23</code>; agent
+<code>Dtos.kt:33-36</code>) — <strong>no account/project is ever
+transmitted</strong>; the device token is operator-minted
+(<code>mintDeviceToken</code> role=<code>device</code>
+sub=<code>deviceId</code>, <code>handlers_device.go:157-159</code>;
+registration requires an operator/admin token,
+<code>server.go:192</code>). Update-check resolution keys on
+<code>(os, model, group)</code> only
+(<code>ActiveDeploymentForTarget</code>,
+<code>handlers_client.go:43</code>). Token claims are
+<code>{sub, roles, iat, exp}</code> — <strong>no account/project
+claim</strong> (<code>token.go:31-36</code>). There is <strong>no
+push/notification</strong> (poll-only, 11_* §5) and <strong>no
+device-side setup/consent “new version” wizard</strong> (11_* §6). The
+concrete HTTP client + device config are <strong>not in the
+submodule</strong> —
+<code>ControlPlaneClient</code>/<code>Downloader</code>/<code>Verifier</code>/<code>Telemetry</code>
+are <strong>interfaces only</strong> (<code>Ports.kt</code>); the only
+concrete reference client is the Go emulator
+<code>server/cmd/ota-device-emu</code> (11_* §4, honest gap 2).</p>
+<hr />
+<h2 id="device-identity-scoping-to-account-project">1. Device identity +
+scoping to (account, project)</h2>
+<h3 id="today-a-bare-deviceid-subject-globally-scoped">1.1 Today — a
+bare <code>deviceId</code> subject, globally scoped</h3>
+<p>Per 11_* the device carries a single opaque bearer token whose
+<code>sub</code> <strong>is</strong> the <code>deviceId</code>; nothing
+else identifies it. The server never filters by account or project, so
+<strong>every device is scoped only by <code>(os, model, group)</code>
+against the whole control plane</strong>. In a multi-account deployment
+this is a cross-tenant leak by construction: a device enrolled by
+account A, if its <code>(os, model, group)</code> matches, would be
+offered account B’s active deployment — because no data-level account
+boundary exists (11_* §7, §Honest-gaps 3-4).</p>
+<h3 id="target-a-server-minted-account-project-device-identity">1.2
+Target — a server-minted <code>(account, project, device)</code>
+identity</h3>
+<p>The design goal fixed by 00_INDEX is
+<code>account → projects → OTA updates</code> with the token carrying an
+account/project claim. Applied to the device client:</p>
+<ul>
+<li>The device token’s claims gain <strong><code>account_id</code> +
+<code>project_id</code></strong> (extending
+<code>Claims{sub,roles,iat,exp}</code>, <code>token.go:31-36</code>) —
+<strong>exact field names/types are owned by <code>20_*</code></strong>;
+this doc only asserts the <em>presence</em> and <em>direction</em> of
+the claim.</li>
+<li><code>store.Device</code> gains the scoping columns
+<code>20_*</code> defines (today it has none,
+<code>store.go:35-56</code>); <code>mintDeviceToken</code> stamps the
+claim at registration.</li>
+<li><code>GET /client/update</code> reads the claim and calls an
+<strong>account/project-scoped</strong> deployment lookup (extend
+<code>ActiveDeploymentForTarget</code> with the account+project filter).
+A device then <strong>only ever sees its own account’s
+updates</strong>.</li>
+<li><strong>Trust boundary (mirrors <code>resolvePublicKey</code>, 11_*
+§3):</strong> the account/project claim is <strong>server-minted and
+server-verified</strong> — the device can never assert or override its
+own tenancy in a request. This is the same trust posture the
+artifact-verify key already uses (key from server config only), applied
+to tenancy.</li>
+</ul>
+<h3
+id="provisioning-the-credential-two-options-with-a-recommendation">1.3
+Provisioning the credential — two options, with a recommendation</h3>
+<p><strong>How does a device <em>get</em> an (account, project)-scoped
+credential at first boot?</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>Mechanism</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — Operator-minted scoped token</strong> (extend today’s
+flow)</td>
+<td>Enrollment stays operator-driven (as today,
+<code>handleRegisterDevice</code> requires operator/admin,
+<code>server.go:192</code>); <code>mintDeviceToken</code> simply also
+stamps <code>account_id</code>/<code>project_id</code>.</td>
+<td>Minimal delta over the <em>existing</em> flow; no new enrollment
+protocol; matches today’s “operator registers the device” reality.</td>
+<td>Operator must touch every device (or script it); no self-service; a
+long-lived token on-device is higher blast-radius if leaked.</td>
+</tr>
+<tr>
+<td><strong>B — Bootstrap-claim → per-device credential</strong>
+(fleet-provisioning pattern)</td>
+<td>Device ships with a <strong>short-lived, account+project-scoped
+enrollment/claim token</strong> (limited to “register me”); at first
+boot it exchanges the claim for a <strong>long-lived per-device
+token</strong> carrying the full
+<code>(account, project, deviceId)</code> claim. Server runs a
+provisioning-hook validation before issuing. Models AWS IoT <em>fleet
+provisioning by claim</em>.</td>
+<td>Scales to many devices / self-service; the on-device long-lived
+secret is minted per-device and rotatable; the shared bootstrap secret
+has near-zero privilege.</td>
+<td>New enrollment endpoint + claim-token lifecycle; more moving parts;
+hook validation to build.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> <strong>start with Option
+A</strong>, because enrollment is <em>already</em> operator-driven today
+(11_* §4) — the production delta is just “stamp the claim,” which is the
+smallest safe change and reuses the existing register path.
+<strong>Adopt Option B’s bootstrap→rotate model when at-scale or
+self-service enrollment is required</strong> (the two are not mutually
+exclusive — B is A plus a claim-exchange front door). This is a
+recommendation, not a silent decision:
+<code>20_*</code>/<code>21_*</code> own the final token/enrollment shape
+and may choose B first if self-service is a launch requirement.
+<strong>Open question for the operator:</strong> is device enrollment
+operator-only at launch (favours A) or self-service (favours B)?</p>
+<hr />
+<h2 id="update-check-transport-keep-poll-add-a-push-wake">2.
+Update-check transport — keep poll, add a push “wake”</h2>
+<h3 id="today-poll-only">2.1 Today — poll only</h3>
+<p>Per 11_* §4-§5: a 15-min WorkManager periodic worker with jitter +
+exponential backoff polls <code>GET /client/update</code> →
+<code>200 UpdateAvailable | 204 no-update | transient error</code>.
+There is <strong>no</strong> push/FCM/WebSocket/SSE channel anywhere in
+<code>server/internal</code> or the agent (11_* §5). Latency to a new
+release is therefore bounded by the poll interval (~15 min worst
+case).</p>
+<h3 id="the-tradeoff-external-research-11.4.8">2.2 The tradeoff
+(external research, §11.4.8)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Poll (pull)</th>
+<th>Push (FCM / SSE / WebSocket)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New-release latency</td>
+<td>Bounded by interval (~15 min)</td>
+<td>Seconds</td>
+</tr>
+<tr>
+<td>Battery</td>
+<td>Periodic radio wake per device</td>
+<td>One shared idle socket (FCM) is near-zero cost; a bespoke WebSocket
+is a persistent connection</td>
+</tr>
+<tr>
+<td>Server load at fleet scale</td>
+<td>Thundering-herd risk unless jittered (“floating cycle” so N devices
+don’t poll at once)</td>
+<td>Fan-out cost moves to the push broker; server just enqueues</td>
+</tr>
+<tr>
+<td>Offline tolerance</td>
+<td>Naturally retries next cycle; robust</td>
+<td>Push is best-effort; a missed push must still be caught by a
+poll</td>
+</tr>
+<tr>
+<td>Reachability</td>
+<td>Works anywhere HTTP works</td>
+<td>FCM needs Google Play Services — <strong>RK3588 / Orange Pi 5 Max
+AOSP targets may be non-GMS</strong> → FCM not guaranteed</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>Already built</td>
+<td>New channel + per-device addressing keyed on
+<code>(account, project, deviceId)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Sources: Mender OTA best-practices + saince.io (pull = less bandwidth
+but interval-bound latency; unsafe-state deferral), FSS/Hubble
+(fleet-scale thundering-herd → floating/jittered cycle; FCM single
+shared socket is battery-efficient instant delivery).</p>
+<h3
+id="recommendation-hybrid-poll-is-the-floor-push-is-a-latency-hint">2.3
+Recommendation — <strong>hybrid: poll is the floor, push is a latency
+hint</strong></h3>
+<p>The mandate (“receive new-OTA-update notifications from the System”)
+argues for push, but push must <strong>never</strong> become the source
+of truth. Recommended design:</p>
+<ol type="1">
+<li><strong>Keep the 15-min jittered poll as the reliable floor</strong>
+— it already exists, it is offline-tolerant, and it is the <em>only</em>
+path that works on non-GMS AOSP targets.
+<code>poll + VerifyBeforeApply</code> stays the <strong>single source of
+truth</strong> for “is there an update, and is it valid.”</li>
+<li><strong>Add an optional push “wake” channel</strong> that carries
+<strong>no update payload</strong> — it only tells the device
+<em>“something changed, poll now,”</em> collapsing latency from ~15 min
+to seconds. The device responds to a wake by running its normal
+authenticated poll + verify. A dropped/spoofed wake is harmless: worst
+case the device just polls on its next scheduled cycle; a spoofed wake
+cannot inject an update because the poll+verify path is unchanged.</li>
+<li><strong>Transport per device class:</strong> FCM where Play Services
+is present; <strong>SSE or a long-poll/WebSocket wake fallback for
+non-GMS RK3588/Orange Pi targets</strong> (the project’s primary
+hardware). Server seam: a new <code>notify</code> fan-out keyed on
+<code>(account, project, deviceId)</code> triggered when a deployment is
+created/updated for that scope (<code>handleCreateDeployment</code> is
+the emit point).</li>
+</ol>
+<p>This is a recommendation-with-tradeoffs: an operator who values
+simplicity over latency can ship <strong>poll-only</strong> first (it
+already works) and add the wake channel as a fast-follow — the wake is
+purely additive and the design must not regress to “push-only.”</p>
+<hr />
+<h2 id="new-version-notification-the-user">3. New-version notification →
+the user</h2>
+<p>Per 11_* §6 this is <strong>absent</strong> today: the agent is
+headless and <strong>auto-applies</strong> without any user-facing “a
+new version is available” surface
+(<code>OtaPollWorker.kt:116-124</code>).</p>
+<p><strong>Design.</strong> When a poll (or a push wake → poll) returns
+<code>200 UpdateAvailable</code> <strong>and the account/project policy
+is <code>interactive</code></strong> (see §3.1), the client:</p>
+<ol type="1">
+<li>Posts an <strong>Android system notification</strong> (dedicated
+notification channel, default importance) — title “System update
+available”, body with target <strong>version</strong>, <strong>download
+size</strong>, and a short <strong>release-notes</strong> line.
+<ul>
+<li><em>Server dependency (flag):</em> the release record carries no
+notes field today (11_* §1); surfacing human-readable notes needs a
+small server addition (a <code>notes</code> field on the release +
+pass-through in the <code>UpdateAvailable</code> offer,
+<code>handlers_client.go:70-101</code>). Until then the notification
+shows version + size only. Stated as a fact, not a guess (§11.4.6).</li>
+</ul></li>
+<li>Respects <strong>deferral conditions</strong> — quiet hours,
+metered-network, low battery, low storage — so the notification/apply
+does not fire at a hostile moment.</li>
+<li>On tap → opens the <strong>setup wizard</strong> (§4).</li>
+</ol>
+<h3 id="two-policy-modes-per-accountproject">3.1 Two policy modes (per
+account/project)</h3>
+<p>Because some tenants run <strong>unattended kiosks</strong> (no human
+at the device) and others run <strong>user-attended</strong> devices,
+notification/consent is a <strong>per-account/project policy</strong>,
+provisioned at enrollment:</p>
+<ul>
+<li><strong><code>silent</code> / auto</strong> — today’s headless
+behaviour: verify + auto-apply, no notification, no wizard. Correct for
+kiosk/signage/unattended fleets. The “consent” is the account policy the
+operator set.</li>
+<li><strong><code>interactive</code> / consent</strong> — notify the
+user, run the wizard, apply only on consent. Correct for user-facing
+devices.</li>
+</ul>
+<p>This keeps the existing headless path valid (no regression) while
+adding the user-informing surface the mandate asks for.</p>
+<p><strong>UI note:</strong> the notification’s expanded content and any
+activity it opens are a <strong>rendered UI surface</strong> → they MUST
+use the <strong>OpenDesign design tokens (§11.4.162)</strong> (light +
+dark) and are covered by the §11.4.170 host-rendered visual proof
+described in §4 — the Android agent is <strong>headless today</strong>,
+so this is net-new UI.</p>
+<hr />
+<h2
+id="setup-wizard-notify-wizard-consent-apply-ab-update_engine-handoff">4.
+Setup wizard — notify → wizard → consent → apply → A/B
+<code>update_engine</code> handoff</h2>
+<h3 id="flow">4.1 Flow</h3>
+<pre><code>[push wake]→ poll → 200 UpdateAvailable
+      │  (policy=interactive)
+      ▼
+  system notification  ──tap──▶  SETUP WIZARD
+                                   1. What&#39;s new (version, size, notes)
+                                   2. Conditions check (Wi-Fi/metered, battery, storage)
+                                   3. Consent + schedule (Now / Tonight / Remind me)
+                                   4. Download (progress; STREAMING or full)
+                                   5. Verify-before-apply (SHA-256 + signature)
+                                   6. Apply via update_engine.applyPayload (progress)
+                                   7. Reboot to switch slot (A/B seamless; auto-rollback on bad boot)</code></pre>
+<p>Steps 4-7 reuse the agent’s <strong>existing</strong> one-cycle path
+(<code>OtaPollWorker.runCycle</code>,
+<code>OtaPollWorker.kt:59-126</code>) — the wizard simply
+<strong>gates</strong> that path on user consent instead of auto-running
+it.</p>
+<h3
+id="update_engine-handoff-grounded-in-the-aosp-systemupdatersample-pattern">4.2
+<code>update_engine</code> handoff (grounded in the AOSP
+SystemUpdaterSample pattern)</h3>
+<p>The Android A/B reference client (<code>SystemUpdaterSample</code>)
+is a <strong>pull</strong> app that lists available updates and, on the
+user’s <strong>Apply</strong>, calls
+<code>UpdateEngine#applyPayload(payloadURL, offset, size, headers)</code>
+— passing the <code>Authorization</code>/<code>User-Agent</code> headers
+— and receives <code>onStatusUpdate</code> /
+<code>onPayloadApplicationComplete</code> callbacks; it persists its own
+updater state so it survives disconnects/resume. Two transfer modes:
+<strong>non-streaming</strong> (whole package URL handed to the engine)
+and <strong>STREAMING</strong> (only ZIP entries fetched first;
+<code>payload.bin</code> streamed by <code>update_engine</code>
+directly, entries stored uncompressed for offset access). Helix’s wizard
+maps onto exactly this:</p>
+<ul>
+<li><strong>Download/apply:</strong> hand the artifact URL
+(<code>ArtifactBaseURL/&lt;id&gt;.zip</code>,
+<code>handlers_client.go:232-234</code>) + the device’s bearer
+<code>Authorization</code> header to <code>applyPayload</code>; prefer
+<strong>STREAMING</strong> to avoid double-storing the payload.</li>
+<li><strong>Verify-before-apply gate stays mandatory:</strong> the
+agent’s <code>VerifyBeforeApply</code> re-checks SHA-256 + signature
+ordered
+<code>MALFORMED_DIGEST → HASH_MISMATCH → SIGNATURE_INVALID</code> (11_*
+§3), and a rejected artifact never reaches <code>update_engine</code>
+(<code>OtaPollWorker.kt:99-113</code>). The signature verified is the
+one the server persisted and handed to the device
+(<code>handlers_artifact.go:196</code> →
+<code>handlers_client.go:81</code>).</li>
+<li><strong>A/B seamless + rollback:</strong> apply happens to the
+inactive slot in the background; the wizard’s final step is a
+<strong>reboot-to-switch</strong> prompt. Per the project overview (root
+CLAUDE.md) the target uses <code>update_engine</code> + AVB/dm-verity
+<ul>
+<li><strong>auto-rollback</strong> — a failed boot rolls back
+automatically, so the wizard must present reboot honestly (“your device
+will restart to finish; it will roll back automatically if anything is
+wrong”) and never brick (<strong>§11.4.133 target/hardware
+safety</strong>).</li>
+</ul></li>
+</ul>
+<h3 id="first-run-enrollment-sub-wizard">4.3 First-run enrollment
+sub-wizard</h3>
+<p>On the <strong>very first boot</strong> the wizard also runs
+enrollment (§1): receive/enter the account+project claim (Option A) or
+exchange the bootstrap claim (Option B), register the device, and store
+the minted per-device token securely (§5). After enrollment the device
+is scoped and the normal update flow applies.</p>
+<h3 id="this-is-the-device-clients-first-ui-surface-mandates">4.4 This
+is the device client’s FIRST UI surface — mandates</h3>
+<p>The agent + <code>ota-update-engine-bridge</code> are
+<strong>headless today</strong> (11_* §4, §6). The wizard is therefore a
+<strong>net-new UI module</strong> — a companion activity / Compose UI
+added to the <code>:android</code> layer (or a small companion app). As
+a rendered UI surface it MUST:</p>
+<ul>
+<li>Use the <strong>OpenDesign design tokens (§11.4.162)</strong> —
+light <strong>and</strong> dark variants, no ad-hoc styling, no label
+overlap.</li>
+<li>Be proven by <strong>device-independent host-rendered pixel proof
+(§11.4.170)</strong> — the real Compose screens rendered to PNG on the
+host (Paparazzi/Roborazzi class) for <strong>every screen × state ×
+{light, dark}</strong>, dual-validated by golden image-diff
+<strong>and</strong> an OCR/vision layout oracle. Value/token-equality
+unit tests are <strong>forbidden as the sole UI proof</strong>.</li>
+</ul>
+<p><strong>Kiosk fallback:</strong> where <code>policy = silent</code>
+(no user), the wizard is bypassed and the headless auto-apply path runs
+unchanged (§3.1) — an honest, operator-configured skip, not a faked
+consent.</p>
+<hr />
+<h2
+id="production-hardening-the-concrete-client-config-that-11_-says-are-missing">5.
+Production hardening — the concrete client + config that 11_* says are
+missing</h2>
+<p>11_* (§4, honest gap 2) establishes that the agent ships
+<strong>interfaces only</strong> (<code>Ports.kt</code>) — no concrete
+<code>ControlPlaneClient</code>/<code>Downloader</code>/<code>Verifier</code>/<code>Telemetry</code>,
+no server-URL/credential config; the only concrete reference is the Go
+<code>ota-device-emu</code>. A production impl needs:</p>
+<ol type="1">
+<li><strong>Concrete <code>ControlPlaneClient</code></strong> (over the
+project’s HTTP transport): configurable <strong>base URL</strong>;
+<strong>token storage</strong> in Android Keystore /
+EncryptedSharedPreferences (never plaintext, §11.4.10); <strong>token
+refresh</strong> via <code>/auth/refresh</code>; the
+<strong>account/project claim carried in every request</strong> via the
+token (never as a spoofable header — §1.2 trust boundary).</li>
+<li><strong>Device config</strong> — server URL, account/project
+enrollment material, poll interval, <code>policy</code>
+(silent/interactive), push-channel opt-in — sourced by
+<strong>configuration injection</strong> (env/config/enrollment
+payload), <strong>never hardcoded</strong> into the submodule (§11.4.28
+decoupling — the agent stays project-agnostic).</li>
+<li><strong>Retry / backoff</strong> — extend the existing jitter +
+exponential backoff (<code>PollScheduler.kt</code>) to the
+<strong>download</strong> and <strong>telemetry</strong> legs; poll is
+idempotent; a <code>transient error</code> retries, a <code>204</code>
+is success-no-op.</li>
+<li><strong>Offline handling (§11.4.144 availability-following)</strong>
+— the device may drop off any transport at any time. The client MUST:
+detect the offline state, log an <strong>honest offline event</strong>
+(never present a stale “up to date” as live), <strong>follow
+reconnection using the already-defined backoff</strong> (never invent
+timings), <strong>resume</strong> an interrupted download (A/B streaming
++ persisted updater state — the SystemUpdaterSample resume pattern), and
+<strong>re-attach + log resume</strong> on return. Server side:
+deployment progress is <strong>derived from telemetry</strong>
+(<code>deriveProgress</code>, <code>handlers_deployment.go:202</code>),
+so an offline device simply stops reporting — the server MUST NOT read
+“no telemetry” as failure; it is an honest gap in the corpus, not a
+FAIL.</li>
+<li><strong>Signature verify against the per-account key</strong> —
+today <code>resolvePublicKey</code> returns <strong>one global</strong>
+<code>HELIX_ARTIFACT_PUBKEY</code> (11_* §3,
+<code>handlers_artifact.go:283-288</code>,
+<code>config.go:72-77</code>). For multi-account, the verify key must
+become <strong>per-account</strong> on <strong>both</strong> sides:
+server-side upload verification (per-account key registry)
+<strong>and</strong> device-side <code>VerifyBeforeApply</code> (the
+device checks against <strong>its account’s</strong> public key,
+provisioned at enrollment <strong>from server config — never from the
+update offer</strong>, preserving the 11_* §3 trust boundary).
+<code>20_*</code>/<code>26_*</code> own the key-registry shape.</li>
+<li><strong>Real artifact byte storage (dependency, 11_* honest gap
+1)</strong> — upload currently <strong>discards the bytes</strong>
+(<code>StorageRef</code> placeholder,
+<code>handlers_artifact.go:184</code>) and the device download URL
+points at an external Storage brick not in-repo
+(<code>handlers_client.go:232-234</code>). A production device client
+that actually downloads-and-applies <strong>requires real per-account
+object storage + working (ideally signed, expiring) download
+URLs</strong>. This is a server/storage prerequisite the device client
+depends on — flagged, not assumed solved.</li>
+</ol>
+<hr />
+<h2 id="test-strategy-anti-bluff-11.4.27-11.4.69-11.4.107-11.4.169">6.
+Test strategy (anti-bluff, §11.4.27 / §11.4.69 / §11.4.107 /
+§11.4.169)</h2>
+<p>Mocks/stubs permitted <strong>only</strong> in unit tests (§11.4.27);
+every other layer drives the <strong>real</strong> server.</p>
+<ul>
+<li><strong>Unit (core Kotlin, mocks OK here only):</strong>
+poll-decision logic, the <code>VerifyBeforeApply</code> ordering
+(<code>MALFORMED_DIGEST→HASH_MISMATCH→SIGNATURE_INVALID</code>), the
+wizard state machine (notify→consent→apply transitions), offline/resume
+state.</li>
+<li><strong>Integration (real <code>ota-server</code>):</strong> drive a
+concrete client (extend the <code>ota-device-emu</code> harness, 11_*
+§4) through <strong>login → register(account, project) → poll →
+200/204</strong>; assert per-account key verification;
+<strong>cross-account isolation test</strong> — a device of account A
+polling MUST receive <code>204</code>/deny for a deployment published
+under account B (captured request/response evidence proving the tenant
+boundary holds; a leak here is a release blocker).</li>
+<li><strong>E2E (full real journey, real content, no mock beyond
+unit):</strong> provision a device to <code>(account, project)</code> →
+operator <strong>publishes a real release under that account</strong> →
+device is <strong>notified</strong> (push wake) / <strong>polls</strong>
+→ wizard <strong>consent</strong> → <strong>download → verify →
+apply</strong> (emulated <code>update_engine</code>) →
+<strong>telemetry</strong> → server <strong>derives progress</strong>.
+Assert the applied version is the published one and the device on the
+<em>other</em> account is unaffected.</li>
+<li><strong>Push/notification latency test:</strong> publish → wake
+fires → device polls within seconds (assert the hybrid §2.3 latency
+claim, with the poll-only floor also covered).</li>
+<li><strong>UI visual proof (§11.4.170):</strong> wizard screens
+host-rendered (Compose → Paparazzi/Roborazzi) per <strong>screen × state
+× {light, dark}</strong>, golden image-diff + OCR/vision oracle —
+<strong>not</strong> value-equality tests.</li>
+<li><strong>Stress + chaos (§11.4.85):</strong> offline mid-download →
+resume; server drop mid-apply; <strong>corrupt payload →
+<code>VerifyBeforeApply</code> reject</strong> (never applies);
+power-loss mid-apply → <strong>A/B auto-rollback</strong> (device still
+boots) — each with captured recovery evidence.</li>
+<li><strong>Captured evidence (§11.4.107 liveness / not-stale):</strong>
+every PASS cites a real artefact under
+<code>docs/qa/&lt;run-id&gt;/</code> — HTTP transcripts, window-scoped
+vision-verified screen recording of the wizard (§11.4.154 / §11.4.158 /
+§11.4.160), <code>update_engine</code> apply logs, telemetry payloads;
+an “update applied” claim proves the <strong>new</strong> version is
+live (not the stale prior one). <strong>§11.4.185</strong> manual QA
+team confirmation is the final gate; <strong>§11.4.169</strong> requires
+the full test-type set.</li>
+</ul>
+<hr />
+<h2 id="sources-verified-2026-07-10">Sources verified 2026-07-10</h2>
+<ul>
+<li><strong>AOSP SystemUpdaterSample (A/B <code>update_engine</code>
+reference client)</strong> — pull model, list-of-updates UI +
+Apply/Stop/Reset/Suspend-Resume, <code>UpdateEngine#applyPayload</code>
+handoff with headers, STREAMING vs non-streaming, resume +
+<code>onStatusUpdate</code> / <code>onPayloadApplicationComplete</code>
+progress callbacks:
+https://android.googlesource.com/platform/bootable/recovery/+/master/updater_sample/README.md</li>
+<li><strong>AOSP OTA / A/B (seamless) system updates</strong> —
+<code>update_engine</code>, slot switching, auto-rollback semantics:
+https://source.android.com/docs/core/ota and
+https://source.android.com/docs/core/ota/ab</li>
+<li><strong>OTA poll-vs-push tradeoffs for device fleets</strong> — pull
+= lower bandwidth but interval-bound latency + unsafe-state deferral;
+fleet-scale thundering-herd → floating/jittered poll cycle; FCM single
+shared socket = battery-efficient instant wake: Mender OTA
+best-practices
+https://mender.io/resources/reports-and-guides/ota-updates-best-practices
+, saince.io OTA update modes
+https://saince.io/2020/08/24/ota-update-modes/ , Hubble “Every Way to
+Push OTA Updates to IoT Devices in 2026”
+https://hubble.com/community/guides/every-way-to-push-ota-updates-to-iot-devices-in-2026/</li>
+<li><strong>Multi-tenant device provisioning / enrollment</strong> — AWS
+IoT <em>fleet provisioning by claim</em>: a shared, minimally-privileged
+bootstrap credential is exchanged at first connect for a unique
+per-device production credential, driven by a provisioning template +
+Lambda provisioning-hook validation (basis for §1.3 Option B):
+https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html
+and
+https://aws.amazon.com/blogs/iot/how-to-automate-onboarding-of-iot-devices-to-aws-iot-core-at-scale-with-fleet-provisioning/</li>
+</ul>
+<p><strong>Negative finding (§11.4.99):</strong> none of the sources
+contradicts the Helix poll-first design; AWS’s model is
+certificate/MQTT-based whereas Helix is bearer-token/HTTP — the
+<em>pattern</em> (bootstrap→rotate, tenant-id-routed provisioning)
+transfers, the transport does not. The A/B <code>update_engine</code>
+handoff is platform-authoritative and adopted directly.</p>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>Design proposal only</strong> — no code is written; the OTA
+multi-account work is operator-approval-gated (00_INDEX §2). Nothing
+here is a §11.4 PASS-bluff: current state is cited to 11_* (which cites
+<code>file:line</code>); external patterns are cited to the sources
+above; every unknown is flagged, never guessed.</li>
+<li><strong><code>20_*</code> is the SSOT for entity shapes and is not
+yet authored.</strong> This doc used only the direction 00_INDEX already
+fixes (account→projects→OTA, server-minted token account/project claim,
+scoping columns) and <strong>invented no conflicting
+account/project/device shape</strong>. Exact field names/types (token
+claim, <code>store.Device</code> columns, per-account key registry) are
+deferred to <code>20_*</code>/<code>21_*</code>/<code>26_*</code>.</li>
+<li><strong>Real gaps that remain (not solved by this design):</strong>
+(1) the <strong>concrete device HTTP client + device config</strong> are
+absent from the agent submodule — interfaces only, the Go emulator is
+the only concrete reference (11_* honest gap 2); (2) <strong>real
+artifact byte storage</strong> is not implemented — bytes are validated
+then discarded, <code>StorageRef</code> is a placeholder, and the device
+download URL points at an out-of-repo Storage brick (11_* honest gap 1)
+— a device that truly downloads-and-applies depends on this being built;
+(3) the <strong>push/wake channel</strong>, <strong>per-account key
+registry</strong>, <strong>release-notes field</strong>, and the
+<strong>entire wizard UI</strong> are net-new. These are stated as facts
+to be built, not as existing capability.</li>
+<li><strong>Recommendations are explicit, never silent:</strong> Option
+A (operator-minted scoped token) first, Option B (bootstrap→rotate) when
+self-service/scale demands it (§1.3); hybrid <strong>poll-floor +
+push-wake</strong> transport, degrade to poll-only if simplicity is
+preferred and to SSE/WebSocket where FCM/GMS is unavailable (§2.3). The
+final choices are the operator’s / <code>20_*</code>’s to make.</li>
+</ul>
+</body>
+</html>

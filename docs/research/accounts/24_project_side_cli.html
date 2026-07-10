@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>24_project_side_cli</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">24_project_side_cli</h1>
+</header>
+<h1
+id="project-side-integration-ota-upload-cli-to-be-design-research-planning">Project-Side
+Integration + OTA-Upload CLI — To-Be Design (research + planning)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p>Design proposal only. This document specifies a production
+<strong>project-integration CLI</strong> (<code>helix-ota</code>) that a
+consuming project’s CI/CD uses to authenticate with <strong>one account
++ one project under it</strong> and publish OTA updates. It
+<strong>extends the mechanisms that already exist</strong> (per
+<code>11_existing_upload_and_device_update.md</code>, the authoritative
+current-state audit — cited, never contradicted) rather than reinventing
+them. Account / user / membership / API-key <strong>entity shapes are
+owned by <code>20_target_multitenancy_data_model.md</code>
+(SSOT)</strong>; this doc <em>consumes</em> those shapes and never
+redefines a conflicting one — where a shape is load-bearing here it is
+cited to the one concrete in-repo sketch
+(<code>001_initial_schema.up.sql</code>) and otherwise deferred to
+<code>20_*</code>. No code is written under this directive; the plan is
+operator-gated (<code>00_INDEX.md</code> §2). Every “as-is” fact carries
+a <code>file:line</code> from the grounded audits; every proposal is a
+<strong>recommendation with tradeoffs</strong>, never a silent decision
+(§11.4.66 / §11.4.6).</p>
+</blockquote>
+<hr />
+<h2 id="current-state-anchor-what-we-extend-from-11_-10_">0.
+Current-state anchor (what we EXTEND, from <code>11_*</code> +
+<code>10_*</code>)</h2>
+<p>The extension target, verbatim from the grounded audits (do not
+contradict):</p>
+<ul>
+<li><strong>Upload/publish EXISTS and is real.</strong>
+<code>POST /artifacts/upload</code> runs a real S1–S6 multipart
+validation pipeline (<code>handlers_artifact.go:47</code>; validate
+<code>:152-173</code>); <code>POST /releases</code>
+(<code>handlers_release.go:16</code>) and <code>POST /deployments</code>
+(<code>handlers_deployment.go:28</code>) publish/deploy. Every write is
+bearer-authenticated + audited (<code>server.go:189-190</code>).</li>
+<li><strong>None of it is project- or account-scoped.</strong>
+<code>store.Artifact/Release/Deployment/ Device</code> carry no
+<code>ProjectID</code>/account field (<code>store.go:58-99</code>,
+<code>:35-56</code>); token <code>Claims{sub,roles,iat,exp}</code> carry
+no tenant dimension (<code>token.go:31-36</code>); the
+<code>Project</code>+<code>ProjectAccess</code> ACL exists but is
+<strong>not wired</strong> into the OTA data model (<code>11_*</code>
+§1, §7; <code>10_*</code> §4).</li>
+<li><strong>The only upload client is the <code>ota-manager</code>
+SPA.</strong> <code>useUploadArtifact</code> →
+<code>apiMultipartPost('/artifacts/upload', formData)</code> with a
+<code>Authorization: Bearer</code> token and <strong>no project
+header/query/path</strong> (<code>use-artifacts.ts:35-51</code>;
+<code>api-client.ts:28-36</code>); its <strong>project switcher is a
+MOCK</strong> (<code>project-switcher.tsx:13-19</code>). <strong>There
+is no upload CLI/SDK</strong> (<code>11_*</code> §2).</li>
+<li><strong>Artifact bytes are validated then discarded.</strong>
+<code>StorageRef</code> is a synthesized placeholder
+<code>s3://helix-artifacts/&lt;id&gt;</code>
+(<code>handlers_artifact.go:184</code>); only metadata + the verified
+signature persist. <strong>No real object storage is in-repo</strong>
+(<code>11_*</code> §Honest-gaps 1). There is also <strong>no
+list-artifacts endpoint</strong>
+(<code>useUploadArtifact.ts:4-7</code>).</li>
+<li><strong>Signing key is a single global.</strong>
+<code>resolvePublicKey</code>
+(<code>handlers_artifact.go:283-288</code>) takes the ed25519 verify key
+ONLY from <code>s.pubKey</code>, loaded from one global
+<code>HELIX_ARTIFACT_PUBKEY</code> (<code>config.go:72-77</code>,
+<code>server.go:109-112</code>) — never from the request (trust
+boundary, matches project CLAUDE.md).</li>
+<li><strong>A login flow already exists.</strong>
+<code>POST /api/v1/auth/login</code> → <code>handleLogin</code>
+exchanges username+password for an access+refresh pair
+(<code>handlers_auth.go:77-99</code>,
+<code>issueTokenPair :123-137</code>); refresh tokens are opaque,
+single-use-rotating, TTL-bounded.</li>
+<li><strong>An <code>api_keys</code> shape already exists ON
+PAPER</strong> (design-target migration, not shipped):
+<code>api_keys(id, user_id, key_hash, name, permissions JSONB, expires_at, revoked_at, created_at)</code>
+— hash-only, cleartext shown once
+(<code>docs/research/main_specs/1.0.0-mvp/database/migrations/001_initial_schema.up.sql:57-71</code>),
+plus a <code>users</code> table (<code>:39-51</code>). Neither is in the
+shipped store (<code>10_*</code> §1, §3).</li>
+</ul>
+<p>This CLI is therefore a <strong>new client binary + a set of additive
+server seams</strong>, not a rewrite. The four hardest dependencies it
+exposes (account/project scope columns, a tenant-aware token, a
+per-account key registry, and <strong>real object storage</strong>) are
+named explicitly below as dependencies/risks.</p>
+<hr />
+<h2 id="auth-model-non-interactive-cicd-authentication">1. Auth model —
+non-interactive CI/CD authentication</h2>
+<h3 id="the-credential-an-account-project-scoped-api-key">1.1 The
+credential: an account + project-scoped API key</h3>
+<p>A CI pipeline cannot type a password. The credential MUST be a
+<strong>named, revocable, long-lived API key bound to exactly one
+account and (optionally) one project</strong>, issued by a super-admin
+(there is no self-registration — <code>00_INDEX.md</code> §1.2),
+presented non-interactively.</p>
+<p>The credential shape <strong>extends the existing
+<code>api_keys</code> sketch</strong> (SSOT: <code>20_*</code>; grounded
+sketch: <code>001_initial_schema.up.sql:57-71</code>). The extension
+<code>20_*</code> must define is the two scope columns that sketch
+lacks:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Source</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>key_hash</code>, <code>name</code>,
+<code>permissions</code>, <code>expires_at</code>,
+<code>revoked_at</code>, <code>created_at</code></td>
+<td>already sketched (<code>001_initial_schema.up.sql:57-71</code>)</td>
+<td>hash-only storage, cleartext shown ONCE at creation, named +
+revocable + expirable</td>
+</tr>
+<tr>
+<td><code>account_id</code></td>
+<td><strong><code>20_*</code> owns this shape</strong></td>
+<td>binds the key to exactly ONE account (tenant)</td>
+</tr>
+<tr>
+<td><code>project_id</code> (nullable)</td>
+<td><strong><code>20_*</code> owns this shape</strong></td>
+<td>optional narrowing to ONE project; NULL = “any project in the
+account the caller is authorized for”</td>
+</tr>
+<tr>
+<td><code>user_id</code> / owner</td>
+<td>already sketched (<code>:59</code>), or an account-owned “robot”
+subject (<code>20_*</code>)</td>
+<td>attributes the key for audit (<code>10_*</code> §6
+<code>UserID</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Only <code>key_hash</code> is stored server-side; the cleartext key
+(recommended opaque form
+<code>helixk_&lt;account-short&gt;_&lt;random&gt;</code>, high-entropy)
+is shown once and never persisted in cleartext (matches the sketch’s
+<code>key_hash</code> + the industry pattern in §Sources). This respects
+the established trust boundary: <strong>scope is authoritative from the
+stored key row, never self-asserted by the request</strong> (the same
+rule as <code>resolvePublicKey</code> and <code>TrustTLSProxy</code>,
+<code>10_*</code> §7).</p>
+<h3 id="where-the-client-stores-it-11.4.10-no-leak">1.2 Where the client
+stores it (§11.4.10 no-leak)</h3>
+<p>Resolution order on the client, highest precedence first — matching
+the CI-token norm across Mender/Expo/balena (§Sources):</p>
+<ol type="1">
+<li><strong><code>--token &lt;value&gt;</code> flag</strong> — explicit,
+for one-off invocations (avoid in shared shells).</li>
+<li><strong><code>HELIX_OTA_TOKEN</code> env var</strong> — the primary
+CI path (GitHub Actions / GitLab secret → env), same shape as Expo’s
+<code>EXPO_TOKEN</code> and Mender’s
+<code>--token-value $PAT</code>.</li>
+<li><strong>Credential file</strong>
+<code>~/.config/helix-ota/credentials</code> (or
+<code>$HELIX_OTA_HOME</code>), one service per file,
+<code>chmod 600</code>, parent dir <code>chmod 700</code> (§11.4.10).
+Written only by <code>helix-ota login --token</code>.</li>
+<li><strong>OS keyring</strong> (optional, opt-in) — Secret Service /
+macOS Keychain / Windows Credential Manager for developer laptops.</li>
+</ol>
+<p>Hard §11.4.10 rules the CLI enforces: the token is
+<strong>never</strong> printed or logged (redacted to
+<code>helixk_…&lt;last4&gt;</code> in any diagnostic),
+<strong>never</strong> written to a world-readable path,
+<strong>never</strong> committed — the CLI ships a
+<code>.gitignore</code> fragment (<code>.helix-ota/</code>,
+<code>*.helix-ota-credentials</code>) and a <code>.env.example</code>
+(§11.4.77) for consuming projects; a <code>helix-ota doctor</code>
+subcommand audits for an accidentally-tracked token before first
+push.</p>
+<h3
+id="how-the-key-maps-to-account-project-scope-on-the-server-two-options">1.3
+How the key maps to (account, project) scope on the server — two
+options</h3>
+<p>The token today has <strong>no tenant dimension</strong>
+(<code>token.go:31-36</code>), so the key→scope mapping is a genuine
+design fork. Both options consume <code>20_*</code>’s
+account/project/key shapes; the choice is a hot-path decision
+<code>21_authz_rbac_superadmin.md</code> finalizes.</p>
+<p><strong>Option A — static key sent directly as <code>Bearer</code> on
+every request; server resolves key→scope per call.</strong> Server
+middleware hashes the presented key, looks up the <code>api_keys</code>
+row, and derives <code>(account_id, project_id, permissions)</code> for
+that request; enforcement reuses the <code>requireProjectAccess</code>
+pattern (<code>handlers_project.go:37-74</code>) plus a new
+<code>requireAccountAccess</code>. - <em>Pros:</em> simplest CLI; one
+credential; matches balena’s named API-key model
+(<code>balena   login --token</code>, then Bearer). Revocation is
+immediate (row lookup each call). - <em>Cons:</em> a long-lived secret
+rides the wire on <strong>every</strong> request; a per-call hash+DB
+lookup on the hot path; the standing exposure window is the key’s whole
+lifetime.</p>
+<p><strong>Option B — key is an EXCHANGE credential
+(recommended).</strong> <code>helix-ota login --token $KEY</code> calls
+a new exchange endpoint (e.g. <code>POST /auth/token-exchange</code>,
+sibling of <code>handleLogin</code>) that validates the key and returns
+a <strong>short-lived access token carrying
+<code>account_id</code>+<code>project_id</code>+<code>role</code>
+claims</strong> — i.e. <code>issueTokenPair</code>
+(<code>handlers_auth.go:123</code>) extended with the tenant claim
+<code>21_*</code> adds to <code>Claims</code>
+(<code>token.go:31-36</code>). Every subsequent request uses that scoped
+bearer on the existing authenticated hot path. - <em>Pros:</em> the
+long-lived key touches the wire <strong>once per session</strong>; the
+hot path is the already-shipped bearer+<code>Claims</code> flow (minimal
+new surface); least standing exposure (§11.4.10); short-lived tokens
+auto-expire; mirrors the existing
+<code>login</code>/<code>refresh</code> design and Expo robot-account
+exchange. - <em>Cons:</em> one extra round trip at session start;
+<strong>requires</strong> the tenant claim in <code>Claims</code> (a
+<code>21_*</code> dependency); revocation of the long-lived key doesn’t
+retroactively kill an already-minted short-lived token (bounded by its
+short TTL — 15 min default, <code>config.go:54-55</code>).</p>
+<p><strong>Recommendation: Option B</strong>, because it reuses the
+existing login/token machinery, keeps the long-lived secret off the
+per-request wire, and inherits the short-TTL auto-expiry the anti-leak
+posture wants. Adopt Option A only if <code>21_*</code> decides the
+tenant claim is out of scope for the first milestone, in which case
+direct-key Bearer is an acceptable, revocation-immediate interim.</p>
+<hr />
+<h2 id="command-surface">2. Command surface</h2>
+<p><code>helix-ota</code> is a single static Go binary (natural home:
+<code>server/cmd/helix-ota/</code>, beside
+<code>ota-server</code>/<code>ota-device-emu</code>, <code>11_*</code>
+§2), reusing the server’s <code>wire.go</code> request structs so the
+CLI and server never drift. It carries a <strong>local context</strong>
+(server URL + account + project + os/target defaults) like
+<code>kubectl</code>, so a project-scoped key need not re-state
+<code>--project</code> on every call.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Command</th>
+<th>Maps to endpoint (existing / +new scoping)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-ota login --token $KEY</code> /
+<code>login -u -p</code></td>
+<td><code>POST /auth/token-exchange</code> (new, Option B) or
+<code>POST /auth/login</code> (<code>handlers_auth.go:77</code>)</td>
+<td>stores scoped session; interactive user/pass path reuses
+<code>handleLogin</code></td>
+</tr>
+<tr>
+<td><code>helix-ota logout</code></td>
+<td>local session clear</td>
+<td>removes cached short-lived token</td>
+</tr>
+<tr>
+<td><code>helix-ota whoami</code></td>
+<td>resolve from token/key</td>
+<td>prints resolved <code>(account, project, role)</code> — proves
+scope, no bluff</td>
+</tr>
+<tr>
+<td><code>helix-ota config set-context --server --account --project --os --target-model</code></td>
+<td>local only</td>
+<td><code>kubectl</code>-style context; no server call</td>
+</tr>
+<tr>
+<td><code>helix-ota upload &lt;artifact.zip&gt; --project &lt;p&gt; [--account &lt;a&gt;] [--version --os --target-model --sha256 --signature]</code></td>
+<td><code>POST /artifacts/upload</code>
+(<code>handlers_artifact.go:47</code>) <strong>+ (account,project)
+association</strong></td>
+<td>multipart
+<code>file</code>+<code>metadata</code>(+<code>sha256</code>/<code>signature</code>);
+the core command (§3)</td>
+</tr>
+<tr>
+<td><code>helix-ota artifacts list --project &lt;p&gt;</code></td>
+<td><strong>MISSING endpoint</strong>
+(<code>useUploadArtifact.ts:4-7</code>)</td>
+<td>dependency: a list-artifacts endpoint must be added (§4)</td>
+</tr>
+<tr>
+<td><code>helix-ota release create --artifact &lt;id&gt; --project &lt;p&gt;</code></td>
+<td><code>POST /releases</code> (<code>handlers_release.go:16</code>)
+<strong>+ project scope</strong></td>
+<td>referenced artifact must be <code>Verified</code> + version
+strictly-monotonic (<code>:43-69</code>)</td>
+</tr>
+<tr>
+<td><code>helix-ota release list --project &lt;p&gt;</code></td>
+<td><code>GET /releases</code> (<code>server.go:206</code>)</td>
+<td>scoped list</td>
+</tr>
+<tr>
+<td><code>helix-ota deploy create --release &lt;id&gt; --strategy all-targets --project &lt;p&gt;</code></td>
+<td><code>POST /deployments</code>
+(<code>handlers_deployment.go:28</code>) <strong>+ project
+scope</strong></td>
+<td>MVP accepts only <code>all-targets</code> (<code>:39-43</code>)</td>
+</tr>
+<tr>
+<td><code>helix-ota status &lt;deploymentId&gt;</code> /
+<code>deploy list</code></td>
+<td><code>GET /deployments/:id</code> (<code>server.go:210</code>)</td>
+<td>progress is derived server-side from telemetry
+(<code>deriveProgress</code>, <code>11_*</code> §5)</td>
+</tr>
+<tr>
+<td><code>helix-ota doctor</code></td>
+<td>local + <code>GET /health</code></td>
+<td>token-leak audit, config sanity, server reachability</td>
+</tr>
+</tbody>
+</table>
+<p>Global flags: <code>--server</code>, <code>--project</code>,
+<code>--account</code>, <code>--json</code> (machine-readable output for
+CI), <code>--token</code>, <code>-v</code> (redacted-logging). Exit
+codes are stable + documented for CI gating (0 ok / non-zero per failure
+class).</p>
+<hr />
+<h2 id="upload-flow-the-core-path">3. Upload flow (the core path)</h2>
+<ol type="1">
+<li><strong>Client</strong> builds <code>multipart/form-data</code>
+exactly as the server expects (<code>file</code> payload bytes +
+<code>metadata</code> JSON <code>ArtifactUploadMetadata</code> +
+optional <code>sha256</code> + <code>signature</code>), mirroring
+<code>useUploadArtifact</code> (<code>use-artifacts.ts:35-51</code>) and
+the wire struct (<code>wire.go</code> / <code>api.ts:723-735</code>),
+and sends <code>POST /artifacts/upload</code> with the scoped bearer
+(Option B token or Option A key) — plus the caller’s chosen
+<code>--project</code>.</li>
+<li><strong>Server associates the artifact with
+<code>(account, project)</code>.</strong> This needs the
+currently-absent scope columns on <code>store.Artifact</code>
+(<code>11_*</code> §1: no <code>ProjectID</code> today). The rule,
+preserving the trust boundary: the <strong>account is taken from the
+resolved token/key scope, never from a request field</strong> (a client
+cannot upload into an account its key does not grant); the
+<strong>project</strong> is the caller-supplied <code>--project</code>,
+which the server <strong>validates against the key’s authorized project
+set</strong> (<code>requireProjectAccess</code> pattern,
+<code>handlers_project.go:37-74</code>) and rejects (403) if out of
+scope. The accepted <code>store.Artifact</code> (built at
+<code>handlers_artifact.go:176-198</code>) gains <code>account_id</code>
++ <code>project_id</code> (shapes owned by <code>20_*</code>).</li>
+<li><strong>Monotonicity + “latest” become per-scope.</strong>
+<code>LatestRelease(os, target_model)</code> is global today
+(<code>10_*</code> §8) and would let one tenant’s version block
+another’s; it must become
+<code>LatestRelease(account/project, os, target_model)</code>. Same for
+<code>ActiveDeploymentForTarget(os, model, group)</code> (deployment
+uniqueness) and project/ device/group name uniqueness (<code>10_*</code>
+§8 flags each). Flagged as a <code>20_*</code>/<code>22_*</code> scoping
+task the CLI depends on but does not itself implement.</li>
+<li><strong>Signing/verify against a per-account key.</strong> Today
+<code>resolvePublicKey</code>
+(<code>handlers_artifact.go:283-288</code>) returns one global
+<code>HELIX_ARTIFACT_PUBKEY</code>. Extend it to a <strong>per-account
+key registry</strong> keyed on the resolved <code>account_id</code>,
+with the global key as fallback for un-migrated accounts. <strong>The
+trust boundary is unchanged</strong>: the verify key still comes only
+from server config/registry, never from the request — only the
+<em>lookup key</em> gains an account dimension. The CLI never supplies a
+verify key; it supplies only the detached signature over
+<code>payload.bin</code> (S3, <code>11_*</code> §3).
+<ul>
+<li><em>Recommendation:</em> per-account ed25519 key in a server-side
+registry (config- or KMS-backed), global fallback during migration.
+<em>Tradeoff:</em> per-account key rotation + a registry lookup vs. the
+simplicity of one global key; a shared global key means any account’s
+signer can sign for the platform — unacceptable long-term for tenant
+isolation, so per-account is the target, staged behind the
+fallback.</li>
+</ul></li>
+<li><strong>Response + evidence.</strong> The CLI surfaces the returned
+<code>Artifact</code> (id, <code>Verified</code> status, stored
+signature) as <code>--json</code>;
+<code>whoami</code>/<code>status</code> let CI assert the artifact
+landed under the right <code>(account, project)</code> — the anti-bluff
+hook for §6.</li>
+</ol>
+<hr />
+<h2 id="object-storage-gap-honest-dependency-risk">4. Object-storage gap
+(honest dependency / risk)</h2>
+<p><strong>This is the load-bearing production dependency and it is
+real, not a design nicety</strong> (<code>11_*</code> §Honest-gaps 1).
+Today <code>handleUploadArtifact</code> validates the uploaded bytes
+with S1–S6 and then <strong>discards them</strong>;
+<code>StorageRef</code> is a synthesized placeholder
+<code>s3://helix-artifacts/&lt;id&gt;</code>
+(<code>handlers_artifact.go:184</code>) and the device’s download URL is
+<code>ArtifactBaseURL/&lt;id&gt;.zip</code>
+(<code>handlers_client.go:232-234</code>) pointing at an external
+“Storage brick” <strong>that is not present in this repo</strong>.
+Consequence: the CLI can authenticate, validate, and register an
+artifact today, <strong>but the platform cannot durably store or serve
+the payload bytes</strong> — so an end-to-end “upload → device downloads
+→ device applies” is not yet possible from in-repo code alone.</p>
+<p>What a production upload requires (dependency the CLI blocks on, not
+owned by this doc):</p>
+<ol type="1">
+<li><strong>A real object store behind the accept path.</strong> After
+S1–S6 accept, stream the payload bytes to a durable store (S3 / GCS /
+MinIO), persist the <strong>real</strong> <code>StorageRef</code>
+(replacing the placeholder at <code>handlers_artifact.go:184</code>),
+and resolve the device download URL from it (signed, time-bounded
+URL).</li>
+<li><strong>Per-account/project key prefix or bucket</strong> so tenant
+A’s bytes are physically isolated from tenant B’s (composes with the §3
+scoping + <code>26_security_threat_model.md</code>).</li>
+<li><strong>A <code>Storage</code> interface seam</strong> (like
+<code>store.Repository</code>) so dev uses rootless-podman
+<strong>MinIO</strong> (§11.4.161 via the containers submodule) and prod
+uses S3/GCS — no ad-hoc client in handlers.</li>
+<li><strong>A list-artifacts endpoint</strong>
+(<code>GET /artifacts?project=…</code>) — absent today
+(<code>useUploadArtifact.ts:4-7</code>) — for
+<code>helix-ota artifacts list</code> and the SPA’s release picker.</li>
+</ol>
+<p><em>Recommendation:</em> introduce the <code>Storage</code> seam +
+MinIO dev backend as a <strong>prerequisite milestone</strong> in
+<code>30_delivery_plan.md</code>, gating the CLI’s e2e claim;
+per-account prefixing; signed download URLs. <em>Tradeoff:</em> a
+self-hosted MinIO adds an infra component and a dev-boot dependency, but
+it is the only way to produce the §6 e2e captured evidence honestly (a
+“PASS” over discarded bytes would be a §11.4 bluff). <strong>Until
+object storage lands, the CLI’s upload+register+release+deploy path is
+validatable, but “device downloads and applies the exact bytes” is not —
+this is stated as fact, not deferred silently (§11.4.6).</strong></p>
+<hr />
+<h2
+id="incorporation-into-an-existing-consuming-project-minimal-recipe">5.
+Incorporation into an existing consuming project (minimal recipe)</h2>
+<p>A consuming project adds Helix OTA publishing in five steps. (Note:
+<strong>CI/CD automation is DISABLED in <em>this</em> repo per
+§11.4.156</strong> — the snippets below are for the <em>consumer’s</em>
+own pipeline; no active <code>.yml</code> workflow is added to
+helix_ota.)</p>
+<ol type="1">
+<li><p><strong>Provision (super-admin side, one-time).</strong> The
+platform super-admin creates the account, the project under it, and
+issues a scoped API key (<code>helix-ota</code> admin flow or the
+super-admin console, <code>21_*</code>/<code>23_*</code>). The cleartext
+key is handed to the project owner once.</p></li>
+<li><p><strong>Store the key as a CI secret.</strong> GitHub Actions
+repo secret / GitLab CI masked variable / Vault — surfaced to the job as
+<code>HELIX_OTA_TOKEN</code>. <strong>Never</strong> in git (§11.4.10);
+the project’s <code>.gitignore</code> includes
+<code>.helix-ota/</code>.</p></li>
+<li><p><strong>Commit non-secret config only.</strong>
+<code>.helix-ota/config.yaml</code> (server URL, account, project,
+<code>os</code>, <code>target_model</code> defaults) is safe to commit;
+the credential is not. Ship a
+<code>.helix-ota/config.example.yaml</code> + <code>.env.example</code>
+documenting <code>HELIX_OTA_TOKEN</code> (§11.4.77
+regeneration/README).</p></li>
+<li><p><strong>Add the publish step</strong> after the OTA artifact is
+built and signed:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># consumer project&#39;s own pipeline (illustrative; not added to helix_ota, §11.4.156)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Publish OTA update</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">HELIX_OTA_TOKEN</span><span class="kw">:</span><span class="at"> ${{ secrets.HELIX_OTA_TOKEN }}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">  run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    helix-ota upload  dist/update.zip \</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      --project myproj --version &quot;${VERSION}&quot; --os android --target-model rk3588</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    helix-ota release create --artifact &quot;$(helix-ota artifacts list --project myproj --json | jq -r &#39;.[0].id&#39;)&quot;  --project myproj</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    helix-ota deploy  create  --release  &quot;${RELEASE_ID}&quot; --strategy all-targets --project myproj</span></code></pre></div></li>
+<li><p><strong>Verify in CI.</strong> <code>helix-ota whoami</code>
+(proves scope) +
+<code>helix-ota status &lt;deploymentId&gt; --json</code> (proves the
+deployment exists) gate the job; a non-zero exit fails the pipeline.
+(<code>artifacts list</code> depends on the §4 endpoint gap being
+closed.)</p></li>
+</ol>
+<p><em>Recommendation:</em> ship the CLI as a downloadable static binary
++ a thin <code>install.sh</code> and a container image
+(rootless-podman-runnable) so consumers pin a version; document the
+minimal <code>config.yaml</code> in the CLI’s own
+<code>docs/scripts/</code> (§11.4.18). <em>Tradeoff:</em> a container
+image is heavier than a bare binary but removes host-toolchain
+assumptions in locked-down CI.</p>
+<hr />
+<h2
+id="test-strategy-for-the-cli-anti-bluff-no-mock-beyond-unit-11.4.27-11.4.69">6.
+Test strategy for the CLI (anti-bluff, no mock beyond unit — §11.4.27 /
+§11.4.69)</h2>
+<p>Every layer below the unit layer exercises the <strong>real</strong>
+server + <strong>real</strong> store; mocks live only in unit tests
+(§11.4.27). Each PASS cites captured evidence under
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83) via
+<code>ab_pass_with_evidence</code> (§11.4.69) — never a
+metadata-only/absence-of-error PASS.</p>
+<ul>
+<li><strong>Unit</strong> (mocks allowed here only): arg/flag parsing,
+context resolution + precedence (<code>--token</code> &gt; env &gt; file
+&gt; keyring), <strong>credential redaction</strong> (assert the raw
+token never appears in any log line — the §11.4.10 guard), multipart
+body construction, retry/backoff, exit-code mapping. Table-driven.</li>
+<li><strong>Integration</strong> (real server, no mock): boot the real
+<code>ota-server</code> (httptest or a real binary) with a real (memory
+or Postgres) store; drive
+<code>login → upload → release create → deploy create</code> with a real
+scoped key. Assert: (a) the artifact row persists with the correct
+<code>(account_id, project_id)</code>; (b) a <strong>cross-project key
+is rejected 403</strong> on upload/release/deploy (tenant isolation —
+negative test, <code>26_*</code>); (c) a cross-account key cannot
+read/list another account’s artifacts. Evidence: captured server JSON
+responses + store-row dumps.</li>
+<li><strong>E2E</strong> (real everything):
+<code>auth → upload → release → deploy → device-verify</code>, against a
+real server + <strong>real object storage (MinIO)</strong> + the Go
+device emulator (<code>ota-device-emu</code>, <code>11_*</code> §4)
+polling <code>GET /client/update</code>. Assert the emulator receives
+the offer for <em>this</em> account/project’s release, <strong>downloads
+the exact bytes</strong>, and <code>VerifyBeforeApply</code> accepts
+them (SHA-256 + signature, <code>11_*</code> §3). Sink-side captured
+evidence (§11.4.69 <code>cast</code>/download taxonomy): the emulator’s
+received manifest
+<ul>
+<li>the persisted real <code>StorageRef</code> + the downloaded+verified
+artifact hash. <strong>Blocked on §4 object storage</strong> — until
+then this layer is honestly
+<code>SKIP-with-reason: object_storage_absent</code>, never a fake
+PASS.</li>
+</ul></li>
+<li><strong>Security / tenant isolation:</strong> the
+cross-account/cross-project negative matrix above as a first-class suite
+(<code>26_*</code>); token-leak scan; expired/revoked-key
+rejection.</li>
+<li><strong>Stress + chaos</strong> (§11.4.85): N concurrent uploads
+across accounts (no cross-tenant bleed, no deadlock); kill the CLI
+mid-upload / corrupt the token / drop the network mid request — the CLI
+fails cleanly with a categorized non-zero exit, never a partial
+registered artifact.</li>
+<li><strong>Full-automation / re-runnability</strong> (§11.4.98): every
+layer is self-driving end to end (credential bootstrapped once from env,
+no human keystroke mid-run) and passes at <code>-count=3</code> with
+self-cleaning state.</li>
+<li><strong>HelixQA Challenge</strong> (§11.4.27 layer 4): a bank entry
+driving the real CLI→server→ device journey with captured evidence.</li>
+</ul>
+<p><em>Recommendation:</em> gate the CLI’s “done” on the integration +
+security layers GREEN with captured evidence now, and mark the e2e layer
+explicitly blocked on the object-storage milestone (§4) so the coverage
+ledger is honest rather than green-over-a-gap.</p>
+<hr />
+<h2 id="sources-verified-2026-07-10">Sources verified 2026-07-10</h2>
+<p>External research per §11.4.8 / §11.4.99 — production CLI-auth-for-CI
+patterns and OTA/release-publishing CLIs that model project/fleet-scoped
+upload tokens. Findings corroborate the design: scoped, revocable,
+hash-stored, least-privilege tokens delivered via env var,
+exchanged/used non-interactively, with an upload command that both
+uploads bytes and creates a release entry.</p>
+<ul>
+<li><strong>Mender — Using the APIs / CI-CD</strong> (Personal Access
+Tokens as API keys for CI/CD;
+<code>mender-cli artifacts --server … --token-value $PAT upload release.mender</code>;
+requires Deployments-Manager + Releases-Manager roles; Direct Upload
+streams bytes to artifact storage): <a
+href="https://docs.mender.io/server-integration/using-the-apis"
+class="uri">https://docs.mender.io/server-integration/using-the-apis</a>
++ <a href="https://docs.mender.io/artifact-creation/ci-cd"
+class="uri">https://docs.mender.io/artifact-creation/ci-cd</a> —
+validates §1 (scoped PAT from CI), §2 (<code>upload</code> command), §3
+(role-scoped publish), §4 (direct-to-object-storage upload).</li>
+<li><strong>balena — Deploy to your Fleet / balena CLI (latest)</strong>
+(named, revocable API keys vs 7-day session tokens;
+<code>balena login --token</code> then
+<code>Authorization: Bearer</code>; <code>balena deploy</code> uploads
+images then creates a release entry; per-fleet key listing; “never
+commit access tokens”): <a
+href="https://docs.balena.io/learn/deploy/deployment"
+class="uri">https://docs.balena.io/learn/deploy/deployment</a> + <a
+href="https://docs.balena.io/reference/balena-cli/latest"
+class="uri">https://docs.balena.io/reference/balena-cli/latest</a> —
+validates §1 (named/revocable fleet-scoped keys, §11.4.10 no-commit), §2
+(<code>login --token</code>, <code>deploy</code>), §5 (fleet == project
+analogue).</li>
+<li><strong>Expo — Programmatic access (EAS)</strong> (robot/bot
+accounts that cannot interactively sign in and authenticate only via a
+token scoped to account-owned resources; <code>EXPO_TOKEN</code> env var
+for CI; treat tokens like passwords, store as CI secrets): <a
+href="https://docs.expo.dev/accounts/programmatic-access/"
+class="uri">https://docs.expo.dev/accounts/programmatic-access/</a> —
+validates §1.1 (account-scoped robot credential, Option-B exchange),
+§1.2 (<code>HELIX_OTA_TOKEN</code> env pattern), §5 (CI-secret
+incorporation).</li>
+<li><strong>npm — About access tokens / granular access tokens
+GA</strong> (least-privilege granular tokens scoped to specific
+packages/scopes/orgs, auto-expiring, recommended for CI publishing;
+legacy long-lived tokens removed 2025): <a
+href="https://docs.npmjs.com/about-access-tokens/"
+class="uri">https://docs.npmjs.com/about-access-tokens/</a>
+<ul>
+<li><a
+href="https://github.blog/changelog/2023-03-21-general-availability-of-granular-access-token-on-npm/"
+class="uri">https://github.blog/changelog/2023-03-21-general-availability-of-granular-access-token-on-npm/</a>
+— validates §1.1 (scope-limited key), §1.3 (short-lived/expiring
+preference, Option B).</li>
+</ul></li>
+</ul>
+<p>Negative finding (§11.4.99): none of the surveyed services stores the
+cleartext token server-side — all store a hash and show the secret once.
+This directly supports the <code>api_keys.key_hash</code> sketch
+(<code>001_initial_schema.up.sql:60</code>) and §1.1’s hash-only rule;
+no source contradicts the proposed model.</p>
+<h2 id="honest-boundary">Honest boundary</h2>
+<p>This is a <strong>design proposal</strong>, not shipped behavior
+(§11.4.6). Concretely:</p>
+<ul>
+<li><strong>The object-storage dependency is REAL and unresolved
+in-repo.</strong> Artifact bytes are validated then discarded today
+(<code>handlers_artifact.go:184</code>, <code>11_*</code> §Honest-gaps
+1). The CLI’s authenticate → upload → validate → register → release →
+deploy path is designable and testable now, but a genuine “device
+downloads and applies the exact uploaded bytes” e2e <strong>cannot be
+proven until real object storage lands</strong> (§4). Any claim of full
+e2e before then would be a §11.4 PASS-bluff; §6 marks that layer
+<code>SKIP-with-reason</code>.</li>
+<li><strong>Entity shapes are not decided here.</strong>
+<code>account</code>, <code>user</code>, <code>membership</code>, and
+the scoped <code>api_keys</code> columns
+(<code>account_id</code>/<code>project_id</code>) are <strong>owned by
+<code>20_*</code> (SSOT)</strong>; this doc consumes them and cites the
+one concrete in-repo sketch
+(<code>001_initial_schema.up.sql:57-71</code>) for the fields that
+already exist. Where <code>20_*</code> finalizes a different shape,
+<code>20_*</code> wins and this doc is reconciled to it.</li>
+<li><strong>The tenant-aware token claim is a <code>21_*</code>
+dependency.</strong> Option B (recommended) needs
+<code>account_id</code>+<code>project_id</code> in <code>Claims</code>
+(<code>token.go:31-36</code> has none today); the auth-model fork is
+surfaced with tradeoffs (§1.3), not silently chosen for
+<code>21_*</code>.</li>
+<li><strong>Per-account signing keys, per-scope monotonicity, and a
+list-artifacts endpoint</strong> are named as required server-side
+extensions the CLI depends on (§3, §4) but does not itself own; the
+trust boundary (verify key from server config only, never the request)
+is explicitly preserved in the proposal.</li>
+<li><strong>Recommendations carry tradeoffs, not silent
+decisions</strong> (§11.4.66): Option B over A for auth; per-account
+signing key with global fallback; MinIO dev / S3 prod behind a
+<code>Storage</code> seam; binary + container distribution. Each states
+the cost of the choice and the condition under which the alternative is
+correct.</li>
+</ul>
+</body>
+</html>

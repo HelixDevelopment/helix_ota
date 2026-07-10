@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>22_api_surface</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">22_api_surface</h1>
+</header>
+<h1
+id="server-api-surface-extensions-for-multi-account-helix-ota-to-be-design">Server
+API Surface Extensions for Multi-Account Helix OTA — To-Be Design</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Scope.</strong> This doc designs the HTTP <strong>API
+surface</strong> the multi-account feature adds to the Helix OTA control
+plane (<code>server/</code>, Go/Gin modular monolith): the super-admin
+admin API (accounts/users/memberships/roles), how the existing OTA
+routes become account-scoped, the post-sign-in account-selection API,
+the credentials API (project-CLI API keys + device provisioning tokens),
+the missing endpoints the as-is audit flagged, and the versioning /
+backward-compat / error / pagination contracts. It is the route-shape
+companion to the data-model keystone.</p>
+<p><strong>Authority to defer to (cited, never contradicted).</strong>
+Entity shapes (Account / User / Membership / Role / api_keys columns /
+token claim) are owned by
+<code>20_target_multitenancy_data_model.md</code>
+(<strong>SSOT</strong>) — this doc <em>consumes</em> those shapes and
+the Repository methods it declares, and invents no conflicting shape.
+The permission-model <em>shape</em> (RBAC vs ABAC vs role+scope — OQ-2)
+is owned by <code>21_authz_rbac_superadmin.md</code>; the token-claim
+field names + the super-admin claim encoding are <code>21_*</code>’s to
+finalize — this doc fixes only route shapes + authZ gates + the
+claim-derivation <em>direction</em>. The project-CLI auth model (Option
+A/B), the object-storage dependency, and the per-account signing-key
+registry are owned by <code>24_project_side_cli.md</code>; the device
+enrollment / provisioning model by
+<code>25_device_side_update_client.md</code>; cross-tenant isolation
+proofs + the anti-enumeration rule by
+<code>26_security_threat_model.md</code>; UI consumption by
+<code>23_ui_ux_all_surfaces.md</code>.</p>
+<p><strong>Reading order.</strong> Read <code>00_INDEX.md</code>,
+<code>10_existing_auth_and_project_model.md</code>,
+<code>11_existing_upload_and_device_update.md</code>, and
+<code>20_*</code> FIRST. Every “as-is” claim about an existing route
+carries a first-hand <code>file:line</code>; every “to-be” element is a
+proposal, presented as a recommendation-with-tradeoffs for operator
+decision — never a silent decision (§11.4.6 / §11.4.66).</p>
+</blockquote>
+<hr />
+<h2 id="super-admin-admin-api-accounts-users-memberships-roles">1.
+Super-admin admin API — accounts / users / memberships / roles</h2>
+<h3 id="as-is-no-admin-surface-no-super-admin-gate">1.1 As-is: no admin
+surface, no super-admin gate</h3>
+<p>Today there is <strong>no accounts/users/memberships surface at
+all</strong> — the route table
+(<code>server/internal/api/server.go:183-251</code>) exposes only auth,
+devices, artifacts, deltas, releases, deployments, rollout, client,
+telemetry, groups, audit, and projects. Projects are the closest
+precedent: <code>POST/GET/GET/PATCH/DELETE /projects</code>
+(<code>server.go:246-250</code>), gated by the <strong>global</strong>
+<code>requireRole</code> (<code>middleware.go:79-97</code>) plus, on the
+single-project routes, the per-project ACL
+<code>requireProjectAccess</code>
+(<code>handlers_project.go:37-74</code>). There is <strong>no persisted
+User entity</strong> — identity is the token <code>Subject</code> and an
+env-seeded in-memory <code>StaticUserDirectory</code>
+(<code>users.go:8-48</code>; bootstrap <code>main.go:96-104</code>) —
+and <strong>no <code>is_super_admin</code> concept</strong>; a global
+RBAC <code>admin</code> merely bypasses the project ACL
+(<code>handlers_project.go:43-60</code>). <code>20_*</code> §1.2/§6
+introduces the persisted <code>User</code> + the global
+<code>users.is_super_admin</code> boolean this admin API gates on.</p>
+<h3 id="new-route-namespace-the-super-admin-gate">1.2 New route
+namespace + the super-admin gate</h3>
+<p>The admin API is a <strong>new, additive namespace</strong> under the
+existing <code>/api/v1</code> group (<code>server.go:189-190</code> —
+<code>auth := v1.Group("")</code> with <code>authMiddleware()</code> +
+<code>auditMiddleware()</code>). It is gated by a <strong>new
+<code>requireSuperAdmin</code> middleware</strong> (sibling of
+<code>requireRole</code>, <code>middleware.go:79-97</code>) that admits
+only a principal whose resolved identity carries
+<code>is_super_admin</code> (the claim/flag shape is
+<code>21_*</code>’s; <code>20_*</code> §6 is the data-layer source).
+<code>requireSuperAdmin</code> is strictly stronger than the global
+<code>admin</code> role — a normal account <code>admin</code> may
+administer <em>within</em> their account (§2) but never create accounts,
+provision users, or read another account’s data.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + path (new)</th>
+<th>Handler (new)</th>
+<th>AuthZ</th>
+<th>Repository method (20_* §3.1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /admin/accounts</code></td>
+<td><code>handleCreateAccount</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>CreateAccountWithOwner</code> (atomic, 20_* §3.3)</td>
+</tr>
+<tr>
+<td><code>GET /admin/accounts</code></td>
+<td><code>handleListAccounts</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>ListAccounts</code></td>
+</tr>
+<tr>
+<td><code>GET /admin/accounts/:accountId</code></td>
+<td><code>handleGetAccount</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>GetAccount</code></td>
+</tr>
+<tr>
+<td><code>PATCH /admin/accounts/:accountId</code></td>
+<td><code>handleUpdateAccount</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>UpdateAccount</code> (name/slug/status)</td>
+</tr>
+<tr>
+<td><code>DELETE /admin/accounts/:accountId</code></td>
+<td><code>handleDeleteAccount</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>DeleteAccount</code> (cascade per 20_* §4 FKs)</td>
+</tr>
+<tr>
+<td><code>POST /admin/users</code></td>
+<td><code>handleCreateUser</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>CreateUser</code></td>
+</tr>
+<tr>
+<td><code>GET /admin/users</code></td>
+<td><code>handleListUsers</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>ListUsers</code></td>
+</tr>
+<tr>
+<td><code>GET /admin/users/:userId</code></td>
+<td><code>handleGetUser</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>GetUser</code></td>
+</tr>
+<tr>
+<td><code>PATCH /admin/users/:userId</code></td>
+<td><code>handleUpdateUser</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>UpdateUser</code>
+(email/active/<code>is_super_admin</code>†)</td>
+</tr>
+<tr>
+<td><code>DELETE /admin/users/:userId</code></td>
+<td><code>handleDeleteUser</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>DeleteUser</code></td>
+</tr>
+<tr>
+<td><code>PUT /admin/accounts/:accountId/members/:userId</code></td>
+<td><code>handleSetMembership</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>SetAccountMembership</code> (grant/change role)</td>
+</tr>
+<tr>
+<td><code>GET /admin/accounts/:accountId/members</code></td>
+<td><code>handleListAccountMembers</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>ListAccountMembers</code></td>
+</tr>
+<tr>
+<td><code>DELETE /admin/accounts/:accountId/members/:userId</code></td>
+<td><code>handleRemoveMembership</code></td>
+<td><code>requireSuperAdmin</code></td>
+<td><code>RemoveAccountMembership</code></td>
+</tr>
+</tbody>
+</table>
+<p>† <strong>Trust-boundary caveat on
+<code>is_super_admin</code>.</strong> Per <code>20_*</code> §6 the
+super-admin flag is maximum-blast-radius and is settable <strong>only
+via config/env bootstrap, never a request</strong> — the same rule the
+codebase already enforces for the token secret
+(<code>config.go:180-184</code>), the TLS-proxy trust flag
+(<code>config.go:88-110</code>), and the artifact-verify key
+(<code>resolvePublicKey</code>,
+<code>handlers_artifact.go:274-283</code>).
+<strong>Recommendation:</strong> <code>PATCH /admin/users/:userId</code>
+accepts profile/active edits but MUST reject any attempt to <em>set</em>
+<code>is_super_admin=true</code> over the wire (a 403, or silently
+ignore the field) — promotion to super-admin stays a bootstrap-only
+operation. <em>Tradeoff:</em> an operator who wants runtime super-admin
+promotion via the API accepts widening that trust boundary; the safe
+default is config-only, and <code>26_*</code> owns the final rule.
+<strong>This admin API assumes at least one super-admin already
+exists</strong> (env bootstrap, <code>main.go:96-104</code> extended per
+<code>20_*</code> §6) — it never mints the <em>first</em> one.</p>
+<h3 id="role-permission-assignment-route-shape-only-model-deferred">1.3
+Role / permission assignment — route shape only, model deferred</h3>
+<p>Per-account <strong>role assignment</strong> rides on
+<code>PUT /admin/accounts/:accountId/members/:userId</code> above (the
+membership row carries the role — <code>20_*</code> §1.3). The richer
+<strong>per-account role/permission catalog</strong> (“ultimate
+flexibility”, OQ-2) — if <code>21_*</code> chooses the reserved
+roles/permissions tables (<code>20_*</code> §1.4) — adds an additive
+sub-namespace whose shape this doc sketches but does
+<strong>not</strong> decide:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + path (conditional on 21_* choosing table-based RBAC)</th>
+<th>AuthZ</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST/GET/PATCH/DELETE /admin/accounts/:accountId/roles[...]</code></td>
+<td><code>requireSuperAdmin</code> (+ account <code>admin</code> if 21_*
+delegates)</td>
+<td>tenant-scoped role catalog (<code>roles(account_id,name)</code>,
+20_* §1.4)</td>
+</tr>
+<tr>
+<td><code>PUT /admin/accounts/:accountId/roles/:roleId/permissions</code></td>
+<td>as above</td>
+<td>attach <code>permissions</code> to a role</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> ship only membership-role assignment
+(fixed <code>viewer&lt;operator&lt;admin</code> enum, reusing the
+<code>ProjectRole</code> rank tooling
+<code>handlers_project.go:78-92</code>) in the first milestone, and gate
+the role/permission-catalog routes behind <code>21_*</code>’s OQ-2
+decision so they are a pure additive migration. <em>Tradeoff:</em> the
+fixed enum caps flexibility at three roles now; the catalog routes
+deliver the mandated max-flexibility later at the cost of a
+role-resolution join per authZ check (<code>20_*</code> §1.4). No silent
+choice — <code>21_*</code> owns it.</p>
+<hr />
+<h2 id="account-scoping-the-existing-ota-routes">2. Account-scoping the
+existing OTA routes</h2>
+<p>This is the load-bearing decision: <strong>where does tenancy live in
+the request, and how is it derived.</strong> The as-is state
+(established first-hand): the token
+<code>Claims{sub,roles,iat,exp}</code> carry <strong>no tenant
+dimension</strong> (<code>token.go:31-36</code>), and every OTA route is
+gated <strong>only</strong> by the global <code>requireRole</code> —
+devices (<code>server.go:192-195</code>), artifacts
+(<code>:197-198</code>), deltas (<code>:202-203</code>), releases
+(<code>:205-207</code>), deployments (<code>:209-211</code>), rollout
+(<code>:215-217</code>), recall (<code>:220-221</code>), client
+update/telemetry (<code>:223-224</code>), groups
+(<code>:232-239</code>), audit (<code>:242</code>). None consults
+account or project, because none carries one (<code>10_*</code> §2,
+§4).</p>
+<h3
+id="the-anchor-decision-token-claim-tenancy-primary-path-tenancy-admin-only">2.0
+The anchor decision: token-claim tenancy (primary) + path tenancy (admin
+only)</h3>
+<p>Two canonical ways to put a tenant in a REST request (Microsoft Azure
+Architecture Center; apyflux; the multi-tenant-SaaS JWT-claims guide —
+§Sources):</p>
+<ul>
+<li><strong>Path-based</strong> —
+<code>/api/v1/accounts/{accountId}/artifacts/upload</code>. The tenant
+is explicit in the URL. <em>Pro:</em> self-documenting, trivially
+routable, easy to log/cache per tenant. <em>Con:</em> the tenant id is
+<strong>client-supplied</strong>, so it MUST still be authorized against
+the caller’s identity on every request — “even though the request
+includes a domain name or other tenant identifier, it doesn’t mean you
+should automatically grant access” (Azure, <em>Request validation</em>,
+assume-breach). It also churns <strong>every</strong> OTA path + every
+client call site (SPA, CLI, device agent).</li>
+<li><strong>Token-claim</strong> — the account (and, where relevant,
+project) is a <strong>top-level immutable claim inside the signed
+token</strong>; the server reads it from that one place, and <strong>the
+paths stay unchanged</strong>. “If <code>tenant_id</code> is a
+top-level, immutable claim inside the signed payload, and every layer
+reads it from that one place, the boundary is enforced by the same
+cryptography that protects identity … if tenant scope is reconstructed
+from request metadata after verification, the signature protects nothing
+useful” (JWT-claims guide, §Sources).</li>
+</ul>
+<p><strong>Recommendation (hybrid):</strong></p>
+<ol type="1">
+<li><strong>Primary hot path — account is derived from the signed token
+claim, NEVER from the path or a header.</strong> The existing OTA routes
+keep their current paths (<code>server.go:192-242</code>) and gain a
+<strong>scoping middleware</strong> (§2.1) that reads
+<code>account_id</code> (+ <code>project_id</code> where present) from
+the verified <code>Claims</code>. This preserves the trust boundary
+<code>20_*</code> §6 / <code>24_*</code> §1 / <code>25_*</code> §1.2 fix
+(tenancy is server-minted + server-verified, the client can never assert
+its own account), it is the smallest path diff (no URL churn for
+device/CLI/SPA callers), and it is exactly the model <code>23_*</code>
+§1.3, <code>24_*</code> §1.3 Option B, and <code>25_*</code> §1.2
+already assume.</li>
+<li><strong>Admin + super-admin cross-account operations —
+path-based</strong> (<code>/admin/accounts/:id/…</code>, §1), because
+there the caller legitimately acts across many accounts and MUST name
+the target account explicitly; that path segment is authorized against
+<code>is_super_admin</code> (§1.2), so it is a named target, never a
+self-asserted scope.</li>
+</ol>
+<p><em>Tradeoff of the token-claim primary:</em> switching the active
+account requires a token re-exchange (§3) rather than just changing a
+URL — accepted, because it is the same “one token per active tenant
+session, switch context explicitly” pattern the JWT-claims guide
+recommends and <code>23_*</code>/<code>24_*</code> already assume. An
+operator who prefers explicit per-request account paths can layer the
+path form on top later (they compose); this doc does not silently
+foreclose it.</p>
+<h3 id="the-scoping-middleware-requireaccountaccess">2.1 The scoping
+middleware (<code>requireAccountAccess</code>)</h3>
+<p>A new middleware runs <strong>after</strong>
+<code>authMiddleware</code> (<code>server.go:190</code>) on every
+account-scoped route, mirroring the shape of
+<code>requireProjectAccess</code>
+(<code>handlers_project.go:37-74</code>):</p>
+<ol type="1">
+<li>Read <code>account_id</code> (+ optional <code>project_id</code>)
+from the verified <code>Claims</code> (never a header or body field —
+the JWT-claims / Azure assume-breach rule).</li>
+<li>Resolve the caller’s membership via
+<code>GetAccountMembership(userID, accountID)</code> (<code>20_*</code>
+§3.1) and deny below the route’s <code>minRole</code> (reuse the
+<code>viewer&lt;operator&lt;admin</code> rank compare,
+<code>handlers_project.go:78-92</code>).</li>
+<li><strong>Super-admin bypass</strong> mirrors the <em>exact precedent
+already in the code</em>: a global <code>admin</code>/super-admin
+bypasses the per-project ACL and sees all projects
+(<code>handlers_project.go:43-60</code>, list-all
+<code>:162-199</code>); the account layer generalizes this —
+<code>is_super_admin</code> skips the <code>account_id</code> membership
+filter (<code>20_*</code> §6).</li>
+<li>Stash the resolved <code>(account_id, project_id)</code> in the Gin
+context so handlers + the store layer scope reads/writes. The Repository
+accessors gain the scope per <code>20_*</code> §3.2 (explicit
+<code>accountID</code> param on single-entity methods +
+<code>AccountID</code>/<code>ProjectID</code> fields on the existing
+<code>*Filter</code> structs <code>store.go:259-285</code> for list
+paths), with pgx RLS as the independent second layer (<code>20_*</code>
+§0).</li>
+</ol>
+<p>Per-route effect (route paths unchanged; the gate + the derived scope
+are the change):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Existing route (<code>server.go</code>)</th>
+<th>Added gate</th>
+<th>Scope source</th>
+<th>Newly-scoped invariant (20_* §2.2)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /artifacts/upload</code> (<code>:197</code>)</td>
+<td><code>requireAccountAccess(operator)</code></td>
+<td>claim <code>account_id</code> + <code>--project</code> validated
+against claim’s authorized set</td>
+<td>artifact row gains <code>account_id</code>+<code>project_id</code>
+(<code>24_*</code> §3)</td>
+</tr>
+<tr>
+<td><code>POST /releases</code> (<code>:205</code>)</td>
+<td><code>requireAccountAccess(operator)</code></td>
+<td>claim</td>
+<td><code>LatestRelease</code> monotonicity becomes
+per-<code>(account,project,os,model)</code>
+(<code>store.go:349</code>)</td>
+</tr>
+<tr>
+<td><code>POST /deployments</code> (<code>:209</code>)</td>
+<td><code>requireAccountAccess(operator)</code></td>
+<td>claim</td>
+<td>active-deploy uniqueness
+per-<code>(account,project,os,model,group)</code>
+(<code>store.go:359</code>)</td>
+</tr>
+<tr>
+<td><code>GET /devices</code> / <code>/releases</code> /
+<code>/deployments</code> / <code>/groups</code> / <code>/audit</code>
+(<code>:193,206,210,233,242</code>)</td>
+<td><code>requireAccountAccess(viewer\|admin)</code></td>
+<td>claim → <code>*Filter.AccountID</code></td>
+<td>list results filtered to the caller’s account</td>
+</tr>
+<tr>
+<td><code>GET /client/update</code> +
+<code>POST /client/telemetry</code> (<code>:223-224</code>,
+<code>RoleDevice</code>)</td>
+<td>claim <code>account_id</code> on the <strong>device</strong>
+token</td>
+<td>server-minted at register (<code>25_*</code> §1.2)</td>
+<td><code>ActiveDeploymentForTarget</code> gains the account+project
+filter → a device only ever sees its own account’s offer</td>
+</tr>
+<tr>
+<td><code>POST /devices/register</code> (<code>:192</code>)</td>
+<td><code>requireAccountAccess(operator)</code></td>
+<td>claim</td>
+<td><code>mintDeviceToken</code>
+(<code>handlers_device.go:157-159</code>) stamps
+<code>account_id</code>/<code>project_id</code> into the device token
+(§4.2)</td>
+</tr>
+<tr>
+<td><code>/projects</code> CRUD (<code>:246-250</code>)</td>
+<td><code>requireAccountAccess</code></td>
+<td>claim</td>
+<td>projects hang off <code>account_id</code>; name unique per-account
+(<code>20_*</code> §2.2 #1)</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>project</strong> dimension stays the caller-supplied
+<code>--project</code> (query/body) but is <strong>validated against the
+token’s authorized project set</strong> and rejected if out of scope
+(<code>requireProjectAccess</code> pattern,
+<code>handlers_project.go:37-74</code>; <code>24_*</code> §3 step 2) —
+project is a narrowing <em>within</em> the claim’s account, never a
+widening of it.</p>
+<hr />
+<h2 id="account-selection-api-post-sign-in">3. Account-selection API
+(post-sign-in)</h2>
+<h3 id="as-is-login-returns-a-role-only-token-no-account-step">3.1
+As-is: login returns a role-only token, no account step</h3>
+<p><code>POST /api/v1/auth/login</code> → <code>handleLogin</code>
+(<code>handlers_auth.go:77-99</code>) authenticates via the injected
+<code>UserDirectory</code> and calls <code>issueTokenPair</code>
+(<code>:123-137</code>), which mints an access token
+(<code>signer.Mint</code>, roles only) + an opaque single-use-rotating
+refresh token (<code>refreshStore</code>, <code>:28-72</code>; 30-day
+default <code>:19</code>) and returns
+<code>TokenResponse{AccessToken,TokenType,ExpiresIn,RefreshToken,Roles}</code>
+(<code>:130-136</code>). <code>POST /auth/refresh</code> →
+<code>handleRefresh</code> (<code>:102-119</code>) rotates the refresh
+token. <strong>There is no account dimension anywhere in this
+flow.</strong></p>
+<h3 id="new-list-my-accounts-set-active-account-token-exchange">3.2 New:
+list-my-accounts + set-active-account (token exchange)</h3>
+<p>The mandate wants “account selection after sign-in”
+(<code>00_INDEX.md</code> §1 item 5). Two new public/authenticated
+routes, additive beside the existing auth pair
+(<code>server.go:184-185</code>):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + path (new)</th>
+<th>AuthZ</th>
+<th>Purpose</th>
+<th>Backing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /auth/accounts</code> (a.k.a. “list my accounts”)</td>
+<td><code>authMiddleware</code> (identity-scoped token)</td>
+<td>after sign-in, list the caller’s memberships → the picker
+(<code>23_*</code> §2.1)</td>
+<td><code>ListUserAccounts(userID)</code> (<code>20_*</code> §3.1) →
+<code>[{account_id, name, slug, role, is_owner}]</code></td>
+</tr>
+<tr>
+<td><code>POST /auth/select-account</code> (token exchange)</td>
+<td><code>authMiddleware</code></td>
+<td>exchange the identity token for a <strong>scoped access token
+carrying the <code>account_id</code> (+ project) claim</strong></td>
+<td>validate <code>GetAccountMembership(userID, accountID)</code>;
+re-mint via an <code>issueTokenPair</code> extended with the tenant
+claim (<code>handlers_auth.go:123</code>; claim shape =
+<code>21_*</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Design (recommendation): identity-scoped refresh token +
+per-account short-lived access token minted on
+selection/switch.</strong> This is the WorkOS/JWT-claims “one token per
+active tenant session, switch context explicitly” pattern (§Sources;
+<code>23_*</code> §1.3): the long-lived refresh credential stays
+identity-scoped, and the account claim is <strong>derived on
+demand</strong> and never embedded in the long-lived credential — so a
+compromised/rotated session cannot silently act in the wrong account. On
+account <strong>switch</strong>, the client calls
+<code>POST /auth/select-account</code> again for the new account and
+invalidates account-scoped caches (<code>23_*</code> §2.3).</p>
+<ul>
+<li><strong>Single membership</strong> → the server MAY auto-issue the
+scoped token at login (skip the picker — Clerk pattern,
+<code>23_*</code> §2.1). <strong>Zero memberships</strong> →
+<code>GET /auth/accounts</code> returns an empty list and the client
+shows the “no account access” dead-end (never a silent blank).
+<strong>Super-admin</strong> → <code>GET /auth/accounts</code> returns
+the System scope; an explicit “act within account X” is a
+<code>POST /auth/select-account</code> that the
+<code>is_super_admin</code> gate authorizes without a membership row
+(<code>23_*</code> §2.1).</li>
+</ul>
+<p><em>Alternative (flagged, not chosen):</em> embed a
+<code>tenants[]</code> array of scoped role-sets in one token and
+validate the chosen <code>account_id</code> per request (the JWT-claims
+guide lists both). <em>Tradeoff:</em> the array avoids the re-exchange
+round trip but ships every membership in one credential (larger blast
+radius on leak, and every downstream layer MUST re-validate the chosen
+tenant or lateral movement is possible — the anti-pattern the guide
+warns against). <strong>Recommendation: token-exchange over the
+tenants-array</strong>, for least standing exposure and smallest new
+surface. The final claim encoding + the exchange endpoint name are
+<code>21_*</code>/this doc’s to bind together; <code>24_*</code> §1.3
+Option B is the same exchange reused for API keys (§4).</p>
+<hr />
+<h2
+id="credentials-api-project-cli-api-keys-device-provisioning-tokens">4.
+Credentials API — project-CLI API keys + device provisioning tokens</h2>
+<p>Two distinct machine credentials, both <strong>scoped from a
+server-stored row, never self-asserted</strong> (the
+<code>resolvePublicKey</code>/<code>TrustTLSProxy</code> trust boundary,
+<code>10_*</code> §7; <code>24_*</code> §1.1). Both consume
+<code>20_*</code>’s <code>api_keys</code>/token shapes; neither is
+minted by an interactive password.</p>
+<h3 id="project-cli-api-keys-non-interactive-cicd">4.1 Project-CLI API
+keys (non-interactive CI/CD)</h3>
+<p>The <code>api_keys</code> shape exists <strong>on paper only</strong>
+(design-target migration <code>001_initial_schema.up.sql:57-71</code>,
+unimplemented in the shipped store — <code>10_*</code> §1) and gains the
+<code>account_id</code> + nullable <code>project_id</code> scope columns
+<code>20_*</code>/<code>24_*</code> §1.1 own. New routes:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + path (new)</th>
+<th>AuthZ</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /admin/accounts/:accountId/api-keys</code></td>
+<td><code>requireSuperAdmin</code> (or account <code>admin</code>, if
+<code>21_*</code> delegates)</td>
+<td>mint a named, scoped key; <strong>cleartext returned ONCE</strong>,
+only <code>key_hash</code> stored
+(<code>001_initial_schema.up.sql:60</code>; industry hash-only,
+<code>24_*</code> §Sources)</td>
+</tr>
+<tr>
+<td><code>GET /admin/accounts/:accountId/api-keys</code></td>
+<td>as above</td>
+<td>list keys (redacted to <code>helixk_…&lt;last4&gt;</code>, never
+cleartext — <code>24_*</code> §1.2)</td>
+</tr>
+<tr>
+<td><code>DELETE /admin/accounts/:accountId/api-keys/:keyId</code></td>
+<td>as above</td>
+<td>revoke (set <code>revoked_at</code>; immediate)</td>
+</tr>
+<tr>
+<td><code>POST /auth/token-exchange</code></td>
+<td>public (presents the key)</td>
+<td>exchange the long-lived key for a short-lived scoped access token
+(<code>24_*</code> §1.3 <strong>Option B</strong>, the recommended CLI
+auth)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> the key is an <strong>exchange
+credential</strong> (<code>24_*</code> §1.3 Option B) — the CLI calls
+<code>POST /auth/token-exchange</code> once per session and then uses
+the scoped bearer on the existing authenticated hot path (§2).
+<em>Tradeoff:</em> one extra round trip at session start + depends on
+the tenant claim in <code>Claims</code>; the alternative (direct-key
+<code>Bearer</code> on every request, Option A) is revocation-immediate
+but rides a long-lived secret on every call. Both are designed here;
+<code>21_*</code> picks whether the claim ships in milestone 1. This
+admin API also hosts, additively, the <strong>per-account
+signing-key</strong> surface
+(<code>POST/DELETE /admin/accounts/:accountId/signing-keys</code>) that
+<code>24_*</code> §3 step 4 + <code>26_*</code> own — the verify key
+still comes only from server config/registry, never the request; only
+the <em>lookup key</em> gains an account dimension
+(<code>resolvePublicKey</code>,
+<code>handlers_artifact.go:274-283</code>). Flagged as a
+<code>26_*</code> dependency, not decided here.</p>
+<h3 id="device-provisioning-tokens">4.2 Device provisioning tokens</h3>
+<p>Today device enrollment is operator-driven:
+<code>POST /devices/register</code> → <code>handleRegisterDevice</code>
+requires an operator/admin token (<code>server.go:192</code>) and mints
+a device-role token via <code>mintDeviceToken</code> (sub =
+<code>deviceId</code>, <code>handlers_device.go:157-159</code>) that
+carries <strong>no account/project</strong> (<code>25_*</code> §1.1).
+Two provisioning shapes (<code>25_*</code> §1.3):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method + path</th>
+<th>AuthZ</th>
+<th>Model</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /devices/register</code> (existing
+<code>server.go:192</code>, extended)</td>
+<td><code>requireAccountAccess(operator)</code></td>
+<td><strong>Option A</strong> — <code>mintDeviceToken</code> also stamps
+<code>account_id</code>/<code>project_id</code> from the operator’s
+claim into the device token</td>
+<td><strong>start here</strong> — smallest delta over today’s flow
+(<code>25_*</code> §1.3)</td>
+</tr>
+<tr>
+<td><code>POST /admin/accounts/:accountId/enrollment-claims</code> +
+<code>POST /devices/claim</code> (new)</td>
+<td>mint: super-admin/account admin; claim: public (presents the
+bootstrap claim)</td>
+<td><strong>Option B</strong> — issue a short-lived,
+minimally-privileged bootstrap claim; the device exchanges it at first
+boot for a long-lived per-device <code>(account,project,deviceId)</code>
+token (AWS IoT fleet-provisioning-by-claim, <code>25_*</code>
+§Sources)</td>
+<td><strong>adopt for at-scale / self-service</strong> enrollment</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation: Option A now</strong> (enrollment is already
+operator-driven — the production delta is just “stamp the claim”),
+<strong>Option B when self-service or fleet-scale enrollment is
+required</strong> (they compose — B is A plus a claim-exchange front
+door). <em>Tradeoff:</em> A puts a long-lived token on-device (higher
+blast radius on leak) but needs no new enrollment protocol; B’s
+on-device secret is per-device + rotatable but adds a claim lifecycle +
+a provisioning-hook to build. The device token’s account claim is
+<strong>server-minted + server-verified</strong> — the device can never
+assert its own tenancy (<code>25_*</code> §1.2 trust boundary). Final
+token/enrollment shape =
+<code>20_*</code>/<code>21_*</code>/<code>25_*</code>.</p>
+<hr />
+<h2 id="missing-endpoints-the-as-is-state-requires">5. Missing endpoints
+the as-is state requires</h2>
+<p>Beyond the admin/selection/credential routes above, the as-is audits
+flag concrete gaps the UI (<code>23_*</code>) and CLI
+(<code>24_*</code>) block on:</p>
+<ol type="1">
+<li><strong><code>GET /artifacts</code> (list-artifacts) — the
+load-bearing gap.</strong> The server exposes <strong>no list-artifacts
+endpoint</strong> today — only <code>GET /artifacts/:artifactId</code>
+metadata (<code>server.go:198</code>); the SPA documents this as a KNOWN
+GAP that leaves the release picker’s artifact list empty
+(<code>clients/ota-manager/src/hooks/useUploadArtifact.ts:4-7</code>),
+and the CLI’s <code>helix-ota artifacts list</code> depends on it
+(<code>24_*</code> §2, §4). <strong>Add</strong>
+<code>GET /artifacts</code>, account-scoped via the claim (§2) +
+optional <code>?project=</code> narrowing, with the
+<strong>existing</strong> cursor+limit pagination convention (§6.3).
+AuthZ: <code>requireAccountAccess(viewer)</code>.</li>
+<li><strong><code>GET /auth/accounts</code> +
+<code>POST /auth/select-account</code></strong> — §3 (account
+selection).</li>
+<li><strong><code>GET /admin/accounts</code> /
+<code>GET /admin/users</code> /
+<code>GET /admin/accounts/:id/members</code></strong> — §1 (super-admin
+console lists, <code>23_*</code> §3.1).</li>
+<li><strong><code>GET /admin/accounts/:id/api-keys</code></strong> —
+§4.1 (key management UI + CLI).</li>
+<li><strong><code>GET /projects</code> becomes account-scoped</strong> —
+it already exists (<code>server.go:247</code>) but returns the global
+project set; under §2 it returns only the active account’s projects,
+which is what the SPA’s real (non-mock) account/project switcher needs
+(<code>23_*</code> §2.2; <code>use-projects.ts</code> already
+anticipates a real <code>GET /projects</code>).</li>
+<li><strong>Small wire additions (not new endpoints, flagged):</strong>
+a <code>notes</code>/release-notes field on the release + pass-through
+in the <code>UpdateAvailable</code> offer
+(<code>handlers_client.go:70-101</code>) so the device wizard can show
+release notes (<code>25_*</code> §3) — an additive optional field
+(§6.1), not a route.</li>
+</ol>
+<p><strong>Out of scope here (owned elsewhere, flagged not silently
+dropped):</strong> the <strong>artifact byte
+download/object-storage</strong> surface — bytes are validated then
+discarded and <code>StorageRef</code> is a placeholder
+(<code>handlers_artifact.go:184</code>; <code>11_*</code> §Honest-gaps
+1) — is a <code>24_*</code> §4 dependency; the device download-URL
+resolution (<code>handlers_client.go:232-234</code>) becomes per-account
+but the <code>Storage</code> seam + signed URLs are
+<code>24_*</code>/<code>26_*</code>. This doc designs the
+<em>control</em> surface, not the byte-transfer surface.</p>
+<hr />
+<h2 id="versioning-backward-compat-error-contracts-pagination">6.
+Versioning, backward-compat, error contracts, pagination</h2>
+<h3 id="keep-apiv1-working-additive-only-no-apiv2">6.1 Keep
+<code>/api/v1</code> working — additive-only, no
+<code>/api/v2</code></h3>
+<p>Every new route above is <strong>additive under the existing
+<code>/api/v1</code> group</strong> (<code>server.go:189</code>) — new
+endpoints (admin/*, auth/accounts, auth/select-account,
+auth/token-exchange, GET /artifacts, enrollment-claims), new
+<strong>optional</strong> response fields
+(<code>account_id</code>/<code>project_id</code> on
+Artifact/Release/Deployment/Device wire shapes; a release
+<code>notes</code> field), and new <strong>optional</strong> query
+params (<code>?project=</code>). Per the versioning guidance (§Sources),
+“adding new endpoints, adding new properties to a response, and
+introducing optional parameters are non-breaking changes” — so
+<strong>no <code>/api/v2</code> is required</strong> for the
+multi-account surface.</p>
+<p><strong>The one potentially-breaking change is the newly-mandatory
+account scope on the existing OTA routes.</strong> Mitigation (composing
+<code>20_*</code> §5 Option A default-account backfill): a
+<strong>legacy token that carries no account claim resolves server-side
+to the seeded <code>__default__</code> account</strong> — so a legacy
+single-tenant caller keeps working on the same paths, unchanged, during
+migration; the account is derived server-side, the URL never changes.
+<strong>Recommendation:</strong> keep the default-account fallback for a
+bounded transition window, then signal removal with a
+<code>Sunset</code> header on the legacy-unscoped behavior before
+dropping it (the versioning guidance’s deprecation pattern — §Sources),
+never a hard cutover. <em>Tradeoff:</em> the fallback keeps a
+“NULL/<code>__default__</code> account” path alive during migration (a
+small isolation caveat <code>20_*</code> §5 accepts because the store is
+an in-memory MVP with negligible data); an operator with real
+multi-tenant prod data from day one drops the fallback and requires the
+claim immediately (<code>20_*</code> §5 operator decision point).</p>
+<h3 id="error-contract-reuse-the-existing-envelope-codes">6.2 Error
+contract — reuse the existing envelope + codes</h3>
+<p>The server already ships a stable error envelope
+<code>ErrorBody{code, message, details}</code>
+(<code>errors.go:32-34</code>) with helpers <code>respondError</code>
+(<code>errors.go:48</code>) / <code>respondValidation</code>
+(<code>errors.go:61</code>) over a closed code set
+(<code>errors.go:11-22</code>): <code>UNAUTHENTICATED</code>,
+<code>FORBIDDEN</code>, <code>NOT_FOUND</code>,
+<code>VALIDATION_FAILED</code>, <code>CONFLICT</code>,
+<code>UNSUPPORTED_MEDIA_TYPE</code>, <code>PAYLOAD_TOO_LARGE</code>,
+<code>RATE_LIMITED</code>, <code>SIGNATURE_INVALID</code>,
+<code>HASH_MISMATCH</code>, <code>VERSION_NOT_MONOTONIC</code>,
+<code>INTERNAL</code>. The multi-account surface <strong>reuses this
+envelope + codes — no new codes are required</strong>:</p>
+<ul>
+<li>Invalid / expired / revoked API key or session, or missing account
+claim → <code>UNAUTHENTICATED</code>.</li>
+<li>Caller lacks the membership role for the route, or a
+super-admin-only route → <code>FORBIDDEN</code>.</li>
+<li>Per-account uniqueness violation (project/device-hardware/group name
+now unique <strong>per-account</strong>, <code>20_*</code> §2.2) → the
+existing <code>CONFLICT</code> (as <code>handleCreateDeployment</code>
+already conflicts on an active target, <code>11_*</code> §1).</li>
+<li><strong>Cross-tenant access — recommend <code>NOT_FOUND</code>, not
+<code>FORBIDDEN</code>.</strong> When account A requests a resource
+owned by account B, returning <code>NOT_FOUND</code> (rather than
+<code>FORBIDDEN</code>) avoids disclosing that the resource exists in
+another tenant — the anti-enumeration posture (Azure assume-breach +
+high-entropy tenant ids, §Sources). <em>Tradeoff:</em>
+<code>NOT_FOUND</code> is slightly less diagnostic for a
+legitimately-confused caller; the isolation win dominates.
+<strong><code>26_security_threat_model.md</code> owns the final hard
+rule + its paired-mutation proof</strong> — flagged, not decided
+here.</li>
+</ul>
+<h3 id="pagination-reuse-the-existing-cursorlimit-convention">6.3
+Pagination — reuse the existing cursor+limit convention</h3>
+<p>Pagination <strong>already exists</strong> and is consistent: list
+endpoints take <code>?cursor=</code> + <code>?limit=</code> (default 50,
+validated to <code>[1,200]</code>) and return a <code>NextCursor</code>
+— see list-releases (<code>handlers_release.go:106-130</code>) and
+list-devices (<code>handlers_device.go:107-138</code>), backed by the
+<code>Cursor</code>/<code>Limit</code> fields on
+<code>AuditFilter</code>/<code>DeviceFilter</code>/<code>ReleaseFilter</code>
+(<code>store.go:259-285</code>). Every <strong>new</strong> list
+endpoint (accounts, users, members, api-keys, artifacts) MUST adopt the
+<strong>same</strong> cursor+limit+<code>NextCursor</code> shape, and
+the account/project scope is added as
+<code>AccountID</code>/<code>ProjectID</code> fields on those same
+<code>*Filter</code> structs (<code>20_*</code> §3.2) so the list paths
+gain scope with zero signature churn. Reusing the shipped convention
+(rather than inventing offset/page params) keeps the API self-consistent
+— a §11.4.50 determinism + consistency win.</p>
+<hr />
+<h2 id="sources-verified-2026-07-10">Sources verified 2026-07-10</h2>
+<p>External research per §11.4.8 / §11.4.99 — REST multi-tenant API
+scoping (path vs token-claim), tenant-request mapping + request
+validation, admin/API-key credential design, and additive-versioning
+backward-compat. Findings corroborate the design: derive tenant from the
+signed token claim (not a request-supplied path/header) on the hot path,
+name the tenant explicitly only for cross-account admin operations,
+exchange tokens on account switch, and add tenancy as an additive
+<code>/api/v1</code> change (new endpoints + optional fields), not a new
+major version.</p>
+<ul>
+<li><strong>Microsoft Azure Architecture Center — “Map requests to
+tenants in a multitenant solution”</strong> (ms.date 2024-11-24, page
+updated 2025-10-30): enumerates domain/subdomain, URL-path,
+query-string, custom-header, token-claim, API-key, and client-cert
+tenant identification; the <strong>Request validation</strong> section
+is load-bearing — “even though the request includes a domain name or
+other tenant identifier, it doesn’t mean you should automatically grant
+access” (assume-breach), and the API-keys note that short-lived
+claims-based tokens are “a more modern and secure approach” than
+long-lived keys. Grounds §2.0 (path is client-supplied → must be
+authorized), §2.1 (validate every request), §4 (API-key = record tenant
+per key, hash-lookup, expire/rotate). <a
+href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/map-requests"
+class="uri">https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/map-requests</a></li>
+<li><strong>Multi-Tenant SaaS Architecture Hub — “JWT Claims for Tenant
+Scoping: Best Practices”</strong>: top-level immutable
+<code>tenant_id</code> inside the signed payload read from one place,
+“if tenant scope is reconstructed from request metadata after
+verification, the signature protects nothing useful”; multi-tenant users
+→ “issue one token per active tenant session” and switch context
+explicitly, or a <code>tenants</code> array validated per request; a
+flat global role list enables lateral movement. Grounds §2.0/§2.1
+(claim, never self-asserted), §3 (token-exchange on selection/switch
+over a tenants-array). <a
+href="https://www.multi-tenant-saas.com/auth-isolation-cross-tenant-access-control/tenant-aware-jwt-token-management/jwt-claims-for-tenant-scoping-best-practices/"
+class="uri">https://www.multi-tenant-saas.com/auth-isolation-cross-tenant-access-control/tenant-aware-jwt-token-management/jwt-claims-for-tenant-scoping-best-practices/</a></li>
+<li><strong>apyflux — “Multi-Tenancy in REST API: Scalable, Secure
+Tenant Identification &amp; API Designs”</strong>: path-based
+(<code>api.example.com/tenant1/resources</code>) is “straightforward and
+easy to implement” but couples tenant to the URL; token-based
+“decoupling tenant data from the URL” is the “go-to approach for modern
+API designs” for security + scale; “a combination of these strategies is
+sometimes employed to maximize both security and performance.” Grounds
+§2.0 (path-vs-token tradeoff + the hybrid recommendation). <a
+href="https://www.apyflux.com/blogs/api-development/multi-tenancy-rest-api"
+class="uri">https://www.apyflux.com/blogs/api-development/multi-tenancy-rest-api</a></li>
+<li><strong>Speakeasy — “Versioning Best Practices in REST API
+Design”</strong>: “adding new endpoints, adding new properties to a
+response, and introducing optional parameters are non-breaking changes”;
+“removing or renaming endpoints, removing required fields, and changing
+response structures are considered breaking changes”; use a
+<code>Sunset</code> header + a transition window rather than an
+immediate cutover. Grounds §6.1 (additive tenancy needs no
+<code>/api/v2</code>; default-account fallback + <code>Sunset</code>
+deprecation). <a href="https://www.speakeasy.com/api-design/versioning/"
+class="uri">https://www.speakeasy.com/api-design/versioning/</a></li>
+</ul>
+<p>No external source contradicts the proposed model. Negative finding
+(§11.4.99): none of the surveyed sources prescribes returning
+<code>NOT_FOUND</code> vs <code>FORBIDDEN</code> for cross-tenant denial
+— that recommendation (§6.2) follows from the Azure assume-breach +
+anti-enumeration principle applied to this API, and its hard rule is
+deferred to <code>26_*</code>, not asserted as external consensus.</p>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>Design proposal, not implemented.</strong> No route,
+handler, middleware (<code>requireSuperAdmin</code>,
+<code>requireAccountAccess</code>), or wire field described here exists
+in the codebase yet. Every “as-is” fact about an existing route carries
+a first-hand <code>file:line</code> (<code>server.go:183-251</code>,
+<code>handlers_auth.go</code>, <code>errors.go</code>,
+<code>handlers_release.go</code> / <code>handlers_device.go</code>
+pagination, <code>store.go:259-285</code>); every “to-be” route is a
+proposal. Nothing here is a §11.4 completion claim.</li>
+<li><strong>Entity + claim + permission shapes are NOT decided
+here.</strong> Account/User/Membership/Role and the
+<code>api_keys</code> scope columns are owned by <code>20_*</code>
+(SSOT); the token-claim field names + the super-admin claim encoding +
+the permission-model shape (OQ-2) are <code>21_*</code>’s. This doc
+fixes only route shapes, authZ gates, and the claim-derivation
+<em>direction</em>; where <code>20_*</code>/ <code>21_*</code> finalize
+a different shape, they win and this doc is reconciled to them.</li>
+<li><strong>Cross-cutting dependencies are flagged, not silently
+owned:</strong> the tenant token claim (<code>21_*</code>), per-account
+signing-key registry + the cross-tenant <code>NOT_FOUND</code> rule +
+isolation proofs (<code>26_*</code>), real object storage + the artifact
+download surface (<code>24_*</code> §4), the device
+enrollment/provisioning model (<code>25_*</code>), and the
+default-account backfill/migration path (<code>20_*</code> §5). The API
+surface is designable and reviewable now, but a live end-to-end “scoped
+upload → device downloads the exact bytes” cannot be proven until object
+storage lands — stated as fact, per <code>24_*</code> §4 /
+<code>11_*</code> §Honest-gaps 1.</li>
+<li><strong>Every open choice is a recommendation with tradeoffs for
+operator decision, never silently decided (§11.4.66):</strong>
+token-claim tenancy on the hot path + path-based only for the
+cross-account admin API (§2.0); token-exchange over a tenants-array for
+account selection (§3); CLI key as an exchange credential — Option B
+(§4.1); operator-minted device token — Option A now, bootstrap-claim —
+Option B at scale (§4.2); additive <code>/api/v1</code>
+<ul>
+<li>default-account fallback + <code>Sunset</code> deprecation over a
+<code>/api/v2</code> cutover (§6.1); <code>NOT_FOUND</code> over
+<code>FORBIDDEN</code> for cross-tenant denial (§6.2, hard rule deferred
+to <code>26_*</code>).</li>
+</ul></li>
+<li><strong>Scope of the audit behind the as-is facts:</strong> route
+lines were read first-hand from non-test source (<code>server.go</code>,
+<code>handlers_auth.go</code>, <code>errors.go</code>, the two list
+handlers, <code>store.go</code> filters); the sibling docs’
+<code>file:line</code> claims (token/claims, project ACL, device-token
+mint, StorageRef placeholder) are cited to
+<code>10_*</code>/<code>11_*</code>/<code>20_*</code>/<code>24_*</code>/<code>25_*</code>
+and not independently re-read here. No test path
+(<code>*_test.go</code>) was audited. </content> </invoke></li>
+</ul>
+</body>
+</html>

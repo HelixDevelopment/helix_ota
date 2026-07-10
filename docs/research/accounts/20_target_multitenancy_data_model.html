@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>20_target_multitenancy_data_model</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">20_target_multitenancy_data_model</h1>
+</header>
+<h1 id="target-multi-account-tenant-data-model-to-be-design">Target
+Multi-Account (Tenant) Data Model — To-Be Design</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Scope.</strong> This is the KEYSTONE data-model design for
+adding an ACCOUNT (tenant) layer to the Helix OTA control plane
+(<code>server/</code>, Go/Gin modular monolith). It designs the to-be
+entities (Account, User, Membership, Role/Permission), how they scope
+the existing OTA model
+(Device/Artifact/Release/Deployment/Telemetry/Group), the
+<code>store.Repository</code> extension for BOTH the in-memory MVP and
+the pgx target, a migration-style DDL sketch, the OQ-4 migration path,
+and the super-admin at the data layer. It is the single source of truth
+the sibling to-be docs (<code>21_authz_rbac_superadmin</code>,
+<code>22_api_surface</code>, <code>24_project_side_cli</code>,
+<code>26_security_threat_model</code>, <code>30_delivery_plan</code>)
+reference — so it is deliberately precise and self-consistent (§11.4.186
+anti-divergence).</p>
+<p><strong>Reading order.</strong> Read <code>00_INDEX.md</code>
+(mandate + open questions) and
+<code>10_existing_auth_and_project_model.md</code> (the authoritative
+as-is facts) FIRST. Every as-is claim below is grounded in a
+<code>file:line</code> those docs already established; this doc does not
+re-derive them, it cites them. Every design choice is grounded in a
+cited source (<code>## Sources verified 2026-07-10</code>) or marked
+“original work”. Every open choice is presented as a
+recommendation-with-tradeoffs for operator decision — never a silent
+decision (§11.4.6).</p>
+</blockquote>
+<hr />
+<h2 id="the-one-decision-this-doc-anchors-tenancy-model">0. The one
+decision this doc anchors: tenancy model</h2>
+<p>Three canonical multi-tenant storage models exist (Microsoft Azure
+Architecture Center; AWS; dasroot 2026): <strong>(1) shared database +
+shared schema</strong> with a
+<code>tenant_id</code>/<code>account_id</code> column on every
+tenant-owned row and database-enforced row scoping; <strong>(2)
+schema-per-tenant</strong>; <strong>(3)
+database-per-tenant</strong>.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>Isolation</th>
+<th>Ops cost</th>
+<th>Cross-tenant analytics</th>
+<th>Fit for Helix OTA today</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shared schema + <code>account_id</code> (+ RLS)</td>
+<td>Policy-enforced; a policy/where bug is a leak</td>
+<td>Lowest — one schema, one migration</td>
+<td>Trivial (one table)</td>
+<td><strong>Best</strong> — matches ADR-0003 “modular monolith — one
+PostgreSQL schema” (<code>001_initial_schema.up.sql:16</code>) and the
+existing single-schema store (<code>schema_postgres.sql:11</code>)</td>
+</tr>
+<tr>
+<td>Schema-per-tenant</td>
+<td>Strong; per-tenant customization</td>
+<td>Every migration ×N tenants</td>
+<td>Harder</td>
+<td>Overkill; no per-tenant schema customization is required by the
+mandate</td>
+</tr>
+<tr>
+<td>Database-per-tenant</td>
+<td>Perfect; per-tenant residency</td>
+<td>N connection pools, N backups</td>
+<td>Hardest</td>
+<td>Reserve for a future compliance/residency tenant only</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation (KEYSTONE): shared schema + a denormalized
+<code>account_id</code> column on every tenant-owned table, defended by
+PostgreSQL Row-Level Security (RLS) at the pgx layer.</strong> This is
+the industry default when tenant counts can grow and no per-tenant
+schema customization is required (Microsoft, AWS, dasroot all recommend
+shared-schema+RLS as the default; escalate only for
+compliance/residency). It also requires the <em>least</em> change to the
+shipped single-schema store.</p>
+<p><strong>Tradeoff to accept:</strong> isolation now depends on correct
+scoping + correct RLS policies; a forgotten
+<code>WHERE account_id = …</code> in application code would leak
+cross-tenant — which is exactly why RLS (database-enforced, “works even
+when your application code has bugs” — AWS) is the belt-and-suspenders
+second layer, and why <code>26_security_threat_model.md</code> must
+carry a paired mutation proving a non-scoped session cannot read another
+account’s rows.</p>
+<p><strong>Escalation path (operator decision, not now):</strong> a
+single high-compliance tenant that needs data residency or a separate
+backup schedule can later be promoted to its own schema or database
+without changing the shared-schema code for everyone else — the
+<code>account_id</code> seam is forward-compatible with a routing layer
+that maps some accounts to isolated storage.</p>
+<hr />
+<h2 id="entities">1. Entities</h2>
+<p>Four new/lifted entities. Id type is <strong>opaque
+<code>TEXT</code></strong> to match the <em>shipped</em> store
+convention (<code>project_id</code>, <code>device_id</code>,
+<code>artifact_id</code> are all <code>TEXT</code> —
+<code>schema_postgres.sql:15,34,49,240</code>), NOT the
+<code>UUID</code> used by the canonical design-target migration
+(<code>001_initial_schema.up.sql:40</code> etc.).</p>
+<blockquote>
+<p><strong>Divergence to reconcile (§11.4.186).</strong> The shipped
+store (<code>schema_postgres.sql</code>) uses opaque <code>TEXT</code>
+ids; the canonical target migration
+(<code>001_initial_schema.up.sql</code>) uses <code>UUID</code> and
+already declares <code>users</code> + <code>api_keys</code> tables (10_*
+§3, <code>001_initial_schema.up.sql:39-71</code>) that were never
+carried into the shipped store. <strong>Recommendation:</strong> the
+<em>implementation</em> seam (this design, §3–§4) uses opaque
+<code>TEXT</code> to mirror the store it actually extends; the canonical
+<code>001</code>-style schema keeps <code>UUID</code>. Both remain
+internally consistent; §4 states the mapping so the two representations
+never silently diverge. Tradeoff: <code>TEXT</code> ids forgo
+<code>gen_random_uuid()</code> server-side generation (ids are minted
+app-side, as they already are for projects/devices) — accepted, because
+it matches the existing code and avoids a store-wide id-type
+migration.</p>
+</blockquote>
+<h3 id="account-the-tenant-top-of-the-tree">1.1 <code>Account</code> —
+the tenant (top of the tree)</h3>
+<p>The account is the top of the hierarchy
+<code>account → projects → OTA updates</code>. It has no parent.
+Account-level identifiers are legitimately
+<strong>global-unique</strong> (accounts ARE the tenant boundary, so
+there is no enclosing scope).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>account_id</code></td>
+<td><code>TEXT</code> <strong>PK</strong></td>
+<td>opaque, app-minted (mirrors <code>project_id</code>)</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td>display name; <strong>UNIQUE (global)</strong> — one tenant per name
+in the super-admin console</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td>URL-/token-safe stable handle; <strong>UNIQUE (global)</strong>; the
+stable key an account switcher / CLI selects by (§11.4.111
+resolve-by-stable-name)</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>TEXT NOT NULL DEFAULT 'active'</code></td>
+<td><code>CHECK IN ('active','suspended','archived')</code> — suspend
+gates all sign-in/scoped access without deleting data</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMPTZ NOT NULL</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td><code>TIMESTAMPTZ NOT NULL</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>PK:</strong> <code>account_id</code>.
+<strong>Unique:</strong> <code>name</code>, <code>slug</code> (both
+global).</li>
+<li>Go type mirrors <code>store.Project</code>
+(<code>store.go:289-295</code>) one level up.</li>
+</ul>
+<h3 id="user-persisted-identity-closes-the-3-gap">1.2 <code>User</code>
+— persisted identity (closes the §3 gap)</h3>
+<p>Today there is <strong>no persisted user</strong> — identity is the
+bare token <code>Subject</code> string and an in-memory env-seeded map
+(10_* §3; <code>token.go:32</code>, <code>users.go:8-48</code>,
+<code>main.go:96-104</code>). This design persists the User the target
+migration already sketched
+(<code>001_initial_schema.up.sql:39-51</code>). A User is a
+<strong>single global identity</strong> that can belong to many accounts
+(the mandate: “users belong to one OR more accounts”, 00_INDEX §1.3) —
+so user identifiers are global-unique and the <em>account
+relationship</em> lives in Membership (§1.3), not on the user row.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user_id</code></td>
+<td><code>TEXT</code> <strong>PK</strong></td>
+<td>opaque, app-minted</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td>login identity; <strong>UNIQUE (global)</strong>; the value the
+token <code>Subject</code> resolves to</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td><strong>UNIQUE (global)</strong></td>
+</tr>
+<tr>
+<td><code>password_hash</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td>credential hash only, never cleartext (mirrors target
+<code>users.password_hash</code>,
+<code>001_initial_schema.up.sql:43</code>)</td>
+</tr>
+<tr>
+<td><code>is_super_admin</code></td>
+<td><code>BOOLEAN NOT NULL DEFAULT FALSE</code></td>
+<td>the <strong>global</strong> super-admin flag (§6) — bypasses account
+scoping; set ONLY via config/env bootstrap, never a request (§11.4.10;
+10_* §7)</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td><code>BOOLEAN NOT NULL DEFAULT TRUE</code></td>
+<td>disable without delete</td>
+</tr>
+<tr>
+<td><code>created_at</code> / <code>updated_at</code></td>
+<td><code>TIMESTAMPTZ NOT NULL</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>PK:</strong> <code>user_id</code>. <strong>Unique:</strong>
+<code>username</code>, <code>email</code>.</li>
+<li><strong>Resolves the CallerID ambiguity</strong> (10_* §8 assumption
+5): the token <code>Subject</code> (a username) resolves to
+<code>user_id</code>; memberships (§1.3) then attach roles per account.
+<code>ProjectAccess.CallerID</code> (<code>store.go:307-311</code>)
+should migrate to reference <code>user_id</code> (reconciliation item,
+§2).</li>
+</ul>
+<h3 id="membership-user-account-the-many-to-many">1.3
+<code>Membership</code> — user ↔︎ account (the many-to-many)</h3>
+<p>A user belongs to one OR more accounts (00_INDEX §1.3); an account
+has many users. This is the direct generalization of the existing
+<code>ProjectAccess</code> (caller↔︎project↔︎role,
+<code>store.go:306-311</code>) lifted one level to account↔︎user↔︎role. It
+is the table the WorkOS multi-tenant RBAC model calls the membership
+join (<code>user_roles</code> keyed
+<code>(user_id, tenant_id, role_id)</code>).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user_id</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td><strong>FK</strong> → <code>users(user_id)</code>
+<code>ON DELETE CASCADE</code></td>
+</tr>
+<tr>
+<td><code>account_id</code></td>
+<td><code>TEXT NOT NULL</code></td>
+<td><strong>FK</strong> → <code>accounts(account_id)</code>
+<code>ON DELETE CASCADE</code></td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td><code>TEXT NOT NULL DEFAULT 'viewer'</code></td>
+<td>per-account role (§1.4);
+<code>CHECK IN ('viewer','operator','admin')</code></td>
+</tr>
+<tr>
+<td><code>is_owner</code></td>
+<td><code>BOOLEAN NOT NULL DEFAULT FALSE</code></td>
+<td>the account’s owner (the membership minted at bootstrap, §3.3); at
+most one owner per account is a policy <code>21_*</code> decides</td>
+</tr>
+<tr>
+<td><code>granted_at</code></td>
+<td><code>TIMESTAMPTZ NOT NULL</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>granted_by</code></td>
+<td><code>TEXT NOT NULL DEFAULT ''</code></td>
+<td>granting user_id (super-admin or account admin)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>PK:</strong> composite <code>(user_id, account_id)</code> —
+one membership row per (user, account); a user in N accounts has N rows.
+<strong>Role is per-account</strong>, so the same user can be
+<code>admin</code> in account A and <code>viewer</code> in account B
+(WorkOS: “the same user may hold different roles in different
+contexts”).</li>
+<li>Go type:
+<code>AccountMembership{AccountID, UserID string; Role AccountRole; IsOwner bool}</code>.</li>
+</ul>
+<h3 id="role-permission-the-per-account-authorization-vocabulary">1.4
+<code>Role</code> / <code>Permission</code> — the per-account
+authorization vocabulary</h3>
+<p>The mandate asks for “ultimate flexibility to the maximum” (00_INDEX
+§1.6), but the <em>shape</em> of the permission model (RBAC vs ABAC vs
+role+scope hybrid) is <strong>OQ-2, explicitly owned by
+<code>21_authz_rbac_superadmin.md</code></strong> (00_INDEX §5). This
+keystone doc models only the minimal role skeleton the data layer needs
+and reserves the richer path so <code>21_*</code> can land it without a
+second data-model change.</p>
+<p><strong>Recommendation for THIS doc (defer full shape to
+<code>21_*</code>):</strong> ship the fixed per-account role enum on
+<code>Membership.role</code> now, mirroring the existing
+<code>ProjectRole</code> hierarchy
+<code>viewer &lt; operator &lt; admin</code>
+(<code>store.go:297-304</code>) so the existing rank-compare tooling
+(<code>handlers_project.go:78-92</code>) reuses unchanged.
+<code>AccountRole</code> = <code>viewer &lt; operator &lt; admin</code>,
+distinct from but structurally identical to
+<code>ProjectRole</code>.</p>
+<p><strong>Reserved “max-flexibility” path (roles/permissions tables),
+if <code>21_*</code> chooses it:</strong> a tenant-scoped RBAC set —
+<code>roles(role_id, account_id, name, UNIQUE(account_id,name))</code>,
+<code>permissions(permission_id, action, resource)</code>,
+<code>role_permissions(role_id, permission_id)</code>, and
+<code>Membership.role</code> becoming a <code>role_id</code> FK — the
+“hybrid/templates” model WorkOS recommends (default roles + per- tenant
+customization). <strong>Tradeoff:</strong> fixed-enum is simplest and
+reuses existing tooling but caps flexibility at three roles; the
+roles/permissions tables give the mandated “ultimate flexibility” at the
+cost of a role-resolution join on every authZ check. Presented for
+<code>21_*</code>; §4 emits the fixed-enum column now + the reserved
+tables as commented DDL so either path is a pure additive migration.</p>
+<h3 id="how-account-sits-above-project">1.5 How Account sits ABOVE
+Project</h3>
+<pre><code>Account (tenant)                       accounts
+  └─ Project (add account_id FK)       projects.account_id → accounts
+       └─ OTA updates:                 (each carries account_id [RLS key] + project_id)
+            Artifact, Release,
+            Deployment, Device,
+            Group, Telemetry</code></pre>
+<p>The as-is gap (10_* §4): projects are <strong>empty
+containers</strong> — Device/Artifact/
+Release/Deployment/Telemetry/Group carry <strong>no
+<code>ProjectID</code></strong> (<code>store.go:36-178</code>), so the
+<code>account → projects → OTA updates</code> link is entirely absent
+below the project row. §2 adds it.</p>
+<hr />
+<h2 id="scoping-the-existing-ota-model">2. Scoping the existing OTA
+model</h2>
+<p><strong>Design rule (from §0 recommendation + AWS RLS best
+practice):</strong> every tenant-owned table gets a <strong>denormalized
+<code>account_id</code> (NOT NULL, the RLS scoping key, and the leading
+column of its primary access index</strong> — AWS: “every table with an
+RLS policy needs <code>tenant_id</code> as the leading column in its
+primary access indexes”), AND a <code>project_id</code> (the true
+mid-tier parent). <code>account_id</code> is denormalized onto each
+resource rather than reached only via
+<code>project_id → account_id</code> because RLS policies and the hot
+scoping filter must not pay a join on every row.</p>
+<p><strong>Tradeoff of the denormalization:</strong>
+<code>resource.account_id</code> must always equal
+<code>project.account_id</code>. Enforce with a <strong>composite
+FK</strong>
+<code>(project_id, account_id) REFERENCES projects(project_id, account_id)</code>
+(requires a <code>UNIQUE(project_id, account_id)</code> on projects) so
+the database — not application discipline — guarantees the two never
+drift. Alternative (a trigger) is weaker; the composite FK is “original
+work” applied to this schema and is the recommended enforcement.</p>
+<h3 id="per-entity-column-plan">2.1 Per-entity column plan</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Entity (struct / table)</th>
+<th>add <code>account_id</code></th>
+<th>add <code>project_id</code></th>
+<th>Nullability</th>
+<th>Migration / backfill implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Project</code> (<code>store.go:289</code>;
+<code>projects</code> <code>schema_postgres.sql:239</code>)</td>
+<td><strong>yes</strong> (it is the mid-tier, not the top)</td>
+<td>n/a</td>
+<td><code>account_id</code> <strong>NOT NULL</strong> after
+backfill</td>
+<td>backfill every existing project to the default account (§5)</td>
+</tr>
+<tr>
+<td><code>Device</code> (<code>store.go:36-*</code>;
+<code>devices</code> <code>:14</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td><code>account_id</code> <strong>NOT NULL</strong>;
+<code>project_id</code> <strong>NULL-until-assigned</strong> (a device
+may register to an account before project assignment)</td>
+<td>backfill account; <code>project_id</code> may stay NULL</td>
+</tr>
+<tr>
+<td><code>Artifact</code> (<code>artifacts</code> <code>:33</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td>both <strong>NOT NULL</strong> after backfill (artifacts are
+uploaded within a project)</td>
+<td>backfill account + a default project</td>
+</tr>
+<tr>
+<td><code>Release</code> (<code>releases</code> <code>:47</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td>both <strong>NOT NULL</strong></td>
+<td>scopes the monotonicity key (§2.2 #3)</td>
+</tr>
+<tr>
+<td><code>Deployment</code> (<code>deployments</code>
+<code>:61</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td>both <strong>NOT NULL</strong></td>
+<td>scopes the active-uniqueness key (§2.2 #4)</td>
+</tr>
+<tr>
+<td><code>TelemetryRecord</code> (<code>telemetry_events</code>
+<code>:73</code>)</td>
+<td>yes</td>
+<td>inherit via device/deployment</td>
+<td><code>account_id</code> <strong>NOT NULL</strong>;
+<code>project_id</code> <strong>NULLABLE</strong></td>
+<td>derive from the referenced device/deployment at write time</td>
+</tr>
+<tr>
+<td><code>Group</code> (<code>device_groups</code>
+<code>:96</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td><code>account_id</code> <strong>NOT NULL</strong>;
+<code>project_id</code> <strong>NULLABLE</strong> (a group may be
+account-wide)</td>
+<td>name becomes unique-per-account (§2.2 #6)</td>
+</tr>
+<tr>
+<td><code>AuditEntry</code> (<code>audit_logs</code> <code>:115</code>;
+<code>store.go:123-134</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td>both <strong>NULLABLE</strong></td>
+<td>populate from the resolved account/project context; also finally
+populate the always-empty <code>UserID</code> (10_* §6,
+<code>audit_wire.go:41-43</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-7-single-global-tenant-assumptions-10_-8-account-scoped">2.2
+The 7 single-global-tenant assumptions (10_* §8) → account-scoped</h3>
+<p>Each global uniqueness/latest key becomes account- (and where
+relevant project-) scoped:</p>
+<ol type="1">
+<li><strong>Project name globally unique</strong>
+(<code>schema_postgres.sql:241</code>; <code>memory.go:39</code>
+<code>prjByName</code>) →
+<strong><code>UNIQUE (account_id, name)</code></strong>. Two tenants may
+both have a project “production”.</li>
+<li><strong>Device <code>hardware_id</code> globally unique</strong>
+(<code>schema_postgres.sql:30</code>; <code>store.go:338</code>
+<code>GetDeviceByHardwareID</code>) →
+<strong><code>UNIQUE (account_id, hardware_id)</code></strong>, and
+<code>GetDeviceByHardwareID</code> gains an <code>accountID</code>
+parameter (§3.2). <em>Tradeoff / flag:</em> if a single physical device
+could legitimately belong to two accounts this must instead be a global
+unique — but the mandate’s tree makes a device account-owned, so
+per-account is recommended; surfaced for operator confirmation.</li>
+<li><strong>Release monotonicity / “latest” keyed
+<code>(os_type, target_model)</code></strong> (<code>store.go:349</code>
+<code>LatestRelease</code>; <code>releaseMu</code> invariant
+<code>server.go:56-69</code>) →
+<strong><code>(account_id, project_id, os_type, target_model)</code></strong>.
+<code>LatestRelease</code> / <code>ReleaseByVersion</code> gain
+account+project scope (§3.2).</li>
+<li><strong>Active-deployment uniqueness keyed
+<code>(os, target_model, group)</code></strong>
+(<code>store.go:359</code> <code>ActiveDeploymentForTarget</code>;
+<code>deployMu</code> <code>server.go:42-54</code>) →
+<strong><code>(account_id, project_id, os, target_model, group)</code></strong>.</li>
+<li><strong><code>ProjectAccess.CallerID</code> a bare subject
+string</strong> (<code>store.go:307-311</code>) → resolves to
+<code>user_id</code> (§1.2); the same person in several accounts is now
+representable because membership (§1.3) is keyed per account.
+<code>project_access</code> rows are implicitly account-scoped via
+<code>projects.account_id</code>.</li>
+<li><strong>Group name globally unique</strong>
+(<code>schema_postgres.sql:102</code>; <code>memory.go</code>
+<code>grpByName</code>) →
+<strong><code>UNIQUE (account_id, name)</code></strong>.</li>
+<li><strong>Token <code>Claims</code> carry no tenant dimension</strong>
+(<code>token.go:31-36</code>) → the data model requires either an
+<code>account_id</code> claim in the minted token OR a per-request
+membership lookup. <strong>The token-shape choice is
+<code>21_*</code>’s</strong> (OQ-2). The <em>data-model requirement</em>
+this doc fixes: the Membership table MUST support a fast
+<code>ListUserAccounts(userID)</code> (for account selection after
+sign-in, 00_INDEX §1.5) and
+<code>GetAccountMembership(userID, accountID)</code> (per-request authZ)
+— both indexed in §4. <strong>Recommendation to <code>21_*</code> (not
+decided here):</strong> resolve membership per-request (supports account
+switching without re-minting) with an optional <code>account_id</code>
+claim stamped <em>after</em> the user selects an account; tradeoff is a
+per-request lookup vs a re-mint on switch.</li>
+</ol>
+<hr />
+<h2 id="store.repository-extension">3. <code>store.Repository</code>
+extension</h2>
+<p>The Repository is one flat interface (<code>store.go:315-429</code>)
+with two implementations — <code>MemoryRepository</code> (default,
+<code>main.go:80</code>) and <code>PostgresRepository</code>
+(<code>HELIX_DATABASE_URL</code> set, <code>main.go:46-78</code>). The
+existing Projects block (<code>store.go:317-332</code>) is the exact
+template. The SAME interface methods are added once and implemented by
+BOTH backends (10_* §5: “additive-friendly — yes”).</p>
+<h3 id="new-interface-methods-mirror-the-projects-block">3.1 New
+interface methods (mirror the Projects block)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Accounts (mirror CreateProject/Get/List/Update/Delete, store.go:317-321).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>CreateAccount<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> a Account<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>GetAccount<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> accountID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>Account<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>GetAccountBySlug<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> slug <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>Account<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// stable-name resolve (§11.4.111)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>ListAccounts<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">([]</span>Account<span class="op">,</span> <span class="dt">error</span><span class="op">)</span>               <span class="co">// super-admin only (§6)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>UpdateAccount<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> a Account<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>DeleteAccount<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> accountID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Users — the CRUD that does NOT exist today (10_* §3).</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>CreateUser<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> u User<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>GetUser<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> userID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>User<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>GetUserByUsername<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> username <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>User<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// token Subject → user</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>GetUserByEmail<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> email <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>User<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>ListUsers<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">([]</span>User<span class="op">,</span> <span class="dt">error</span><span class="op">)</span>                        <span class="co">// super-admin only</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>UpdateUser<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> u User<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>DeleteUser<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> userID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Memberships (mirror the ProjectAccess block, store.go:322-332).</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>SetAccountMembership<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> m AccountMembership<span class="op">)</span> <span class="dt">error</span>   <span class="co">// grant/update role</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>GetAccountMembership<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> userID<span class="op">,</span> accountID <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>AccountMembership<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>ListAccountMembers<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> accountID <span class="dt">string</span><span class="op">)</span> <span class="op">([]</span>AccountMembership<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>ListUserAccounts<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> userID <span class="dt">string</span><span class="op">)</span> <span class="op">([]</span>AccountMembership<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="co">// account selection after sign-in</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>RemoveAccountMembership<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> userID<span class="op">,</span> accountID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<h3 id="scoping-the-existing-readwrite-methods">3.2 Scoping the existing
+read/write methods</h3>
+<p>Every existing OTA accessor must become account-scoped. Two
+mechanisms, with a recommended hybrid:</p>
+<ul>
+<li><strong>Option A — explicit <code>accountID</code> parameter on
+every scoped method.</strong> e.g.
+<code>GetDevice(ctx, accountID, deviceID)</code>,
+<code>GetDeviceByHardwareID(ctx, accountID, hardwareID)</code>,
+<code>LatestRelease(ctx, accountID, projectID, os, targetModel)</code>,
+<code>ActiveDeploymentForTarget(ctx, accountID, projectID, os, targetModel, group)</code>.
+<em>Pro:</em> the compiler forces every call site to supply scope — a
+forgotten scope is a build error, not a runtime leak. <em>Con:</em>
+churns every signature + call site.</li>
+<li><strong>Option B — carry scope in
+<code>context.Context</code></strong> (a
+<code>ScopeContext{AccountID, ProjectID}</code> read by each method).
+<em>Pro:</em> minimal signature churn; mirrors the RLS session-variable
+pattern (set once per request). <em>Con:</em> scope becomes implicit — a
+call in a context missing the scope silently reads unscoped (the exact
+leak RLS must then catch).</li>
+<li><strong>Existing <code>*Filter</code> structs already exist</strong>
+for the list methods (<code>DeviceFilter</code>
+<code>store.go:280-285</code>, <code>ReleaseFilter</code>,
+<code>AuditFilter</code>) — add <code>AccountID</code> +
+<code>ProjectID</code> fields there for the list paths with zero
+signature change.</li>
+</ul>
+<p><strong>Recommendation (hybrid): Option A (explicit
+<code>accountID</code>, and <code>projectID</code> where the resource is
+project-owned) for the single-entity get/create/update methods + extend
+the <code>*Filter</code> structs for the list methods</strong>, with
+<strong>pgx RLS as the independent second layer</strong> so even a
+missed scope cannot leak (defense in depth). Explicit params are chosen
+over ctx-implicit specifically because the whole point of this feature
+is tenant isolation, and a compile-time guarantee beats a runtime one.
+<em>Tradeoff:</em> larger diff (every OTA handler + call site touched) —
+acceptable, and <code>22_api_surface.md</code> already inventories those
+call sites.</p>
+<h3
+id="the-missing-transaction-problem-atomic-create-account-first-super-admin">3.3
+The missing-transaction problem (atomic “create account + first
+super-admin”)</h3>
+<p>The seam has <strong>no transaction primitive</strong> — the code
+explicitly does a best-effort, non-atomic create-then-grant for projects
+(10_* §5; <code>handlers_project.go:137-154</code>). For accounts this
+is worse: a crash between “account created” and “owner membership
+granted” leaves an <strong>ownerless orphan tenant</strong> — nobody can
+administer it and no membership gates it (an isolation + usability
+defect). Three seam options:</p>
+<ul>
+<li><strong>Option A — a purpose-built composite method</strong>
+<code>CreateAccountWithOwner(ctx, a Account, ownerUserID string, role AccountRole) error</code>,
+implemented atomically by each backend (pgx:
+<code>BEGIN … COMMIT</code>; memory: a single mutex-guarded critical
+section that inserts both the account and the owner membership, rolling
+back the in-memory map insert on any error). <em>Pro:</em> smallest seam
+change; matches the existing pattern of purpose-built methods; solves
+the one flow that actually needs atomicity now. <em>Con:</em> a bespoke
+method per atomic flow (doesn’t generalize).</li>
+<li><strong>Option B — a generic transaction primitive</strong>
+<code>WithTx(ctx, func(RepositoryTx) error) error</code> on the
+interface (pgx: a real transaction; memory: a global-lock stand-in).
+<em>Pro:</em> general — any future multi-write flow (create project +
+grant, deploy + audit) becomes atomic. <em>Con:</em> large seam change;
+the memory impl’s “transaction” is only a coarse lock (no true rollback
+of partial map mutations without extra bookkeeping); bigger blast
+radius.</li>
+<li><strong>Option C — keep best-effort compensation</strong> (create
+account → grant → on grant failure, delete account). <em>Pro:</em> zero
+seam change. <em>Con:</em> non-atomic across a crash (the orphan-tenant
+window remains) — rejected for the security-sensitive bootstrap.</li>
+</ul>
+<p><strong>Recommendation: Option A now</strong>
+(<code>CreateAccountWithOwner</code>, the one flow that must be atomic
+for correctness), and <strong>adopt Option B (<code>WithTx</code>)
+later</strong> when a second multi-write atomic flow appears — deferred
+to the implementation phase, not required for MVP. <em>Tradeoff:</em>
+Option A doesn’t generalize, but it is the minimal change that closes
+the orphan-tenant hole; Option B is the right long-term seam but is
+over-scoped for a single bootstrap flow today.</p>
+<hr />
+<h2 id="sql-schema-sketch-migration-style-ddl">4. SQL schema sketch
+(migration-style DDL)</h2>
+<p>A store-schema-style migration (opaque <code>TEXT</code> ids,
+mirroring <code>schema_postgres.sql</code>) — call it
+<strong><code>002_accounts_multitenancy.up.sql</code></strong>, additive
+to the shipped store. The canonical <code>UUID</code> variant would land
+the same tables in the <code>001</code>-style schema
+(<code>001_initial_schema.up.sql</code>); the mapping is
+<code>TEXT ↔︎ UUID</code>, <code>users</code>/<code>api_keys</code> here
+match <code>001_initial_schema.up.sql:39-71</code>. RLS statements are
+the recommended second isolation layer (§0). This is a <strong>sketch
+for the design; not applied</strong>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 002_accounts_multitenancy (UP) — additive to schema_postgres.sql. TEXT ids to</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- match the shipped store; UUID in the canonical 001-style schema. NOT executed.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> search_path <span class="op">=</span> helix_ota, <span class="kw">public</span>;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- 1) New top-level tenant.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> helix_ota.accounts (</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    account_id  TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    name        TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">UNIQUE</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    slug        TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">UNIQUE</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    status      TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;active&#39;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">CHECK</span> (status <span class="kw">IN</span> (<span class="st">&#39;active&#39;</span>,<span class="st">&#39;suspended&#39;</span>,<span class="st">&#39;archived&#39;</span>)),</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    created_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    updated_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- 2) Persisted User (closes the 10_* §3 gap; mirrors 001_initial_schema users).</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> helix_ota.users (</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    user_id        TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    username       TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">UNIQUE</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    email          TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">UNIQUE</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    password_hash  TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    is_super_admin <span class="dt">BOOLEAN</span>     <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">FALSE</span>,   <span class="co">-- §6 global bypass flag</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    is_active      <span class="dt">BOOLEAN</span>     <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">TRUE</span>,</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    created_at     TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    updated_at     TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">-- 2b) api_keys (from 001_initial_schema.up.sql:57-71; non-interactive CI/CLI creds).</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> helix_ota.api_keys (</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    api_key_id  TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    user_id     TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> helix_ota.users(user_id) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    account_id  TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> helix_ota.accounts(account_id) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    key_hash    TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">UNIQUE</span>,           <span class="co">-- hash only; cleartext shown once (§11.4.10)</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    name        TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    permissions JSONB       <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;{}&#39;</span>:<span class="ch">:jsonb</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    expires_at  TIMESTAMPTZ,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    revoked_at  TIMESTAMPTZ,</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    created_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_api_keys_user    <span class="kw">ON</span> helix_ota.api_keys (user_id);</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_api_keys_account <span class="kw">ON</span> helix_ota.api_keys (account_id);</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co">-- 3) Membership (user ↔ account, M:N) — mirrors project_access one level up.</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> helix_ota.account_members (</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    user_id    TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> helix_ota.users(user_id)       <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    account_id TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> helix_ota.accounts(account_id) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span>,</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">role</span>       TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;viewer&#39;</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">CHECK</span> (<span class="kw">role</span> <span class="kw">IN</span> (<span class="st">&#39;viewer&#39;</span>,<span class="st">&#39;operator&#39;</span>,<span class="st">&#39;admin&#39;</span>)),</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    is_owner   <span class="dt">BOOLEAN</span>     <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="kw">FALSE</span>,</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    granted_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    granted_by TEXT        <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (user_id, account_id)</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_account_members_account <span class="kw">ON</span> helix_ota.account_members (account_id);</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> idx_account_members_user    <span class="kw">ON</span> helix_ota.account_members (user_id);</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="co">-- 3b) RESERVED &quot;max-flexibility&quot; RBAC (only if 21_* chooses it — additive, not now):</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE TABLE helix_ota.roles (role_id TEXT PK, account_id TEXT NOT NULL</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="co">--   REFERENCES accounts(account_id) ON DELETE CASCADE, name TEXT NOT NULL,</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="co">--   UNIQUE (account_id, name));</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE TABLE helix_ota.permissions (permission_id TEXT PK, action TEXT NOT NULL,</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="co">--   resource TEXT NOT NULL, UNIQUE (action, resource));</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE TABLE helix_ota.role_permissions (role_id TEXT, permission_id TEXT,</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="co">--   PRIMARY KEY (role_id, permission_id));</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="co">-- and account_members.role becomes a role_id FK.</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="co">-- 4) Scope the existing OTA tables. account_id nullable now → backfill → NOT NULL</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="co">--    in 003 (see §5 Option A). project_id added to the resources per §2.1.</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.projects          <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.devices           <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.devices           <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;   <span class="co">-- NULL-until-assigned</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.artifacts         <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.artifacts         <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.releases          <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.releases          <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.deployments       <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.deployments       <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.device_groups     <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.device_groups     <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;   <span class="co">-- nullable</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.telemetry_events  <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.telemetry_events  <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;   <span class="co">-- nullable</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.audit_logs        <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> account_id TEXT;   <span class="co">-- nullable</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> helix_ota.audit_logs        <span class="kw">ADD</span> <span class="kw">COLUMN</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> project_id TEXT;   <span class="co">-- nullable</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="co">-- 5) Composite-FK enforcement so resource.account_id == project.account_id (§2).</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="co">--    Requires a UNIQUE (project_id, account_id) on projects to be the FK target.</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="co">--    (Deferred to 003 after backfill sets account_id, since project_id is the PK</span></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="co">--     and account_id starts nullable.)</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALTER TABLE helix_ota.projects   ADD CONSTRAINT projects_pid_aid_uniq UNIQUE (project_id, account_id);</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALTER TABLE helix_ota.artifacts  ADD CONSTRAINT artifacts_proj_fk</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="co">--     FOREIGN KEY (project_id, account_id) REFERENCES helix_ota.projects (project_id, account_id);</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="co">-- (same composite FK for releases, deployments; devices/groups/telemetry where project_id NOT NULL)</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="co">-- 6) Uniqueness re-scoping (§2.2). Old global uniques are dropped, per-account added</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a><span class="co">--    in 003 after backfill (a per-account unique cannot be added while account_id is</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="co">--    still NULL for legacy rows).</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALTER TABLE helix_ota.projects      DROP CONSTRAINT ... ; ADD UNIQUE (account_id, name);</span></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALTER TABLE helix_ota.devices       DROP CONSTRAINT devices_hardware_id_uniq;</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="co">--   ADD CONSTRAINT devices_acct_hw_uniq UNIQUE (account_id, hardware_id);</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALTER TABLE helix_ota.device_groups DROP CONSTRAINT device_groups_name_uniq;</span></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="co">--   ADD CONSTRAINT groups_acct_name_uniq UNIQUE (account_id, name);</span></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="co">-- 7) Indexes: account_id as the LEADING column of each hot scoping index (AWS RLS</span></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a><span class="co">--    indexing rule). Added in 003 once account_id is populated + NOT NULL.</span></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE INDEX idx_devices_account     ON helix_ota.devices (account_id);</span></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE INDEX idx_artifacts_account   ON helix_ota.artifacts (account_id);</span></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE INDEX idx_releases_account    ON helix_ota.releases (account_id, project_id, os_type, target_model);</span></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE INDEX idx_deployments_account ON helix_ota.deployments (account_id, project_id, status);</span></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE INDEX idx_telemetry_account   ON helix_ota.telemetry_events (account_id);</span></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE INDEX idx_audit_account       ON helix_ota.audit_logs (account_id);</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a><span class="co">-- 8) RLS (recommended §0 second layer; enable in 003 after NOT NULL). Per-table:</span></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a><span class="co">-- ALTER TABLE helix_ota.devices ENABLE ROW LEVEL </span><span class="al">SECURITY</span><span class="co">;</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="co">-- CREATE POLICY devices_tenant_isolation ON helix_ota.devices</span></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="co">--     USING       (account_id = current_setting(&#39;app.current_account&#39;, true))</span></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a><span class="co">--     WITH CHECK  (account_id = current_setting(&#39;app.current_account&#39;, true));</span></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a><span class="co">--    The app connects as a NON-owner, NON-BYPASSRLS role and runs</span></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a><span class="co">--    `SET app.current_account = &#39;&lt;account_id&gt;&#39;` per request (AWS pattern). A</span></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a><span class="co">--    super-admin request either sets a super-admin GUC the policy also honors, or</span></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a><span class="co">--    is served by a policy-based bypass (§6) — NOT a BYPASSRLS role.</span></span></code></pre></div>
+<blockquote>
+<p><strong>Reference to the canonical target schema.</strong>
+<code>users</code> + <code>api_keys</code> above mirror
+<code>001_initial_schema.up.sql:39-71</code> (which the shipped store
+never carried, 10_* §3). The
+<code>account_id</code>/<code>project_id</code> scoping columns are the
+additive complement to that migration’s
+device/artifact/release/deployment tables
+(<code>001_initial_schema.up.sql:80-360</code>). When the project adopts
+the <code>001</code>-style normalized schema, this becomes
+<code>002</code> there too, with <code>UUID</code> ids and
+FK-to-<code>users</code> on
+<code>uploaded_by</code>/<code>published_by</code>/<code>created_by</code>
+(<code>001_initial_schema.up.sql:155,219,265</code>) finally
+resolvable.</p>
+</blockquote>
+<hr />
+<h2 id="oq-4-migrating-existing-data-under-accounts">5. OQ-4 — migrating
+existing data under accounts</h2>
+<p>OQ-4 (00_INDEX §5): migrate existing projects/rollouts/artifacts
+under a <strong>default account</strong>, or keep the schema
+<strong>additive-nullable until backfill</strong>? Two options:</p>
+<ul>
+<li><strong>Option A — default-account backfill (big-bang, then NOT
+NULL).</strong> <code>002</code> adds <code>account_id</code> nullable →
+a one-shot backfill assigns every existing project, device, artifact,
+release, deployment, group, telemetry, audit row to a single seeded
+<strong><code>__default__</code> system account</strong> (and a
+<code>__default__</code> project where a project_id is required) →
+<code>003</code> sets <code>account_id NOT NULL</code>, adds the
+per-account uniques, the composite FKs, the leading-column indexes, and
+enables RLS. <em>Pro:</em> one clean invariant (<code>account_id</code>
+is NEVER NULL for a tenant row after <code>003</code>); RLS is correct
+immediately; no “NULL means legacy-global” special case litters the
+code. <em>Con:</em> requires a data-migration step and a brief
+coordinated <code>003</code> cutover.</li>
+<li><strong>Option B — additive-nullable-until-backfill
+(gradual).</strong> Add <code>account_id</code> nullable and ship code
+that tolerates NULL as “unassigned/legacy-global”, backfill lazily, flip
+NOT NULL “eventually.” <em>Pro:</em> purely additive, zero-downtime, no
+cutover. <em>Con:</em> while <code>account_id</code> is NULL, those rows
+are <strong>outside</strong> per- account scoping — an isolation hole
+for the whole window; every read path needs a NULL branch; the NOT-NULL
+flip still needs the same backfill Option A does, just later and with
+more accumulated NULL rows.</li>
+</ul>
+<p><strong>Recommendation: Option A (default-account backfill).</strong>
+It removes the nullable- isolation-hole window entirely and yields a
+clean NOT-NULL + RLS invariant on day one. The deciding factor is
+<strong>data volume</strong>, and the as-is state makes the backfill
+nearly free: the store is an <strong>in-memory MVP by default</strong>
+(<code>main.go:80</code>) with Postgres wired only when
+<code>HELIX_DATABASE_URL</code> is set and barely populated — so the
+big-bang cost Option A normally carries is negligible here.</p>
+<p><strong>Operator decision point (flagged, not decided):</strong> if,
+contrary to the as-is state, a target deployment already holds
+meaningful production OTA data AND a zero-downtime cutover is mandatory,
+choose Option B and accept the interim NULL- scoping window with an
+explicit “NULL account_id is visible only to super-admin” guard. The
+recommendation flips on that single fact — surfaced per §11.4.6, not
+assumed.</p>
+<hr />
+<h2 id="super-admin-at-the-data-layer">6. Super-admin at the data
+layer</h2>
+<p>The mandate: the super-user “sees and controls everything” and
+administers all accounts/users/permissions (00_INDEX §1.4, §1.6). Model
+it as a <strong>global <code>users.is_super_admin</code>
+boolean</strong> (§1.2) — a property of the <em>identity</em>, NOT a
+per-account membership role (a super-admin need not be a member of any
+account).</p>
+<p><strong>How the flag bypasses account scoping (two
+layers):</strong></p>
+<ol type="1">
+<li><strong>Application layer.</strong> The scope resolver returns “all
+accounts” when the authenticated user is super-admin — the <em>exact
+precedent already in the code</em>: <code>requireProjectAccess</code>
+lets a global <code>admin</code> bypass the per-project ACL and
+implicitly access every project
+(<code>handlers_project.go:43-60</code>), and the list-all path returns
+every project for a global admin
+(<code>handlers_project.go:162-199</code>). The account layer
+generalizes this: super-admin ⇒ skip the <code>account_id</code> filter
+/ <code>requireAccountAccess</code>.</li>
+<li><strong>Database layer (RLS).</strong> Prefer a <strong>policy-based
+bypass over a <code>BYPASSRLS</code> role.</strong> A normal request
+connects as a non-owner, non-<code>BYPASSRLS</code> role and sets
+<code>app.current_account</code>; a super-admin request additionally
+sets a super-admin GUC (e.g. <code>SET app.is_super_admin = 'on'</code>)
+that each policy’s <code>USING</code> clause also accepts:
+<code>USING (account_id = current_setting('app.current_account', true)         OR current_setting('app.is_super_admin', true) = 'on')</code>.
+AWS explicitly recommends “policy-based admin access over
+privilege-based bypass” because it “keeps admin access <strong>auditable
+and revocable</strong>” — a <code>BYPASSRLS</code> role is invisible to
+the policy and cannot be scoped or logged per query. (PostgreSQL:
+superusers and <code>BYPASSRLS</code> roles <em>always</em> bypass RLS —
+which is exactly why the app must NOT connect as one for super-admin
+requests.)</li>
+</ol>
+<p><strong>Security implications (data layer; full model in
+<code>26_security_threat_model.md</code>):</strong></p>
+<ul>
+<li><strong>Maximum blast radius.</strong> One compromised super-admin
+credential = total cross- tenant breach. Therefore
+<code>is_super_admin</code> is settable <strong>only via config/env
+bootstrap, never a request</strong> — the same trust-boundary rule the
+codebase already enforces for the token secret
+(<code>config.go:180-184</code>), the admin bootstrap
+(<code>main.go:96-104</code>), the TLS-proxy trust flag
+(<code>config.go:88-110</code>), and the artifact-signature key
+<code>resolvePublicKey</code>
+(<code>handlers_artifact.go:274-283</code>, which takes the verify key
+ONLY from server config, never the request). The first super-admin is
+seeded from a <code>HELIX_*</code> env field (or the existing
+<code>HELIX_ADMIN_PASSWORD</code> path extended with
+<code>is_super_admin=true</code>), following 10_* §7 exactly.</li>
+<li><strong>Auditability.</strong> Every super-admin action MUST record
+the <strong>affected tenant’s <code>account_id</code></strong> in the
+audit row (§2.1; the audit table today carries no account_id — 10_* §6).
+The policy-based bypass (not a BYPASSRLS role) is what keeps those
+actions attributable per query.</li>
+<li><strong>Testable, revocable (anti-bluff).</strong> <code>26_*</code>
+must carry a paired mutation proving
+<ol type="a">
+<li>a non-super-admin session with <code>app.current_account = A</code>
+<strong>cannot</strong> read account B’s rows even with a forged
+<code>WHERE</code>, and (b) clearing <code>is_super_admin</code> (or the
+GUC) <strong>immediately</strong> re-scopes the session — a super-admin
+bypass that survives revocation is a §11.4 isolation-layer bluff.</li>
+</ol></li>
+</ul>
+<hr />
+<h2 id="sources-verified-2026-07-10">Sources verified 2026-07-10</h2>
+<ul>
+<li>PostgreSQL Row-Level Security for multi-tenant isolation — runtime
+tenant context via
+<code>SET</code>/<code>current_setting('app.current_tenant')</code>, the
+app-role-must-not-be-owner- or-<code>BYPASSRLS</code> caveat, and the
+“prefer policy-based admin access over privilege- based bypass …
+auditable and revocable” guidance: <a
+href="https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/"
+class="uri">https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/</a></li>
+<li>PostgreSQL official docs — canonical RLS primitives
+(<code>ALTER TABLE … ENABLE ROW LEVEL SECURITY</code>,
+<code>CREATE POLICY … USING … WITH CHECK</code>,
+<code>FORCE ROW LEVEL SECURITY</code>, superuser/<code>BYPASSRLS</code>
+bypass): <a
+href="https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+class="uri">https://www.postgresql.org/docs/current/ddl-rowsecurity.html</a></li>
+<li>WorkOS — multi-tenant RBAC data model: membership join keyed
+<code>(user_id, tenant_id, role_id)</code>, global vs tenant-scoped vs
+hybrid/template roles, <code>UNIQUE(tenant_id, name)</code> for
+tenant-scoped role namespaces: <a
+href="https://workos.com/blog/how-to-design-multi-tenant-rbac-saas"
+class="uri">https://workos.com/blog/how-to-design-multi-tenant-rbac-saas</a></li>
+<li>Microsoft Azure Architecture Center — tenancy models (shared vs
+schema-per vs database-per) and the isolation/ops-cost tradeoff
+taxonomy: <a
+href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models"
+class="uri">https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models</a>
+and Azure SQL multitenant SaaS patterns: <a
+href="https://learn.microsoft.com/en-us/azure/azure-sql/database/saas-tenancy-app-design-patterns"
+class="uri">https://learn.microsoft.com/en-us/azure/azure-sql/database/saas-tenancy-app-design-patterns</a></li>
+<li>Supplementary comparison of the three tenancy patterns
+(shared-schema+RLS as the default recommendation): dasroot 2026, <a
+href="https://dasroot.net/posts/2026/01/multi-tenancy-database-patterns-schema-database-row-level/"
+class="uri">https://dasroot.net/posts/2026/01/multi-tenancy-database-patterns-schema-database-row-level/</a></li>
+</ul>
+<p>The composite-FK enforcement of
+<code>resource.account_id == project.account_id</code> (§2) and the
+<code>CreateAccountWithOwner</code> atomic-bootstrap seam (§3.3) are
+<strong>original work</strong> applied to this schema — no external
+source prescribes them; they follow from the shipped store’s shape.</p>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>This is a design proposal, not implemented.</strong> No
+entity, column, interface method, migration, or RLS policy described
+here exists in the codebase yet; every “as-is” fact carries a
+<code>file:line</code> (via 00_/10_*), every “to-be” element is a
+proposal. Nothing here is a §11.4 completion claim.</li>
+<li><strong>Every open choice is presented with a recommendation +
+tradeoffs for operator decision, never silently decided:</strong> the
+tenancy model (§0), the id type TEXT-vs-UUID divergence (§1), the
+OTA-resource scoping shape (§2), the Repository scoping mechanism and
+the atomic-bootstrap seam (§3), the OQ-4 migration path (§5), the
+super-admin RLS-bypass mechanism (§6). The permission-model
+<em>shape</em> (OQ-2) is deliberately deferred to
+<code>21_authz_rbac_superadmin.md</code>; this doc fixes only the
+minimal role skeleton + the data-layer requirements <code>21_*</code>
+must satisfy.</li>
+<li><strong>Scope of the audit behind the as-is facts:</strong> the
+<code>file:line</code> references were established by 10_* against
+non-test source only; a test path may exercise a detail not seen. The
+pgx read paths were read as SQL strings, not executed against a live DB
+(10_* “Honest gaps”). The rollout subsystem’s tenancy
+(<code>internal/rollout/</code>) is marked <code>UNCONFIRMED:</code> in
+10_* and is not designed here — <code>21_*</code>/<code>30_*</code> must
+audit <code>rollout/store.go</code> before scoping it.</li>
+<li><strong>What the recommendation does NOT prove:</strong>
+shared-schema+RLS is the correct <em>default</em>, not a guarantee of
+isolation — isolation is only as good as the policies
+<ul>
+<li>the scope-resolution code, which is precisely why
+<code>26_security_threat_model.md</code> owns the paired-mutation proof
+that cross-account reads are impossible.</li>
+</ul></li>
+</ul>
+</body>
+</html>

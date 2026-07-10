@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>27_test_strategy</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">27_test_strategy</h1>
+</header>
+<h1
+id="multi-account-test-strategy-all-surfaces-anti-bluff-captured-evidence-to-be-27">Multi-Account
+Test Strategy — All Surfaces, Anti-Bluff Captured Evidence (to-be
+§27)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T11:18:54Z</p>
+<blockquote>
+<p><strong>Scope.</strong> This document designs the <strong>test
+strategy</strong> for the multi-account (multi-tenant) Helix OTA
+feature: every applicable test type per §11.4.27 (no fakes beyond unit)
++ §11.4.169 (the closed test-type set) + §11.4.107 (anti-bluff
+AV/validation), across every surface — server API, data-model/RLS,
+project CLI, device client, dashboard SPA, ota-manager SPA. It is a
+<strong>design / planning</strong> document: <strong>no test code is
+written here</strong> (the multi-account work is operator-approval-gated
+per 00_INDEX §2). Every design choice is grounded in a cited sibling doc
+or an external source (<code>## Sources verified 2026-07-10</code>);
+every open choice is a recommendation-with-tradeoffs for the owner doc,
+never a silent decision (§11.4.6 / §11.4.66).</p>
+<p><strong>Reading order + SSOT (do not contradict).</strong> The
+<strong>entity + RLS SSOT</strong> is
+<code>20_target_multitenancy_data_model.md</code>; the
+<strong>all-surface UI SSOT</strong> is
+<code>23_ui_ux_all_surfaces.md</code>; the <strong>CLI</strong> and
+<strong>device-client</strong> designs are
+<code>24_project_side_cli.md</code> /
+<code>25_device_side_update_client.md</code>; the authoritative as-is
+facts are <code>10_existing_auth_and_project_model.md</code> /
+<code>11_existing_upload_and_device_update.md</code> /
+<code>12_existing_ui_surfaces_and_design_system.md</code>. This doc
+<strong>cites</strong> those, never re-derives their
+<code>file:line</code> facts. The <strong>permission-model
+shape</strong> (OQ-2) is <code>21_authz_rbac_superadmin.md</code>’s and
+the <strong>threat enumeration</strong> is
+<code>26_security_threat_model.md</code>’s — <strong><code>21_*</code>
+and <code>26_*</code> are planned but not yet authored at this
+revision</strong> (00_INDEX §3); where this doc names a threat it draws
+it from <code>20_*</code> §6 + the isolation sketches in
+<code>24_*</code> §6 / <code>25_*</code> §6 and defers the canonical
+enumeration to <code>26_*</code>, inventing no conflicting threat.</p>
+</blockquote>
+<hr />
+<h2
+id="grounding-what-this-strategy-tests-and-the-two-hard-test-infra-facts">0.
+Grounding — what this strategy tests, and the two hard test-infra
+facts</h2>
+<p>The feature under test, from the grounded audits (cited, not
+re-derived):</p>
+<ul>
+<li>The account layer is primarily a <strong>data-model +
+scoping</strong> effort, not a from-scratch auth build — auth, RBAC,
+<code>super_admin</code>, both sign-in UIs, and a per-project
+<code>ProjectAccess</code> ACL already exist (00_INDEX §7;
+<code>10_*</code> §1-§2; <code>12_*</code> §4). The <strong>central
+gap</strong> is that there is <strong>no tenant isolation</strong>: no
+<code>account</code> entity, and
+<code>Device/Artifact/Release/Deployment/Telemetry/Group</code> carry no
+<code>ProjectID</code>/account field, so every OTA route is gated only
+by the GLOBAL RBAC role (<code>10_*</code> §2, §4).</li>
+<li>The to-be model (<code>20_*</code>): <strong>shared schema + a
+denormalized <code>account_id</code> column on every tenant-owned table,
+defended by PostgreSQL Row-Level Security (RLS)</strong> at the pgx
+layer (<code>20_*</code> §0), with <strong>explicit
+<code>accountID</code> params</strong> on the scoped Repository methods
+as the compile-time first layer and <strong>RLS as the independent
+second layer</strong> (<code>20_*</code> §3.2 “Recommendation
+(hybrid)”).</li>
+</ul>
+<p><strong>Two test-infrastructure facts that shape every layer below
+(§11.4.6, stated so they are never silently assumed):</strong></p>
+<ol type="1">
+<li><strong>RLS is pgx-only; the default store is in-memory.</strong>
+<code>MemoryRepository</code> is wired by default;
+<code>PostgresRepository</code> only when
+<code>HELIX_DATABASE_URL</code> is set (<code>10_*</code> §5;
+<code>20_*</code> §3). RLS (the database-enforced belt) <strong>exists
+only on the pgx path</strong>. So: the <strong>application-layer scope
+test</strong> (explicit-<code>accountID</code> scoping) MUST run against
+<strong>BOTH</strong> backends; the <strong>RLS-layer test</strong> is
+<strong>pgx-only</strong> and requires a <strong>live
+PostgreSQL</strong>, booted on-demand via the <strong>containers
+submodule in rootless podman (§11.4.161)</strong> — never a mock
+(§11.4.27). Absent Postgres, the RLS layer is an honest
+<strong><code>SKIP-with-reason: topology_unsupported</code></strong> per
+§11.4.3, <strong>never a PASS-by-default</strong>.</li>
+<li><strong>The “device downloads + applies the exact bytes” e2e is
+blocked on object storage.</strong> Artifact bytes are validated then
+<strong>discarded</strong>; <code>StorageRef</code> is a placeholder and
+no real object store is in-repo (<code>11_*</code> §Honest-gaps 1;
+<code>24_*</code> §4; <code>25_*</code> §5). So the isolation / scope /
+UI / super-admin / migration layers are all validatable
+<strong>now</strong>, but the byte-level download-and-apply e2e is
+honestly
+<strong><code>SKIP-with-reason: object_storage_absent</code></strong>
+until real per-account object storage (MinIO dev via rootless podman)
+lands — never a fake PASS over discarded bytes.</li>
+</ol>
+<p>Both facts are carried into the coverage ledger (§6) so the honest
+state is visible, not green-over-a-gap.</p>
+<hr />
+<h2 id="test-type-matrix-surface">1. Test-type matrix × surface</h2>
+<p>Six surfaces. For each, the applicable test types and the single
+<strong>anti-bluff proof</strong> each surface must produce (positive
+captured evidence per §11.4.5 / §11.4.69, never a metadata-only /
+absence-of-error PASS).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Applicable test types</th>
+<th>The anti-bluff proof this surface must produce</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Server API</strong> (<code>server/</code>, Gin monolith;
+httptest suite exists per project CLAUDE.md)</td>
+<td>unit · integration-against-real-server · e2e · <strong>security /
+tenant-isolation</strong> · DDoS (auth/upload flood) · concurrency/race
+· stress+chaos · benchmarking · memory · Challenges/HelixQA</td>
+<td>Captured HTTP request+response transcripts + store-row dumps proving
+a scoped token reads/writes <strong>only its account’s</strong>
+resources; a cross-account call is denied (§2 API layer)</td>
+</tr>
+<tr>
+<td><strong>Data model / RLS</strong> (<code>store.Repository</code>
+memory + pgx; <code>20_*</code>)</td>
+<td>unit (memory) · integration (real store, <strong>both</strong>
+backends) · <strong>RLS-isolation</strong> (pgx, live Postgres) ·
+concurrency/race (monotonicity + active-deployment keys,
+<code>CreateAccountWithOwner</code> atomicity) · migration/backfill (§5)
+· memory</td>
+<td>Captured SQL/query output proving RLS returns <strong>only</strong>
+the current-account rows <strong>even with a forged
+<code>WHERE account_id</code></strong>, and 0 rows on a cross-account
+UPDATE/DELETE (§2 DB layer)</td>
+</tr>
+<tr>
+<td><strong>Project CLI</strong> (<code>helix-ota</code>, new binary;
+<code>24_*</code>)</td>
+<td>unit (arg/flag parse, <strong>token-redaction</strong> §11.4.10,
+exit-code map) · integration (real server) · e2e (real server + real
+store + object storage) · security (cross-project/-account key → 403,
+expired/revoked key) · stress+chaos (concurrent cross-account uploads,
+kill-mid-upload) · full-automation §11.4.98 · Challenges/HelixQA</td>
+<td>Captured server JSON + store dumps proving the artifact persists
+under the <strong>correct
+<code>(account_id, project_id)</code></strong>, and a
+<strong>cross-project key is rejected 403</strong> (<code>24_*</code>
+§6); the raw token <strong>never</strong> appears in any log line
+(§11.4.10 redaction)</td>
+</tr>
+<tr>
+<td><strong>Device client</strong> (<code>ota-android-agent</code> + Go
+<code>ota-device-emu</code> reference client; <code>25_*</code>)</td>
+<td>unit (core Kotlin: <code>VerifyBeforeApply</code> ordering, wizard
+state machine, offline/resume) · integration (real
+<code>ota-server</code>) · e2e (real journey, blocked on object storage
+— §0) · <strong>tenant-isolation</strong> (device A never offered
+account B’s deployment) · UI host-render §11.4.170 (net-new wizard) ·
+stress+chaos (offline→resume, corrupt→reject, power-loss→A/B
+rollback)</td>
+<td>Captured poll request/response proving a device enrolled to account
+A gets its <strong>own</strong> account’s offer and
+<strong><code>204</code>/deny</strong> for account B’s deployment even
+at matching <code>(os, model, group)</code> (<code>25_*</code> §6)</td>
+</tr>
+<tr>
+<td><strong>Dashboard SPA</strong> (<code>dashboard/</code>, Vite;
+hostrender harness exists)</td>
+<td>unit (component logic) · <strong>UI host-render §11.4.170</strong>
+(golden-diff + OCR/vision) · integration (auth/account-switch against
+real server) · e2e</td>
+<td>Device-independent <strong>host-rendered pixels</strong> per
+screen×state×{light,dark}, dual-validated by golden image-diff
+<strong>and</strong> the OCR/vision layout oracle (§3) —
+value/token-equality tests FORBIDDEN as sole proof</td>
+</tr>
+<tr>
+<td><strong>OTA Manager SPA</strong> (<code>clients/ota-manager/</code>,
+React 19 + shadcn; also served at <code>/manager</code>; hostrender +
+OCR harness exists)</td>
+<td>unit · <strong>UI host-render §11.4.170</strong> · integration · e2e
+(account switcher re-scopes projects + invalidates caches)</td>
+<td>Same host-rendered dual-validated pixel proof (§3) for the account
+switcher, post-login picker, and super-admin console; plus a wire proof
+that switching account <strong>re-scopes</strong> the project list and
+<strong>invalidates account-scoped caches</strong> (<code>23_*</code>
+§2.3)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>§11.4.169 closed-set completeness (every type mapped to this
+feature, none skipped):</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>§11.4.169 type</th>
+<th>This feature’s instance</th>
+<th>Load-bearing for isolation?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unit</td>
+<td>flag/arg parse, redaction, <code>VerifyBeforeApply</code> order,
+rank-compare, scope-resolution helpers (mocks OK here only,
+§11.4.27)</td>
+<td>supporting</td>
+</tr>
+<tr>
+<td>integration</td>
+<td>real server + real store, scoped token reads only its account</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>e2e</td>
+<td>sign-in → scope → publish → device offer (byte-apply blocked on
+§0.2)</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>full-automation §11.4.98</td>
+<td>every layer self-driving, <code>-count=3</code>, self-cleaning</td>
+<td>supporting</td>
+</tr>
+<tr>
+<td>Challenges / HelixQA §11.4.27</td>
+<td>one bank entry per user-visible feature driving the real
+journey</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>DDoS</td>
+<td>auth-login brute-force + upload flood vs the rate-limit posture
+(per-account)</td>
+<td>supporting</td>
+</tr>
+<tr>
+<td>security / tenant-isolation</td>
+<td><strong>THE flagship</strong> cross-account matrix (§2)</td>
+<td><strong>yes (primary)</strong></td>
+</tr>
+<tr>
+<td>stress + chaos §11.4.85</td>
+<td>N concurrent cross-account uploads (no bleed), kill-mid-upload,
+offline→resume, corrupt→reject, power-loss→A/B rollback</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>concurrency / race-deadlock</td>
+<td>scoped <code>LatestRelease</code> monotonicity +
+<code>ActiveDeploymentForTarget</code> uniqueness under concurrent
+cross-account writes; <code>CreateAccountWithOwner</code> atomicity (no
+orphan tenant)</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>memory</td>
+<td>no leak under sustained scoped-session / RLS-GUC set-reset
+churn</td>
+<td>supporting</td>
+</tr>
+<tr>
+<td>benchmarking</td>
+<td>scope-resolution overhead (Option A per-call key hash+lookup vs
+Option B token, <code>24_*</code> §1.3); RLS overhead vs no-RLS
+baseline</td>
+<td>supporting</td>
+</tr>
+</tbody>
+</table>
+<p>Each PASS cites rock-solid captured physical evidence under
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83) via
+<code>ab_pass_with_evidence</code> (§11.4.69) — never a bare
+<code>ab_pass</code>.</p>
+<hr />
+<h2 id="the-flagship-test-cross-account-isolation-the-primary-threat">2.
+THE flagship test — cross-account isolation (the primary threat)</h2>
+<p>The single most important proof of the whole feature: <strong>account
+A cannot see or modify account B’s devices / artifacts / releases /
+deployments</strong> — the primary threat class <code>20_*</code> §6 and
+<code>24_*</code>/<code>25_*</code> §6 name. It is proven at
+<strong>three layers</strong>, each with a paired §1.1 mutation that
+removes the scoping and makes the test FAIL. Isolation asserted at only
+one layer is not proven — a scoped session must be denied by BOTH the
+application scope (layer B) AND the database (layer A, pgx), because
+either alone can be bypassed by the other’s bug (<code>20_*</code> §0
+defense-in-depth).</p>
+<p><strong>Shared anti-bluff design (applies to all three layers), the
+§11.4.107-style not-a-false-negative guard applied to
+isolation:</strong> an “A cannot see B” assertion is a bluff if the
+query is simply broken (a broken query returns empty for
+<em>everyone</em>). Every isolation assertion is therefore
+<strong>three-part in the same call</strong>: (i) A’s own rows are
+<strong>present and non-empty</strong>, (ii) B’s rows are
+<strong>absent</strong>, (iii) the paired §1.1 mutation <strong>flips
+(i)/(ii)</strong> — B’s rows appear. Only all three together prove
+isolation, not a coincidentally-empty result.</p>
+<h3 id="db-layer-rls-pgx-live-postgres-via-rootless-podman-11.4.161">2.1
+DB layer — RLS (pgx, live Postgres via rootless podman §11.4.161)</h3>
+<p><strong>Setup.</strong> Boot a real PostgreSQL (containers submodule,
+rootless podman). Apply the <code>20_*</code> §4 schema with RLS
+enabled: the app connects as a <strong>non-owner,
+non-<code>BYPASSRLS</code> role</strong> and runs
+<code>SET app.current_account = '&lt;account_id&gt;'</code> per session
+(<code>20_*</code> §4 step 8, §6). Seed account <strong>A</strong> and
+account <strong>B</strong>, each with a device, artifact, release, and
+deployment (composite-FK-consistent per <code>20_*</code> §2).</p>
+<p><strong>Assertions</strong> (session with
+<code>SET app.current_account = A</code>):</p>
+<ol type="1">
+<li><code>SELECT * FROM devices</code> (and
+artifacts/releases/deployments) → returns <strong>A’s rows,
+non-empty</strong> and <strong>zero B rows</strong>.</li>
+<li><strong>Forged-<code>WHERE</code> read</strong> —
+<code>SELECT * FROM devices WHERE account_id = 'B'</code> → <strong>0
+rows</strong> (RLS filters <em>before</em> the <code>WHERE</code>; this
+is the belt that “works even when your application code has bugs” — AWS
+RLS blog).</li>
+<li><strong>Cross-account write</strong> —
+<code>UPDATE devices SET … WHERE account_id = 'B'</code> and
+<code>DELETE FROM devices WHERE account_id = 'B'</code> → <strong>0 rows
+affected</strong>.</li>
+<li><strong>Determinism</strong> — the same suite at
+<code>-count=3</code> yields identical row sets + identical
+captured-evidence hashes (§11.4.50 / §11.4.98).</li>
+</ol>
+<p><strong>§1.1 mutation (proves the gate is not a bluff):</strong> drop
+the RLS policy on <code>devices</code> (or weaken it to
+<code>USING (true)</code>, or omit the per-session
+<code>SET app.current_account</code>) → assertion 2’s
+forged-<code>WHERE</code> read <strong>returns B’s rows</strong> → the
+test <strong>FAILs</strong>. Restore → GREEN. A policy that still hides
+B’s rows after being weakened would itself be a bluff gate (§11.4.120
+reconcile-don’t-fake).</p>
+<p><strong>Evidence (§11.4.69):</strong> captured
+<code>psql</code>/driver query output for each assertion + the seeded
+row dumps + the mutation-run output showing the flip, under
+<code>docs/qa/&lt;run-id&gt;/isolation_rls/</code>.</p>
+<h3
+id="api-layer-scoped-routes-real-ota-server-httptest-both-store-backends">2.2
+API layer — scoped routes (real <code>ota-server</code>, httptest, both
+store backends)</h3>
+<p><strong>Setup.</strong> Boot the real server with a real store; mint
+a <strong>scoped access token for a user in account A</strong> (the
+<code>20_*</code>/<code>21_*</code> account claim, or Option B
+token-exchange per <code>24_*</code> §1.3). Seed A’s and B’s resources
+through the real API.</p>
+<p><strong>Assertions:</strong></p>
+<ol type="1">
+<li><code>GET /devices</code>, <code>GET /releases</code>,
+<code>GET /deployments</code>, <code>GET /artifacts?project=…</code>
+(the list-artifacts endpoint <code>24_*</code> §4 adds) with A’s token →
+<strong>only A’s resources</strong> (non-empty A, zero B).</li>
+<li><code>GET /devices/{B_device_id}</code> (a <strong>known</strong> id
+in account B) with A’s token → <strong>denied</strong> (recommend
+<strong>404</strong> to avoid an existence-leak; <strong>403</strong>
+for an in-account operation the role lacks — the 404-vs-403 choice is
+<code>22_*</code>/<code>26_*</code>’s to bind, flagged not decided;
+<code>24_*</code>/<code>25_*</code> §6 use “403/deny”).</li>
+<li><code>PATCH</code>/<code>DELETE /devices/{B_device_id}</code> with
+A’s token → denied; B’s row is <strong>unchanged</strong> (re-read as a
+super-admin or a B-scoped token to confirm no mutation).</li>
+<li><strong>Cross-project / cross-account key on write</strong> — a key
+scoped to account/project X used on <code>POST /artifacts/upload</code>
+/ <code>POST /releases</code> / <code>POST /deployments</code> for Y →
+<strong>403</strong> (<code>24_*</code> §6). The <strong>account is
+taken from the resolved token/key scope, never from a request
+field</strong> (<code>24_*</code> §3 step 2 — the trust boundary, same
+rule as <code>resolvePublicKey</code>).</li>
+</ol>
+<p><strong>§1.1 mutation:</strong> remove
+<code>requireAccountAccess</code> from the route (or drop the
+<code>AccountID</code> filter from the handler’s Repository query /
+<code>*Filter</code> struct, <code>20_*</code> §3.2) → A’s token
+<strong>sees/mutates B’s resources</strong> → the test
+<strong>FAILs</strong>. Restore → GREEN.</p>
+<p><strong>Evidence:</strong> captured HTTP request+response JSON
+transcripts (headers + bodies) for every assertion + store-row dumps
+before/after the write attempts, under
+<code>docs/qa/&lt;run-id&gt;/isolation_api/</code>. Run against
+<strong>both</strong> memory and pgx backends (the memory backend has no
+RLS, so the app-layer scope is its <em>only</em> isolation — layer 2.2
+is where the memory MVP’s isolation is proven).</p>
+<h3 id="e2e-layer-the-real-userdevice-journey">2.3 E2E layer — the real
+user/device journey</h3>
+<p><strong>Setup.</strong> Provision two accounts end-to-end. A user in
+A signs in via the SPA (or the CLI <code>whoami</code>), and a device is
+enrolled to A (operator-minted scoped token, <code>25_*</code> §1.3
+Option A).</p>
+<p><strong>Assertions:</strong></p>
+<ol type="1">
+<li><strong>User</strong> in A sees <strong>only A’s</strong>
+projects/devices/releases in the SPA (host-render + OCR of the scoped
+list, §3) and via <code>helix-ota</code> <code>list</code> commands
+(<code>--json</code>, <code>24_*</code> §2).</li>
+<li><strong>Device</strong> enrolled to A polling
+<code>GET /client/update</code> receives <strong>A’s</strong> active
+deployment and <strong><code>204</code>/deny</strong> for B’s deployment
+<strong>even when <code>(os, model, group)</code> match</strong> — the
+exact cross-tenant-leak-by-construction <code>25_*</code> §1.1 warns of,
+now closed by the account/project-scoped
+<code>ActiveDeploymentForTarget</code> (<code>25_*</code> §1.2).</li>
+<li>The device on the <strong>other</strong> account (B) is
+<strong>unaffected</strong> by A’s release.</li>
+</ol>
+<p><strong>§1.1 mutation:</strong> remove the account/project filter
+from <code>ActiveDeploymentForTarget</code> (revert to the global
+<code>(os, model, group)</code> key, <code>11_*</code> §4) → device A is
+<strong>offered B’s deployment</strong> → the e2e
+<strong>FAILs</strong>. Restore → GREEN.</p>
+<p><strong>Evidence:</strong> device-emulator poll transcripts + the
+offered manifest + (SPA) the host-rendered scoped-list PNG/OCR, under
+<code>docs/qa/&lt;run-id&gt;/isolation_e2e/</code>. The
+<strong>byte-level</strong> “device downloads + applies A’s exact
+artifact” step is honestly
+<code>SKIP-with-reason: object_storage_absent</code> until §0.2 lands —
+the <strong>routing/offer isolation</strong> above is fully provable
+now; the byte-apply is not, and that is stated, not silently green
+(<code>24_*</code> §4 / <code>25_*</code> §5).</p>
+<hr />
+<h2
+id="ui-proof-11.4.170-sign-in-split-account-switcher-super-admin-console">3.
+UI proof (§11.4.170) — sign-in split, account switcher, super-admin
+console</h2>
+<p>Every new/changed UI screen MUST be proven by
+<strong>device-independent host-rendered pixels</strong> (the real
+component rendered to a PNG on the host — no device/emulator),
+<strong>dual-validated</strong> by (i) a <strong>golden
+image-diff</strong> AND (ii) an <strong>OCR/vision oracle</strong>
+reading rendered text + labels + control bounds (no overlap /
+label-over-label / clipping / off-screen / collapsed-or-giant-unbounded
+widget). <strong>Value/token-equality unit tests are FORBIDDEN as the
+sole proof</strong> (§11.4.170 forensic: hex/sp/dp value-equality tests
+stayed GREEN while a visibly-broken screen shipped); they MAY
+supplement, never substitute.</p>
+<h3
+id="the-harnesses-already-exist-new-screens-add-fixtures-to-them">3.1
+The harnesses ALREADY EXIST — new screens add fixtures to them</h3>
+<p>This is grounded in <code>23_*</code> §4 (re-verified there this
+session); the test strategy <strong>extends</strong> these, it does not
+build a new harness:</p>
+<ul>
+<li><strong>OTA Manager —
+<code>clients/ota-manager/visual/</code>:</strong>
+<code>harness.tsx</code> + <code>run-all.mjs</code> render components to
+PNG on the host (Storybook-class); <strong><code>oracle-diff.mjs</code>
+= the golden image-diff</strong> oracle;
+<strong><code>oracle-ocr.mjs</code> = the OCR/vision layout
+oracle</strong>; <code>vite.harness.config.ts</code>. It also ships a
+<strong>dashboard variant</strong> (<code>harness-dashboard.tsx</code>,
+<code>run-all-dashboard.mjs</code>) so the OCR/vision oracle can cover
+dashboard screens too.</li>
+<li><strong>Dashboard — <code>dashboard/hostrender/</code>:</strong>
+Playwright specs (<code>login.hostrender.spec.ts</code>,
+<code>screens.hostrender.spec.ts</code>) with <code>-snapshots/</code>
+dirs (Playwright <code>toHaveScreenshot</code> = the golden image-diff)
++ <code>playwright.hostrender.config.ts</code>.</li>
+</ul>
+<h3 id="fixture-matrix-per-screen-state-light-dark-from-23_-4.3">3.2
+Fixture matrix — per screen × state × {light, dark} (from
+<code>23_*</code> §4.3)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th>States to prove</th>
+<th>Surface(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regular sign-in (unchanged form, <strong>re-proven</strong> — the
+split is a post-auth router concern, <code>23_*</code> §1.2 Option
+A)</td>
+<td>idle · validation-error · submitting</td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td>Account picker (post-login, <code>23_*</code> §2.1)</td>
+<td>multi-account list · no-membership error · (single-account =
+auto-select, <strong>no screen</strong>)</td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td><strong>AccountSwitcher</strong> (above the ProjectSwitcher,
+<code>23_*</code> §2.2)</td>
+<td>closed · open · active-account checked · <strong>long-name
+truncation</strong></td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td>Super-admin: accounts list</td>
+<td>populated · empty · loading</td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td>Super-admin: account create/edit dialog</td>
+<td>empty · filled · error</td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td>Super-admin: users list + user create/edit</td>
+<td>populated · membership-assignment open</td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td>Super-admin: <strong>permissions matrix</strong> (roles ×
+resource×action grid, <code>23_*</code> §3.2)</td>
+<td>full grid · <strong>horizontal-scroll, no clip/overlap of header or
+first data row</strong></td>
+<td>both SPAs</td>
+</tr>
+<tr>
+<td>(Option B only) super-admin sign-in</td>
+<td>idle · error</td>
+<td>only if the operator picks the <code>23_*</code> §1.2 Option-B
+split</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dashboard precondition (flag, from <code>23_*</code>
+§5):</strong> the dashboard <code>Role</code> union OMITS
+<code>super_admin</code> (<code>dashboard/src/types/api.ts</code>); the
+super-admin console cannot be gated/rendered on the dashboard until
+<code>super_admin</code> is added to that union (and to
+<code>TokenResponse.roles</code>). The dashboard super-admin fixtures
+are <strong>blocked</strong> on that small type change — a documented
+ordering dependency, not a test gap to paper over.</p>
+<h3
+id="anti-bluff-for-the-oracles-themselves-11.4.10710-self-validation">3.3
+Anti-bluff for the oracles themselves (§11.4.107(10)
+self-validation)</h3>
+<p>The OCR/vision oracle (<code>oracle-ocr.mjs</code>) and the
+golden-diff oracle (<code>oracle-diff.mjs</code> / Playwright) are
+themselves proven not-a-bluff: a <strong>golden-good</strong> fixture (a
+correctly-laid screen) MUST PASS, and a <strong>golden-bad</strong>
+fixture (an overlapping / clipped / label-over-label screen) MUST FAIL,
+pinpointing the offending region — wired into meta-test. <strong>§1.1
+mutation:</strong> feed the golden-bad fixture to the oracle; if it
+PASSes, the oracle is the bluff and the gate FAILs (§11.4.107(10)
+analyzer self-validation). Thresholds (<code>maxDiffPixelRatio</code> /
+OCR per-word confidence floor) are <strong>calibrated on the project’s
+own fixtures, not hardcoded from literature</strong> (§11.4.6 /
+§11.4.107(13)); rendering is pinned to one OS/browser environment
+(Playwright’s Docker image / the pinned harness env) so the goldens are
+deterministic (Playwright docs: rendering varies by host OS/version —
+run in the same environment the baseline was generated in;
+§Sources).</p>
+<p><strong>Honest boundary (§11.4.170):</strong> these are
+<strong>host-rendered</strong> device-independent pixels — proof the
+real component <em>renders</em> correctly per state and theme. It is
+<strong>not</strong> the running wire proof that the switch re-scopes
+data (that is §2.2/§2.3 and the §11.4.169 e2e). Both are required;
+neither substitutes the other.</p>
+<hr />
+<h2
+id="super-admin-tests-bypass-only-for-super-admin-audit-written-no-escalation">4.
+Super-admin tests (bypass only for super-admin · audit written · no
+escalation)</h2>
+<p>The super-admin is a <strong>global <code>users.is_super_admin</code>
+boolean</strong> — a property of the identity, not a per-account role —
+and it bypasses account scoping at <strong>two layers</strong>
+(<code>20_*</code> §6). The tests prove the bypass is <strong>scoped to
+super-admins, audited, and revocable</strong>, never a standing
+hole.</p>
+<ol type="1">
+<li><strong>Bypass works only for super-admin.</strong> A super-admin
+session <code>ListAccounts</code> / <code>ListUsers</code> returns
+<strong>all</strong> accounts/users (the app-layer resolver returns “all
+accounts” for super-admin — the exact precedent
+<code>handlers_project.go</code>’s global-admin bypass,
+<code>20_*</code> §6). A <strong>non-super-admin</strong> session
+calling those admin routes → <strong>403</strong>. <em>§1.1
+mutation:</em> grant the bypass to a non-super-admin role → the
+non-super-admin <code>ListAccounts</code> returns all accounts →
+<strong>FAIL</strong>.</li>
+<li><strong>RLS bypass is policy-based, not <code>BYPASSRLS</code>, and
+is immediately revocable (<code>20_*</code> §6).</strong> A super-admin
+request sets a super-admin GUC
+(<code>SET app.is_super_admin = 'on'</code>) that each policy’s
+<code>USING</code> clause also accepts → sees all accounts’ rows.
+<strong>Clearing the GUC re-scopes the SAME session immediately</strong>
+to its own account only. <em>§1.1 mutation:</em> replace the
+policy-based bypass with a <code>BYPASSRLS</code> role
+<strong>OR</strong> make the bypass survive the GUC-clear → the
+revocation assertion <strong>FAILs</strong> (a super-admin bypass that
+survives revocation is a §11.4 isolation-layer bluff, <code>20_*</code>
+§6). This also proves <strong>auditability</strong>: a
+<code>BYPASSRLS</code> role is invisible to the policy and cannot be
+attributed per query — the policy-based path keeps every super-admin
+query attributable (AWS RLS blog: “policy-based admin access … keeps
+admin access auditable and revocable”; §Sources).</li>
+<li><strong>Audit log is written with the affected
+<code>account_id</code>.</strong> Every super-admin mutating action
+records an audit row carrying the <strong>affected tenant’s
+<code>account_id</code></strong> and the actor (<code>20_*</code> §6;
+the audit table today carries neither <code>account_id</code> nor a
+populated <code>UserID</code>, <code>10_*</code> §6). <em>§1.1
+mutation:</em> drop <code>account_id</code> from the audit write → the
+“super-admin action is tenant-attributable” assertion
+<strong>FAILs</strong>.</li>
+<li><strong>A non-super-admin cannot escalate.</strong>
+<code>is_super_admin</code> is settable <strong>only via config/env
+bootstrap, never a request</strong> (<code>20_*</code> §6; the same
+trust boundary as the token secret / TLS-proxy flag /
+<code>resolvePublicKey</code>, <code>10_*</code> §7). Tests:
+<ol type="a">
+<li>an account <code>admin</code> calling <code>PATCH /users/{id}</code>
+with <code>is_super_admin=true</code> → <strong>denied</strong>;</li>
+<li>a <strong>forged <code>is_super_admin</code> claim</strong> in a
+self-minted / tampered token → <strong>ignored</strong> (the claim is
+server-minted + server-verified, never trusted from the request);</li>
+<li>an account admin cannot grant itself membership in another account
+it does not own. <em>§1.1 mutation:</em> honor a request-supplied
+<code>is_super_admin</code> field/claim → the privilege-escalation test
+<strong>FAILs</strong>.</li>
+</ol></li>
+</ol>
+<p><strong>Evidence:</strong> captured HTTP transcripts + audit-row
+dumps + the RLS session output (GUC-on → all rows, GUC-off → own rows)
+under <code>docs/qa/&lt;run-id&gt;/superadmin/</code>.
+<strong>Bootstrap-only note (§11.4.10):</strong> the first super-admin
+is seeded from a <code>HELIX_*</code> env field (<code>20_*</code> §6;
+<code>10_*</code> §7) — the escalation tests never create one via the
+API, they prove the API <em>cannot</em>.</p>
+<hr />
+<h2
+id="migration-backfill-tests-oq-4-default-account-backfill-correctness">5.
+Migration / backfill tests — OQ-4 default-account backfill
+correctness</h2>
+<p>OQ-4 (00_INDEX §5): migrate existing projects/rollouts/artifacts
+under a <strong>default account</strong>, or keep the schema
+additive-nullable until backfill? <code>20_*</code> §5
+<strong>recommends Option A (default-account big-bang, then NOT
+NULL)</strong> because the as-is store is in-memory-by-default and
+barely populated, making the backfill nearly free, and it removes the
+nullable-isolation-hole window entirely. This section tests
+<strong>Option A</strong> (and the Option-B variant if the operator
+picks it), on the <strong>pgx path</strong> (a live Postgres via
+rootless podman; the memory backend has an analogous in-code
+default-account assignment).</p>
+<p><strong>Setup.</strong> Seed a <strong>pre-migration</strong> store
+with existing rows carrying <strong>no <code>account_id</code></strong>:
+projects, devices, artifacts, releases, deployments, groups, telemetry,
+audit (the eight tenant-owned tables of <code>20_*</code> §2.1). Run the
+migration sequence: <code>002</code> (add <code>account_id</code>
+nullable) → <strong>backfill</strong> (assign every legacy row to the
+seeded <code>__default__</code> account, and a <code>__default__</code>
+project where a <code>project_id</code> is required) → <code>003</code>
+(set <code>account_id NOT NULL</code>, add the per-account uniques, the
+composite FKs, the leading-column indexes, and enable RLS) —
+<code>20_*</code> §5 Option A.</p>
+<p><strong>Assertions (backfill correctness):</strong></p>
+<ol type="1">
+<li><strong>No orphan / no NULL after <code>003</code>.</strong> Every
+legacy row now has <code>account_id = __default__</code>; the
+<code>003</code> <code>NOT NULL</code> add <strong>succeeds</strong> (it
+would FAIL if any row were left NULL — that failure IS a detection).
+Assert <code>COUNT(* WHERE account_id IS NULL) = 0</code> on every
+migrated table.</li>
+<li><strong>No cross-account bleed.</strong> With a single default
+account, every migrated row lands under <code>__default__</code> and
+<strong>none</strong> under any other account:
+<code>COUNT(rows under __default__) == COUNT(pre-migration rows)</code>
+per table, and <code>COUNT(rows outside __default__) == 0</code>.</li>
+<li><strong>Composite-FK integrity holds</strong> (<code>20_*</code>
+§2): every resource’s <code>account_id</code> <strong>equals</strong>
+its project’s <code>account_id</code> (the
+<code>(project_id, account_id)</code> composite FK the <code>003</code>
+migration adds) — assert 0 violating rows.</li>
+<li><strong>Uniqueness re-scoping is correct</strong> (<code>20_*</code>
+§2.2): the old global uniques (project name, device
+<code>hardware_id</code>, group name) are dropped and re-added
+<strong>per-account</strong>; a legacy row set that had one global
+“production” project now validates under the
+per-<code>(account_id, name)</code> unique.</li>
+<li><strong>Round-trip / scoped read.</strong> Post-migration, an
+app-layer scoped read for <code>__default__</code> returns
+<strong>exactly</strong> the legacy rows; an RLS session with
+<code>SET app.current_account = __default__</code> sees them and a
+<em>different</em> account’s session sees <strong>zero</strong>
+(composes with §2.1).</li>
+<li><strong>Idempotent + crash-safe</strong> (§11.4.98 / §11.4.85):
+running the backfill <strong>twice</strong> yields the identical result;
+a <strong>SIGKILL mid-backfill</strong> leaves a resumable state (no
+partial NOT-NULL failure, no half-assigned rows) — captured recovery
+trace.</li>
+</ol>
+<p><strong>§1.1 mutations (each makes a specific assertion
+FAIL):</strong> - <strong>Skip a table in the backfill</strong>
+(e.g. forget <code>telemetry_events</code>) → its <code>003</code>
+NOT-NULL add FAILs OR assertion 1 finds a NULL row →
+<strong>FAIL</strong>. - <strong>Assign a row to a second
+account</strong> (bleed) → assertion 2’s “0 rows outside
+<code>__default__</code>” <strong>FAILs</strong>. - <strong>Break the
+composite FK</strong> (set a resource’s <code>account_id</code> ≠ its
+project’s) → assertion 3 <strong>FAILs</strong>.</p>
+<p><strong>Option-B variant (only if the operator chooses
+additive-nullable-until-backfill, <code>20_*</code> §5).</strong>
+Additionally test the interim <strong>NULL-scoping guard</strong>: while
+<code>account_id</code> is NULL, those rows are
+“unassigned/legacy-global” and MUST be <strong>visible only to
+super-admin</strong> — a non-super-admin scoped session must see
+<strong>zero</strong> NULL-account rows. <em>§1.1 mutation:</em> make
+NULL-account rows visible to a non-super-admin scoped session →
+<strong>FAIL</strong> (this is the isolation-hole <code>20_*</code> §5
+warns Option B carries during its window).</p>
+<p><strong>Evidence:</strong> pre/post row-count dumps, the
+<code>COUNT(NULL)=0</code> and <code>COUNT(outside)=0</code> query
+outputs, the composite-FK verification query output, and the twice-run /
+crash-recovery traces, under
+<code>docs/qa/&lt;run-id&gt;/migration/</code>.</p>
+<hr />
+<h2 id="anti-bluff-discipline-for-the-whole-feature">6. Anti-bluff
+discipline for the whole feature</h2>
+<p>The bar (§11.4 / §11.4.87 / §11.4.126): shipping is
+<strong>not</strong> “tests pass” but “users can use the feature” —
+every PASS carries positive captured evidence that the feature works,
+and every gate is provably not a bluff.</p>
+<ol type="1">
+<li><strong>Captured evidence for every PASS (§11.4.69).</strong> Every
+PASS calls <code>ab_pass_with_evidence &lt;desc&gt; &lt;path&gt;</code>
+citing a real, non-empty artefact under
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83); a bare
+<code>ab_pass</code> is deprecated → FAIL. Evidence shapes per surface:
+HTTP request+response transcripts (API/CLI/device), store-row + SQL
+query dumps (data/RLS/migration), host-rendered PNGs + OCR JSON (UI),
+device-emulator manifests + downloaded-artifact hashes (e2e, when object
+storage lands), <code>latency.json</code> +
+<code>categorised_errors.txt</code> + <code>recovery_trace.log</code>
+(stress/chaos). Metadata-only / config-only / absence-of-error /
+grep-without-runtime PASS are all forbidden (§11.4 / §11.4.1).</li>
+<li><strong>Every gate has a paired §1.1 mutation.</strong> Each
+isolation / super-admin / migration / UI gate above ships its
+<strong>mutation that removes the scoping/guard and makes the gate
+FAIL</strong> (§2.1–§2.3, §4, §5, §3.3). A gate whose mutation does
+<strong>not</strong> make it FAIL is a bluff gate and is itself a
+finding; a fix that breaks its own gate is <strong>reconciled, never
+fake-passed</strong> (§11.4.120).</li>
+<li><strong>Deterministic re-runnability (§11.4.98 / §11.4.50).</strong>
+Every layer below unit is <strong>fully self-driving end-to-end</strong>
+— the only human step is a one-time credential bootstrap
+<strong>outside</strong> test execution (env/<code>.env</code> per
+§11.4.10); no “operator types a message” mid-run. Every suite passes at
+<strong><code>-count=3</code></strong> with self-cleaning state and
+identical exit + identical evidence hashes. Live tests drive the
+account/device programmatically (no hard-coded session UUID colliding
+with a dev session, per §11.4.98’s forensic).</li>
+<li><strong>No fakes beyond unit (§11.4.27).</strong> Integration / e2e
+/ security / stress / chaos / UI-host-render / migration all exercise
+the <strong>real</strong> server + <strong>real</strong> store — the
+<strong>real PostgreSQL</strong> (rootless podman via the containers
+submodule, §11.4.161) for the RLS/pgx/migration paths, the <strong>real
+<code>ota-server</code></strong> binary/httptest, the <strong>real Go
+device emulator</strong> for the device journey. Mocks live only in unit
+tests. Production code never imports a mock path.</li>
+<li><strong>Coverage ledger (§11.4.25 / §11.4.52).</strong> One row per
+<strong>feature × surface × invariant 1–6</strong> (anti-bluff posture ·
+working end-to-end on the real topology · matches the documented promise
+· no open bug · full docs in sync · four-layer floor), each row
+classified <code>AUTONOMOUS_VERIFIED</code> /
+<code>AUTONOMOUS_DESIGNED</code> / <code>OPERATOR_ATTENDED_ONLY</code> /
+<code>NOT_APPLICABLE</code> (§11.4.52).
+<code>OPERATOR_ATTENDED_ONLY</code> is a release blocker until promoted,
+citing a tracked migration item. Two rows are <strong>honestly non-green
+today by construction</strong> (§0): the <strong>RLS layer</strong> is
+<code>topology_unsupported</code>-SKIP when Postgres is absent, and the
+<strong>byte-level device-apply e2e</strong> is
+<code>object_storage_absent</code>-SKIP until real object storage lands
+— both stated in the ledger, never faked green.</li>
+<li><strong>Independent verification + review of the test code itself
+(§11.4.142 / §11.4.165 / §11.4.134).</strong> The tests are code; a
+bluff-capable test (one that PASSes on broken-for-the-user behaviour) is
+a finding. An <strong>independent reviewer/verifier</strong>
+(structurally separate from the author) confirms every isolation gate
+genuinely exercises the boundary and its mutation genuinely FAILs,
+iterating to a zero-finding GO.</li>
+<li><strong>Manual QA final confirmation (§11.4.185).</strong> Every
+automated gate above is necessary but <strong>not sufficient</strong> —
+the feature is “done” only after the <strong>QA team’s manual
+testing</strong> confirms it, as the final step, after the autonomous
+suites are GREEN. The agent hands off and waits; it never self-certifies
+the manual step.</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-10">Sources verified 2026-07-10</h2>
+<p>External best-practice research per §11.4.8 / §11.4.99 — testing
+multi-tenant isolation (RLS negative-test patterns), tenant-isolation
+testing strategy (inject-and-assert-denied), and visual-regression
+testing for auth/switcher flows. Cross-referenced against latest online
+sources, not copied; each claim above that leans on an external pattern
+points here.</p>
+<ul>
+<li><strong>AWS — “Multi-tenant data isolation with PostgreSQL Row Level
+Security.”</strong> <a
+href="https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/"
+class="uri">https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/</a>
+— verified (also cited by <code>20_*</code>): RLS enforces tenant
+scoping on every SELECT/UPDATE/DELETE/INSERT so it “works even when your
+application code has bugs” (grounds §2.1’s forged-<code>WHERE</code>
+belt), the app role must <strong>not</strong> be the table owner or a
+<code>BYPASSRLS</code>/superuser role, and “policy-based admin access
+over privilege-based bypass … keeps admin access auditable and
+revocable” (grounds §4’s policy-based-bypass + revocability tests).</li>
+<li><strong>AWS Well-Architected SaaS Lens — REL_3, “How are you testing
+the multi-tenant capabilities of your SaaS application?”</strong> <a
+href="https://wa.aws.amazon.com/saas.question.REL_3.en.html"
+class="uri">https://wa.aws.amazon.com/saas.question.REL_3.en.html</a> —
+verified directly this session: “Create tests that attempt to change the
+tenant context by injecting a new tenant identifier. Verify that the
+injection is blocked from crossing a tenant boundary,” “inject tenant
+tokens that attempt to simulate a SaaS identity,” and exercise the
+shared isolation frameworks to “validate that they accurately apply
+tenant isolation policies.” Grounds §2.2’s cross-account-token matrix
+and §4’s forged-<code>is_super_admin</code>-claim escalation test — a
+boundary you have not tried to break is a boundary you do not know
+works.</li>
+<li><strong>AWS SaaS Architecture Fundamentals — Tenant
+isolation.</strong> <a
+href="https://docs.aws.amazon.com/whitepapers/latest/saas-architecture-fundamentals/tenant-isolation.html"
+class="uri">https://docs.aws.amazon.com/whitepapers/latest/saas-architecture-fundamentals/tenant-isolation.html</a>
+— verified: SaaS systems include explicit constructs that block any
+attempt to access another tenant’s resources even on shared
+infrastructure, and isolation must be an automated, first-class
+validation (“attempt cross-tenant access with one tenant’s session
+against another tenant’s resources and assert access is denied”).
+Grounds the three-layer flagship (§2) and the “one layer is not enough”
+defense-in-depth stance.</li>
+<li><strong>Playwright — “Visual comparisons”
+(<code>toHaveScreenshot</code>).</strong> <a
+href="https://playwright.dev/docs/test-snapshots"
+class="uri">https://playwright.dev/docs/test-snapshots</a> — verified
+directly: golden snapshots are generated on first run
+(<code>{test}-{browser}-{platform}.png</code>) and updated with
+<code>--update-snapshots</code>;
+<code>maxDiffPixels</code>/<code>maxDiffPixelRatio</code> set the
+tolerance (pixelmatch); <strong>“Browser rendering can vary based on the
+host OS, version, settings, hardware … For consistent screenshots, run
+tests in the same environment where the baseline screenshots were
+generated.”</strong> Grounds §3.1 (the dashboard <code>hostrender</code>
+golden-diff = <code>toHaveScreenshot</code>) and §3.3
+(pinned-environment goldens + calibrated-not-hardcoded thresholds).</li>
+</ul>
+<p>Corroborating multi-tenant RLS negative-test guidance (add automated
+isolation tests so a later migration can’t silently break tenant
+scoping; test functions/views/nested queries for unintended policy
+effects; a consistent per-table tenant-column shape keeps policies
+testable) surfaced consistently across the RLS-for-multi-tenant corpus
+(<a
+href="https://www.techbuddies.io/2026/01/01/how-to-implement-postgresql-row-level-security-for-multi-tenant-saas/"
+class="uri">https://www.techbuddies.io/2026/01/01/how-to-implement-postgresql-row-level-security-for-multi-tenant-saas/</a>,
+<a
+href="https://dev.to/uaslimcreate/building-multi-tenant-row-level-security-in-postgresql-a-production-pattern-4n2k"
+class="uri">https://dev.to/uaslimcreate/building-multi-tenant-row-level-security-in-postgresql-a-production-pattern-4n2k</a>)
+and is applied in §2.1 + §5.</p>
+<p><strong>No external source prescribes</strong> the three-layer (RLS +
+app-scope + e2e) flagship composition, the not-a-false-negative
+three-part isolation assertion (§2 shared design), or the
+default-account backfill correctness matrix (§5) — those are
+<strong>original work</strong> applied to this codebase’s shape,
+following from <code>20_*</code>’s data model.</p>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<ul>
+<li><strong>This is a test-strategy design, not implemented.</strong> No
+test file, harness, fixture, gate, mutation, or evidence artefact
+described here exists yet; every “assertion” and “§1.1 mutation” is a
+<strong>plan</strong> for the implementation phase (operator-gated,
+00_INDEX §2). Nothing here is a §11.4 completion claim, and no test was
+run under this doc.</li>
+<li><strong>The feature-under-test does not exist yet.</strong>
+Accounts, the <code>account_id</code>/<code>project_id</code> scoping
+columns, RLS policies, <code>requireAccountAccess</code>, the tenant
+token claim, the account switcher, the super-admin console, the
+<code>helix-ota</code> CLI, and the device wizard are all
+<strong>to-be</strong> proposals in
+<code>20_*</code>/<code>21_*</code>/<code>22_*</code>/<code>23_*</code>/<code>24_*</code>/<code>25_*</code>
+— this strategy tests them <strong>once they are built</strong>, and
+reconciles to those docs’ final shapes (they are the SSOTs; this doc
+consumes, never redefines).</li>
+<li><strong>Two layers are honestly non-green by construction, today
+(§0):</strong> the <strong>RLS layer</strong> requires a live PostgreSQL
+and is <code>topology_unsupported</code>-SKIP without one (memory MVP
+has only the app-layer scope, §2.2); the <strong>byte-level device
+download-and-apply e2e</strong> is
+<code>object_storage_absent</code>-SKIP until real per-account object
+storage lands (<code>24_*</code> §4 / <code>25_*</code> §5). The
+isolation / scope / UI / super-admin / migration proofs are
+<strong>fully designable and runnable now</strong> without those
+two.</li>
+<li><strong><code>26_security_threat_model.md</code> (threat SSOT) and
+<code>21_authz_rbac_superadmin.md</code> (permission-model / token-shape
+SSOT) are planned but not yet authored</strong> (00_INDEX §3). The
+threats tested here are drawn from <code>20_*</code> §6 +
+<code>24_*</code>/<code>25_*</code> §6 and the permission shape from
+<code>20_*</code>’s minimal role skeleton; when
+<code>26_*</code>/<code>21_*</code> land, this strategy’s threat list
+and role assertions reconcile to them (they win). Specifically deferred
+to those docs: the <strong>404-vs-403</strong> cross-account-response
+choice (§2.2), the exact <strong>token claim names</strong> (§2.2/§4),
+and the <strong>permission-model shape</strong> the matrix UI renders
+(§3).</li>
+<li><strong>The <code>23_*</code> “harnesses already exist” claim is
+inherited, not re-verified here.</strong> §3.1 restates the harness
+paths (<code>clients/ota-manager/visual/</code> with
+<code>oracle-diff.mjs</code> + <code>oracle-ocr.mjs</code>;
+<code>dashboard/hostrender/</code> Playwright specs) exactly as
+<code>23_*</code> §4 established them; this doc did not itself re-open
+those files — it grounds the claim in <code>23_*</code>’s verification,
+and the per-screen tenancy-fixture PASS is the §11.4.170 proof to be
+produced during implementation, out of scope for a planning doc.</li>
+<li><strong>The recommendation-vs-decision boundary (§11.4.66) is
+preserved:</strong> every alternative the owner docs left open (sign-in
+split A/B, CLI key direct-vs-exchange, device enrollment A/B, OQ-4 A/B,
+404-vs-403) is tested along the <strong>recommended</strong> path with
+the <strong>alternative’s</strong> variant noted — this strategy does
+not pick for the owner docs.</li>
+</ul>
+</body>
+</html>
