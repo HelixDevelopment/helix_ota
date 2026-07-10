@@ -66,13 +66,15 @@ func run() error {
 		os.Exit(1)
 	}
 
-	// Parse flags before the subcommand so subcommand parsers can re-parse.
-	flag.Parse()
-
 	cmd := os.Args[1]
-	// Re-parse flags for the subcommand.
-	flag.Parse()
-	_ = os.Args[2:]
+	// Parse the flags that follow the subcommand: the documented usage is
+	// `applyport <cmd> [flags]`. flag.Parse() parses os.Args[1:] and stops at
+	// the subcommand token (a non-flag positional), which would silently drop
+	// every following flag (-server, -pubkey, -username, ...). Parse os.Args[2:]
+	// so the operator's subcommand flags actually apply.
+	if perr := flag.CommandLine.Parse(os.Args[2:]); perr != nil {
+		return perr
+	}
 
 	switch cmd {
 	case "run":

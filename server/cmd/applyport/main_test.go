@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
+	"flag"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,6 +63,32 @@ func TestRun_CheckCommand(t *testing.T) {
 
 	if err := run(); err != nil {
 		t.Fatalf("run() 'check' should be a no-op success, got %v", err)
+	}
+}
+
+// TestRun_SubcommandFlagsAreParsed proves that a flag supplied AFTER the
+// subcommand — the documented usage form `applyport <cmd> [flags]` — actually
+// reaches run(). RED baseline (§11.4.115): the pre-fix code calls flag.Parse()
+// (which parses os.Args[1:]) and stops at the subcommand token, silently
+// dropping EVERY following flag, so an operator-supplied -server (or -pubkey,
+// -username, -password, -insecure) reverts to its default/env value. A dropped
+// -pubkey silently DISABLES signature verification the operator asked for.
+func TestRun_SubcommandFlagsAreParsed(t *testing.T) {
+	saved := os.Args
+	defer func() { os.Args = saved }()
+
+	const want = "http://flag-after-subcommand.example/api/v1"
+	// `check` is the only fully offline subcommand: it consumes -server and
+	// returns nil without touching the network or a device.
+	os.Args = []string{"applyport", "check", "-server", want}
+
+	if err := run(); err != nil {
+		t.Fatalf("run() 'check' should succeed, got %v", err)
+	}
+	got := flag.CommandLine.Lookup("server").Value.String()
+	if got != want {
+		t.Fatalf("flag supplied after the subcommand was dropped: -server = %q, want %q "+
+			"(flags after `applyport <cmd>` are silently ignored)", got, want)
 	}
 }
 

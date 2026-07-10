@@ -165,16 +165,25 @@ func (s *Server) handleUploadArtifact(c *gin.Context) {
 	// --- accept path: stage + record (artifact_validation.md §6) ---
 	artifactID := s.newID()
 	art := store.Artifact{
-		ArtifactID:        artifactID,
-		SHA256:            result.ComputedSHA256,
-		Size:              int64(len(fileBytes)),
-		OSType:            meta.OS,
-		TargetModel:       meta.TargetModel,
-		Version:           meta.Version,
-		StorageRef:        fmt.Sprintf("s3://helix-artifacts/%s", artifactID),
-		Verified:          true,
-		UploadedAt:        s.now(),
-		Signature:         meta.Signature,
+		ArtifactID:  artifactID,
+		SHA256:      result.ComputedSHA256,
+		Size:        int64(len(fileBytes)),
+		OSType:      meta.OS,
+		TargetModel: meta.TargetModel,
+		Version:     meta.Version,
+		StorageRef:  fmt.Sprintf("s3://helix-artifacts/%s", artifactID),
+		Verified:    true,
+		UploadedAt:  s.now(),
+		// Single source of truth: persist (and later serve to devices via
+		// handlers_client.go UpdateAvailable.Signature) exactly the detached
+		// signature that S3 VERIFIED against the payload digest — NOT the
+		// unverified meta.Signature. resolveSignature may verify a `signature`
+		// form-part that differs from meta.Signature, and the validator never
+		// cross-checks the two (it verifies Input.Signature only; S6 requires
+		// meta.Signature merely non-empty). Storing meta.Signature could hand a
+		// device a signature that does not match the payload — a valid-but-broken
+		// publish (§11.4). base64.StdEncoding is the device's expected on-wire form.
+		Signature:         base64.StdEncoding.EncodeToString(sig),
 		PayloadProperties: payloadPropsFromMeta(meta),
 	}
 	if err := s.repo.CreateArtifact(c.Request.Context(), art); err != nil {

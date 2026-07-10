@@ -1,0 +1,104 @@
+<h1
+id="qa-evidence-server-artifact-signature-consistency-verified-served">QA
+evidence — server artifact signature consistency (verified ==
+served)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-10T06:44:00Z <strong>Run-id:</strong>
+20260710-server-signature-consistency <strong>Scope:</strong>
+<code>server/</code> Go module (main repo). No submodule touched.
+<strong>Anchors:</strong> §11.4.6 (verify-as-FACT), §11.4.115
+(RED-baseline + polarity switch), §11.4.107/§11.4.108 (served-to-device
+runtime signature), §11.4.83 (QA transcript).</p>
+<h2 id="defect-verified-as-fact-not-surfaced-guess">Defect (verified as
+FACT, not surfaced-guess)</h2>
+<p>The server verified one detached signature against the payload but
+stored + served a <em>different</em>, unverified signature to devices.
+Chain, all cited file:line:</p>
+<ul>
+<li><code>internal/api/handlers_artifact.go:124</code> —
+<code>sig = resolveSignature(form, meta.Signature)</code>.
+<code>resolveSignature</code> (<code>:274</code>) PREFERS an uploaded
+<code>signature</code> form-part over <code>metadata.signature</code>,
+so <code>sig</code> is the signature actually verified.</li>
+<li><code>internal/api/handlers_artifact.go:147</code> —
+<code>in.Signature = sig</code> → the ONLY signature cryptographically
+checked (<code>ota-artifact-validator/pipeline.go:73</code>
+<code>ValidateSignature(digest, in.PublicKey, in.Signature)</code>).</li>
+<li>Validator NEVER cross-checks <code>Meta.Signature</code> vs
+<code>Input.Signature</code>; S6 <code>ValidateMetadata</code> requires
+<code>meta.signature</code> merely non-empty + non-blank
+(<code>ota-protocol/validate.go:79-84</code>).</li>
+<li><code>internal/api/handlers_artifact.go:177 (pre-fix)</code> —
+<code>art.Signature = meta.Signature</code> → the STORED value is the
+unverified <code>metadata.signature</code>.</li>
+<li><code>internal/api/handlers_client.go:81</code> —
+<code>UpdateAvailable.Signature = art.Signature</code> → that stored,
+possibly-divergent value is SERVED to the device.</li>
+</ul>
+<p>Reachable + harmful scenario: an upload whose verified
+<code>signature</code> form-part differs from
+<code>metadata.signature</code> is ACCEPTED (201,
+<code>Verified:true</code>), yet the device is served a signature that
+does not match the payload → device signature check fails → cannot
+install, while the server reported the artifact valid/published. §11.4
+“validation passes but broken for the end user”.</p>
+<h2 id="fix-server-layer-only-single-source-of-truth">Fix (server layer
+only; single source of truth)</h2>
+<p><code>internal/api/handlers_artifact.go:186</code> — store
+<code>base64.StdEncoding.EncodeToString(sig)</code> (the base64 of the
+actually-verified signature) instead of <code>meta.Signature</code>.
+Cannot false-reject a legitimate publish: when the signature was
+supplied only via <code>metadata.signature</code> (canonical std
+base64), re-encoding the decoded bytes yields the identical string; when
+a <code>signature</code> form-part was verified, the stored value
+becomes exactly that verified signature. The decoupled
+<code>ota-artifact-validator</code> library was NOT touched (§11.4.28 —
+it is encoding-agnostic; the server owns base64).</p>
+<h2 id="red-baseline-11.4.115-captured-on-the-pre-fix-artifact">RED
+baseline (§11.4.115) — captured on the PRE-FIX artifact</h2>
+<p>Test: <code>TestArtifactUploadServesVerifiedSignature</code> drives
+the REAL device-facing <code>/client/update</code> path and asserts the
+served <code>UpdateAvailable.Signature</code> equals the verified
+signature. Default mode = GREEN guard (assert defect absent). Verbatim
+pre-fix failing output:</p>
+<pre><code>=== RUN   TestArtifactUploadServesVerifiedSignature
+    handlers_artifact_signature_consistency_test.go:142: device served a signature that does NOT match the verified one: server verified &quot;rJF8+ba04/KEGo06cVknGTGod6toEcFWZcZRFWSZrOmoqVr51/TWO1081nmTYuzTJpqekgBdm7XvYQL4ObmNCQ==&quot; against the payload but serves &quot;VtZq3QjIMHvWkcgecAoZvTUIpg9T3kPOBSEuRSYll798oVHWwgYSY65CPfE3ddSbTbMBYRucdnF4zKuokNNQAw==&quot; to the device -&gt; the device receives a signature that does not match the payload and fails to install while the server reported the artifact valid/published
+--- FAIL: TestArtifactUploadServesVerifiedSignature (0.00s)
+FAIL</code></pre>
+<p>Polarity proof on PRE-FIX code — <code>RED_MODE=1</code> (assert
+defect PRESENT) PASSED, confirming the defect is genuinely reproduced
+(served == divergent metadata.signature):</p>
+<pre><code>=== RUN   TestArtifactUploadServesVerifiedSignature
+--- PASS: TestArtifactUploadServesVerifiedSignature (0.00s)
+PASS</code></pre>
+<h2 id="green-post-fix">GREEN (post-fix)</h2>
+<ul>
+<li>Default GREEN guard PASSES — see
+<code>green_guard_postfix.log</code>.</li>
+<li><code>RED_MODE=1</code> (defect-present) now FAILS — see
+<code>redmode_postfix_defect_absent.log</code> — a valid §1.1 pair: the
+same source guards the invariant, and its mutation (RED_MODE) flips the
+verdict.</li>
+</ul>
+<h2 id="full-verification-sweep-post-fix">Full verification sweep
+(post-fix)</h2>
+<ul>
+<li><code>go build ./...</code> → exit 0; <code>go vet ./...</code> →
+exit 0; <code>gofmt -l internal/api</code> → clean. See
+<code>build_vet_gofmt.log</code>.</li>
+<li><code>go test -race ./internal/api/...</code> → <code>ok</code> (all
+existing upload+serve tests still pass). See
+<code>race_internal_api.log</code>.</li>
+<li><code>go test ./...</code> (whole module) → all packages
+<code>ok</code> (Postgres integration tests skip without a DB).</li>
+</ul>
+<h2 id="files-changed-relative-to-server">Files changed (relative to
+<code>server/</code>)</h2>
+<ul>
+<li><code>internal/api/handlers_artifact.go</code> — fix at the
+accept-path <code>store.Artifact.Signature</code>.</li>
+<li><code>internal/api/handlers_artifact_signature_consistency_test.go</code>
+— NEW §11.4.115 RED test / permanent regression guard.</li>
+<li><code>docs/qa/20260710-server-signature-consistency/</code> — this
+evidence.</li>
+</ul>
