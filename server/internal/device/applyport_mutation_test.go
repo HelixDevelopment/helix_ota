@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -277,54 +278,57 @@ func TestMutationSignatureLengthGuard(t *testing.T) {
 	pub, _, _ := generateTestKeypair()
 	verifier := NewSignatureVerifier(pub)
 
-	// ed25519.SignatureSize is 64 bytes. A short hex like "aabb" is 1 byte.
-	shortHex := "aabb"
-	if err := verifier.Verify([]byte("payload"), shortHex); err == nil {
-		t.Fatal("MUTATION PROOF: too-short signature (1 byte) was accepted. " +
+	// ed25519.SignatureSize is 64 bytes. "aabb" is valid base64 that decodes
+	// to only 3 bytes.
+	shortB64 := "aabb"
+	if err := verifier.Verify([]byte("payload"), shortB64); err == nil {
+		t.Fatal("MUTATION PROOF: too-short signature (3 bytes) was accepted. " +
 			"The length guard must reject signatures that are not 64 bytes. " +
 			"TestSignatureVerifier_BadSignatureLength catches this exact mutation.")
 	}
 
-	// Also test a 16-byte hex (32 hex chars) -- still too short.
-	mediumHex := hex.EncodeToString(make([]byte, 16))
-	if err := verifier.Verify([]byte("payload"), mediumHex); err == nil {
+	// Also test a base64 string that decodes to 16 bytes -- still too short.
+	mediumB64 := base64.StdEncoding.EncodeToString(make([]byte, 16))
+	if err := verifier.Verify([]byte("payload"), mediumB64); err == nil {
 		t.Fatal("MUTATION PROOF: 16-byte signature was accepted; ed25519 requires 64 bytes.")
 	}
 
-	// Exact-length hex (64 bytes = 128 hex chars) should reach crypto layer.
-	validLenHex := hex.EncodeToString(make([]byte, ed25519.SignatureSize))
+	// Exact-length base64 (64 raw bytes) should reach the crypto layer.
+	validLenB64 := base64.StdEncoding.EncodeToString(make([]byte, ed25519.SignatureSize))
 	// This may either verify (improbable with zero key) or fail at crypto.
 	// Both are fine -- the LENGTH guard must not reject it.
-	err := verifier.Verify([]byte("payload"), validLenHex)
+	err := verifier.Verify([]byte("payload"), validLenB64)
 	if err != nil {
 		t.Logf("note: valid-length zero sig rejected at crypto layer: %v (expected)", err)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// §1.1 Mutation: Signature hex decoding validation removed
+// §1.1 Mutation: Signature base64 decoding validation removed
 // ---------------------------------------------------------------------------
 //
-// MUTATION: remove hex decode error check, pass raw bytes to ed25519.Verify.
-// COVERING TEST: TestSignatureVerifier_BadSignatureHex (line 254).
+// MUTATION: remove base64 decode error check, pass raw bytes to ed25519.Verify.
+// COVERING TEST: TestSignatureVerifier_BadSignatureEncoding (line 254).
 //
-// This meta-test proves the hex-decoding guard rejects invalid hex.
+// This meta-test proves the base64-decoding guard rejects invalid base64.
 
-func TestMutationSignatureHexDecodingGuard(t *testing.T) {
+func TestMutationSignatureBase64DecodingGuard(t *testing.T) {
 	t.Parallel()
 
 	pub, _, _ := generateTestKeypair()
 	verifier := NewSignatureVerifier(pub)
 
-	// Invalid hex characters must be rejected by the decoder.
-	if err := verifier.Verify([]byte("payload"), "not-a-hex-string!!"); err == nil {
-		t.Fatal("MUTATION PROOF: invalid hex was accepted by decoder. " +
-			"TestSignatureVerifier_BadSignatureHex catches this mutation.")
+	// Invalid base64 characters ("-", "!") must be rejected by the decoder.
+	if err := verifier.Verify([]byte("payload"), "not-a-base64-string!!"); err == nil {
+		t.Fatal("MUTATION PROOF: invalid base64 was accepted by decoder. " +
+			"TestSignatureVerifier_BadSignatureEncoding catches this mutation.")
 	}
 
-	// Another invalid hex pattern.
+	// "zzzz" IS syntactically valid base64 (decodes to 3 bytes) but must
+	// still be rejected -- by the LENGTH guard, since 3 != 64.
 	if err := verifier.Verify([]byte("payload"), "zzzz"); err == nil {
-		t.Fatal("MUTATION PROOF: 'zzzz' is not valid hex but was accepted.")
+		t.Fatal("MUTATION PROOF: 'zzzz' decodes to only 3 bytes but was accepted; " +
+			"the length guard must reject it.")
 	}
 }
 

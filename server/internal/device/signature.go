@@ -6,6 +6,14 @@
 // verify-before-apply pattern (OtaPollWorker.runCycle step 3) and the
 // server-side artifact-validator S3 signature stage.
 //
+// Wire format (§11.4.108 SOURCE<->RUNTIME contract): the "signature" string
+// is BASE64, matching internal/api/handlers_artifact.go:resolveSignature
+// (its own validation error is literally "signature is missing or not valid
+// base64") and docs/research/main_specs/1.0.0-mvp/api/endpoints.md §12.1
+// (`"signature": "BASE64-detached-signature"`). This is the single
+// authoritative encoding for the signature string travelling over the wire;
+// it must NEVER be decoded as hex.
+//
 // Key hygiene (SS11.4.10, SS11.4.10.A):
 //   - The trusted public key is loaded from server config (HELIX_ARTIFACT_PUBKEY,
 //     config.go:141-148), NEVER from untrusted input (SS11.4 resolvesPublicKey).
@@ -15,6 +23,7 @@ package device
 import (
 	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 )
@@ -43,19 +52,19 @@ func (v *SignatureVerifier) KeyConfigured() bool {
 }
 
 // Verify checks that the bundle payload (raw bytes) was signed by the
-// trusted key. It computes SHA-256(payload), then verifies the hex-encoded
-// ed25519 signature.
+// trusted key. It computes SHA-256(payload), then verifies the base64
+// -encoded ed25519 signature.
 //
-// The signature format matches the server-side signing:
-// hex(ed25519.Sign(privateKey, sha256(payload)))
-func (v *SignatureVerifier) Verify(payload []byte, signatureHex string) error {
+// The signature format matches the real server wire contract (see the
+// package doc comment): base64(ed25519.Sign(privateKey, sha256(payload))).
+func (v *SignatureVerifier) Verify(payload []byte, signatureB64 string) error {
 	if !v.KeyConfigured() {
 		return fmt.Errorf("signature: no trusted public key configured")
 	}
 
-	sig, err := hex.DecodeString(signatureHex)
+	sig, err := base64.StdEncoding.DecodeString(signatureB64)
 	if err != nil {
-		return fmt.Errorf("signature: decode signature hex: %w", err)
+		return fmt.Errorf("signature: decode signature base64: %w", err)
 	}
 	if len(sig) != ed25519.SignatureSize {
 		return fmt.Errorf("signature: bad signature length %d (expected %d)",
@@ -70,16 +79,18 @@ func (v *SignatureVerifier) Verify(payload []byte, signatureHex string) error {
 }
 
 // SignAndEncode is a test-only helper that signs payload bytes with the
-// given ed25519 private key and returns the hex-encoded signature. It is
-// NOT exported from the package as a public API -- it should only be used
-// in test files that import package device.
+// given ed25519 private key and returns the base64-encoded signature,
+// mirroring the real wire format (see the package doc comment). It is NOT
+// exported from the package as a public API -- it should only be used in
+// test files that import package device.
 //
 // In production, signatures are produced by the server's release pipeline
-// (server/internal/api/handlers_artifact.go).
+// (server/internal/api/handlers_artifact.go), which requires and decodes
+// this same base64 encoding (resolveSignature).
 func signAndEncode(privateKey ed25519.PrivateKey, payload []byte) string {
 	digest := sha256.Sum256(payload)
 	sig := ed25519.Sign(privateKey, digest[:])
-	return hex.EncodeToString(sig)
+	return base64.StdEncoding.EncodeToString(sig)
 }
 
 // GenerateTestKeypair is a test-only helper that generates a fresh

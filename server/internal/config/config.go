@@ -141,20 +141,38 @@ func Load() (Config, error) {
 	if c.PollInterval, err = getDuration("HELIX_POLL_INTERVAL", DefaultPollInterval); err != nil {
 		return Config{}, err
 	}
+	if c.PollInterval < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_POLL_INTERVAL must not be negative, got %s", c.PollInterval)
+	}
 	if c.PollJitter, err = getDuration("HELIX_POLL_JITTER", DefaultPollJitter); err != nil {
 		return Config{}, err
+	}
+	if c.PollJitter < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_POLL_JITTER must not be negative, got %s", c.PollJitter)
 	}
 	if c.AccessTokenTTL, err = getDuration("HELIX_ACCESS_TOKEN_TTL", DefaultAccessTokenTTL); err != nil {
 		return Config{}, err
 	}
+	if c.AccessTokenTTL < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_ACCESS_TOKEN_TTL must not be negative, got %s", c.AccessTokenTTL)
+	}
 	if c.DeviceTokenTTL, err = getDuration("HELIX_DEVICE_TOKEN_TTL", DefaultDeviceTokenTTL); err != nil {
 		return Config{}, err
+	}
+	if c.DeviceTokenTTL < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_DEVICE_TOKEN_TTL must not be negative, got %s", c.DeviceTokenTTL)
 	}
 	if c.MaxInflight, err = getInt64("HELIX_MAX_INFLIGHT", 0); err != nil {
 		return Config{}, err
 	}
+	if c.MaxInflight < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_MAX_INFLIGHT must not be negative, got %d", c.MaxInflight)
+	}
 	if c.MaxUploadBytes, err = getInt64("HELIX_MAX_UPLOAD_BYTES", DefaultMaxUploadBytes); err != nil {
 		return Config{}, err
+	}
+	if c.MaxUploadBytes < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_MAX_UPLOAD_BYTES must not be negative, got %d", c.MaxUploadBytes)
 	}
 
 	// Token secret: env-supplied, never a hard-coded secret. A development

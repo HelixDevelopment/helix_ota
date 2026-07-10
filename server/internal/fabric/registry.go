@@ -50,6 +50,14 @@ var (
 	ErrTargetLeased = errors.New("fabric: target already leased")
 	// ErrEmptyEvidence indicates a rejected 0-byte evidence artefact (§11.4.69).
 	ErrEmptyEvidence = errors.New("fabric: evidence artefact is empty")
+	// ErrPassRequiresEvidence indicates a PASS verdict was rejected because the
+	// run has no attached evidence artefact. Per the documented design
+	// contract (docs/design/emulation_fabric/SCHEMA.sql: "a PASS run MUST link
+	// >=1 non-empty artefact"; internal/store/store.go FabricEvidence doc
+	// comment) a PASS run must link at least one non-empty artefact — the
+	// AttachEvidence byteSize<=0 guard only ensures each LINKED artefact is
+	// non-empty, it does not ensure one was ever linked at all (§11.4.69).
+	ErrPassRequiresEvidence = errors.New("fabric: PASS verdict requires at least one attached evidence artefact")
 )
 
 // RegisterNode upserts a fabric execution node. node_id/kind/arch are required.
@@ -136,7 +144,12 @@ func (g *Registry) RecordRun(ctx context.Context, runID, targetID, testType, tes
 
 // CompleteRun sets a run's terminal verdict + ended_at. verdict is one of the
 // closed §11.4.45 vocabulary; skipReason is required (non-empty) when verdict is
-// SKIP (§11.4.3/§11.4.69) and ignored otherwise.
+// SKIP (§11.4.3/§11.4.69) and ignored otherwise. A PASS verdict additionally
+// requires at least one evidence artefact already attached to the run
+// (ErrPassRequiresEvidence otherwise) — the documented "a PASS run MUST link
+// >=1 non-empty artefact" invariant (SCHEMA.sql, store.go FabricEvidence);
+// AttachEvidence's byteSize<=0 guard only ensures each linked artefact is
+// non-empty, it does not by itself ensure one was ever linked.
 func (g *Registry) CompleteRun(ctx context.Context, runID, verdict, skipReason string) (store.FabricRun, error) {
 	run, err := g.repo.GetFabricRun(ctx, runID)
 	if err != nil {
@@ -144,6 +157,15 @@ func (g *Registry) CompleteRun(ctx context.Context, runID, verdict, skipReason s
 	}
 	if verdict == "SKIP" && skipReason == "" {
 		return store.FabricRun{}, fmt.Errorf("fabric: SKIP verdict requires a skip_reason (§11.4.3)")
+	}
+	if verdict == "PASS" {
+		evs, err := g.repo.ListFabricEvidence(ctx, runID)
+		if err != nil {
+			return store.FabricRun{}, err
+		}
+		if len(evs) == 0 {
+			return store.FabricRun{}, ErrPassRequiresEvidence
+		}
 	}
 	end := g.now()
 	run.Verdict = verdict

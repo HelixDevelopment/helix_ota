@@ -9,7 +9,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -251,14 +251,16 @@ func TestSignatureVerifier_KeyConfigured(t *testing.T) {
 	}
 }
 
-func TestSignatureVerifier_BadSignatureHex(t *testing.T) {
+func TestSignatureVerifier_BadSignatureEncoding(t *testing.T) {
 	t.Parallel()
 
 	pub, _, _ := generateTestKeypair()
 	verifier := NewSignatureVerifier(pub)
 
-	if err := verifier.Verify([]byte("x"), "not-hex"); err == nil {
-		t.Fatal("expected error for invalid hex")
+	// "-" is not in the standard base64 alphabet (only the URL-safe variant
+	// uses it), so this must be rejected as an invalid base64 signature.
+	if err := verifier.Verify([]byte("x"), "not-base64"); err == nil {
+		t.Fatal("expected error for invalid base64")
 	}
 }
 
@@ -268,9 +270,9 @@ func TestSignatureVerifier_BadSignatureLength(t *testing.T) {
 	pub, _, _ := generateTestKeypair()
 	verifier := NewSignatureVerifier(pub)
 
-	// Too-short hex string.
-	shortHex := "aabb"
-	if err := verifier.Verify([]byte("x"), shortHex); err == nil {
+	// Valid base64, but decodes to far fewer than ed25519.SignatureSize bytes.
+	shortB64 := "aabb"
+	if err := verifier.Verify([]byte("x"), shortB64); err == nil {
 		t.Fatal("expected error for short signature")
 	}
 }
@@ -874,10 +876,12 @@ func TestRealEd25519Signature(t *testing.T) {
 	payload := []byte("real firmware bundle abc123")
 	digest := sha256.Sum256(payload)
 	sig := ed25519.Sign(priv, digest[:])
-	sigHex := hex.EncodeToString(sig)
+	// The real wire format is base64 (endpoints.md §12.1), not hex — see
+	// signature.go's package doc comment and signature_wireformat_test.go.
+	sigB64 := base64.StdEncoding.EncodeToString(sig)
 
 	// Verify.
-	if err := verifier.Verify(payload, sigHex); err != nil {
+	if err := verifier.Verify(payload, sigB64); err != nil {
 		t.Fatalf("real ed25519 verify: %v", err)
 	}
 }

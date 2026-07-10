@@ -243,9 +243,12 @@ func (r *errInjectRepo) AttachFabricEvidence(ctx context.Context, e store.Fabric
 
 // TestCompleteRunUpdateRepoError proves CompleteRun surfaces a store-layer
 // UpdateFabricRun failure verbatim (the previously-uncovered repo-error return
-// after the SKIP-reason guard). The run is recorded successfully first, then the
-// injected repo fails the terminal update — the registry MUST propagate the
-// error and NOT report a completed run.
+// after the SKIP-reason guard and the PASS-evidence guard). The run is
+// recorded and given a qualifying evidence artefact first (so the
+// ErrPassRequiresEvidence guard is satisfied and the test actually reaches
+// the UpdateFabricRun call under test), then the injected repo fails the
+// terminal update — the registry MUST propagate the error and NOT report a
+// completed run.
 func TestCompleteRunUpdateRepoError(t *testing.T) {
 	ctx := context.Background()
 	ts := time.Date(2026, 6, 10, 12, 0, 0, 0, time.UTC)
@@ -257,6 +260,9 @@ func TestCompleteRunUpdateRepoError(t *testing.T) {
 	}
 	if _, err := g.RecordRun(ctx, "r1", "t1", "e2e", "ref"); err != nil {
 		t.Fatalf("RecordRun: %v", err)
+	}
+	if err := g.AttachEvidence(ctx, "e1", "r1", "transcript", "docs/qa/r1/t.log", 2048, "sha"); err != nil {
+		t.Fatalf("AttachEvidence: %v", err)
 	}
 	done, err := g.CompleteRun(ctx, "r1", "PASS", "")
 	if !errors.Is(err, wantErr) {

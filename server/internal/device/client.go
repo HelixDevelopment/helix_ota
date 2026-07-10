@@ -149,11 +149,16 @@ func (c *ApplyPortClient) Login(ctx context.Context, username, password string) 
 // --------------------------------------------------------------------------
 
 // DeviceRegistrationRequest is the wire format for device registration.
-// It mirrors otaprotocol.DeviceRegistrationRequest.
+// It mirrors the server's DeviceRegistration wire struct
+// (internal/api/wire.go) exactly. The OS field's wire key is "os" -- NOT
+// "os_type" -- per the OpenAPI schema (endpoints.md) and the server's own
+// strict decode discipline (internal/api/bind.go:bindJSON calls
+// json.Decoder.DisallowUnknownFields(), so any drift here makes the server
+// reject the request outright with "json: unknown field").
 type DeviceRegistrationRequest struct {
 	HardwareID     string `json:"hardware_id"`
 	Model          string `json:"model"`
-	OSType         string `json:"os_type"`
+	OSType         string `json:"os"`
 	OSVersion      string `json:"os_version,omitempty"`
 	CurrentVersion string `json:"current_version,omitempty"`
 	Group          string `json:"group,omitempty"`
@@ -329,12 +334,65 @@ func (c *ApplyPortClient) DownloadBundle(ctx context.Context, url string, offset
 // --------------------------------------------------------------------------
 
 // TelemetryEvent is a single lifecycle event for telemetry reporting.
+// Timestamp is Unix seconds for caller convenience (e.g.
+// cmd/applyport/main.go: Timestamp: time.Now().Unix()); see MarshalJSON for
+// the actual wire encoding.
 type TelemetryEvent struct {
 	Event     string `json:"event"`
 	Version   string `json:"version,omitempty"`
 	ErrorCode string `json:"error_code,omitempty"`
 	Detail    string `json:"detail,omitempty"`
 	Timestamp int64  `json:"timestamp"`
+}
+
+// MarshalJSON emits Timestamp as an RFC 3339 string, matching the server's
+// wire contract (internal/api/wire.go: TelemetryEventWire.Timestamp
+// time.Time). encoding/json's default time.Time codec REQUIRES a quoted
+// RFC 3339 string; a bare Unix-seconds number (what the zero-value int64
+// field would otherwise marshal to) fails server-side decode with
+// "Time.UnmarshalJSON: input is not a JSON string" (internal/api's
+// bindJSON -- see wireformat_telemetry_test.go for the captured proof), so
+// every real telemetry report from cmd/applyport/main.go would be rejected
+// without this. The public Timestamp field stays an int64 (Unix seconds) so
+// existing callers are unaffected -- only the wire encoding changes.
+func (e TelemetryEvent) MarshalJSON() ([]byte, error) {
+	type wire struct {
+		Event     string    `json:"event"`
+		Version   string    `json:"version,omitempty"`
+		ErrorCode string    `json:"error_code,omitempty"`
+		Detail    string    `json:"detail,omitempty"`
+		Timestamp time.Time `json:"timestamp"`
+	}
+	return json.Marshal(wire{
+		Event:     e.Event,
+		Version:   e.Version,
+		ErrorCode: e.ErrorCode,
+		Detail:    e.Detail,
+		Timestamp: time.Unix(e.Timestamp, 0).UTC(),
+	})
+}
+
+// UnmarshalJSON is the symmetric counterpart to MarshalJSON: it accepts the
+// wire format (RFC 3339 string) and converts it back to Unix seconds so the
+// public Timestamp field's Go type (int64) round-trips exactly.
+func (e *TelemetryEvent) UnmarshalJSON(data []byte) error {
+	type wire struct {
+		Event     string    `json:"event"`
+		Version   string    `json:"version,omitempty"`
+		ErrorCode string    `json:"error_code,omitempty"`
+		Detail    string    `json:"detail,omitempty"`
+		Timestamp time.Time `json:"timestamp"`
+	}
+	var w wire
+	if err := json.Unmarshal(data, &w); err != nil {
+		return err
+	}
+	e.Event = w.Event
+	e.Version = w.Version
+	e.ErrorCode = w.ErrorCode
+	e.Detail = w.Detail
+	e.Timestamp = w.Timestamp.Unix()
+	return nil
 }
 
 // TelemetryReport is the wire format for the telemetry POST body.
