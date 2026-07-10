@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Helix OTA Firebase Deployment</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Helix OTA Firebase Deployment</h1>
+</header>
+<h1
+id="helix-ota-firebase-deployment-plan-git-ignored-secrets-fresh-clone-manifest">Helix
+OTA — Firebase Deployment Plan + Git-Ignored Secrets / Fresh-Clone
+Manifest</h1>
+<p><strong>Revision:</strong> 1<br />
+<strong>Last modified:</strong> 2026-07-10T16:23:23Z<br />
+<strong>Description:</strong> Firebase Hosting / App-Distribution
+deployment plan for all Helix OTA surfaces + git-ignored secrets and
+fresh-clone manifest (operator-requested 2026-07-10; four-format export
+per §11.4.65).<br />
+<strong>Authority:</strong> Helix OTA deployment — docs/firebase.</p>
+<p><strong>Author:</strong> <code>(T1/main - claude1)</code> background
+research subagent <strong>Scope:</strong> Read-only investigation. No
+repo mutation, no <code>git</code>/build command executed, no live
+Firebase project created, nothing deployed. All claims below are either
+(a) a direct observation of a real file/path in this checkout, cited by
+path, or (b) a cited live web source retrieved 2026-07-10, or (c)
+explicitly marked <code>PENDING</code> when a live fetch did not return
+the needed detail. No value of any credential/token/key appears anywhere
+in this document — only variable <strong>names</strong> and file
+<strong>paths</strong>.</p>
+<hr />
+<h2 id="critical-findings-read-this-first">0. CRITICAL FINDINGS (read
+this first)</h2>
+<p><strong>No tracked secret VALUE leak was found.</strong> The
+repo-wide audit (Task D, §4 below) found:</p>
+<ol type="1">
+<li><strong>No real leak.</strong> Every literal-looking credential
+assignment found in tracked files resolved to one of: (a) a
+shell-required-variable pattern with no default
+(<code>${HELIX_ADMIN_PASSWORD:?Set HELIX_ADMIN_PASSWORD...}</code> in
+<code>clients/ota-manager/docker/ota-manager.docker-compose.yml:53</code>),
+(b) a widely-reused, clearly non-secret <strong>test fixture</strong>
+string also hard-coded in
+<code>server/internal/deviceemu/emulator_test.go:42</code>
+(<code>fxAdminPass = "s3cret"</code>) and
+<code>server/tests/chaos/chaos_test.go:71/85/142</code> — the
+<em>same</em> 6-char test password appears in
+<code>.github/workflows/ci.yml.disabled-local-only:147,166</code> (a
+<strong>disabled</strong> CI workflow per §11.4.156 — filename literally
+ends <code>.disabled-local-only</code>), (c) an explicitly non-secret
+placeholder
+(<code>HELIX_TOKEN_SECRET=ephemeral-test-stack-token-NOT-A-SECRET</code>
+in <code>docs/qa/20260623-chaos-live/boot.log:42</code>), or (d) a
+<strong>public</strong> ed25519 verification key
+(<code>HELIX_ARTIFACT_PUBKEY=jcOsQsDpso3JYXBYfxO6eLkdeO4dx7Z390uLAKUgM0A=</code>,
+same log line — public keys are not secrets by design, see §4.4).</li>
+<li><strong>Evidence a prior leak-audit already worked
+correctly.</strong>
+<code>docs/qa/20260608-perf/run_conditions.txt:7</code> shows
+<code>HELIX_TOKEN_SECRET=&lt;redacted-§11.4.10&gt;</code> — the exact
+redaction marker §11.4.10.A mandates. Whatever real value was originally
+captured there was already found and scrubbed by an earlier audit. This
+is a positive signal, not a new finding.</li>
+<li><strong>Operational gap, not a leak:</strong> the host-level
+<code>~/api_keys.sh</code> exports a variable named
+<strong><code>FIRBASE_CLI_TOKEN</code></strong> (note the typo — missing
+the second <code>E</code> in “FIREBASE”). Nothing in the tracked
+codebase currently reads this variable
+(<code>grep -rl "FIRBASE_CLI_TOKEN\|FIREBASE_TOKEN"</code> over tracked
+<code>*.sh</code>/<code>*.md</code> returns empty) — there is no
+Firebase deploy script yet, so the typo has caused no functional
+breakage to date, but <strong>any deploy script written against this var
+MUST use the exact existing (typo’d) name
+<code>FIRBASE_CLI_TOKEN</code>, or the operator must rename the export
+in <code>~/api_keys.sh</code> first</strong> (out of scope for this
+read-only task — flagging for operator decision per §11.4.66, not
+silently “fixing” a name I don’t own). Also see §4 — this token
+mechanism (<code>firebase login:ci</code> / <code>FIREBASE_TOKEN</code>)
+is itself <strong>deprecated upstream</strong> (§2.4), so wiring a new
+deploy script around it is a dead end regardless of the typo.</li>
+<li>One tracked <code>*.pem</code> file exists —
+<code>tests/emulator/ab_virt/rootfs-overlay/etc/rauc/dev.cert.pem</code>.
+Confirmed by content inspection to be a <strong>public X.509
+certificate</strong> (<code>-----BEGIN CERTIFICATE-----</code>), not a
+private key. Its private counterpart (<code>dev.key.pem</code>) is
+generated at build time by
+<code>tests/emulator/ab_virt/rauc/gen_dev_keys.sh</code> into the
+gitignored <code>tests/emulator/ab_virt/out/rauc-keys/</code> tree and
+is <strong>never tracked</strong> (verified: <code>git ls-files</code>
+shows no <code>dev.key.pem</code>). This is an intentional, documented
+dev-only RAUC signing setup (unrelated to Firebase); flagged in §4 for
+completeness since the task asked for <strong>all</strong>
+sensitive/git-ignored data, not only Firebase-related items.</li>
+</ol>
+<p><strong>Net verdict: PASS — no credential value is currently
+committed to git in this repository.</strong></p>
+<hr />
+<h2 id="task-a-firebase-tokencli-premise-observed-facts-names-only">1.
+Task A — Firebase token/CLI premise (observed facts, names only)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>~/api_keys.sh</code> exists</td>
+<td><strong>YES</strong> — it is a symlink:
+<code>/home/milos/api_keys.sh -&gt; ./Factory/api_keys.sh</code>
+(resolves to <code>/home/milos/Factory/api_keys.sh</code>).</td>
+</tr>
+<tr>
+<td>FIREBASE-related exported var <strong>names</strong> in
+<code>~/api_keys.sh</code></td>
+<td>Exactly one: <strong><code>FIRBASE_CLI_TOKEN</code></strong> (typo
+preserved verbatim from the file — this is the real exported name, not a
+transcription error on my part). No <code>FIREBASE_TOKEN</code>, no
+<code>GOOGLE_APPLICATION_CREDENTIALS</code>, no
+<code>FIREBASE_PROJECT_ID</code> are exported.</td>
+</tr>
+<tr>
+<td>Other exported vars present (context only, names only)</td>
+<td>~50 other provider API keys (<code>HUGGINGFACE_API_KEY</code>,
+<code>GEMINI_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>,
+<code>GITLAB_TOKEN</code>, <code>GITFLIC_TOKEN</code>,
+<code>GITVERSE_TOKEN</code>, etc.) — none Firebase-specific besides the
+one above.</td>
+</tr>
+<tr>
+<td><code>firebase</code> CLI on PATH</td>
+<td><strong>YES</strong> — resolved to
+<code>/home/milos/Factory/software/Firebase/bin/firebase</code>.</td>
+</tr>
+<tr>
+<td><code>firebase --version</code></td>
+<td><strong><code>15.22.3</code></strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> the CLI is installed and
+current-looking; the token variable exists but (a) is misnamed relative
+to the CLI’s own conventional <code>FIREBASE_TOKEN</code> env var, and
+(b) the underlying <code>firebase login:ci</code> token mechanism it
+presumably holds is itself deprecated upstream (§2.4) — so before any
+automation is written, the operator should decide between (i)
+renaming/re-exporting a service-account-based credential instead
+(recommended, see §2.4), or (ii) keeping token-based
+<code>FIRBASE_CLI_TOKEN</code> for now as an interim manual/local-only
+deploy path.</p>
+<hr />
+<h2
+id="task-b-latest-firebase-deploy-workflow-research-live-fetched-2026-07-10">2.
+Task B — Latest Firebase deploy workflow research (live-fetched
+2026-07-10)</h2>
+<h3 id="firebase-hosting-deploy-via-cli">2.1 Firebase Hosting deploy via
+CLI</h3>
+<p>Source: <a
+href="https://firebase.google.com/docs/hosting/quickstart">firebase.google.com/docs/hosting/quickstart</a>
+(fetched 2026-07-10; page self-reports “Last updated 2026-07-03
+UTC”).</p>
+<ol type="1">
+<li>Install/update the Firebase CLI (already present locally at v15.22.3
+— §1).</li>
+<li>From the project (or the specific app’s) root:
+<code>firebase init hosting</code> — interactive prompts: select/create
+the Firebase project, specify the <strong>public root directory</strong>
+(Firebase’s default suggestion is <code>public</code>; for a Vite app
+this MUST be pointed at the build output directory — for Helix OTA that
+is <code>dashboard/dist/</code>, see §3), and choose single-page-app
+rewrite behavior (yes, for a React Router SPA like
+<code>dashboard/</code>).</li>
+<li>This produces two config files in the directory
+<code>firebase init</code> was run from:
+<ul>
+<li><strong><code>firebase.json</code></strong> — hosting config (public
+dir, rewrites, ignore patterns, headers).</li>
+<li><strong><code>.firebaserc</code></strong> — project aliasing (which
+Firebase project this checkout deploys to). Neither file currently
+exists anywhere in this repo (confirmed:
+<code>git ls-files | grep -iE 'firebase\.json|\.firebaserc'</code> →
+empty) — Firebase Hosting has <strong>never</strong> been initialized
+here.</li>
+</ul></li>
+<li>Deploy: <code>firebase deploy --only hosting</code> uploads the
+public directory’s contents to Firebase’s global CDN and activates the
+release.</li>
+<li><strong>Preview channels</strong> (share a build at a temporary URL
+before promoting to the live channel):
+<code>firebase hosting:channel:deploy &lt;CHANNEL_ID&gt; [--expires &lt;duration&gt;]</code>,
+e.g.
+<code>firebase hosting:channel:deploy new-awesome-feature --expires 7d</code>.
+<code>--expires</code> accepts
+<code>h</code>/<code>d</code>/<code>w</code> units, max 30 days.
+Confirmed via <a
+href="https://firebase.google.com/docs/hosting/manage-hosting-resources">firebase.google.com/docs/hosting/manage-hosting-resources</a>
+and corroborating GitHub Actions integration docs (<a
+href="https://firebase.google.com/docs/hosting/github-integration">firebase.google.com/docs/hosting/github-integration</a>),
+web-searched 2026-07-10.</li>
+</ol>
+<p>This is the correct path for “deploy the website so we can see &amp;
+test it” for a <strong>static SPA build</strong> — exactly what
+<code>dashboard/</code> (and, separately,
+<code>clients/ota-manager/</code>’s web/hostrender build target)
+produce.</p>
+<h3 id="firebase-hosting-vs-firebase-app-distribution">2.2 Firebase
+Hosting vs Firebase App Distribution</h3>
+<p>Source: <a
+href="https://firebase.google.com/docs/app-distribution">firebase.google.com/docs/app-distribution</a>
+(fetched 2026-07-10).</p>
+<ul>
+<li><strong>Firebase Hosting</strong> = production/preview delivery of a
+<strong>static web app</strong> (HTML/JS/CSS bundle) to end users via a
+CDN + custom domain. This is what a browser-based dashboard needs.</li>
+<li><strong>Firebase App Distribution</strong> = pre-release
+<strong>binary</strong> distribution to a private list of testers for
+<strong>iOS and Android only</strong> (“It does not support desktop or
+web applications” — direct reading of the official page). Distribution
+methods: Firebase console, Firebase CLI
+(<code>firebase appdistribution:distribute &lt;path-to-binary&gt; --app &lt;APP_ID&gt; --groups &lt;tester-group&gt;</code>
+is the documented pattern across Firebase’s own guides and quickstarts;
+the exact flag set was not fully extractable from this fetch —
+<strong>PENDING</strong> exact flag confirmation via
+<code>firebase appdistribution:distribute --help</code> at execution
+time), Gradle plugin (Android), or fastlane.</li>
+<li><strong>Direct implication for Helix OTA:</strong> App Distribution
+covers the Android agent (<code>submodules/ota-android-agent</code>, an
+APK/AAB) but explicitly does <strong>not</strong> cover
+<code>clients/ota-manager/</code> (a <strong>Tauri v2 desktop
+app</strong> — Linux/macOS/Windows native binaries, see §3) or
+<code>dashboard/</code> (a browser SPA). The operator’s two phrases —
+“Firebase Distribute” and “Web app” — map to two <strong>different,
+non-overlapping</strong> Firebase products, and the desktop Tauri client
+maps to <strong>neither</strong> (a Windows/macOS/Linux installer needs
+a different distribution channel — e.g. GitHub Releases, a dedicated
+download page served by the very same Firebase Hosting site, or a future
+desktop-update mechanism — that decision is out of scope here and is
+flagged as an open question for the operator, not decided unilaterally
+per §11.4.66).</li>
+</ul>
+<h3 id="firebase-project-multi-platform-app-registration">2.3 Firebase
+project + multi-platform app registration</h3>
+<p>Source: <a
+href="https://firebase.google.com/docs/projects/learn-more">firebase.google.com/docs/projects/learn-more</a>
+(fetched 2026-07-10), corroborated by web search 2026-07-10.</p>
+<ul>
+<li>A single <strong>Firebase project</strong> is the top-level
+container; every app registered inside it (Web / Android / iOS — called
+“platform variants”) <strong>shares</strong> the same backend
+resources/services. Firebase projects are Google Cloud projects
+underneath.</li>
+<li>Project cap: <strong>30 registered apps per project</strong> (per
+the official “learn more” page).</li>
+<li>CLI:
+<code>firebase projects:create --display-name "&lt;name&gt;"</code>
+creates the project (an interactive fallback with prompts also exists).
+<code>firebase apps:create</code> creates an app inside the current
+project; multiple independent sources (search results,
+<code>firebase apps:sdkconfig WEB</code> usage in a firebase-tools
+GitHub issue) confirm the CLI takes a
+<strong><code>PLATFORM</code></strong> argument whose values are
+<code>WEB</code> / <code>ANDROID</code> / <code>IOS</code> (e.g. the
+conventional form is
+<code>firebase apps:create &lt;PLATFORM&gt; "&lt;display name&gt;"</code>)
+— the <strong>exact</strong> full flag syntax (e.g. Android package name
+/ iOS bundle ID flags) was not extractable from the fetched pages; this
+is marked <strong>PENDING exact-syntax confirmation via
+<code>firebase apps:create --help</code></strong> rather than guessed,
+per §11.4.6.</li>
+<li><strong>Where the Go control-plane server fits:</strong> Firebase
+does not host an arbitrary backend binary (no facility to run a
+long-lived Go process). Three honest options, none executed here: (a)
+register the server merely as a <strong>Web app entry</strong> purely so
+its API can be referenced/keyed from Firebase project metadata (no
+hosting of the binary itself); (b) if the operator later wants
+Firebase-native backend hosting, that is <strong>Cloud Run</strong> (a
+Google Cloud product Firebase Hosting can rewrite requests to —
+<code>firebase.json</code>
+<code>"rewrites": [{"source": "/api/**", "run": {"serviceId": "..."}}]</code>)
+— this was referenced generically by the fetched project docs (“Cloud
+Functions for Firebase” / underlying GCP integration) but a dedicated
+Cloud-Run-rewrite doc was not separately fetched in this session —
+<strong>PENDING</strong> if the operator wants this path researched in
+depth; (c) simplest and recommended for now: leave the Go server
+deployed exactly as it already is (own container/host, see
+<code>server/Dockerfile</code>,
+<code>clients/ota-manager/docker/ota-manager.docker-compose.yml</code>)
+and use Firebase <strong>only</strong> for the static dashboard/website
+surface — Firebase Hosting’s <code>rewrites</code> can still proxy
+<code>/api/**</code> requests to that externally-hosted server without
+needing Cloud Run at all (a plain <code>"destination"</code> rewrite is
+also supported by Firebase Hosting for arbitrary origins in some
+configurations — <strong>PENDING</strong> verification of that exact
+rewrite capability, flagged rather than asserted).</li>
+</ul>
+<h3 id="non-interactive-ci-auth-firebase_token-vs-service-account">2.4
+Non-interactive CI auth: <code>FIREBASE_TOKEN</code> vs service
+account</h3>
+<p>Sources: official firebase-tools maintainer discussion <a
+href="https://github.com/firebase/firebase-tools/discussions/6283">github.com/firebase/firebase-tools/discussions/6283</a>
+(fetched 2026-07-10) + corroborating web search 2026-07-10 (Medium
+guide, GitHub issues #10726, #5650, prisma/ecosystem-tests#3570).</p>
+<ul>
+<li><strong><code>firebase login:ci</code></strong> (which mints a
+<code>FIREBASE_TOKEN</code>) is <strong>officially deprecated</strong>
+per firebase-tools’ own deprecation warning, quoted directly from the
+discussion: <em>“Authenticating with <code>FIREBASE_TOKEN</code> is
+deprecated and will be removed in a future major version of
+<code>firebase-tools</code>.”</em> No specific removal version/date was
+stated in the sources found — it is a “future major version” without a
+committed date as of this research.</li>
+<li><strong>Recommended replacement:</strong> a <strong>Google Cloud
+service-account JSON key</strong>, supplied via the standard Google
+auth-library environment variable
+<strong><code>GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json</code></strong>.
+The CLI auto-discovers this via the Google Auth Library — no
+<code>firebase login</code> step needed at all in CI once this is
+set.</li>
+<li><strong>Known rough edge (informational, not blocking):</strong> at
+least one open firebase-tools issue (#10726) reports
+<code>firebase deploy</code> failing to pick up
+Workload-Identity-Federation-issued credentials via
+<code>GOOGLE_APPLICATION_CREDENTIALS</code> in some CI providers (GitLab
+OIDC) — a traditional downloaded service-account-key JSON file (not a
+WIF token) is the well-trodden path.</li>
+<li><strong>Recommendation for Helix OTA:</strong> do
+<strong>not</strong> build new automation around
+<code>FIRBASE_CLI_TOKEN</code> (deprecated mechanism + currently-unused
+typo’d name). Instead, when the operator is ready to execute this plan,
+create a Google Cloud <strong>service account</strong> with the
+<code>Firebase Hosting Admin</code> role (console: IAM &amp; Admin →
+Service Accounts → Create → download JSON key), store the key
+<strong>outside git</strong> (see §4), and export
+<code>GOOGLE_APPLICATION_CREDENTIALS</code> in any deploy script/CI
+runner. This is a <strong>new</strong> secret this plan will introduce —
+it does not exist yet anywhere in this checkout or in
+<code>~/api_keys.sh</code>.</li>
+</ul>
+<hr />
+<h2
+id="task-c-helix-ota-firebase-project-structure-plan-recommendation-only-not-executed">3.
+Task C — Helix OTA → Firebase project structure PLAN (recommendation
+only, not executed)</h2>
+<h3
+id="real-surfaces-found-in-this-checkout-grounded-in-actual-paths">3.1
+Real surfaces found in this checkout (grounded in actual paths)</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Surface</th>
+<th>Real path</th>
+<th>What it is (observed, not assumed)</th>
+<th>Exists today?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Go control-plane server</td>
+<td><code>server/</code> (module
+<code>github.com/HelixDevelopment/helix_ota/server</code>,
+<code>server/cmd/ota-server</code>)</td>
+<td>Gin modular-monolith REST API (<code>/api/v1</code>); httptest
+integration suite in <code>server/internal/api/</code>.</td>
+<td>YES, built + tested.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Operator Dashboard</strong> (web SPA)</td>
+<td><code>dashboard/</code></td>
+<td>React 18 + TypeScript + Vite SPA, <code>react-router-dom</code>,
+talks only to <code>/api/v1</code> via
+<code>dashboard/src/api/client.ts</code>. Per
+<code>dashboard/README.md</code>: “a <strong>buildable
+scaffold</strong>… It typechecks and builds” (see
+<code>dashboard/BUILD_EVIDENCE.txt</code>). A production build
+<strong>already exists on disk</strong> at <code>dashboard/dist/</code>
+(<code>index.html</code> + <code>assets/</code>, last built 2026-07-10).
+Design source of truth:
+<code>docs/research/main_specs/1.0.0-mvp/dashboard/dashboard_design.md</code>.</td>
+<td><strong>YES — this already exists and already builds.</strong> (The
+task brief’s premise that the dashboard “does not exist yet” is
+<strong>not accurate</strong> for this checkout — see honest correction
+below.)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>OTA Manager desktop client</strong></td>
+<td><code>clients/ota-manager/</code></td>
+<td>A <strong>Tauri v2</strong> desktop app (<code>package.json</code>:
+“Helix OTA Manager — Tauri v2 desktop client for managing OTA updates”)
+— React/Vite UI shell (<code>src/</code>) wrapped by a native Rust shell
+(<code>src-tauri/</code>) that builds native installers/binaries per OS.
+Also has its own Docker path
+(<code>clients/ota-manager/docker/ota-manager.docker-compose.yml</code>)
+that serves its web build via nginx as a plain SPA.</td>
+<td>YES, present with its own build/docker/visual-test tooling.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Android OTA agent</td>
+<td><code>submodules/ota-android-agent/</code></td>
+<td>Kotlin/KMP device agent (poll/download/verify/apply/report); builds
+an Android APK/AAB.</td>
+<td>YES (submodule present, Gradle project).</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Android <code>update_engine</code> bridge</td>
+<td><code>submodules/ota-update-engine-bridge/</code></td>
+<td>Kotlin library wrapping AOSP
+<code>update_engine</code>/<code>boot_control</code>; consumed BY the
+agent (#4), not itself a distributable end-user app.</td>
+<td>YES (submodule present).</td>
+</tr>
+<tr>
+<td>6</td>
+<td>CLI/dev tooling</td>
+<td><code>server/cmd/applyport</code>,
+<code>server/cmd/ota-device-emu</code>,
+<code>server/tools/loadtest</code>, <code>cmd/build-stats</code>,
+<code>cmd/workable-items</code></td>
+<td>Internal Go dev/test/ops tools — not end-user distributables.</td>
+<td>YES, internal-only.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Multi-tenant web dashboard</td>
+<td><em>(no separate path found beyond #2)</em></td>
+<td>Track-2 focus label in
+<code>config/multitrack/the-factory.yaml</code> reads: <em>“helix_ota
+web dashboard + website — multi-tenant super-admin/user sign-in +
+account-selection UI surfaces (feature/accounts-web)”</em> —
+i.e. multi-tenant super-admin/account-selection UI is <strong>active,
+in-progress work on the SAME <code>dashboard/</code> surface</strong>
+(#2), tracked under <code>docs/research/accounts</code>, not a separate
+app.</td>
+<td>IN PROGRESS on <code>feature/accounts-web</code>, extending #2.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Honest correction of the task brief’s premise:</strong> the
+brief states “the (planned) multi-tenant web dashboard/website” and
+instructs “mark clearly anything that does not yet exist as PLANNED.”
+Per direct filesystem observation, <strong>the dashboard is not merely
+planned — a buildable, typechecked, previously-built React/Vite SPA
+already exists at <code>dashboard/</code>,</strong> and a second,
+separate multi-tenant/account-selection <strong>feature branch</strong>
+(<code>feature/accounts-web</code>) is actively extending it right now
+(§11.4.6 no-guessing: this is what the repo actually shows, not what I
+expected to find).</p>
+<h3
+id="recommended-firebase-product-mapping-one-project-multiple-registered-apps">3.2
+Recommended Firebase product mapping (one project, multiple registered
+apps)</h3>
+<p>Recommend <strong>one Firebase project</strong>, e.g. display name
+<code>Helix OTA</code>, holding:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Firebase product</th>
+<th>App nickname (suggested)</th>
+<th>Config/env needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dashboard/</code> (operator web dashboard)</td>
+<td><strong>Firebase Hosting</strong> (+ optional preview channels per
+PR/feature branch)</td>
+<td>n/a — Hosting sites aren’t “apps”; optionally also register a
+<strong>Web app</strong>
+(<code>firebase apps:create WEB "Helix OTA Dashboard"</code>) purely to
+get a Firebase Web SDK config object if any Firebase client SDK feature
+(Analytics, Remote Config, etc.) is ever wanted client-side.</td>
+<td><code>firebase.json</code> (<code>public: "dashboard/dist"</code>,
+SPA rewrite to <code>index.html</code>, optional <code>/api/**</code>
+rewrite to the externally-hosted Go server or a Cloud Run wrapper),
+<code>.firebaserc</code> (project alias). Build step
+<code>npm run build</code> inside <code>dashboard/</code> MUST run
+before <code>firebase deploy</code>.</td>
+</tr>
+<tr>
+<td><code>clients/ota-manager/</code> (Tauri desktop client)</td>
+<td><strong>Neither Hosting nor App Distribution directly covers a
+desktop installer</strong> (§2.2 — App Distribution is iOS/Android
+only). Two sub-options: (a) host the <strong>web-preview build</strong>
+of its UI (its own <code>vite build</code> output, distinct from the
+native Tauri binary) on the <strong>same</strong> Firebase Hosting site
+as a secondary path/subdomain purely for browser-based visual QA (this
+project’s <code>hostrender</code> tooling already builds a web target
+for exactly this kind of visual testing — see
+<code>clients/ota-manager/visual/</code>); (b) for the actual native
+installers (<code>.msi</code>/<code>.dmg</code>/<code>.AppImage</code>
+from <code>tauri build</code>), Firebase has <strong>no first-party
+product</strong> — recommend GitHub Releases or a plain download page
+served from the same Hosting site, decided by the operator.</td>
+<td>n/a for the native binary path; optional Web app registration for
+(a).</td>
+<td>Only relevant if option (a) is chosen: a second
+<code>firebase.json</code> hosting target/site within the same
+project.</td>
+</tr>
+<tr>
+<td><code>submodules/ota-android-agent/</code> (Android agent
+APK/AAB)</td>
+<td><strong>Firebase App Distribution</strong></td>
+<td>Register an <strong>Android app</strong>
+(<code>firebase apps:create ANDROID "Helix OTA Android Agent"</code>
+with its package name/applicationId) so App Distribution can attach to
+it; then
+<code>firebase appdistribution:distribute app-release.apk --app &lt;ANDROID_APP_ID&gt; --groups &lt;testers&gt;</code>.</td>
+<td>Android <code>applicationId</code> (from the submodule’s Gradle
+config — not inspected in depth in this read-only pass), a configured
+tester group in the Firebase console.</td>
+</tr>
+<tr>
+<td><code>submodules/ota-update-engine-bridge/</code></td>
+<td><strong>None</strong> — it is a library, not a distributable app; no
+Firebase registration needed.</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>server/</code> (Go control plane)</td>
+<td><strong>No Firebase product hosts this directly</strong> (§2.3).
+Recommend: keep on its existing deploy path
+(<code>server/Dockerfile</code>,
+<code>scripts/distribute_stack.sh</code> → rootless podman on
+<code>thinker.local</code>/<code>amber.local</code> per
+<code>.env.example</code>); Firebase Hosting’s <code>/api/**</code>
+rewrite can point at it as an external origin if/when that rewrite
+capability is confirmed (§2.3, marked PENDING).</td>
+<td>n/a, or a Web-app registration purely for project-metadata
+bookkeeping if desired.</td>
+<td>None beyond what already exists (<code>HELIX_*</code> env vars,
+§4).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hard-gate-explicit-statement-per-task-instructions">3.3 HARD
+GATE — explicit statement per task instructions</h3>
+<blockquote>
+<p><strong>The website (<code>dashboard/</code>) Hosting deploy
+described in §2.1/§3.2 is technically ready-to-execute right
+now</strong> — a production build already exists at
+<code>dashboard/dist/</code> and the app “typechecks and builds” per its
+own <code>BUILD_EVIDENCE.txt</code>. <strong>However, per this task’s
+explicit constraints, nothing was deployed, no live Firebase project was
+created, and <code>firebase init</code> / <code>firebase deploy</code>
+were NOT run.</strong> This document is the ready-to-execute recipe
+(§2.1 + §3.2), not a completed deployment. Before actually running it,
+the operator should also weigh the honest open items flagged as PENDING
+in §2.1/§2.3 (exact <code>apps:create</code> flag syntax, and whether a
+Firebase Hosting rewrite can target an arbitrary external origin
+vs. only Cloud Run) — neither blocks <em>creating</em> the Firebase
+project + Hosting site, only the optional API-proxy rewrite step.</p>
+</blockquote>
+<hr />
+<h2 id="task-d-sensitive-git-ignored-data-fresh-clone-manifest">4. Task
+D — Sensitive / git-ignored data + fresh-clone manifest</h2>
+<h3 id="gitignore-sensitive-pattern-coverage">4.1
+<code>.gitignore</code> sensitive-pattern coverage</h3>
+<p><strong>Root <code>.gitignore</code></strong>
+(<code>/home/milos/Factory/projects/tools_and_research/helix_ota/.gitignore</code>)
+— relevant sensitive/secret-adjacent lines (paraphrased, full file is 1
+path, not reproduced verbatim beyond what’s needed): - <code>.env</code>
+— the real environment file (git-ignored; <code>.env.example</code> is
+the tracked template). - <code>.git-backups/</code>,
+<code>.git-backup-filter-repo/</code> — repo-op safety backups (§9), not
+secrets per se. - Various build-artifact/cache excludes
+(<code>node_modules/</code>, <code>package-lock.json</code>,
+<code>*.db-wal</code>/<code>*.db-shm</code>, <code>qa-results/</code>,
+etc.) — not credential-bearing, listed here only because the task asked
+for the full enumeration; none of these carry secrets.</p>
+<p><strong>28 submodule/subdirectory <code>.gitignore</code> files
+exist</strong> (found via <code>find . -name .gitignore</code>):
+<code>containers/</code>, <code>docs_chain/</code>,
+<code>constitution/</code>, <code>.remember/</code>,
+<code>dashboard/</code>, <code>.codegraph/</code>,
+<code>tools/device_claim/</code>, <code>cmd/workable-items/</code>,
+<code>cmd/build-stats/</code>, plus one per owned submodule
+(<code>submodules/ota-rollout-engine</code>,
+<code>submodules/containers</code>,
+<code>submodules/vision_engine</code>,
+<code>submodules/llm_orchestrator</code>,
+<code>submodules/ota-telemetry-schema</code>,
+<code>submodules/challenges</code>,
+<code>submodules/ota-artifact-validator</code>,
+<code>submodules/ota-protocol</code>,
+<code>submodules/doc_processor</code>, <code>submodules/http3</code>,
+<code>submodules/helixqa</code>, <code>submodules/security</code>,
+<code>submodules/llm_provider</code>,
+<code>submodules/llms_verifier</code>,
+<code>submodules/ota-update-engine-bridge</code>,
+<code>submodules/ota-android-agent</code>) plus
+<code>tests/e2e/.gitignore</code>,
+<code>tests/security/.gitignore</code>.
+<code>dashboard/.gitignore</code> specifically excludes
+<code>/.e2e-artifact-key.json</code> — “Ephemeral ed25519
+artifact-signing key for the e2e harness — regenerated every run by
+<code>e2e/global-setup.ts</code>, NEVER committed” (direct quote from
+the file).</p>
+<h3 id="env-.env.example-required-keys-for-a-fresh-clone">4.2
+<code>.env</code> / <code>.env.example</code> — required keys for a
+fresh clone</h3>
+<p><code>.env.example</code> (tracked, 109 lines) documents these
+optional overrides — <strong>none are secrets</strong>, they are
+deployment-topology knobs:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Var</th>
+<th>Purpose</th>
+<th>Sensitive?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HELIX_RELEASE_PREFIX</code></td>
+<td>Release-tag / recording-filename prefix (§11.4.151/§11.4.155).</td>
+<td>No.</td>
+</tr>
+<tr>
+<td><code>HELIXTRACK_REMOTE_HOST</code>,
+<code>HELIXTRACK_REMOTE_USER</code></td>
+<td>SSH targets for <code>scripts/distribute_stack.sh</code> (rootless
+podman remote deploy).</td>
+<td>Host/user names only — not a credential (auth is via pre-configured
+SSH key, not a password in this file).</td>
+</tr>
+<tr>
+<td><code>HELIX_DISTRIBUTE_ON_COMMIT</code>,
+<code>HELIX_DIST_REMOTE_DIR</code></td>
+<td>Deploy-automation toggles.</td>
+<td>No.</td>
+</tr>
+<tr>
+<td><code>HELIX_MAX_INFLIGHT</code></td>
+<td>Server request-concurrency ceiling.</td>
+<td>No.</td>
+</tr>
+<tr>
+<td><code>HELIX_TRUST_TLS_PROXY</code></td>
+<td>Operator assertion the process sits behind a trusted TLS-terminating
+proxy.</td>
+<td>No.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Gap found (documentation, not a leak):</strong> the Go
+server’s <code>server/internal/config/config.go</code> reads several env
+vars that <strong><code>.env.example</code> does NOT mention at
+all</strong>: <code>HELIX_PORT</code>, <code>HELIX_API_BASE_PATH</code>,
+<code>HELIX_ARTIFACT_BASE_URL</code>, <code>HELIX_POLL_INTERVAL</code>,
+<code>HELIX_POLL_JITTER</code>, <code>HELIX_ACCESS_TOKEN_TTL</code>,
+<code>HELIX_DEVICE_TOKEN_TTL</code>, <code>HELIX_TLS_CERT</code>,
+<code>HELIX_TLS_KEY</code>, <code>HELIX_HTTPS_PORT</code>,
+<code>HELIX_DATABASE_URL</code>, and — the two that actually matter for
+secrets — <strong><code>HELIX_TOKEN_SECRET</code></strong> (symmetric
+JWT-signing secret; falls back to a hard-coded
+<strong>non-production</strong> dev default
+<code>"helix-ota-dev-token-secret-change-me"</code> if unset — see
+<code>config.go:183</code>) and
+<strong><code>HELIX_ARTIFACT_PUBKEY</code></strong> (base64 ed25519
+<strong>public</strong> key trusted for artifact-signature verification;
+server/internal/api/handlers_artifact.go:274-288,
+<code>resolvePublicKey()</code> — per this project’s CLAUDE.md
+trust-boundary rule, this key MUST come only from server config, never
+from a request). A fresh clone/deploy MUST set
+<strong><code>HELIX_TOKEN_SECRET</code></strong> to a real random secret
+in production (the checked-in dev fallback is explicitly labeled
+“change-me” and must not be used in production), and MUST set
+<strong><code>HELIX_ARTIFACT_PUBKEY</code></strong> to the base64 form
+of whatever ed25519 keypair signs real OTA artifacts (the corresponding
+<strong>private</strong> signing key is an operator-held secret that
+lives <strong>entirely outside this repo</strong> — no private
+artifact-signing key exists anywhere in this checkout, tracked or
+otherwise; only the <em>public</em> verification half is ever configured
+server-side).</p>
+<h3 id="api_keys.sh-host-level-outside-the-repo-names-only">4.3
+<code>~/api_keys.sh</code> (host-level, outside the repo) — names
+only</h3>
+<p>Already covered in §1: single Firebase-relevant name is
+<strong><code>FIRBASE_CLI_TOKEN</code></strong> (typo preserved). ~50
+other provider-API-key names are present for unrelated tooling (LLM
+providers, git-forge tokens) — out of scope for this Firebase-focused
+audit beyond noting they exist and are correctly kept out of git (the
+file itself, <code>/home/milos/Factory/api_keys.sh</code>, is outside
+this repository entirely, not merely gitignored within it).</p>
+<h3 id="artifact-signature-keys-trust-boundary">4.4 Artifact-signature
+keys (trust boundary)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Path / source</th>
+<th>Nature</th>
+<th>Fresh-clone requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trusted <strong>public</strong> verification key</td>
+<td><code>server/internal/config/config.go</code> reads
+<code>HELIX_ARTIFACT_PUBKEY</code> (base64 ed25519, 32 bytes) →
+<code>Config.ArtifactPublicKey</code> → <code>Server.pubKey</code> →
+<code>resolvePublicKey()</code> in
+<code>server/internal/api/handlers_artifact.go</code></td>
+<td><strong>Not secret</strong> by cryptographic design (a verification
+public key), but MUST come only from trusted server config per this
+project’s CLAUDE.md hard rule — never accept one from a request.</td>
+<td>Operator must supply the real base64 public key value via
+<code>HELIX_ARTIFACT_PUBKEY</code> env var in production; unset =
+uploads are rejected (no trusted key configured) — this is a fail-closed
+default, confirmed safe.</td>
+</tr>
+<tr>
+<td>Private <strong>signing</strong> key (signs real OTA artifacts
+before upload)</td>
+<td><strong>Not present anywhere in this checkout.</strong></td>
+<td>Secret.</td>
+<td>Operator must supply/hold this entirely outside the repo (the build
+pipeline that signs release artifacts is the only consumer) — nothing to
+regenerate here since this repo contains no signing-key generation
+tooling for <em>production</em> artifacts (only the emulator’s own
+throwaway RAUC dev key, §4.5, which is unrelated).</td>
+</tr>
+<tr>
+<td>JWT symmetric secret</td>
+<td><code>HELIX_TOKEN_SECRET</code> env var,
+<code>config.go:180-184</code></td>
+<td>Secret. Dev fallback
+<code>"helix-ota-dev-token-secret-change-me"</code> is intentionally
+weak/labeled.</td>
+<td>Operator MUST set a real random value in any non-dev
+deployment.</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="rauc-dev-signing-keypair-emulator-test-harness-not-firebase-related-included-for-completeness-per-audit-all-sensitive-data">4.5
+RAUC dev signing keypair (emulator test harness — not Firebase-related,
+included for completeness per “audit ALL sensitive data”)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Path</th>
+<th>Nature</th>
+<th>Fresh-clone requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dev private key</td>
+<td>Generated by
+<code>tests/emulator/ab_virt/rauc/gen_dev_keys.sh</code> into
+<code>tests/emulator/ab_virt/out/rauc-keys/dev.key.pem</code>
+(gitignored, <code>chmod 600</code>, never committed per the script’s
+own header comment).</td>
+<td>Secret (throwaway/dev-only).</td>
+<td>Regenerable: run the script; §11.4.77 regen-mechanism already
+documented in the script itself. Not needed unless running the RK3588
+A/B-virt emulator tests.</td>
+</tr>
+<tr>
+<td>Dev public cert</td>
+<td><strong>Tracked</strong>:
+<code>tests/emulator/ab_virt/rootfs-overlay/etc/rauc/dev.cert.pem</code></td>
+<td>Public X.509 cert — confirmed safe to track (verified file starts
+<code>-----BEGIN CERTIFICATE-----</code>).</td>
+<td>None — already in the tree.</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="multitrack-per-alias-auth-claude_code_oauth_token-claude_config_dir">4.6
+Multitrack per-alias auth (<code>CLAUDE_CODE_OAUTH_TOKEN</code> /
+<code>CLAUDE_CONFIG_DIR</code>)</h3>
+<p>Referenced (names only, no values) throughout
+<code>constitution/scripts/multitrack/*.sh</code>
+(<code>multitrack_sessions.sh</code>,
+<code>multitrack_cwd_hook.sh</code>,
+<code>multitrack_conductor_monitor_autoarm.sh</code>,
+<code>track_label_audit.sh</code>). Per
+<code>config/multitrack/the-factory.yaml</code>’s own comment:
+<em>“Claude Toolkit alias roster. NAMES ONLY — never keys/tokens
+(§11.4.10; keys live in host <code>~/api_keys.sh</code> outside the
+repo).”</em> The tracked YAML lists alias <strong>names</strong>
+(<code>claude1..claude4</code>, <code>deepseek</code>,
+<code>xiaomi</code>, <code>opencode</code>,
+<code>kimi-for-coding</code>) and their <code>kind</code>
+(<code>native</code>/<code>provider</code>) only — confirmed no token
+values appear in this tracked file. A fresh clone that wants multi-track
+orchestration needs the operator to populate the corresponding
+<code>CLAUDE_CODE_OAUTH_TOKEN</code>/<code>CLAUDE_CONFIG_DIR</code>
+values per-alias on the host, outside git, exactly as the existing
+convention already requires — this is pre-existing project convention,
+not something this Firebase task needs to change.</p>
+<h3 id="verification-that-no-secret-value-is-tracked-methodology">4.7
+Verification that no secret VALUE is tracked (methodology)</h3>
+<p>All of the following ran against <code>git ls-files</code> /
+<code>git grep</code> (tracked content only, not the working tree) and
+returned <strong>empty</strong> (no hits) except where explicitly noted
+and resolved above: - <code>.env</code> is not tracked (only
+<code>.env.example</code> is). - No <code>.env.*</code> besides
+<code>.env.example</code> is tracked. - No <code>firebase.json</code> /
+<code>.firebaserc</code> tracked anywhere (Firebase Hosting has never
+been initialized in this repo). - No PEM/private-key header
+(<code>BEGIN RSA PRIVATE KEY</code> / <code>BEGIN PRIVATE KEY</code> /
+<code>BEGIN OPENSSH PRIVATE KEY</code> /
+<code>BEGIN EC PRIVATE KEY</code>) appears in any tracked file. - No
+Google API key pattern (<code>AIza[0-9A-Za-z_-]{35}</code>) appears in
+any tracked file. - The one tracked
+<code>*.pem</code>/<code>*.key</code>-adjacent filename hit
+(<code>tests/emulator/ab_virt/rootfs-overlay/etc/rauc/dev.cert.pem</code>)
+is a public certificate (§4.5). - Every literal
+<code>HELIX_ADMIN_PASSWORD=</code>/<code>HELIX_TOKEN_SECRET=</code>/<code>HELIX_ARTIFACT_PUBKEY=</code>
+assignment found in tracked files was individually inspected and
+resolved to a non-secret/test-fixture/ already-redacted/public-key value
+(§0, §4.2).</p>
+<hr />
+<h2 id="summary-table-fresh-clone-secrets-checklist">5. Summary table —
+fresh-clone secrets checklist</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>What</th>
+<th>Path (repo-relative unless noted)</th>
+<th>Why ignored</th>
+<th>What a fresh clone must supply</th>
+<th>How to get it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Real environment file</td>
+<td><code>.env</code> (repo root)</td>
+<td>§11.4.10 — never commit real config/secrets</td>
+<td>Copy <code>.env.example</code> → <code>.env</code>, fill in real
+values</td>
+<td>Operator</td>
+</tr>
+<tr>
+<td>2</td>
+<td>JWT signing secret</td>
+<td>env var <code>HELIX_TOKEN_SECRET</code></td>
+<td>Secret material</td>
+<td>Random 32+ byte value in production</td>
+<td>Operator generates (<code>openssl rand -hex 32</code> or
+similar)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Artifact verification public key</td>
+<td>env var <code>HELIX_ARTIFACT_PUBKEY</code></td>
+<td>Trust-boundary config (not secret, but must come from config)</td>
+<td>Base64 ed25519 public key matching the real signing pipeline</td>
+<td>Operator (from the build pipeline’s keypair)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Artifact <strong>signing</strong> private key</td>
+<td><em>(not in this repo at all)</em></td>
+<td>Secret, never touches the server repo</td>
+<td>The build pipeline that signs release artifacts must hold this</td>
+<td>Operator, fully external</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Admin bootstrap password</td>
+<td>env var <code>HELIX_ADMIN_PASSWORD</code></td>
+<td>Secret</td>
+<td>Strong password (docker-compose enforces “no default” via
+<code>:?</code> syntax)</td>
+<td>Operator</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Firebase deploy credential</td>
+<td><em>(does not exist in usable form yet)</em> —
+<code>~/api_keys.sh</code>’s <code>FIRBASE_CLI_TOKEN</code> is
+unused/deprecated-mechanism</td>
+<td>Would be a deploy secret</td>
+<td>A service-account JSON key path via
+<code>GOOGLE_APPLICATION_CREDENTIALS</code> (recommended, §2.4)</td>
+<td>Operator creates via GCP console, stores outside git</td>
+</tr>
+<tr>
+<td>7</td>
+<td>RAUC dev signing private key</td>
+<td><code>tests/emulator/ab_virt/out/rauc-keys/dev.key.pem</code>
+(gitignored)</td>
+<td>Dev/test-only secret</td>
+<td>Only needed for RK3588 A/B-virt emulator tests</td>
+<td>Regenerate:
+<code>tests/emulator/ab_virt/rauc/gen_dev_keys.sh</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>E2E ephemeral artifact-signing key</td>
+<td><code>dashboard/.e2e-artifact-key.json</code> (gitignored)</td>
+<td>Ephemeral test secret</td>
+<td>Only needed to run dashboard e2e suite</td>
+<td>Auto-regenerated every run by
+<code>dashboard/e2e/global-setup.ts</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Per-alias Claude Code auth</td>
+<td><code>CLAUDE_CODE_OAUTH_TOKEN</code> /
+<code>CLAUDE_CONFIG_DIR</code> (host env, per alias)</td>
+<td>§11.4.10</td>
+<td>Only needed for multi-track orchestration</td>
+<td>Operator, per <code>~/api_keys.sh</code> convention</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Distribution-host SSH access</td>
+<td>implied by <code>HELIXTRACK_REMOTE_HOST</code>/<code>_USER</code> in
+<code>.env.example</code></td>
+<td>Not itself a secret in-repo; relies on pre-provisioned SSH key
+auth</td>
+<td>Passwordless SSH key for the configured user on the target
+host(s)</td>
+<td>Operator provisions host-side</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="anti-bluff-retrieval-notes">6. Anti-bluff / retrieval notes</h2>
+<ul>
+<li>All Task B claims are cited with the exact URL fetched and the
+retrieval date (2026-07-10, matching the environment’s current date).
+Two sub-items could not be fully confirmed from the fetched page content
+within this session and are explicitly marked <strong>PENDING</strong>
+rather than guessed: (a) the complete flag syntax for
+<code>firebase apps:create &lt;PLATFORM&gt;</code> /
+<code>firebase appdistribution:distribute</code>, (b) whether a Firebase
+Hosting rewrite can target an arbitrary external HTTP origin vs. only
+Cloud Run/Cloud Functions. Both are easy to resolve at execution time
+with <code>firebase &lt;command&gt; --help</code> or a follow-up
+official-docs fetch — flagging honestly per §11.4.6/§11.4.99 rather than
+asserting an unverified syntax.</li>
+<li>All Task C/D claims are grounded in files actually read in this
+checkout during this session; paths are given exactly as found. Where
+the task brief’s assumption (“dashboard doesn’t exist yet”) conflicted
+with what the repository actually contains, this document states the
+observed reality rather than the assumed premise (§3.1).</li>
+<li>No repo file was modified, no git/build command was executed, no
+Firebase project was created, and nothing was deployed, per the task’s
+explicit constraints.</li>
+</ul>
+</body>
+</html>
