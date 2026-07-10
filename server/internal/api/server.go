@@ -110,6 +110,23 @@ func (s *Server) newID() string { return s.newIDFn() }
 // probes.
 func (s *Server) Router() *gin.Engine {
 	r := gin.New()
+	// SECURITY: gin.New() defaults Engine.trustedProxies to {"0.0.0.0/0", "::/0"}
+	// -- i.e. it trusts EVERY source as a legitimate reverse proxy. Left at that
+	// default, Context.ClientIP() (consumed by auditMiddleware for the audit
+	// log's IPAddress field, operational_endpoints.md §4.1) honors an
+	// X-Forwarded-For/X-Real-Ip header supplied by ANY direct, untrusted caller,
+	// letting an attacker forge the IP address their own mutating action is
+	// attributed to in the audit trail. Disabling trusted-proxy parsing entirely
+	// (nil) makes ClientIP() fall back to the genuine TCP peer address
+	// (r.RemoteAddr) unconditionally. This control plane has no documented
+	// reverse-proxy deployment topology that forwards X-Forwarded-For (the
+	// existing cfg.TrustTLSProxy flag concerns TLS-only response headers, not IP
+	// provenance) so the safe default is to trust no proxy.
+	if err := r.SetTrustedProxies(nil); err != nil {
+		// SetTrustedProxies(nil) cannot fail (it skips CIDR parsing entirely) --
+		// panic here would only mask an unexpected upstream gin behavior change.
+		panic("api: SetTrustedProxies(nil): " + err.Error())
+	}
 	// compressionMiddleware negotiates Brotli -> gzip -> identity and sets
 	// `Vary: Accept-Encoding` (superseding the bare varyMiddleware). The optional
 	// in-flight cap (HELIX_MAX_INFLIGHT) sheds excess load with 429 before any

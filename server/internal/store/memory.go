@@ -17,6 +17,7 @@ type MemoryRepository struct {
 	mu sync.RWMutex
 
 	devices     map[string]Device        // by deviceID
+	devOrder    []string                 // insertion order for stable listing (ListDevices/AllDevices)
 	devByHW     map[string]string        // hardwareID -> deviceID
 	artifacts   map[string]Artifact      // by artifactID
 	releases    map[string]Release       // by releaseID
@@ -75,19 +76,28 @@ func NewMemoryRepository() *MemoryRepository {
 var _ Repository = (*MemoryRepository)(nil)
 
 // CreateDevice stores a new device, rejecting a duplicate hardware_id bound to a
-// different identity (endpoints.md §8.1 409 CONFLICT).
+// different identity (endpoints.md §8.1 409 CONFLICT). The caller's Metadata map
+// is cloned before storage so a later mutation of the caller's own struct cannot
+// silently corrupt the stored record (the write-side half of the isolation
+// guarantee memory_fabric.go's cloneStrMap already enforces for FabricNode.Labels).
 func (m *MemoryRepository) CreateDevice(_ context.Context, d Device) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if existingID, ok := m.devByHW[d.HardwareID]; ok && existingID != d.DeviceID {
 		return ErrConflict
 	}
+	if _, exists := m.devices[d.DeviceID]; !exists {
+		m.devOrder = append(m.devOrder, d.DeviceID)
+	}
+	d.Metadata = cloneStrMap(d.Metadata)
 	m.devices[d.DeviceID] = d
 	m.devByHW[d.HardwareID] = d.DeviceID
 	return nil
 }
 
-// GetDevice returns a device by id.
+// GetDevice returns a device by id. The returned Metadata map is a clone so the
+// caller cannot mutate the stored record through the returned value (read-side
+// isolation, symmetric with the clone CreateDevice/UpdateDevice apply on write).
 func (m *MemoryRepository) GetDevice(_ context.Context, deviceID string) (Device, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -95,10 +105,12 @@ func (m *MemoryRepository) GetDevice(_ context.Context, deviceID string) (Device
 	if !ok {
 		return Device{}, ErrNotFound
 	}
+	d.Metadata = cloneStrMap(d.Metadata)
 	return d, nil
 }
 
-// GetDeviceByHardwareID returns a device by its hardware id.
+// GetDeviceByHardwareID returns a device by its hardware id (cloned Metadata;
+// see GetDevice).
 func (m *MemoryRepository) GetDeviceByHardwareID(_ context.Context, hardwareID string) (Device, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -106,21 +118,43 @@ func (m *MemoryRepository) GetDeviceByHardwareID(_ context.Context, hardwareID s
 	if !ok {
 		return Device{}, ErrNotFound
 	}
-	return m.devices[id], nil
+	d := m.devices[id]
+	d.Metadata = cloneStrMap(d.Metadata)
+	return d, nil
 }
 
-// UpdateDevice overwrites an existing device record.
+// UpdateDevice overwrites an existing device record. When HardwareID changes,
+// the devByHW secondary index is re-pointed to the new value and the stale old
+// mapping is removed (mirroring the rename handling UpdateGroup/UpdateProject
+// already apply to their own name indexes) — otherwise GetDeviceByHardwareID
+// would keep resolving the OLD hardware id to this device while the NEW
+// hardware id resolved to nothing. A HardwareID collision with a different
+// device is rejected with ErrConflict, matching CreateDevice's own invariant.
 func (m *MemoryRepository) UpdateDevice(_ context.Context, d Device) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if _, ok := m.devices[d.DeviceID]; !ok {
+	old, ok := m.devices[d.DeviceID]
+	if !ok {
 		return ErrNotFound
 	}
+	if old.HardwareID != d.HardwareID {
+		if existingID, taken := m.devByHW[d.HardwareID]; taken && existingID != d.DeviceID {
+			return ErrConflict
+		}
+		delete(m.devByHW, old.HardwareID)
+		m.devByHW[d.HardwareID] = d.DeviceID
+	}
+	d.Metadata = cloneStrMap(d.Metadata)
 	m.devices[d.DeviceID] = d
 	return nil
 }
 
 // ListDevices returns devices matching the filter, with cursor pagination.
+// Iterates devOrder (not the devices map directly) so the match set has a
+// stable order across calls — Go map iteration order is randomized per range,
+// so ranging over m.devices directly here made offset-cursor pagination
+// silently duplicate and drop devices across pages (proven in
+// memory_devices_order_test.go).
 func (m *MemoryRepository) ListDevices(_ context.Context, f DeviceFilter) ([]Device, string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -132,7 +166,8 @@ func (m *MemoryRepository) ListDevices(_ context.Context, f DeviceFilter) ([]Dev
 	start := decodeCursor(f.Cursor)
 
 	var matched []Device
-	for _, d := range m.devices {
+	for _, id := range m.devOrder {
+		d := m.devices[id]
 		if f.OSType != "" && d.OSType != f.OSType {
 			continue
 		}
@@ -142,6 +177,7 @@ func (m *MemoryRepository) ListDevices(_ context.Context, f DeviceFilter) ([]Dev
 		if f.Status != "" && d.UpdateState != f.Status {
 			continue
 		}
+		d.Metadata = cloneStrMap(d.Metadata)
 		matched = append(matched, d)
 	}
 
@@ -370,14 +406,17 @@ func (m *MemoryRepository) TelemetryForDeployment(_ context.Context, deploymentI
 	return out, nil
 }
 
-// AllDevices returns a snapshot of every registered device. It backs the
-// all-targets matching in the api layer (deviceLister capability); the pgx
+// AllDevices returns a snapshot of every registered device, in stable
+// (insertion) order, each with a cloned Metadata map (see GetDevice). It backs
+// the all-targets matching in the api layer (deviceLister capability); the pgx
 // implementation would replace this scan with an indexed query.
 func (m *MemoryRepository) AllDevices(_ context.Context) []Device {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	out := make([]Device, 0, len(m.devices))
-	for _, d := range m.devices {
+	out := make([]Device, 0, len(m.devOrder))
+	for _, id := range m.devOrder {
+		d := m.devices[id]
+		d.Metadata = cloneStrMap(d.Metadata)
 		out = append(out, d)
 	}
 	return out
@@ -575,37 +614,48 @@ func (m *MemoryRepository) DeviceStateCounts(_ context.Context) (map[string]int6
 	return out, nil
 }
 
-// AppendRollback appends a rollback/abort record (append-only).
+// AppendRollback appends a rollback/abort record (append-only). The Details
+// map is cloned before storage so a later mutation of the caller's struct
+// cannot reach back into the stored record (write-side isolation, symmetric
+// with ListRollbacks' clone on read).
 func (m *MemoryRepository) AppendRollback(_ context.Context, r RollbackRecord) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	r.Details = cloneStrMap(r.Details)
 	m.rollbacks = append(m.rollbacks, r)
 	return nil
 }
 
-// ListRollbacks returns the rollback records for a deployment in insertion order.
+// ListRollbacks returns the rollback records for a deployment in insertion
+// order, each with a cloned Details map so the caller cannot mutate the stored
+// record through the returned value.
 func (m *MemoryRepository) ListRollbacks(_ context.Context, deploymentID string) ([]RollbackRecord, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	var out []RollbackRecord
 	for _, r := range m.rollbacks {
 		if r.DeploymentID == deploymentID {
+			r.Details = cloneStrMap(r.Details)
 			out = append(out, r)
 		}
 	}
 	return out, nil
 }
 
-// AppendAudit appends an admin/operator action to the audit log.
+// AppendAudit appends an admin/operator action to the audit log. The Details
+// map is cloned before storage (see AppendRollback).
 func (m *MemoryRepository) AppendAudit(_ context.Context, e AuditEntry) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	e.Details = cloneStrMap(e.Details)
 	m.audit = append(m.audit, e)
 	return nil
 }
 
 // ListAudit returns audit entries matching the filter in insertion order, with
-// the same offset-cursor paging as ListReleases.
+// the same offset-cursor paging as ListReleases. Each entry's Details map is
+// cloned so the caller cannot mutate the stored record through the returned
+// value (see GetDevice).
 func (m *MemoryRepository) ListAudit(_ context.Context, f AuditFilter) ([]AuditEntry, string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -628,6 +678,7 @@ func (m *MemoryRepository) ListAudit(_ context.Context, f AuditFilter) ([]AuditE
 		if !f.Until.IsZero() && e.CreatedAt.After(f.Until) {
 			continue
 		}
+		e.Details = cloneStrMap(e.Details)
 		matched = append(matched, e)
 	}
 	if start > len(matched) {

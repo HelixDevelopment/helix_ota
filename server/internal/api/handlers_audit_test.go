@@ -78,6 +78,51 @@ func TestAuditReadIsAdminOnly(t *testing.T) {
 	}
 }
 
+// TestAuditLogIPAddressNotSpoofableViaXForwardedFor proves the audit log's
+// IPAddress field records the REAL network peer, not an untrusted
+// client-supplied X-Forwarded-For header. gin.New() defaults
+// Engine.trustedProxies to {"0.0.0.0/0", "::/0"} (trust every source), so
+// unless the server explicitly narrows/disables that trust, Context.ClientIP()
+// honors X-Forwarded-For from ANY direct caller -- letting an attacker forge
+// the IP address their own mutating action is attributed to in the audit
+// trail (an audit-log integrity / IP-spoofing defect, not merely cosmetic:
+// operational_endpoints.md §4.1 IPAddress is the forensic "who did this from
+// where" field). A direct (non-proxied) caller's self-reported
+// X-Forwarded-For MUST be ignored.
+func TestAuditLogIPAddressNotSpoofableViaXForwardedFor(t *testing.T) {
+	env := newTestEnv(t)
+
+	const spoofedIP = "203.0.113.99"
+	r := newAuthedReq(t, http.MethodPost, "/api/v1/groups", env.adminToken(),
+		mustJSON(t, GroupCreate{Name: "spoof-test-group"}))
+	r.Header.Set("X-Forwarded-For", spoofedIP)
+	// httptest.NewRequest defaults RemoteAddr to "192.0.2.1:1234" -- this IS the
+	// genuine, un-spoofable network peer for this request.
+	if r.RemoteAddr == "" || r.RemoteAddr == spoofedIP+":0" {
+		t.Fatalf("test precondition broken: RemoteAddr=%q", r.RemoteAddr)
+	}
+	w := serveReq(env, r)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create group want 201, got %d (%s)", w.Code, w.Body.String())
+	}
+
+	list, code := listAudit(t, env, env.adminToken())
+	if code != http.StatusOK {
+		t.Fatalf("GET /audit want 200, got %d", code)
+	}
+	if len(list.Items) != 1 {
+		t.Fatalf("want 1 audit entry, got %d (%+v)", len(list.Items), list.Items)
+	}
+	got := list.Items[0].IPAddress
+	if got == spoofedIP {
+		t.Fatalf("audit log IPAddress was forged via X-Forwarded-For: got %q (attacker-supplied), "+
+			"the server must not trust X-Forwarded-For from an untrusted direct peer", got)
+	}
+	if got == "" {
+		t.Fatalf("audit log IPAddress must not be empty for a direct request with a known RemoteAddr")
+	}
+}
+
 // TestDeriveAuditAction unit-checks the action/resource derivation from the
 // route template (no ids leak into the action string).
 func TestDeriveAuditAction(t *testing.T) {

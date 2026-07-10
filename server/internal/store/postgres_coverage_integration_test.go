@@ -93,6 +93,52 @@ func TestPostgresCoveragePaths_Integration(t *testing.T) {
 
 	runProjectAccessContract(t, ctx, repo)
 	runListDevicesContract(t, ctx, repo)
+	runUpdateDeviceConflictContract(t, ctx, repo)
+}
+
+// runUpdateDeviceConflictContract proves UpdateDevice maps a hardware_id
+// UNIQUE-constraint violation (devices_hardware_id_uniq, schema_postgres.sql)
+// to ErrConflict — the same mapping UpdateGroup/UpdateProject already apply to
+// their own UNIQUE(name) rename conflicts. Before this fix, UpdateDevice's SQL
+// UPDATE had no isUniqueViolation check at all, so this exact scenario returned
+// the raw *pgconn.PgError past the Repository interface's documented error
+// contract instead of the sentinel callers branch on with errors.Is.
+func runUpdateDeviceConflictContract(t *testing.T, ctx context.Context, repo *PostgresRepository) {
+	t.Helper()
+	ts := time.Date(2026, 6, 8, 12, 0, 0, 0, time.UTC)
+
+	if err := repo.CreateDevice(ctx, Device{DeviceID: "uc-dev-1", HardwareID: "UC-HW-1", RegisteredAt: ts}); err != nil {
+		t.Fatalf("CreateDevice uc-dev-1: %v", err)
+	}
+	if err := repo.CreateDevice(ctx, Device{DeviceID: "uc-dev-2", HardwareID: "UC-HW-2", RegisteredAt: ts}); err != nil {
+		t.Fatalf("CreateDevice uc-dev-2: %v", err)
+	}
+
+	// uc-dev-2 tries to steal uc-dev-1's hardware id via UpdateDevice.
+	steal := Device{DeviceID: "uc-dev-2", HardwareID: "UC-HW-1", RegisteredAt: ts}
+	if err := repo.UpdateDevice(ctx, steal); !errors.Is(err, ErrConflict) {
+		t.Fatalf("UpdateDevice hardware_id collision want ErrConflict, got %v", err)
+	}
+	// uc-dev-2's row must be unchanged by the rejected update.
+	if got, err := repo.GetDevice(ctx, "uc-dev-2"); err != nil || got.HardwareID != "UC-HW-2" {
+		t.Fatalf("uc-dev-2 corrupted by rejected UpdateDevice: %+v err=%v", got, err)
+	}
+	// uc-dev-1's binding must be untouched too.
+	if got, err := repo.GetDeviceByHardwareID(ctx, "UC-HW-1"); err != nil || got.DeviceID != "uc-dev-1" {
+		t.Fatalf("UC-HW-1 binding corrupted by rejected UpdateDevice: %+v err=%v", got, err)
+	}
+
+	// A genuine (non-colliding) hardware_id change still succeeds and re-indexes.
+	rename := Device{DeviceID: "uc-dev-2", HardwareID: "UC-HW-2-RENAMED", RegisteredAt: ts}
+	if err := repo.UpdateDevice(ctx, rename); err != nil {
+		t.Fatalf("UpdateDevice genuine hardware_id change: %v", err)
+	}
+	if got, err := repo.GetDeviceByHardwareID(ctx, "UC-HW-2-RENAMED"); err != nil || got.DeviceID != "uc-dev-2" {
+		t.Fatalf("GetDeviceByHardwareID(UC-HW-2-RENAMED): %+v err=%v", got, err)
+	}
+	if _, err := repo.GetDeviceByHardwareID(ctx, "UC-HW-2"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("GetDeviceByHardwareID(UC-HW-2) should be gone after rename, got %v", err)
+	}
 }
 
 // mustPool opens a pool against the freshly-booted Postgres, retrying until it

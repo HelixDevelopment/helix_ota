@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"testing"
+	"time"
 )
 
 func TestLogin(t *testing.T) {
@@ -69,6 +70,40 @@ func TestRefreshRotation(t *testing.T) {
 	w = env.doJSON(http.MethodPost, "/api/v1/auth/refresh", "", RefreshRequest{RefreshToken: login.RefreshToken})
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("reused refresh token want 401, got %d", w.Code)
+	}
+}
+
+// TestRefreshTokenExpiresAfterTTL proves a refresh token issued at login is
+// NOT usable forever. endpoints.md §7.2 (docs/research/main_specs/1.0.0-mvp/
+// api/endpoints.md line 144) specifies the refresh token is "long-lived
+// (default 30 days, configurable), opaque, server-side revocable" -- i.e. it
+// MUST eventually expire, not remain valid indefinitely until first use. A
+// refresh token presented long after issuance (31 days later, one day past
+// the documented 30-day default) must be rejected with 401, exactly like an
+// already-used or garbage token.
+func TestRefreshTokenExpiresAfterTTL(t *testing.T) {
+	env := newTestEnv(t)
+
+	w := env.doJSON(http.MethodPost, "/api/v1/auth/login", "", LoginRequest{Username: "admin@helix.test", Password: "s3cret"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("login failed: %d %s", w.Code, w.Body.String())
+	}
+	var login TokenResponse
+	env.decode(w, &login)
+
+	// Advance the server's clock 31 days past issuance (1 day beyond the
+	// documented 30-day default refresh-token lifetime) without ever consuming
+	// the refresh token.
+	issuedAt := env.srv.now()
+	env.srv.nowFn = func() time.Time { return issuedAt.Add(31 * 24 * time.Hour) }
+
+	w = env.doJSON(http.MethodPost, "/api/v1/auth/refresh", "", RefreshRequest{RefreshToken: login.RefreshToken})
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("refresh token 31 days after issuance (past documented 30-day default) must be rejected; want 401, got %d (%s)",
+			w.Code, w.Body.String())
+	}
+	if got := env.errCode(w); got != CodeUnauthenticated {
+		t.Fatalf("want UNAUTHENTICATED, got %s", got)
 	}
 }
 

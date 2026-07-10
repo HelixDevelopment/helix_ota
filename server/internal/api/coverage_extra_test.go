@@ -291,6 +291,16 @@ func TestProjectUpdate_NameOnly(t *testing.T) {
 	if updated.Name != "proj-y-renamed" {
 		t.Fatalf("name = %q, want proj-y-renamed", updated.Name)
 	}
+	// Anti-bluff (§11.4 covenant): a name-only PATCH omitting `description`
+	// entirely must NOT clear the previously-set description. This exact
+	// scenario (create-with-description then PATCH name-only) previously
+	// silently wiped the description to "" -- see
+	// TestProjectUpdatePartialOmitsDescriptionUnchanged in
+	// handlers_project_test.go for the dedicated regression test -- so this
+	// pre-existing test now checks the field it originally left unchecked.
+	if updated.Description != "orig" {
+		t.Fatalf("name-only PATCH must not clear description: got %q, want %q", updated.Description, "orig")
+	}
 }
 
 func TestProjectUpdate_NotFound(t *testing.T) {

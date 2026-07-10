@@ -116,7 +116,8 @@ func TestProjectUpdate(t *testing.T) {
 	var created ProjectResponse
 	env.decode(cw, &created)
 
-	uw := env.doJSON(http.MethodPatch, "/api/v1/projects/"+created.ProjectID, tok, UpdateProjectRequest{Name: "updatable", Description: "new desc"})
+	newDesc := "new desc"
+	uw := env.doJSON(http.MethodPatch, "/api/v1/projects/"+created.ProjectID, tok, UpdateProjectRequest{Name: "updatable", Description: &newDesc})
 	if uw.Code != http.StatusOK {
 		t.Fatalf("update want 200, got %d (%s)", uw.Code, uw.Body.String())
 	}
@@ -127,6 +128,73 @@ func TestProjectUpdate(t *testing.T) {
 	}
 	if !updated.UpdatedAt.After(created.UpdatedAt) && !updated.UpdatedAt.Equal(created.UpdatedAt) {
 		t.Fatalf("UpdatedAt should be >= original: %v vs %v", updated.UpdatedAt, created.UpdatedAt)
+	}
+}
+
+// TestProjectUpdatePartialOmitsDescriptionUnchanged proves a PATCH that only
+// sets `name` (the `description` field entirely absent from the JSON body,
+// not present-and-empty) does NOT wipe the project's existing description.
+// handleUpdateProject's current gate is `req.Description != "" ||
+// c.Request.ContentLength > 0` -- but ANY non-empty PATCH body (including one
+// that legitimately omits `description` to mean "leave it alone") has
+// ContentLength > 0, so this condition is true on effectively every real PATCH
+// request and clobbers the description to "" whenever the caller does not
+// resend it verbatim. A partial update MUST be able to change just the name.
+func TestProjectUpdatePartialOmitsDescriptionUnchanged(t *testing.T) {
+	env := newTestEnv(t)
+	tok := env.adminToken()
+
+	cw := env.doJSON(http.MethodPost, "/api/v1/projects", tok, CreateProjectRequest{Name: "partial", Description: "keep me"})
+	if cw.Code != http.StatusCreated {
+		t.Fatalf("create want 201, got %d", cw.Code)
+	}
+	var created ProjectResponse
+	env.decode(cw, &created)
+
+	// Partial update: only `name` changes, `description` field is entirely
+	// absent from the JSON body (UpdateProjectRequest.Description carries
+	// `omitempty` and is left at its zero value here).
+	uw := env.doJSON(http.MethodPatch, "/api/v1/projects/"+created.ProjectID, tok, UpdateProjectRequest{Name: "partial-renamed"})
+	if uw.Code != http.StatusOK {
+		t.Fatalf("update want 200, got %d (%s)", uw.Code, uw.Body.String())
+	}
+	var updated ProjectResponse
+	env.decode(uw, &updated)
+	if updated.Name != "partial-renamed" {
+		t.Fatalf("name want partial-renamed, got %q", updated.Name)
+	}
+	if updated.Description != "keep me" {
+		t.Fatalf("a name-only PATCH must not clear description; want %q, got %q", "keep me", updated.Description)
+	}
+}
+
+// TestProjectUpdateExplicitEmptyDescriptionClears proves the complementary
+// case to TestProjectUpdatePartialOmitsDescriptionUnchanged: when the caller
+// DOES send an explicit empty-string `description`, it must actually clear the
+// stored value (not be silently ignored just because it is the zero value).
+func TestProjectUpdateExplicitEmptyDescriptionClears(t *testing.T) {
+	env := newTestEnv(t)
+	tok := env.adminToken()
+
+	cw := env.doJSON(http.MethodPost, "/api/v1/projects", tok, CreateProjectRequest{Name: "clearable", Description: "will be cleared"})
+	if cw.Code != http.StatusCreated {
+		t.Fatalf("create want 201, got %d", cw.Code)
+	}
+	var created ProjectResponse
+	env.decode(cw, &created)
+
+	empty := ""
+	uw := env.doJSON(http.MethodPatch, "/api/v1/projects/"+created.ProjectID, tok, UpdateProjectRequest{Description: &empty})
+	if uw.Code != http.StatusOK {
+		t.Fatalf("update want 200, got %d (%s)", uw.Code, uw.Body.String())
+	}
+	var updated ProjectResponse
+	env.decode(uw, &updated)
+	if updated.Description != "" {
+		t.Fatalf("explicit empty description must clear the field; got %q", updated.Description)
+	}
+	if updated.Name != "clearable" {
+		t.Fatalf("name must be unchanged when omitted from the PATCH; got %q", updated.Name)
 	}
 }
 

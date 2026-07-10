@@ -32,7 +32,14 @@ func TestNewWrapsHTTP3ConstructionError(t *testing.T) {
 	if !strings.Contains(err.Error(), "transport: http3:") {
 		t.Fatalf("error %q missing the wrapped http3 prefix", err)
 	}
-	if !strings.Contains(err.Error(), "Certificates or GetCertificate") {
+	// Surfaces the underlying cert requirement. Assert on the two stable
+	// cert-source terms independently rather than an exact phrasing: http3's
+	// Validate message now also lists GetConfigForClient as a valid source
+	// (submodules/http3 a56d040), so it reads "Certificates, GetCertificate, or
+	// GetConfigForClient" — re-pinning the whole sentence would just break again
+	// on the next legitimate reword, while these two terms robustly prove the
+	// wrapped error names the cert requirement.
+	if !strings.Contains(err.Error(), "Certificates") || !strings.Contains(err.Error(), "GetCertificate") {
 		t.Fatalf("error %q does not surface the underlying cert requirement", err)
 	}
 }

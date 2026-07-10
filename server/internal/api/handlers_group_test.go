@@ -46,7 +46,8 @@ func TestGroupCRUDLifecycle(t *testing.T) {
 	}
 
 	// Update.
-	uw := env.doJSON(http.MethodPatch, "/api/v1/groups/"+g.GroupID, tok, GroupUpdate{Name: "fleet-a", Description: "field"})
+	updateDesc := "field"
+	uw := env.doJSON(http.MethodPatch, "/api/v1/groups/"+g.GroupID, tok, GroupUpdate{Name: "fleet-a", Description: &updateDesc})
 	if uw.Code != http.StatusOK {
 		t.Fatalf("update group want 200, got %d (%s)", uw.Code, uw.Body.String())
 	}
@@ -93,6 +94,39 @@ func TestGroupCRUDLifecycle(t *testing.T) {
 	}
 	if gone := env.do(http.MethodGet, "/api/v1/groups/"+g.GroupID, tok, nil, ""); gone.Code != http.StatusNotFound {
 		t.Fatalf("deleted group should be 404, got %d", gone.Code)
+	}
+}
+
+// TestGroupUpdateNameOnlyPreservesDescription proves a PATCH that only
+// changes `name` (the `description` field entirely absent from the JSON body)
+// does not wipe the group's existing description. handleUpdateGroup
+// previously did `existing.Description = req.Description` UNCONDITIONALLY on
+// every PATCH -- since a plain string's zero value ("") is indistinguishable
+// from "the caller explicitly cleared it", any name-only PATCH silently
+// erased the description (same defect class fixed for projects in
+// TestProjectUpdatePartialOmitsDescriptionUnchanged).
+func TestGroupUpdateNameOnlyPreservesDescription(t *testing.T) {
+	env := newTestEnv(t)
+	tok := env.adminToken()
+
+	w := env.doJSON(http.MethodPost, "/api/v1/groups", tok, GroupCreate{Name: "desc-group", Description: "keep me"})
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create group want 201, got %d (%s)", w.Code, w.Body.String())
+	}
+	var g GroupView
+	env.decode(w, &g)
+
+	uw := env.doJSON(http.MethodPatch, "/api/v1/groups/"+g.GroupID, tok, GroupUpdate{Name: "desc-group-renamed"})
+	if uw.Code != http.StatusOK {
+		t.Fatalf("update group want 200, got %d (%s)", uw.Code, uw.Body.String())
+	}
+	var updated GroupView
+	env.decode(uw, &updated)
+	if updated.Name != "desc-group-renamed" {
+		t.Fatalf("name want desc-group-renamed, got %q", updated.Name)
+	}
+	if updated.Description != "keep me" {
+		t.Fatalf("a name-only PATCH must not clear description; want %q, got %q", "keep me", updated.Description)
 	}
 }
 

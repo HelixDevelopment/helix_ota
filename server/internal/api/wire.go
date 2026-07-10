@@ -250,10 +250,17 @@ type CreateProjectRequest struct {
 	Description string `json:"description,omitempty"`
 }
 
-// UpdateProjectRequest is PATCH /projects/{projectId} (admin).
+// UpdateProjectRequest is PATCH /projects/{projectId} (admin). Description is a
+// pointer so the handler can distinguish "field entirely absent from the JSON
+// body" (nil -- leave the stored description untouched) from "field present
+// with an explicit empty string" (non-nil pointing to "" -- clear the
+// description). A plain string cannot make that distinction: its zero value is
+// indistinguishable from an explicitly-empty field, which previously caused
+// any partial PATCH that only changed `name` to silently wipe the existing
+// description.
 type UpdateProjectRequest struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
+	Name        string  `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // ProjectResponse is a project response body.

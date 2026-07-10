@@ -213,8 +213,12 @@ func (s *Server) handleUpdateProject(c *gin.Context) {
 	if req.Name != "" {
 		existing.Name = req.Name
 	}
-	if req.Description != "" || c.Request.ContentLength > 0 { // allow explicit empty description
-		existing.Description = req.Description
+	// req.Description is nil when the JSON body omits the field entirely (leave
+	// the stored description untouched -- a partial PATCH that only sets `name`
+	// must not clobber it) versus non-nil when the caller explicitly sent the
+	// field, including an explicit empty string to intentionally clear it.
+	if req.Description != nil {
+		existing.Description = *req.Description
 	}
 	existing.UpdatedAt = s.now()
 	if err := s.repo.UpdateProject(c.Request.Context(), existing); err != nil {

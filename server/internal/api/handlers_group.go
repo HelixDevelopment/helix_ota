@@ -44,10 +44,17 @@ type GroupCreate struct {
 	Description string `json:"description,omitempty"`
 }
 
-// GroupUpdate is the PATCH /groups/{id} body.
+// GroupUpdate is the PATCH /groups/{id} body. Description is a pointer so the
+// handler can distinguish "field entirely absent from the JSON body" (nil --
+// leave the stored description untouched) from "field present with an
+// explicit empty string" (non-nil pointing to "" -- clear the description). A
+// plain string cannot make that distinction: its zero value is
+// indistinguishable from an explicitly-empty field, which previously caused
+// any partial PATCH that only changed `name` to silently wipe the existing
+// description.
 type GroupUpdate struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
 }
 
 // GroupView is a device-group response.
@@ -183,7 +190,13 @@ func (s *Server) handleUpdateGroup(c *gin.Context) {
 	if req.Name != "" {
 		existing.Name = req.Name
 	}
-	existing.Description = req.Description
+	// req.Description is nil when the JSON body omits the field entirely (leave
+	// the stored description untouched -- a partial PATCH that only sets `name`
+	// must not clobber it) versus non-nil when the caller explicitly sent the
+	// field, including an explicit empty string to intentionally clear it.
+	if req.Description != nil {
+		existing.Description = *req.Description
+	}
 	if err := s.repo.UpdateGroup(c.Request.Context(), existing); err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			respondError(c, http.StatusConflict, CodeConflict, "a group with that name already exists")

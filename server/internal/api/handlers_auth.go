@@ -5,23 +5,37 @@ import (
 	"encoding/base64"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+// defaultRefreshTokenTTL is the refresh-token lifetime (endpoints.md §7.2 /
+// docs/research/main_specs/1.0.0-mvp/api/endpoints.md line 144: "long-lived
+// (default 30 days, configurable)"). The MVP has no dedicated config field for
+// this yet (only AccessTokenTTL/DeviceTokenTTL are configurable) so the
+// documented default is applied unconditionally; a refresh token MUST expire
+// eventually rather than remain valid forever until its first use.
+const defaultRefreshTokenTTL = 30 * 24 * time.Hour
+
 // refreshStore maps opaque refresh tokens to their subject+roles, supporting
 // single-use rotation (endpoints.md §7.2: a used refresh token is invalidated
-// when a new pair is issued). The production target is the `auth` brick's
-// server-side revocable store; the MVP keeps it in memory.
+// when a new pair is issued) AND time-bounded expiry (endpoints.md §7.2:
+// "long-lived (default 30 days, configurable)" -- a refresh token is
+// server-side revocable and MUST NOT remain valid indefinitely). The
+// production target is the `auth` brick's server-side revocable store; the
+// MVP keeps it in memory.
 type refreshStore struct {
 	mu     sync.Mutex
 	tokens map[string]refreshEntry
 }
 
-// refreshEntry is the subject + roles bound to a refresh token.
+// refreshEntry is the subject + roles bound to a refresh token, plus the
+// instant after which it is no longer honored.
 type refreshEntry struct {
-	subject string
-	roles   []string
+	subject   string
+	roles     []string
+	expiresAt time.Time
 }
 
 // newRefreshStore builds an empty refresh-token store.
@@ -29,17 +43,21 @@ func newRefreshStore() *refreshStore {
 	return &refreshStore{tokens: make(map[string]refreshEntry)}
 }
 
-// issue mints a new opaque refresh token for the subject/roles.
-func (rs *refreshStore) issue(subject string, roles []string) string {
+// issue mints a new opaque refresh token for the subject/roles, valid until
+// now+ttl.
+func (rs *refreshStore) issue(subject string, roles []string, now time.Time, ttl time.Duration) string {
 	tok := randomOpaque()
 	rs.mu.Lock()
-	rs.tokens[tok] = refreshEntry{subject: subject, roles: roles}
+	rs.tokens[tok] = refreshEntry{subject: subject, roles: roles, expiresAt: now.Add(ttl)}
 	rs.mu.Unlock()
 	return tok
 }
 
-// rotate consumes a refresh token (single use) and returns its binding.
-func (rs *refreshStore) rotate(token string) (refreshEntry, bool) {
+// rotate consumes a refresh token (single use) and returns its binding. A
+// token presented at or after its expiresAt is treated exactly like an
+// already-used/unknown token: it is purged and rejected (ok=false) rather than
+// honored indefinitely.
+func (rs *refreshStore) rotate(token string, now time.Time) (refreshEntry, bool) {
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 	e, ok := rs.tokens[token]
@@ -47,6 +65,9 @@ func (rs *refreshStore) rotate(token string) (refreshEntry, bool) {
 		return refreshEntry{}, false
 	}
 	delete(rs.tokens, token)
+	if !e.expiresAt.IsZero() && !now.Before(e.expiresAt) {
+		return refreshEntry{}, false
+	}
 	return e, true
 }
 
@@ -89,7 +110,7 @@ func (s *Server) handleRefresh(c *gin.Context) {
 			ErrorDetail{Field: "refresh_token", Issue: "required"})
 		return
 	}
-	entry, ok := s.refresh.rotate(req.RefreshToken)
+	entry, ok := s.refresh.rotate(req.RefreshToken, s.now())
 	if !ok {
 		respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "refresh token is expired, revoked, or already used")
 		return
@@ -105,7 +126,7 @@ func (s *Server) issueTokenPair(c *gin.Context, subject string, roles []string) 
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not mint access token")
 		return
 	}
-	refresh := s.refresh.issue(subject, roles)
+	refresh := s.refresh.issue(subject, roles, s.now(), defaultRefreshTokenTTL)
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken:  access,
 		TokenType:    "Bearer",

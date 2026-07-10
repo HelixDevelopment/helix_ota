@@ -110,6 +110,13 @@ func (r *PostgresRepository) GetDeviceByHardwareID(ctx context.Context, hardware
 	return r.scanDevice(r.pool.QueryRow(ctx, deviceSelect+` WHERE hardware_id=$1`, hardwareID))
 }
 
+// UpdateDevice overwrites an existing device record. Like UpdateGroup and
+// UpdateProject map their own UNIQUE(name) violation to ErrConflict on rename,
+// a hardware_id change that collides with a DIFFERENT device's hardware_id
+// hits the devices_hardware_id_uniq constraint (schema_postgres.sql) and MUST
+// map to ErrConflict too — without this check the raw pgconn.PgError (23505)
+// leaked past the Repository interface's documented error contract, so a
+// caller doing errors.Is(err, store.ErrConflict) would miss a genuine conflict.
 func (r *PostgresRepository) UpdateDevice(ctx context.Context, d Device) error {
 	meta, err := jsonbOf(orEmptyMap(d.Metadata))
 	if err != nil {
@@ -125,6 +132,9 @@ WHERE device_id=$1`
 		d.DeviceID, d.HardwareID, d.Model, string(d.OSType), d.OSVersion, d.CurrentVersion,
 		d.Group, meta, d.RegisteredAt, nullTime(d.LastSeen), d.UpdateState, d.ActiveSlot,
 		d.LastErrorCode, d.HealthOK, d.TargetVersion)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
 	if err != nil {
 		return err
 	}
