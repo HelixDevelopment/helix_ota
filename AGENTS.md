@@ -180,6 +180,18 @@
   doc/DB sync verify, or doc-set commit — never an after-the-fact audit;
   five decidable check families + self-validated analyzer (composes
   §11.4.86/.93/.106/.107/.148). Gate `CM-COVENANT-114-186-PROPAGATION`.
+- **Website engineering-quality mandate.** Constitution §11.4.190. Every
+  website / web-UI a project ships — INCLUDING this project's own — MUST be
+  fully responsive (all browser engines / OSes / device classes / screen
+  sizes), completely SEO-optimized (semantic HTML, per-page title + meta,
+  OG/Twitter cards, canonical, schema.org/JSON-LD, robots + sitemap, WCAG AA
+  + Core Web Vitals), uniquely OpenDesign-authored (§11.4.162, no generic
+  template), and bleeding-edge enterprise-quality in light+dark — each PROVEN
+  with captured evidence: host-rendered screenshots across the breakpoint ×
+  engine matrix + layout oracle, an automated SEO audit meeting a score
+  floor, and the §11.4.170 host-rendered pixel proof per screen×state×{light,
+  dark} (composes §11.4.5/.6/.69/.107/.162/.168/.170). Gate
+  `CM-COVENANT-114-190-PROPAGATION`.
 - **Process/thread-limit (RLIMIT_NPROC) awareness.** Constitution §12.12.
   Heavy parallel subagent/multi-process work is bounded by the OS
   per-user process/thread limit (`ulimit -u` / `RLIMIT_NPROC`); check

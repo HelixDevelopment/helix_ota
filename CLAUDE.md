@@ -104,7 +104,7 @@ modules) and the dev/runtime infrastructure in `containers/`.
   `constitution/scripts/semgrep/*` (NEVER copied); MCP wired per §11.4.78
   step 3. Scope: `server/`, `submodules/`, `scripts/`.
 
-### Universal mandates propagation (§11.4.167–§11.4.186 + §12.12)
+### Universal mandates propagation (§11.4.167–§11.4.186, §11.4.190 + §12.12)
 
 - §11.4.167 — every BIG feature/large fix MUST develop as its own isolated
   feature work-stream (CoW/reflink project copy, own `feature/<slug>` branch
@@ -207,6 +207,17 @@ modules) and the dev/runtime infrastructure in `containers/`.
   doc/DB sync verify, or doc-set commit — never an after-the-fact audit;
   five decidable check families + self-validated analyzer (composes
   §11.4.86/.93/.106/.107/.148). Gate `CM-COVENANT-114-186-PROPAGATION`.
+- §11.4.190 — every project website / web-UI surface (INCLUDING this project's
+  own) MUST be fully responsive (all browser engines / OSes / device classes /
+  screen sizes) + completely SEO-optimized (semantic HTML, per-page title +
+  meta, OG/Twitter cards, canonical, schema.org/JSON-LD, robots + sitemap,
+  WCAG AA + Core Web Vitals) + uniquely OpenDesign-authored (§11.4.162, no
+  generic template) + bleeding-edge enterprise-quality in light+dark — each
+  PROVEN with captured evidence: host-rendered screenshots across the
+  breakpoint×engine matrix + layout oracle, an automated SEO audit meeting a
+  score floor, and the §11.4.170 host-rendered pixel proof per
+  screen×state×{light,dark} (composes §11.4.5/.6/.69/.107/.162/.168/.170).
+  Gate `CM-COVENANT-114-190-PROPAGATION`.
 - §12.12 — heavy parallel subagent/multi-process work is bounded by the OS
   per-user process/thread limit (`ulimit -u` / `RLIMIT_NPROC`); check
   thread headroom before scaling parallelism and treat exhaustion as a §12
