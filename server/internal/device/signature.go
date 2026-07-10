@@ -61,6 +61,18 @@ func (v *SignatureVerifier) Verify(payload []byte, signatureB64 string) error {
 	if !v.KeyConfigured() {
 		return fmt.Errorf("signature: no trusted public key configured")
 	}
+	// Fail CLOSED on a configured-but-malformed key. KeyConfigured() only
+	// reports len>0, so a non-empty but wrong-length key (e.g. a truncated or
+	// corrupted HELIX_ARTIFACT_PUBKEY) is treated as "configured" and the
+	// caller does NOT skip verification -- yet crypto/ed25519.Verify PANICS
+	// when the key length is not exactly PublicKeySize. A verification
+	// primitive MUST return an error on a bad key, never crash the process;
+	// this mirrors the server-side validator's ValidateSignature key-length
+	// guard (§11.4 anti-bluff: verification fails closed, not open, not crash).
+	if len(v.publicKey) != ed25519.PublicKeySize {
+		return fmt.Errorf("signature: trusted public key is not a valid ed25519 key (length %d, expected %d)",
+			len(v.publicKey), ed25519.PublicKeySize)
+	}
 
 	sig, err := base64.StdEncoding.DecodeString(signatureB64)
 	if err != nil {
