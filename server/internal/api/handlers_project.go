@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -130,6 +131,28 @@ func (s *Server) handleCreateProject(c *gin.Context) {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not create project")
 		return
 	}
+
+	// Grant the creator admin-level access to the project they just created.
+	// requireProjectAccess (GET/PATCH/DELETE) and handleListProjects both gate
+	// a non-super-admin caller on a store.ProjectAccess ACL entry via
+	// GetProjectAccess; without this grant that lookup always misses
+	// (store.ErrNotFound), so the very operator/admin who created the project
+	// would be immediately locked out of it (403) unless they separately hold
+	// the GLOBAL admin role — confirmed by TestProjectCreatorCanAccessOwnProject.
+	// Best-effort: the project row is already durably created, so a failure
+	// here is logged rather than rolled back (there is no cross-call
+	// transaction in the Repository seam); it is expected to succeed given the
+	// project row was just inserted.
+	if callerID := getCallerID(c); callerID != "" {
+		if aerr := s.repo.SetProjectAccess(c.Request.Context(), store.ProjectAccess{
+			ProjectID: p.ProjectID,
+			CallerID:  callerID,
+			Role:      store.ProjectRoleAdmin,
+		}); aerr != nil {
+			log.Printf("handleCreateProject: could not grant creator %s access to project %s: %v", callerID, p.ProjectID, aerr)
+		}
+	}
+
 	c.JSON(http.StatusCreated, toProjectResponse(p))
 }
 

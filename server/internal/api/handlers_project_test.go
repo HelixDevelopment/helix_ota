@@ -255,3 +255,61 @@ func TestProjectPermissions(t *testing.T) {
 		t.Fatalf("operator delete want 403, got %d", dw.Code)
 	}
 }
+
+// TestProjectCreatorCanAccessOwnProject proves the operator who just CREATED a
+// project can read it back (GET) and see it in their own project list (LIST)
+// using the SAME token — the minimum bar for the multi-project feature to be
+// usable at all. handleCreateProject persists the store.Project row but never
+// calls store.SetProjectAccess to grant the creator an entry in the
+// project_access ACL; every other project handler (handleGetProject,
+// handleUpdateProject, handleDeleteProject, handleListProjects) gates on that
+// ACL via requireProjectAccess/GetProjectAccess for any caller who is not a
+// GLOBAL admin (the RoleAdmin bypass in requireProjectAccess). Without the
+// grant, GetProjectAccess always misses (store.ErrNotFound) for the creator,
+// so a non-super-admin operator is locked out of the very project they just
+// created — confirmed by the sibling TestProjectPermissions test, whose
+// "Operator can view but NOT delete" comment asserts view access that no
+// assertion in that test actually exercises with the operator's own token.
+func TestProjectCreatorCanAccessOwnProject(t *testing.T) {
+	env := newTestEnv(t)
+	operator, _ := env.signer.Mint("creator@helix.test", []string{RoleOperator}, env.srv.cfg.AccessTokenTTL, env.srv.now())
+
+	cw := env.doJSON(http.MethodPost, "/api/v1/projects", operator, CreateProjectRequest{Name: "self-access"})
+	if cw.Code != http.StatusCreated {
+		t.Fatalf("create want 201, got %d (%s)", cw.Code, cw.Body.String())
+	}
+	var created ProjectResponse
+	env.decode(cw, &created)
+
+	// The creator MUST be able to read back the project they just created,
+	// with the SAME token that created it.
+	gw := env.do(http.MethodGet, "/api/v1/projects/"+created.ProjectID, operator, nil, "")
+	if gw.Code != http.StatusOK {
+		t.Fatalf("creator get own project want 200, got %d (%s)", gw.Code, gw.Body.String())
+	}
+	var got ProjectResponse
+	env.decode(gw, &got)
+	if got.ProjectID != created.ProjectID {
+		t.Fatalf("get returned wrong project: %+v", got)
+	}
+
+	// The project MUST appear in the creator's own project list.
+	lw := env.do(http.MethodGet, "/api/v1/projects", operator, nil, "")
+	if lw.Code != http.StatusOK {
+		t.Fatalf("list want 200, got %d", lw.Code)
+	}
+	var body struct {
+		Items []ProjectResponse `json:"items"`
+	}
+	env.decode(lw, &body)
+	found := false
+	for _, item := range body.Items {
+		if item.ProjectID == created.ProjectID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("creator's own project list should contain %s, got %+v", created.ProjectID, body.Items)
+	}
+}
