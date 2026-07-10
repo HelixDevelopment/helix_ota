@@ -104,7 +104,7 @@ modules) and the dev/runtime infrastructure in `containers/`.
   `constitution/scripts/semgrep/*` (NEVER copied); MCP wired per §11.4.78
   step 3. Scope: `server/`, `submodules/`, `scripts/`.
 
-### Universal mandates propagation (§11.4.167–§11.4.186, §11.4.190 + §12.12)
+### Universal mandates propagation (§11.4.167–§11.4.190 + §12.12)
 
 - §11.4.167 — every BIG feature/large fix MUST develop as its own isolated
   feature work-stream (CoW/reflink project copy, own `feature/<slug>` branch
@@ -207,6 +207,47 @@ modules) and the dev/runtime infrastructure in `containers/`.
   doc/DB sync verify, or doc-set commit — never an after-the-fact audit;
   five decidable check families + self-validated analyzer (composes
   §11.4.86/.93/.106/.107/.148). Gate `CM-COVENANT-114-186-PROPAGATION`.
+- §11.4.187 — every project MUST ship its multi-track parallel-development
+  orchestration as a universal, automatic, out-of-the-box, inherited
+  capability: one conductor session programmatically spawns/drives/resumes/
+  monitors per-track headless workers (`claude -p --output-format
+  stream-json`; session_id from the first `init` event; success read from
+  `result.is_error` NOT the process exit code; `--resume` from the same
+  cwd+env); per-subscription auth (unset `ANTHROPIC_API_KEY` + per-alias
+  OAuth token/config-dir) with rate-limit→rebind→fallback→bounded-park;
+  crash-resilient ruler self-supervisor (durable state + watchdog
+  rehydrate); idempotent bootstrap auto-installed via the §11.4.164
+  post-update hook; conductor stays home; the engine lives at
+  `constitution/scripts/multitrack/` inherited by reference, the consumer
+  supplying `config/multitrack/<hostname>.yaml` as data (composes
+  §11.4.20/.28/.58/.70/.101/.103/.116/.126/.147/.164/.167/.176/§12.6/§12.8).
+  Gate `CM-COVENANT-114-187-PROPAGATION`.
+- §11.4.188 — every long-lived feature branch AND every parallel-dev track
+  MUST regularly `git merge origin/main` INTO its own branch THROUGHOUT the
+  work — never only at the end — so no branch drifts far from trunk and the
+  back-merge stays small/low-conflict; generalises §11.4.167(D) to every
+  feature branch on every track; cadence = after every trunk tag / ≥ daily /
+  before any significant new chunk (many small merges); MERGE never rebase a
+  shared/tagged branch, fetch-first, §9.2 pre-op backup before large/risky
+  merges, resolve conflicts with ZERO markers + ZERO dropped files + union
+  preserved, quiescent-only, background merge+verify, NEVER force-push;
+  anti-bluff = post-merge smoke GREEN + empty conflict-marker scan +
+  no-lost-commit, captured evidence; honest boundary — keeps the branch
+  mergeable, does NOT prove its own work correct nor replace the
+  approval-gated back-merge (composes §9/§9.2/§11.4.6/.37/.41/.42/.71/.84/
+  .88/.103/.113/.167/.176/.178/.179/.181). Gate
+  `CM-COVENANT-114-188-PROPAGATION`.
+- §11.4.189 — all LIVE TESTING MUST give EXTRA-DEPTH retest + in-depth
+  investigation + full validation/verification with real physical captured
+  evidence and NO bluff to the cases REOPENED THE MOST TIMES (highest
+  §11.4.55 reopens-count) — the empirically-most-fragile set gets the
+  deepest live scrutiny FIRST, ahead of the rest of the suite; keyed off the
+  §11.4.55 reopens-count; each most-reopened case's live PASS cites
+  captured-evidence on a CLEAN deployment (§11.4.108 runtime-signature) with
+  the §11.4.115 RED→GREEN flip where a §11.4.135 guard exists; strengthens/
+  refines §11.4.132(d) + §11.4.55 + §11.4.129/.130 (composes §11.4.5/.6/.55/
+  .69/.107/.108/.115/.129/.130/.132/.135/.146). Gate
+  `CM-COVENANT-114-189-PROPAGATION`.
 - §11.4.190 — every project website / web-UI surface (INCLUDING this project's
   own) MUST be fully responsive (all browser engines / OSes / device classes /
   screen sizes) + completely SEO-optimized (semantic HTML, per-page title +
