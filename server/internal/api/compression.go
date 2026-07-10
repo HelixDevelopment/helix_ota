@@ -40,8 +40,23 @@ func compressionMiddleware() gin.HandlerFunc {
 
 		cw := &compressWriter{ResponseWriter: c.Writer, enc: enc, newW: newW}
 		c.Writer = cw
+		// Close via defer so the compressor is flushed + closed on EVERY exit
+		// path — including a panic unwind. A plain post-c.Next() Close is jumped
+		// over by a handler panic, leaving the compressor half-open: the outer
+		// recoveryMiddleware then writes the 500 envelope through a stream that is
+		// never finalised, so a gzip/br client receives a truncated, undecodable
+		// body. If the compressor never engaged (no body written — e.g. the
+		// handler panicked before its first Write), restore the plain writer so
+		// that recovery-written error is emitted intact rather than into a stale
+		// stream. On a normal, fully-written response cw.cw is non-nil, so the
+		// writer is left in place and the emitted bytes are byte-for-byte unchanged.
+		defer func() {
+			_ = cw.Close()
+			if cw.cw == nil {
+				c.Writer = cw.ResponseWriter
+			}
+		}()
 		c.Next()
-		_ = cw.Close()
 	}
 }
 
