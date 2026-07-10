@@ -1,0 +1,137 @@
+# Per-host multi-track drive <-> track mapping — HELIX_OTA consumer config
+# (§11.4.167 / §11.4.178 / §11.4.187 multi-track). ONE file per host; committed
+# to git. Filename = <hostname>.yaml. Drives resolved by STABLE SERIAL
+# (§11.4.111 — /dev/nvmeXn1 enumeration order is NOT stable across boots).
+#
+# §11.4.178 MULTI-PROJECT-PER-TRACK: /mnt/track<N> is NOT single-project. This
+# host also carries the `atmosphere` project on the SAME track parents. The
+# helix_ota per-track working copy is ALWAYS /mnt/track<N>/helix_ota (canonical
+# lowercase snake_case §11.4.29), NEVER the bare track root. `worktree_subdir`
+# below pins it. helix_ota never owns a track root and never assumes a track
+# hosts only one project.
+#
+# §11.4.186 ANTI-DIVERGENCE: the HOST-level facts here (host.machine_id,
+# protected_drives, tracks[].drive_serial, tracks[].mount, device_pool[].
+# adb_serial, aliases, fallback.signatures) describe ONE physical host and MUST
+# be byte-identical to every other consumer's the-factory.yaml on this host
+# (the atmosphere consumer's config/multitrack/the-factory.yaml is the peer).
+# Divergence in a host fact is a bug. ONLY worktree_subdir + per-track focus +
+# lease_policy focus are project-specific.
+#
+# FULLY DYNAMIC contract (the automation MUST honor):
+#   - 1 drive  -> system only; single-track (main develops in-place).
+#   - 2 drives -> system + 1 track drive (main track).
+#   - N drives -> system + (N-1) track drives, assigned in `tracks` order.
+#   The prep automation detects live drives at runtime, matches by serial, and
+#   NEVER touches any serial listed in `protected_drives`.
+
+schema_version: 1
+
+host:
+  hostname: the-factory
+  machine_id: "199b17d394dc3ebb"   # first 16 chars of /etc/machine-id (host fact — see §11.4.186 note)
+
+# NEVER format / partition / encrypt these — hard protect-guard keys on serial.
+protected_drives:
+  - serial: "S7HDNJ0Y900101Y"      # nvme0n1: /boot/efi + swap + / + /home (+ encrypted Factory)
+    reason: "system + home + encrypted Factory"
+
+# Track drives. Assigned in listed order to available serials. fs=btrfs,
+# LUKS2-encrypted, auto-unlocked at milos login (one passphrase; never git'd).
+# `focus` is a documentation label — the loader ignores it (§11.4.91 clarity).
+tracks:
+  - id: track-1
+    role: main
+    branch: main
+    drive_serial: "S7HDNJ0Y900098B"   # nvme1n1
+    mount: /mnt/track1
+    fs: btrfs
+    encrypted: true
+    focus: "helix_ota production main — multi-tenant accounts implementation (docs/research/accounts) + OTA control-plane production readiness"
+  - id: track-2
+    role: feature
+    branch_pattern: "feature/*"
+    drive_serial: "S7HDNJ0Y900121H"   # nvme2n1
+    mount: /mnt/track2
+    fs: btrfs
+    encrypted: true
+    focus: "helix_ota web dashboard + website — multi-tenant super-admin/user sign-in + account-selection UI surfaces (feature/accounts-web)"
+  - id: track-3
+    role: feature
+    branch_pattern: "feature/*"
+    drive_serial: "S7HDNJ0Y900124L"   # nvme3n1
+    mount: /mnt/track3
+    fs: btrfs
+    encrypted: true
+    focus: "containers-submodule discovery-fix backlog — the ~55 confirmed Wave-18b findings prioritized into 7 package streams (feature/containers-hardening)"
+  - id: track-4
+    role: feature
+    branch_pattern: "feature/*"
+    drive_serial: "S7HDNJ0Y900107J"   # nvme4n1
+    mount: /mnt/track4
+    fs: btrfs
+    encrypted: true
+    focus: "Wave-16/17/18 fix backlog — process-kill cluster (§11.4.174), fixture-bluff/wrong-endpoint cluster, network reaper + lifecycle deferred (feature/vm-emu-hardening)"
+
+# Test-device pool (capability-aware leasing). Capabilities are HOST facts probed
+# read-only by the atmosphere consumer 2026-07-05 (§11.4.6 not guessed, §11.4.133
+# no writes); reused verbatim here per §11.4.186 anti-divergence + §11.4.111
+# resolve-by-stable-name. helix_ota leases these RK3588 targets for OTA
+# integration / android-agent flashing validation.
+device_pool:
+  - id: D1
+    adb_serial: "998fd36615e99484"
+    model: "Orange Pi 5 Max (RK3588)"
+    capabilities: ["hdmi_in", "audio_es8388", "usb_audio", "bt_a2dp"]
+  - id: D2
+    adb_serial: "66ff9c4f51f00ee7"
+    model: "Orange Pi 5 Max (RK3588)"
+    capabilities: ["hdmi_in", "audio_es8388", "bt_a2dp"]
+
+# Track<->device lease policy: main track leases BOTH RK3588 targets for maximal
+# OTA A/B-update coverage; feature tracks lease on demand by required capability.
+lease_policy:
+  main_track_devices: ["D1", "D2"]
+
+# Claude Toolkit alias roster. NAMES ONLY — never keys/tokens (§11.4.10; keys
+# live in host ~/api_keys.sh outside the repo). Natives FIRST (claude1..claude4),
+# then providers in the operator-mandated priority (deepseek -> xiaomi ->
+# opencode -> kimi-for-coding). Host fact — peer to the atmosphere consumer's
+# roster (§11.4.186).
+aliases:
+  - name: claude1
+    kind: native
+  - name: claude2
+    kind: native
+  - name: claude3
+    kind: native
+  - name: claude4
+    kind: native
+  - name: deepseek
+    kind: provider
+  - name: xiaomi
+    kind: provider
+  - name: opencode
+    kind: provider
+  - name: kimi-for-coding
+    kind: provider
+
+# §11.4.187 auto-conductor — which alias is the conductor. The conductor alias is
+# NEVER worktree-bound: its session stays on the shared /home checkout. Empty
+# (default) => no alias special-cased; the /home session is whichever session is
+# not bound to a track.
+conductor: ""
+
+# §11.4.178 / §11.4.111 stable-name resolution: pin the per-track working copy to
+# the stable `helix_ota` subdir (canonical §11.4.29 name), so claude1/2/3/4
+# resolve to /mnt/track{1,2,3,4}/helix_ota — never the track root, never a
+# track-qualified basename.
+worktree_subdir: helix_ota
+
+# §11.4.187 auto-fallback — the rate-limit transcript signatures the per-alias
+# monitor matches to detect a usage/quota limit and trigger `orchestrator
+# fallback`. Host fact (§11.4.186) — peer to the atmosphere consumer's block.
+fallback:
+  signatures:
+    - '"apiErrorStatus":429'
+    - '"isApiErrorMessage":true'
