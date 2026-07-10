@@ -245,8 +245,8 @@
 <h1 class="title">CONTINUATION</h1>
 </header>
 <h1 id="helix-ota-continuation">Helix OTA — Continuation</h1>
-<p><strong>Revision:</strong> 28 <strong>Last modified:</strong>
-2026-07-10T09:52:00Z</p>
+<p><strong>Revision:</strong> 29 <strong>Last modified:</strong>
+2026-07-10T10:25:00Z</p>
 <hr />
 <h2 id="current-state">1. Current state</h2>
 <table>
@@ -263,8 +263,25 @@
 <tbody>
 <tr>
 <td><strong>HEAD</strong></td>
-<td><strong>Wave-13 consolidation (cont-8, 2026-07-10)</strong> — this
-commit lands the multipart spill temp-file-leak fix
+<td><strong>Wave-14 consolidation (cont-9, 2026-07-10)</strong> — bumps
+parent gitlinks containers <code>f25228f→9548c36</code> (pkg/lazyservice
+StopService now resets the one-shot LazyBooter so a Start→Stop→Start
+genuinely re-boots instead of a cached-success no-op — §11.4
+fabricated-success PASS-bluff) + docs_chain <code>394270e→9510e01</code>
+(hash.FingerprintMembers used a non-injective <code>"\n"</code>-join →
+distinct member SETS collide since newline is a legal path byte → a
+§11.4.86 roster/corpus change is MISSED → stale export ships past the
+drift gate; now injective 8-byte length-prefix framing) +
+<code>docs/qa/wave14-20260710/EVIDENCE.{md,html,pdf}</code>. Both fixes
+RED→GREEN + conductor polarity §11.4.115 + independent review §11.4.142,
+FF github+gitlab (no force §11.4.113). Wave-14 also cleared 6 NO-DEFECT
+passes (deviceemu 97.7% cov, containers pkg/cache+pkg/lifecycle,
+docs_chain internal/graph+orchestrator+runner). Loop NOT yet dry —
+<code>containers</code> (~30 pkgs:
+remote/distribution/orchestrator/monitor/health/runtime/vm…) is the
+largest remaining un-deep-audited surface. <strong>Prior — Wave-13
+consolidation (cont-8, 2026-07-10)</strong> — <code>cfdbd99a</code>
+landed the multipart spill temp-file-leak fix
 (<code>server/internal/api/handlers_artifact.go</code>
 <code>RemoveAll</code> defer) + 3 owned-submodule gitlink bumps
 (docs_chain <code>9a5bd32→394270e</code>, ota-android-agent
@@ -513,6 +530,59 @@ by operator decision (§11.4.133)</strong></td>
 </tr>
 </tbody>
 </table>
+<h3
+id="latest-session-2026-07-10-cont-9-wave-14-2-fresh-coverage-fixes-6-clean-loop-still-yielding">Latest
+session (2026-07-10, cont-9) — Wave-14: 2 fresh-coverage fixes + 6
+clean; loop still yielding</h3>
+<p>Standing directive (§11.4.126): endless autonomous loop, 3-4 parallel
+subagents, rock-solid physical evidence, no bluff. Wave-14 targeted the
+largest un-deep-audited surfaces (deviceemu, the docs_chain
+propagation-engine core, containers concurrency packages). Each closure
+conductor-independently re-verified (§11.4.142 + §11.4.115 polarity:
+compile-safe mutation → guard FAILs → sha256 byte-identical restore →
+GREEN). Both fixes came from GENUINELY-FRESH coverage (never previously
+audited) — evidence the loop is not yet dry.</p>
+<ul>
+<li><strong>containers pkg/lazyservice <code>9548c36</code> (FF
+github+gitlab):</strong> <code>StopService</code> cleared
+<code>lo.started[name]</code> but never reset the ONE-SHOT
+<code>lifecycle.LazyBooter</code>, so an in-contract
+<code>Start→Stop→Start</code> hit the booter’s cached-success fast path
+on the 2nd Start — compose <code>Up</code> never re-issued, service
+stays DOWN, yet <code>StartService</code> returns nil (fabricated
+success). Fix recreates the booter under the held <code>lo.mu</code>.
+Guard
+<code>TestLazyOrchestrator_StartService_AfterStop_ActuallyRestarts</code>
+(Up count 1→2). Polarity: delete the reset → “Up calls = 1, want
+2”.</li>
+<li><strong>docs_chain internal/hash <code>9510e01</code> (FF
+github+gitlab):</strong> <code>FingerprintMembers</code> (the §11.4.86
+drift-proof fingerprint) used
+<code>sha256(strings.Join(members,"\n"))</code> — non-injective:
+<code>{"a","b\nc"}</code> and <code>{"a\nb","c"}</code> collide (newline
+is a legal path byte) → a roster/corpus change is MISSED → stale export
+ships past the drift gate. Fix: injective 8-byte length-prefix framing.
+Guard <code>TestFingerprintMembers_SeparatorInjection</code>. Blast
+radius: fingerprint VALUE changes → gitignored state.json sidecars show
+one-time drift + resync (correct); <code>go test -race ./...</code>
+green all 8 pkgs.</li>
+<li><strong>6 NO-DEFECT passes (§11.4.118, enumerated coverage, no
+fabrication §11.4.6):</strong> server/internal/deviceemu (614 LOC prod,
+97.7% cov, every http body-close verified, <code>-race -count=2</code>),
+containers pkg/cache (flock+per-id mutex+atomic-rename), containers
+pkg/lifecycle (atomic booter, idle-race already fixed 1a526ab),
+docs_chain internal/graph (Kahn deterministic + cycle detection),
+internal/orchestrator (stage-then-atomic-commit rollback),
+internal/runner (transform error propagation, Verify temp-rebind).</li>
+<li><strong>Convergence:</strong> Wave-14 = 2 fixes + 6 clean, both
+fixes §11.4-class from fresh coverage. Loop NOT dry.
+<code>containers</code> (~30 pkgs) is the largest remaining surface;
+Wave-15 targets its highest-risk concurrency/state-heavy packages
+(remote/distribution/orchestrator/monitor). Evidence:
+<code>docs/qa/wave14-20260710/EVIDENCE.{md,html,pdf}</code>. Release tag
+still gated on §11.4.185 QA-team manual confirmation + the 3
+operator-blocked mirror-fork publishes.</li>
+</ul>
 <h3
 id="latest-session-2026-07-10-cont-8-wave-12-wave-13-landed-11.4.118-loop-measurably-drying-5-fixes-5-clean">Latest
 session (2026-07-10, cont-8) — Wave-12 + Wave-13 landed; §11.4.118 loop
