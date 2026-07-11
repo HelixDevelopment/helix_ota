@@ -46,13 +46,14 @@ func NewPostgresRepositoryFromPool(pool *pgxpool.Pool) *PostgresRepository {
 	return &PostgresRepository{pool: pool}
 }
 
-// Migrate applies the store schema DDL (idempotent). It is the on-demand
-// bring-up step for the integration test and for first-run provisioning.
+// Migrate brings the store schema up to date via the versioned migration
+// framework (schema_migrations ledger + ordered, idempotent ApplyMigrations,
+// SRV-NEW-1). Retained as the on-demand bring-up entry point for existing
+// callers (main.go first-run provisioning + the integration tests); it now
+// delegates to ApplyMigrations instead of blindly re-exec'ing the whole schema
+// blob on every boot.
 func (r *PostgresRepository) Migrate(ctx context.Context) error {
-	if _, err := r.pool.Exec(ctx, postgresSchema); err != nil {
-		return fmt.Errorf("store: apply schema: %w", err)
-	}
-	return nil
+	return r.ApplyMigrations(ctx)
 }
 
 // Close releases the pool.
@@ -179,7 +180,11 @@ func (r *PostgresRepository) ListDevices(ctx context.Context, f DeviceFilter) ([
 	}
 	start := decodeCursor(f.Cursor)
 
-	q := deviceSelect + ` WHERE ($1='' OR os_type=$1) AND ($2='' OR model=$2) AND ($3='' OR update_state=$3) ORDER BY device_id OFFSET $4 LIMIT $5`
+	// STORE-1: ORDER BY seq (the BIGSERIAL insertion counter), NOT device_id, so
+	// the pgx listing reproduces MemoryRepository's insertion order (devOrder) —
+	// releases/deployments already order by their own seq for the same
+	// memory-vs-pgx parity reason (see ListReleases/ListActiveDeployments).
+	q := deviceSelect + ` WHERE ($1='' OR os_type=$1) AND ($2='' OR model=$2) AND ($3='' OR update_state=$3) ORDER BY seq OFFSET $4 LIMIT $5`
 	rows, err := r.pool.Query(ctx, q, string(f.OSType), f.TargetModel, f.Status, start, limit+1)
 	if err != nil {
 		return nil, "", err
