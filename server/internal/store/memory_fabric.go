@@ -87,11 +87,14 @@ func (m *MemoryRepository) AcquireFabricLease(_ context.Context, l FabricLease) 
 	if !ok {
 		return ErrNotFound
 	}
-	if tgt.Exclusive {
-		for _, existing := range m.fabLeases {
-			if existing.TargetID == l.TargetID && existing.ReleaseAt == nil {
-				return ErrConflict
-			}
+	// HB-2 uniform one-lease-per-target (operator decision 2026-07-11): reject a
+	// 2nd active lease on ANY target, matching the production PostgresRepository
+	// whose partial unique index rejects it uniformly ("the stricter, safe
+	// choice"). Was gated on tgt.Exclusive, so a non-exclusive target allowed
+	// concurrent leases in dev while prod rejected them (dev/prod divergence).
+	for _, existing := range m.fabLeases {
+		if existing.TargetID == l.TargetID && existing.ReleaseAt == nil {
+			return ErrConflict
 		}
 	}
 	l.ReleaseAt = nil

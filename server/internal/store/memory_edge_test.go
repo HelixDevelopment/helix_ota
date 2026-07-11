@@ -112,8 +112,18 @@ func TestReleaseFabricLeaseWithOtherActiveLease(t *testing.T) {
 		Exclusive: false, Status: "idle", CreatedAt: ts,
 	})
 
-	_ = r.AcquireFabricLease(ctx, FabricLease{LeaseID: "l1", TargetID: "tgt-non-excl", Owner: "A", AcquiredAt: ts})
-	_ = r.AcquireFabricLease(ctx, FabricLease{LeaseID: "l2", TargetID: "tgt-non-excl", Owner: "B", AcquiredAt: ts})
+	if err := r.AcquireFabricLease(ctx, FabricLease{LeaseID: "l1", TargetID: "tgt-non-excl", Owner: "A", AcquiredAt: ts}); err != nil {
+		t.Fatalf("first lease: %v", err)
+	}
+	// HB-2 reconcile (operator decision 2026-07-11): AcquireFabricLease now
+	// enforces one active lease per target UNIFORMLY, so it no longer permits a
+	// 2nd concurrent lease even on a non-exclusive target. Inject the 2nd active
+	// lease DIRECTLY into the backing map (same pattern as
+	// TestFabricLeaseExclusivityGuard's mutation half) to set up the "two active
+	// leases" state whose stillHeld=true release branch this test exercises.
+	r.mu.Lock()
+	r.fabLeases["l2"] = FabricLease{LeaseID: "l2", TargetID: "tgt-non-excl", Owner: "B", AcquiredAt: ts}
+	r.mu.Unlock()
 
 	// Release l1 — l2 is still active, so the target stays "leased".
 	_ = r.ReleaseFabricLease(ctx, "l1", ts.Add(5*time.Minute))
