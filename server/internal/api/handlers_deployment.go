@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -83,7 +84,11 @@ func (s *Server) handleCreateDeployment(c *gin.Context) {
 	}
 
 	deploymentID := s.newID()
-	targetCount := s.countTargets(ctx, deploymentID, rel, req.Group)
+	targetCount, err := s.countTargets(ctx, deploymentID, rel, req.Group)
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, CodeInternal, "could not enumerate target devices")
+		return
+	}
 
 	dep := store.Deployment{
 		DeploymentID: deploymentID,
@@ -146,21 +151,29 @@ func (s *Server) handleGetDeployment(c *gin.Context) {
 // countTargets counts devices matching the release os+target_model (optionally
 // narrowed by group) that fall in the all-targets cohort. The cohort membership
 // goes through the rollout-engine seam so the staged engine reuses it in 1.0.1.
-func (s *Server) countTargets(ctx context.Context, deploymentID string, rel store.Release, group string) int {
-	devices := s.matchingDevices(ctx, rel, group)
+func (s *Server) countTargets(ctx context.Context, deploymentID string, rel store.Release, group string) (int, error) {
+	devices, err := s.matchingDevices(ctx, rel, group)
+	if err != nil {
+		return 0, err
+	}
 	count := 0
 	for _, d := range devices {
 		if rollout.InCohort(d.DeviceID, deploymentID, allTargetsCohortPercent) {
 			count++
 		}
 	}
-	return count
+	return count, nil
 }
 
 // assignTargetVersion stamps the release version as the target on each matching
 // device.
 func (s *Server) assignTargetVersion(ctx context.Context, rel store.Release, group string) {
-	for _, d := range s.matchingDevices(ctx, rel, group) {
+	devices, err := s.matchingDevices(ctx, rel, group)
+	if err != nil {
+		log.Printf("assignTargetVersion: could not enumerate devices for release %s: %v", rel.Version, err)
+		return
+	}
+	for _, d := range devices {
 		d.TargetVersion = rel.Version
 		if err := s.repo.UpdateDevice(ctx, d); err != nil {
 			log.Printf("failed to set target version on device %s: %v", d.DeviceID, err)
@@ -168,26 +181,50 @@ func (s *Server) assignTargetVersion(ctx context.Context, rel store.Release, gro
 	}
 }
 
+// matchingDevicesPageSize bounds each ListDevices page while matchingDevices
+// cursors through the full matching set (HA-1).
+const matchingDevicesPageSize = 500
+
 // matchingDevices returns devices whose os+model match the release (and group,
-// when set). The MemoryRepository has no device list method in the interface;
-// matching is done via a best-effort scan helper exposed for this purpose.
-func (s *Server) matchingDevices(ctx context.Context, rel store.Release, group string) []store.Device {
-	lister, ok := s.repo.(deviceLister)
-	if !ok {
-		log.Printf("matchingDevices: repo does not implement deviceLister — returning empty set")
-		return nil
-	}
+// when set). It enumerates via the REQUIRED store.Repository.ListDevices seam —
+// which BOTH the in-memory and the production pgx backends implement — NOT the
+// OPTIONAL deviceLister/AllDevices capability that the pgx backend does not
+// provide. The prior AllDevices type-assertion silently returned an EMPTY set
+// on any backend lacking that capability (i.e. production Postgres), so a
+// deployment targeted ZERO devices while handleCreateDeployment still reported
+// 201 Created with TargetCount 0 (HA-1, §11.4.108). A ListDevices error is now
+// propagated so callers fail loudly (500) rather than silently under-deploying.
+// Group is filtered client-side because store.DeviceFilter carries no group
+// field; os/model are re-checked client-side too so the result is identical
+// regardless of a backend's server-side filter fidelity.
+func (s *Server) matchingDevices(ctx context.Context, rel store.Release, group string) ([]store.Device, error) {
 	var out []store.Device
-	for _, d := range lister.AllDevices(ctx) {
-		if d.OSType != rel.OSType || d.Model != rel.TargetModel {
-			continue
+	cursor := ""
+	for {
+		page, next, err := s.repo.ListDevices(ctx, store.DeviceFilter{
+			OSType:      rel.OSType,
+			TargetModel: rel.TargetModel,
+			Limit:       matchingDevicesPageSize,
+			Cursor:      cursor,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("matchingDevices: ListDevices: %w", err)
 		}
-		if group != "" && d.Group != group {
-			continue
+		for _, d := range page {
+			if d.OSType != rel.OSType || d.Model != rel.TargetModel {
+				continue
+			}
+			if group != "" && d.Group != group {
+				continue
+			}
+			out = append(out, d)
 		}
-		out = append(out, d)
+		if next == "" {
+			break
+		}
+		cursor = next
 	}
-	return out
+	return out, nil
 }
 
 // deviceLister is an optional capability a Repository may expose to enumerate
