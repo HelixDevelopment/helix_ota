@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -97,15 +98,18 @@ func TestShutdownBeforeStart(t *testing.T) {
 	}
 }
 
-// TestAltSvcHandlerSetsHeader directly exercises altSvcHandler: it must set an
-// Alt-Svc header advertising HTTP/3 on the configured port and still delegate to
-// the wrapped handler. A regression dropping the header or the delegation fails.
+// TestAltSvcHandlerSetsHeader directly exercises altSvcHandler: when h3Ready
+// reports the HTTP/3 (QUIC/UDP) listener as up, it must set an Alt-Svc header
+// advertising HTTP/3 on the configured port and still delegate to the wrapped
+// handler. A regression dropping the header or the delegation fails.
 func TestAltSvcHandlerSetsHeader(t *testing.T) {
 	var inner bool
+	ready := &atomic.Bool{}
+	ready.Store(true)
 	wrapped := altSvcHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		inner = true
 		w.WriteHeader(http.StatusTeapot)
-	}), "9443")
+	}), "9443", ready)
 	rec := newRecorder()
 	wrapped.ServeHTTP(rec, &http.Request{})
 	if !inner {
@@ -116,6 +120,27 @@ func TestAltSvcHandlerSetsHeader(t *testing.T) {
 	}
 	if rec.code != http.StatusTeapot {
 		t.Fatalf("wrapped status not propagated: %d", rec.code)
+	}
+}
+
+// TestAltSvcHandlerOmitsHeaderWhenH3NotReady is the unit-level proof of the
+// HA-2 gate: while h3Ready is false (HTTP/3 listener not confirmed bound,
+// e.g. it failed or hasn't come up yet), altSvcHandler MUST NOT advertise
+// Alt-Svc, even though it still delegates to the wrapped handler.
+func TestAltSvcHandlerOmitsHeaderWhenH3NotReady(t *testing.T) {
+	var inner bool
+	ready := &atomic.Bool{} // zero value: false
+	wrapped := altSvcHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		inner = true
+		w.WriteHeader(http.StatusOK)
+	}), "9443", ready)
+	rec := newRecorder()
+	wrapped.ServeHTTP(rec, &http.Request{})
+	if !inner {
+		t.Fatalf("altSvcHandler did not call the wrapped handler")
+	}
+	if got := rec.Header().Get("Alt-Svc"); got != "" {
+		t.Fatalf("Alt-Svc = %q, want empty while h3Ready is false", got)
 	}
 }
 

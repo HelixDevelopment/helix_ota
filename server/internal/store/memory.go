@@ -23,6 +23,7 @@ type MemoryRepository struct {
 	releases    map[string]Release       // by releaseID
 	relOrder    []string                 // insertion order for stable listing
 	deployments map[string]Deployment    // by deploymentID
+	depOrder    []string                 // insertion order for stable matching (ActiveDeploymentForTarget/ListActiveDeployments)
 	telemetry   []TelemetryRecord        // append-only event log
 	audit       []AuditEntry             // append-only admin/operator action log
 	rollbacks   []RollbackRecord         // append-only rollback/abort log
@@ -317,10 +318,17 @@ func (m *MemoryRepository) ListReleases(_ context.Context, f ReleaseFilter) ([]R
 	return matched[start:end], next, nil
 }
 
-// CreateDeployment stores a deployment.
+// CreateDeployment stores a deployment in insertion order. depOrder is
+// appended only for a genuinely new id (mirroring devOrder/relOrder in
+// CreateDevice/CreateRelease) so ActiveDeploymentForTarget/
+// ListActiveDeployments can iterate deterministically instead of ranging the
+// raw map (whose iteration order Go randomizes per range).
 func (m *MemoryRepository) CreateDeployment(_ context.Context, d Deployment) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if _, exists := m.deployments[d.DeploymentID]; !exists {
+		m.depOrder = append(m.depOrder, d.DeploymentID)
+	}
 	m.deployments[d.DeploymentID] = d
 	return nil
 }
@@ -350,10 +358,21 @@ func (m *MemoryRepository) GetDeployment(_ context.Context, deploymentID string)
 
 // ActiveDeploymentForTarget returns an active deployment whose release targets
 // the given os+target_model (optionally narrowed to a group), or ErrNotFound.
+// Iterates depOrder (not the deployments map directly) so that when two
+// active deployments match the same target, the result is deterministic
+// (the earliest-created match) across repeated calls — ranging m.deployments
+// directly here made the returned deployment depend on Go's per-range
+// randomized map iteration order (see the comment citing
+// memory_devices_order_test.go on ListDevices, and
+// memory_deployments_order_test.go for this method).
 func (m *MemoryRepository) ActiveDeploymentForTarget(ctx context.Context, os otaprotocol.OSType, targetModel, group string) (Deployment, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	for _, dep := range m.deployments {
+	for _, id := range m.depOrder {
+		dep, ok := m.deployments[id]
+		if !ok {
+			continue
+		}
 		if dep.Status != string(otaprotocol.DeploymentActive) {
 			continue
 		}
@@ -372,12 +391,18 @@ func (m *MemoryRepository) ActiveDeploymentForTarget(ctx context.Context, os ota
 	return Deployment{}, ErrNotFound
 }
 
-// ListActiveDeployments returns all active deployments.
+// ListActiveDeployments returns all active deployments in stable (insertion)
+// order, iterating depOrder for the same determinism reason as
+// ActiveDeploymentForTarget.
 func (m *MemoryRepository) ListActiveDeployments(_ context.Context) ([]Deployment, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	var out []Deployment
-	for _, dep := range m.deployments {
+	for _, id := range m.depOrder {
+		dep, ok := m.deployments[id]
+		if !ok {
+			continue
+		}
 		if dep.Status == string(otaprotocol.DeploymentActive) {
 			out = append(out, dep)
 		}

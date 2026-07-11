@@ -112,7 +112,22 @@ func TestDualTransportServesH3AndH2(t *testing.T) {
 		Timeout: 5 * time.Second,
 	}
 	defer h2cli.CloseIdleConnections()
-	h2resp, body2 := getOK(t, h2cli, url, "h2")
+	// The fallback response only advertises HTTP/3 once Start's h3Ready grace
+	// window (transport.go) has elapsed and confirmed the QUIC listener
+	// bound — which, on a fast/otherwise-idle machine, can be AFTER the H3
+	// round-trip above already completed (a real QUIC connection can
+	// complete before the bounded grace window fires). Poll briefly rather
+	// than assume Alt-Svc is already present on the very first H2 request.
+	var h2resp *http.Response
+	var body2 string
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		h2resp, body2 = getOK(t, h2cli, url, "h2")
+		if h2resp.Header.Get("Alt-Svc") != "" || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	if h2resp.ProtoMajor != 2 {
 		t.Fatalf("h2 fallback used proto %d (want 2)", h2resp.ProtoMajor)
 	}

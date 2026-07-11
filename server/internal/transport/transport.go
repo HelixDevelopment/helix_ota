@@ -4,7 +4,10 @@
 // use QUIC/UDP. Both listeners share the same net/http.Handler and the same
 // TLS 1.3 material; HTTP/3 is delivered via the reusable `digital.vasic.http3`
 // submodule (a drop-in net/http.Handler server). Responses advertise
-// `Alt-Svc: h3` so HTTP/2 clients can discover and upgrade to HTTP/3.
+// `Alt-Svc: h3` so HTTP/2 clients can discover and upgrade to HTTP/3 — but
+// ONLY once the HTTP/3 (QUIC/UDP) listener is actually confirmed bound; see
+// h3Ready below. A client is never pointed at a QUIC endpoint that failed to
+// come up (HA-2).
 package transport
 
 import (
@@ -14,9 +17,29 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
+	"time"
 
 	h3server "digital.vasic.http3/pkg/server"
 )
+
+// h3ReadyGrace bounds how long Start waits, after launching the HTTP/3
+// (QUIC/UDP) listener, before treating it as successfully bound.
+//
+// Honest §11.4.3/§11.4.6 boundary: the vendored h3server.Server exposes no
+// positive "listener bound" signal separate from Start() returning — Start()
+// blocks for the server's ENTIRE lifetime and only returns when the server
+// stops (cleanly or with an error), so we cannot simply await "success" on
+// that call. What IS true of the underlying quic-go http3.Server.ListenAndServe
+// (which h3server.Server.Start calls into) is that a UDP-bind or TLS-config
+// failure is returned SYNCHRONOUSLY — before the blocking serve loop is ever
+// entered (see quic-go/http3.Server.setupListenerForConn: it calls
+// quic.ListenAddrEarly and returns its error immediately, with no I/O wait).
+// So any error surfacing within this short grace window is a genuine
+// bind-time failure, not a later runtime one. This is therefore a BOUNDED
+// HEURISTIC, not a positive confirmation from the vendored API — the best
+// available signal given that API's shape, not a claim of certainty.
+const h3ReadyGrace = 50 * time.Millisecond
 
 // Config configures the dual-stack transport.
 type Config struct {
@@ -34,6 +57,13 @@ type Server struct {
 	addr string
 	h2   *http.Server
 	h3   *h3server.Server
+
+	// h3Ready is set true once Start confirms (within h3ReadyGrace) that the
+	// HTTP/3 (QUIC/UDP) listener bound successfully, and cleared back to
+	// false the moment h3 stops (cleanly or with an error). altSvcHandler
+	// consults it on every request and only advertises Alt-Svc while true —
+	// never unconditionally.
+	h3Ready *atomic.Bool
 }
 
 // New builds the dual transport. The HTTP/2 server and the HTTP/3 server each
@@ -54,7 +84,8 @@ func New(cfg Config) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("transport: bad Addr %q: %w", cfg.Addr, err)
 	}
-	handler := altSvcHandler(cfg.Handler, port)
+	h3Ready := new(atomic.Bool)
+	handler := altSvcHandler(cfg.Handler, port, h3Ready)
 
 	// HTTP/3 (UDP): the submodule clones + enforces TLS 1.3; we set the h3 ALPN.
 	h3TLS := cfg.TLSConf.Clone()
@@ -72,15 +103,39 @@ func New(cfg Config) (*Server, error) {
 	h2TLS.NextProtos = nil
 	h2 := &http.Server{Addr: cfg.Addr, Handler: handler, TLSConfig: h2TLS}
 
-	return &Server{addr: cfg.Addr, h2: h2, h3: h3}, nil
+	return &Server{addr: cfg.Addr, h2: h2, h3: h3, h3Ready: h3Ready}, nil
 }
 
 // Start runs both listeners concurrently and blocks until one returns. A clean
 // Shutdown of the HTTP/2 server returns http.ErrServerClosed, which Start maps
 // to nil so a graceful stop is not reported as a failure.
+//
+// The HTTP/3 (QUIC/UDP) bind happens in its own goroutine, racing the real
+// h3.Start() error against the bounded h3ReadyGrace window (see its doc
+// comment for why a race is the best available signal here): if h3.Start()
+// fails first, s.h3Ready is never set — Alt-Svc is simply never advertised
+// for a QUIC endpoint that never came up. If the grace window elapses first,
+// s.h3Ready flips true so HTTP/2 responses start advertising HTTP/3; it is
+// flipped back to false the moment h3 eventually stops, for any reason.
 func (s *Server) Start() error {
 	errCh := make(chan error, 2)
-	go func() { errCh <- s.h3.Start() }()
+
+	h3Done := make(chan error, 1)
+	go func() { h3Done <- s.h3.Start() }()
+	go func() {
+		select {
+		case err := <-h3Done:
+			// h3 failed before the grace window even elapsed — never ready.
+			errCh <- err
+			return
+		case <-time.After(h3ReadyGrace):
+			s.h3Ready.Store(true)
+		}
+		err := <-h3Done
+		s.h3Ready.Store(false)
+		errCh <- err
+	}()
+
 	go func() {
 		if err := s.h2.ListenAndServeTLS("", ""); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
@@ -102,11 +157,16 @@ func (s *Server) Shutdown(ctx context.Context) error {
 }
 
 // altSvcHandler advertises HTTP/3 availability so HTTP/2 / HTTP/1.1 clients can
-// discover the QUIC endpoint and upgrade on a subsequent request.
-func altSvcHandler(next http.Handler, port string) http.Handler {
+// discover the QUIC endpoint and upgrade on a subsequent request — but ONLY
+// while h3Ready reports the HTTP/3 (QUIC/UDP) listener as actually up (HA-2:
+// advertising a dead QUIC endpoint sends HTTP/3-capable clients into a
+// repeated-failed-upgrade loop).
+func altSvcHandler(next http.Handler, port string, h3Ready *atomic.Bool) http.Handler {
 	altSvc := fmt.Sprintf(`h3=":%s"; ma=86400`, port)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Alt-Svc", altSvc)
+		if h3Ready.Load() {
+			w.Header().Set("Alt-Svc", altSvc)
+		}
 		next.ServeHTTP(w, r)
 	})
 }
