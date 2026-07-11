@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DELTA_ANALYSIS_20260712</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DELTA_ANALYSIS_20260712</h1>
+</header>
+<h1 id="helix-ota-net-new-delta-analysis-server-submodulesota-">Helix
+OTA — NET-NEW Delta Analysis (server + submodules/ota-*)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-12T00:00:00Z <strong>Authority:</strong> §11.4.172 (living
+production-readiness planning) · §11.4.93 (workable-items DB load-list)
+· §11.4.6 (no-guessing — every claim cites a path; nothing
+runtime-reproduced this pass) · §11.4.165 (findings cross-checked by an
+independent verification pass) <strong>Scope:</strong> the Go control
+plane <code>server/</code> and the six <code>submodules/ota-*</code>
+bricks (ota-protocol, ota-telemetry-schema, ota-artifact-validator,
+ota-rollout-engine, ota-update-engine-bridge, ota-android-agent).
+<strong>Method:</strong> READ-ONLY static read of source + git history +
+<code>docs/workable_items.db</code>, de-duplicated against the 40
+tracked items OTA-022..061 in
+<code>docs/planning/PRODUCTION_READINESS_PLAN.md</code>. No builds/tests
+were run; no code was modified. Every item below is a genuine gap NOT
+already a tracked workable-item.</p>
+<hr />
+<h2 id="executive-delta-summary">1. Executive delta summary</h2>
+<p>This document records ONLY the DELTA on top of the already-tracked
+set (OTA-003..061). It adds <strong>7 proposed NET-NEW
+workable-items</strong> (SRV-NEW-1..4 server, SUB-NEW-1..2 submodules)
+and <strong>5 untracked known issues</strong> (KI-1..KI-5). The two most
+material findings: <strong>KI-1</strong> — OTA-033 (SEC-1 token-secret
+fail-fast) is already committed and clean in the tree, yet it is still
+tracked <code>Queued</code> and the plan’s Top-Risk #1 still reads as
+open; and <strong>SRV-NEW-1</strong> — the server has no versioned
+DB-migration framework, a silent prerequisite the Accounts M1 stream
+(OTA-046) assumes exists.</p>
+<p>Baseline facts that produced NO net-new item (recorded so the
+conductor does not re-chase them): every <code>server/</code> package
+directory has ≥1 <code>_test.go</code>; both store backends
+(<code>MemoryRepository</code>, <code>PostgresRepository</code>) satisfy
+the full <code>store.Repository</code> interface with method parity;
+every HTTP route is behind
+<code>authMiddleware</code>+<code>requireRole</code> (no unauthenticated
+mutating route); <code>transport.Server.Shutdown(ctx)</code> already
+exists (<code>server/internal/transport/transport.go:150</code>), so
+OTA-032’s residual work is only the SIGTERM signal-wiring in
+<code>main.go</code> for both the plain-HTTP and QUIC paths; and the
+<code>android/build/</code> trees in the two Kotlin bricks are NOT
+git-tracked (checked — no §11.4.30 versioned-artifact violation).</p>
+<hr />
+<h2 id="net-new-items">2. NET-NEW items</h2>
+<h3 id="srv-new-1-type-task-severity-med-phase-p1">[SRV-NEW-1] Type:
+Task · Severity: MED · Phase: P1</h3>
+<p><strong>Title:</strong> No versioned DB-migration framework; schema
+is one idempotent DDL blob re-run on boot.</p>
+<p><strong>Description (§11.4.171):</strong> The Postgres store brings
+up its schema by <code>//go:embed</code>-ing a single
+<code>internal/store/schema_postgres.sql</code> (272 lines: 18
+<code>CREATE TABLE IF NOT EXISTS</code> + 3 <code>ALTER TABLE</code> +
+13 <code>CREATE INDEX IF NOT EXISTS</code>) and executing the whole file
+on every boot via <code>PostgresRepository.Migrate</code>
+(<code>server/internal/store/postgres.go:49-56</code>); the rollout
+store does the same with <code>rollout_schema.sql</code>
+(<code>server/internal/rollout/postgres.go:45</code>). There is no
+<code>schema_migrations</code>/applied-version ledger, no
+<code>goose</code>/<code>golang-migrate</code> tooling, no
+ordered/numbered forward-migration files, and no down/rollback path —
+schema evolution across releases is ad-hoc and unauditable, and altering
+an existing table on a populated production database is not reliably
+expressible in a wholesale idempotent re-exec. It matters because a
+fleet control-plane changes its schema many times over its life and
+needs safe, recorded, forward-only migrations with a version ledger.
+Verify by reading <code>Migrate()</code> and the two <code>.sql</code>
+files (there is no version table and no migrations directory beyond the
+two blobs). Operators doing safe rolling schema upgrades and future
+authors both benefit; the expected outcome is a real migration runner
+plus numbered migration files. This is also the clean prerequisite the
+Accounts plan already assumes when it references “002/003 migrations” —
+but the base ships no <code>001</code> framework to build on.</p>
+<p><strong>Already-covered-by:</strong> none (OTA-046 Accounts M1
+assumes numbered migrations exist; it does not create the
+framework).</p>
+<h3 id="srv-new-2-type-bug-severity-med-phase-p1">[SRV-NEW-2] Type: Bug
+· Severity: MED · Phase: P1</h3>
+<p><strong>Title:</strong> <code>/readyz</code> never fails — the
+readiness probe ignores the DB result and always returns true.</p>
+<p><strong>Description (§11.4.171):</strong> The <code>/readyz</code>
+route is wired to <code>health.Checker.Ready</code>
+(<code>server/internal/api/server.go:174</code>), which delegates to the
+<code>ReadyFunc</code> built in <code>main.go</code>. That closure calls
+<code>repo.GetIdempotent(ctx, "__readyz__")</code>, logs, and then
+<code>return true</code> <strong>unconditionally</strong>, ignoring the
+repository result (<code>server/cmd/ota-server/main.go:86-93</code>);
+its own comment admits it is “a liveness stand-in for the real
+PostgreSQL/MinIO probes used in production.” So a Postgres or
+object-storage outage never flips readiness to NOT-READY, and a
+Kubernetes / load-balancer health gate keeps routing traffic to a pod
+that cannot serve. It matters because a readiness signal that can never
+go not-ready defeats rolling-deploy draining and outage isolation.
+Verify by reading the ReadyFunc closure — no branch returns false.
+Operators and SREs benefit; the expected outcome is a readiness probe
+that actually pings the pool (and object storage once it lands) and
+returns false on failure.</p>
+<p><strong>Already-covered-by:</strong> none (OTA-034 observability is
+metrics / structured-logs / tracing, not readiness correctness).</p>
+<h3 id="srv-new-3-type-task-severity-low-phase-p1">[SRV-NEW-3] Type:
+Task · Severity: LOW · Phase: P1</h3>
+<p><strong>Title:</strong> Project-member management is unwired —
+<code>ListProjectMembers</code>/<code>RemoveProjectAccess</code>
+implemented but no HTTP route.</p>
+<p><strong>Description (§11.4.171):</strong> The
+<code>store.Repository</code> interface declares
+<code>ListProjectMembers</code>, <code>RemoveProjectAccess</code>,
+<code>SetProjectAccess</code>, and <code>GetProjectAccess</code>, and
+both backends implement all four (memory + pgx, full parity), but the
+only mounted project routes are CRUD —
+<code>POST/GET/GET/PATCH/DELETE /projects[/:projectId]</code>
+(<code>server/internal/api/server.go:246-250</code>); there is no
+<code>GET/POST/DELETE /projects/:projectId/members</code> route and no
+member handler in <code>handlers_project.go</code> (only
+Create/List/Get/Update/Delete project). <code>SetProjectAccess</code> is
+called only to seed the creator’s admin ACL, and
+<code>ListProjectMembers</code>/<code>RemoveProjectAccess</code> are
+referenced only by tests — they are unwired production methods. It
+matters per §11.4.124 (investigate-before-remove / finish-the-wiring):
+either the member-management endpoints should be mounted, or the methods
+explained and kept as a deliberate seam. Verify with a route grep (no
+<code>members</code> under <code>/projects</code>) and a caller grep
+(only tests + the store). Admins who need to grant/revoke project access
+benefit; the expected outcome is mounted, role-gated member routes or a
+documented keep-as-seam decision.</p>
+<p><strong>Already-covered-by:</strong> partial — the Accounts stream
+(OTA-048 M3 / OTA-049 M4) rescopes project/account authz, but no tracked
+item wires these existing pre-Accounts project-member methods, and they
+are not OTA data routes.</p>
+<h3 id="srv-new-4-type-bug-severity-low-phase-p1">[SRV-NEW-4] Type: Bug
+· Severity: LOW · Phase: P1</h3>
+<p><strong>Title:</strong> One-of-pair TLS config silently downgrades to
+plain HTTP.</p>
+<p><strong>Description (§11.4.171):</strong> <code>main.go</code> enters
+the HTTP/3 + HTTP/2 TLS path only when BOTH <code>HELIX_TLS_CERT</code>
+and <code>HELIX_TLS_KEY</code> are set
+(<code>server/cmd/ota-server/main.go:119</code>, an
+<code>&amp;&amp;</code> guard); if an operator sets exactly one of the
+pair, the server silently serves plain HTTP on the plaintext port with
+no error and no warning, and <code>config.Load()</code> performs no
+cross-field validation of the pair
+(<code>server/internal/config/config.go:132-135</code>). It matters
+because a half-configured TLS deployment looks “up” while actually
+terminating no TLS — a security-relevant silent misconfiguration that a
+deployment can carry into production undetected. Verify by reading the
+<code>&amp;&amp;</code> guard in <code>main.go</code> and the absence of
+any TLS-pair check in <code>Load()</code>. Operators benefit from
+fail-fast behavior; the expected outcome is <code>Load()</code> erroring
+(or main loudly warning) when exactly one of the pair is set. Good
+fold-in candidate for a broader config-validation hardening pass.</p>
+<p><strong>Already-covered-by:</strong> none.</p>
+<h3 id="sub-new-1-type-task-severity-med-phase-p0p5">[SUB-NEW-1] Type:
+Task · Severity: MED · Phase: P0/P5</h3>
+<p><strong>Title:</strong> All six ota-* bricks lack the mandated
+§11.4.31 <code>helix-deps.yaml</code> (and ship no
+<code>upstreams/</code> recipes).</p>
+<p><strong>Description (§11.4.171):</strong> None of
+<code>ota-protocol</code>, <code>ota-telemetry-schema</code>,
+<code>ota-artifact-validator</code>, <code>ota-rollout-engine</code>,
+<code>ota-update-engine-bridge</code>, <code>ota-android-agent</code>
+contains a <code>helix-deps.yaml</code> dependency manifest, and none
+has an <code>upstreams/</code> (or legacy <code>Upstreams/</code>)
+recipe directory — confirmed present-vs-absent by contrast, since the
+other owned submodules (<code>containers</code>, <code>http3</code>,
+<code>security</code>, <code>doc_processor</code>) all DO ship
+<code>helix-deps.yaml</code>, and the two Go bricks spot-checked have a
+single <code>origin</code> push URL rather than the §2.1 four-mirror
+fan-out. It matters because §11.4.31 makes the manifest the
+machine-readable dependency-graph bridge a consumer uses to reconstruct
+the graph, and §11.4.36/§2.1 make <code>upstreams/</code> the mechanism
+each brick uses to reach all four mirrors. Verify with
+<code>ls submodules/ota-*/helix-deps.yaml</code> (none) and
+<code>ls -d submodules/ota-*/upstreams</code> (none), contrasted with
+the other owned submodules (present). Downstream consumers and
+multi-mirror release hygiene benefit; the expected outcome is a
+<code>helix-deps.yaml</code> per brick plus <code>upstreams/</code>
+recipes (or an explicit operator decision that these bricks are
+single-mirror).</p>
+<p><strong>Already-covered-by:</strong> none (the plan covers the
+llm_<em>/vision_engine mirror-forks under OTA-026 and containers
+hardening under OTA-058, but not ota-</em> manifests/upstreams).</p>
+<h3 id="sub-new-2-type-task-severity-low-phase-p1">[SUB-NEW-2] Type:
+Task · Severity: LOW · Phase: P1</h3>
+<p><strong>Title:</strong> No wire/telemetry message-schema-version
+field for cross-version device↔︎server evolution.</p>
+<p><strong>Description (§11.4.171):</strong> The
+<code>ota-protocol</code> request/offer/telemetry payload types carry no
+<code>ProtocolVersion</code>/<code>SchemaVersion</code>/<code>MessageVersion</code>
+field (the
+<code>Version</code>/<code>CurrentVersion</code>/<code>MinCurrentVersion</code>
+fields are firmware/OS versions, not message-schema versions —
+<code>submodules/ota-protocol/types.go</code>), and
+<code>ota-telemetry-schema</code> has no <code>version</code> token at
+all across its three sources (<code>codec.go</code>,
+<code>event.go</code>, <code>health.go</code>). The only versioning
+present is the coarse REST URL path <code>/api/v1</code>
+(<code>config.DefaultAPIBasePath</code>). It matters because an OTA
+fleet spans many device-agent versions while the control plane keeps
+evolving; without an embedded per-message schema version there is no
+compatibility negotiation, so a payload-schema change can silently break
+older or newer peers. Verify by grepping both modules for a
+schema/protocol version field (absent). Long-lived heterogeneous fleets
+and safe schema evolution benefit; the expected outcome is an explicit
+schema-version field on the wire messages plus tolerant decoding. Honest
+boundary: <code>/api/v1</code> gives coarse REST versioning, so this is
+a graceful-evolution gap, not a total absence of versioning.</p>
+<p><strong>Already-covered-by:</strong> none.</p>
+<hr />
+<h2 id="known-issues-untracked">3. Known issues (untracked)</h2>
+<h3
+id="ki-1-ota-033-sec-1-token-secret-fail-fast-is-already-done-but-tracked-queued-and-the-plans-top-risk-1-reads-as-open.">KI-1
+— OTA-033 (SEC-1 token-secret fail-fast) is already DONE but tracked
+“Queued”, and the plan’s Top-Risk #1 reads as open.</h3>
+<p><strong>Fact:</strong> SEC-1 fail-fast on unset
+<code>HELIX_TOKEN_SECRET</code> is COMMITTED at <code>7763c7c7</code>
+and the working tree is clean;
+<code>server/internal/config/config.go:179-207</code> now REFUSES to
+boot on an unset secret (dev fallback gated behind
+<code>HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET</code> with a loud warning).
+Yet DB item <code>OTA-033</code> status = <code>Queued</code>, and
+<code>docs/planning/PRODUCTION_READINESS_PLAN.md:17</code> (Top-5 Risk
+#1) plus §2.7 still describe the <em>silently-defaulting</em> dev secret
+citing <code>config.go:180-184</code>. This is §11.4.172/§11.4.93
+living-plan / DB drift. <strong>Evidence:</strong>
+<code>git show 7763c7c7</code>;
+<code>git status --porcelain server/internal/config/config.go</code>
+(clean);
+<code>git show HEAD:server/internal/config/config.go | grep "refusing to start"</code>
+(present); <code>docs/workable_items.db</code> OTA-033 = Queued.
+<strong>Recommended action:</strong> close OTA-033 with the correct
+§11.4.33 vocabulary and correct the plan’s Risk #1 + §2.7 to reflect
+that SEC-1 has landed.</p>
+<h3
+id="ki-2-workable-items-tooling-is-a-divergent-simplified-reimplementation-whose-db-to-md-sync-is-an-explicit-stub.">KI-2
+— <code>workable-items</code> tooling is a divergent simplified
+reimplementation whose <code>db-to-md</code> sync is an explicit
+stub.</h3>
+<p><strong>Fact:</strong> The in-repo
+<code>cmd/workable-items/main.go</code> is a single-file simplified
+reimplementation whose bidirectional sync is a stub —
+<code>main.go:546</code> (“Sync: MD &lt;-&gt; DB (bidirectional stub /
+framework)”) and <code>main.go:937-938</code> (prints
+<code>WARN: db-to-md sync is a stub</code>), so the §11.4.93
+byte-identical round-trip cannot regenerate the docs from the DB. The
+canonical richer engine lives at
+<code>constitution/scripts/workable-items/cmd/workable-items/</code>
+(ships <code>diary_cmd.go</code>, <code>obsolete.go</code>,
+<code>assign_test.go</code>, more) and per §11.4.93/§11.4.106/§11.4.177
+should be consumed BY REFERENCE rather than reimplemented in-repo.
+<strong>Evidence:</strong>
+<code>cmd/workable-items/main.go:546,937-938</code>; contrast with
+<code>constitution/scripts/workable-items/cmd/workable-items/*</code>.
+<strong>Recommended action:</strong> adopt the constitution engine by
+reference (retire the local simplified copy) so <code>db-to-md</code>
+and the full column set work.</p>
+<h3
+id="ki-3-workable_items.db-schema-is-missing-constitution-mandated-columnstables.">KI-3
+— <code>workable_items.db</code> schema is missing constitution-mandated
+columns/tables.</h3>
+<p><strong>Fact:</strong> <code>PRAGMA table_info(items)</code> returns
+only
+<code>ota_id, type, status, severity, title, description, composes_with, current_location, created_at, modified_at</code>.
+Missing: <code>created_by</code>/<code>assigned_to</code> (§11.4.104); a
+<code>canonical_track</code> column + authoritative destination-branch
+binding and a <code>logic_groups</code> table (§11.4.181/§11.4.191 — no
+<code>logic_groups</code> table exists); a <code>test_diary</code> table
+(§11.4.149); a <code>reopens_count</code> column (§11.4.55).
+<code>.tables</code> shows only <code>items</code>,
+<code>item_history</code>, <code>meta</code>. (The <code>OTA-NNN</code>
+id prefix vs the §11.4.54 <code>ATM-NNN</code> convention is a
+project-specific naming choice and is NOT counted as a defect here.)
+<strong>Evidence:</strong>
+<code>sqlite3 docs/workable_items.db "PRAGMA table_info(items)"</code>;
+<code>sqlite3 docs/workable_items.db ".tables"</code>.
+<strong>Recommended action:</strong> extend the schema with the
+§11.4.104 / §11.4.191 / §11.4.149 / §11.4.55 columns + tables (naturally
+landed together with KI-2’s engine adoption).</p>
+<h3
+id="ki-4-12-closed-items-violate-11.4.33-type-aware-closure-vocabulary.">KI-4
+— 12 closed items violate §11.4.33 type-aware closure vocabulary.</h3>
+<p><strong>Fact:</strong> Exactly 12 closed items are recorded as
+<code>Fixed (→ Fixed.md)</code> regardless of Type — 7 Features (should
+be <code>Implemented (→ Fixed.md)</code>: OTA-005, 006, 008, 015, 016,
+017, 018) and 5 Tasks (should be <code>Completed (→ Fixed.md)</code>:
+OTA-007, 009, 010, 014, 019); only the 1 Bug (OTA-020) is correct. A
+<code>workable-items validate</code> run would FAIL on these.
+<strong>Evidence:</strong>
+<code>sqlite3 docs/workable_items.db "SELECT type, count(*) FROM items WHERE status='Fixed (→ Fixed.md)' GROUP BY type"</code>
+→ Bug 1, Feature 7, Task 5. <strong>Recommended action:</strong>
+retype-close the 12 rows to the type-appropriate terminal status per
+§11.4.33.</p>
+<h3
+id="ki-5-correction-to-ota-027-plan-k2-framing-submodulesllmprovider-is-a-symlink-not-a-stray-directory.">KI-5
+— Correction to OTA-027 / plan-K2 framing:
+<code>submodules/LLMProvider</code> is a symlink, not a stray
+directory.</h3>
+<p><strong>Fact:</strong> <code>submodules/LLMProvider</code> is a
+symbolic link to <code>llm_provider</code>
+(<code>ls -la submodules/</code> shows
+<code>LLMProvider -&gt; llm_provider</code>), NOT an untracked duplicate
+directory copy as OTA-027 (“remove stray untracked
+submodules/LLMProvider dir”) and plan-K2 frame it.
+<strong>Evidence:</strong> <code>ls -la submodules/</code> (symlink
+entry). <strong>Recommended action:</strong> re-verify OTA-027 as a
+symlink-removal (and confirm nothing resolves the
+<code>LLMProvider</code> path) before acting, rather than a
+directory-copy removal.</p>
+<hr />
+<h2 id="untested-surfaces-file-whats-untested">4. Untested surfaces
+(file → what’s untested)</h2>
+<p>Server package coverage is genuinely strong — <strong>every</strong>
+<code>server/</code> package directory (including <code>cmd/*</code>,
+<code>tools/loadtest</code>, <code>tests/chaos</code>,
+<code>tests/stress</code>) has at least one <code>_test.go</code>, and
+the <code>store.Repository</code> contract is asserted on both backends.
+There is <strong>no untested package</strong> in <code>server/</code>.
+The residual per-file / per-type gaps below sit largely inside the
+already-tracked §11.4.169 item (OTA-040) and the Android item (OTA-043);
+they are enumerated here as the concrete surfaces:</p>
+<ul>
+<li><code>submodules/ota-update-engine-bridge/android/src/main/.../BootStateObserver.kt</code>
+— the concrete <code>SystemPropertyBootStateObserver</code> class has
+real logic but no host-runnable unit test; the module has no
+<code>src/androidTest/</code>. JVM unit only; no
+stress/chaos/bench/memory. (→ overlaps OTA-043; the host-runnable
+JVM/Robolectric unit gap is not explicitly enumerated there.)</li>
+<li><code>submodules/ota-android-agent/android/src/main/.../apply/ReflectiveUpdateEngineApplyPort.kt</code>
+— concrete reflection apply-port class, no host-runnable unit test.</li>
+<li><code>submodules/ota-android-agent/android/src/main/.../poll/PollScheduler.kt</code>
+— <code>object</code> with WorkManager <code>schedule()</code> logic, no
+unit test.</li>
+<li><code>submodules/ota-android-agent/core/src/main/.../protocol/Dtos.kt</code>
++ <code>protocol/Enums.kt</code> (<code>fromWire</code> logic) — no
+dedicated test file; exercised only indirectly via
+<code>CodecRoundTripTest</code>.</li>
+<li>The two Kotlin bricks’ <code>androidTest/</code>
+(<code>OtaAgentOnDeviceTest.kt</code>) cannot run in a host build (needs
+a system-UID / platform-signed target — noted in the module
+<code>BUILD_STATUS.md</code>). (→ OTA-043 real-device coverage.)</li>
+<li>4 Go bricks (<code>ota-protocol</code>,
+<code>ota-telemetry-schema</code>, <code>ota-artifact-validator</code>,
+<code>ota-rollout-engine</code>) — heavy unit/fuzz coverage (tests &gt;
+sources) but zero <code>Benchmark</code> funcs and no memory/leak tests.
+(→ OTA-040.)</li>
+<li><code>server/internal/device/applyport.go</code> — SCAFFOLD; its
+runtime apply loop is untested because unimplemented. (→ OTA-038.)</li>
+</ul>
+<hr />
+<h2 id="honest-coverage-gaps-subsystems-not-fully-inspected">5. Honest
+coverage gaps (subsystems not fully inspected)</h2>
+<ul>
+<li><strong>No build/test executed (READ-ONLY session).</strong> “Strong
+test coverage” is asserted from file presence + git history, not re-run
+this pass; the migration, <code>/readyz</code>, TLS-pair, and
+schema-version findings are static-read facts, not
+runtime-reproduced.</li>
+<li><strong>Web frontends</strong> (<code>clients/ota-manager/</code>,
+<code>dashboard/</code>) were out of the requested scope (server +
+ota-*); the plan already tracks their
+stress/chaos/DDoS/memory/host-render gaps (§2.2/§3, OTA-055..057).</li>
+<li><strong>Non-ota owned submodules not independently surveyed this
+pass:</strong> <code>challenges</code>, <code>containers</code>,
+<code>doc_processor</code>, <code>helixqa</code>, <code>http3</code>,
+<code>llm_orchestrator</code>, <code>llm_provider</code>,
+<code>llms_verifier</code>, <code>security</code>,
+<code>vision_engine</code>. They were checked only for
+<code>helix-deps.yaml</code> presence (all present). Their known items
+are covered by the plan (mirror-forks OTA-026/K1; containers + vm/emu
+hardening OTA-058/059); their other internal open items were out of this
+task’s server+ota-* scope.</li>
+<li><strong>Multi-mirror check for SUB-NEW-1</strong> was
+<code>git remote -v</code> spot-verified on 2 of 6 bricks; the
+<code>helix-deps.yaml</code>/<code>upstreams/</code> absence is
+confirmed on all 6.</li>
+<li><strong>Runtime/on-device behavior</strong> (Android A/B apply,
+RK3588 silicon) is unexercised in-repo by design and already tracked
+(OTA-003/004/042/043/044).</li>
+</ul>
+<hr />
+<p><em>Prepared as a READ-ONLY analysis + planning deliverable. No fixes
+were implemented, no DB was written, no git operations were performed.
+Every claim cites a file/path or a reproducible query. Effort/phase tags
+are advisory, aligned to the phases in
+<code>docs/planning/PRODUCTION_READINESS_PLAN.md</code>.</em></p>
+</body>
+</html>

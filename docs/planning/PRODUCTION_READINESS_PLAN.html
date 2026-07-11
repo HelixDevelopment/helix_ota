@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PRODUCTION_READINESS_PLAN</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PRODUCTION_READINESS_PLAN</h1>
+</header>
+<h1
+id="helix-ota-production-readiness-assessment-phased-delivery-plan">Helix
+OTA — Production-Readiness Assessment &amp; Phased Delivery Plan</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-12T00:00:00Z <strong>Authority:</strong> §11.4.172 (living
+production-readiness planning doc) · §11.4.93 (workable-items DB
+load-list) · §11.4.6 (no-guessing — every claim cites a path; unknowns
+marked <code>UNCONFIRMED:</code>) <strong>Scope:</strong> the whole
+Helix OTA monorepo — Go control plane (<code>server/</code>), the six
+<code>ota-*</code> bricks + other owned submodules, the two web
+frontends (<code>clients/ota-manager/</code>, <code>dashboard/</code>),
+the (unbuilt) marketing website, containers/dev-infra, and the
+multi-track/tracking machinery. <strong>Method:</strong> authored from a
+direct read of <code>.superpowers/sdd/progress.md</code>,
+<code>docs/CONTINUATION.md</code>, <code>docs/features/Status.md</code>,
+<code>docs/Issues.md</code>,
+<code>config/multitrack/the-factory.yaml</code>,
+<code>docs/research/accounts/*</code>,
+<code>docs/research/website/*</code>, plus four independent
+evidence-cited survey passes (server / submodules+gitlinks /
+web-frontends+website / test-type matrix). FACT = read this session;
+UNCONFIRMED = flagged inline.</p>
+<hr />
+<h2 id="executive-summary">1. EXECUTIVE SUMMARY</h2>
+<p><strong>Verdict — the control-plane CORE is strong and well-tested;
+the SYSTEM is not production-ready.</strong> The Go/Gin control plane
+(<code>server/</code>) compiles clean
+(<code>cd server &amp;&amp; go build ./...</code> → exit 0, FACT),
+carries deep multi-type test coverage
+(unit/integration/stress/chaos/fuzz/security/concurrency/race/memory/benchmark),
+and both store backends (in-memory + real pgx/PostgreSQL) are compiled
+in and runtime-selectable
+(<code>server/cmd/ota-server/main.go:46-82</code>). The emulated Android
+A/B path is genuinely proven end-to-end (Cuttlefish Tier-2 on nezha,
+<code>docs/qa/20260623-cuttlefish-tier2-ab/</code>; OTA-003 Completed).
+But the <em>deliverable product</em> the operator described — a
+multi-tenant, self-hostable OTA platform with a project CLI, a device
+update client + setup wizard, a marketing website, and validated
+on-silicon RK3588 updates — is substantially <strong>unbuilt or
+unproven</strong>: multi-tenant Accounts is design-complete but not
+implemented, the website does not exist, the on-device Linux/U-Boot
+apply path is a scaffold, and the physical-board Tier-3 apply +
+§11.4.185 manual-QA final gate are operator-blocked. No release tag
+exists (greenfield, FACT
+<code>docs/research/accounts/30_delivery_plan.md:70</code>).</p>
+<p><strong>Top 5 risks (production-blocking,
+risk-descending):</strong></p>
+<ol type="1">
+<li><strong>Predictable dev token secret + no fail-fast
+(security).</strong>
+<code>server/internal/config/config.go:180-184</code> — when
+<code>HELIX_TOKEN_SECRET</code> is unset the HMAC signing key silently
+defaults to the literal
+<code>"helix-ota-dev-token-secret-change-me"</code>; the server boots
+with a publicly-known signing key and no warning. Under the forthcoming
+multi-tenant Accounts layer this is catastrophic (an attacker mints a
+token with ANY <code>account_id</code> claim → total tenant-isolation
+defeat) — flagged as the single highest-severity as-is finding in
+<code>docs/research/accounts/30_delivery_plan.md:392-399</code>.</li>
+<li><strong>No graceful shutdown (ops).</strong>
+<code>server/cmd/ota-server/main.go:142-148</code> calls
+<code>ListenAndServe</code>/<code>tsrv.Start()</code> with no
+<code>os/signal</code> handling and no
+<code>http.Server.Shutdown</code>/drain — on SIGTERM in-flight requests
+are dropped; no rolling-deploy safety.</li>
+<li><strong>No observability (ops).</strong> No <code>/metrics</code>
+(Prometheus), no tracing/OpenTelemetry, no structured logging (stdlib
+<code>log</code> only) — a production fleet-update system with no
+metrics/traces is operationally blind (server survey §7, FACT).</li>
+<li><strong>Physical-target apply unproven + operator-blocked
+(correctness).</strong> The on-device Linux/U-Boot ApplyPort is an
+explicit SCAFFOLD
+(<code>server/internal/device/applyport.go:10-16</code>); RK3588 Tier-3
+on-silicon A/B (vendor HAL, U-Boot slot-switch, real-partition
+dm-verity) is OPERATOR-BLOCKED on hardware (OTA-004,
+<code>docs/Issues.md:26-44</code>); the §11.4.185 manual-QA final
+confirmation on the fielded target is therefore unsatisfied.</li>
+<li><strong>Object storage is a placeholder (correctness/e2e).</strong>
+Uploaded artifact bytes are validated then discarded —
+<code>StorageRef</code> is a placeholder, no real object store in-repo
+(<code>docs/research/accounts/30_delivery_plan.md:407-413</code>). Any
+“device downloads + applies the exact bytes” e2e is unprovable until a
+real Storage seam lands, so the full OTA loop is proven only in the
+emulated/container tier, not byte-for-byte over real storage.</li>
+</ol>
+<p><strong>Honest positives (so the plan is proportionate):</strong>
+server trust boundary is correct (artifact verify key comes only from
+config, never the request —
+<code>server/internal/config/config.go:73-77</code>); pgx path is real +
+migrated-on-boot + integration-tested against real Postgres; HB-2
+fabric-lease dev/prod divergence is already closed
+(<code>03340896</code>); the dashboard has strong §11.4.170 host-render
+proof (26 goldens); the OTA Go bricks are clean, decoupled, and
+test-backed.</p>
+<hr />
+<h2 id="unfinished-incomplete-features-components-wiring-each-cited">2.
+UNFINISHED — incomplete features / components / wiring (each cited)</h2>
+<h3 id="multi-tenant-accounts-designed-not-tenant-isolating">2.1
+Multi-tenant Accounts — DESIGNED, not tenant-isolating</h3>
+<ul>
+<li><strong>Design complete, implementation gated.</strong> Full 11-doc
+research/design set
+<code>docs/research/accounts/00_INDEX.md … 30_delivery_plan.md</code>
+(Rev 2, 2026-07-10) — 8-milestone delivery plan M1–M8, status “as-is
+discovery COMPLETE; to-be design phase … implementation gated on
+operator approval” (<code>00_INDEX.md:5</code>).</li>
+<li><strong>Partial skeleton exists but is NOT multi-tenant</strong>
+(server survey §4, FACT):
+<code>store.Project</code>/<code>ProjectRole</code>/<code>ProjectAccess</code>
+types (<code>server/internal/store/store.go:287-311</code>), project
+CRUD routes (<code>server/internal/api/server.go:246-250</code>),
+<code>requireProjectAccess</code> helper
+(<code>handlers_project.go:37</code>), creator-admin ACL seed
+(<code>handlers_project.go:147</code>). GAPS: core resource tables
+(devices/artifacts/releases/deployments/telemetry) carry <strong>no
+<code>project_id</code>/<code>account_id</code> column</strong> → no
+data-level tenant isolation; there is <strong>no
+<code>account</code>/<code>org</code>/<code>tenant</code> entity
+anywhere</strong> (<code>accounts/00_INDEX.md:137-143</code>); no
+persisted <code>User</code> (identity is the token subject, env-seeded
+in-memory map); membership-management routes
+(<code>POST/DELETE /projects/:id/members</code>) are not mounted, and
+<code>ListProjectMembers</code>/<code>RemoveProjectAccess</code> repo
+methods are unreferenced.</li>
+</ul>
+<h3 id="project-website-11.4.190-absent-planning-only">2.2 Project
+website (§11.4.190) — ABSENT (planning-only)</h3>
+<ul>
+<li>No <code>website/</code>/<code>site/</code>/<code>www/</code> source
+dir; no <code>website</code> entry in <code>.gitmodules</code>;
+<code>submodules/website</code> does <strong>not</strong> exist (FACT,
+verified this session). Firebase hosts only the two admin SPAs, both
+<code>noindex</code> (<code>firebase.json</code>,
+<code>.firebaserc</code>) — not a marketing surface.</li>
+<li>Only planning exists:
+<code>docs/research/website/00_WEBSITE_DESIGN_AND_BUILD_PLAN.md</code> +
+<code>01_SCAFFOLD_READINESS_AND_VERIFICATION.md</code> (Rev 2) — planned
+as a NEW submodule <code>submodules/website</code>, Angular 22 SSR +
+Tailwind v4 + an OpenDesign “Helix-green” brand layer, dark/light +
+i18n, content LOCKED (sales email <code>contact@hxota.com</code>,
+<strong>NO pricing</strong>, “Made with ♥ by Helix Development team”
+footer). 3 operator decisions open (§8.6 of the plan).</li>
+</ul>
+<h3
+id="device-side-min_current_version-server-only-wire-field-absent">2.3
+Device-side <code>min_current_version</code> — server-only, wire field
+ABSENT</h3>
+<ul>
+<li>Server enforces the floor
+(<code>server/internal/api/handlers_client.go:63-76</code>, SRV-1
+<code>87305ca1</code>) but the device-facing offer struct
+<code>UpdateAvailable</code>
+(<code>submodules/ota-protocol/types.go:87-108</code>) carries
+<strong>no <code>MinCurrentVersion</code> field</strong> — it exists
+only on the server-side <code>Release</code> struct
+(<code>types.go:50</code>). The Kotlin device DTOs also lack it. The
+follow-up (add <code>min_current_version</code> to
+<code>UpdateAvailable</code> + the Kotlin <code>UpdateAvailable</code>
+DTO in <code>ota-android-agent</code>, then enforce device-side to
+mirror SRV-1) is real and unstarted.</li>
+</ul>
+<h3 id="on-device-linuxu-boot-applyport-scaffold">2.4 On-device
+Linux/U-Boot ApplyPort — SCAFFOLD</h3>
+<ul>
+<li><code>server/internal/device/applyport.go:10-16</code> header:
+“SCAFFOLD — the ApplyPort methods are stubs … the slot-writer and full
+ApplyPort driver (Step a→f loop) are DESIGNED but NOT wired.”
+<code>fwenv.go</code> shell-out is authored; the apply loop / SlotWriter
+is not. <code>server/cmd/applyport/main.go:357</code> —
+<code>// … For now return a placeholder.</code> (Note: the emulated
+Cuttlefish + QEMU A/B path IS proven — this gap is the real-partition
+Linux path, entangled with OTA-004.)</li>
+</ul>
+<h3
+id="pgxpostgresql-store-wired-but-production-operation-not-hardened">2.5
+pgx/PostgreSQL store — WIRED, but production-operation not hardened</h3>
+<ul>
+<li>CORRECTION to a common assumption: the Postgres path is
+<strong>not</strong> integration-tag-gated dead code —
+<code>postgres.go</code>/<code>postgres_fabric.go</code>/<code>rollout/postgres.go</code>
+carry no <code>//go:build</code> line and ship in the binary; selection
+is the runtime env var <code>HELIX_DATABASE_URL</code>
+(<code>config.go:112-134</code>, <code>main.go:46-82</code>), migrated
+on boot with a 60s connect-retry. In-memory (<code>main.go:80</code>) is
+the default when unset. What is UNFINISHED is production
+<em>operation</em> hardening around it (graceful shutdown,
+connection-pool observability, secret fail-fast) — see §2.7.</li>
+</ul>
+<h3 id="parent-repo-gitlink-bumps-lagging-trunk-hygiene">2.6 Parent-repo
+gitlink bumps lagging (trunk hygiene)</h3>
+<ul>
+<li><strong>llm_orchestrator gitlink LAGS by 2 commits (FACT):</strong>
+recorded pointer <code>7e3e6da</code>, submodule HEAD
+<code>c41a264</code> (Wave-22 LO-1..4),
+<code>git submodule status</code> shows the <code>+</code> dirty marker
+→ parent must bump <code>7e3e6da → c41a264</code>.</li>
+<li><strong>containers:</strong> the main-repo checkout’s gitlink is
+<code>4774eda</code> (Wave-18c) and equals the submodule HEAD (no
+<code>+</code>). The Wave-21/SW6 containers hardening (progress ledger
+<code>047fbfc</code>) lives on <code>feature/containers-hardening</code>
+in a <em>separate</em> track checkout (§11.4.179 own-<code>.git</code>),
+<strong>not</strong> in this main tree —
+<code>git cat-file -t 047fbfc</code> → “Not a valid object name” here.
+So on <code>main</code> this is not a lag but a pending §11.4.191
+feature→main merge. (The <code>.superpowers/sdd/progress.md</code>
+“Wave-21 047fbfc landed” line is written from the track-3 checkout;
+reconcile the ledger.)</li>
+</ul>
+<h3
+id="server-production-readiness-wiring-gaps-fact-server-survey-7">2.7
+Server production-readiness wiring gaps (FACT, server survey §7)</h3>
+<ul>
+<li><strong>Graceful shutdown absent</strong> —
+<code>main.go:142-148</code> (no signal handling /
+<code>Server.Shutdown</code>).</li>
+<li><strong>Token-secret silent dev fallback</strong> —
+<code>config.go:180-184</code> (no fail-fast/warn on the default
+secret).</li>
+<li><strong>Observability absent</strong> — no <code>/metrics</code>,
+tracing, or structured logging.</li>
+<li><strong>Rate-limiting thin + default-off</strong> — only a global
+in-flight semaphore <code>rate_limit.go:9-33</code>,
+<code>HELIX_MAX_INFLIGHT</code> default <code>0</code>=disabled
+(<code>config.go:60-62</code>); no per-IP/token throttle, no login
+brute-force limiter.</li>
+<li><strong>Auth is an MVP stub</strong> — HMAC opaque token
+(<code>token.go:25-30</code>), static in-memory
+<code>UserDirectory</code> with constant-time compare (GOOD,
+<code>users.go:41-44</code>) but plaintext in-memory passwords +
+in-memory refresh store (lost on restart). No real IdP/OAuth2.</li>
+</ul>
+<h3 id="multi-track-headless-auto-ruler-bootstrapped-operator-gated">2.8
+Multi-track headless auto-ruler — bootstrapped, operator-gated</h3>
+<ul>
+<li>Engine present (<code>constitution/scripts/multitrack/*</code>) +
+per-host config (<code>config/multitrack/the-factory.yaml</code>);
+bootstrap rc=0, cwd-hook installed, §11.4.178 identity resolver live
+(progress.md:132-136). REMAINDER (operator-gated, §11.4.10/§11.4.187
+honest boundary): the <code>claude1..4</code> toolkit aliases are
+<strong>not on PATH</strong> — headless-worker spawn needs per-alias
+account provisioning + OAuth tokens (external, cannot be done via
+tools). The system engages the instant aliases are provisioned.</li>
+</ul>
+<h3 id="config-vs-directive-trackbranch-drift-needs-reconciliation">2.9
+Config-vs-directive track/branch drift (needs reconciliation)</h3>
+<ul>
+<li><code>config/multitrack/the-factory.yaml</code> focus labels: T2=web
+dashboard/website, T3=containers-hardening, T4=vm-emu-hardening. The
+later operator directive (progress.md:53) dispatches <strong>claude1→T2
+accounts, claude3→T4 website</strong>, and the Accounts delivery plan
+mandates ONE canonical branch <code>feature/multi-tenant-accounts</code>
+across main+submodules (§11.4.181,
+<code>accounts/30_delivery_plan.md:37</code>) — which differs from the
+config’s <code>feature/accounts-web</code>. This drift must be
+reconciled and the canonical <code>(logic-group → track, branch)</code>
+binding recorded ONCE in the workable-items registry
+(§11.4.181/§11.4.191) before dispatch.</li>
+</ul>
+<hr />
+<h2 id="untested-coverage-gaps-per-11.4.169-test-type-matrix">3.
+UNTESTED / COVERAGE GAPS (per §11.4.169 test-type matrix)</h2>
+<p><strong>Strong surfaces (FACT, test survey):</strong>
+<code>server/</code> control plane
+(unit/integration[pgx]/stress/chaos/security/fuzz/concurrency/race/memory/benchmark
+— all present) and the 4 Go OTA bricks
+(unit/stress/chaos/fuzz/security/concurrency-race). HelixQA OTA banks
+are genuinely wired (<code>tools/helixqa/banks/helix_ota.yaml</code> +
+Go runner <code>tools/helixqa_runner/main.go</code>). Emulated Tier-1
+container OTA round-trip + Tier-2 Cuttlefish A/B are proven with
+committed evidence.</p>
+<p><strong>Gaps (risk-ordered):</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Detail (cited)</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Physical RK3588 apply (Tier-3) + §11.4.185 manual
+QA</strong></td>
+<td>Full on-silicon <code>update_engine</code>/U-Boot/dm-verity apply is
+OPERATOR-BLOCKED (OTA-004, <code>docs/Issues.md:26-44</code>). Board
+control-plane reachability IS proven
+(<code>docs/qa/20260622-rk3588-controlplane/REPORT.md</code>) but on
+nezha-attached serials, <strong>not</strong> the
+<code>the-factory.yaml</code> D1/D2 serials
+(<code>998fd36615e99484</code>/<code>66ff9c4f51f00ee7</code>) — no
+full-apply run on any board. §11.4.185 final manual-QA confirmation on
+the fielded target is unmet.</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td><strong>Android bricks under-tested</strong></td>
+<td><code>ota-android-agent</code> +
+<code>ota-update-engine-bridge</code> have JVM unit tests only (47 + 27
+PASS); NO stress/chaos/benchmark/memory; only the agent has an
+<code>androidTest/</code> dir. Real device apply unproven off-emulator
+(ties to OTA-004).</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td><strong>Object-storage byte-level e2e</strong></td>
+<td><code>StorageRef</code> placeholder → “device downloads + applies
+exact bytes” over real storage is unprovable until a Storage seam lands
+(<code>accounts/30_delivery_plan.md:407-413</code>).</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td><strong>True distributed DDoS</strong></td>
+<td>Only one bounded live saturation test
+(<code>tests/security/saturation_live.sh</code>) +
+<code>rate_limit_test.go</code>; deployed
+<code>system.compose.yml</code> ships the in-flight cap OFF (default
+<code>0</code>). No multi-source flood / slowloris; OTA submodules have
+zero DDoS coverage.</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td><strong>Web-surface resilience</strong></td>
+<td><code>clients/ota-manager</code> + <code>dashboard</code> have unit
++ e2e + §11.4.170 host-render but NO
+stress/chaos/DDoS/memory/benchmark.</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td><strong>Submodule bench/memory</strong></td>
+<td>The 4 Go bricks have stress+chaos+fuzz but zero
+<code>Benchmark</code> funcs and no memory/leak tests; no
+<code>-memprofile</code> anywhere outside server.</td>
+<td>LOW-MEDIUM</td>
+</tr>
+<tr>
+<td><strong>§11.4.170 host-render breadth</strong></td>
+<td><code>dashboard/</code> strong (26 goldens, ~13 screen×state ×
+{light,dark}); <code>clients/ota-manager/</code> only 2 screens rendered
+— the feature pages need host-render once routed.</td>
+<td>LOW-MEDIUM</td>
+</tr>
+<tr>
+<td><strong>Challenges submodule</strong></td>
+<td><code>submodules/challenges/</code> carries no OTA bank; all OTA
+challenge coverage rests on <code>tools/helixqa/banks/</code>.</td>
+<td>LOW</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="known-issues-operator-decisions">4. KNOWN ISSUES + OPERATOR
+DECISIONS</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Item (cited)</th>
+<th>Class</th>
+<th>Severity</th>
+<th>Who decides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K1</td>
+<td><strong>Mirror-fork canonicalization</strong> —
+<code>vision_engine</code> (<code>main</code> published;
+<code>master</code> diverges github <code>a97df79</code> vs origin
+<code>b417a40</code>); <code>llm_orchestrator</code> (main-vs-master
+§11.4.181 asymmetry across orgs; gitlink also lags §2.6);
+<code>llm_provider</code> (<code>main</code> branches a real CODE fork:
+HelixDev <code>4749d46</code> +16.8k lines vs vasic <code>8905a76</code>
++647). All fixes already published on the canonical branch; force-push
+forbidden §11.4.113.</td>
+<td>Operator decision</td>
+<td>Medium</td>
+<td>Operator (pick canonical mirror + UNION-merge/retire divergent
+branches)</td>
+</tr>
+<tr>
+<td>K2</td>
+<td><strong>Stray <code>submodules/LLMProvider/</code> dir</strong> —
+untracked duplicate not in <code>.gitmodules</code>
+(<code>llm_provider</code> is the tracked one).</td>
+<td>Cleanup</td>
+<td>Low</td>
+<td>Agent (remove) / operator confirm</td>
+</tr>
+<tr>
+<td>K3</td>
+<td><strong>ROLL-1</strong> — <code>SuccessThreshold==0</code> =
+any-success-passes (symmetric canary no-gate) in
+<code>ota-rollout-engine</code>; reject-in-<code>validatePhases</code>
+OR document as by-design (progress.md:159).</td>
+<td>Design decision</td>
+<td>Low</td>
+<td>Operator</td>
+</tr>
+<tr>
+<td>K4</td>
+<td><strong>OTA signing metadata not crypto-bound</strong> — targeting
+metadata (OSType/Board/Version) is not signature-bound, so
+relabel-replay is possible within S4/S5 constraints; framed intentional,
+hinges on upload-auth + signing spec (progress.md:159).</td>
+<td>Security design</td>
+<td>Medium</td>
+<td>Operator (signing-spec scope)</td>
+</tr>
+<tr>
+<td>K5</td>
+<td><strong>VAL-1</strong> —
+<code>ota-artifact-validator/stages.go:15</code> FALSE comment claims
+<code>ota-protocol.ValidateArtifactMeta</code> enforces a 255-char
+Version bound (it only checks empty; real guard is in-package
+<code>ValidateVersion</code>). Corrective, prevents a future HC-2
+regression re-open (progress.md:159).</td>
+<td>Doc bug</td>
+<td>Low</td>
+<td>Agent (fix comment)</td>
+</tr>
+<tr>
+<td>K6</td>
+<td><strong>Stale fabric-lease comments</strong> —
+<code>server/internal/store/postgres_fabric.go:137-139</code> still
+asserts “non-exclusive target may hold multiple concurrent leases”
+(false since HB-2 <code>03340896</code> made it uniform);
+<code>store.go:220-229</code>/<code>:415-417</code> still frame it as
+“exclusive target”. Behavior correct; comments misleading.</td>
+<td>Doc bug</td>
+<td>Low</td>
+<td>Agent (fix comments)</td>
+</tr>
+<tr>
+<td>K7</td>
+<td><strong>HB-1</strong> —
+<code>server/internal/device/fwenv.go SaveEnv</code> swallows a
+<code>fw_setenv</code> flush error; naive <code>return err</code>
+false-fails on backends where empty-key-save is unsupported → needs
+§11.4.8 research on <code>fw_setenv</code> no-args semantics before a
+safe fix (progress.md:101).</td>
+<td>Bug (research-gated)</td>
+<td>Medium</td>
+<td>Agent (after research)</td>
+</tr>
+<tr>
+<td>K8</td>
+<td><strong>SW1-2</strong> — containers
+<code>pkg/vm/macos/macos.go:262</code> bootWait timer not
+<code>Stop()</code>’d on 2 non-timer select branches; darwin-only, weak
+RED oracle → defensive defer-Stop + pattern-consistency proof
+(progress.md:116,139).</td>
+<td>Bug (low)</td>
+<td>Low</td>
+<td>Agent (T3)</td>
+</tr>
+<tr>
+<td>K9</td>
+<td><strong>HB-2</strong> — memory-vs-Postgres fabric-lease divergence:
+<strong>ALREADY CLOSED</strong> uniformly (<code>03340896</code>);
+listed here only because prior ledgers framed it open (server survey
+§6).</td>
+<td>Resolved</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>K10</td>
+<td><strong>§11.4.185 manual-QA final gate + OTA-004
+hardware</strong></td>
+<td>Release blocker</td>
+<td>High</td>
+<td>Operator/QA (attach RK3588 board; run manual confirmation)</td>
+</tr>
+<tr>
+<td>K11</td>
+<td><strong>Multi-track alias provisioning</strong> (§2.8) +
+<strong>track/branch drift</strong> (§2.9)</td>
+<td>Operator/registry</td>
+<td>Medium</td>
+<td>Operator (provision toolkit OAuth) + agent (record canonical
+bindings)</td>
+</tr>
+<tr>
+<td>K12</td>
+<td><strong>Accounts decision gate</strong> — OQ-2 (RBAC-first hybrid),
+OQ-3 (local accounts), OQ-4 (default-account backfill), per-account
+signing keys, TEXT-vs-UUID id type
+(<code>accounts/30_delivery_plan.md:482-498</code>).</td>
+<td>Design decision</td>
+<td>High (blocks P3)</td>
+<td>Operator</td>
+</tr>
+<tr>
+<td>K13</td>
+<td><strong>Website decisions</strong> — repo name/remote, containerized
+build, tokens-only OpenDesign (<code>website/00_*</code> §8.6).</td>
+<td>Design decision</td>
+<td>Medium (blocks P4)</td>
+<td>Operator</td>
+</tr>
+<tr>
+<td>K14</td>
+<td><strong>DDoS default posture</strong> —
+<code>HELIX_MAX_INFLIGHT</code> default <code>0</code>=UNLIMITED (OOM
+risk); proposed conservative <code>256</code> is a §11.4.122 behavior
+change (progress.md; CONTINUATION §5 Q).</td>
+<td>Ops decision</td>
+<td>Medium</td>
+<td>Operator</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="phased-plan">5. PHASED PLAN</h2>
+<p><strong>Ordering principle (§11.4.132 risk-descending):</strong>
+production-critical server + OTA-deploy path first → live on-device
+validation → the two big features (Accounts, Website) → hardening
+backlog + tracking hygiene. The two big features (P3/P4) develop as
+isolated §11.4.167 work-streams on their own branches, trunk-merged
+regularly (§11.4.188), merged to <code>main</code> ONLY after operator
+approval + §11.4.185 manual QA. Effort = T-shirt estimate only;
+§11.4.172 forbids false calendar precision until velocity is
+measured.</p>
+<p><strong>Track/branch map (reconcile per §2.9 before dispatch;
+canonical bindings recorded once in the registry §11.4.191):</strong> -
+<strong>T1 / <code>main</code></strong> — trunk hygiene + server
+production-readiness + OTA-deploy path (config focus: production main).
+- <strong>T2 / <code>feature/multi-tenant-accounts</code></strong> —
+Accounts big feature (delivery-plan canonical branch §11.4.181;
+supersedes the config’s <code>feature/accounts-web</code> label —
+reconcile). - <strong>T3 /
+<code>feature/containers-hardening</code></strong> — containers
+hardening backlog. - <strong>T4 / <code>feature/website</code></strong>
+— new marketing website submodule (+ residual
+<code>feature/vm-emu-hardening</code> vm/emu backlog).</p>
+<h3 id="p0-stabilize-publish-pending-t1-main-effort-sm">P0 — Stabilize +
+publish-pending (T1 / main) — effort <strong>S–M</strong></h3>
+<ul>
+<li>Bump <code>llm_orchestrator</code> gitlink
+<code>7e3e6da → c41a264</code> (§2.6).</li>
+<li>Fix stale doc comments (K6 fabric-lease, K5 VAL-1); reconcile the
+progress-ledger containers <code>047fbfc</code> note (§2.6).</li>
+<li>Surface K1 mirror-fork + K3 ROLL-1 + K14 DDoS-default operator
+decisions; remove stray <code>submodules/LLMProvider</code> (K2).</li>
+<li>Reconcile track/branch drift + record canonical bindings (§2.9);
+provision multi-track toolkit aliases (K11, operator).</li>
+<li>Migrate OTA-003 → <code>Fixed.md</code>; refresh stale
+<code>Status.md</code> (Rev 21, 2026-06-23) +
+<code>CONTINUATION.md</code> exports.</li>
+</ul>
+<h3 id="p1-server-production-readiness-t1-main-effort-l">P1 — Server
+production-readiness (T1 / main) — effort <strong>L</strong></h3>
+<ul>
+<li><strong>Graceful shutdown</strong> (SIGTERM →
+<code>http.Server.Shutdown</code> drain, both HTTP and QUIC transports)
+— §2.7.</li>
+<li><strong>Token-secret fail-fast</strong> (refuse to boot on
+default/unset <code>HELIX_TOKEN_SECRET</code>) — Risk #1,
+K-security.</li>
+<li><strong>Observability</strong> — <code>/metrics</code> (Prometheus)
++ structured logging (slog) + optional tracing.</li>
+<li><strong>Rate-limiting</strong> — per-IP/token throttle + login
+brute-force limiter; decide <code>HELIX_MAX_INFLIGHT</code> default
+(K14).</li>
+<li><strong>Auth hardening</strong> — hashed password storage + durable
+refresh-token store (or wire the real <code>auth</code> brick).</li>
+<li><strong>Device-side <code>min_current_version</code></strong> — add
+to <code>ota-protocol.UpdateAvailable</code> + Kotlin DTO + device
+enforcement (§2.3).</li>
+<li><strong>Complete §11.4.169 gaps</strong> — server distributed-DDoS,
+submodule benchmarks/memory, web-surface stress/chaos (§3).</li>
+<li><strong>HB-1</strong> <code>fw_setenv</code> flush-error fix after
+§11.4.8 research (K7).</li>
+</ul>
+<h3
+id="p2-on-device-ota-e2e-live-validation-t1-main-hardware-gated-effort-ml-elapsed">P2
+— On-device OTA e2e live validation (T1 / main; hardware-gated) — effort
+<strong>M–L (elapsed)</strong></h3>
+<ul>
+<li><strong>RK3588 Tier-3</strong> on-silicon A/B apply (vendor HAL,
+U-Boot slot-switch, real-partition dm-verity) — OTA-004
+(OPERATOR-BLOCKED on board).</li>
+<li><strong>Wire the Linux ApplyPort</strong> SlotWriter + driver loop
+(<code>server/internal/device/applyport.go</code> scaffold, §2.4) once
+<code>fw_env.config</code> + RAUC bundle are validated.</li>
+<li><strong>Android bricks real-device coverage</strong>
+(stress/chaos/bench/memory + instrumentation) on a real target
+(§3).</li>
+<li><strong>§11.4.185 manual QA-team confirmation</strong> on D1/D2 as
+the final release gate (K10).</li>
+</ul>
+<h3
+id="p3-accounts-multi-tenant-t2-featuremulti-tenant-accounts-isolated-11.4.167-stream-effort-xl">P3
+— Accounts multi-tenant (T2 / feature/multi-tenant-accounts; isolated
+§11.4.167 stream) — effort <strong>XL</strong></h3>
+<p>Resolve the K12 decision gate FIRST, then the 8 milestones
+(<code>accounts/30_delivery_plan.md</code>), critical path
+<code>M1→M2→M3→M7-storage-seam→M5/M6 e2e→M8</code>: - <strong>M1
+(XL)</strong> data model + <code>002/003</code> migrations +
+<code>store.Repository</code> account scoping + RLS. - <strong>M2
+(L)</strong> authZ / token <code>account_id</code> claim / super-admin +
+single role-vocab SSOT. - <strong>M3 (L)</strong> account-scope every
+OTA route + super-admin <code>/admin/*</code> API +
+<code>GET /artifacts</code> list. - <strong>M4 (L)</strong> UI: sign-in
+split + account switcher + super-admin console (dashboard +
+ota-manager), host-render-proven light+dark. - <strong>M5 (M)</strong>
+project-side integration CLI (<code>server/cmd/helix-ota</code>). -
+<strong>M6 (XL)</strong> device/System update client + setup wizard
+(<code>ota-android-agent</code>) + per-account key verify. - <strong>M7
+(L)</strong> security hardening + <strong>object-storage seam</strong>
+(MinIO/S3, real <code>StorageRef</code>, per-account signing-key
+registry, secret fail-fast) — pull the storage seam EARLY (right after
+M3) so M5/M6 e2e aren’t permanently SKIP. - <strong>M8 (M–L)</strong>
+full §11.4.40 retest + §11.4.185 manual-QA final gate +
+operator-approval merge to main.</p>
+<h3
+id="p4-marketing-website-11.4.190-t4-featurewebsite-new-submoduleswebsite-effort-l">P4
+— Marketing website §11.4.190 (T4 / feature/website; new
+<code>submodules/website</code>) — effort <strong>L</strong></h3>
+<p>Resolve the K13 decisions, then: scaffold Angular 22 SSR + Tailwind
+v4 + OpenDesign Helix-green brand layer; build content to the locked
+spec (<code>contact@hxota.com</code>, no pricing, heart footer,
+roadmap-marked claims); i18n + theme switchers + WCAG-AA + Core Web
+Vitals; §11.4.190 proofs (responsive breakpoint×engine host-render +
+automated SEO audit + light/dark §11.4.170 pixel proof).</p>
+<h3 id="p5-hardening-backlog-docstracking-hygiene-t3t4-t1-effort-m">P5 —
+Hardening backlog + docs/tracking hygiene (T3/T4 + T1) — effort
+<strong>M</strong></h3>
+<ul>
+<li><strong>Containers</strong> (T3): land SW6-1
+(<code>pkg/lifecycle/idle.go</code> recover) + remaining Wave-21/22
+findings; merge <code>feature/containers-hardening</code> → main
+(§11.4.191), bumping the containers gitlink.</li>
+<li><strong>vm/emu</strong> (T4): SW1-2 macos timer (K8), SW2-2
+<code>authorizeADB</code> diagnostic, Wave-16/17/18 backlog.</li>
+<li><strong>Tracking</strong> (T1): load
+<code>docs/workable_items.db</code> from this plan via
+<code>cmd/workable-items</code> (§11.4.93); wire this doc as the
+§11.4.172 living plan; complete §11.4.153 per-feature video-recording
+confirmation (durable evidence).</li>
+</ul>
+<hr />
+<h2
+id="workable-items-breakdown-load-list-for-docsworkable_items.db-via-cmdworkable-items">6.
+WORKABLE-ITEMS BREAKDOWN (load-list for
+<code>docs/workable_items.db</code> via
+<code>cmd/workable-items</code>)</h2>
+<p>ATM IDs left <code>&lt;auto&gt;</code> (the tool allocates).
+Track/branch per §5 (reconcile §2.9 first). Description ≥40 chars,
+plain-language (§11.4.171).</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Proposed title</th>
+<th>Type</th>
+<th>Severity</th>
+<th>Track</th>
+<th>Branch</th>
+<th>Description (≥40 chars)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Bump llm_orchestrator parent gitlink to c41a264</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>The parent repo still points at an older llm_orchestrator commit
+(7e3e6da) while the submodule tip is c41a264 with landed Wave-22 fixes;
+advance the gitlink so main carries them.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Reconcile containers gitlink ledger note vs main tree</td>
+<td>Task</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>The progress ledger claims a Wave-21 containers commit that does not
+exist in the main checkout; reconcile the ledger and confirm the
+hardening lives on the feature branch pending merge.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Fix stale fabric-lease comments (postgres_fabric/store)</td>
+<td>Bug</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>Comments still describe the old non-exclusive-lease behavior that
+HB-2 already made uniform; correct them so future readers do not
+re-introduce the divergence the code already fixed.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Correct VAL-1 false comment in ota-artifact-validator</td>
+<td>Bug</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>A stage comment falsely claims the protocol layer enforces a
+version-length bound; fix it to name the real in-package guard so a
+future edit does not silently drop that protection.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Mirror-fork canonicalization decision + union-merge</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>Three owned submodules have cross-org diverged mirrors blocking
+clean publish; the operator must pick one canonical mirror per repo and
+the divergent branches be union-merged or retired without any
+force-push.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Remove stray untracked submodules/LLMProvider dir</td>
+<td>Task</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>An untracked duplicate LLMProvider directory sits beside the tracked
+llm_provider submodule; remove the stray copy after confirming nothing
+depends on it.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>ROLL-1 decision: SuccessThreshold==0 canary semantics</td>
+<td>Task</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>A zero success-threshold currently lets any single success pass a
+canary phase with no real gate; decide whether to reject that config or
+document it as intended symmetric behavior.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Reconcile track/branch bindings + record canonically</td>
+<td>Task</td>
+<td>Low</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>The static multitrack config, the operator directive, and the
+accounts delivery plan name different branches for the same work;
+reconcile them and record one canonical track/branch binding per logic
+group in the registry.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Provision multi-track toolkit aliases (OAuth)</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>The multi-track headless ruler is bootstrapped but its per-alias
+worker accounts are not provisioned; the operator must supply the
+toolkit OAuth tokens so the automatic multi-track orchestration can
+engage.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Migrate OTA-003 to Fixed.md + refresh Status/CONTINUATION</td>
+<td>Task</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>The completed Cuttlefish Tier-2 item still sits in the open tracker
+and the feature-status doc is weeks stale; migrate the closure and
+re-export the tracking docs so they reflect live state.</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Add graceful shutdown (SIGTERM drain) to ota-server</td>
+<td>Task</td>
+<td>High</td>
+<td>T1</td>
+<td>main</td>
+<td>The server has no signal handling or connection draining, so a
+rolling deploy or SIGTERM drops in-flight requests; add
+http.Server.Shutdown drain for both the HTTP and QUIC transports.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Fail-fast on default/unset token signing secret</td>
+<td>Bug</td>
+<td>High</td>
+<td>T1</td>
+<td>main</td>
+<td>When the token secret env var is unset the server silently signs
+with a publicly-known dev key; make it refuse to boot (or loudly warn)
+so production never runs with a forgeable signing key.</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Add observability: metrics, structured logs, tracing</td>
+<td>Feature</td>
+<td>High</td>
+<td>T1</td>
+<td>main</td>
+<td>The control plane exposes no metrics, traces, or structured logs,
+leaving a fleet-update system operationally blind; add a Prometheus
+metrics endpoint, structured logging, and optional distributed
+tracing.</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Harden rate-limiting: per-IP throttle + brute-force guard</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>Only a global in-flight semaphore exists and it defaults to
+disabled, with no login brute-force protection; add per-IP/token
+throttling, a login attempt limiter, and a safe default in-flight
+cap.</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Auth hardening: hash passwords + durable refresh store</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>The MVP auth keeps plaintext passwords in memory and loses refresh
+tokens on restart; hash stored credentials and persist refresh tokens
+(or wire the real auth brick) for a production identity path.</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Add device-side min_current_version to UpdateAvailable</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>The server enforces a minimum-current-version floor but never sends
+it in the wire offer, so the device cannot enforce it locally; add the
+field to the protocol and Kotlin DTO and enforce it device-side.</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Wire Linux/U-Boot ApplyPort slot-writer + driver loop</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>The on-device Linux apply path is a documented scaffold with stubbed
+slot-writer and driver; implement the full A/B apply loop once the
+fw_env config and RAUC bundle are validated.</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Resolve applyport CLI placeholder return</td>
+<td>Task</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>The applyport CLI tool returns a placeholder value in one path;
+implement the real behavior so the CLI is complete and not a partial
+stub.</td>
+</tr>
+<tr>
+<td>19</td>
+<td>Complete §11.4.169 test-type coverage gaps</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>Several surfaces lack test types the standard requires (distributed
+DDoS on the server, benchmarks/memory on the Go bricks, stress/chaos on
+the web apps); add the missing types with captured evidence.</td>
+</tr>
+<tr>
+<td>20</td>
+<td>HB-1 fw_setenv flush-error handling (research-gated)</td>
+<td>Bug</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>SaveEnv swallows a fw_setenv flush error, but a naive fix
+false-fails on backends where empty-key save is unsupported; research
+the tool semantics first, then apply a fix that fails only on real
+errors.</td>
+</tr>
+<tr>
+<td>21</td>
+<td>RK3588 Tier-3 on-silicon A/B apply validation</td>
+<td>Task</td>
+<td>High</td>
+<td>T1</td>
+<td>main</td>
+<td>The full on-hardware update path (vendor HAL, U-Boot slot-switch,
+real-partition dm-verity, auto-rollback) is unproven and
+hardware-blocked; validate it on a physically attached Orange Pi 5 Max
+board.</td>
+</tr>
+<tr>
+<td>22</td>
+<td>Android bricks real-device test coverage</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>The Android agent and update-engine bridge have only JVM unit tests;
+add stress, chaos, benchmark, memory, and instrumentation coverage
+against a real Android A/B target.</td>
+</tr>
+<tr>
+<td>23</td>
+<td>§11.4.185 manual QA-team final confirmation gate</td>
+<td>Task</td>
+<td>High</td>
+<td>T1</td>
+<td>main</td>
+<td>No scope is release-complete until the QA team manually confirms it
+on real hardware; hand off the validated build to QA on the D1/D2 boards
+and record the final confirmation before any tag.</td>
+</tr>
+<tr>
+<td>24</td>
+<td>Accounts: resolve operator decision gate</td>
+<td>Task</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>The multi-tenant design is complete but implementation is gated on
+operator choices for permission model, identity source, migration path,
+per-account keys, and id type; resolve them before M1 starts.</td>
+</tr>
+<tr>
+<td>25</td>
+<td>Accounts M1: data model + migrations + store scoping</td>
+<td>Feature</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Add account/user/membership entities and account-and-project scoping
+columns across every OTA table in both store backends with RLS, the
+keystone that everything else depends on.</td>
+</tr>
+<tr>
+<td>26</td>
+<td>Accounts M2: token account-claim + super-admin authZ</td>
+<td>Feature</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Add the account-scoped token claim, the super-admin bypass, and a
+single canonical role vocabulary across server and both SPAs so requests
+authorize only their own account.</td>
+</tr>
+<tr>
+<td>27</td>
+<td>Accounts M3: scope every OTA route + super-admin API</td>
+<td>Feature</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Gate every OTA route by the account claim, add the super-admin admin
+API and account-selection endpoints, and the missing list-artifacts
+endpoint, keeping the existing API backward-compatible.</td>
+</tr>
+<tr>
+<td>28</td>
+<td>Accounts M4: sign-in split + account switcher + console</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Extend both web apps with a post-login account picker, an account
+switcher above the project switcher, and a super-admin console, all
+proven light and dark by host-rendered pixels.</td>
+</tr>
+<tr>
+<td>29</td>
+<td>Accounts M5: project-side integration CLI</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Build a production CLI that a consuming project’s CI uses to
+authenticate to one account and project and publish OTA updates,
+extending the existing upload path rather than reinventing it.</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Accounts M6: device update client + setup wizard</td>
+<td>Feature</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Extend the device agent to a multi-account production client with a
+server-minted identity, a notification/setup/consent wizard, and
+per-account signature verification, so a device only ever sees its own
+account’s updates.</td>
+</tr>
+<tr>
+<td>31</td>
+<td>Accounts M7: object storage seam + security hardening</td>
+<td>Feature</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Replace the discard-after-validate placeholder with a real
+per-account object-storage seam and signed download URLs, add the
+per-account signing-key registry, and fail fast on an unset secret.</td>
+</tr>
+<tr>
+<td>32</td>
+<td>Accounts M8: full retest + manual-QA merge gate</td>
+<td>Task</td>
+<td>High</td>
+<td>T2</td>
+<td>feature/multi-tenant-accounts</td>
+<td>Run the complete test sweep from a clean baseline with captured
+evidence and the manual-QA final confirmation, then merge the feature
+branch to main only after operator approval.</td>
+</tr>
+<tr>
+<td>33</td>
+<td>Website: resolve the three operator decisions</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T4</td>
+<td>feature/website</td>
+<td>The marketing website plan is complete but blocked on operator
+choices for the new repo/remote, the containerized build approach, and
+the tokens-only OpenDesign strategy; resolve them before
+scaffolding.</td>
+</tr>
+<tr>
+<td>34</td>
+<td>Website: scaffold Angular 22 submodule + brand tokens</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T4</td>
+<td>feature/website</td>
+<td>Create the new website submodule with Angular 22 SSR, Tailwind v4,
+and a Helix-green OpenDesign brand layer with light/dark and i18n
+switchers, as the base for the marketing site.</td>
+</tr>
+<tr>
+<td>35</td>
+<td>Website: build content to the locked spec</td>
+<td>Feature</td>
+<td>Medium</td>
+<td>T4</td>
+<td>feature/website</td>
+<td>Build the long-scroll marketing site describing only real shipping
+capabilities, with the locked sales email, no pricing, the heart footer,
+and any roadmap features clearly marked as coming.</td>
+</tr>
+<tr>
+<td>36</td>
+<td>Website: §11.4.190 responsive + SEO + visual proofs</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T4</td>
+<td>feature/website</td>
+<td>Prove the site is fully responsive, SEO-optimized, and
+enterprise-quality with host-rendered screenshots across the breakpoint
+and engine matrix, an automated SEO audit, and light/dark pixel
+proofs.</td>
+</tr>
+<tr>
+<td>37</td>
+<td>Containers: land SW6-1 + merge hardening branch to main</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T3</td>
+<td>feature/containers-hardening</td>
+<td>Land the idle-shutdown recover guard and remaining containers
+hardening findings, then merge the hardening branch to main and advance
+the parent gitlink under the work-track binding rule.</td>
+</tr>
+<tr>
+<td>38</td>
+<td>vm/emu hardening backlog (SW1-2, SW2-2, Wave-16/17/18)</td>
+<td>Task</td>
+<td>Low</td>
+<td>T4</td>
+<td>feature/vm-emu-hardening</td>
+<td>Work the remaining vm and emulator hardening backlog including the
+macOS boot-wait timer leak, the discarded ADB-authorize diagnostic, and
+the process-kill and fixture clusters.</td>
+</tr>
+<tr>
+<td>39</td>
+<td>Load workable_items.db from this plan (§11.4.93)</td>
+<td>Task</td>
+<td>Medium</td>
+<td>T1</td>
+<td>main</td>
+<td>This plan’s leaf items are not yet in the single-source-of-truth
+database; load them via the workable-items tool so the tracker, docs,
+and this living plan stay in sync.</td>
+</tr>
+<tr>
+<td>40</td>
+<td>Complete §11.4.153 per-feature video-recording evidence</td>
+<td>Task</td>
+<td>Low</td>
+<td>T1</td>
+<td>main</td>
+<td>Several feature-status rows cite cleared ephemeral recordings rather
+than durable committed evidence; regenerate window-scoped,
+vision-verified recordings and commit them as durable proof.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Counts:</strong> 40 workable items across 6 phases (P0–P5) —
+14 Feature, 22 Task, 4 Bug.</p>
+<hr />
+<h2 id="honest-boundary-11.4.6">7. Honest boundary (§11.4.6)</h2>
+<p>This is an <strong>analysis + planning</strong> deliverable. No fixes
+were implemented, no DB was written, no builds beyond the survey
+subagents’ single clean <code>go build ./...</code>. Every claim above
+cites a file/path or is marked <code>UNCONFIRMED:</code>. Effort sizes
+are T-shirt estimates, not calendar commitments (§11.4.172 — replace
+with measured-velocity ranges once P0/P1 land). The two biggest
+deliverables (Accounts, Website) already carry their own detailed,
+operator-gated design sets under <code>docs/research/accounts/</code>
+and <code>docs/research/website/</code> — this plan cites and sequences
+them rather than restating them. The release tag remains gated on
+§11.4.185 QA-team manual confirmation and the resolution of the
+K1/K12/K13 operator decisions.</p>
+</body>
+</html>
