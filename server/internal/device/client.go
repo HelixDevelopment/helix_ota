@@ -304,9 +304,19 @@ func (c *ApplyPortClient) DownloadBundle(ctx context.Context, url string, offset
 		return nil, fmt.Errorf("client: create download request: %w", err)
 	}
 
-	// Range header for resumable partial downloads.
-	if offset > 0 || size > 0 {
+	// Range header for resumable partial downloads. HB-4: the prior
+	// `bytes=%d-%d` with end = offset+size-1 produced an INVALID range
+	// (end < start) when size==0 && offset>0 — e.g. "bytes=4096-4095", which a
+	// server either 416s or silently ignores (serving the full body from byte
+	// 0). Emit an OPEN-ENDED range for the "resume from offset, remaining size
+	// unknown" case instead.
+	switch {
+	case offset > 0 && size > 0:
 		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", offset, offset+size-1))
+	case offset > 0:
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", offset))
+	case size > 0:
+		req.Header.Set("Range", fmt.Sprintf("bytes=0-%d", size-1))
 	}
 
 	resp, err := c.httpClient.Do(req)
