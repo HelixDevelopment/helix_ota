@@ -75,8 +75,10 @@ func (s *Server) handleRecall(c *gin.Context) {
 			ErrorDetail{Field: "deployment", Issue: "no current release"})
 		return
 	}
-	// The target release must exist.
-	if _, err := s.repo.GetRelease(c.Request.Context(), req.ToReleaseID); err != nil {
+	// The target release must exist. Capture it so we can stamp the fleet's
+	// TargetVersion after the recall deployment is created (HA-3).
+	toRel, err := s.repo.GetRelease(c.Request.Context(), req.ToReleaseID)
+	if err != nil {
 		respondError(c, http.StatusNotFound, CodeNotFound, "target release not found")
 		return
 	}
@@ -109,6 +111,11 @@ func (s *Server) handleRecall(c *gin.Context) {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not create recall deployment")
 		return
 	}
+	// HA-3: stamp the recall release as the fleet's target version, mirroring
+	// handleCreateDeployment. Without this the devices' TargetVersion stays at
+	// the superseded release, so GET /devices and device-status endpoints report
+	// stale, misleading target state after a recall (§11.4.108).
+	s.assignTargetVersion(ctx, toRel, dep.Group)
 	rec := store.RollbackRecord{
 		ID:                 s.newID(),
 		DeploymentID:       deploymentID,
