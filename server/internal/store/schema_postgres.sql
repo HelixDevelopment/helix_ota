@@ -12,6 +12,11 @@ CREATE SCHEMA IF NOT EXISTS helix_ota;
 SET search_path = helix_ota, public;
 
 CREATE TABLE IF NOT EXISTS helix_ota.devices (
+    -- STORE-1: seq is the insertion-order counter ListDevices/AllDevices order
+    -- by, exactly as releases.seq / deployments.seq already do — so the pgx
+    -- listing reproduces MemoryRepository's insertion order (devOrder) instead
+    -- of a device_id-sorted order (dev-vs-prod GET /devices order divergence).
+    seq             BIGSERIAL,
     device_id       TEXT PRIMARY KEY,
     hardware_id     TEXT        NOT NULL,
     model           TEXT        NOT NULL DEFAULT '',
@@ -29,6 +34,15 @@ CREATE TABLE IF NOT EXISTS helix_ota.devices (
     target_version  TEXT        NOT NULL DEFAULT '',
     CONSTRAINT devices_hardware_id_uniq UNIQUE (hardware_id)
 );
+-- STORE-1: additive, idempotent forward-migration for a devices table
+-- provisioned before seq landed. ADD COLUMN IF NOT EXISTS is a no-op on the
+-- fresh CREATE above (the column is already there) and adds the insertion-order
+-- counter to an existing table so its ListDevices ordering stops depending on
+-- device_id. (Same forward-migration shape the telemetry duration_ms/
+-- bytes_transferred columns use below.) On an already-populated table BIGSERIAL
+-- backfills seq in the table's physical row order and rewrites the table once;
+-- for the MVP bring-up path (fresh DROP SCHEMA + Migrate) this branch is a no-op.
+ALTER TABLE helix_ota.devices ADD COLUMN IF NOT EXISTS seq BIGSERIAL;
 
 CREATE TABLE IF NOT EXISTS helix_ota.artifacts (
     artifact_id        TEXT PRIMARY KEY,
