@@ -1,11 +1,12 @@
 // Helix OTA — LoginScreen (design §9.1).
 // OAuth2 ROPC: POST /auth/login -> tokens established by AuthContext.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import { Button, Card, ErrorPanel, Field, TextInput } from "../components/ui";
+import { setPageTitle } from "../seo";
 
 interface LocationState {
   from?: string;
@@ -16,6 +17,12 @@ export function LoginScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as LocationState | null)?.from ?? "/";
+
+  // §11.4.190(B) — the public /login route renders outside AppShell, so it
+  // sets its own tab title.
+  useEffect(() => {
+    setPageTitle("/login");
+  }, []);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

@@ -2,11 +2,12 @@
 // AppShell (nav/header) stands in for the UNVERIFIED `UI-Components-React` brick (design §13).
 // RoleGate is UX-only; the server enforces RBAC authoritatively (design §7.3).
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import type { Role } from "../types/api";
 import { currentTheme, toggleTheme, type Theme } from "../theme";
+import { setPageTitle } from "../seo";
 
 // Public route: only reachable while anonymous (redirects authed users home).
 export function PublicOnly({ children }: { children: ReactNode }) {
@@ -46,6 +47,13 @@ const NAV: { to: string; label: string }[] = [
 export function AppShell() {
   const { subject, roles, logout } = useAuth();
   const [theme, setThemeState] = useState<Theme>(() => currentTheme());
+  const location = useLocation();
+  // §11.4.190(B) — every authenticated screen gets a distinct browser-tab
+  // title (also the string a screen-reader announces on route change), kept
+  // live as the SPA navigates (see dashboard/src/seo.ts + seo.test.ts).
+  useEffect(() => {
+    setPageTitle(location.pathname);
+  }, [location.pathname]);
   // Compute the next theme (and run toggleTheme's DOM/localStorage side effect)
   // in the handler, then hand the plain value to setThemeState — no side effect
   // runs inside the state updater, so it is StrictMode double-invoke-safe.
