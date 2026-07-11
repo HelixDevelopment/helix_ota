@@ -28,7 +28,58 @@ type migration struct {
 // this framework.
 var registeredMigrations = []migration{
 	{Version: 1, Name: "baseline", SQL: postgresSchema},
+	{Version: 2, Name: "accounts", SQL: accountsMigrationSQL},
 }
+
+// accountsMigrationSQL is migration 2 ("accounts") — the Accounts M1 tenant
+// layer ABOVE Project (design §2). It creates the accounts + account_memberships
+// tables and adds the account_id scope column to projects. It is idempotent
+// (IF NOT EXISTS / ADD COLUMN IF NOT EXISTS) and FULLY schema-qualified: it runs
+// in its own transaction (applyOne), so it must NOT depend on the baseline's
+// `SET search_path`.
+//
+// SCOPE (this first M1 sub-slice): projects.account_id lands NOT NULL with an
+// empty-string default (empty = legacy/unscoped), which keeps the in-memory and
+// pgx backends byte-identical on the empty-scope case (no NULL-vs-empty-string
+// parity hazard). The design's migration 003 (a LATER M1 sub-slice) backfills
+// the empty-string scope to a __default__ account, adds the composite
+// (project_id, account_id) FK to every OTA
+// table, the per-account UNIQUE keys, and enables Row-Level Security — none of
+// which land here.
+const accountsMigrationSQL = `
+CREATE TABLE IF NOT EXISTS helix_ota.accounts (
+    -- seq is the insertion-order counter ListAccounts orders by, the same idiom
+    -- devices.seq / releases.seq use for a stable, backend-parity listing order.
+    seq        BIGSERIAL,
+    account_id TEXT PRIMARY KEY,
+    name       TEXT        NOT NULL UNIQUE,
+    slug       TEXT        NOT NULL UNIQUE,
+    status     TEXT        NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active','suspended','archived')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS helix_ota.account_memberships (
+    user_id    TEXT        NOT NULL,
+    account_id TEXT        NOT NULL REFERENCES helix_ota.accounts(account_id) ON DELETE CASCADE,
+    role       TEXT        NOT NULL DEFAULT 'viewer'
+        CHECK (role IN ('viewer','operator','admin')),
+    is_owner   BOOLEAN     NOT NULL DEFAULT FALSE,
+    granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    granted_by TEXT        NOT NULL DEFAULT '',
+    PRIMARY KEY (user_id, account_id)
+);
+CREATE INDEX IF NOT EXISTS idx_account_memberships_user    ON helix_ota.account_memberships (user_id);
+CREATE INDEX IF NOT EXISTS idx_account_memberships_account ON helix_ota.account_memberships (account_id);
+
+-- The tenant scope on projects. NOT NULL DEFAULT '' (empty = legacy/unscoped)
+-- so the pgx backend matches the in-memory backend's "" default exactly; the
+-- '' -> __default__ backfill + composite FK + per-account UNIQUE(account_id,name)
+-- are migration 003 (a later M1 sub-slice), not this one.
+ALTER TABLE helix_ota.projects ADD COLUMN IF NOT EXISTS account_id TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_projects_account ON helix_ota.projects (account_id);
+`
 
 // schemaMigrationsDDL bootstraps the applied-version ledger. It is deliberately
 // NOT itself a versioned migration: the ledger must exist before we can read

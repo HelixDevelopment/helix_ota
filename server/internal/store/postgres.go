@@ -865,9 +865,9 @@ func nullTime(t time.Time) any {
 
 func (r *PostgresRepository) CreateProject(ctx context.Context, p Project) error {
 	const q = `
-INSERT INTO helix_ota.projects (project_id, name, description, created_at, updated_at)
-VALUES ($1,$2,$3,$4,$5)`
-	_, err := r.pool.Exec(ctx, q, p.ProjectID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt)
+INSERT INTO helix_ota.projects (project_id, account_id, name, description, created_at, updated_at)
+VALUES ($1,$2,$3,$4,$5,$6)`
+	_, err := r.pool.Exec(ctx, q, p.ProjectID, p.AccountID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt)
 	if isUniqueViolation(err) {
 		return ErrConflict
 	}
@@ -876,11 +876,11 @@ VALUES ($1,$2,$3,$4,$5)`
 
 func (r *PostgresRepository) GetProject(ctx context.Context, projectID string) (Project, error) {
 	const q = `
-SELECT project_id, name, description, created_at, updated_at
+SELECT project_id, account_id, name, description, created_at, updated_at
 FROM helix_ota.projects WHERE project_id=$1`
 	var p Project
 	err := r.pool.QueryRow(ctx, q, projectID).
-		Scan(&p.ProjectID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt)
+		Scan(&p.ProjectID, &p.AccountID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Project{}, ErrNotFound
 	}
@@ -889,7 +889,7 @@ FROM helix_ota.projects WHERE project_id=$1`
 
 func (r *PostgresRepository) ListProjects(ctx context.Context) ([]Project, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT project_id, name, description, created_at, updated_at FROM helix_ota.projects ORDER BY created_at`)
+		`SELECT project_id, account_id, name, description, created_at, updated_at FROM helix_ota.projects ORDER BY created_at`)
 	if err != nil {
 		return nil, err
 	}
@@ -897,7 +897,7 @@ func (r *PostgresRepository) ListProjects(ctx context.Context) ([]Project, error
 	var out []Project
 	for rows.Next() {
 		var p Project
-		if serr := rows.Scan(&p.ProjectID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt); serr != nil {
+		if serr := rows.Scan(&p.ProjectID, &p.AccountID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt); serr != nil {
 			return nil, serr
 		}
 		out = append(out, p)
@@ -985,4 +985,164 @@ func (r *PostgresRepository) RemoveProjectAccess(ctx context.Context, callerID, 
 		return ErrNotFound
 	}
 	return nil
+}
+
+// --- accounts (tenant layer above Project — Accounts M1) ---
+
+func (r *PostgresRepository) CreateAccount(ctx context.Context, a Account) error {
+	const q = `
+INSERT INTO helix_ota.accounts (account_id, name, slug, status, created_at, updated_at)
+VALUES ($1,$2,$3,$4,$5,$6)`
+	_, err := r.pool.Exec(ctx, q, a.AccountID, a.Name, a.Slug, string(a.Status), a.CreatedAt, a.UpdatedAt)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	return err
+}
+
+func (r *PostgresRepository) GetAccount(ctx context.Context, accountID string) (Account, error) {
+	const q = `
+SELECT account_id, name, slug, status, created_at, updated_at
+FROM helix_ota.accounts WHERE account_id=$1`
+	var a Account
+	var status string
+	err := r.pool.QueryRow(ctx, q, accountID).
+		Scan(&a.AccountID, &a.Name, &a.Slug, &status, &a.CreatedAt, &a.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Account{}, ErrNotFound
+	}
+	if err != nil {
+		return Account{}, err
+	}
+	a.Status = AccountStatus(status)
+	return a, nil
+}
+
+func (r *PostgresRepository) ListAccounts(ctx context.Context) ([]Account, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT account_id, name, slug, status, created_at, updated_at FROM helix_ota.accounts ORDER BY seq`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Account
+	for rows.Next() {
+		var a Account
+		var status string
+		if serr := rows.Scan(&a.AccountID, &a.Name, &a.Slug, &status, &a.CreatedAt, &a.UpdatedAt); serr != nil {
+			return nil, serr
+		}
+		a.Status = AccountStatus(status)
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+// CreateAccountWithOwner creates the account AND its owner membership in ONE
+// transaction, so a crash between the two writes can never leave an orphan
+// (un-administerable) tenant (design §2.3). A duplicate name/slug rolls the
+// whole tx back with ErrConflict; an empty owner id is rejected before any DDL.
+func (r *PostgresRepository) CreateAccountWithOwner(ctx context.Context, a Account, ownerUserID string, role AccountRole) error {
+	if ownerUserID == "" {
+		return fmt.Errorf("store: CreateAccountWithOwner requires a non-empty owner user id")
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) // no-op once Commit succeeds
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO helix_ota.accounts (account_id, name, slug, status, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6)`,
+		a.AccountID, a.Name, a.Slug, string(a.Status), a.CreatedAt, a.UpdatedAt); err != nil {
+		if isUniqueViolation(err) {
+			return ErrConflict
+		}
+		return err
+	}
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO helix_ota.account_memberships (user_id, account_id, role, is_owner, granted_at, granted_by) VALUES ($1,$2,$3,TRUE,$4,$5)`,
+		ownerUserID, a.AccountID, string(role), a.CreatedAt, ""); err != nil {
+		if isUniqueViolation(err) {
+			return ErrConflict
+		}
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) GetAccountMembership(ctx context.Context, userID, accountID string) (AccountMembership, error) {
+	const q = `
+SELECT user_id, account_id, role, is_owner, granted_at, granted_by
+FROM helix_ota.account_memberships WHERE user_id=$1 AND account_id=$2`
+	var mem AccountMembership
+	var role string
+	err := r.pool.QueryRow(ctx, q, userID, accountID).
+		Scan(&mem.UserID, &mem.AccountID, &role, &mem.IsOwner, &mem.GrantedAt, &mem.GrantedBy)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return AccountMembership{}, ErrNotFound
+	}
+	if err != nil {
+		return AccountMembership{}, err
+	}
+	mem.Role = AccountRole(role)
+	return mem, nil
+}
+
+func (r *PostgresRepository) ListAccountMemberships(ctx context.Context, userID string) ([]AccountMembership, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT user_id, account_id, role, is_owner, granted_at, granted_by
+FROM helix_ota.account_memberships WHERE user_id=$1 ORDER BY account_id`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []AccountMembership
+	for rows.Next() {
+		var mem AccountMembership
+		var role string
+		if serr := rows.Scan(&mem.UserID, &mem.AccountID, &role, &mem.IsOwner, &mem.GrantedAt, &mem.GrantedBy); serr != nil {
+			return nil, serr
+		}
+		mem.Role = AccountRole(role)
+		out = append(out, mem)
+	}
+	return out, rows.Err()
+}
+
+// ListProjectsForAccount returns only accountID's projects. The `WHERE
+// account_id=$1` is the pgx L2 tenant scope — the app-layer twin of the L3 RLS
+// policy a later M1 sub-slice adds (design §0).
+func (r *PostgresRepository) ListProjectsForAccount(ctx context.Context, accountID string) ([]Project, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT project_id, account_id, name, description, created_at, updated_at
+FROM helix_ota.projects WHERE account_id=$1 ORDER BY created_at`, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Project
+	for rows.Next() {
+		var p Project
+		if serr := rows.Scan(&p.ProjectID, &p.AccountID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt); serr != nil {
+			return nil, serr
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+// GetProjectForAccount resolves a project by id ONLY within accountID (the
+// `AND account_id=$2` scope). A project owned by another account — or an unknown
+// id — yields no row and returns ErrNotFound (NOT_FOUND anti-enumeration §4.3).
+func (r *PostgresRepository) GetProjectForAccount(ctx context.Context, accountID, projectID string) (Project, error) {
+	const q = `
+SELECT project_id, account_id, name, description, created_at, updated_at
+FROM helix_ota.projects WHERE project_id=$1 AND account_id=$2`
+	var p Project
+	err := r.pool.QueryRow(ctx, q, projectID, accountID).
+		Scan(&p.ProjectID, &p.AccountID, &p.Name, &p.Description, &p.CreatedAt, &p.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Project{}, ErrNotFound
+	}
+	return p, err
 }

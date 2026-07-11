@@ -361,6 +361,9 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 	// --- emulation test-fabric registry (SCHEMA.sql) ---
 	runFabricContract(t, repo, ts)
 
+	// --- accounts M1: tenant layer + cross-tenant isolation (both backends) ---
+	runAccountContract(t, repo, ts)
+
 	// --- idempotency ---
 	if _, ok := repo.GetIdempotent(ctx, "k1"); ok {
 		t.Fatalf("GetIdempotent before put should be absent")

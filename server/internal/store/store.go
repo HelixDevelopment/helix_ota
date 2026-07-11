@@ -286,8 +286,15 @@ type ReleaseFilter struct {
 
 // Project is a named container for devices, releases, and deployments, providing
 // multi-tenant isolation (project-scoped roles, OS targets, hardware targets).
+// AccountID is the tenant scope introduced by Accounts M1 (design §2.2): the
+// Account this project belongs to. An empty AccountID means legacy/unscoped
+// (backfilled to a __default__ account in a later M1 sub-slice); it is stored
+// NOT NULL with an empty-string default in the pgx backend so the in-memory and
+// pgx backends stay byte-identical on the empty-scope case (no NULL-vs-empty
+// divergence).
 type Project struct {
 	ProjectID   string    `json:"project_id"`
+	AccountID   string    `json:"account_id,omitempty"`
 	Name        string    `json:"name"`
 	Description string    `json:"description,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -310,6 +317,62 @@ type ProjectAccess struct {
 	Role      ProjectRole
 }
 
+// --- accounts (tenant layer above Project — Accounts M1) ---
+//
+// An Account is the top-level tenant (organization/customer) — the isolation
+// boundary ABOVE Project. Every tenant-owned resource carries the account_id:
+// the RLS key on the pgx backend, and the L1/L2-enforced scope on the in-memory
+// backend (which has no RLS, so its isolation rests entirely on the explicit
+// account scoping proven at parity). Design SSOT: research set 20_* §1.
+
+// AccountStatus is the lifecycle state of an account. A suspended/archived
+// account is denied at the app-layer ABAC deny-override (design §3.1). Closed
+// set — mirrors 20_* §1.
+type AccountStatus string
+
+const (
+	AccountStatusActive    AccountStatus = "active"
+	AccountStatusSuspended AccountStatus = "suspended"
+	AccountStatusArchived  AccountStatus = "archived"
+)
+
+// AccountRole is the per-account membership role (viewer < operator < admin),
+// mirroring ProjectRole one level up (the account layer lifts the ProjectAccess
+// template per design §1.4). The role lives on the membership join, never on a
+// global user row, so the same identity is admin in account A and viewer in B.
+type AccountRole string
+
+const (
+	AccountRoleViewer   AccountRole = "viewer"
+	AccountRoleOperator AccountRole = "operator"
+	AccountRoleAdmin    AccountRole = "admin"
+)
+
+// Account is the top-level tenant. Name and Slug are both UNIQUE; Slug is the
+// stable account-switch key (§11.4.111 resolve-by-stable-name, never by an
+// enumeration index).
+type Account struct {
+	AccountID string
+	Name      string
+	Slug      string
+	Status    AccountStatus
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// AccountMembership is one user↔account link carrying the per-account role, so a
+// single global identity may belong to many accounts with a different role in
+// each. Composite identity (UserID, AccountID). IsOwner marks the bootstrap
+// owner CreateAccountWithOwner grants. Design SSOT: 20_* §1.
+type AccountMembership struct {
+	UserID    string
+	AccountID string
+	Role      AccountRole
+	IsOwner   bool
+	GrantedAt time.Time
+	GrantedBy string
+}
+
 // Repository is the persistence port for the control plane. Implementations are
 // the in-memory MemoryRepository (MVP/testing) and a future pgx/PostgreSQL one.
 type Repository interface {
@@ -330,6 +393,31 @@ type Repository interface {
 	ListProjectMembers(ctx context.Context, projectID string) ([]ProjectAccess, error)
 	// RemoveProjectAccess revokes a caller's access to a project.
 	RemoveProjectAccess(ctx context.Context, callerID, projectID string) error
+
+	// Accounts (tenant layer above Project — Accounts M1). CreateAccount rejects a
+	// duplicate name OR slug bound to a different account with ErrConflict.
+	// CreateAccountWithOwner atomically creates the account AND its owner
+	// membership so a crash can never leave an un-administerable orphan tenant
+	// (design §2.3). The account-scoped Project accessors enforce THE load-bearing
+	// cross-tenant isolation invariant (design §0): a query scoped to account A
+	// never returns account B's rows — GetProjectForAccount returns ErrNotFound
+	// for a project owned by another account (NOT_FOUND anti-enumeration, §4.3).
+	CreateAccount(ctx context.Context, a Account) error
+	GetAccount(ctx context.Context, accountID string) (Account, error)
+	ListAccounts(ctx context.Context) ([]Account, error)
+	CreateAccountWithOwner(ctx context.Context, a Account, ownerUserID string, role AccountRole) error
+	// GetAccountMembership returns the user's membership in an account, or
+	// ErrNotFound when the user is not a member (the cross-tenant deny).
+	GetAccountMembership(ctx context.Context, userID, accountID string) (AccountMembership, error)
+	// ListAccountMemberships returns every account the user belongs to (the
+	// post-sign-in account-picker source).
+	ListAccountMemberships(ctx context.Context, userID string) ([]AccountMembership, error)
+	// ListProjectsForAccount returns only the projects owned by accountID.
+	ListProjectsForAccount(ctx context.Context, accountID string) ([]Project, error)
+	// GetProjectForAccount returns a project by id ONLY when it belongs to
+	// accountID; a project owned by another account (or absent) returns
+	// ErrNotFound (anti-enumeration, design §4.3).
+	GetProjectForAccount(ctx context.Context, accountID, projectID string) (Project, error)
 
 	// Devices.
 	// Devices.

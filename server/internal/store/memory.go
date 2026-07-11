@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -41,6 +42,13 @@ type MemoryRepository struct {
 	// Project access control (callerID -> projectID -> role).
 	prjAccess map[string]map[string]ProjectRole // callerID -> projectID -> role
 
+	// Accounts (tenant layer above Project — Accounts M1).
+	accounts   map[string]Account                      // by accountID
+	accOrder   []string                                // insertion order for stable listing
+	accByName  map[string]string                       // name -> accountID (uniqueness)
+	accBySlug  map[string]string                       // slug -> accountID (uniqueness)
+	accMembers map[string]map[string]AccountMembership // userID -> accountID -> membership
+
 	// Emulation test-fabric registry (docs/design/emulation_fabric/SCHEMA.sql).
 	fabNodes    map[string]FabricNode       // by nodeID
 	fabTargets  map[string]FabricTarget     // by targetID
@@ -61,6 +69,10 @@ func NewMemoryRepository() *MemoryRepository {
 		projects:    make(map[string]Project),
 		prjByName:   make(map[string]string),
 		prjAccess:   make(map[string]map[string]ProjectRole),
+		accounts:    make(map[string]Account),
+		accByName:   make(map[string]string),
+		accBySlug:   make(map[string]string),
+		accMembers:  make(map[string]map[string]AccountMembership),
 		groups:      make(map[string]Group),
 		grpByName:   make(map[string]string),
 		members:     make(map[string][]GroupMember),
@@ -874,4 +886,142 @@ func (m *MemoryRepository) RemoveProjectAccess(_ context.Context, callerID, proj
 	}
 	delete(byCaller, projectID)
 	return nil
+}
+
+// --- accounts (tenant layer above Project — Accounts M1) ---
+
+// CreateAccount stores a new account, rejecting a duplicate name OR slug bound
+// to a different account id with ErrConflict (both are UNIQUE, mirroring the pgx
+// constraints).
+func (m *MemoryRepository) CreateAccount(_ context.Context, a Account) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.createAccountLocked(a)
+}
+
+// createAccountLocked assumes m.mu is already held. It is shared by CreateAccount
+// and CreateAccountWithOwner so the owner-membership grant happens under the SAME
+// lock as the account insert — the atomic no-orphan-tenant guarantee (design §2.3).
+func (m *MemoryRepository) createAccountLocked(a Account) error {
+	if existing, ok := m.accByName[a.Name]; ok && existing != a.AccountID {
+		return ErrConflict
+	}
+	if existing, ok := m.accBySlug[a.Slug]; ok && existing != a.AccountID {
+		return ErrConflict
+	}
+	if _, exists := m.accounts[a.AccountID]; !exists {
+		m.accOrder = append(m.accOrder, a.AccountID)
+	}
+	m.accounts[a.AccountID] = a
+	m.accByName[a.Name] = a.AccountID
+	m.accBySlug[a.Slug] = a.AccountID
+	return nil
+}
+
+// GetAccount returns an account by id, or ErrNotFound.
+func (m *MemoryRepository) GetAccount(_ context.Context, accountID string) (Account, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	a, ok := m.accounts[accountID]
+	if !ok {
+		return Account{}, ErrNotFound
+	}
+	return a, nil
+}
+
+// ListAccounts returns all accounts in insertion order.
+func (m *MemoryRepository) ListAccounts(_ context.Context) ([]Account, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]Account, 0, len(m.accOrder))
+	for _, id := range m.accOrder {
+		out = append(out, m.accounts[id])
+	}
+	return out, nil
+}
+
+// CreateAccountWithOwner atomically creates the account AND its owner membership
+// under one lock, so a partial write can never leave an un-administerable orphan
+// tenant (design §2.3). A duplicate name/slug fails BEFORE any membership is
+// written; an empty owner id is rejected.
+func (m *MemoryRepository) CreateAccountWithOwner(_ context.Context, a Account, ownerUserID string, role AccountRole) error {
+	if ownerUserID == "" {
+		return fmt.Errorf("store: CreateAccountWithOwner requires a non-empty owner user id")
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := m.createAccountLocked(a); err != nil {
+		return err
+	}
+	if m.accMembers[ownerUserID] == nil {
+		m.accMembers[ownerUserID] = make(map[string]AccountMembership)
+	}
+	m.accMembers[ownerUserID][a.AccountID] = AccountMembership{
+		UserID: ownerUserID, AccountID: a.AccountID, Role: role,
+		IsOwner: true, GrantedAt: a.CreatedAt, GrantedBy: "",
+	}
+	return nil
+}
+
+// GetAccountMembership returns the user's membership in an account, or
+// ErrNotFound when the user is not a member (the cross-tenant deny).
+func (m *MemoryRepository) GetAccountMembership(_ context.Context, userID, accountID string) (AccountMembership, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	byUser, ok := m.accMembers[userID]
+	if !ok {
+		return AccountMembership{}, ErrNotFound
+	}
+	mem, ok := byUser[accountID]
+	if !ok {
+		return AccountMembership{}, ErrNotFound
+	}
+	return mem, nil
+}
+
+// ListAccountMemberships returns every account the user belongs to, in account
+// insertion order.
+func (m *MemoryRepository) ListAccountMemberships(_ context.Context, userID string) ([]AccountMembership, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	byUser := m.accMembers[userID]
+	var out []AccountMembership
+	for _, accID := range m.accOrder {
+		if mem, ok := byUser[accID]; ok {
+			out = append(out, mem)
+		}
+	}
+	return out, nil
+}
+
+// ListProjectsForAccount returns only the projects owned by accountID, in
+// insertion order. The `p.AccountID != accountID` predicate is the L2 tenant
+// scope (design §0): the whole cross-tenant isolation guarantee on the
+// RLS-less in-memory backend.
+func (m *MemoryRepository) ListProjectsForAccount(_ context.Context, accountID string) ([]Project, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []Project
+	for _, id := range m.prjOrder {
+		p := m.projects[id]
+		if p.AccountID != accountID {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
+// GetProjectForAccount returns a project by id ONLY when it belongs to accountID.
+// A project owned by a DIFFERENT account — or an unknown id — returns ErrNotFound
+// (NOT_FOUND anti-enumeration, design §4.3), never a distinguishable error that
+// would confirm the id exists in another tenant.
+func (m *MemoryRepository) GetProjectForAccount(_ context.Context, accountID, projectID string) (Project, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	p, ok := m.projects[projectID]
+	if !ok || p.AccountID != accountID {
+		return Project{}, ErrNotFound
+	}
+	return p, nil
 }
