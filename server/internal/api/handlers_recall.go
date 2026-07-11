@@ -85,6 +85,29 @@ func (s *Server) handleRecall(c *gin.Context) {
 	claims, _ := claimsFrom(c)
 	ctx := c.Request.Context()
 
+	// HB-3-ROOT: serialize the supersede-then-create sequence against
+	// handleCreateDeployment and other concurrent recalls, and RE-READ the
+	// deployment under the lock. handleRecall creates a NEW active deployment for
+	// the target; without this, a recall racing a create — or a second recall of
+	// an already-superseded deployment — could leave TWO simultaneously-active
+	// deployments for one target, so a polling device is offered a
+	// nondeterministic release. Mirrors handleCreateDeployment's deployMu
+	// discipline (the store-layer HB-3 fix only makes the resulting selection
+	// deterministic; this closes the root cause).
+	s.deployMu.Lock()
+	defer s.deployMu.Unlock()
+
+	dep, err = s.repo.GetDeployment(ctx, deploymentID)
+	if err != nil {
+		respondError(c, http.StatusNotFound, CodeNotFound, "deployment not found")
+		return
+	}
+	if dep.Status == "superseded" {
+		respondError(c, http.StatusConflict, CodeConflict,
+			"deployment has already been recalled/superseded")
+		return
+	}
+
 	// Forward-fix recall (operator decision 2026-06-08, honor-AVB): supersede the
 	// current deployment and create a NEW active deployment of the target release.
 	// We never ship below the device's rollback index — the update-check
