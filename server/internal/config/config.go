@@ -8,6 +8,7 @@ package config
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -175,11 +176,33 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("config: HELIX_MAX_UPLOAD_BYTES must not be negative, got %d", c.MaxUploadBytes)
 	}
 
-	// Token secret: env-supplied, never a hard-coded secret. A development
-	// fallback keeps the binary runnable locally; production MUST set the env.
+	// SEC-1: Token secret is env-supplied and MUST be set in any real
+	// deployment — it is the symmetric key that signs AND verifies every bearer
+	// token this server mints (internal/api NewTokenSigner). A hard-coded
+	// default would let anyone who can read the source forge valid auth tokens,
+	// so we FAIL-CLOSED: when HELIX_TOKEN_SECRET is unset/empty we REFUSE to
+	// start, UNLESS the operator explicitly opts into the insecure development
+	// secret via HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET (truthy), in which case
+	// we use the dev fallback AND log a loud warning. The previous behaviour
+	// silently substituted the publicly-known dev secret, so a production deploy
+	// that merely forgot the env signed tokens with a forgeable key. The secret
+	// value itself is NEVER logged.
 	if secret := os.Getenv("HELIX_TOKEN_SECRET"); secret != "" {
 		c.TokenSecret = []byte(secret)
 	} else {
+		allowInsecure, aerr := getBool("HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET", false)
+		if aerr != nil {
+			return Config{}, aerr
+		}
+		if !allowInsecure {
+			return Config{}, fmt.Errorf("config: HELIX_TOKEN_SECRET is required (it signs and verifies auth " +
+				"tokens); refusing to start with the insecure hard-coded development secret — set " +
+				"HELIX_TOKEN_SECRET to a strong random value, or set HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET=1 " +
+				"for LOCAL DEVELOPMENT ONLY")
+		}
+		log.Println("config: WARNING — HELIX_TOKEN_SECRET is unset; using the INSECURE hard-coded development " +
+			"token secret because HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET is enabled. Auth tokens are FORGEABLE " +
+			"by anyone with source access — NEVER use this in production; set HELIX_TOKEN_SECRET.")
 		c.TokenSecret = []byte("helix-ota-dev-token-secret-change-me")
 	}
 

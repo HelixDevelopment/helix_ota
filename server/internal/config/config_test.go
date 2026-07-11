@@ -16,6 +16,10 @@ func TestLoadDefaults(t *testing.T) {
 	} {
 		t.Setenv(k, "")
 	}
+	// SEC-1: with HELIX_TOKEN_SECRET unset, Load() now fail-closes unless the
+	// operator explicitly opts into the insecure dev secret. This test asserts
+	// the dev-fallback path, so it must set that opt-in (never weaken the guard).
+	t.Setenv("HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET", "1")
 
 	cfg, err := Load()
 	if err != nil {
@@ -34,7 +38,7 @@ func TestLoadDefaults(t *testing.T) {
 		t.Fatalf("max upload want %d, got %d", DefaultMaxUploadBytes, cfg.MaxUploadBytes)
 	}
 	if len(cfg.TokenSecret) == 0 {
-		t.Fatalf("token secret should have a dev fallback")
+		t.Fatalf("token secret should have a dev fallback when the insecure-dev opt-in is set")
 	}
 	if cfg.TrustTLSProxy {
 		t.Fatalf("TrustTLSProxy default must be false (safe default per §11.4.6/§11.4.115 — HELIX_TRUST_TLS_PROXY unset)")
@@ -77,6 +81,10 @@ func TestLoadOverrides(t *testing.T) {
 // docs/qa/20260710-i1-hsts-trust-proxy/EVIDENCE.md).
 func TestLoadTrustTLSProxyOverride(t *testing.T) {
 	t.Setenv("HELIX_TRUST_TLS_PROXY", "true")
+	// SEC-1: this test does not care about the token secret, but Load() now
+	// fail-closes on an unset one — opt into the dev secret so the TrustTLSProxy
+	// assertion below is what actually gets exercised.
+	t.Setenv("HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET", "1")
 	cfg, err := Load()
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -87,6 +95,10 @@ func TestLoadTrustTLSProxyOverride(t *testing.T) {
 }
 
 func TestLoadInvalidValues(t *testing.T) {
+	// SEC-1: opt into the dev secret so each malformed-value case fails for its
+	// OWN reason and is not masked by the new unset-HELIX_TOKEN_SECRET guard
+	// (e.g. the "bad base64 pubkey" case must reach the pubkey decode).
+	t.Setenv("HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET", "1")
 	tests := []struct {
 		name string
 		key  string
