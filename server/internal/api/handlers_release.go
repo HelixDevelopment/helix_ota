@@ -135,13 +135,14 @@ func (s *Server) handleListReleases(c *gin.Context) {
 // toRelease maps a stored release to the Release response body.
 func toRelease(r store.Release) Release {
 	return Release{
-		ReleaseID:   r.ReleaseID,
-		ArtifactID:  r.ArtifactID,
-		Version:     r.Version,
-		OS:          r.OSType,
-		TargetModel: r.TargetModel,
-		Status:      r.Status,
-		Notes:       r.Notes,
-		CreatedAt:   r.CreatedAt,
+		ReleaseID:         r.ReleaseID,
+		ArtifactID:        r.ArtifactID,
+		Version:           r.Version,
+		OS:                r.OSType,
+		TargetModel:       r.TargetModel,
+		Status:            r.Status,
+		Notes:             r.Notes,
+		MinCurrentVersion: r.MinCurrentVersion, // SRV-1: operator-visibility of the stored floor
+		CreatedAt:         r.CreatedAt,
 	}
 }

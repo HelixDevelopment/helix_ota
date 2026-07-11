@@ -152,7 +152,11 @@ type Release struct {
 	TargetModel string             `json:"target_model"`
 	Status      string             `json:"status"`
 	Notes       string             `json:"notes,omitempty"`
-	CreatedAt   time.Time          `json:"created_at"`
+	// SRV-1: echo the stored eligibility floor so an operator can confirm the
+	// min_current_version they submitted actually stuck (the value enforced in
+	// handleClientUpdate). Omitempty keeps legacy releases (no floor) byte-identical.
+	MinCurrentVersion string    `json:"min_current_version,omitempty"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 // ReleaseList is the paginated list body (ReleaseList schema).

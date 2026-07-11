@@ -60,6 +60,21 @@ func (s *Server) handleClientUpdate(c *gin.Context) {
 		}
 	}
 
+	// SRV-1: eligibility floor enforcement. A release may declare a
+	// min_current_version below which the update MUST NOT be offered (the device
+	// is too far behind to apply this release directly). The floor is stored on
+	// the release (handlers_release.go) and persisted, but was never read here —
+	// so a device below the operator-declared floor was still offered + installed
+	// the gated release. Enforce it with the SAME dotted-version comparator the
+	// on-target check above uses: if the device's known current version is
+	// strictly below the floor, it is ineligible -> 204.
+	if rel.MinCurrentVersion != "" && current != "" {
+		if cmp, cerr := otavalidator.CompareDotted(current, rel.MinCurrentVersion); cerr == nil && cmp < 0 {
+			c.Status(http.StatusNoContent)
+			return
+		}
+	}
+
 	art, err := s.repo.GetArtifact(ctx, rel.ArtifactID)
 	if err != nil {
 		// Release with no resolvable artifact: cannot offer an update.
