@@ -79,8 +79,10 @@ type Config struct {
 
 	// TLSCertFile / TLSKeyFile enable the HTTP/3 (QUIC) + HTTP/2 transport. When
 	// BOTH are set the control plane is served over HTTP/3 with automatic HTTP/2
-	// fallback (ADR-0004) on HTTPSPort; otherwise it serves plain HTTP on Port
-	// (development). Supplied via HELIX_TLS_CERT / HELIX_TLS_KEY.
+	// fallback (ADR-0004) on HTTPSPort; when NEITHER is set it serves plain HTTP on
+	// Port (development). Setting exactly one is a fail-close configuration error in
+	// Load() (SRV-NEW-4/OTA-065) — a half-configured pair would otherwise silently
+	// serve plaintext. Supplied via HELIX_TLS_CERT / HELIX_TLS_KEY.
 	TLSCertFile string
 	TLSKeyFile  string
 	// HTTPSPort is the port for the TLS HTTP/2 (TCP) + HTTP/3 (UDP) listeners.
@@ -174,6 +176,27 @@ func Load() (Config, error) {
 	}
 	if c.MaxUploadBytes < 0 {
 		return Config{}, fmt.Errorf("config: HELIX_MAX_UPLOAD_BYTES must not be negative, got %d", c.MaxUploadBytes)
+	}
+
+	// SRV-NEW-4 / OTA-065: TLS cert+key form a PAIR — either BOTH are configured
+	// (the control plane terminates TLS: HTTP/3 + HTTP/2 on HTTPSPort per ADR-0004)
+	// or NEITHER is (plain HTTP on Port, the documented development default). A
+	// HALF-configured pair (exactly one of HELIX_TLS_CERT / HELIX_TLS_KEY set) is a
+	// security-relevant misconfiguration: main.go's TLS path is gated on BOTH being
+	// non-empty (an && guard), so with only one set the server SILENTLY serves plain
+	// HTTP on Port while the operator believes TLS is terminated — a downgrade that a
+	// deployment can carry into production undetected. We FAIL-CLOSED (matching the
+	// SEC-1 token-secret pattern below) rather than silently downgrade: the operator
+	// MUST set both env vars, or neither.
+	certSet, keySet := c.TLSCertFile != "", c.TLSKeyFile != ""
+	if certSet != keySet {
+		present, missing := "HELIX_TLS_CERT", "HELIX_TLS_KEY"
+		if keySet {
+			present, missing = "HELIX_TLS_KEY", "HELIX_TLS_CERT"
+		}
+		return Config{}, fmt.Errorf("config: %s is set but %s is not — the TLS cert and key must be "+
+			"configured together (set BOTH to terminate TLS, or NEITHER to serve plain HTTP); refusing "+
+			"to start with a half-configured TLS pair that would silently serve plaintext", present, missing)
 	}
 
 	// SEC-1: Token secret is env-supplied and MUST be set in any real
