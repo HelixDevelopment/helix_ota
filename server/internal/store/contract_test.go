@@ -62,6 +62,45 @@ func runRepositoryContract(t *testing.T, repo Repository) {
 		t.Fatalf("UpdateDevice unknown want ErrNotFound, got %v", err)
 	}
 
+	// STORE-1: ListDevices returns INSERTION order, not device_id-sorted order —
+	// identically across the memory and pgx backends. Insert three devices whose
+	// ids are deliberately NOT in lexicographic order (ord-3, ord-1, ord-2) and
+	// assert the listing preserves creation order. Memory iterates devOrder; pgx
+	// now ORDER BY seq (the BIGSERIAL insertion counter). The pre-fix pgx
+	// `ORDER BY device_id` returns them SORTED as [ord-1 ord-2 ord-3] and FAILs
+	// this assertion — that is the RED this guard catches. Distinct hardware_ids
+	// avoid the CreateDevice dedup conflict; a distinct Model isolates the probe
+	// set from the dev-1 registered above so the assertion holds regardless of
+	// what else is already in the repository.
+	const orderModel = "OrderProbeBoard"
+	for _, od := range []Device{
+		{DeviceID: "ord-3", HardwareID: "ORD-HW-3", Model: orderModel, OSType: otaprotocol.OSAndroid, RegisteredAt: ts},
+		{DeviceID: "ord-1", HardwareID: "ORD-HW-1", Model: orderModel, OSType: otaprotocol.OSAndroid, RegisteredAt: ts},
+		{DeviceID: "ord-2", HardwareID: "ORD-HW-2", Model: orderModel, OSType: otaprotocol.OSAndroid, RegisteredAt: ts},
+	} {
+		if err := repo.CreateDevice(ctx, od); err != nil {
+			t.Fatalf("CreateDevice ordering probe %s: %v", od.DeviceID, err)
+		}
+	}
+	ordered, _, err := repo.ListDevices(ctx, DeviceFilter{TargetModel: orderModel})
+	if err != nil {
+		t.Fatalf("ListDevices ordering probe: %v", err)
+	}
+	wantOrder := []string{"ord-3", "ord-1", "ord-2"}
+	gotOrder := make([]string, len(ordered))
+	for i, d := range ordered {
+		gotOrder[i] = d.DeviceID
+	}
+	if len(gotOrder) != len(wantOrder) {
+		t.Fatalf("ListDevices insertion-order (STORE-1): got %v, want %v", gotOrder, wantOrder)
+	}
+	for i, want := range wantOrder {
+		if gotOrder[i] != want {
+			t.Fatalf("ListDevices insertion-order (STORE-1): got %v, want %v "+
+				"(a device_id ORDER BY would sort to [ord-1 ord-2 ord-3])", gotOrder, wantOrder)
+		}
+	}
+
 	// --- artifacts ---
 	a1 := Artifact{
 		ArtifactID: "art-1", SHA256: "abc123", Size: 4096, OSType: otaprotocol.OSAndroid,

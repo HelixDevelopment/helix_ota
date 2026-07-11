@@ -300,7 +300,9 @@ func runListDevicesContract(t *testing.T, ctx context.Context, repo *PostgresRep
 		}
 	}
 
-	// Unfiltered: all three, ordered by device_id, no next cursor.
+	// Unfiltered: all three, in insertion order (seq), no next cursor. The seed
+	// is inserted d-a,d-b,d-c so insertion order coincides with device_id order
+	// here; the non-lexicographic STORE-1 proof lives in runRepositoryContract.
 	all, next, err := repo.ListDevices(ctx, DeviceFilter{})
 	if err != nil || len(all) != 3 || all[0].DeviceID != "d-a" || all[2].DeviceID != "d-c" || next != "" {
 		t.Fatalf("ListDevices all: n=%d next=%q err=%v", len(all), next, err)
