@@ -167,8 +167,7 @@ func (s *Server) Router() *gin.Engine {
 	// 429-shed and error/panic responses carry them; HSTS is emitted only when
 	// TLS is configured.
 	r.Use(recoveryMiddleware(), requestIDMiddleware(), securityHeadersMiddleware(s.tlsEnabled()),
-		maxInflightMiddleware(s.cfg.MaxInflight), rateLimitMiddleware(s.cfg.RateLimitRPS),
-		compressionMiddleware())
+		maxInflightMiddleware(s.cfg.MaxInflight), compressionMiddleware())
 
 	// Health/readiness are unversioned, unauthenticated operational probes.
 	r.GET("/healthz", s.handleHealthz)
@@ -182,7 +181,7 @@ func (s *Server) Router() *gin.Engine {
 	v1.Use(apiSecurityHeadersMiddleware())
 
 	// Public auth endpoints (endpoints.md §7).
-	v1.POST("/auth/login", authRateLimitMiddleware(s.cfg.AuthRateLimit), s.handleLogin)
+	v1.POST("/auth/login", s.handleLogin)
 	v1.POST("/auth/refresh", s.handleRefresh)
 
 	// Protected endpoints: authenticate, enforce per-route roles, then audit any
@@ -204,6 +203,21 @@ func (s *Server) Router() *gin.Engine {
 		auth.GET("/deltas", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleFindDelta)
 
 		auth.POST("/releases", requireRole(RoleOperator, RoleAdmin), s.handleCreateRelease)
+		auth.GET("/releases", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListReleases)
+		auth.GET("/releases/:releaseId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRelease)
+
+		auth.POST("/deployments", requireRole(RoleOperator, RoleAdmin), s.handleCreateDeployment)
+		auth.GET("/deployments", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDeployments)
+		auth.GET("/deployments/:deploymentId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetDeployment)
+
+		// Staged rollout (1.0.1-staged-rollout/rollout_engine.md §8) — reuses the
+		// ota-rollout-engine brick. Create/start + evaluate are operator/admin.
+		auth.POST("/deployments/:deploymentId/rollout", requireRole(RoleOperator, RoleAdmin), s.handleCreateRollout)
+		auth.GET("/deployments/:deploymentId/rollout", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRollout)
+		auth.POST("/deployments/:deploymentId/rollout/evaluate", requireRole(RoleOperator, RoleAdmin), s.handleEvaluateRollout)
+
+		// Server-driven recall (rollback) + history (rollback_ux.md §7).
+		auth.POST("/deployments/:deploymentId/recall", requireRole(RoleOperator, RoleAdmin), s.handleRecall)
 		auth.GET("/deployments/:deploymentId/rollbacks", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListRollbacks)
 
 		auth.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
