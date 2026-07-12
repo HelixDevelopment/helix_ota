@@ -129,9 +129,20 @@ conductor: ""
 worktree_subdir: helix_ota
 
 # §11.4.187 auto-fallback — the rate-limit transcript signatures the per-alias
-# monitor matches to detect a usage/quota limit and trigger `orchestrator
-# fallback`. Host fact (§11.4.186) — peer to the atmosphere consumer's block.
+# monitor matches (AND-set: a line must contain EVERY listed token) to detect a
+# usage/quota limit and trigger `orchestrator fallback`. Host fact (§11.4.186) —
+# MUST be propagated byte-identically to the atmosphere peer's the-factory.yaml.
+# Pinned 2026-07-12 to the REAL captured live token: a headless probe of
+# claude1/claude4 (both weekly-rejected) showed the previous camelCase pair
+# (`"apiErrorStatus":429` + `"isApiErrorMessage":true`) matched NO real transcript
+# line. `":429` is the 429 rate-limit value present in BOTH the interactive
+# assistant API-error line (`"apiErrorStatus":429`) AND the headless stream-json
+# result line (`"api_error_status":429`) — one AND-token that unions the old
+# camelCase + new snake_case shapes (the list is AND, so listing both literals
+# would match nothing). The quota-marker gate (resets / weekly limit / session
+# limit) prevents a coincidental 429 from firing: no marker => classified
+# unclassified => NO-OP. Healthy accounts emit `"api_error_status":null` /
+# `"status":"allowed"` (no 429) so they never match — verified no-false-positive.
 fallback:
   signatures:
-    - '"apiErrorStatus":429'
-    - '"isApiErrorMessage":true'
+    - '":429'
