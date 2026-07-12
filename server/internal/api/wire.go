@@ -277,14 +277,18 @@ type CreateProjectRequest struct {
 // indistinguishable from an explicitly-empty field, which previously caused
 // any partial PATCH that only changed `name` to silently wipe the existing
 // description.
+// AccountID is a pointer for the same reason: absent (nil) leaves the stored
+// account_id untouched; non-nil (including an explicit empty string) updates it.
 type UpdateProjectRequest struct {
 	Name        string  `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	AccountID   *string `json:"account_id,omitempty"`
 }
 
 // ProjectResponse is a project response body.
 type ProjectResponse struct {
 	ProjectID   string    `json:"project_id"`
+	AccountID   string    `json:"account_id,omitempty"`
 	Name        string    `json:"name"`
 	Description string    `json:"description,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
