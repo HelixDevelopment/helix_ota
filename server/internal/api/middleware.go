@@ -200,6 +200,89 @@ func (s *Server) requireAccountAccess(minRole store.AccountRole) gin.HandlerFunc
 	}
 }
 
+// TestDisableClaimAccountAccess, when true, makes requireClaimAccountAccess
+// pass through without enforcing account membership. This is an anti-tautology
+// test hook per §11.4.115 — only test code sets it; production code never does.
+var TestDisableClaimAccountAccess bool
+
+// --- Accounts M3: claim-based account scoping for OTA operational routes ---
+//
+// requireClaimAccountAccess enforces account scoping from the token CLAIM
+// (not the URL path). It reads the server-minted account_id from the verified
+// JWT claim stored by authMiddleware, re-verifies membership on every request
+// (belt-and-suspenders, design §3.2), and checks the account is active.
+//
+// This is the PRIMARY scoping mechanism for OTA operational routes (devices,
+// releases, deployments, artifacts, groups, telemetry, audit — design §4.2
+// "Token-claim on the hot path"). It is DISTINCT from requireAccountAccess
+// which reads the target account from the URL path :accountId param (used by
+// account-management routes and cross-account admin operations).
+//
+// Backward compatibility: when the token carries NO account_id claim (legacy
+// token from before M2, or a fresh sign-in that has not yet selected an
+// account), the request passes through with an empty-string scope — single-tenant
+// callers keep working during the migration window. Post-migration this degrades
+// to fail-closed per design §3.3/J.
+//
+// Super-admin bypasses the tenant-isolation predicate entirely (design §3.4).
+func (s *Server) requireClaimAccountAccess(minRole store.AccountRole) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Anti-tautology test hook (§11.4.115): when disabled, the
+		// middleware passes through — enabling a test to prove that
+		// cross-tenant access is GENUINELY possible without it (RED),
+		// then re-enable and prove the middleware provides the active
+		// isolation gate (GREEN).
+		if TestDisableClaimAccountAccess {
+			c.Next()
+			return
+		}
+		claims, ok := claimsFrom(c)
+		if !ok {
+			respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "authentication required")
+			return
+		}
+		// Super-admin bypasses tenant isolation (design §3.4).
+		if claims.HasRole(RoleSuperAdmin) {
+			c.Next()
+			return
+		}
+		accountID := claims.AccountID
+		if accountID == "" {
+			// Legacy token (no account claim) — backward compat: allow through.
+			// Post-migration this becomes fail-closed per design §3.3/J.
+			c.Next()
+			return
+		}
+		// Belt-and-suspenders: re-verify membership on every request so a
+		// stale/forged claim cannot outlive the membership row (design §3.2).
+		membership, err := s.repo.GetAccountMembership(c.Request.Context(), claims.Subject, accountID)
+		if err != nil {
+			// Anti-enumeration: membership absence looks identical to account absence.
+			respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+			return
+		}
+		if membership.Role == "" {
+			respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+			return
+		}
+		if !accountRoleAtLeast(membership.Role, minRole) {
+			respondError(c, http.StatusForbidden, CodeForbidden, "insufficient role for this operation")
+			return
+		}
+		// Thin ABAC deny-override: account must be active (design §3.1).
+		acct, err := s.repo.GetAccount(c.Request.Context(), accountID)
+		if err != nil {
+			respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+			return
+		}
+		if acct.Status != store.AccountStatusActive {
+			respondError(c, http.StatusForbidden, CodeForbidden, "account is not active")
+			return
+		}
+		c.Next()
+	}
+}
+
 // requireSuperAdmin enforces that the authenticated principal carries the
 // super_admin role (the global bypass flag, design §3.4). It runs AFTER
 // authMiddleware. A principal lacking super_admin yields 403 FORBIDDEN.

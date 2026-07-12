@@ -36,6 +36,7 @@ type Server struct {
 	target  otavalidator.TargetPolicy
 	refresh *refreshStore
 	rollout *rollout.Service
+	metrics *Metrics
 	nowFn   func() time.Time
 	newIDFn func() string
 
@@ -83,6 +84,10 @@ type Options struct {
 	// Rollout, when non-nil, is the staged-rollout service the server uses (e.g.
 	// a pgx-backed one in production). Nil falls back to an in-memory service.
 	Rollout *rollout.Service
+	// Metrics, when non-nil, is the registered Prometheus metric set the server
+	// exposes at GET /metrics and records on every request. Nil (the typical
+	// production path) creates the default-process-registry metric set.
+	Metrics *Metrics
 }
 
 // NewServer builds a Server from the given options.
@@ -124,6 +129,7 @@ func NewServer(opts Options) *Server {
 		target:  policy,
 		refresh: newRefreshStore(),
 		rollout: rolloutSvc,
+		metrics: opts.Metrics, // nil when not provided — Router skips metrics then
 		nowFn:   now,
 		newIDFn: newID,
 	}
@@ -166,12 +172,23 @@ func (s *Server) Router() *gin.Engine {
 	// headers on EVERY response. It runs before the in-flight limiter so even a
 	// 429-shed and error/panic responses carry them; HSTS is emitted only when
 	// TLS is configured.
-	r.Use(recoveryMiddleware(), requestIDMiddleware(), securityHeadersMiddleware(s.tlsEnabled()),
-		maxInflightMiddleware(s.cfg.MaxInflight), compressionMiddleware())
+	// OTA-034 observability: metrics middleware first (measures full request
+	// lifecycle including all downstream middleware), then the existing chain
+	// with structured logging injected after the request-id is assigned.
+	if s.metrics != nil {
+		r.Use(s.metrics.Middleware())
+	}
+	r.Use(recoveryMiddleware(), requestIDMiddleware(),
+		StructuredLoggingMiddleware(), securityHeadersMiddleware(s.tlsEnabled()),
+		maxInflightMiddleware(s.cfg.MaxInflight),
+		compressionMiddleware())
 
-	// Health/readiness are unversioned, unauthenticated operational probes.
+	// Health/readiness and metrics are unversioned, unauthenticated operational probes.
 	r.GET("/healthz", s.handleHealthz)
 	r.GET("/readyz", s.handleReadyz)
+	if s.metrics != nil {
+		r.GET("/metrics", s.metrics.Handler())
+	}
 
 	v1 := r.Group(s.cfg.APIBasePath)
 	// apiSecurityHeadersMiddleware (Item O, Tier B) adds the strict JSON CSP
@@ -189,72 +206,99 @@ func (s *Server) Router() *gin.Engine {
 	auth := v1.Group("")
 	auth.Use(s.authMiddleware(), s.auditMiddleware())
 	{
-		auth.POST("/devices/register", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDevice)
-		auth.GET("/devices", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDevices)
-		auth.GET("/devices/by-hardware/:hardwareId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleDeviceByHardware)
-		auth.GET("/devices/:deviceId/status", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceStatus)
-
-		auth.POST("/artifacts/upload", requireRole(RoleOperator, RoleAdmin), s.handleUploadArtifact)
-		auth.GET("/artifacts/:artifactId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetArtifact)
-
-		// Delta artifacts (delta_updates_design.md §4): register + lookup a
-		// base->target delta. Register is operator/admin; lookup is viewer+.
-		auth.POST("/deltas", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDelta)
-		auth.GET("/deltas", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleFindDelta)
-
-		auth.POST("/releases", requireRole(RoleOperator, RoleAdmin), s.handleCreateRelease)
-		auth.GET("/releases", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListReleases)
-		auth.GET("/releases/:releaseId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRelease)
-
-		auth.POST("/deployments", requireRole(RoleOperator, RoleAdmin), s.handleCreateDeployment)
-		auth.GET("/deployments", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDeployments)
-		auth.GET("/deployments/:deploymentId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetDeployment)
-
-		// Staged rollout (1.0.1-staged-rollout/rollout_engine.md §8) — reuses the
-		// ota-rollout-engine brick. Create/start + evaluate are operator/admin.
-		auth.POST("/deployments/:deploymentId/rollout", requireRole(RoleOperator, RoleAdmin), s.handleCreateRollout)
-		auth.GET("/deployments/:deploymentId/rollout", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRollout)
-		auth.POST("/deployments/:deploymentId/rollout/evaluate", requireRole(RoleOperator, RoleAdmin), s.handleEvaluateRollout)
-
-		// Server-driven recall (rollback) + history (rollback_ux.md §7).
-		auth.POST("/deployments/:deploymentId/recall", requireRole(RoleOperator, RoleAdmin), s.handleRecall)
-		auth.GET("/deployments/:deploymentId/rollbacks", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListRollbacks)
-
-		auth.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
-		auth.POST("/client/telemetry", requireRole(RoleDevice), s.handleClientTelemetry)
-
-		// Telemetry reads (operational_endpoints.md §5). Device may read its own.
-		auth.GET("/devices/:deviceId/telemetry", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceTelemetry)
-		auth.GET("/telemetry/overview", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleTelemetryOverview)
-
-		// Device groups (operational_endpoints.md §6). Writes operator/admin;
-		// group delete is admin-only; reads viewer+.
-		auth.POST("/groups", requireRole(RoleOperator, RoleAdmin), s.handleCreateGroup)
-		auth.GET("/groups", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroups)
-		auth.GET("/groups/:groupId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetGroup)
-		auth.PATCH("/groups/:groupId", requireRole(RoleOperator, RoleAdmin), s.handleUpdateGroup)
-		auth.DELETE("/groups/:groupId", requireRole(RoleAdmin), s.handleDeleteGroup)
-		auth.GET("/groups/:groupId/members", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroupMembers)
-		auth.POST("/groups/:groupId/members", requireRole(RoleOperator, RoleAdmin), s.handleAddGroupMembers)
-		auth.DELETE("/groups/:groupId/members/:deviceId", requireRole(RoleOperator, RoleAdmin), s.handleRemoveGroupMember)
-
-		// Audit log read (operational_endpoints.md §4.3) — admin only.
-		auth.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
-
-		// Accounts M2 — super-admin (design §4.1): list/create/manage accounts.
+		// --- Super-admin routes (design §4.1) ---
+		// These bypass tenant isolation entirely — the super_admin global flag
+		// is the only gate. Account creation/management is super-admin-only.
 		auth.GET("/admin/accounts", requireSuperAdmin(), s.handleAdminListAccounts)
 
-		// Accounts M2 — account-scoped (design §4.1): list projects for this account.
+		// --- Account-scoped management routes (path-based, design §4.1) ---
+		// These read the target account from the URL path :accountId param and
+		// enforce requireAccountAccess (which re-verifies membership). Used for
+		// cross-account admin / account-management operations.
 		auth.GET("/accounts/:accountId/projects",
 			s.requireAccountAccess(store.AccountRoleViewer), s.handleListAccountProjects)
 
-		// Projects (multi-project support). Writes operator/admin, delete admin-only,
-		// reads viewer+.
-		auth.POST("/projects", requireRole(RoleOperator, RoleAdmin), s.handleCreateProject)
-		auth.GET("/projects", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListProjects)
-		auth.GET("/projects/:projectId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetProject)
-		auth.PATCH("/projects/:projectId", requireRole(RoleAdmin), s.handleUpdateProject)
-		auth.DELETE("/projects/:projectId", requireRole(RoleAdmin), s.handleDeleteProject)
+		// --- OTA operational routes (claim-scoped, design §4.2) ---
+		// Every device / release / deployment / artifact / delta / rollout /
+		// rollback / client / telemetry / group / audit / project route is scoped
+		// to the account carried in the verified JWT token claim. The subgroup
+		// applies requireClaimAccountAccess(viewer) uniformly — every caller
+		// must belong to the token's account at viewer-or-higher. Per-route
+		// requireRole() enforces the GLOBAL RBAC role as before (the two
+		// middleware stack: claim-account → global-role).
+		//
+		// Backward compatibility: when the token carries no account_id claim
+		// (legacy single-tenant token), requireClaimAccountAccess passes through
+		// with an empty-string scope — existing callers keep working during the
+		// migration window.
+		ota := auth.Group("")
+		ota.Use(s.requireClaimAccountAccess(store.AccountRoleViewer))
+		{
+			// Devices.
+			ota.POST("/devices/register", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDevice)
+			ota.GET("/devices", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDevices)
+			ota.GET("/devices/by-hardware/:hardwareId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleDeviceByHardware)
+			ota.GET("/devices/:deviceId/status", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceStatus)
+
+			// Artifacts.
+			ota.POST("/artifacts/upload", requireRole(RoleOperator, RoleAdmin), s.handleUploadArtifact)
+			ota.GET("/artifacts/:artifactId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetArtifact)
+
+			// Delta artifacts (delta_updates_design.md §4): register + lookup a
+			// base->target delta. Register is operator/admin; lookup is viewer+.
+			ota.POST("/deltas", requireRole(RoleOperator, RoleAdmin), s.handleRegisterDelta)
+			ota.GET("/deltas", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleFindDelta)
+
+			// Releases.
+			ota.POST("/releases", requireRole(RoleOperator, RoleAdmin), s.handleCreateRelease)
+			ota.GET("/releases", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListReleases)
+			ota.GET("/releases/:releaseId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRelease)
+
+			// Deployments.
+			ota.POST("/deployments", requireRole(RoleOperator, RoleAdmin), s.handleCreateDeployment)
+			ota.GET("/deployments", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListDeployments)
+			ota.GET("/deployments/:deploymentId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetDeployment)
+
+			// Staged rollout (1.0.1-staged-rollout/rollout_engine.md §8) — reuses the
+			// ota-rollout-engine brick. Create/start + evaluate are operator/admin.
+			ota.POST("/deployments/:deploymentId/rollout", requireRole(RoleOperator, RoleAdmin), s.handleCreateRollout)
+			ota.GET("/deployments/:deploymentId/rollout", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetRollout)
+			ota.POST("/deployments/:deploymentId/rollout/evaluate", requireRole(RoleOperator, RoleAdmin), s.handleEvaluateRollout)
+
+			// Server-driven recall (rollback) + history (rollback_ux.md §7).
+			ota.POST("/deployments/:deploymentId/recall", requireRole(RoleOperator, RoleAdmin), s.handleRecall)
+			ota.GET("/deployments/:deploymentId/rollbacks", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListRollbacks)
+
+			// Client (device-facing).
+			ota.GET("/client/update", requireRole(RoleDevice), s.handleClientUpdate)
+			ota.POST("/client/telemetry", requireRole(RoleDevice), s.handleClientTelemetry)
+
+			// Telemetry reads (operational_endpoints.md §5). Device may read its own.
+			ota.GET("/devices/:deviceId/telemetry", requireRole(RoleViewer, RoleOperator, RoleAdmin, RoleDevice), s.handleDeviceTelemetry)
+			ota.GET("/telemetry/overview", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleTelemetryOverview)
+
+			// Device groups (operational_endpoints.md §6). Writes operator/admin;
+			// group delete is admin-only; reads viewer+.
+			ota.POST("/groups", requireRole(RoleOperator, RoleAdmin), s.handleCreateGroup)
+			ota.GET("/groups", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroups)
+			ota.GET("/groups/:groupId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetGroup)
+			ota.PATCH("/groups/:groupId", requireRole(RoleOperator, RoleAdmin), s.handleUpdateGroup)
+			ota.DELETE("/groups/:groupId", requireRole(RoleAdmin), s.handleDeleteGroup)
+			ota.GET("/groups/:groupId/members", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListGroupMembers)
+			ota.POST("/groups/:groupId/members", requireRole(RoleOperator, RoleAdmin), s.handleAddGroupMembers)
+			ota.DELETE("/groups/:groupId/members/:deviceId", requireRole(RoleOperator, RoleAdmin), s.handleRemoveGroupMember)
+
+			// Audit log read (operational_endpoints.md §4.3) — admin only.
+			ota.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
+
+			// Projects (multi-project support, account-scoped via token claim).
+			// Writes operator/admin, delete admin-only, reads viewer+.
+			ota.POST("/projects", requireRole(RoleOperator, RoleAdmin), s.handleCreateProject)
+			ota.GET("/projects", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListProjects)
+			ota.GET("/projects/:projectId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetProject)
+			ota.PATCH("/projects/:projectId", requireRole(RoleAdmin), s.handleUpdateProject)
+			ota.DELETE("/projects/:projectId", requireRole(RoleAdmin), s.handleDeleteProject)
+		}
 	}
 
 	s.MountManagerUI(r)
