@@ -54,15 +54,18 @@ func TestRun_UnknownCommand(t *testing.T) {
 	}
 }
 
-// TestRun_CheckCommand exercises the safe 'check' subcommand which only logs and
-// returns nil (no network), confirming the happy dispatch path through run().
+// TestRun_CheckCommand exercises the 'check' subcommand dispatch path through
+// run(). Without a running server, runCheck will return a register error — that
+// is expected and proves the function actually attempts a real check rather than
+// silently logging a placeholder.
 func TestRun_CheckCommand(t *testing.T) {
 	saved := os.Args
 	defer func() { os.Args = saved }()
 	os.Args = []string{"applyport", "check"}
 
-	if err := run(); err != nil {
-		t.Fatalf("run() 'check' should be a no-op success, got %v", err)
+	err := run()
+	if err == nil {
+		t.Fatal("run() 'check' must return an error when no server is reachable (was a placeholder no-op)")
 	}
 }
 
@@ -78,13 +81,13 @@ func TestRun_SubcommandFlagsAreParsed(t *testing.T) {
 	defer func() { os.Args = saved }()
 
 	const want = "http://flag-after-subcommand.example/api/v1"
-	// `check` is the only fully offline subcommand: it consumes -server and
-	// returns nil without touching the network or a device.
+	// runCheck now performs a real network call (OTA-039); without a running
+	// server it will return an error — that is fine. What matters is that the
+	// -server flag was PARSED and populated from the post-subcommand position.
 	os.Args = []string{"applyport", "check", "-server", want}
 
-	if err := run(); err != nil {
-		t.Fatalf("run() 'check' should succeed, got %v", err)
-	}
+	_ = run() // error is expected (no server reachable)
+
 	got := flag.CommandLine.Lookup("server").Value.String()
 	if got != want {
 		t.Fatalf("flag supplied after the subcommand was dropped: -server = %q, want %q "+
