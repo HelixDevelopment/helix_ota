@@ -15,7 +15,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -31,9 +31,13 @@ import (
 )
 
 func main() {
+	// OTA-034: structured JSON logging (slog).
+	slog.SetDefault(api.NewJSONLogger(slog.LevelInfo))
+
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("ota-server: config: %v", err)
+		slog.Error("ota-server: config", "err", err)
+		os.Exit(1)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
@@ -58,27 +62,31 @@ func main() {
 				break
 			}
 			if time.Now().After(deadline) {
-				log.Fatalf("ota-server: connect postgres (after 60s of retries): %v", perr)
+				slog.Error("ota-server: connect postgres after 60s of retries", "err", perr)
+				os.Exit(1)
 			}
-			log.Printf("ota-server: postgres not ready yet: %v — retrying in 2s", perr)
+			slog.Info("ota-server: postgres not ready yet, retrying in 2s", "err", perr)
 			time.Sleep(2 * time.Second)
 		}
 		if perr := pg.Migrate(bootCtx); perr != nil {
-			log.Fatalf("ota-server: migrate store schema: %v", perr)
+			slog.Error("ota-server: migrate store schema", "err", perr)
+			os.Exit(1)
 		}
 		rs, rerr := rollout.NewPostgresStore(bootCtx, cfg.DatabaseURL)
 		if rerr != nil {
-			log.Fatalf("ota-server: connect rollout store: %v", rerr)
+			slog.Error("ota-server: connect rollout store", "err", rerr)
+			os.Exit(1)
 		}
 		if rerr := rs.Migrate(bootCtx); rerr != nil {
-			log.Fatalf("ota-server: migrate rollout schema: %v", rerr)
+			slog.Error("ota-server: migrate rollout schema", "err", rerr)
+			os.Exit(1)
 		}
 		repo = pg
 		rolloutSvc = rollout.NewServiceWithStore(rs, time.Now)
-		log.Printf("ota-server: persistence = PostgreSQL (pgx)")
+		slog.Info("ota-server: persistence = PostgreSQL (pgx)")
 	} else {
 		repo = store.NewMemoryRepository()
-		log.Printf("ota-server: persistence = in-memory (set HELIX_DATABASE_URL for PostgreSQL)")
+		slog.Info("ota-server: persistence = in-memory (set HELIX_DATABASE_URL for PostgreSQL)")
 	}
 
 	// Readiness reflects real store health: /readyz reports ready only when a
@@ -104,6 +112,7 @@ func main() {
 		Rollout: rolloutSvc, // nil with the in-memory default => NewServer builds a memory rollout service
 		Users:   api.NewStaticUserDirectory(users...),
 		Health:  checker,
+		Metrics: api.NewMetrics(nil), // OTA-034: default prometheus registry
 	})
 
 	router := srv.Router()
@@ -114,7 +123,8 @@ func main() {
 	if cfg.TLSCertFile != "" && cfg.TLSKeyFile != "" {
 		cert, certErr := tls.LoadX509KeyPair(cfg.TLSCertFile, cfg.TLSKeyFile)
 		if certErr != nil {
-			log.Fatalf("ota-server: load TLS keypair: %v", certErr)
+			slog.Error("ota-server: load TLS keypair", "err", certErr)
+			os.Exit(1)
 		}
 		addr := ":" + cfg.HTTPSPort
 		tsrv, tErr := transport.New(transport.Config{
@@ -123,23 +133,26 @@ func main() {
 			TLSConf: &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS13},
 		})
 		if tErr != nil {
-			log.Fatalf("ota-server: transport: %v", tErr)
+			slog.Error("ota-server: transport", "err", tErr)
+			os.Exit(1)
 		}
-		log.Printf("ota-server: serving HTTP/3 (QUIC) + HTTP/2 on %s (base path %s)", addr, cfg.APIBasePath)
+		slog.Info("ota-server: serving HTTP/3 (QUIC) + HTTP/2", "addr", addr, "base_path", cfg.APIBasePath)
 		if err := tsrv.Start(); err != nil {
-			log.Fatalf("ota-server: serve: %v", err)
+			slog.Error("ota-server: serve", "err", err)
+			os.Exit(1)
 		}
 		return
 	}
 
 	addr := ":" + cfg.Port
-	log.Printf("ota-server: listening on %s (plain HTTP, base path %s)", addr, cfg.APIBasePath)
+	slog.Info("ota-server: listening (plain HTTP)", "addr", addr, "base_path", cfg.APIBasePath)
 	httpServer := &http.Server{
 		Addr:    addr,
 		Handler: router,
 	}
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("ota-server: serve: %v", err)
+		slog.Error("ota-server: serve", "err", err)
+			os.Exit(1)
 	}
 }
 
