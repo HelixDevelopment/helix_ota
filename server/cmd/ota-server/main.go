@@ -81,16 +81,11 @@ func main() {
 		log.Printf("ota-server: persistence = in-memory (set HELIX_DATABASE_URL for PostgreSQL)")
 	}
 
-	// Readiness consults the repository as a liveness stand-in for the real
-	// PostgreSQL/MinIO probes used in production.
-	checker := health.New(func(ctx context.Context) bool {
-		// GetIdempotent returns (string, bool) — the bool signals presence.
-		// A "not found" on startup is expected (no requests yet).
-		if _, ok := repo.GetIdempotent(ctx, "__readyz__"); !ok {
-			log.Println("ota-server: readiness probe: idempotent store (expected before any idempotent requests)")
-		}
-		return true
-	})
+	// Readiness reflects real store health: /readyz reports ready only when a
+	// cheap, bounded round-trip against the persistence store succeeds, and 503
+	// otherwise so an orchestrator withholds traffic (SRV-NEW-2 / OTA-063). The
+	// prior probe returned ready unconditionally, masking an unreachable store.
+	checker := health.New(api.NewStoreReadinessProbe(repo))
 
 	// Admin/operator login directory. Credentials come from the environment so
 	// no secret is hard-coded; an unset admin password disables the static user.
