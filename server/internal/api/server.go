@@ -200,6 +200,10 @@ func (s *Server) Router() *gin.Engine {
 	// Public auth endpoints (endpoints.md §7).
 	v1.POST("/auth/login", s.handleLogin)
 	v1.POST("/auth/refresh", s.handleRefresh)
+	// Accounts M4: POST /auth/select-account — the caller must carry a valid
+	// (unscoped, post-login) token; the handler verifies membership in the
+	// target account and returns an account-scoped access+refresh pair.
+	v1.POST("/auth/select-account", s.authMiddleware(), s.handleSelectAccount)
 
 	// Protected endpoints: authenticate, enforce per-route roles, then audit any
 	// successful mutating action (auditMiddleware runs after the handler).

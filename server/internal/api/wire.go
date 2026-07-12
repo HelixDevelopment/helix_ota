@@ -28,11 +28,26 @@ type RefreshRequest struct {
 
 // TokenResponse is the 200 body for login/refresh (TokenResponse schema).
 type TokenResponse struct {
-	AccessToken  string   `json:"access_token"`
-	TokenType    string   `json:"token_type"`
-	ExpiresIn    int      `json:"expires_in"`
-	RefreshToken string   `json:"refresh_token"`
-	Roles        []string `json:"roles,omitempty"`
+	AccessToken  string         `json:"access_token"`
+	TokenType    string         `json:"token_type"`
+	ExpiresIn    int            `json:"expires_in"`
+	RefreshToken string         `json:"refresh_token"`
+	Roles        []string       `json:"roles,omitempty"`
+	Accounts     []AccountEntry `json:"accounts,omitempty"`
+}
+
+// AccountEntry is a single available account in the post-login account picker
+// (Accounts M4, design §4.3). The SPA renders this list so the user can pick
+// which account to scope their session to.
+type AccountEntry struct {
+	AccountID   string `json:"account_id"`
+	AccountName string `json:"account_name"`
+	Role        string `json:"role"`
+}
+
+// SelectAccountRequest is POST /auth/select-account (Accounts M4).
+type SelectAccountRequest struct {
+	AccountID string `json:"account_id"`
 }
 
 // --- devices ---

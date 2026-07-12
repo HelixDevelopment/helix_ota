@@ -76,6 +76,11 @@ func (rs *refreshStore) rotate(token string, now time.Time) (refreshEntry, bool)
 // handleLogin exchanges username/password for an access/refresh pair
 // (endpoints.md §7.1). The credential check is the `auth` brick stub modelled by
 // the wired UserDirectory.
+//
+// Accounts M4 (design §4.3): after authentication the handler queries the user's
+// account memberships and returns them alongside the token so the SPA can render
+// an account picker. The initial token is unscoped (no account_id claim) — the
+// caller picks an account and calls select-account to get a scoped token.
 func (s *Server) handleLogin(c *gin.Context) {
 	var req LoginRequest
 	if err := bindJSON(c, &req); err != nil {
@@ -97,7 +102,95 @@ func (s *Server) handleLogin(c *gin.Context) {
 		respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "invalid credentials")
 		return
 	}
-	s.issueTokenPair(c, req.Username, roles)
+	// Accounts M4: gather the available-accounts list for the account picker.
+	accounts := s.availableAccounts(c, req.Username)
+	s.issueTokenPair(c, req.Username, roles, accounts...)
+}
+
+// availableAccounts queries the user's memberships and resolves each to an
+// AccountEntry. It never fails the login — a user with no memberships gets an
+// empty list (they land on a "no accounts" view in the SPA).
+func (s *Server) availableAccounts(c *gin.Context, userID string) []AccountEntry {
+	memberships, err := s.repo.ListAccountMemberships(c.Request.Context(), userID)
+	if err != nil || len(memberships) == 0 {
+		return nil
+	}
+	result := make([]AccountEntry, 0, len(memberships))
+	for _, m := range memberships {
+		acct, err := s.repo.GetAccount(c.Request.Context(), m.AccountID)
+		if err != nil {
+			continue
+		}
+		result = append(result, AccountEntry{
+			AccountID:   m.AccountID,
+			AccountName: acct.Name,
+			Role:        string(m.Role),
+		})
+	}
+	return result
+}
+
+// --- Accounts M4: select-account (design §4.3) ---
+//
+// TestDisableSelectAccountMembershipCheck, when true, makes handleSelectAccount
+// skip the membership verification (anti-tautology test hook per §11.4.115).
+var TestDisableSelectAccountMembershipCheck bool
+
+// handleSelectAccount accepts {account_id} and returns a new account-scoped
+// token pair. The caller must carry a VALID (unscoped, post-login) token AND
+// be a member of the target account. The returned token carries the account_id
+// claim so downstream account-scoped middleware (requireClaimAccountAccess)
+// can enforce tenant isolation.
+//
+// This is the "sign-in then pick account" pattern: the SPA calls login →
+// renders the account picker from the accounts list → calls select-account
+// to pivot into an account-scoped session.
+func (s *Server) handleSelectAccount(c *gin.Context) {
+	claims, ok := claimsFrom(c)
+	if !ok {
+		respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "authentication required")
+		return
+	}
+	var req SelectAccountRequest
+	if err := bindJSON(c, &req); err != nil {
+		respondValidation(c, "malformed select-account request body")
+		return
+	}
+	if req.AccountID == "" {
+		respondValidation(c, "account_id is required",
+			ErrorDetail{Field: "account_id", Issue: "required"})
+		return
+	}
+	// Verify the caller is a member of the target account (unless the
+	// anti-tautology test hook is active — RED path).
+	if !TestDisableSelectAccountMembershipCheck {
+		// Super-admin bypasses the membership check (design §3.4).
+		if !claims.HasRole(RoleSuperAdmin) {
+			membership, err := s.repo.GetAccountMembership(c.Request.Context(), claims.Subject, req.AccountID)
+			if err != nil {
+				respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+				return
+			}
+			if membership.Role == "" {
+				respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+				return
+			}
+		}
+	}
+	// Verify the account is active (thin ABAC deny-override, design §3.1).
+	acct, err := s.repo.GetAccount(c.Request.Context(), req.AccountID)
+	if err != nil {
+		respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+		return
+	}
+	if acct.Status != "active" {
+		respondError(c, http.StatusForbidden, CodeForbidden, "account is not active")
+		return
+	}
+	// Mint an account-scoped token pair. The account_id claim in the access
+	// token is what requireClaimAccountAccess reads on every subsequent OTA
+	// operational route.
+	s.issueScopedTokenPair(c, claims.Subject, claims.Roles, req.AccountID)
 }
 
 // handleRefresh rotates a refresh token into a new pair (endpoints.md §7.2).
@@ -117,21 +210,30 @@ func (s *Server) handleRefresh(c *gin.Context) {
 		respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "refresh token is expired, revoked, or already used")
 		return
 	}
-	s.issueScopedTokenPair(c, entry.subject, entry.roles, entry.accountID)
+	// When the refresh token is unscoped (no account_id), the caller is still
+	// in the account-picker phase — re-resolve available accounts so the SPA
+	// re-renders the picker on token rotation.
+	var accounts []AccountEntry
+	if entry.accountID == "" {
+		accounts = s.availableAccounts(c, entry.subject)
+	}
+	s.issueScopedTokenPair(c, entry.subject, entry.roles, entry.accountID, accounts...)
 }
 
 // issueTokenPair mints an access token and a rotated refresh token and writes
 // the 200 TokenResponse. When accountID is non-empty the access token carries the
 // account claim (Accounts M2, design §3.2) and the refresh token scopes it
-// transparently through rotation.
-func (s *Server) issueTokenPair(c *gin.Context, subject string, roles []string) {
-	s.issueScopedTokenPair(c, subject, roles, "")
+// transparently through rotation. The accounts variadic carries the available-
+// accounts list for the post-login picker (Accounts M4).
+func (s *Server) issueTokenPair(c *gin.Context, subject string, roles []string, accounts ...AccountEntry) {
+	s.issueScopedTokenPair(c, subject, roles, "", accounts...)
 }
 
 // issueScopedTokenPair mints an account-scoped access+refresh pair. An empty
 // accountID produces an unscoped token (legacy fallback, denied on account-scoped
-// routes per design §3.3/J).
-func (s *Server) issueScopedTokenPair(c *gin.Context, subject string, roles []string, accountID string) {
+// routes per design §3.3/J). The accounts variadic carries the available-accounts
+// list when relevant (login), empty otherwise (refresh, select-account).
+func (s *Server) issueScopedTokenPair(c *gin.Context, subject string, roles []string, accountID string, accounts ...AccountEntry) {
 	access, err := s.signer.MintAccount(subject, roles, accountID, s.cfg.AccessTokenTTL, s.now())
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not mint access token")
@@ -144,6 +246,7 @@ func (s *Server) issueScopedTokenPair(c *gin.Context, subject string, roles []st
 		ExpiresIn:    int(s.cfg.AccessTokenTTL.Seconds()),
 		RefreshToken: refresh,
 		Roles:        roles,
+		Accounts:     accounts,
 	})
 }
 
