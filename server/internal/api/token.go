@@ -11,12 +11,15 @@ import (
 	"time"
 )
 
-// RBAC roles (endpoints.md §4.2).
+// RBAC roles (endpoints.md §4.2). RoleSuperAdmin is the global "sees/controls
+// everything" identity flag per the Accounts design §3.4 — it bypasses the
+// per-account tenant predicate. Set only via config/bootstrap, never a request.
 const (
-	RoleAdmin    = "admin"
-	RoleOperator = "operator"
-	RoleViewer   = "viewer"
-	RoleDevice   = "device"
+	RoleAdmin      = "admin"
+	RoleOperator   = "operator"
+	RoleViewer     = "viewer"
+	RoleDevice     = "device"
+	RoleSuperAdmin = "super_admin"
 )
 
 // errInvalidToken is returned for any malformed/expired/tampered token.
@@ -28,11 +31,21 @@ var errInvalidToken = errors.New("api: invalid token")
 // provide the production signer (endpoints.md §4; architecture.md §8). The shape
 // (sub, roles, exp, iat) is JWT-forward so the brick drops in without changing
 // callers.
+//
+// AccountID is the per-claim account scope added by Accounts M2 (design §3.2).
+// It is SERVER-MINTED (at account-select/device-register time), SERVER-VERIFIED
+// (HMAC-SHA256, secret from config only), and the trust boundary is identical to
+// `resolvePublicKey`: the claim is NEVER derived from a header/body/request field.
+// A token with no account_id (legacy/pre-M2, or a fresh sign-in that has not yet
+// selected an account) parses as the empty string — the auth layer treats an empty
+// AccountID as unscoped and the account-scoped middleware (requireAccountAccess)
+// denies it on every account-scoped route (fail-closed per design §3.3/J).
 type Claims struct {
-	Subject  string   `json:"sub"`
-	Roles    []string `json:"roles"`
-	IssuedAt int64    `json:"iat"`
-	Expiry   int64    `json:"exp"`
+	Subject   string   `json:"sub"`
+	Roles     []string `json:"roles"`
+	AccountID string   `json:"account_id,omitempty"`
+	IssuedAt  int64    `json:"iat"`
+	Expiry    int64    `json:"exp"`
 }
 
 // HasRole reports whether the claims carry the given role.
@@ -57,13 +70,26 @@ func NewTokenSigner(secret []byte) *TokenSigner {
 	return &TokenSigner{secret: secret}
 }
 
-// Mint issues a signed token for the subject/roles with the given TTL.
+// Mint issues a signed token for the subject/roles with the given TTL. This is
+// the legacy (pre-M2) signature — tokens minted through this path carry an empty
+// AccountID (unscoped). Callers that need an account-scoped token should use
+// MintAccount instead.
 func (s *TokenSigner) Mint(subject string, roles []string, ttl time.Duration, now time.Time) (string, error) {
+	return s.MintAccount(subject, roles, "" /* accountID */, ttl, now)
+}
+
+// MintAccount issues a signed, account-scoped token. When accountID is non-empty
+// the token carries the account claim that the auth middleware extracts and
+// requireAccountAccess enforces. An empty accountID produces an unscoped (legacy)
+// token — the account-scoped middleware will deny it on every account-scoped route
+// (fail-closed per design §3.3/J).
+func (s *TokenSigner) MintAccount(subject string, roles []string, accountID string, ttl time.Duration, now time.Time) (string, error) {
 	claims := Claims{
-		Subject:  subject,
-		Roles:    roles,
-		IssuedAt: now.Unix(),
-		Expiry:   now.Add(ttl).Unix(),
+		Subject:   subject,
+		Roles:     roles,
+		AccountID: accountID,
+		IssuedAt:  now.Unix(),
+		Expiry:    now.Add(ttl).Unix(),
 	}
 	payload, err := json.Marshal(claims)
 	if err != nil {

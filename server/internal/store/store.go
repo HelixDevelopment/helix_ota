@@ -419,6 +419,10 @@ type Repository interface {
 	// ErrNotFound (anti-enumeration, design §4.3).
 	GetProjectForAccount(ctx context.Context, accountID, projectID string) (Project, error)
 
+	// SetAccountMembership grants or updates a user's membership role within an
+	// account. The account MUST exist; a non-existent account returns ErrNotFound.
+	SetAccountMembership(ctx context.Context, m AccountMembership) error
+
 	// Devices.
 	// Devices.
 	CreateDevice(ctx context.Context, d Device) error

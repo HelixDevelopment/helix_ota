@@ -8,12 +8,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
 
 // Gin context keys.
 const (
 	ctxRequestID = "helix.request_id"
 	ctxClaims    = "helix.claims"
+	ctxAccountID = "helix.account_id"
 )
 
 // requestIDMiddleware assigns an X-Request-Id to every request (endpoints.md §2
@@ -56,9 +59,11 @@ func recoveryMiddleware() gin.HandlerFunc {
 }
 
 // authMiddleware verifies the bearer token and stores its claims in the context.
-// It does not enforce a role — route-level requireRole does that — so it can be
-// applied to every protected route uniformly. A missing/invalid token yields
-// 401 UNAUTHENTICATED.
+// It does not enforce a role or account — route-level requireRole/requireAccountAccess
+// do that — so it can be applied to every protected route uniformly. Accounts M2
+// (design §3.2): extracts the server-minted account_id from verified claims and
+// stores it alongside the claims so the downstream middleware can enforce tenant
+// scoping. A missing/invalid token yields 401 UNAUTHENTICATED.
 func (s *Server) authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, ok := bearerToken(c)
@@ -72,6 +77,14 @@ func (s *Server) authMiddleware() gin.HandlerFunc {
 			return
 		}
 		c.Set(ctxClaims, claims)
+		// Account scope from the verified, server-minted claim (design §1.3 trust
+		// boundary: the account claim is NEVER self-asserted by the caller — the
+		// HMAC-SHA256 signature proves the server minted it, using the secret from
+		// config only). An empty AccountID = legacy/unscoped token; the account-scoped
+		// middleware denies it (fail-closed per design §3.3/J).
+		if claims.AccountID != "" {
+			c.Set(ctxAccountID, claims.AccountID)
+		}
 		c.Next()
 	}
 }
@@ -118,6 +131,110 @@ func claimsFrom(c *gin.Context) (Claims, bool) {
 	}
 	claims, ok := v.(Claims)
 	return claims, ok
+}
+
+// --- Accounts M2: account-scoped authZ middleware (design §3.5) ---
+//
+// requireAccountAccess enforces that the authenticated principal belongs to the
+// target account (at or above minRole) AND the account is active. It runs AFTER
+// authMiddleware. The target account is read from the URL path parameter
+// ":accountId" (set by the route); the calling user's subject is read from the
+// verified Claims. It re-verifies GetAccountMembership on every request (the
+// belt-and-suspenders approach, design §3.2) so a stale/forged claim cannot
+// outlive the membership row. A principal lacking access to the account yields
+// 403 FORBIDDEN; a suspended account yields 403. This is the L1 app-layer
+// enforcement (L2 compile-time explicit-accountID-param is the handler layer;
+// L3 RLS is pgx-only).
+//
+// Role comparison: super-admin bypasses the role check (global bypass flag) and
+// the tenant-isolation predicate (the super-admin "sees everything"). Viewer <
+// Operator < Admin — to be at-least-minRole you must have a role <= minRole in
+// the hierarchy.
+func (s *Server) requireAccountAccess(minRole store.AccountRole) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, ok := claimsFrom(c)
+		if !ok {
+			respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "authentication required")
+			return
+		}
+		targetAccount := c.Param("accountId")
+		if targetAccount == "" {
+			respondError(c, http.StatusBadRequest, CodeValidationFailed, "account ID is required")
+			return
+		}
+		// Super-admin bypasses tenant isolation (design §3.4).
+		if claims.HasRole(RoleSuperAdmin) {
+			c.Next()
+			return
+		}
+		// Non-super-admin MUST have a non-empty account claim.
+		if claims.AccountID == "" {
+			respondError(c, http.StatusForbidden, CodeForbidden, "account scope required — select an account first")
+			return
+		}
+		membership, err := s.repo.GetAccountMembership(c.Request.Context(), claims.Subject, targetAccount)
+		if err != nil {
+			// Anti-enumeration: membership absence looks identical to account absence.
+			respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+			return
+		}
+		if membership.Role == "" {
+			respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+			return
+		}
+		if !accountRoleAtLeast(membership.Role, minRole) {
+			respondError(c, http.StatusForbidden, CodeForbidden, "insufficient role for this operation")
+			return
+		}
+		// Check the account is active (thin ABAC deny-override, design §3.1).
+		acct, err := s.repo.GetAccount(c.Request.Context(), targetAccount)
+		if err != nil {
+			respondError(c, http.StatusForbidden, CodeForbidden, "access denied")
+			return
+		}
+		if acct.Status != store.AccountStatusActive {
+			respondError(c, http.StatusForbidden, CodeForbidden, "account is not active")
+			return
+		}
+		c.Next()
+	}
+}
+
+// requireSuperAdmin enforces that the authenticated principal carries the
+// super_admin role (the global bypass flag, design §3.4). It runs AFTER
+// authMiddleware. A principal lacking super_admin yields 403 FORBIDDEN.
+func requireSuperAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, ok := claimsFrom(c)
+		if !ok {
+			respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "authentication required")
+			return
+		}
+		if !claims.HasRole(RoleSuperAdmin) {
+			respondError(c, http.StatusForbidden, CodeForbidden, "super-admin access required")
+			return
+		}
+		c.Next()
+	}
+}
+
+// accountRoleAtLeast returns true when role is at least minRole in the Viewer <
+// Operator < Admin hierarchy.
+func accountRoleAtLeast(role, minRole store.AccountRole) bool {
+	return accountRoleRank(role) <= accountRoleRank(minRole)
+}
+
+func accountRoleRank(r store.AccountRole) int {
+	switch r {
+	case store.AccountRoleAdmin:
+		return 0
+	case store.AccountRoleOperator:
+		return 1
+	case store.AccountRoleViewer:
+		return 2
+	default:
+		return 99
+	}
 }
 
 // newRequestID returns a random 16-byte hex correlation id.
