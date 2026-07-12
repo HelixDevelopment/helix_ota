@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS helix_ota.telemetry_events (
     -- NULLABLE so a legacy event that omits them stays NULL, never a misleading 0.
     duration_ms       BIGINT,
     bytes_transferred BIGINT
+    current_version TEXT NOT NULL DEFAULT '',
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_deployment ON helix_ota.telemetry_events (deployment_id);
 -- Additive, idempotent column adds for databases provisioned before the
@@ -106,6 +107,7 @@ CREATE INDEX IF NOT EXISTS idx_telemetry_deployment ON helix_ota.telemetry_event
 -- safe forward-migration on an existing one (nullable, no default => no rewrite).
 ALTER TABLE helix_ota.telemetry_events ADD COLUMN IF NOT EXISTS duration_ms       BIGINT;
 ALTER TABLE helix_ota.telemetry_events ADD COLUMN IF NOT EXISTS bytes_transferred BIGINT;
+ALTER TABLE helix_ota.telemetry_events ADD COLUMN IF NOT EXISTS current_version TEXT NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS helix_ota.device_groups (
     seq         BIGSERIAL,

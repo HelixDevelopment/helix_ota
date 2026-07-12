@@ -262,3 +262,46 @@ func TestClientTelemetryEmptyEvents(t *testing.T) {
 		t.Fatalf("empty events want 400, got %d", w.Code)
 	}
 }
+
+// TestClientTelemetryCurrentVersion verifies that a current_version field in
+// the telemetry payload is stored on the device record (OTA-037).
+// RED: this test MUST fail before the change is made because TelemetryEventWire
+// has no CurrentVersion field and applyDeviceRuntime does not act on it.
+func TestClientTelemetryCurrentVersion(t *testing.T) {
+	env := newTestEnv(t)
+	dev := setupDeployment(t, env, "1.0.0", "2.0.0")
+	deps, _ := env.repo.ListActiveDeployments(nil)
+	if len(deps) == 0 {
+		t.Fatalf("expected an active deployment")
+	}
+
+	// Post telemetry: the device reports its current version as "1.5.0" via the
+	// dedicated current_version field — distinct from ev.Version ("2.0.0") which
+	// is the target being downloaded. The RED assertion: device CurrentVersion
+	// SHOULD be 1.5.0 after this but will still be 1.0.0 before the fix.
+	report := TelemetryReport{
+		DeviceID:     dev.DeviceID,
+		DeploymentID: deps[0].DeploymentID,
+		Events: []TelemetryEventWire{
+			{
+				Event:          otaprotocol.EventDownloadStarted,
+				Version:        "2.0.0",
+				CurrentVersion: "1.5.0",
+				Timestamp:      time.Now(),
+			},
+		},
+	}
+	w := env.doJSON(http.MethodPost, "/api/v1/client/telemetry", env.deviceToken(dev.DeviceID), report)
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("telemetry want 202, got %d (%s)", w.Code, w.Body.String())
+	}
+
+	// Verify the device record was updated with the reported current_version.
+	d, err := env.repo.GetDevice(context.Background(), dev.DeviceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.CurrentVersion != "1.5.0" {
+		t.Fatalf("device CurrentVersion = %q, want %q", d.CurrentVersion, "1.5.0")
+	}
+}

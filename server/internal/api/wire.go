@@ -237,6 +237,11 @@ type TelemetryEventWire struct {
 	// absent on legacy device payloads, byte-identical to before this addition.
 	DurationMS       *int64 `json:"duration_ms,omitempty"`
 	BytesTransferred *int64 `json:"bytes_transferred,omitempty"`
+	// CurrentVersion is the device's current software version as reported by the
+	// device (OTA-037). Distinct from Version — which is the update being
+	// processed — this is the version ALREADY running, so the dashboard can
+	// track which devices meet the per-release min_current_version floor.
+	CurrentVersion string `json:"current_version,omitempty"`
 }
 
 // TelemetryHealth is the optional device health block in a TelemetryReport.

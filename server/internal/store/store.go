@@ -114,6 +114,8 @@ type TelemetryRecord struct {
 	// them round-trips as nil (never as a misleading 0).
 	DurationMS       *int64
 	BytesTransferred *int64
+	// CurrentVersion is the device-reported current software version (OTA-037).
+	CurrentVersion string
 }
 
 // AuditEntry is one persisted admin/operator action (audit_logs;

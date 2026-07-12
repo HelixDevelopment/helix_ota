@@ -189,6 +189,9 @@ func (s *Server) handleClientTelemetry(c *gin.Context) {
 		}
 		if ev.Detail != nil {
 			rec.Detail = *ev.Detail
+			if ev.CurrentVersion != "" {
+				rec.CurrentVersion = ev.CurrentVersion
+			}
 		}
 		if err := s.repo.AppendTelemetry(ctx, rec); err != nil {
 			rejected++
@@ -232,6 +235,9 @@ func (s *Server) applyDeviceRuntime(ctx context.Context, deviceID string, ev Tel
 	case otaprotocol.EventSuccess:
 		dev.HealthOK = true
 		dev.LastErrorCode = ""
+	}
+	if ev.CurrentVersion != "" {
+		dev.CurrentVersion = ev.CurrentVersion
 	}
 	if h != nil && h.ActiveSlot != "" {
 		dev.ActiveSlot = h.ActiveSlot

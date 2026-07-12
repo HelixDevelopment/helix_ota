@@ -25,6 +25,7 @@ type TelemetryEventView struct {
 	// pointer: a legacy event that never carried them is rendered without the key.
 	DurationMS       *int64 `json:"duration_ms,omitempty"`
 	BytesTransferred *int64 `json:"bytes_transferred,omitempty"`
+	CurrentVersion   string `json:"current_version,omitempty"`
 }
 
 // TelemetryHistory is the GET /devices/{id}/telemetry body — newest-first,
@@ -74,6 +75,7 @@ func toTelemetryView(r store.TelemetryRecord) TelemetryEventView {
 		ReceivedAt:       r.ReceivedAt,
 		DurationMS:       r.DurationMS,
 		BytesTransferred: r.BytesTransferred,
+		CurrentVersion:   r.CurrentVersion,
 	}
 }
 
