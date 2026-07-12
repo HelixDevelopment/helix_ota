@@ -40,6 +40,8 @@ const (
 	// Range-served, identity-encoded artifact download reference (endpoints.md
 	// §12.1). The byte path itself is the Storage brick's concern.
 	DefaultArtifactBaseURL = "https://artifacts.helix.example"
+	DefaultRateLimitRPS = 100
+	DefaultAuthRateLimit = 5
 )
 
 // Config is the resolved server configuration.
@@ -63,6 +65,13 @@ type Config struct {
 	MaxInflight int64
 	// ArtifactBaseURL is the base of the artifact download reference.
 	ArtifactBaseURL string
+
+	// RateLimitRPS is the per-IP request allowance (token-bucket refill rate).
+	// Default 100 req/s. A non-positive value disables rate limiting.
+	RateLimitRPS int
+	// AuthRateLimit is the per-IP login attempt cap per minute for POST
+	// /auth/login (brute-force guard). Default 5 req/min. Non-positive disables.
+	AuthRateLimit int
 
 	// TokenSecret is the symmetric secret used to sign/verify the opaque bearer
 	// tokens this MVP mints. Supplied via HELIX_TOKEN_SECRET; a development
@@ -171,6 +180,18 @@ func Load() (Config, error) {
 	if c.MaxInflight < 0 {
 		return Config{}, fmt.Errorf("config: HELIX_MAX_INFLIGHT must not be negative, got %d", c.MaxInflight)
 	}
+	if c.RateLimitRPS, err = getEnvInt("HELIX_RATE_LIMIT_RPS", DefaultRateLimitRPS); err != nil {
+		return Config{}, err
+	}
+	if c.RateLimitRPS < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_RATE_LIMIT_RPS must not be negative, got %d", c.RateLimitRPS)
+	}
+	if c.AuthRateLimit, err = getEnvInt("HELIX_AUTH_RATE_LIMIT", DefaultAuthRateLimit); err != nil {
+		return Config{}, err
+	}
+	if c.AuthRateLimit < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_AUTH_RATE_LIMIT must not be negative, got %d", c.AuthRateLimit)
+	}
 	if c.MaxUploadBytes, err = getInt64("HELIX_MAX_UPLOAD_BYTES", DefaultMaxUploadBytes); err != nil {
 		return Config{}, err
 	}
@@ -269,6 +290,18 @@ func getInt64(key string, fallback int64) (int64, error) {
 		return fallback, nil
 	}
 	n, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("config: %s is not a valid integer: %w", key, err)
+	}
+	return n, nil
+}
+
+func getEnvInt(key string, fallback int) (int, error) {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback, nil
+	}
+	n, err := strconv.Atoi(v)
 	if err != nil {
 		return 0, fmt.Errorf("config: %s is not a valid integer: %w", key, err)
 	}

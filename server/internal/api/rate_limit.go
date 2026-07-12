@@ -1,19 +1,16 @@
 package api
 
 import (
+	"fmt"
+	"math"
 	"net/http"
 	"strconv"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// maxInflightMiddleware bounds the number of concurrently in-flight requests as
-// a simple, robust DoS protection: when `limit` requests are already being
-// served, excess requests are shed immediately with 429 RATE_LIMITED + a
-// Retry-After hint, rather than piling up unbounded work on the host
-// (docs/qa/20260608-stress-chaos/ finding). A non-positive limit is a no-op
-// passthrough (the cap is opt-in via HELIX_MAX_INFLIGHT; default disabled so
-// existing behaviour is unchanged).
 func maxInflightMiddleware(limit int64) gin.HandlerFunc {
 	if limit <= 0 {
 		return func(c *gin.Context) { c.Next() }
@@ -30,5 +27,129 @@ func maxInflightMiddleware(limit int64) gin.HandlerFunc {
 				"server at capacity ("+strconv.FormatInt(limit, 10)+" in-flight); retry shortly")
 			c.Abort()
 		}
+	}
+}
+
+type tokenBucket struct {
+	tokens     float64
+	lastRefill time.Time
+	rate       float64
+	capacity   float64
+	mu         sync.Mutex
+}
+
+func newTokenBucket(rate, capacity float64, now time.Time) *tokenBucket {
+	return &tokenBucket{tokens: capacity, lastRefill: now, rate: rate, capacity: capacity}
+}
+
+func (tb *tokenBucket) allow(now time.Time) bool {
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+	elapsed := now.Sub(tb.lastRefill).Seconds()
+	if elapsed > 0 {
+		tb.tokens += elapsed * tb.rate
+		if tb.tokens > tb.capacity {
+			tb.tokens = tb.capacity
+		}
+	}
+	tb.lastRefill = now
+	if tb.tokens >= 1.0 {
+		tb.tokens -= 1.0
+		return true
+	}
+	return false
+}
+
+type IPRateLimiter struct {
+	buckets  map[string]*tokenBucket
+	rate     float64
+	capacity float64
+	mu       sync.Mutex
+	done     chan struct{}
+}
+
+func NewIPRateLimiter(rate, capacity float64) *IPRateLimiter {
+	rl := &IPRateLimiter{
+		buckets: make(map[string]*tokenBucket), rate: rate, capacity: capacity,
+		done: make(chan struct{}),
+	}
+	go rl.reapLoop()
+	return rl
+}
+
+func (rl *IPRateLimiter) Allow(ip string, now time.Time) bool {
+	rl.mu.Lock()
+	tb, ok := rl.buckets[ip]
+	if !ok {
+		tb = newTokenBucket(rl.rate, rl.capacity, now)
+		rl.buckets[ip] = tb
+	}
+	rl.mu.Unlock()
+	return tb.allow(now)
+}
+
+func (rl *IPRateLimiter) Stop() { close(rl.done) }
+
+func (rl *IPRateLimiter) reapLoop() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			rl.reap()
+		case <-rl.done:
+			return
+		}
+	}
+}
+
+func (rl *IPRateLimiter) reap() {
+	cutoff := time.Now().Add(-10 * time.Minute)
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	for ip, tb := range rl.buckets {
+		tb.mu.Lock()
+		if tb.lastRefill.Before(cutoff) {
+			delete(rl.buckets, ip)
+		}
+		tb.mu.Unlock()
+	}
+}
+
+func rateLimitMiddleware(rps int) gin.HandlerFunc {
+	if rps <= 0 {
+		return func(c *gin.Context) { c.Next() }
+	}
+	rl := NewIPRateLimiter(float64(rps), float64(rps))
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		if !rl.Allow(ip, time.Now()) {
+			c.Header("Retry-After", "1")
+			respondError(c, http.StatusTooManyRequests, CodeRateLimited,
+				fmt.Sprintf("rate limit exceeded (%d req/s per IP); retry shortly", rps))
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+func authRateLimitMiddleware(rpm int) gin.HandlerFunc {
+	if rpm <= 0 {
+		return func(c *gin.Context) { c.Next() }
+	}
+	rate := float64(rpm) / 60.0
+	rl := NewIPRateLimiter(rate, float64(rpm))
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		if !rl.Allow(ip, time.Now()) {
+			c.Header("Retry-After", "60")
+			respondError(c, http.StatusTooManyRequests, CodeRateLimited,
+				fmt.Sprintf("too many login attempts (%d/min per IP); retry after %d seconds",
+					rpm, int(math.Ceil(60.0/float64(rpm)))))
+			c.Abort()
+			return
+		}
+		c.Next()
 	}
 }
