@@ -1,0 +1,3 @@
+package api
+var TestDisableClaimAccountAccess bool
+var TestDisableSelectAccountMembershipCheck bool
