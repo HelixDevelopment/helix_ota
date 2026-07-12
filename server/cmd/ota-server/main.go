@@ -105,7 +105,7 @@ func main() {
 		Config:  cfg,
 		Repo:    repo,
 		Rollout: rolloutSvc, // nil with the in-memory default => NewServer builds a memory rollout service
-		Users:   api.NewStaticUserDirectory(users...),
+		Users:   api.MustNewStaticUserDirectory(users...),
 		Health:  checker,
 	})
 
