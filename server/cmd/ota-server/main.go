@@ -18,6 +18,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -108,6 +111,20 @@ func main() {
 
 	router := srv.Router()
 
+	// OTA-032: drain middleware returns 503 while the server is gracefully
+	// stopping so an orchestrator/load-balancer can retry another instance.
+	var draining atomic.Bool
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if draining.Load() {
+			w.Header().Set("Retry-After", "5")
+			http.Error(w, "server draining — please retry", http.StatusServiceUnavailable)
+			return
+		}
+		router.ServeHTTP(w, r)
+	})
+
+	const drainTimeout = 30 * time.Second
+
 	// When TLS material is configured, serve the control plane over HTTP/3
 	// (QUIC) with automatic HTTP/2 fallback via the transport package
 	// (ADR-0004). Otherwise serve plain HTTP for local development.
@@ -119,16 +136,18 @@ func main() {
 		addr := ":" + cfg.HTTPSPort
 		tsrv, tErr := transport.New(transport.Config{
 			Addr:    addr,
-			Handler: router,
+			Handler: handler,
 			TLSConf: &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS13},
 		})
 		if tErr != nil {
 			log.Fatalf("ota-server: transport: %v", tErr)
 		}
 		log.Printf("ota-server: serving HTTP/3 (QUIC) + HTTP/2 on %s (base path %s)", addr, cfg.APIBasePath)
-		if err := tsrv.Start(); err != nil {
-			log.Fatalf("ota-server: serve: %v", err)
-		}
+
+		startErr := make(chan error, 1)
+		go func() { startErr <- tsrv.Start() }()
+
+		graceful(tsrv, &draining, drainTimeout, startErr)
 		return
 	}
 
@@ -136,11 +155,19 @@ func main() {
 	log.Printf("ota-server: listening on %s (plain HTTP, base path %s)", addr, cfg.APIBasePath)
 	httpServer := &http.Server{
 		Addr:    addr,
-		Handler: router,
+		Handler: handler,
 	}
-	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("ota-server: serve: %v", err)
-	}
+
+	startErr := make(chan error, 1)
+	go func() {
+		err := httpServer.ListenAndServe()
+		if err == http.ErrServerClosed {
+			err = nil
+		}
+		startErr <- err
+	}()
+
+	graceful(httpServer, &draining, drainTimeout, startErr)
 }
 
 // getEnvDefault returns the env var or a fallback.
@@ -149,4 +176,38 @@ func getEnvDefault(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// serverStopper is the minimal interface both *http.Server and
+// *transport.Server satisfy (each has Shutdown(context.Context) error).
+type serverStopper interface {
+	Shutdown(context.Context) error
+}
+
+// graceful blocks until SIGTERM or SIGINT, then drains the server with a
+// bounded timeout. During the drain new requests receive 503 (via the draining
+// middleware) while in-flight requests complete.
+func graceful(s serverStopper, draining *atomic.Bool, timeout time.Duration, startErr <-chan error) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case sig := <-sigCh:
+		log.Printf("ota-server: received %v, draining (%v timeout)…", sig, timeout)
+	case err := <-startErr:
+		if err != nil {
+			log.Fatalf("ota-server: serve: %v", err)
+		}
+		return
+	}
+
+	draining.Store(true)
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := s.Shutdown(ctx); err != nil {
+		log.Fatalf("ota-server: shutdown: %v", err)
+	}
+	log.Println("ota-server: stopped")
 }

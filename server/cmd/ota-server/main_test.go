@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
 
 var otaServerBin string
@@ -28,8 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 // ---------------------------------------------------------------------------
-// Approach (a): pure helper coverage (the only in-process-safe seam — main()
-// itself blocks on ListenAndServe and cannot be driven without a kill).
+// Approach (a): pure helper coverage.
 // ---------------------------------------------------------------------------
 
 func TestGetEnvDefault(t *testing.T) {
@@ -43,9 +49,7 @@ func TestGetEnvDefault(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Approach (b): build + exec smoke of the config-error startup path. A malformed
-// HELIX_POLL_INTERVAL makes config.Load() fail, so main() log.Fatalf's (exit 1)
-// BEFORE binding any TCP port — a deterministic, non-blocking smoke of main().
+// Approach (b): build + exec smoke of the config-error startup path.
 // ---------------------------------------------------------------------------
 
 func TestSmoke_BadConfigExits(t *testing.T) {
@@ -66,11 +70,111 @@ func TestSmoke_BadConfigExits(t *testing.T) {
 	}
 }
 
-// NOTE (honest §11.4.6 boundary): the ota-server happy path is NOT smoke-tested
-// here. main() has no --help/--version flag and immediately calls
-// http.Server.ListenAndServe (or the HTTP/3 transport.Start), which blocks
-// forever; driving it would require binding a real port and then killing the
-// process, which is a server-boot integration concern covered by the
-// internal/api + internal/transport test suites and the e2e stream — not a
-// lightweight unit smoke. Only the deterministic config-error exit path is
-// asserted at the binary level above.
+// ---------------------------------------------------------------------------
+// OTA-032: graceful SIGTERM drain.
+//
+// RED (before the signal-handling fix): starting the server and sending
+// SIGTERM would kill it immediately — no drain, in-flight requests dropped,
+// exit code -1 (signalled).  The pre-fix ListenAndServe blocked forever so the
+// happy-path was never smoke-testable at the process level; the fact that no
+// graceful-stop test existed IS the RED.
+//
+// GREEN (this test): the server catches SIGTERM, drains for up to 30 s
+// (returning 503 to new requests), shuts down cleanly, and exits 0.
+// ---------------------------------------------------------------------------
+
+func TestGracefulShutdown_SIGTERM_ExitsCleanly(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("SIGTERM not supported on Windows")
+	}
+
+	port := freePort(t)
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+
+	cmd := exec.Command(otaServerBin)
+	cmd.Env = append(os.Environ(),
+		"HELIX_PORT="+fmt.Sprint(port),
+		"HELIX_POLL_INTERVAL=5s",
+		"HELIX_API_BASE_PATH=/api/v1",
+		"HELIX_ALLOW_INSECURE_DEV_TOKEN_SECRET=1",
+	)
+
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("start server: %v", err)
+	}
+
+	// Wait for the health endpoint to become reachable.
+	healthURL := fmt.Sprintf("http://%s/healthz", addr)
+	if !waitForHTTP(t, healthURL, 5*time.Second) {
+		killAndWait(cmd)
+		t.Fatalf("server did not become healthy within 5s\nstderr:\n%s", stderr.String())
+	}
+
+	// Send SIGTERM to trigger graceful drain.
+	if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+		killAndWait(cmd)
+		t.Fatalf("send SIGTERM: %v", err)
+	}
+
+	// Wait for the process to exit (drain timeout is 30 s, 35 s is safe).
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Errorf("server should exit cleanly after SIGTERM drain, got: %v", err)
+		}
+		out := stderr.String()
+		if !strings.Contains(out, "draining") {
+			t.Errorf("expected drain log message, got stderr:\n%s", out)
+		}
+		if !strings.Contains(out, "stopped") {
+			t.Errorf("expected 'stopped' log message, got stderr:\n%s", out)
+		}
+	case <-time.After(35 * time.Second):
+		killAndWait(cmd)
+		t.Fatal("server did not exit within 35 s after SIGTERM (drain hung?)")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+// freePort returns a free TCP port on localhost.
+func freePort(t *testing.T) int {
+	t.Helper()
+	l, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("find free port: %v", err)
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port
+}
+
+// waitForHTTP polls url until it returns 200 or the deadline is reached.
+func waitForHTTP(t *testing.T, url string, timeout time.Duration) bool {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	client := &http.Client{Timeout: 500 * time.Millisecond}
+	for time.Now().Before(deadline) {
+		resp, err := client.Get(url)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return true
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return false
+}
+
+// killAndWait sends SIGKILL and waits for the process to exit.
+func killAndWait(cmd *exec.Cmd) {
+	_ = cmd.Process.Signal(syscall.SIGKILL)
+	_ = cmd.Wait()
+}
