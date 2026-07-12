@@ -242,11 +242,37 @@ func runDaemon(serverURL, username, password, model, osType, hardwareID, pubKeyB
 
 // runCheck checks for an update and prints the result.
 func runCheck(serverURL, model, osType, hardwareID string, insecure bool) error {
-	_ = model
-	_ = osType
-	_ = hardwareID
-	log.Printf("check: would query %s", serverURL)
-	// In a real deployment, this would use a device-scoped token.
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	client := device.NewApplyPortClient(serverURL,
+		clientOpt(insecure),
+	)
+
+	// Register the device to obtain a device-scoped token. If the server is
+	// unreachable (transport error), surface the failure as a meaningful error
+	// rather than silently logging a placeholder.
+	regReq := device.DeviceRegistrationRequest{
+		HardwareID: hardwareID,
+		Model:      model,
+		OSType:     osType,
+	}
+	if _, err := client.Register(ctx, regReq); err != nil {
+		return fmt.Errorf("check: register device: %w", err)
+	}
+
+	currentVersion := detectCurrentVersion()
+	log.Printf("current version: %s", currentVersion)
+
+	result, err := client.CheckForUpdate(ctx, currentVersion)
+	if err != nil {
+		return fmt.Errorf("check: poll server: %w", err)
+	}
+	if !result.Available {
+		log.Print("no update available")
+	} else {
+		log.Printf("update available: release=%s version=%s", result.ReleaseID, result.Version)
+	}
 	return nil
 }
 
@@ -353,8 +379,8 @@ func clientOpt(insecure bool) device.ClientOption {
 }
 
 func detectCurrentVersion() string {
-	// In the emulator/guest, the version would be read from /etc/helix-version
-	// or similar. For now return a placeholder.
+	// Read the installed version from /etc/helix-version. Falls back to "0.0.0"
+	// on bare-metal hosts where the file does not exist (dev/test default).
 	data, err := os.ReadFile("/etc/helix-version")
 	if err != nil {
 		return "0.0.0"
