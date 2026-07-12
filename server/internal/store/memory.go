@@ -994,6 +994,23 @@ func (m *MemoryRepository) ListAccountMemberships(_ context.Context, userID stri
 	return out, nil
 }
 
+// SetAccountMembership grants or updates a user's membership role within an
+// account (Accounts M2, design §3.5). The account MUST exist; a non-existent
+// account returns ErrNotFound. Adding/updating a membership is not topic of
+// this method and the M2 authZ middleware needs it.
+func (m *MemoryRepository) SetAccountMembership(_ context.Context, mem AccountMembership) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.accounts[mem.AccountID]; !ok {
+		return ErrNotFound
+	}
+	if m.accMembers[mem.UserID] == nil {
+		m.accMembers[mem.UserID] = make(map[string]AccountMembership)
+	}
+	m.accMembers[mem.UserID][mem.AccountID] = mem
+	return nil
+}
+
 // ListProjectsForAccount returns only the projects owned by accountID, in
 // insertion order. The `p.AccountID != accountID` predicate is the L2 tenant
 // scope (design §0): the whole cross-tenant isolation guarantee on the

@@ -31,10 +31,12 @@ type refreshStore struct {
 }
 
 // refreshEntry is the subject + roles bound to a refresh token, plus the
-// instant after which it is no longer honored.
+// instant after which it is no longer honored. AccountID carries the selected
+// account scope through a refresh cycle (Accounts M2, design §3.2).
 type refreshEntry struct {
 	subject   string
 	roles     []string
+	accountID string
 	expiresAt time.Time
 }
 
@@ -44,11 +46,11 @@ func newRefreshStore() *refreshStore {
 }
 
 // issue mints a new opaque refresh token for the subject/roles, valid until
-// now+ttl.
-func (rs *refreshStore) issue(subject string, roles []string, now time.Time, ttl time.Duration) string {
+// now+ttl. accountID carries the selected account scope through a refresh cycle.
+func (rs *refreshStore) issue(subject string, roles []string, accountID string, now time.Time, ttl time.Duration) string {
 	tok := randomOpaque()
 	rs.mu.Lock()
-	rs.tokens[tok] = refreshEntry{subject: subject, roles: roles, expiresAt: now.Add(ttl)}
+	rs.tokens[tok] = refreshEntry{subject: subject, roles: roles, accountID: accountID, expiresAt: now.Add(ttl)}
 	rs.mu.Unlock()
 	return tok
 }
@@ -115,18 +117,27 @@ func (s *Server) handleRefresh(c *gin.Context) {
 		respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "refresh token is expired, revoked, or already used")
 		return
 	}
-	s.issueTokenPair(c, entry.subject, entry.roles)
+	s.issueScopedTokenPair(c, entry.subject, entry.roles, entry.accountID)
 }
 
 // issueTokenPair mints an access token and a rotated refresh token and writes
-// the 200 TokenResponse.
+// the 200 TokenResponse. When accountID is non-empty the access token carries the
+// account claim (Accounts M2, design §3.2) and the refresh token scopes it
+// transparently through rotation.
 func (s *Server) issueTokenPair(c *gin.Context, subject string, roles []string) {
-	access, err := s.signer.Mint(subject, roles, s.cfg.AccessTokenTTL, s.now())
+	s.issueScopedTokenPair(c, subject, roles, "")
+}
+
+// issueScopedTokenPair mints an account-scoped access+refresh pair. An empty
+// accountID produces an unscoped token (legacy fallback, denied on account-scoped
+// routes per design §3.3/J).
+func (s *Server) issueScopedTokenPair(c *gin.Context, subject string, roles []string, accountID string) {
+	access, err := s.signer.MintAccount(subject, roles, accountID, s.cfg.AccessTokenTTL, s.now())
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not mint access token")
 		return
 	}
-	refresh := s.refresh.issue(subject, roles, s.now(), defaultRefreshTokenTTL)
+	refresh := s.refresh.issue(subject, roles, accountID, s.now(), defaultRefreshTokenTTL)
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken:  access,
 		TokenType:    "Bearer",

@@ -64,6 +64,11 @@ func isUniqueViolation(err error) bool {
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
 
+func isFKViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23503"
+}
+
 func jsonbOf(v any) ([]byte, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -1129,6 +1134,23 @@ FROM helix_ota.projects WHERE account_id=$1 ORDER BY created_at`, accountID)
 		out = append(out, p)
 	}
 	return out, rows.Err()
+}
+
+// SetAccountMembership grants or updates a user's membership role within an
+// account (Accounts M2, design §3.5).
+func (r *PostgresRepository) SetAccountMembership(ctx context.Context, mem AccountMembership) error {
+	const q = `
+	INSERT INTO helix_ota.account_memberships (user_id, account_id, role, is_owner, granted_at, granted_by)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	ON CONFLICT (user_id, account_id) DO UPDATE SET role=$3, is_owner=$4, granted_at=$5, granted_by=$6`
+	if _, err := r.pool.Exec(ctx, q, mem.UserID, mem.AccountID, string(mem.Role),
+		mem.IsOwner, mem.GrantedAt, mem.GrantedBy); err != nil {
+		if isFKViolation(err) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
 }
 
 // GetProjectForAccount resolves a project by id ONLY within accountID (the

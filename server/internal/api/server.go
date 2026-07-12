@@ -241,6 +241,13 @@ func (s *Server) Router() *gin.Engine {
 		// Audit log read (operational_endpoints.md §4.3) — admin only.
 		auth.GET("/audit", requireRole(RoleAdmin), s.handleListAudit)
 
+		// Accounts M2 — super-admin (design §4.1): list/create/manage accounts.
+		auth.GET("/admin/accounts", requireSuperAdmin(), s.handleAdminListAccounts)
+
+		// Accounts M2 — account-scoped (design §4.1): list projects for this account.
+		auth.GET("/accounts/:accountId/projects",
+			s.requireAccountAccess(store.AccountRoleViewer), s.handleListAccountProjects)
+
 		// Projects (multi-project support). Writes operator/admin, delete admin-only,
 		// reads viewer+.
 		auth.POST("/projects", requireRole(RoleOperator, RoleAdmin), s.handleCreateProject)
