@@ -200,6 +200,11 @@ func (s *Server) requireAccountAccess(minRole store.AccountRole) gin.HandlerFunc
 	}
 }
 
+// TestDisableClaimAccountAccess, when true, makes requireClaimAccountAccess
+// pass through without enforcing account membership. This is an anti-tautology
+// test hook per §11.4.115 — only test code sets it; production code never does.
+var TestDisableClaimAccountAccess bool
+
 // --- Accounts M3: claim-based account scoping for OTA operational routes ---
 //
 // requireClaimAccountAccess enforces account scoping from the token CLAIM
@@ -222,6 +227,15 @@ func (s *Server) requireAccountAccess(minRole store.AccountRole) gin.HandlerFunc
 // Super-admin bypasses the tenant-isolation predicate entirely (design §3.4).
 func (s *Server) requireClaimAccountAccess(minRole store.AccountRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Anti-tautology test hook (§11.4.115): when disabled, the
+		// middleware passes through — enabling a test to prove that
+		// cross-tenant access is GENUINELY possible without it (RED),
+		// then re-enable and prove the middleware provides the active
+		// isolation gate (GREEN).
+		if TestDisableClaimAccountAccess {
+			c.Next()
+			return
+		}
 		claims, ok := claimsFrom(c)
 		if !ok {
 			respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "authentication required")
