@@ -8,9 +8,10 @@ import (
 // Emulation test-fabric registry — in-memory implementation
 // (docs/design/emulation_fabric/SCHEMA.sql). Mirrors the pgx implementation's
 // behaviour so the shared contract test proves memory+pgx parity. The
-// exclusive-lease invariant (§11.4.119) and the non-empty-evidence rule
-// (§11.4.69) are enforced here exactly as the pgx UNIQUE partial index + CHECK
-// enforce them, so neither layer can silently diverge.
+// one-lease-per-target invariant (HB-2 uniform, §11.4.119) and the
+// non-empty-evidence rule (§11.4.69) are enforced here exactly as the pgx
+// UNIQUE partial index + CHECK enforce them, so neither layer can silently
+// diverge.
 
 func cloneStrMap(m map[string]string) map[string]string {
 	if m == nil {
@@ -77,9 +78,10 @@ func (m *MemoryRepository) ListFabricTargets(_ context.Context) ([]FabricTarget,
 	return out, nil
 }
 
-// AcquireFabricLease records an exclusive hold (§11.4.119). For an exclusive
-// target that already has an active (ReleaseAt nil) lease it returns ErrConflict
-// — the equivalent of the pgx UNIQUE partial index uq_fabric_lease_active.
+// AcquireFabricLease records a lease while enforcing one-lease-per-target
+// (§11.4.119, HB-2 uniform). Any target that already has an active
+// (ReleaseAt nil) lease is rejected with ErrConflict — the equivalent of the
+// pgx UNIQUE partial index uq_fabric_lease_active.
 func (m *MemoryRepository) AcquireFabricLease(_ context.Context, l FabricLease) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

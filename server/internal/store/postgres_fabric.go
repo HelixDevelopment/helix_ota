@@ -14,10 +14,10 @@ import (
 // Emulation test-fabric registry — pgx/PostgreSQL implementation
 // (docs/design/emulation_fabric/SCHEMA.sql). Behaviourally identical to the
 // in-memory implementation; the shared contract test proves parity. The
-// exclusive-lease invariant (§11.4.119) is enforced by the uq_fabric_lease_active
-// UNIQUE partial index (a double-lease raises 23505 -> ErrConflict); the
-// non-empty-evidence rule (§11.4.69) by the byte_size > 0 CHECK (a 0-byte row
-// raises 23514 -> ErrEvidenceEmpty).
+// one-lease-per-target invariant (HB-2 uniform, §11.4.119) is enforced by the
+// uq_fabric_lease_active UNIQUE partial index (a double-lease raises 23505 ->
+// ErrConflict); the non-empty-evidence rule (§11.4.69) by the byte_size > 0
+// CHECK (a 0-byte row raises 23514 -> ErrEvidenceEmpty).
 
 func isCheckViolation(err error) bool {
 	var pgErr *pgconn.PgError
@@ -132,11 +132,10 @@ func (r *PostgresRepository) ListFabricTargets(ctx context.Context) ([]FabricTar
 	return out, rows.Err()
 }
 
-// AcquireFabricLease inserts an active (release_at NULL) lease. For an exclusive
-// target with an already-active lease, the uq_fabric_lease_active partial index
-// raises 23505 -> ErrConflict (§11.4.119). A non-exclusive target may hold
-// multiple concurrent leases (the partial index permits it because such targets
-// are not gated; the guard is on the exclusive case, mirroring memory).
+// AcquireFabricLease inserts an active (release_at NULL) lease. The
+// uq_fabric_lease_active partial UNIQUE index enforces one-lease-per-target
+// uniformly (HB-2) — a second active lease on ANY target raises 23505 ->
+// ErrConflict (§11.4.119), regardless of the target's exclusive flag.
 func (r *PostgresRepository) AcquireFabricLease(ctx context.Context, l FabricLease) error {
 	tgt, err := r.GetFabricTarget(ctx, l.TargetID)
 	if err != nil {
