@@ -134,7 +134,6 @@ func (s *Server) availableAccounts(c *gin.Context, userID string) []AccountEntry
 //
 // TestDisableSelectAccountMembershipCheck, when true, makes handleSelectAccount
 // skip the membership verification (anti-tautology test hook per §11.4.115).
-var TestDisableSelectAccountMembershipCheck bool
 
 // handleSelectAccount accepts {account_id} and returns a new account-scoped
 // token pair. The caller must carry a VALID (unscoped, post-login) token AND

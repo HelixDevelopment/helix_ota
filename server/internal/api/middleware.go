@@ -203,7 +203,6 @@ func (s *Server) requireAccountAccess(minRole store.AccountRole) gin.HandlerFunc
 // TestDisableClaimAccountAccess, when true, makes requireClaimAccountAccess
 // pass through without enforcing account membership. This is an anti-tautology
 // test hook per §11.4.115 — only test code sets it; production code never does.
-var TestDisableClaimAccountAccess bool
 
 // --- Accounts M3: claim-based account scoping for OTA operational routes ---
 //
