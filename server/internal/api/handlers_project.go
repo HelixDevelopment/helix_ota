@@ -96,6 +96,7 @@ func isRoleAtLeast(actual, required store.ProjectRole) bool {
 func toProjectResponse(p store.Project) ProjectResponse {
 	return ProjectResponse{
 		ProjectID:   p.ProjectID,
+		AccountID:   p.AccountID,
 		Name:        p.Name,
 		Description: p.Description,
 		CreatedAt:   p.CreatedAt,
@@ -242,6 +243,11 @@ func (s *Server) handleUpdateProject(c *gin.Context) {
 	// field, including an explicit empty string to intentionally clear it.
 	if req.Description != nil {
 		existing.Description = *req.Description
+	}
+	// req.AccountID is nil when omitted (leave stored account_id untouched);
+	// non-nil, including an explicit empty string, updates the stored value.
+	if req.AccountID != nil {
+		existing.AccountID = *req.AccountID
 	}
 	existing.UpdatedAt = s.now()
 	if err := s.repo.UpdateProject(c.Request.Context(), existing); err != nil {
