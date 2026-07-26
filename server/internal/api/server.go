@@ -281,6 +281,10 @@ func (s *Server) Router() *gin.Engine {
 		// cross-account admin / account-management operations.
 		auth.GET("/accounts/:accountId/projects",
 			s.requireAccountAccess(store.AccountRoleViewer), s.handleListAccountProjects)
+		auth.GET("/accounts/:accountId/updates",
+			s.requireAccountAccess(store.AccountRoleViewer), s.handleListAccountUpdates)
+		auth.POST("/accounts/:accountId/devices",
+			s.requireAccountAccess(store.AccountRoleOperator), s.handleRegisterDeviceForAccount)
 
 		// --- OTA operational routes (claim-scoped, design §4.2) ---
 		// Every device / release / deployment / artifact / delta / rollout /

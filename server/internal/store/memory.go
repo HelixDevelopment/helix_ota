@@ -213,6 +213,51 @@ func (m *MemoryRepository) ListDevices(_ context.Context, f DeviceFilter) ([]Dev
 	return matched[start:end], next, nil
 }
 
+// RegisterDeviceForAccount creates a device under an account, or returns the
+// existing one when a device with the same hardware_id is already registered
+// for the same account (idempotent). A hardware_id registered under a different
+// account creates a separate device (full multi-tenant isolation).
+func (m *MemoryRepository) RegisterDeviceForAccount(_ context.Context, accountID string, d Device) (Device, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, existing := range m.devices {
+		if existing.HardwareID == d.HardwareID && existing.AccountID == accountID {
+			return cloneDevice(existing), nil
+		}
+	}
+	d.AccountID = accountID
+	if d.DeviceID == "" {
+		return Device{}, fmt.Errorf("store: RegisterDeviceForAccount requires a non-empty device id")
+	}
+	if _, exists := m.devices[d.DeviceID]; !exists {
+		m.devOrder = append(m.devOrder, d.DeviceID)
+	}
+	d.Metadata = cloneStrMap(d.Metadata)
+	m.devices[d.DeviceID] = d
+	return cloneDevice(d), nil
+}
+
+// ListDevicesForAccount returns all devices belonging to an account in insertion
+// order, each with a cloned Metadata map.
+func (m *MemoryRepository) ListDevicesForAccount(_ context.Context, accountID string) ([]Device, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []Device
+	for _, id := range m.devOrder {
+		d := m.devices[id]
+		if d.AccountID == accountID {
+			out = append(out, cloneDevice(d))
+		}
+	}
+	return out, nil
+}
+
+// cloneDevice returns a shallow copy of d with a cloned Metadata map.
+func cloneDevice(d Device) Device {
+	d.Metadata = cloneStrMap(d.Metadata)
+	return d
+}
+
 // CreateArtifact stores a verified artifact record.
 func (m *MemoryRepository) CreateArtifact(_ context.Context, a Artifact) error {
 	m.mu.Lock()

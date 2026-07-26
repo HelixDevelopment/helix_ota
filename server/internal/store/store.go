@@ -36,6 +36,7 @@ var (
 type Device struct {
 	DeviceID       string
 	HardwareID     string
+	AccountID      string
 	Model          string
 	OSType         otaprotocol.OSType
 	OSVersion      string
@@ -472,6 +473,13 @@ type Repository interface {
 	GetDeviceByHardwareID(ctx context.Context, hardwareID string) (Device, error)
 	UpdateDevice(ctx context.Context, d Device) error
 	ListDevices(ctx context.Context, f DeviceFilter) ([]Device, string, error)
+	// RegisterDeviceForAccount creates a new device under an account, or returns
+	// the existing one when a device with the same hardware_id is already
+	// registered for the SAME account (idempotent). A hardware_id registered
+	// under a different account is a separate device.
+	RegisterDeviceForAccount(ctx context.Context, accountID string, d Device) (Device, error)
+	// ListDevicesForAccount returns all devices belonging to an account.
+	ListDevicesForAccount(ctx context.Context, accountID string) ([]Device, error)
 
 	// Artifacts.
 	CreateArtifact(ctx context.Context, a Artifact) error

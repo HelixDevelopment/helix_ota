@@ -153,7 +153,7 @@ WHERE device_id=$1`
 const deviceSelect = `
 SELECT device_id, hardware_id, model, os_type, os_version, current_version, group_name,
        metadata, registered_at, last_seen, update_state, active_slot, last_error_code,
-       health_ok, target_version
+       health_ok, target_version, COALESCE(account_id,'')
 FROM helix_ota.devices`
 
 func (r *PostgresRepository) scanDevice(row pgx.Row) (Device, error) {
@@ -163,7 +163,7 @@ func (r *PostgresRepository) scanDevice(row pgx.Row) (Device, error) {
 	var lastSeen *time.Time
 	if err := row.Scan(&d.DeviceID, &d.HardwareID, &d.Model, &osType, &d.OSVersion,
 		&d.CurrentVersion, &d.Group, &meta, &d.RegisteredAt, &lastSeen, &d.UpdateState,
-		&d.ActiveSlot, &d.LastErrorCode, &d.HealthOK, &d.TargetVersion); err != nil {
+		&d.ActiveSlot, &d.LastErrorCode, &d.HealthOK, &d.TargetVersion, &d.AccountID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return Device{}, ErrNotFound
 		}
@@ -212,6 +212,55 @@ func (r *PostgresRepository) ListDevices(ctx context.Context, f DeviceFilter) ([
 		next = encodeCursor(start + limit)
 	}
 	return out, next, nil
+}
+
+func (r *PostgresRepository) RegisterDeviceForAccount(ctx context.Context, accountID string, d Device) (Device, error) {
+	const q = `
+INSERT INTO helix_ota.devices
+ (device_id, hardware_id, account_id, model, os_type, os_version, current_version,
+  group_name, metadata, registered_at)
+VALUES ($1,$2,$3,$4,$5,$6,'',$7,$8,$9)
+ON CONFLICT (device_id) DO NOTHING
+RETURNING device_id, hardware_id, account_id, model, os_type, os_version, current_version,
+          group_name, metadata, registered_at,
+          last_seen, update_state, active_slot, last_error_code,
+          health_ok, target_version`
+	d.AccountID = accountID
+	meta, err := jsonbOf(d.Metadata)
+	if err != nil {
+		return Device{}, err
+	}
+	row := r.pool.QueryRow(ctx, q, d.DeviceID, d.HardwareID, accountID,
+		d.Model, string(d.OSType), d.OSVersion, d.Group, meta, d.RegisteredAt)
+	dev, scanErr := r.scanDevice(row)
+	if scanErr != nil {
+		if errors.Is(scanErr, pgx.ErrNoRows) {
+			return r.GetDevice(ctx, d.DeviceID)
+		}
+		return Device{}, scanErr
+	}
+	return dev, nil
+}
+
+func (r *PostgresRepository) ListDevicesForAccount(ctx context.Context, accountID string) ([]Device, error) {
+	q := deviceSelect + ` WHERE account_id=$1 ORDER BY seq`
+	rows, err := r.pool.Query(ctx, q, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Device
+	for rows.Next() {
+		dev, serr := r.scanDevice(rows)
+		if serr != nil {
+			return nil, serr
+		}
+		out = append(out, dev)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // --- artifacts ---

@@ -179,6 +179,24 @@ type Config struct {
 	// use pgxpool defaults (max(4, runtime.NumCPU())). Supplied via
 	// HELIX_DB_CONNECTION_POOL_SIZE. Default: DefaultDBConnectionPoolSize (0).
 	DBConnectionPoolSize int
+
+	// StorageBackend selects the object-storage backend for artifact blobs.
+	// Valid values: "memory" (in-memory, dev/testing), "s3" (MinIO/S3-compatible).
+	// Default "memory". Supplied via HELIX_STORAGE_BACKEND.
+	StorageBackend string
+
+	// S3Endpoint is the MinIO/S3-compatible endpoint address (host:port).
+	// Required when StorageBackend is "s3". Supplied via HELIX_S3_ENDPOINT.
+	S3Endpoint string
+	// S3AccessKey is the S3-compatible access key. Supplied via HELIX_S3_ACCESS_KEY.
+	S3AccessKey string
+	// S3SecretKey is the S3-compatible secret key. Supplied via HELIX_S3_SECRET_KEY.
+	S3SecretKey string
+	// S3Bucket is the bucket name for artifact storage. Default "helix-artifacts".
+	// Supplied via HELIX_S3_BUCKET.
+	S3Bucket string
+	// S3Secure toggles TLS for the S3 connection. Supplied via HELIX_S3_SECURE.
+	S3Secure bool
 }
 
 // Load builds a Config from the process environment, applying defaults for any
@@ -281,6 +299,30 @@ func Load() (Config, error) {
 	}
 	if c.DBConnectionPoolSize < 0 {
 		return Config{}, fmt.Errorf("config: HELIX_DB_CONNECTION_POOL_SIZE must not be negative, got %d", c.DBConnectionPoolSize)
+	}
+
+	c.StorageBackend = getEnv("HELIX_STORAGE_BACKEND", "memory")
+	switch c.StorageBackend {
+	case "memory", "s3":
+	default:
+		return Config{}, fmt.Errorf("config: HELIX_STORAGE_BACKEND must be 'memory' or 's3', got %q", c.StorageBackend)
+	}
+
+	c.S3Endpoint = os.Getenv("HELIX_S3_ENDPOINT")
+	c.S3AccessKey = os.Getenv("HELIX_S3_ACCESS_KEY")
+	c.S3SecretKey = os.Getenv("HELIX_S3_SECRET_KEY")
+	c.S3Bucket = getEnv("HELIX_S3_BUCKET", "helix-artifacts")
+	if c.S3Secure, err = getBool("HELIX_S3_SECURE", false); err != nil {
+		return Config{}, err
+	}
+
+	if c.StorageBackend == "s3" {
+		if c.S3Endpoint == "" {
+			return Config{}, fmt.Errorf("config: HELIX_S3_ENDPOINT is required when HELIX_STORAGE_BACKEND=s3")
+		}
+		if c.S3AccessKey == "" || c.S3SecretKey == "" {
+			return Config{}, fmt.Errorf("config: HELIX_S3_ACCESS_KEY and HELIX_S3_SECRET_KEY are required when HELIX_STORAGE_BACKEND=s3")
+		}
 	}
 
 	// SRV-NEW-4 / OTA-065: TLS cert+key form a PAIR — either BOTH are configured
