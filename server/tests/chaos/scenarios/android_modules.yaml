@@ -1,0 +1,40 @@
+# server/tests/chaos/scenarios/android_modules.yaml
+# §11.4.85 chaos test scenario for Android OTA client module paths.
+# Five injection classes against the device-registration / update-check
+# / telemetry endpoints: process-death, network-fault, input-corruption,
+# resource-exhaustion, state-corruption.
+scenario: android_modules_chaos
+component: android_modules
+chaos:
+  - type: process_death
+    target: device_endpoints
+    description: "kill the in-memory store's backing goroutine (simulated) mid-registration"
+    injection: "simulate store unavailability for a 2-second window"
+    recovery: "all inflight requests return 5xx, new requests succeed after recovery window"
+    assertion: "no_panic_no_corruption_clients_retry_safely"
+  - type: network_fault
+    target: device_update_check
+    description: "introduce 500ms artificial latency on the update-check handler"
+    injection: "latency injection via middleware for 30 seconds"
+    recovery: "all requests complete within 2x timeout, no dropped connections"
+    assertion: "clients_timeout_cleanly_no_server_resource_leak"
+  - type: input_corruption
+    target: device_registration
+    description: "send registration payloads with bit-flipped JSON fields"
+    injection: "random byte corruption at positions 0, N/2, N-1 for 50 registration attempts"
+    recovery: "every corrupted payload returns 4xx, server stays responsive"
+    assertion: "no_500_no_panic_no_db_corruption"
+  - type: resource_exhaustion
+    target: device_handler_goroutines
+    description: "flood the registration endpoint with 1000 concurrent requests to exhaust goroutine budget"
+    injection: "1000 concurrent POST /devices/register"
+    recovery: "server accepts queued requests, rate-limits or 503s excess, stabilises within 30s"
+    assertion: "server_does_not_crash_no_goroutine_leak_detected"
+  - type: state_corruption
+    target: device_store
+    description: "register a device, then concurrently update hardware_capabilities through two writers"
+    injection: "2 concurrent PATCH calls with conflicting JSON patches"
+    recovery: "at least one succeeds, final state is one of the two valid JSON values, never a hybrid blob"
+    assertion: "atomic_state_update_no_partial_json_persisted"
+traces:
+  output: "qa-results/stress_chaos/android_modules/"

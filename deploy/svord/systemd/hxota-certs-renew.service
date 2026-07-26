@@ -1,0 +1,29 @@
+# =============================================================================
+# hxota-certs-renew.service — rootless (user) unit: renew TLS certs + reload proxy.
+# -----------------------------------------------------------------------------
+# ROOTLESS user unit (§11.4.161). Triggered by hxota-certs-renew.timer. Invokes
+# the lets_encrypt submodule renew path via https_certs.sh, then reloads the proxy
+# so the new cert is served. Requires the lets_encrypt submodule incorporated +
+# LETS_ENCRYPT_HOME/HXOTA_LE_ENTRYPOINT set (honest no-op SKIP otherwise, §11.4.6).
+#
+# The %h/hxota-stack/renew.env is an operator-provided env fragment exporting
+# LETS_ENCRYPT_HOME, HXOTA_LE_ENTRYPOINT, HXOTA_LE_DOMAINS, HXOTA_LE_EMAIL,
+# LE_RELOAD_CMD, and HXOTA_DEPLOY_ENV (never committed; §11.4.10).
+#
+# Install alongside the timer (as the hxota user):
+#   cp hxota-certs-renew.service hxota-certs-renew.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now hxota-certs-renew.timer
+# =============================================================================
+[Unit]
+Description=HelixOTA TLS certificate renewal (lets_encrypt submodule) + proxy reload
+After=hxota-stack.service
+Wants=hxota-stack.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/hxota-stack
+# Load the operator renew env fragment (paths to the lets_encrypt submodule, etc.)
+# then run the renew path. `-` prefix: a missing env file is tolerated (SKIP).
+EnvironmentFile=-%h/hxota-stack/renew.env
+ExecStart=/bin/sh -lc 'exec bash "${HXOTA_REMOTE_DEPLOY_SCRIPTS:-%h/hxota-stack/scripts/remote_deploy}/https_certs.sh" renew'

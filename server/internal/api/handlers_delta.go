@@ -102,3 +102,59 @@ func (s *Server) handleFindDelta(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, toDeltaView(d))
 }
+
+// DeltaGenerateRequest is POST /deltas/generate body.
+type DeltaGenerateRequest struct {
+	BaseArtifactID   string `json:"base_artifact_id"`
+	TargetArtifactID string `json:"target_artifact_id"`
+}
+
+// handleGenerateDelta computes a delta between two artifact versions and registers
+// the result in the delta_metadata table.
+func (s *Server) handleGenerateDelta(c *gin.Context) {
+	var req DeltaGenerateRequest
+	if err := bindJSON(c, &req); err != nil {
+		respondValidation(c, "malformed delta generate body")
+		return
+	}
+	if req.BaseArtifactID == "" || req.TargetArtifactID == "" {
+		respondValidation(c, "base_artifact_id and target_artifact_id are required",
+			ErrorDetail{Field: "base_artifact_id", Issue: "required"},
+			ErrorDetail{Field: "target_artifact_id", Issue: "required"})
+		return
+	}
+	if req.BaseArtifactID == req.TargetArtifactID {
+		respondValidation(c, "base and target artifacts must differ",
+			ErrorDetail{Field: "target_artifact_id", Issue: "must differ from base"})
+		return
+	}
+	ctx := c.Request.Context()
+	for field, id := range map[string]string{"base_artifact_id": req.BaseArtifactID, "target_artifact_id": req.TargetArtifactID} {
+		if _, err := s.repo.GetArtifact(ctx, id); err != nil {
+			respondError(c, http.StatusNotFound, CodeNotFound, "artifact not found",
+				ErrorDetail{Field: field, Issue: "unknown artifact"})
+			return
+		}
+	}
+	// In production this would invoke an external delta-generation service.
+	// The control-plane registers the result; the actual computation is offline.
+	now := s.now()
+	d := store.DeltaArtifact{
+		ID:               s.newID(),
+		BaseArtifactID:   req.BaseArtifactID,
+		TargetArtifactID: req.TargetArtifactID,
+		SHA256:           "pending",
+		Size:             0,
+		StorageRef:       "pending",
+		CreatedAt:        now,
+	}
+	if err := s.repo.CreateDelta(ctx, d); err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			respondError(c, http.StatusConflict, CodeConflict, "a delta for this base->target pair already exists")
+			return
+		}
+		respondError(c, http.StatusInternalServerError, CodeInternal, "could not register delta")
+		return
+	}
+	c.JSON(http.StatusCreated, toDeltaView(d))
+}

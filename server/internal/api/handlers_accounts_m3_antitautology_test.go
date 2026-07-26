@@ -68,7 +68,7 @@ func TestAccountsM3_ClaimAccountAccess_AntiTautology(t *testing.T) {
 	// --- Phase 1: Account-A scoped token → project IS returned ---
 
 	tokenA, err := env.signer.MintAccount(userA,
-		[]string{RoleViewer}, acctA, time.Hour, env.srv.now())
+		[]string{RoleViewer}, acctA, 0, time.Hour, env.srv.now())
 	if err != nil {
 		t.Fatalf("mint token A: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestAccountsM3_ClaimAccountAccess_AntiTautology(t *testing.T) {
 	// GetAccountMembership(userB, acctA) → ErrNotFound → 403 FORBIDDEN.
 
 	tokenB, err := env.signer.MintAccount(userB,
-		[]string{RoleViewer}, acctA, time.Hour, env.srv.now())
+		[]string{RoleViewer}, acctA, 0, time.Hour, env.srv.now())
 	if err != nil {
 		t.Fatalf("mint token B: %v", err)
 	}

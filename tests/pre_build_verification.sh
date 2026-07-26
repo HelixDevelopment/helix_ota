@@ -234,6 +234,159 @@ else
 fi
 echo
 
+# ---- gate: CM-FEATURE-WORKSTREAM-PLANNING (§11.4.167 substantive) ----
+# Verifies the production-readiness planning document exists (not just the
+# propagation anchor — a real file gating the feature work-stream lifecycle).
+echo ">>> gate: CM-FEATURE-WORKSTREAM-PLANNING"
+ANALYSIS_FILE="${SCRIPT_DIR}/../docs/research/production_planning_20260726/ANALYSIS.md"
+if [[ -f "${ANALYSIS_FILE}" ]]; then
+    echo "  ANALYSIS.md present: ${ANALYSIS_FILE}"
+    echo "<<< gate: CM-FEATURE-WORKSTREAM-PLANNING OK"
+else
+    echo "  ANALYSIS.md missing: ${ANALYSIS_FILE}"
+    echo "<<< gate: CM-FEATURE-WORKSTREAM-PLANNING FAIL"
+    rc=1
+fi
+echo
+
+# ---- gate: CM-DOCUMENT-EXPORT-VALIDATOR (§11.4.168 substantive) ----
+# Verifies the document export validation script exists and is executable.
+echo ">>> gate: CM-DOCUMENT-EXPORT-VALIDATOR"
+VALIDATE_SCRIPT="${SCRIPT_DIR}/../scripts/validate_document_exports.sh"
+if [[ -f "${VALIDATE_SCRIPT}" ]] && [[ -x "${VALIDATE_SCRIPT}" ]]; then
+    echo "  validate_document_exports.sh present and executable"
+    echo "<<< gate: CM-DOCUMENT-EXPORT-VALIDATOR OK"
+else
+    echo "  validate_document_exports.sh missing or not executable: ${VALIDATE_SCRIPT}"
+    echo "<<< gate: CM-DOCUMENT-EXPORT-VALIDATOR FAIL"
+    rc=1
+fi
+echo
+
+# ---- gate: CM-STRESS-CHAOS-COMPONENT-COVERAGE (§11.4.169 substantive) ----
+# Verifies stress+chaos test coverage exists across components.
+echo ">>> gate: CM-STRESS-CHAOS-COMPONENT-COVERAGE"
+STRESS_CHAOS_DIR="${SCRIPT_DIR}/stress_chaos"
+STRESS_CHAOS_FILES=0
+if [[ -d "${STRESS_CHAOS_DIR}" ]]; then
+    STRESS_CHAOS_FILES=$(find "${STRESS_CHAOS_DIR}" -type f -name '*.sh' 2>/dev/null | wc -l)
+fi
+API_STRESS_FILES=$(find "${SCRIPT_DIR}/../server/internal/api" -type f \( -name '*stress*' -o -name '*chaos*' \) 2>/dev/null | wc -l)
+TOTAL_STRESS=$((STRESS_CHAOS_FILES + API_STRESS_FILES))
+if [[ "${TOTAL_STRESS}" -ge 1 ]]; then
+    echo "  stress+chaos coverage: ${TOTAL_STRESS} files (${STRESS_CHAOS_FILES} shell, ${API_STRESS_FILES} Go)"
+    echo "<<< gate: CM-STRESS-CHAOS-COMPONENT-COVERAGE OK"
+else
+    echo "  stress+chaos coverage: 0 files"
+    echo "<<< gate: CM-STRESS-CHAOS-COMPONENT-COVERAGE FAIL"
+    rc=1
+fi
+echo
+
+# ---- gate: CM-HOSTRENDER-DASHBOARD-PRESENT (§11.4.170 substantive) ----
+# Verifies the dashboard hostrender test directory exists.
+echo ">>> gate: CM-HOSTRENDER-DASHBOARD-PRESENT"
+HOSTRENDER_DIR="${SCRIPT_DIR}/../dashboard/hostrender"
+if [[ -d "${HOSTRENDER_DIR}" ]]; then
+    HOSTRENDER_COUNT=$(find "${HOSTRENDER_DIR}" -type f -name '*.spec.ts' 2>/dev/null | wc -l)
+    echo "  dashboard/hostrender/ present with ${HOSTRENDER_COUNT} spec file(s)"
+    echo "<<< gate: CM-HOSTRENDER-DASHBOARD-PRESENT OK"
+else
+    echo "  dashboard/hostrender/ missing"
+    echo "<<< gate: CM-HOSTRENDER-DASHBOARD-PRESENT FAIL"
+    rc=1
+fi
+echo
+
+# ---- gate: CM-PRODUCTION-PLANNING-SECTIONS (§11.4.172 substantive) ----
+# Verifies ANALYSIS.md contains required sections: Executive Summary,
+# Velocity Metrics, Risk Register, Critical Path Analysis, Compliance.
+echo ">>> gate: CM-PRODUCTION-PLANNING-SECTIONS"
+REQUIRED_SECTIONS_OK=1
+for section in "Executive Summary" "Velocity Metrics" "Risk Register" "Critical Path Analysis" "Compliance"; do
+    if grep -qF "${section}" "${ANALYSIS_FILE}" 2>/dev/null; then
+        :
+    else
+        echo "  ANALYSIS.md missing section: ${section}"
+        REQUIRED_SECTIONS_OK=0
+    fi
+done
+if [[ "${REQUIRED_SECTIONS_OK}" -eq 1 ]]; then
+    echo "  ANALYSIS.md contains all 5 required sections"
+    echo "<<< gate: CM-PRODUCTION-PLANNING-SECTIONS OK"
+else
+    echo "<<< gate: CM-PRODUCTION-PLANNING-SECTIONS FAIL"
+    rc=1
+fi
+echo
+
+# ---- gate: CM-SONARQUBE-INSTALLED (§11.4.184 substantive) ----
+# Verifies the SonarQube scanner CLI is on PATH or emits an honest SKIP.
+echo ">>> gate: CM-SONARQUBE-INSTALLED"
+if command -v sonar-scanner >/dev/null 2>&1; then
+    SS_VER="$(sonar-scanner --version 2>&1 | head -1)"
+    echo "  sonar-scanner present: ${SS_VER}"
+    echo "<<< gate: CM-SONARQUBE-INSTALLED OK"
+else
+    echo "  SKIP: sonar-scanner not installed / not on PATH (§11.4.3)"
+    echo "<<< gate: CM-SONARQUBE-INSTALLED SKIP"
+fi
+echo
+
+# ---- gate: CM-DOC-INTEGRITY-VALIDATOR (§11.4.186 substantive) ----
+# Verifies the cross-document consistency validator exists.
+echo ">>> gate: CM-DOC-INTEGRITY-VALIDATOR"
+DOCINTEGRITY_GATE="${SCRIPT_DIR}/../constitution/scripts/doc_integrity/wire/doc_integrity_gate.sh"
+if [[ -f "${DOCINTEGRITY_GATE}" ]]; then
+    echo "  doc_integrity_gate.sh present"
+    if [[ -x "${DOCINTEGRITY_GATE}" ]]; then
+        echo "<<< gate: CM-DOC-INTEGRITY-VALIDATOR OK"
+    else
+        echo "  doc_integrity_gate.sh not executable"
+        echo "<<< gate: CM-DOC-INTEGRITY-VALIDATOR FAIL"
+        rc=1
+    fi
+else
+    echo "  SKIP: doc_integrity_gate.sh not found; constitution submodule may need update"
+    echo "<<< gate: CM-DOC-INTEGRITY-VALIDATOR SKIP"
+fi
+echo
+
+# ---- gate: CM-RLIMIT-NPROC-HEADROOM (§12.12 substantive) ----
+# Checks RLIMIT_NPROC thread headroom before heavy parallel work.
+echo ">>> gate: CM-RLIMIT-NPROC-HEADROOM"
+NPROC_SOFT=$(ulimit -u 2>/dev/null || echo "0")
+NPROC_HARD=$(ulimit -Hu 2>/dev/null || echo "0")
+LIVE_THREADS=$(ps -L --no-headers -u "$USER" 2>/dev/null | wc -l)
+HEADROOM=$((NPROC_SOFT - LIVE_THREADS))
+THRESHOLD=$((NPROC_SOFT / 10))
+if [[ "${NPROC_SOFT}" -eq 0 ]]; then
+    echo "  SKIP: cannot determine RLIMIT_NPROC"
+    echo "<<< gate: CM-RLIMIT-NPROC-HEADROOM SKIP"
+elif [[ "${HEADROOM}" -lt "${THRESHOLD}" ]]; then
+    echo "  WARN: ${HEADROOM} threads free (soft=${NPROC_SOFT} hard=${NPROC_HARD} live=${LIVE_THREADS}) — below 10% threshold (${THRESHOLD})"
+    echo "  parallel subagent dispatch limited per §12.12"
+    echo "<<< gate: CM-RLIMIT-NPROC-HEADROOM SKIP"
+else
+    echo "  ${HEADROOM} threads free (soft=${NPROC_SOFT} hard=${NPROC_HARD} live=${LIVE_THREADS}) — above 10% threshold (${THRESHOLD})"
+    echo "<<< gate: CM-RLIMIT-NPROC-HEADROOM OK"
+fi
+echo
+
+# ---- gate: CM-MULTITRACK-WORK-DIVISION (§11.4.176 substantive) ----
+# Documents the multi-track work-division arbitration mechanism.
+echo ">>> gate: CM-MULTITRACK-WORK-DIVISION"
+MULTITRACK_DIR="${SCRIPT_DIR}/../constitution/scripts/multitrack"
+if [[ -d "${MULTITRACK_DIR}" ]]; then
+    MULTITRACK_SCRIPTS=$(find "${MULTITRACK_DIR}" -type f -name '*.sh' 2>/dev/null | wc -l)
+    echo "  multitrack scripts present: ${MULTITRACK_SCRIPTS} file(s)"
+    echo "<<< gate: CM-MULTITRACK-WORK-DIVISION OK"
+else
+    echo "  SKIP: constitution/scripts/multitrack/ not present"
+    echo "<<< gate: CM-MULTITRACK-WORK-DIVISION SKIP"
+fi
+echo
+
 # ---- gate: META-TESTS (§1.1 paired-mutation gate bluff-proofing) ----
 # Runs every tests/meta/meta_test_*.sh — each PROVES a gate catches its own
 # negation (mutate→FAIL→restore→PASS). A gate without a green meta-test here is

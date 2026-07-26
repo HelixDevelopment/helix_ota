@@ -12,7 +12,7 @@ func TestLoadDefaults(t *testing.T) {
 		"HELIX_PORT", "HELIX_API_BASE_PATH", "HELIX_POLL_INTERVAL", "HELIX_POLL_JITTER",
 		"HELIX_ACCESS_TOKEN_TTL", "HELIX_DEVICE_TOKEN_TTL", "HELIX_MAX_UPLOAD_BYTES",
 		"HELIX_ARTIFACT_BASE_URL", "HELIX_TOKEN_SECRET", "HELIX_ARTIFACT_PUBKEY",
-		"HELIX_TRUST_TLS_PROXY",
+		"HELIX_TRUST_TLS_PROXY", "HELIX_MAX_INFLIGHT", "HELIX_ROLLOUT_POLL_INTERVAL",
 	} {
 		t.Setenv(k, "")
 	}
@@ -42,6 +42,12 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.TrustTLSProxy {
 		t.Fatalf("TrustTLSProxy default must be false (safe default per §11.4.6/§11.4.115 — HELIX_TRUST_TLS_PROXY unset)")
+	}
+	if cfg.MaxInflight != DefaultMaxInflight {
+		t.Fatalf("MaxInflight want %d, got %d", DefaultMaxInflight, cfg.MaxInflight)
+	}
+	if cfg.RolloutPollInterval != DefaultRolloutPollInterval {
+		t.Fatalf("RolloutPollInterval want %v, got %v", DefaultRolloutPollInterval, cfg.RolloutPollInterval)
 	}
 }
 

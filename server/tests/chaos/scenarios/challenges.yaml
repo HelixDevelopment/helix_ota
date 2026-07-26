@@ -1,0 +1,38 @@
+# server/tests/chaos/scenarios/challenges.yaml
+# §11.4.85 chaos scenario for the challenges submodule lifecycle paths:
+# deployment creation + start + evaluate + completion/halt pipeline.
+scenario: challenges_chaos
+component: challenges
+chaos:
+  - type: process_death
+    target: rollout_evaluate_endpoint
+    description: "simulate store unavailability mid-evaluation (the handler panics, middleware recovers)"
+    injection: "fault-injected repository that fails on Load for 5 evaluation calls"
+    recovery: "handler returns 500, no panic escapes, subsequent evaluations work after fault cleared"
+    assertion: "no_panic_propagated_no_corrupted_deployment_state"
+  - type: network_fault
+    target: webhook_delivery
+    description: "simulate webhook endpoint timeout during deployment state transition notification"
+    injection: "webhook URL that never responds (TCP accept + infinite sleep)"
+    recovery: "webhook delivery times out, fallback retry logged, deployment transition NOT blocked"
+    assertion: "deployment_state_machine_progresses_even_when_webhook_is_dead"
+  - type: input_corruption
+    target: deployment_evaluate_input
+    description: "send NaN, Inf, and extreme floating-point values in the health verdict"
+    injection: "20 evaluate requests with JSON {\"success_rate\":NaN,\"error_rate\":Inf}"
+    recovery: "JSON parser rejects malformed numbers, or handler clamps to valid range"
+    assertion: "no_panic_no_state_corruption_response_is_4xx"
+  - type: resource_exhaustion
+    target: deployment_registry
+    description: "create 1000 deployment rollout plans concurrently to exhaust the in-memory registry space"
+    injection: "1000 concurrent CreateAndStart calls with unique deployment IDs"
+    recovery: "all succeed, p95 latency < 5s, memory plateaus without unbounded growth"
+    assertion: "memory_plateaus_no_goroutine_leak"
+  - type: state_corruption
+    target: deployment_phase_advance
+    description: "send two conflicting health verdicts (healthy + unhealthy) for the same phase concurrently"
+    injection: "2 concurrent Evaluate calls: one healthy (success_rate=1.0), one unhealthy (error_rate=1.0)"
+    recovery: "one verdict wins atomically, deployment ends in exactly one consistent state (advance or halt)"
+    assertion: "deterministic_state_no_schrodinger_deployment"
+traces:
+  output: "qa-results/stress_chaos/challenges/"

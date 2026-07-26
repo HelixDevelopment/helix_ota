@@ -1,0 +1,35 @@
+# server/tests/stress/scenarios/dashboard.yaml
+# §11.4.85 stress scenario for the manager-dashboard API surface.
+# Exercises the read-heavy dashboard workload pattern: authenticated
+# listing with filters + pagination at dashboard-refresh cadence.
+scenario: dashboard_stress
+component: dashboard
+stress:
+  sustained_load:
+    concurrency: 1
+    iterations: 200
+    description: "200 sequential filtered list requests simulating a dashboard page with rapid filtering"
+    assertions:
+      - "p95_latency < 200ms"
+      - "error_rate == 0"
+      - "all_responses_valid_json"
+  concurrent_contention:
+    parallel_readers: 50
+    description: "50 concurrent dashboard sessions listing devices + groups + releases"
+    operations_per_session: 5
+    assertions:
+      - "zero_deadlocks"
+      - "all_reads_consistent_with_each_other"
+      - "no_500_errors"
+  boundary_conditions:
+    - type: "list_with_all_filters_applied"
+      description: "GET /releases?os=android&target_model=unknown&version=999.999.999"
+      assertion: "must_return_empty_array_not_500"
+    - type: "pagination_zero_and_negative"
+      description: "GET /devices?limit=0&offset=-1"
+      assertion: "must_reject_or_return_empty"
+    - type: "list_while_store_under_write_load"
+      description: "concurrent writes + reads to verify snapshot isolation"
+      assertion: "list_must_not_return_partial_state"
+traces:
+  output: "qa-results/stress_chaos/dashboard/"

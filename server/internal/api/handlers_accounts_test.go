@@ -53,7 +53,7 @@ func TestAccountsM2_RequireAccountAccess_DeniesNonMember(t *testing.T) {
 
 	// Mint a token scoped to account-A.
 	tokenA, err := env.signer.MintAccount("admin@helix.test",
-		[]string{RoleAdmin, RoleOperator, RoleViewer}, acctA, time.Hour, env.srv.now())
+		[]string{RoleAdmin, RoleOperator, RoleViewer}, acctA, 0, time.Hour, env.srv.now())
 	if err != nil {
 		t.Fatalf("mint scoped token: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestAccountsM2_RequireAccountAccess_AntiTautology(t *testing.T) {
 
 	// Phase 1: non-member — RED.
 	nonMemberToken, err := env.signer.MintAccount("outsider@helix.test",
-		[]string{RoleAdmin}, acctID, time.Hour, env.srv.now())
+		[]string{RoleAdmin}, acctID, 0, time.Hour, env.srv.now())
 	if err != nil {
 		t.Fatalf("mint non-member token: %v", err)
 	}
@@ -181,7 +181,7 @@ func TestAccountsM2_TokenRoundTrip_AccountIDClaim(t *testing.T) {
 	env := newTestEnv(t)
 
 	tok, err := env.signer.MintAccount("testuser", []string{RoleViewer},
-		"acct-claims-test", time.Hour, env.srv.now())
+		"acct-claims-test", 0, time.Hour, env.srv.now())
 	if err != nil {
 		t.Fatalf("MintAccount: %v", err)
 	}

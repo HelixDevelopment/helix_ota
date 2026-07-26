@@ -1,0 +1,38 @@
+# server/tests/stress/scenarios/containers.yaml
+# §11.4.85 stress scenario for the containers submodule integration.
+# Exercises the server's containerized-build lifecycle — artifact upload
+# at sustained load simulating a CI pipeline pushing OTA artifacts.
+scenario: containers_stress
+component: containers
+stress:
+  sustained_load:
+    concurrency: 1
+    iterations: 100
+    description: "100 sequential multipart artifact uploads (small ~1KiB zip payloads) to simulate a containerized CI pipeline pushing nightly builds"
+    assertions:
+      - "p95_latency < 2000ms"
+      - "error_rate < 0.01"
+      - "artifacts_verifiable_after_upload"
+  concurrent_contention:
+    parallel_uploads: 10
+    description: "10 concurrent artifact uploads to the same project"
+    operations_per_uploader: 5
+    assertions:
+      - "zero_deadlocks"
+      - "zero_corrupted_artifacts"
+      - "all_uploads_return_2xx_or_conflict"
+  boundary_conditions:
+    - type: "max_upload_size_boundary"
+      description: "upload at exactly MaxUploadBytes - 1 byte"
+      assertion: "must_accept"
+    - type: "over_max_upload_size"
+      description: "upload exceeding MaxUploadBytes"
+      assertion: "must_return_413_payload_too_large"
+    - type: "empty_artifact"
+      description: "upload zero-length payload"
+      assertion: "must_reject_with_400"
+    - type: "max_metadata_fields"
+      description: "upload with metadata containing 100 extra JSON keys"
+      assertion: "must_accept_or_reject_gracefully_no_panic"
+traces:
+  output: "qa-results/stress_chaos/containers/"

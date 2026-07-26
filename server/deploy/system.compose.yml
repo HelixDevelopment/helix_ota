@@ -75,16 +75,13 @@ services:
       # test keypair is generated per boot. Empty is tolerated by config.Load.
       HELIX_ARTIFACT_PUBKEY: "${SYSTEM_ARTIFACT_PUBKEY:-}"
       HELIX_ARTIFACT_BASE_URL: "http://localhost:18080/artifacts"
-      # DDoS / in-flight ceiling (§11.4.119 single-owner server/). DEFAULT unset
-      # = 0 = UNLIMITED (operator decision 2026-07-10; shipped unlimited, tuned
-      # per-install). Unset here on purpose so this ephemeral test stack exercises
-      # the unlimited path. RISK at 0: a flood has no ceiling -> unbounded
-      # goroutines/memory/pgx-pool pressure -> OOM. The limiter protects
-      # MEMORY/goroutines, not CPU (auth verify ~1.7us, forged-token reject ~0.5us
-      # -> CPU absorbs a high rate; see docs/qa/20260710-server-security-and-
-      # benchmark-baseline/). To harden a real deployment, set a ceiling well above
-      # steady-state load, e.g.:
-      #HELIX_MAX_INFLIGHT: "256"
+      # DDoS / in-flight ceiling (§11.4.119 single-owner server/). Default: 1000
+      # (protects against connection-flood DoS by shedding excess requests with
+      # 429 RATE_LIMITED). Set a ceiling well above steady-state load:
+      HELIX_MAX_INFLIGHT: "1000"
+      # Rollout auto-progress scheduler poll interval. Controls how often the
+      # scheduler checks for pending window activations. Default: 60s.
+      HELIX_ROLLOUT_POLL_INTERVAL: "60s"
     ports:
       # Host 18080 -> container 8080. 18080 is free + distinct from the
       # integration suite + the Tier-1 E2E harness's 8080.
@@ -98,3 +95,26 @@ services:
       retries: 20
       start_period: 3s
     mem_limit: 256m
+
+# ─── TLS Configuration (uncomment for production) ─────────────────────────
+#
+# To enable TLS (HTTP/3 + HTTP/2 per ADR-0004), mount cert+key and set the
+# corresponding env vars. The server fails fast (fail-closed) when exactly ONE
+# of the pair is set — both must be configured together.
+#
+#   volumes:
+#     - /etc/helix-ota/tls.crt:/etc/helix-ota/tls.crt:ro
+#     - /etc/helix-ota/tls.key:/etc/helix-ota/tls.key:ro
+#   environment:
+#     HELIX_TLS_CERT: "/etc/helix-ota/tls.crt"
+#     HELIX_TLS_KEY: "/etc/helix-ota/tls.key"
+#     HELIX_HTTPS_PORT: "8443"
+#
+# When TLS is active the server listens on 8443 (HTTP/3 + HTTP/2) and also on
+# 8080 (plain HTTP redirect). Set HELIX_TRUST_TLS_PROXY=1 when deployed behind
+# a trusted TLS-terminating reverse proxy that forwards plain HTTP to this
+# process (nginx/lb) — the server then emits HSTS + upgrade-insecure-requests
+# headers despite receiving plain HTTP from the proxy.
+#
+# NEVER generate self-signed certs for production. Use a real CA (Let's Encrypt
+# via cert-manager / ACME) or the organization's internal PKI.

@@ -1,0 +1,19 @@
+# =============================================================================
+# hxota-certs-renew.timer — twice-daily TLS-cert renewal trigger (rootless user).
+# -----------------------------------------------------------------------------
+# ROOTLESS user timer (§11.4.161). Fires hxota-certs-renew.service twice a day
+# with a randomized delay (the ACME renewal is a no-op until a cert is within its
+# renewal window, so frequent runs are safe + recommended). Persistent=true runs a
+# missed trigger after downtime.
+# =============================================================================
+[Unit]
+Description=Twice-daily HelixOTA TLS certificate renewal
+Documentation=file:%h/hxota-stack/scripts/remote_deploy/https_certs.sh
+
+[Timer]
+OnCalendar=*-*-* 03,15:00:00
+RandomizedDelaySec=3600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

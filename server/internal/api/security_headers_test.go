@@ -161,7 +161,8 @@ func TestSecurityHeaders_TierA_OnShed429(t *testing.T) {
 // r.Use(recoveryMiddleware(), requestIDMiddleware(), securityHeadersMiddleware(...),
 // maxInflightMiddleware(...), compressionMiddleware()) chain from server.go,
 // with Config.MaxInflight set so the shed is real (not the newTestEnv default
-// of 0, under which maxInflightMiddleware is a permanent no-op).
+// of 0, under which maxInflightMiddleware is a permanent no-op; config.Load()
+// defaults to 1000 with the same effect).
 //
 // No production source file is touched to make this deterministic. gin's
 // RouterGroup.handle (routergroup.go:88-90) calls combineHandlers
@@ -181,7 +182,7 @@ func TestSecurityHeaders_TierA_OnShed429_RealRouter(t *testing.T) {
 		Config: config.Config{
 			APIBasePath: "/api/v1", AccessTokenTTL: time.Hour, DeviceTokenTTL: 24 * time.Hour,
 			TokenSecret: []byte("sec-headers-secret"),
-			MaxInflight: 1, // real shed, unlike newTestEnv's default 0 (no-op).
+			MaxInflight: 1, // real shed (newTestEnv defaults 0=no-op; Load() defaults 1000).
 		},
 		Repo:   store.NewMemoryRepository(),
 		Users:  NewStaticUserDirectory(),

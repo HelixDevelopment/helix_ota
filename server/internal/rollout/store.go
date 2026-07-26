@@ -48,6 +48,17 @@ func (m *MemoryStore) Save(_ context.Context, state engine.State) error {
 	return nil
 }
 
+// AllDeploymentIDs returns all deployment IDs currently tracked in the store.
+func (m *MemoryStore) AllDeploymentIDs() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	ids := make([]string, 0, len(m.states))
+	for id := range m.states {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // ClockFunc adapts a func() time.Time into the brick's engine.Clock, so the
 // control plane shares one clock (and tests inject a deterministic one).
 type ClockFunc func() time.Time

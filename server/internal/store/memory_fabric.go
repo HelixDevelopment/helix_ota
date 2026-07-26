@@ -208,3 +208,6 @@ func (m *MemoryRepository) ListFabricEvidence(_ context.Context, runID string) (
 	defer m.mu.RUnlock()
 	return append([]FabricEvidence(nil), m.fabEvidence[runID]...), nil
 }
+
+// SetTenantVariable is a no-op on the in-memory repository.
+func (m *MemoryRepository) SetTenantVariable(_ context.Context, _ string) error { return nil }

@@ -6,8 +6,10 @@
 | Title | Server topology: modular monolith vs microservices |
 | Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
-| Status | **Proposed** |
+| Last modified | 2026-07-26 |
+| Status | **Accepted** |
+| Accepted | 2026-07-26 |
+| Rationale | Modular monolith with extractable seams confirmed for 1.0.0-MVP. The Helix-authored Go control plane ships as one deployable binary with enforced internal module boundaries. Microservice extraction deferred until the scale trigger fires. Decision locked as architectural foundation for US1-US3 implementation. |
 | Status summary | Decides the MVP deployment topology for the Helix OTA Go control plane and the concrete trigger to split into independent services. Resolves contradiction **C2** from [`../additions_synthesis.md`](../additions_synthesis.md) §5. |
 | Decision | **Modular monolith** for 1.0.0-MVP — one deployable Go binary with enforced internal package boundaries that mirror future service seams; **rollout-engine** and **OS-adapter** designed as extractable modules. Split to services only when a defined scale trigger fires. |
 | Deciders | Lead architect (synthesis); operator review gate pending. |
@@ -144,7 +146,7 @@ Because the seams are extractable by construction (§3.1), satisfying a trigger 
 
 ## 5. Status
 
-**Proposed.** Pending the operator review gate. Ratifies the synthesis's pre-resolution of contradiction **C2**. [additions_synthesis §5 C2; master-design §15 ADR list]
+**Accepted.** **Accepted**: 2026-07-26. Ratifies the synthesis's pre-resolution of contradiction **C2**. [additions_synthesis §5 C2; master-design §15 ADR list]
 
 ## 6. Compliance notes (HelixConstitution)
 

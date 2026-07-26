@@ -56,6 +56,10 @@ type MemoryRepository struct {
 	fabLeases   map[string]FabricLease      // by leaseID
 	fabRuns     map[string]FabricRun        // by runID
 	fabEvidence map[string][]FabricEvidence // runID -> ordered evidence
+	branches    map[string]Branch           // by branchID
+	brnOrder    []string                    // insertion order
+
+	webhooks map[string]Webhook // by webhookID
 }
 
 // NewMemoryRepository constructs an empty in-memory repository.
@@ -82,6 +86,8 @@ func NewMemoryRepository() *MemoryRepository {
 		fabLeases:   make(map[string]FabricLease),
 		fabRuns:     make(map[string]FabricRun),
 		fabEvidence: make(map[string][]FabricEvidence),
+		branches:    make(map[string]Branch),
+		webhooks:    make(map[string]Webhook),
 	}
 }
 
@@ -1041,4 +1047,152 @@ func (m *MemoryRepository) GetProjectForAccount(_ context.Context, accountID, pr
 		return Project{}, ErrNotFound
 	}
 	return p, nil
+}
+
+func (m *MemoryRepository) UpdateAccount(_ context.Context, a Account) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	existing, ok := m.accounts[a.AccountID]
+	if !ok {
+		return ErrNotFound
+	}
+	if a.Name != existing.Name {
+		if dupID, dup := m.accByName[a.Name]; dup && dupID != a.AccountID {
+			return ErrConflict
+		}
+		delete(m.accByName, existing.Name)
+		m.accByName[a.Name] = a.AccountID
+	}
+	if a.Slug != existing.Slug {
+		if dupID, dup := m.accBySlug[a.Slug]; dup && dupID != a.AccountID {
+			return ErrConflict
+		}
+		delete(m.accBySlug, existing.Slug)
+		m.accBySlug[a.Slug] = a.AccountID
+	}
+	m.accounts[a.AccountID] = a
+	return nil
+}
+
+func (m *MemoryRepository) CreateBranch(_ context.Context, b Branch) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, bid := range m.brnOrder {
+		if ex := m.branches[bid]; ex.ProjectID == b.ProjectID && ex.Name == b.Name {
+			return ErrConflict
+		}
+	}
+	m.branches[b.ID] = b
+	m.brnOrder = append(m.brnOrder, b.ID)
+	return nil
+}
+
+func (m *MemoryRepository) GetBranch(_ context.Context, branchID string) (Branch, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	b, ok := m.branches[branchID]
+	if !ok {
+		return Branch{}, ErrNotFound
+	}
+	return b, nil
+}
+
+func (m *MemoryRepository) ListBranches(_ context.Context, projectID string) ([]Branch, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []Branch
+	for _, bid := range m.brnOrder {
+		b := m.branches[bid]
+		if b.ProjectID == projectID {
+			out = append(out, b)
+		}
+	}
+	return out, nil
+}
+
+func (m *MemoryRepository) UpdateBranch(_ context.Context, b Branch) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	existing, ok := m.branches[b.ID]
+	if !ok {
+		return ErrNotFound
+	}
+	if b.Name != existing.Name {
+		for _, bid := range m.brnOrder {
+			if ex := m.branches[bid]; ex.ID != b.ID && ex.ProjectID == b.ProjectID && ex.Name == b.Name {
+				return ErrConflict
+			}
+		}
+	}
+	m.branches[b.ID] = b
+	return nil
+}
+
+func (m *MemoryRepository) DeleteBranch(_ context.Context, branchID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.branches[branchID]; !ok {
+		return ErrNotFound
+	}
+	delete(m.branches, branchID)
+	filtered := make([]string, 0, len(m.brnOrder))
+	for _, bid := range m.brnOrder {
+		if bid != branchID {
+			filtered = append(filtered, bid)
+		}
+	}
+	m.brnOrder = filtered
+	return nil
+}
+
+func (m *MemoryRepository) CreateWebhook(_ context.Context, wh Webhook) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.webhooks[wh.ID] = wh
+	return nil
+}
+
+func (m *MemoryRepository) GetWebhook(_ context.Context, webhookID string) (Webhook, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	wh, ok := m.webhooks[webhookID]
+	if !ok {
+		return Webhook{}, ErrNotFound
+	}
+	return wh, nil
+}
+
+func (m *MemoryRepository) ListWebhooks(_ context.Context, projectID string) ([]Webhook, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []Webhook
+	for _, wh := range m.webhooks {
+		if wh.ProjectID == projectID {
+			out = append(out, wh)
+		}
+	}
+	return out, nil
+}
+
+func (m *MemoryRepository) DeleteWebhook(_ context.Context, webhookID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.webhooks[webhookID]; !ok {
+		return ErrNotFound
+	}
+	delete(m.webhooks, webhookID)
+	return nil
+}
+
+func (m *MemoryRepository) UpdateWebhookTimestamps(_ context.Context, webhookID string, lastSuccess, lastFailure *time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	wh, ok := m.webhooks[webhookID]
+	if !ok {
+		return ErrNotFound
+	}
+	wh.LastSuccessAt = lastSuccess
+	wh.LastFailureAt = lastFailure
+	m.webhooks[webhookID] = wh
+	return nil
 }

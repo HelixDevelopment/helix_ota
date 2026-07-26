@@ -1,0 +1,39 @@
+# server/tests/stress/scenarios/challenges.yaml
+# §11.4.85 stress scenario for the challenges submodule (vasic-digital/challenges).
+# Exercises the server's challenge-bank evaluation paths — webhook delivery,
+# deployment lifecycle transitions (create -> evaluate -> complete/halt) under
+# sustained and concurrent load typical of a challenge-bank run of 100+ checks.
+scenario: challenges_stress
+component: challenges
+stress:
+  sustained_load:
+    concurrency: 1
+    iterations: 150
+    description: "150 sequential deployment lifecycle transitions (create + get + evaluate) simulating a full challenge-bank evaluation pass"
+    assertions:
+      - "p95_latency < 500ms"
+      - "error_rate == 0"
+      - "every_transition_durable_via_get"
+  concurrent_contention:
+    parallel_challenges: 20
+    description: "20 concurrent challenge-bank evaluation sessions each running 10 deployment transitions"
+    operations_per_session: 10
+    assertions:
+      - "zero_deadlocks"
+      - "zero_lost_states"
+      - "no_double_advance_on_a_deployment"
+  boundary_conditions:
+    - type: "evaluate_unknown_deployment"
+      description: "call Evaluate on a non-existent deployment_id"
+      assertion: "must_return_404"
+    - type: "evaluate_with_extreme_verdict_values"
+      description: "pass success_rate=2.0 and error_rate=-1.0"
+      assertion: "must_reject_or_clamp_gracefully"
+    - type: "create_and_start_then_immediately_reevaluate"
+      description: "race-condition stress: Start then Evaluate within 0ms"
+      assertion: "must_not_panic_and_produce_consistent_state"
+    - type: "rapid_successive_health_verdicts"
+      description: "send 100 health verdicts for the same deployment within 1 second"
+      assertion: "must_serialize_without_data_corruption"
+traces:
+  output: "qa-results/stress_chaos/challenges/"

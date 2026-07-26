@@ -1,0 +1,38 @@
+# server/tests/chaos/scenarios/helixqa.yaml
+# §11.4.85 chaos scenario for HelixQA — API chaos under test-automation load.
+# HelixQA exercises every endpoint; these injections ensure graceful degradation.
+scenario: helixqa_chaos
+component: helixqa
+chaos:
+  - type: process_death
+    target: auth_middleware
+    description: "simulate token-verification secret rotation mid-session (old secret rejected)"
+    injection: "reconfigure the TokenSigner secret while inflight requests still carry old-secret tokens"
+    recovery: "old tokens return 401, clients re-login with new secret, no 500"
+    assertion: "graceful_401_no_panic_no_secret_leak"
+  - type: network_fault
+    target: api_response_writer
+    description: "abruptly close client connection during a streaming JSON response"
+    infection: "client cancel/close at t+10ms for 30 sequential LIST endpoints"
+    recovery: "server detects broken pipe, stops writing, releases resources"
+    assertion: "no_goroutine_leak_on_client_disconnect"
+  - type: input_corruption
+    target: json_body_parser
+    description: "POST endpoints with deeply nested JSON (>64 levels), circular references emulated via duplicate keys"
+    injection: "100 requests with 100-deep JSON nesting + duplicate keys"
+    recovery: "gin/Go JSON parser rejects or truncates, never crashes"
+    assertion: "no_panic_no_OOM"
+  - type: resource_exhaustion
+    target: request_body_buffer
+    description: "POST with a declared Content-Length that exceeds the actual body"
+    injection: "100 requests with Content-Length: 10000000 but body=3 bytes"
+    recovery: "gin's http.MaxBytesReader handles the mismatch, handler returns 4xx or 400"
+    assertion: "no_connection_hang_no_server_hang"
+  - type: state_corruption
+    target: group_and_release_concurrent_mutation
+    description: "create a group, then immediately delete it while another goroutine reads it"
+    injection: "30 concurrent create+delete+read cycles on groups with the same name"
+    recovery: "store serialises operations, no stale-ghost group appears in a list after delete"
+    assertion: "no_phantom_rows_no_dirty_reads"
+traces:
+  output: "qa-results/stress_chaos/helixqa/"

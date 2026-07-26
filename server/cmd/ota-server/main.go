@@ -46,13 +46,9 @@ func main() {
 	// store.Repository + the rollout StoragePort are the seams.
 	var repo store.Repository
 	var rolloutSvc *rollout.Service
+	var isDegraded bool
 	if cfg.DatabaseURL != "" {
 		bootCtx := context.Background()
-		// Startup connection retry (robustness): a freshly started PostgreSQL
-		// reports its container "up" before it accepts connections, so the first
-		// ping can hit "connection refused" on a boot-ordering race (compose /
-		// k8s / systemd). Retry with bounded backoff (up to 60s) instead of
-		// crashing the control plane; only a persistent failure is fatal.
 		var pg *store.PostgresRepository
 		var perr error
 		deadline := time.Now().Add(60 * time.Second)
@@ -61,24 +57,36 @@ func main() {
 				break
 			}
 			if time.Now().After(deadline) {
-				log.Fatalf("ota-server: connect postgres (after 60s of retries): %v", perr)
+				log.Printf("ota-server: WARNING — PostgreSQL unreachable after 60s (%v); falling back to in-memory store "+
+					"with degraded health. Set HELIX_DATABASE_URL to a reachable instance or restart when Postgres recovers.", perr)
+				isDegraded = true
+				break
 			}
 			log.Printf("ota-server: postgres not ready yet: %v — retrying in 2s", perr)
 			time.Sleep(2 * time.Second)
 		}
-		if perr := pg.Migrate(bootCtx); perr != nil {
-			log.Fatalf("ota-server: migrate store schema: %v", perr)
+		if !isDegraded {
+			if perr := pg.Migrate(bootCtx); perr != nil {
+				log.Printf("ota-server: WARNING — cannot migrate schema (%v); falling back to in-memory store "+
+					"with degraded health.", perr)
+				isDegraded = true
+			}
 		}
-		rs, rerr := rollout.NewPostgresStore(bootCtx, cfg.DatabaseURL)
-		if rerr != nil {
-			log.Fatalf("ota-server: connect rollout store: %v", rerr)
+		if isDegraded {
+			repo = store.NewMemoryRepository()
+			log.Printf("ota-server: persistence = in-memory (degraded — PostgreSQL unreachable)")
+		} else {
+			rs, rerr := rollout.NewPostgresStore(bootCtx, cfg.DatabaseURL)
+			if rerr != nil {
+				log.Fatalf("ota-server: connect rollout store: %v", rerr)
+			}
+			if rerr := rs.Migrate(bootCtx); rerr != nil {
+				log.Fatalf("ota-server: migrate rollout schema: %v", rerr)
+			}
+			repo = pg
+			rolloutSvc = rollout.NewServiceWithStore(rs, time.Now)
+			log.Printf("ota-server: persistence = PostgreSQL (pgx)")
 		}
-		if rerr := rs.Migrate(bootCtx); rerr != nil {
-			log.Fatalf("ota-server: migrate rollout schema: %v", rerr)
-		}
-		repo = pg
-		rolloutSvc = rollout.NewServiceWithStore(rs, time.Now)
-		log.Printf("ota-server: persistence = PostgreSQL (pgx)")
 	} else {
 		repo = store.NewMemoryRepository()
 		log.Printf("ota-server: persistence = in-memory (set HELIX_DATABASE_URL for PostgreSQL)")
@@ -108,6 +116,7 @@ func main() {
 		Users:   api.MustNewStaticUserDirectory(users...),
 		Health:  checker,
 	})
+	srv.Degraded = isDegraded // T060: degradation signal on /healthz
 
 	router := srv.Router()
 

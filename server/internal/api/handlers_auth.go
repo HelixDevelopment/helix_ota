@@ -232,8 +232,11 @@ func (s *Server) issueTokenPair(c *gin.Context, subject string, roles []string, 
 // accountID produces an unscoped token (legacy fallback, denied on account-scoped
 // routes per design §3.3/J). The accounts variadic carries the available-accounts
 // list when relevant (login), empty otherwise (refresh, select-account).
+// roleVersion is bound into the token so authMiddleware can reject it after a
+// role change (T040).
 func (s *Server) issueScopedTokenPair(c *gin.Context, subject string, roles []string, accountID string, accounts ...AccountEntry) {
-	access, err := s.signer.MintAccount(subject, roles, accountID, s.cfg.AccessTokenTTL, s.now())
+	ver := s.GetRoleVersion(subject)
+	access, err := s.signer.MintAccount(subject, roles, accountID, ver, s.cfg.AccessTokenTTL, s.now())
 	if err != nil {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not mint access token")
 		return

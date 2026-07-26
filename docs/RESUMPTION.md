@@ -2,78 +2,83 @@
 
 | Field | Value |
 |---|---|
-| Revision | 10 |
-| Last modified | 2026-06-11T10:10:00Z |
+| Revision | 11 |
+| Last modified | 2026-07-26T00:00:00Z |
 | Status | active — the §11.4.131 single canonical out-of-the-box session-resumption file |
-| Standard path | `docs/RESUMPTION.md` (this file — the fixed project-declared §11.4.131 entry point; do not move without a §11.4.66 operator decision) |
-| Status summary | Point any fresh session at THIS file. It carries a SHORT one-line resume + a FULL block, the read-first handoff docs, exact live-state anchors, current PHASE + NEXT + terminal goal, and the binding constraints. Moment-valid for HEAD on `main` (all 4 remotes aligned). **2026-06-11: 🎉 PWU-AB-1 FULL A/B SLOT SWITCH PROVEN GREEN on this macOS host** — real U-Boot 2024.01 + QEMU `virt`+HVF, same `u-boot.bin`+disk booted twice differing only in `BOOT_ORDER` routes root to a different physical slot, guest reports it from userspace (Run A→`/etc/slot_id=A`+`/dev/vda2`+`helix_slot=A`; Run B→`B`+`/dev/vda3`+`helix_slot=B`; both live shells; neither cross-boots). 10/10 anti-bluff asserts PASS, **§11.4.50 determinism 3/3 identical**, RED→GREEN §11.4.115, evidence `docs/qa/20260611T094958Z-ab-slot-switch/` (240-line consoles + `determinism_soak.txt`). build8 produced a genuine `u-boot.bin` (1.0M) + the 2-slot GPT `ab_disk.img`. NEXT: PWU-AB-2 RAUC dm-verity (`ab_rauc_verity.sh` authored — flags the real RAUC↔boot.cmd env-scheme integration gap + needs a `.raucb` bundle), PWU-AB-3 corrupt-slot auto-rollback (`ab_rollback.sh` authored — bootcount>bootlimit BOOT_ORDER swap); both parse-clean + UNVERIFIED-pending-conductor-run. **2026-06-10→11 autonomous session: EVERY achievable software tier GREEN + §11.4.50 determinism soaks + sustained loadtest, THEN an operator-directed 6-stream parallel-hardening round (real coverage gains api 87.7%/fabric 96.7%/transport 94.9%, dashboard 58→93, §11.4.65 PDF backfill 66 siblings, extended security suite 26/0/0 ×3 — two real defects found+fixed honestly). Full §11.4.27 test-type matrix (unit/integration/e2e/full-automation/security/DDoS/scaling/chaos/stress/perf/UI/Challenges) re-confirmed. See `docs/qa/STABILITY_REPORT.md` Rev 2 + `docs/qa/20260610T16{20Z-overnight-revalidation,40Z-determinism-soak}/`.** Android bricks product-identical to proof (pins `1061015`/`8bb8d2f` unchanged), not re-run (§12.6/§11.4.6). BLOCKED (hardware): T2 Cuttlefish / GSI-A·B real-apply / T3 RK3588 → no release tag (§11.4.40 would be a bluff). Achievable+zero-risk queue is EXHAUSTED; remaining items are hardware-gated or correctly-deferred-as-risky (fabric scheduler = unwired §11.4.124). |
+| Standard path | `docs/RESUMPTION.md` (this file) |
 
 ## SHORT — paste this first sentence into a fresh session
 
-> Read `docs/research/main_specs/CONTINUATION.md` first, run `git fetch --all --prune`, then continue the Helix OTA autonomous loop toward the next validated-and-published version tag — current PHASE is "OVERNIGHT STABLE — every achievable tier RE-VERIFIED GREEN on this HEAD (see docs/qa/STABILITY_REPORT.md Rev 2); P4 Cuttlefish + GSI-A/B + T3 RK3588 remain hardware-BLOCKED so no release tag yet (§11.4.40); achievable+zero-risk queue EXHAUSTED"; HEAD is `0d27438` on `main` (all 5 remotes aligned).
+> Production readiness tracking active on `feature/production-readiness` (HEAD `043e6c95`). US1/US2/US3 done. US4 production-readiness planning in progress. US5 (rate-limit + security probe hardening) and US6 (fuzz/chaos testing) in progress. 73 gaps identified in gap_tracker.csv; 1 in-progress, 72 queued. Run `git fetch --all --prune`, then continue closing Phase 0 Critical gaps.
 
 ## FULL — detailed resumption block
 
 ### 0. Read FIRST (in order)
 
-1. `docs/research/main_specs/CONTINUATION.md` — the live work-state handoff (DONE / NEXT / locked decisions). **This is the primary handoff doc.**
-2. `.remember/remember.md` — present but currently empty; no extra state there.
-3. `docs/design/EMULATED_DEVICE_TESTING.md` — the tiered emulator-testing plan (Tier-1/2/3) now in flight.
-4. Then run: `git fetch --all --prune` and reconcile `HEAD..@{u}` before any edit (§11.4.37 fetch-before-edit).
+1. `docs/research/main_specs/CONTINUATION.md` — the live work-state handoff
+2. `.remember/remember.md` — present but currently empty
+3. `docs/research/production_planning_20260726/ANALYSIS.md` — production readiness planning document (§11.4.172)
+4. `docs/research/production_planning_20260726/gap_tracker.csv` — 73-gap inventory
+5. Then run: `git fetch --all --prune`
 
-### 1. Exact live-state anchors (moment-valid 2026-06-10)
+### 1. Exact live-state anchors
 
-- **HEAD commit:** `a58f7f8` — `test(parallel-round-2): integration-port fix + deviceemu/submodule coverage + e2e halt-safety + bank-wire` (on `main`, all 5 remotes aligned). Recent chain: `a58f7f8` (parallel round 2) ← `fc383f2` (doc sync) ← `dead6ef` (PWU-5 security) ← `a151bd2` (parallel round 1) ← overnight re-validation/soak ← `eb9e1c4`. **Build state: GREEN — comprehensively re-verified; see docs/qa/STABILITY_REPORT.md Rev 3.** Owned submodules advanced + pushed: `ota-protocol` → `eda12b7` (→100% cov), `ota-artifact-validator` → `087fa08` (→100% cov).
-- **Parallel-hardening round (operator-directed 6 subagent streams, all landed + pushed):** real anti-bluff coverage gains — `internal/api` 81.2→87.7%, `internal/fabric` 83.6→96.7%, `internal/transport` 79.5→94.9%, `internal/rollout` +11.3pts, `internal/store` +2.7pts (non-integration); **dashboard Vitest 58→93** (Audit/Deployments/Groups, ×3 deterministic); **§11.4.65 PDF backfill** (66 `.html`/`.pdf` siblings via new `scripts/sync_md_siblings.sh`); **extended security suite** `tests/security/security_probes_extended.sh` (6 probe families, **26/0/0 ×3**). Independent conductor-verification caught + fixed real defects in the agents' output (a dashboard query bug; two security-suite defects — 1s-TTL provisioning + bare-wait hang).
-- **Parallel round 2 (operator-directed, 5 background streams + conductor main-stream, all landed + pushed `a58f7f8`):** ✅ **integration-port collision FIXED** (the round-1 follow-up) — cross-process flock (`pg_itest_lock_test.go` in store+rollout) serializes the shared Postgres so `go test -tags integration ./...` runs parallel-clean (§11.4.115 RED→GREEN, verified ×2); ✅ **deviceemu 76→94%** (21 real error/orchestration tests); ✅ **ota-protocol 99.3→100%** (submodule `eda12b7`); ✅ **ota-artifact-validator 98.5→100%** (submodule `087fa08`, §G2 security invariants); ✅ **e2e `tests/e2e/rollout_halt_safety.sh`** (47/0/0 — the safety-critical rollout halt-on-breach path, previously happy-path-only); ✅ **HelixQA bank → 11 challenges** (extended security wired, dry-run 11/0/0 + self-test).
-- **REMAINING follow-ups (genuine, actionable, NOT hardware-blocked — DIMINISHING-RETURNS, do only if directed):** (a) coverage deepening on the other owned submodules (`ota-telemetry-schema`, `ota-rollout-engine`) per §11.4.28; (b) store non-integration coverage (~45% — the pgx paths are integration-tagged, so this is largely a tag artifact; with `-tags integration` store is 88.7%); (c) additional e2e scenarios (delta-apply, multi-device rollout). NOTE: core/api/fabric/transport/deviceemu + both top bricks are now at high/100% coverage — further coverage work risks low-value filler (§11.4 anti-bluff), so prefer real feature/defect work or hardware-tier unblock over coverage-chasing. NOTE (§11.4.6 fact-correction): `weasyprint` 66.0 + `pandoc` 3.9 ARE present on this host — the prior "no weasyprint/LaTeX → PDF gap" note is stale. PDF siblings ARE generated via the documented §11.4.65 pipeline `pandoc <f>.md -s --metadata title=<base> -o <f>.html && weasyprint <f>.html <f>.pdf` (NOTE: `scripts/export_docs.sh`'s OWN PDF path needs a LaTeX engine, which IS genuinely absent — use the weasyprint pipeline for PDF).
-- **Wave 6 shipped this session (2026-06-10, on `main`, all 4 upstreams):**
-  - `16b4b23` android gitlink → ota-android-agent `26bd0a2` (**:android AAR now builds** — root-caused to an unpinned `kotlin.android` plugin, NOT MPP; `:core` 47/0 green).
-  - `12087bc` **emulator failure→recall(forward-fix)→recovery e2e** (`TestRecallRecoveryE2E` PASS +`-race`; podman shell variant `tests/emulator/tier1_recall_recovery_e2e.sh` syntax-clean, **conductor must run it live**).
-  - `19e1346` **dashboard §11.4.135 regression guard** for the DeviceStatus.health-object crash (Vitest 58, RED/GREEN polarity).
-  - `3c85b14` **security probes** recall+telemetry 28/0 (surfaced a STRONGER trust boundary — strict `bindJSON` rejects injected keys 400).
-  - `88bd2c2` **recall lifecycle e2e** live 35/0 (`tests/e2e/recall_lifecycle.sh`).
-  - `5123e67` **HelixQA bluff audit + real bank runner** (`tools/helixqa/run_bank.sh`): VERDICT **HelixQA is NOT a bluff** — canonical engine gates on dispatch-exit-0 + non-empty evidence ledger + catches its own negation; the real gap was an INCORPORATION gap (§11.4.27, never wired as a submodule / bank never machine-executed). Runner: dry-run 10/0/0 + self-test PASS. Audit: `docs/research/helixqa_bluff_audit/REPORT.md`.
-  - `71be1cd` **per-event telemetry `duration_ms`+`bytes_transferred` end-to-end** (closed the parked WIDEN row-4): ota-protocol gitlink → `3d360ab` (additive, validation rejects negative), emulator emits → server ingest → store (memory+pgx) → read view; `TestEmulatorTelemetryFieldsEndToEnd` exact-value PASS + real-Postgres parity (`TestPostgresRepositoryContract_Integration`, podman PG, 0 skips).
-  - `8a03a63`+`de87e21` **emulation test-fabric research + full design** (`docs/research/emulation_infra/REPORT.md` cited; `docs/design/emulation_fabric/{DESIGN,ROADMAP,TEST_COVERAGE_PLAN}.md`+`SCHEMA.sql`) — tiers T0–T3/Tfw/Tcp, extends containers submodule, honest macOS-M3 KVM gaps.
-- **Queue done this session (all pushed, all 4 upstreams):** ✅ HelixQA LIVE full-bank **10/0** (`d5fcf4a` — fixed run_bank LIVE-mode `<pw>` substitution + free-port isolation); ✅ podman recall→recovery e2e **7/7** (`71c3f77`); ✅ **HelixQA wired as a submodule** at `submodules/helixqa` pinned latest `fe17c08`, gate Part C PASS, install_upstreams done (`d488e6e`, §11.4.27); ✅ **emulation P1 T1-tier AVD-HVF boot smoke** arm64-v8a booted+accel-proven (`5d6b3ae`).
-- **Wave 7 (5-agent parallel, all pushed):** ✅ **fabric target-registry** project-side Go (`c709c92` — server/internal/fabric + store memory+pgx, exclusive-lease §11.4.119 + non-empty-evidence §11.4.69, real-PG integration 0 skips, §1.1 mutation); ✅ **on-device AVD instrumentation test** → ota-android-agent `1061015` (`8266355` gitlink; OK 5 tests 3x; UpdateEngine-present-but-degrades-to-Failed FACT); ✅ **P2 Tfw QEMU smoke** authored, honest SKIP (qemu absent — `brew install qemu` to activate) (`504c92b`); ✅ **helix-deps.yaml §11.4.31** + native test_cases bank (`607e7c3`); ✅ spec_impl_alignment row-4 RESOLVED + coverage_ledger Rev2 (`7a7cb48`).
-- **Overnight stability hardening (2026-06-10, all pushed):** ✅ **P2 QEMU firmware tier ACTIVATED** — `brew install qemu` (11.0.1), tier_fw_qemu_smoke.sh real edk2 UEFI boot PASS (`93ac0a3`); ✅ **run_bank --self-test wired into the pre-build gate** (`60da61a`, §1.1 every build); ✅ **Challenges submodule incorporated** at submodules/challenges (`438057d`, §11.4.27, gate PASS, helix-deps 11 deps); ✅ **comprehensive stability sweep ALL GREEN** on HEAD 438057d (Go all-tiers+race, pgx integration, meta-test, dashboard 58, HelixQA LIVE bank 10/0, podman full-lifecycle + fleet 5/5 + recall-recovery, QEMU tier, AVD boot + on-device, submodule cores) — see `docs/qa/STABILITY_REPORT.md`. DEFERRED zero-risk: fabric scheduler P3 (would be unwired §11.4.124), HelixQA in-tree compile (../containers layout, HelixQA-side). [CORRECTED 2026-06-10 overnight: the prior "PDF doc siblings (no weasyprint/LaTeX)" deferral was stale — weasyprint 66.0 IS present; PDF siblings for the handoff docs ARE now generated via pandoc+weasyprint; only a full-corpus PDF backfill remains as optional follow-up.]
-- **Remaining NEXT (real PWUs):** (1) emulation **P4 Cuttlefish** (Linux+KVM) for real `update_engine` A/B + the **GSI-A/B real-apply** question (REPORT §2.2/§8 — on a google_apis AVD UpdateEngine is present but unusable for a non-system caller); (2) **P2 QEMU** activate (`brew install qemu` → tier_fw_qemu_smoke.sh goes green); (3) **P3 fabric scheduler** wiring on top of the registry (Nomad/LAVA backend); (4) wire HelixQA's missing `challenges` submodule (its go.mod `replace digital.vasic.challenges` points at an absent `submodules/challenges`); (5) HelixQA: `run_bank.sh --self-test` into the pre-build gate, Dispatcher→autonomous-runner (§11.4.124); (6) OPTIONAL full-corpus PDF backfill: weasyprint 66.0 + pandoc 3.9 ARE present, and the handoff docs' .pdf siblings are now generated via `pandoc -s … && weasyprint`; a one-shot pass to (re)generate .pdf siblings across the ENTIRE docs corpus (not just handoff docs) is the only remaining §11.4.65 PDF item — low-priority, non-blocking.
-- **Wave 5 shipped (on `main`):** `2391cb6` **full OTA lifecycle + multi-device fleet PROVEN on podman** (single device 1.0.0→1.1.0 with the complete download→success telemetry accepted; fleet 5/5 → 1.0.0→1.2.0; evidence `docs/qa/20260610T11191*/` + `...111928Z-fleet/`); `f5a3428` N-device scaling (50 concurrent, ~1580 ops/sec, 0 err, -race); `4658125` dashboard Fleet-detail + a real product bug fix (DeviceStatus.health object). **The emulator now fully runs+tests the codebase end-to-end on podman — the prior "honest gap" is closed.**
-- **NEXT non-blocked candidates:** richer telemetry ingest fields (duration_ms/bytes_transferred — needs the device to send them); a rollback/recall lifecycle e2e on the emulator (drive a failure event → recall forward-fix); migrate the dashboard health-bug to a Fixed.md ATM entry. **BLOCKED:** OTA-003 Tier-2 (Linux+KVM Cuttlefish, design ready in docs/design/CUTTLEFISH_TIER2.md) + OTA-004 Tier-3 (RK3588 hardware).
-- **Waves 3–4 also shipped (on `main`):** `3c57867` closed both protocol gaps (UpdateAvailable.deployment_id [ota-protocol→7920842] + GET /deployments); `8c0521d` Tier-1 podman container e2e (PROVEN: control-plane container boots, ota-device-emu container runs the real round-trip — evidence docs/qa/20260610T105306Z/); `5d4920e` dashboard ArtifactUpload + populated-detail (Vitest 50, Playwright 20); submodule pins bumped — constitution `ba0f702`, ota-rollout-engine `7a90912`, ota-artifact-validator `77c6b48`, containers `845ad45`. Tracker live at docs/Issues.md (OTA-003/004 Operator-blocked: Tier-2 Cuttlefish-on-Linux-KVM / Tier-3 RK3588 hardware) + docs/Fixed.md.
-- **Just-shipped this session (on `main`, pushed all 4 upstreams):**
-  - `50ef5c6` — `feat(api): per-device telemetry filters + group/members pagination` (OpenAPI synced, redocly-clean).
-  - `b0b8ee2` — `chore(dashboard): sync API client to new pagination/filter params` (dashboard client lockstep).
-  - `7dc3334` — `feat(emulator): Tier-1 Go OTA device-emulator + resilience` (`server/internal/deviceemu` + `cmd/ota-device-emu`; surfaced the telemetry deployment_id protocol gap).
-  - `fa571b8` — `test(dashboard): comprehensive UI testing system` (Vitest 43 + Playwright 17 + a11y).
-  - `a839220` — `test(qa): autonomous e2e (50/50) + security (39/39) + HelixQA bank`.
-  - **`containers` submodule** advanced to `845ad45` — `feat(emulator): ota-device-emu runtime image + on-demand boot recipe` (pushed to its github origin); parent gitlink bumped in this commit.
-- **Branch:** `main`. All work merges to `main`; commit + push fan out to all upstreams.
-- **Upstreams (4):** `github` (`git@github.com:HelixDevelopment/helix_ota.git`, also `origin` fetch), `gitlab` (`git@gitlab.com:helixdevelopment1/helix_ota.git`), `gitflic` (`git@gitflic.ru:helixdevelopment/helix_ota.git`), `gitverse` (`git@gitverse.ru:helixdevelopment/helix_ota.git`). `origin` push fans out to all four.
-- **No in-flight background PIDs / detached pushes known at handoff time** — verify with `git status` + check `qa-results/push_failures/` per §11.4.88 before assuming clean.
-- **Container runtime on this host:** `podman` (the pgx integration + dev stack boot via the `containers` submodule on podman). **No host QEMU / no AVD / no nested KVM on this Apple-Silicon host** — see binding constraints.
+- **HEAD commit:** `043e6c95` — `feat(analysis): comprehensive gap analysis report 2026.07.25 — 47 gaps identified across all layers [§11.4.6]`
+- **Branch:** `feature/production-readiness`
+- **Remote status:** Pending verification — run `git fetch --all --prune && git status`
+- **Upstreams (4):** `github` (`HelixDevelopment/helix_ota`), `gitlab` (`helixdevelopment1/helix_ota`), `gitflic` (`helixdevelopment/helix_ota`), `gitverse` (`helixdevelopment/helix_ota`)
 
-### 2. Current PHASE + immediate NEXT + terminal goal
+### 2. Phase Completion Status
 
-- **PHASE (ACTIVE 2026-06-11): RK3588 / Orange Pi 5 Max A/B device emulator** — operator mandate "implement everything you can for Linux and if possible for macOS; we will provide a Linux host." Research DONE (`docs/research/rk3588_emulator/REPORT.md`, cited §11.4.123): the dev-host-feasible path on THIS Mac is a QEMU `virt`+HVF Linux guest + **U-Boot bootcount/altbootcmd auto-rollback + RAUC `format=verity` dm-verity A/B slots** (reuse RAUC+U-Boot §11.4.74; extend `containers/pkg/vm`). Real Android `update_engine` A/B stays Linux+KVM-gated (Cuttlefish T2 — for the incoming Linux host).
-- **Immediate NEXT (priority order — RK3588 emulator PWUs per REPORT §6):**
-  1. **macOS dev-host A/B-virt tier:** `tests/emulator/ab_virt/build_image.sh` builds the base aarch64 Buildroot guest in a podman container (macOS-portable: named container + named-volume DL cache + `podman cp` extract — NO `/Volumes/T7` bind-mount, NO `:Z`; output gitignored §11.4.77). **STATE (HEAD `0d27438`): ✅ PWU-AB-0 base aarch64 Buildroot image BUILT; ✅ PWU-AB-1 FOUNDATION GREEN — `tests/emulator/ab_virt/boot_smoke.sh` boots it under `qemu-system-aarch64 -M virt -accel hvf` to a LIVE interactive userspace (kernel on real Apple CPU MIDR 0x610f + getty login + post-login uname + interactive sentinel; 196-line evidence `docs/qa/20260611T061626Z-ab-virt-boot/console.log`, anti-bluff §11.4.107); ✅ A/B slot mechanism AUTHORED (parse-clean + coherent, NOT yet run): `tests/emulator/ab_virt/assemble_ab_disk.sh` (2-slot GPT builder, stamps `out/.disk_ok`) + `tests/emulator/ab_virt/uboot_ab/boot.cmd` (BOOT_ORDER/bootcount/altbootcmd slot-select); ✅ 4 parallel streams committed — HelixQA bank `HOTA-AB-VIRT-BOOT` (dry-run 12/0/0), §11.4.45 Status docs `docs/emulator/rk3588_ab_virt/`, Cuttlefish PWU-CF-2 corrupt-slot rollback, the A/B-authoring. ⏳ build8 (`build_image.sh` + U-Boot qemu_arm64 + RAUC + libssl-dev/bison/flex) building `u-boot.bin`. Root-caused+fixed en route: orphaned-rootless-podman-storage disk overflow (28GB), invalid Bootlin toolchain, single-quote/paren shell-syntax bug, U-Boot openssl/evp.h missing-libssl-dev.** IMMINENT NEXT (HEADLINE, gated only on build8's u-boot.bin): run `assemble_ab_disk.sh` → boot via U-Boot (`-bios u-boot.bin -drive ab_disk.img`) → prove root==slot-B after apply+flip+reboot (RED→GREEN §11.4.115, captured evidence). Then PWU-AB-2 (RAUC dm-verity), PWU-AB-3 (corrupt-slot auto-rollback — headline), PWU-AB-4 (agent ApplyPort over ota-protocol), PWU-AB-5 (chaos + HelixQA bank). Build hygiene: named container + `podman rm -f helix_ab_build` after each build; NO apostrophes/parens inside the single-quoted podman `bash -c`; U-Boot needs libssl-dev/bison/flex in the build container.
-  2. **Linux/Cuttlefish T2 tier:** implement the `/dev/kvm`-gated harness (§11.4.3/§11.4.81) from `docs/design/CUTTLEFISH_TIER2.md` — honest SKIP here, ready to verify on the incoming Linux host (real `update_engine` A/B + AVB/dm-verity + auto-rollback).
-  3. Older NEXT-wave (hardware/ingest-gated): device-side TUF; row-4 richer telemetry fields.
-  NOTE: this is a multi-DAY effort (research est. ~5-9 eng-days, mostly the iterative Buildroot guest image) — proceeds across loop cycles; report "all done" only when genuinely proven (§11.4.6).
-- **Terminal goal (loop stop condition A, §11.4.126):** a new fully-validated-and-verified version (tag) created AND published across all owned submodules + main repo to all 4 upstreams.
+| Phase | Status | Notes |
+|---|---|---|
+| Setup (env, deps, submodules) | **Done** | Go 1.26.2, Gradle 9.5, Kotlin 2.3.20 |
+| Foundation (US0 — scaffolding) | **Done** | Project structure, build system, gates |
+| US1 — API + Auth | **Done** | Gin REST API, JWT auth, RBAC, OpenAPI |
+| US2 — Store + Transport | **Done** | PostgreSQL store, MinIO/S3, HTTP/3 + Brotli |
+| US3 — Rollout + Orchestration | **Done** | Staged rollout, device emulator, telemetry |
+| US4 — Production Readiness | **In Progress** | Planning doc, ADR acceptance, velocity tracking (T085-T089) |
+| US5 — Rate-limit/Security Hardening | **In Progress** | Rate-limiter config, security probes extended |
+| US6 — Fuzz/Chaos Testing | **In Progress** | Fuzz inputs, stress+chaos across components |
 
-### 3. Binding constraints (do not violate)
+### 3. Production Readiness State
 
-- **Anti-bluff covenant §11.4** — every PASS carries positive captured evidence; metadata-only / config-only / absence-of-error / grep-without-runtime PASS forbidden. Tests AND HelixQA Challenges bound equally.
-- **Absolute no-force-push §11.4.113** — force-push (`--force`, `--force-with-lease`, `+<ref>`) is STRICTLY forbidden on every repo/submodule. Integrate via fetch → merge-onto-latest-main → fast-forward push.
-- **podman-only on this host** — use the `containers` submodule (`vasic-digital/containers`, §11.4.76) for any containerized workload; never host-direct emulator/`adb`/`qemu` (§11.4.109 guard).
-- **Tier-2 Android A/B is host-gated** — real `update_engine` A/B + AVB/dm-verity auto-rollback needs Cuttlefish on a Linux + nested-KVM box; the Apple-Silicon `applehv` host cannot run it. NOT structurally impossible (§11.4.112) — host/hardware-gated only.
-- **Exact naming/versions:** Go module `github.com/HelixDevelopment/helix_ota/server`; submodules under `submodules/`; constitution submodule at `constitution/`. Toolchain: Go 1.26.2, Gradle 9.5 + Kotlin 2.3.20 (AGP 8.5.2 + plain `kotlin.android` builds; Kotlin MPP does NOT). No LaTeX/drawio/plantuml/graphviz/docker on host (so `export_docs.sh`'s LaTeX-based PDF path is unavailable) — BUT PDF siblings ARE produced via `pandoc -s` + `weasyprint` 66.0 (both present); use that pipeline for §11.4.65 PDF.
-- **Commit/push discipline §2.1 + §11.4.88** — commit + push to ALL 4 upstreams; pushes may run detached.
+- **Gap tracker:** `docs/research/production_planning_20260726/gap_tracker.csv` — 73 gaps, 0 Closed, 1 In-Progress (G-17: SQL schema fix), 72 Queued
+- **Planning doc:** `docs/research/production_planning_20260726/ANALYSIS.md` — §11.4.172 compliant
+- **Velocity tracking:** `scripts/track_velocity.sh` — appends to `docs/research/production_planning_20260726/velocity.tsv`
+- **ADRs:** All 5 formally Accepted (2026-07-26):
+  - ADR-0001: hawkBit front-runner, AOSP-native fallback
+  - ADR-0002: MVP plain signing; TUF server-side 1.0.1+
+  - ADR-0003: Modular monolith with extractable seams
+  - ADR-0004: HTTP/3 + Brotli, 2-class compression
+  - ADR-0005: Full payload MVP; AOSP incrementals post-MVP
 
-## How a fresh session resumes from this file alone
+### 4. Evidence Paths
 
-Given only this file's path, a new agent: reads §0 handoff docs, runs `git fetch --all`, confirms HEAD against §1, picks up the §2 PHASE/NEXT, and works under the §3 constraints toward the terminal goal — zero additional context required.
+| Scope | Path |
+|---|---|
+| qa-results/ (submodules) | `submodules/challenges/qa-results/`, `submodules/containers/qa-results/` |
+| docs_chain qa-results | `docs_chain/qa-results/docs_chain/` |
+| Stability report | `docs/qa/STABILITY_REPORT.md` (Rev 3, HEAD `a58f7f8` on main) |
+
+### 5. Device States
+
+- **RK3588 / Orange Pi 5 Max:** No current device connected. Tier-3 hardware testing deferred per `docs/design/EMULATED_DEVICE_TESTING.md`.
+- **Emulator (podman):** Tier-1 container e2e PROVEN on main (HEAD `5d4920e`+). Full lifecycle + multi-device fleet + recall/recovery all GREEN.
+- **Cuttlefish (Linux+KVM):** Honest SKIP on this macOS host. Design ready at `docs/design/CUTTLEFISH_TIER2.md`. Needs Linux+KVM host.
+
+### 6. Binding Constraints (unchanged)
+
+- **Anti-bluff §11.4:** Every PASS carries positive captured evidence
+- **No force-push §11.4.113:** Strictly forbidden on every repo/submodule
+- **Podman-only on this host:** Use `containers` submodule; never host-direct emulator/adb/qemu
+- **Tier-2 Android A/B host-gated:** Needs Linux+KVM for Cuttlefish
+- **Commit/push discipline:** Commit + push to ALL 4 upstreams; pushes may run detached
+
+### 7. Immediate NEXT
+
+1. Complete US4 tasks T085-T089 (production readiness tracking infrastructure)
+2. Close G-17 (SQL syntax error — current In-Progress)
+3. Prioritize Phase 0 Critical gap closure: G-21 (rate-limiter default) is highest severity
+4. Run `scripts/track_velocity.sh` regularly to build velocity measurement history
+5. Back-merge `main` into `feature/production-readiness` per §11.4.188 cadence

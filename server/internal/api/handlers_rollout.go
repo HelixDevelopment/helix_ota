@@ -1,13 +1,17 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	engine "github.com/HelixDevelopment/ota-rollout-engine"
 	"github.com/gin-gonic/gin"
+
+	"github.com/HelixDevelopment/helix_ota/server/internal/store"
 )
 
 // --- wire types (1.0.1-staged-rollout/rollout_engine.md §8) ---
@@ -152,9 +156,31 @@ func (s *Server) handleEvaluateRollout(c *gin.Context) {
 		// Return the decision with a zero-valued state instead of blocking the response.
 		log.Printf("evaluate: state lookup after %s: %v", deploymentID, getErr)
 	}
+	s.notifyRolloutChange(c.Request.Context(), deploymentID, dec, st)
 	c.JSON(http.StatusOK, RolloutDecision{
 		Action: string(dec.Action),
 		Reason: string(dec.Reason),
 		State:  toRolloutState(st),
 	})
+}
+
+func (s *Server) notifyRolloutChange(ctx context.Context, deploymentID string, dec engine.Decision, st engine.State) {
+	if dec.Action != engine.ActionAdvance && dec.Action != engine.ActionHalt {
+		return
+	}
+	dep, err := s.repo.GetDeployment(ctx, deploymentID)
+	if err != nil {
+		return
+	}
+	projectID := resolveProjectID(dep)
+	stageFrom := strconv.Itoa(st.CurrentPhase)
+	stageTo := strconv.Itoa(st.CurrentPhase + 1)
+	if dec.Action == engine.ActionHalt {
+		stageTo = stageFrom
+	}
+	s.NotifyRolloutStageChanged(ctx, projectID, deploymentID, stageFrom, stageTo, deploymentID, dec.Action != engine.ActionHalt)
+}
+
+func resolveProjectID(dep store.Deployment) string {
+	return ""
 }

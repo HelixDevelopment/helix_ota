@@ -1,0 +1,35 @@
+# =============================================================================
+# hxota-stack.service — rootless (user) systemd unit that runs the HelixOTA stack.
+# -----------------------------------------------------------------------------
+# ROOTLESS (§11.4.161): installed as a USER unit under the deploy user (hxota),
+# NOT a system unit; NO sudo/root. Runs ON the deploy host, operating the bundle
+# rsynced to %h/hxota-stack by the deploy scripts. Enable persistence across
+# logout with:  loginctl enable-linger hxota
+#
+# Install (as the hxota user on the remote host):
+#   mkdir -p ~/.config/systemd/user
+#   cp hxota-stack.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   loginctl enable-linger hxota          # boot without an active login session
+#   systemctl --user enable --now hxota-stack.service
+#
+# "Boots with the system OR distributed per config": with linger enabled the unit
+# starts at host boot; without linger it starts on the user's first login.
+# =============================================================================
+[Unit]
+Description=HelixOTA (Svord) container stack — rootless podman compose
+Documentation=file:%h/hxota-stack/compose.svord.yml
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=%h/hxota-stack
+# Prefer podman-compose; fall back to the `podman compose` plugin.
+ExecStart=/bin/sh -lc 'CC=$(command -v podman-compose || echo "podman compose"); exec $CC --env-file ./stack.env -f compose.svord.yml up -d'
+ExecStop=/bin/sh -lc 'CC=$(command -v podman-compose || echo "podman compose"); exec $CC --env-file ./stack.env -f compose.svord.yml down'
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

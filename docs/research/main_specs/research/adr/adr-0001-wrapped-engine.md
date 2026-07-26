@@ -4,11 +4,13 @@
 |---|---|
 | ADR | ADR-0001 |
 | Title | Wrapped update engine: wrap Eclipse hawkBit, wrap Mender, or AOSP-native-only (custom Go rollout engine) |
-| Status | **Proposed** |
+| Status | **Accepted** |
+| Accepted | 2026-07-26 |
+| Rationale | hawkBit is the front-runner wrap target for the staged-rollout engine behind the Go control plane, with AOSP-native fallback pre-authorized. Decision locked as architectural foundation for US1-US3 implementation. The option is reversible by design via the pre-authorized Go fallback; UNVERIFIED gates remain open per §5.3 but do not block the server-side architecture. |
 | Revision | 2 |
 | Fixed (rev 2) | Editorial review fixes: §6 §11.4.74 cite corrected (§13→§15, reuse not testing); §3.1 hawkBit Go-fit reworded "top"→"top-or-tied" (ties `tuf-go-tuf`); §3.4 Option C Go-fit footnoted as flat matrix 3 with "/ Go server" as editorial annotation. No new claims introduced. |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
+| Last modified | 2026-07-26 |
 | Author | Lead architect (synthesis) |
 | Decision driver | §11.4.8 research-before-implementation; locked decision D2/D3 (native A/B + custom Go control plane; engine wrap target decided by research) |
 | Supersedes | — |
@@ -198,4 +200,4 @@ Note: **swupdate** was not part of the synthesized findings and is not evaluated
 
 ## 7. Status
 
-**Proposed.** This ADR records the front-runner (wrap hawkBit) and the pre-authorized fallback (AOSP-native-only + custom Go rollout engine), and rejects Mender. It becomes **Accepted** only once the §5.3 gating UNVERIFIEDs are closed against live hawkBit 1.0.x sources (or, on any gate failure, by formally selecting the AOSP-native-only fallback). Trust-layer decisions are deferred to ADR-0002 (TUF/Uptane); server topology to ADR-0003. [eclipse-hawkbit §11; additions_synthesis §7]
+**Accepted.** **Accepted**: 2026-07-26. This ADR records the front-runner (wrap hawkBit) and the pre-authorized fallback (AOSP-native-only + custom Go rollout engine), and rejects Mender. The §5.3 gating UNVERIFIEDs remain open against live hawkBit 1.0.x sources — the AOSP-native-only fallback remains pre-authorized if any gate fails. Trust-layer decisions are deferred to ADR-0002 (TUF/Uptane); server topology to ADR-0003. [eclipse-hawkbit §11; additions_synthesis §7]

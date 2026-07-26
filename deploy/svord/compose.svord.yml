@@ -1,0 +1,143 @@
+# =============================================================================
+# deploy/svord/compose.svord.yml — HelixOTA remote-deploy stack (CONSUMER layer).
+# -----------------------------------------------------------------------------
+# The Svord OTA control-plane stack, deployed to the remote host by
+# scripts/remote_deploy/deploy*.sh over SSH + rootless `podman compose`
+# (§11.4.161). This compose lives in the CONSUMER layer (deploy/svord/), NOT in
+# the project-agnostic containers submodule (§11.4.28) — the same decoupling
+# distribute_stack.sh uses.
+#
+# Rootless-podman hygiene (§11.4.161): NO `privileged`, NO host networking, NO
+# root user, fully-qualified image refs, bounded mem_limit (§12.6). Ports are
+# configurable — binding 80/443 rootless requires a one-time host sysctl
+# `net.ipv4.ip_unprivileged_port_start=80` (host config, NOT sudo-at-runtime) OR a
+# host-level proxy in front (QD flagged in docs/remote_deploy/REMOTE_DEPLOY.md).
+#
+# Services (4): postgres + minio (infra) · ota-server (API) · proxy (nginx:
+# serves the website on hxota.com, the console/dashboards on hxota.dev, redirects
+# hxota.dev root -> hxota.com, reverse-proxies /api/v1 -> ota-server, terminates
+# TLS from lets_encrypt-issued certs).
+#
+# Multi-product (Svord -> {ATMOSphere, Mistiq/VADER}): the stack is product-
+# AGNOSTIC. Products are DATA — release channels/projects are seeded post-deploy
+# from deploy/svord/products/<product>.env; nothing product-specific is baked here.
+#
+# Env interpolation (from the deploy env + product env, injected by the scripts):
+#   HXOTA_IMAGE_TAG, HXOTA_PG_PASSWORD, HXOTA_MINIO_USER, HXOTA_MINIO_PASSWORD,
+#   HXOTA_TOKEN_SECRET, HXOTA_ARTIFACT_PUBKEY, HXOTA_HTTP_PORT, HXOTA_HTTPS_PORT,
+#   HXOTA_ARTIFACT_BASE_URL.  NEVER commit real values (§11.4.10) — the scripts
+#   export them from the gitignored deploy env at bring-up time.
+# =============================================================================
+
+services:
+
+  # --- infrastructure: PostgreSQL (control-plane persistence seam F18) --------
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: "${HXOTA_PG_USER:-helix}"
+      POSTGRES_PASSWORD: "${HXOTA_PG_PASSWORD:?set HXOTA_PG_PASSWORD in the deploy env}"
+      POSTGRES_DB: "${HXOTA_PG_DB:-helix_ota}"
+    volumes:
+      - hxota_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${HXOTA_PG_USER:-helix} -d ${HXOTA_PG_DB:-helix_ota}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    mem_limit: 512m
+    restart: unless-stopped
+
+  # --- infrastructure: MinIO (S3 artifact-blob store) -------------------------
+  minio:
+    image: docker.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: "${HXOTA_MINIO_USER:?set HXOTA_MINIO_USER in the deploy env}"
+      MINIO_ROOT_PASSWORD: "${HXOTA_MINIO_PASSWORD:?set HXOTA_MINIO_PASSWORD in the deploy env}"
+    volumes:
+      - hxota_miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || curl -sf http://127.0.0.1:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+    restart: unless-stopped
+
+  # --- API: the Go control plane (built from server/Dockerfile) ---------------
+  # The image expects a cross-compiled static binary staged at
+  # server/.docker-bin/ota-server BEFORE build (server/Dockerfile header;
+  # scripts/remote_deploy/deploy_api.sh stages it). Postgres-backed persistence.
+  ota-server:
+    # Build context is ./server RELATIVE to this compose file, so it resolves
+    # identically in the remote bundle ($HXOTA_REMOTE_DIR/server, rsynced by
+    # deploy_api.sh) and locally. For a --local bring-up, stage the server context
+    # at deploy/svord/server (e.g. `ln -s ../../server deploy/svord/server`) or use
+    # a prebuilt hxota/ota-server image. The Dockerfile expects the cross-compiled
+    # static binary staged at server/.docker-bin/ota-server BEFORE build.
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: "hxota/ota-server:${HXOTA_IMAGE_TAG:-svord}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HELIX_PORT: "8080"
+      HELIX_API_BASE_PATH: "/api/v1"
+      HELIX_DATABASE_URL: "postgres://${HXOTA_PG_USER:-helix}:${HXOTA_PG_PASSWORD}@postgres:5432/${HXOTA_PG_DB:-helix_ota}?sslmode=disable"
+      # SEC-1: fail-closed if unset (server refuses to start). Injected from the
+      # deploy env at bring-up; NEVER committed (§11.4.10).
+      HELIX_TOKEN_SECRET: "${HXOTA_TOKEN_SECRET:?set HXOTA_TOKEN_SECRET in the deploy env}"
+      HELIX_ARTIFACT_PUBKEY: "${HXOTA_ARTIFACT_PUBKEY:-}"
+      HELIX_ARTIFACT_BASE_URL: "${HXOTA_ARTIFACT_BASE_URL:-https://hxota.dev/artifacts}"
+      # Behind the TLS-terminating proxy => emit HSTS correctly (F17).
+      HELIX_TRUST_TLS_PROXY: "true"
+      HELIX_MAX_INFLIGHT: "${HXOTA_MAX_INFLIGHT:-256}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/readyz >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+    mem_limit: 256m
+    restart: unless-stopped
+
+  # --- proxy: nginx (website + console/dashboards + TLS + /api reverse proxy) --
+  # Serves the prebuilt static dists (bind-mounted read-only) and the
+  # lets_encrypt-issued certs (bind-mounted read-only). `deploy_dashboards.sh` /
+  # `deploy_website.sh` build the dists BEFORE bring-up; `https_certs.sh` populates
+  # the certs dir. LE_RELOAD_CMD reloads this container after cert rotation.
+  proxy:
+    image: docker.io/library/nginx:stable-alpine
+    depends_on:
+      ota-server:
+        condition: service_started
+    ports:
+      # Default to high ports (rootless-safe). Override to 80/443 via the deploy
+      # env once the host sysctl net.ipv4.ip_unprivileged_port_start is set (QD).
+      - "${HXOTA_HTTP_PORT:-8080}:80"
+      - "${HXOTA_HTTPS_PORT:-8443}:443"
+    volumes:
+      # All mounts are RELATIVE to this compose file's dir, so the layout is
+      # IDENTICAL locally (deploy/svord/) and in the remote bundle
+      # ($HXOTA_REMOTE_DIR). deploy_dashboards.sh / deploy_website.sh stage the
+      # built SPA dists into ./srv/*; https_certs.sh populates ./certs.
+      - ./nginx/hxota-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ./srv/acme:/var/www/acme
+      - ./srv/website:/srv/website:ro
+      - ./srv/console:/srv/console:ro
+      - ./srv/dashboard:/srv/dashboard:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    mem_limit: 128m
+    restart: unless-stopped
+
+volumes:
+  hxota_pgdata:
+  hxota_miniodata:

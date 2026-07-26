@@ -59,6 +59,18 @@ tags:
     description: Device-group CRUD and membership (operational_endpoints.md §6).
   - name: audit
     description: Admin-only audit-log read (operational_endpoints.md §4.3).
+  - name: admin
+    description: Super-admin account management (multi-tenancy M4).
+  - name: projects
+    description: Project CRUD, account-scoped (multi-project support).
+  - name: webhooks
+    description: Project-scoped webhook callback registrations (production ops US1).
+  - name: branches
+    description: Project-scoped release channels (branch CRUD, migration 5).
+  - name: fabric
+    description: Emulation test-fabric node/target registry (admin only).
+  - name: health
+    description: Unauthenticated operational probes (healthz, readyz, metrics).
 
 security:
   - bearerAuth: []
@@ -827,6 +839,736 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /auth/select-account:
+    post:
+      tags: [auth]
+      operationId: selectAccount
+      summary: Select a target account and receive an account-scoped token pair.
+      description: >
+        The caller must carry a valid (unscoped, post-login) bearer token. The handler
+        verifies membership in the target account and returns an account-scoped
+        access+refresh pair (handlers_accounts.go). RBAC: any authenticated user who
+        is a member of the target account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SelectAccountRequest' }
+      responses:
+        '200':
+          description: Account-scoped token pair issued.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+            Vary: { $ref: '#/components/headers/Vary' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Admin / Accounts (multi-tenancy M4; administration, super-admin only) ---
+  /admin/accounts:
+    get:
+      tags: [admin]
+      operationId: adminListAccounts
+      summary: List all accounts (super-admin only).
+      description: >
+        RBAC: super_admin global flag required. Bypasses tenant isolation entirely.
+        Returns all registered accounts (handlers_accounts.go).
+      responses:
+        '200':
+          description: Accounts list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [admin]
+      operationId: adminCreateAccount
+      summary: Create a new account (super-admin only).
+      description: "RBAC: super_admin only (handlers_accounts.go)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountCreate' }
+      responses:
+        '201':
+          description: Account created.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/accounts/{id}:
+    get:
+      tags: [admin]
+      operationId: adminGetAccount
+      summary: Get account by ID (super-admin only).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account details.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [admin]
+      operationId: adminUpdateAccount
+      summary: Update account (super-admin only).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountUpdate' }
+      responses:
+        '200':
+          description: Account updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [admin]
+      operationId: adminDeleteAccount
+      summary: Delete an account (super-admin only).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '204':
+          description: Account deleted.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/accounts/{id}/suspend:
+    post:
+      tags: [admin]
+      operationId: adminSuspendAccount
+      summary: Suspend an account (super-admin only).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account suspended.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/accounts/{id}/unsuspend:
+    post:
+      tags: [admin]
+      operationId: adminUnsuspendAccount
+      summary: Unsuspend an account (super-admin only).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account unsuspended.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/accounts/{id}/archive:
+    post:
+      tags: [admin]
+      operationId: adminArchiveAccount
+      summary: Archive an account (super-admin only).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account archived.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/accounts/{accountId}/members:
+    post:
+      tags: [admin]
+      operationId: adminSetAccountMembership
+      summary: Set account membership — add/update/remove members (super-admin only).
+      description: >
+        RBAC: super_admin only. Updates membership for the target account. Triggers
+        role-version invalidation for affected users (T040 session invalidation).
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountMembershipRequest' }
+      responses:
+        '200':
+          description: Membership updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountMembershipResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # --- Account-scoped management (cross-account) ---
+  /accounts/{accountId}/projects:
+    get:
+      tags: [admin]
+      operationId: listAccountProjects
+      summary: List projects scoped to a specific account.
+      description: >
+        RBAC: token holder must be a member of the target account (requireAccountAccess).
+        Returns all projects belonging to the specified account (handlers_project.go).
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Projects list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Device list + hardware lookup ---
+  /devices:
+    get:
+      tags: [devices]
+      operationId: listDevices
+      summary: List registered devices (account-scoped).
+      description: RBAC viewer+. Returns devices scoped to the token's account (handlers_device.go).
+      responses:
+        '200':
+          description: Device list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /devices/by-hardware/{hardwareId}:
+    get:
+      tags: [devices]
+      operationId: deviceByHardware
+      summary: Look up a device by its hardware_id.
+      description: RBAC viewer+ (handlers_device.go:handleDeviceByHardware).
+      parameters:
+        - { name: hardwareId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Device found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeviceStatus' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Delta generation (on-demand compute) ---
+  /deltas/generate:
+    post:
+      tags: [deltas]
+      operationId: generateDelta
+      summary: Generate a base->target delta artifact on-demand.
+      description: >
+        RBAC operator/admin. Computes a delta between two artifacts and registers
+        the result (handlers_delta.go:handleGenerateDelta).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeltaGenerateRequest' }
+      responses:
+        '201':
+          description: Delta generated and registered.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeltaView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # --- Projects (multi-project support, account-scoped) ---
+  /projects:
+    post:
+      tags: [projects]
+      operationId: createProject
+      summary: Create a project within the token's account.
+      description: >
+        RBAC operator/admin. The project is scoped to the account carried in the
+        JWT token claim (handlers_project.go:handleCreateProject).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectCreate' }
+      responses:
+        '201':
+          description: Project created.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      tags: [projects]
+      operationId: listProjects
+      summary: List projects (account-scoped, cursor-paginated).
+      description: >
+        RBAC viewer+. Returns projects for the token's account
+        (handlers_project.go:handleListProjects).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Projects list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /projects/{projectId}:
+    get:
+      tags: [projects]
+      operationId: getProject
+      summary: Read a single project.
+      description: RBAC viewer+ (handlers_project.go:handleGetProject).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [projects]
+      operationId: updateProject
+      summary: Update a project (admin only).
+      description: RBAC admin only (handlers_project.go:handleUpdateProject).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectUpdate' }
+      responses:
+        '200':
+          description: Project updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [projects]
+      operationId: deleteProject
+      summary: Delete a project (admin only).
+      description: RBAC admin only (handlers_project.go:handleDeleteProject).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '204':
+          description: Project deleted.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Project members (per-project RBAC) ---
+  /projects/{projectId}/members:
+    get:
+      tags: [projects]
+      operationId: listProjectMembers
+      summary: List members of a project.
+      description: RBAC viewer+ (handlers_project_members.go:handleListProjectMembers).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project members.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectMemberList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [projects]
+      operationId: addProjectMember
+      summary: Add a member to a project (admin only).
+      description: RBAC admin only (handlers_project_members.go:handleAddProjectMember).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectMemberAdd' }
+      responses:
+        '201':
+          description: Member added.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectMemberView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/members/{userId}:
+    patch:
+      tags: [projects]
+      operationId: updateProjectMember
+      summary: Update a project member's role (admin only).
+      description: RBAC admin only (handlers_project_members.go:handleUpdateProjectMember).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectMemberUpdate' }
+      responses:
+        '200':
+          description: Member updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectMemberView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [projects]
+      operationId: removeProjectMember
+      summary: Remove a member from a project.
+      description: RBAC operator/admin (handlers_project_members.go:handleRemoveProjectMember).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: Member removed.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Webhooks (project-scoped callback registrations) ---
+  /webhooks:
+    post:
+      tags: [webhooks]
+      operationId: createWebhook
+      summary: Register a webhook for event-driven delivery.
+      description: >
+        RBAC operator/admin. Creates a project-scoped webhook callback
+        (handlers_webhook.go:handleCreateWebhook).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WebhookCreate' }
+      responses:
+        '201':
+          description: Webhook registered.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    get:
+      tags: [webhooks]
+      operationId: listWebhooks
+      summary: List webhooks (account-scoped).
+      description: RBAC viewer+. Returns webhooks for the token's account (handlers_webhook.go:handleListWebhooks).
+      responses:
+        '200':
+          description: Webhooks list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /webhooks/{id}:
+    delete:
+      tags: [webhooks]
+      operationId: deleteWebhook
+      summary: Delete a webhook.
+      description: RBAC operator/admin (handlers_webhook.go:handleDeleteWebhook).
+      parameters:
+        - $ref: '#/components/parameters/WebhookId'
+      responses:
+        '204':
+          description: Webhook deleted.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Branches (project-scoped release channels) ---
+  /branches:
+    post:
+      tags: [branches]
+      operationId: createBranch
+      summary: Create a release branch within a project.
+      description: >
+        RBAC operator/admin. A branch is a project-scoped release channel
+        (handlers_branches.go:handleCreateBranch).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BranchCreate' }
+      responses:
+        '201':
+          description: Branch created.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BranchView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      tags: [branches]
+      operationId: listBranches
+      summary: List branches (account-scoped, cursor-paginated).
+      description: RBAC viewer+ (handlers_branches.go:handleListBranches).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Branches list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BranchList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /branches/{id}:
+    get:
+      tags: [branches]
+      operationId: getBranch
+      summary: Read a single branch.
+      description: RBAC viewer+ (handlers_branches.go:handleGetBranch).
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      responses:
+        '200':
+          description: Branch.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BranchView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [branches]
+      operationId: updateBranch
+      summary: Update a branch.
+      description: RBAC operator/admin (handlers_branches.go:handleUpdateBranch).
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BranchUpdate' }
+      responses:
+        '200':
+          description: Branch updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BranchView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [branches]
+      operationId: deleteBranch
+      summary: Delete a branch.
+      description: RBAC operator/admin (handlers_branches.go:handleDeleteBranch).
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      responses:
+        '204':
+          description: Branch deleted.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --- Fabric registry (emulation test-fabric, admin-only) ---
+  /fabric/nodes:
+    post:
+      tags: [fabric]
+      operationId: registerFabricNode
+      summary: Register a fabric node (admin only).
+      description: >
+        RBAC admin only. Emulation test-fabric node registration
+        (handlers_fabric.go:handleRegisterFabricNode).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FabricNodeRegister' }
+      responses:
+        '201':
+          description: Node registered.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FabricNodeView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /fabric/nodes/{nodeId}:
+    get:
+      tags: [fabric]
+      operationId: getFabricNode
+      summary: Get a fabric node by ID (admin only).
+      description: RBAC admin only (handlers_fabric.go:handleGetFabricNode).
+      parameters:
+        - { name: nodeId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Fabric node.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FabricNodeView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /fabric/targets:
+    post:
+      tags: [fabric]
+      operationId: registerFabricTarget
+      summary: Register a fabric target (admin only).
+      description: RBAC admin only (handlers_fabric.go:handleRegisterFabricTarget).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FabricTargetRegister' }
+      responses:
+        '201':
+          description: Target registered.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FabricTargetView' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    get:
+      tags: [fabric]
+      operationId: listFabricTargets
+      summary: List fabric targets (admin only).
+      description: RBAC admin only (handlers_fabric.go:handleListFabricTargets).
+      responses:
+        '200':
+          description: Fabric targets list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FabricTargetList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # --- Unversioned operational probes ---
+  /healthz:
+    get:
+      tags: [health]
+      operationId: healthz
+      summary: Health probe — overall server health.
+      description: >
+        Unauthenticated. Returns {"status":"ok"} when healthy, {"status":"degraded"}
+        when operating with a fallback persistence layer (e.g. in-memory store after
+        PostgreSQL connection failure).
+      security: []
+      responses:
+        '200':
+          description: Server health status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+
+  /readyz:
+    get:
+      tags: [health]
+      operationId: readyz
+      summary: Readiness probe — server can accept traffic.
+      description: >
+        Unauthenticated. Returns {"status":"ready"} when the server is fully
+        initialized and can accept requests.
+      security: []
+      responses:
+        '200':
+          description: Readiness status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessStatus' }
+
+  /metrics:
+    get:
+      tags: [health]
+      operationId: metrics
+      summary: Prometheus metrics endpoint.
+      description: >
+        Unauthenticated. Exposes Prometheus-format metrics when the server is
+        configured with metrics enabled. Returns text/plain; charset=utf-8.
+      security: []
+      responses:
+        '200':
+          description: Prometheus text exposition format.
+
 components:
   securitySchemes:
     bearerAuth:
@@ -887,6 +1629,31 @@ components:
       schema: { type: string, format: uuid }
     GroupId:
       name: groupId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AccountId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    BranchId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    WebhookId:
+      name: id
       in: path
       required: true
       schema: { type: string, format: uuid }
@@ -1643,3 +2410,343 @@ components:
             - { type: string }
             - { type: 'null' }
           description: Null on the last page.
+
+    # --- auth: select-account (handlers_accounts.go M4) ---
+    SelectAccountRequest:
+      type: object
+      required: [account_id]
+      additionalProperties: false
+      properties:
+        account_id: { type: string, format: uuid }
+
+    # --- admin: account management (handlers_accounts.go M4) ---
+    AccountCreate:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        description: { type: string }
+
+    AccountUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        description: { type: string }
+
+    AccountView:
+      type: object
+      required: [account_id, name, status, created_at]
+      additionalProperties: false
+      properties:
+        account_id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        description: { type: string }
+        status: { type: string, enum: [active, suspended, archived] }
+        member_count: { type: integer, minimum: 0 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    AccountList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AccountView' }
+
+    AccountMembershipRequest:
+      type: object
+      required: [members]
+      additionalProperties: false
+      properties:
+        members:
+          type: array
+          items:
+            type: object
+            required: [user_id, role]
+            additionalProperties: false
+            properties:
+              user_id: { type: string, format: uuid }
+              role: { type: string }
+
+    AccountMembershipResponse:
+      type: object
+      required: [account_id, members]
+      additionalProperties: false
+      properties:
+        account_id: { type: string, format: uuid }
+        members:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              user_id: { type: string, format: uuid }
+              role: { type: string }
+
+    # --- device list (handlers_device.go) ---
+    DeviceList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/DeviceStatus' }
+
+    # --- delta generation (handlers_delta.go) ---
+    DeltaGenerateRequest:
+      type: object
+      required: [base_artifact_id, target_artifact_id]
+      additionalProperties: false
+      properties:
+        base_artifact_id: { type: string, format: uuid }
+        target_artifact_id: { type: string, format: uuid }
+        algorithm: { type: string, description: "Delta algorithm to use (default: bsdiff)." }
+
+    # --- projects (handlers_project.go) ---
+    ProjectCreate:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string }
+        branch_id: { type: string, format: uuid, description: Optional parent branch for the project. }
+
+    ProjectUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string }
+
+    ProjectView:
+      type: object
+      required: [project_id, name, account_id, created_at]
+      additionalProperties: false
+      properties:
+        project_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        account_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ProjectList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ProjectView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    # --- project members (handlers_project_members.go) ---
+    ProjectMemberAdd:
+      type: object
+      required: [user_id, role]
+      additionalProperties: false
+      properties:
+        user_id: { type: string, format: uuid }
+        role: { type: string, enum: [owner, editor, viewer] }
+
+    ProjectMemberUpdate:
+      type: object
+      required: [role]
+      additionalProperties: false
+      properties:
+        role: { type: string, enum: [owner, editor, viewer] }
+
+    ProjectMemberView:
+      type: object
+      required: [user_id, role, added_at]
+      additionalProperties: false
+      properties:
+        user_id: { type: string, format: uuid }
+        role: { type: string, enum: [owner, editor, viewer] }
+        added_at: { type: string, format: date-time }
+
+    ProjectMemberList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ProjectMemberView' }
+
+    # --- webhooks (handlers_webhook.go) ---
+    WebhookCreate:
+      type: object
+      required: [url, events]
+      additionalProperties: false
+      properties:
+        url: { type: string, format: uri }
+        events:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [artifact.uploaded, release.published, deployment.created, deployment.completed, rollout.phase_advanced, device.registered]
+        project_id: { type: string, format: uuid }
+        secret: { type: string, description: HMAC shared secret for webhook payload signing. }
+        active: { type: boolean, default: true }
+
+    WebhookView:
+      type: object
+      required: [id, url, events, active, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        url: { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }
+        project_id: { type: string, format: uuid }
+        active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    WebhookList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/WebhookView' }
+
+    # --- branches (handlers_branches.go, migration 5) ---
+    BranchCreate:
+      type: object
+      required: [name, project_id]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        project_id: { type: string, format: uuid }
+        description: { type: string }
+
+    BranchUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string }
+
+    BranchView:
+      type: object
+      required: [id, name, project_id, account_id, created_at]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        project_id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    BranchList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/BranchView' }
+        next_cursor:
+          oneOf:
+            - { type: string }
+            - { type: 'null' }
+
+    # --- fabric registry (handlers_fabric.go) ---
+    FabricNodeRegister:
+      type: object
+      required: [host, port]
+      additionalProperties: false
+      properties:
+        host: { type: string }
+        port: { type: integer, minimum: 1, maximum: 65535 }
+        role: { type: string, enum: [emulator, builder, validator] }
+        properties:
+          type: object
+          additionalProperties: { type: string }
+
+    FabricNodeView:
+      type: object
+      required: [node_id, host, port, created_at]
+      additionalProperties: false
+      properties:
+        node_id: { type: string, format: uuid }
+        host: { type: string }
+        port: { type: integer }
+        role: { type: string }
+        properties:
+          type: object
+          additionalProperties: { type: string }
+        created_at: { type: string, format: date-time }
+
+    FabricTargetRegister:
+      type: object
+      required: [target_model, os]
+      additionalProperties: false
+      properties:
+        target_model: { type: string }
+        os: { $ref: '#/components/schemas/Os' }
+        os_version: { type: string }
+        properties:
+          type: object
+          additionalProperties: { type: string }
+
+    FabricTargetView:
+      type: object
+      required: [target_id, target_model, os, created_at]
+      additionalProperties: false
+      properties:
+        target_id: { type: string, format: uuid }
+        target_model: { type: string }
+        os: { $ref: '#/components/schemas/Os' }
+        os_version: { type: string }
+        properties:
+          type: object
+          additionalProperties: { type: string }
+        created_at: { type: string, format: date-time }
+
+    FabricTargetList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/FabricTargetView' }
+
+    # --- health probes ---
+    HealthStatus:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+
+    ReadinessStatus:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [ready, not_ready]

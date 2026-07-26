@@ -1,0 +1,37 @@
+# server/tests/chaos/scenarios/emulator.yaml
+# §11.4.85 chaos scenario for emulator/device-facing endpoints.
+scenario: emulator_chaos
+component: emulator
+chaos:
+  - type: process_death
+    target: telemetry_ingest_handler
+    description: "simulate the telemetry store write failing (disk full / DB connection lost)"
+    injection: "faultRepo errors on InsertTelemetryEvent for 20 submissions"
+    recovery: "handler returns 500, queued events retried, no data silently lost"
+    assertion: "no_silent_telemetry_drop"
+  - type: network_fault
+    target: device_checkin_poll
+    description: "introduce packet loss (10%) on the update-check response path"
+    injection: "random 10% packet-drop injection on update-check responses for 60 seconds"
+    recovery: "clients with retry logic eventually get a complete response; server not affected"
+    assertion: "no_server_error_accumulation"
+  - type: input_corruption
+    target: device_token_signing
+    description: "send a corrupted device registration with a forged device-token signature"
+    injection: "50 registration requests where the DeviceToken header is mangled"
+    recovery: "every request is rejected (401/403), no device registered with a broken token"
+    assertion: "no_token_forgery_accepted"
+  - type: resource_exhaustion
+    target: device_poll_connection_pool
+    description: "1000 devices simultaneously polling /check at 0ms intervals"
+    injection: "1000 real goroutine-based connections all polling the check endpoint"
+    recovery: "server queues or rate-limits, does not exhaust file descriptors"
+    assertion: "fd_count_stable_no_too_many_open_files"
+  - type: state_corruption
+    target: device_hardware_id_conflict
+    description: "two emulated devices with the same hardware_id but different models attempt concurrent registration"
+    injection: "20 concurrent POST /devices/register all with hardware_id='same-hw-3'"
+    recovery: "at most one succeeds, the rest get conflict (409) or are deduplicated"
+    assertion: "at_most_one_device_per_hardware_id"
+traces:
+  output: "qa-results/stress_chaos/emulator/"

@@ -1,0 +1,38 @@
+# server/tests/stress/scenarios/emulator.yaml
+# §11.4.85 stress scenario for the Android emulator / device-emulation paths.
+# Exercises the server's device-facing endpoints under sustained load
+# mimicking a lab with N emulated devices all phoning home simultaneously.
+scenario: emulator_stress
+component: emulator
+stress:
+  sustained_load:
+    concurrency: 1
+    iterations: 150
+    description: "150 sequential device register + telemetry push operations for emulated Orange Pi 5 Max devices"
+    assertions:
+      - "p95_latency < 300ms"
+      - "error_rate == 0"
+      - "all_telemetry_events_persisted"
+  concurrent_contention:
+    parallel_emulators: 30
+    description: "30 emulated devices concurrently registering + pushing telemetry at boot-like burst"
+    operations_per_emulator: 3
+    assertions:
+      - "zero_deadlocks"
+      - "all_devices_registered_with_unique_ids"
+      - "telemetry_events_not_mixed_between_devices"
+  boundary_conditions:
+    - type: "telemetry_with_missing_fields"
+      description: "POST /telemetry with empty event_type"
+      assertion: "must_return_400"
+    - type: "telemetry_with_oversized_payload"
+      description: "POST /telemetry with 1MB extra_data field"
+      assertion: "must_reject_gracefully"
+    - type: "register_with_non_ascii_hardware_id"
+      description: "device registration with unicode hardware_id"
+      assertion: "must_reject_or_accept_cleanly_no_panic_no_db_corruption"
+    - type: "register_at_absolute_concurrency_limit"
+      description: "register 100 devices with exactly max_possible_parallel goroutines"
+      assertion: "must_not_deadlock_and_all_register"
+traces:
+  output: "qa-results/stress_chaos/emulator/"

@@ -41,11 +41,12 @@ var errInvalidToken = errors.New("api: invalid token")
 // AccountID as unscoped and the account-scoped middleware (requireAccountAccess)
 // denies it on every account-scoped route (fail-closed per design §3.3/J).
 type Claims struct {
-	Subject   string   `json:"sub"`
-	Roles     []string `json:"roles"`
-	AccountID string   `json:"account_id,omitempty"`
-	IssuedAt  int64    `json:"iat"`
-	Expiry    int64    `json:"exp"`
+	Subject     string   `json:"sub"`
+	Roles       []string `json:"roles"`
+	AccountID   string   `json:"account_id,omitempty"`
+	RoleVersion int64    `json:"role_ver,omitempty"`
+	IssuedAt    int64    `json:"iat"`
+	Expiry      int64    `json:"exp"`
 }
 
 // HasRole reports whether the claims carry the given role.
@@ -73,23 +74,26 @@ func NewTokenSigner(secret []byte) *TokenSigner {
 // Mint issues a signed token for the subject/roles with the given TTL. This is
 // the legacy (pre-M2) signature — tokens minted through this path carry an empty
 // AccountID (unscoped). Callers that need an account-scoped token should use
-// MintAccount instead.
+// MintAccount instead. roleVersion is bound into the token claim so the
+// authMiddleware can reject a stale token after a role change (T040).
 func (s *TokenSigner) Mint(subject string, roles []string, ttl time.Duration, now time.Time) (string, error) {
-	return s.MintAccount(subject, roles, "" /* accountID */, ttl, now)
+	return s.MintAccount(subject, roles, "" /* accountID */, 0 /* roleVersion */, ttl, now)
 }
 
 // MintAccount issues a signed, account-scoped token. When accountID is non-empty
 // the token carries the account claim that the auth middleware extracts and
 // requireAccountAccess enforces. An empty accountID produces an unscoped (legacy)
 // token — the account-scoped middleware will deny it on every account-scoped route
-// (fail-closed per design §3.3/J).
-func (s *TokenSigner) MintAccount(subject string, roles []string, accountID string, ttl time.Duration, now time.Time) (string, error) {
+// (fail-closed per design §3.3/J). roleVersion is bound into the token claim
+// so the authMiddleware can reject a stale token after a role change (T040).
+func (s *TokenSigner) MintAccount(subject string, roles []string, accountID string, roleVersion int64, ttl time.Duration, now time.Time) (string, error) {
 	claims := Claims{
-		Subject:   subject,
-		Roles:     roles,
-		AccountID: accountID,
-		IssuedAt:  now.Unix(),
-		Expiry:    now.Add(ttl).Unix(),
+		Subject:     subject,
+		Roles:       roles,
+		AccountID:   accountID,
+		RoleVersion: roleVersion,
+		IssuedAt:    now.Unix(),
+		Expiry:      now.Add(ttl).Unix(),
 	}
 	payload, err := json.Marshal(claims)
 	if err != nil {

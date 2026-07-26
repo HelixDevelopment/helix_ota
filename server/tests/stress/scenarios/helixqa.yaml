@@ -1,0 +1,36 @@
+# server/tests/stress/scenarios/helixqa.yaml
+# §11.4.85 stress scenario for the HelixQA submodule integration.
+# Exercises the server's API surface as consumed by an automated QA session:
+# project CRUD + release publishing + deployment management under the
+# sustained pace of a full QA bank traversal (100+ ops).
+scenario: helixqa_stress
+component: helixqa
+stress:
+  sustained_load:
+    concurrency: 1
+    iterations: 200
+    description: "200 sequential group CRUD operations simulating a HelixQA session exercising every endpoint"
+    assertions:
+      - "p95_latency < 300ms"
+      - "error_rate == 0"
+      - "state_consistent_between_create_and_get"
+  concurrent_contention:
+    parallel_sessions: 15
+    description: "15 parallel QA sessions each exercising group + release + deployment APIs"
+    operations_per_session: 15
+    assertions:
+      - "zero_deadlocks"
+      - "zero_corrupted_state"
+      - "each_session_observes_own_side_effects"
+  boundary_conditions:
+    - type: "list_with_large_offset"
+      description: "GET /groups?limit=1&offset=999999"
+      assertion: "must_return_empty_array_not_500"
+    - type: "create_with_duplicate_name"
+      description: "group create with name that already exists"
+      assertion: "must_return_409_conflict"
+    - type: "deeply_nested_json_body"
+      description: "group create with 10-level deep JSON"
+      assertion: "must_reject_with_400_no_panic"
+traces:
+  output: "qa-results/stress_chaos/helixqa/"

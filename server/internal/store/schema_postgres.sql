@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS helix_ota.telemetry_events (
     -- Optional per-event telemetry annotations (spec_impl_alignment.md row 4).
     -- NULLABLE so a legacy event that omits them stays NULL, never a misleading 0.
     duration_ms       BIGINT,
-    bytes_transferred BIGINT
-    current_version TEXT NOT NULL DEFAULT '',
+    bytes_transferred BIGINT,
+    current_version TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_deployment ON helix_ota.telemetry_events (deployment_id);
 -- Additive, idempotent column adds for databases provisioned before the

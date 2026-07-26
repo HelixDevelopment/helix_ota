@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# =============================================================================
+# post-merge — CodeGraph auto-rebuild hook
+# -----------------------------------------------------------------------------
+# Detects .go / .ts / .tsx / .kt file changes in the merged-in commits and
+# triggers `codegraph index` automatically so the knowledge graph stays
+# current without a manual re-index step.
+#
+# Installed by: cp scripts/git_hooks/post-merge .git/hooks/post-merge && chmod +x .git/hooks/post-merge
+# =============================================================================
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+CODEGRAPH="$(command -v codegraph 2>/dev/null || echo "$HOME/.local/bin/codegraph")"
+
+# --- detect relevant file changes in the merged-in commits -------------------
+# git merge brings in commits from the merged branch.  We inspect what changed
+# between the pre-merge HEAD (ORIG_HEAD) and the post-merge tip.
+CHANGED=$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null || true)
+
+if [ -z "$CHANGED" ]; then
+    exit 0
+fi
+
+# Check for Go, TypeScript, Kotlin, or JSX file changes
+RELEVANT=$(echo "$CHANGED" | grep -E '\.(go|ts|tsx|kt|js|jsx)$' 2>/dev/null || true)
+
+if [ -z "$RELEVANT" ]; then
+    exit 0
+fi
+
+echo "[post-merge] Code-relevant files changed, rebuilding CodeGraph index..."
+echo "$RELEVANT" | while read -r f; do echo "  $f"; done
+
+# --- run codegraph index -----------------------------------------------------
+if [ ! -x "$CODEGRAPH" ]; then
+    echo "[post-merge] WARNING: codegraph not found at $CODEGRAPH — index skipped"
+    exit 0
+fi
+
+cd "$PROJECT_ROOT"
+if "$CODEGRAPH" index 2>&1; then
+    echo "[post-merge] CodeGraph index updated successfully"
+else
+    echo "[post-merge] WARNING: codegraph index failed (non-fatal; run manually: codegraph index)"
+fi
+
+exit 0

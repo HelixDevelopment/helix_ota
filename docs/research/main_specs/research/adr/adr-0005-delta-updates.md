@@ -6,8 +6,10 @@
 | Title | Delta updates: AOSP block diffs vs custom (and phase placement) |
 | Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
-| Status | **Proposed** |
+| Last modified | 2026-07-26 |
+| Status | **Accepted** |
+| Accepted | 2026-07-26 |
+| Rationale | Full payload only for MVP (1.0.0) with Virtual A/B COW compression for interim savings. AOSP-native incremental payloads (`ota_from_target_files -i`) adopted for 1.0.1+ with full-payload fallback. Custom and third-party delta formats rejected. Decision locked as architectural foundation for US1-US3 implementation. |
 | Decision owners | Lead architect (synthesis) |
 | Deciders / reviewers | Operator; mandatory code-review subagent (§11.4.125) |
 | Supersedes | — |
@@ -154,7 +156,7 @@ This placement matches the synthesis's MVP-minimal bias and routes the delta que
 
 ## 8. Status
 
-**Proposed.** Pending operator review gate and the mandatory code-review subagent pass (§11.4.125). No implementation of deltas is authorized until the gating measurements in §7 are closed (§11.4.6 / §11.4.8).
+**Accepted.** **Accepted**: 2026-07-26. Pending operator review gate and the mandatory code-review subagent pass (§11.4.125). No implementation of deltas is authorized until the gating measurements in §7 are closed (§11.4.6 / §11.4.8).
 
 ## 9. Compliance Notes (HelixConstitution)
 

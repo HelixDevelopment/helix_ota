@@ -1,0 +1,42 @@
+groups:
+  - name: helix_ota
+    rules:
+      - alert: RolloutFailureRate
+        expr: rate(helix_ota_rollout_failures_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          component: ota-server
+        annotations:
+          summary: "Rollout failures detected"
+          description: "Rollout failure rate is {{ $value | humanize }} failures/s over the last 5 minutes. Deployment {{ $labels.deployment_id }} may be unhealthy."
+
+      - alert: HighErrorRate
+        expr: (sum(rate(helix_ota_http_requests_total{status=~"5.."}[5m])) / sum(rate(helix_ota_http_requests_total[5m]))) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: ota-server
+        annotations:
+          summary: "High 5xx error rate"
+          description: "5xx error rate is {{ $value | humanizePercentage }} over the last 5 minutes, exceeding the 5% threshold."
+
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: postgresql
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} has been unreachable for over 1 minute. The control plane cannot serve stateful requests."
+
+      - alert: InflightHigh
+        expr: helix_ota_http_requests_in_flight > (helix_max_inflight * 0.8)
+        for: 5m
+        labels:
+          severity: warning
+          component: ota-server
+        annotations:
+          summary: "In-flight requests nearing capacity"
+          description: "In-flight requests ({{ $value }}) are above 80% of HELIX_MAX_INFLIGHT ({{ $labels.max_inflight }}). Server is approaching connection saturation."

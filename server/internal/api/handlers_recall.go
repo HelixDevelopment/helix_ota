@@ -155,6 +155,8 @@ func (s *Server) handleRecall(c *gin.Context) {
 		respondError(c, http.StatusInternalServerError, CodeInternal, "could not record rollback")
 		return
 	}
+	// T050: emit webhook for deployment rollback
+	s.NotifyDeploymentRolledBack(ctx, resolveProjectID(dep), deploymentID, claims.Subject, req.Reason)
 	c.JSON(http.StatusCreated, toRollbackView(rec))
 }
 

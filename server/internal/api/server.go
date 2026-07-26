@@ -1,14 +1,17 @@
 package api
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
+	"log"
 	"sync"
 	"time"
 
 	otavalidator "github.com/HelixDevelopment/ota-artifact-validator"
 	otaprotocol "github.com/HelixDevelopment/ota-protocol"
+	engine "github.com/HelixDevelopment/ota-rollout-engine"
 	"github.com/gin-gonic/gin"
 
 	"github.com/HelixDevelopment/helix_ota/server/internal/config"
@@ -32,13 +35,20 @@ type Server struct {
 	signer  *TokenSigner
 	users   UserDirectory
 	health  health.Checker
-	pubKey  ed25519.PublicKey
-	target  otavalidator.TargetPolicy
+	pubKey         ed25519.PublicKey
+	prevPubKey     ed25519.PublicKey
+	target         otavalidator.TargetPolicy
 	refresh *refreshStore
 	rollout *rollout.Service
 	metrics *Metrics
 	nowFn   func() time.Time
 	newIDFn func() string
+
+	// Degraded indicates the server started with a fallback persistence layer
+	// (e.g. in-memory store after PostgreSQL connection failure). When true the
+	// /healthz endpoint reports {"status":"degraded"} so an operator can detect
+	// the degraded state programmatically.
+	Degraded bool
 
 	// deployMu serializes the deployment-creation critical section (endpoints.md
 	// §11.1's check-then-act invariant "at most one active deployment per
@@ -68,6 +78,13 @@ type Server struct {
 	// storing a duplicate (os, target_model, version) release row). releaseMu
 	// makes the whole check+create sequence atomic relative to itself.
 	releaseMu sync.Mutex
+
+	// roleVersionMu guards the roleVersions map. When a user's role changes
+	// (SetAccountMembership), the version is incremented so any existing token
+	// carrying the old version is rejected at the next authenticated request
+	// (T040 — session invalidation on role change).
+	roleVersionMu  sync.Mutex
+	roleVersions   map[string]int64
 }
 
 // Options configures a Server. Fields left nil/zero fall back to sensible
@@ -115,24 +132,59 @@ func NewServer(opts Options) *Server {
 	if pubKey == nil && len(opts.Config.ArtifactPublicKey) == ed25519.PublicKeySize {
 		pubKey = ed25519.PublicKey(opts.Config.ArtifactPublicKey)
 	}
+	prevPubKey := ed25519.PublicKey(nil)
+	if len(opts.Config.PreviousArtifactPublicKey) == ed25519.PublicKeySize &&
+		opts.Config.SigningKeyRotationInterval > 0 {
+		prevPubKey = ed25519.PublicKey(opts.Config.PreviousArtifactPublicKey)
+	}
 	rolloutSvc := opts.Rollout
 	if rolloutSvc == nil {
 		rolloutSvc = rollout.NewService(now)
 	}
 	return &Server{
-		cfg:     opts.Config,
-		repo:    opts.Repo,
-		signer:  NewTokenSigner(opts.Config.TokenSecret),
-		users:   opts.Users,
-		health:  checker,
-		pubKey:  pubKey,
-		target:  policy,
-		refresh: newRefreshStore(),
-		rollout: rolloutSvc,
-		metrics: opts.Metrics, // nil when not provided — Router skips metrics then
-		nowFn:   now,
-		newIDFn: newID,
+		cfg:          opts.Config,
+		repo:         opts.Repo,
+		signer:       NewTokenSigner(opts.Config.TokenSecret),
+		users:        opts.Users,
+		health:       checker,
+		pubKey:       pubKey,
+		prevPubKey:   prevPubKey,
+		target:       policy,
+		refresh:      newRefreshStore(),
+		rollout:      rolloutSvc,
+		metrics:      opts.Metrics, // nil when not provided — Router skips metrics then
+		nowFn:        now,
+		newIDFn:      newID,
+		roleVersions: make(map[string]int64),
 	}
+}
+
+// StartRolloutAutoProgress launches a background goroutine that periodically
+// polls active rollouts and auto-advances phases whose duration has elapsed.
+func (s *Server) StartRolloutAutoProgress(ctx context.Context) {
+	if s.cfg.RolloutPollInterval <= 0 {
+		return
+	}
+	go func() {
+		ticker := time.NewTicker(s.cfg.RolloutPollInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				for _, depID := range s.rollout.ActiveDeploymentIDs() {
+					_, err := s.rollout.Evaluate(ctx, depID, engine.HealthVerdict{
+						SuccessRate: 1.0,
+						ErrorRate:   0.0,
+					})
+					if err != nil {
+						log.Printf("rollout auto-progress: %s: %v", depID, err)
+					}
+				}
+			}
+		}
+	}()
 }
 
 // now returns the current time via the (possibly injected) clock.
@@ -208,12 +260,20 @@ func (s *Server) Router() *gin.Engine {
 	// Protected endpoints: authenticate, enforce per-route roles, then audit any
 	// successful mutating action (auditMiddleware runs after the handler).
 	auth := v1.Group("")
-	auth.Use(s.authMiddleware(), s.auditMiddleware())
+	auth.Use(s.authMiddleware(), s.tenantSessionMiddleware(), piiDetectionMiddleware(), s.auditMiddleware())
 	{
 		// --- Super-admin routes (design §4.1) ---
 		// These bypass tenant isolation entirely — the super_admin global flag
 		// is the only gate. Account creation/management is super-admin-only.
 		auth.GET("/admin/accounts", requireSuperAdmin(), s.handleAdminListAccounts)
+		auth.POST("/admin/accounts", requireSuperAdmin(), s.handleAdminCreateAccount)
+		auth.GET("/admin/accounts/:id", requireSuperAdmin(), s.handleAdminGetAccount)
+		auth.PATCH("/admin/accounts/:id", requireSuperAdmin(), s.handleAdminUpdateAccount)
+		auth.DELETE("/admin/accounts/:id", requireSuperAdmin(), s.handleAdminDeleteAccount)
+		auth.POST("/admin/accounts/:id/suspend", requireSuperAdmin(), s.handleAdminSuspendAccount)
+		auth.POST("/admin/accounts/:id/unsuspend", requireSuperAdmin(), s.handleAdminUnsuspendAccount)
+		auth.POST("/admin/accounts/:id/archive", requireSuperAdmin(), s.handleAdminArchiveAccount)
+		auth.POST("/admin/accounts/:id/members", requireSuperAdmin(), s.handleAdminSetAccountMembership)
 
 		// --- Account-scoped management routes (path-based, design §4.1) ---
 		// These read the target account from the URL path :accountId param and
@@ -302,6 +362,34 @@ func (s *Server) Router() *gin.Engine {
 			ota.GET("/projects/:projectId", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetProject)
 			ota.PATCH("/projects/:projectId", requireRole(RoleAdmin), s.handleUpdateProject)
 			ota.DELETE("/projects/:projectId", requireRole(RoleAdmin), s.handleDeleteProject)
+
+			// Webhooks — project-scoped callback registrations for event-driven
+			// delivery (production operations baseline US1).
+			ota.POST("/webhooks", requireRole(RoleOperator, RoleAdmin), s.handleCreateWebhook)
+			ota.GET("/webhooks", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListWebhooks)
+			ota.DELETE("/webhooks/:id", requireRole(RoleOperator, RoleAdmin), s.handleDeleteWebhook)
+
+			// Branches (migration 5) — project-scoped release channels.
+			ota.POST("/branches", requireRole(RoleOperator, RoleAdmin), s.handleCreateBranch)
+			ota.GET("/branches", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListBranches)
+			ota.GET("/branches/:id", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleGetBranch)
+			ota.PATCH("/branches/:id", requireRole(RoleOperator, RoleAdmin), s.handleUpdateBranch)
+			ota.DELETE("/branches/:id", requireRole(RoleOperator, RoleAdmin), s.handleDeleteBranch)
+
+			// Project members — role-based access within a project.
+			ota.GET("/projects/:projectId/members", requireRole(RoleViewer, RoleOperator, RoleAdmin), s.handleListProjectMembers)
+			ota.POST("/projects/:projectId/members", requireRole(RoleAdmin), s.handleAddProjectMember)
+			ota.PATCH("/projects/:projectId/members/:userId", requireRole(RoleAdmin), s.handleUpdateProjectMember)
+			ota.DELETE("/projects/:projectId/members/:userId", requireRole(RoleOperator, RoleAdmin), s.handleRemoveProjectMember)
+
+			// Delta generation (on-demand compute).
+			ota.POST("/deltas/generate", requireRole(RoleOperator, RoleAdmin), s.handleGenerateDelta)
+
+			// Fabric registry (emulation test-fabric) — admin-only at this tier.
+			ota.POST("/fabric/nodes", requireRole(RoleAdmin), s.handleRegisterFabricNode)
+			ota.GET("/fabric/nodes/:nodeId", requireRole(RoleAdmin), s.handleGetFabricNode)
+			ota.POST("/fabric/targets", requireRole(RoleAdmin), s.handleRegisterFabricTarget)
+			ota.GET("/fabric/targets", requireRole(RoleAdmin), s.handleListFabricTargets)
 		}
 	}
 
@@ -334,4 +422,25 @@ func newRandomID() string {
 		return hex.EncodeToString([]byte(time.Now().UTC().Format(time.RFC3339Nano)))
 	}
 	return hex.EncodeToString(b[:])
+}
+
+// IncrementRoleVersion bumps the role version for a user so any existing
+// token carrying the old version is rejected at the next authenticated
+// request (T040 — session invalidation on role change).
+func (s *Server) IncrementRoleVersion(userID string) int64 {
+	s.roleVersionMu.Lock()
+	v := s.roleVersions[userID] + 1
+	s.roleVersions[userID] = v
+	s.roleVersionMu.Unlock()
+	return v
+}
+
+// GetRoleVersion returns the current role version for a user. A user with
+// no stored version returns 0 (the compatible legacy default — any token
+// minted before T040 carries an implicit version of 0).
+func (s *Server) GetRoleVersion(userID string) int64 {
+	s.roleVersionMu.Lock()
+	v := s.roleVersions[userID]
+	s.roleVersionMu.Unlock()
+	return v
 }

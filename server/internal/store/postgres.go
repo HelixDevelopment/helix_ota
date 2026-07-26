@@ -1168,3 +1168,151 @@ FROM helix_ota.projects WHERE project_id=$1 AND account_id=$2`
 	}
 	return p, err
 }
+
+// SetTenantVariable sets the PostgreSQL session variable app.tenant_id used by
+// Row-Level Security policies to enforce tenant isolation (migration 010).
+func (r *PostgresRepository) SetTenantVariable(ctx context.Context, tenantID string) error {
+	_, err := r.pool.Exec(ctx, "SET app.tenant_id = $1", tenantID)
+	return err
+}
+
+func (r *PostgresRepository) CreateWebhook(ctx context.Context, wh Webhook) error {
+	const q = `
+INSERT INTO helix_ota.webhooks (id, project_id, url, secret, events, active, last_success_at, last_failure_at, created_at)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+	_, err := r.pool.Exec(ctx, q, wh.ID, wh.ProjectID, wh.URL, wh.Secret, wh.Events, wh.Active, wh.LastSuccessAt, wh.LastFailureAt, wh.CreatedAt)
+	return err
+}
+
+func (r *PostgresRepository) GetWebhook(ctx context.Context, webhookID string) (Webhook, error) {
+	const q = `SELECT id, project_id, url, secret, events, active, last_success_at, last_failure_at, created_at FROM helix_ota.webhooks WHERE id=$1`
+	var wh Webhook
+	err := r.pool.QueryRow(ctx, q, webhookID).
+		Scan(&wh.ID, &wh.ProjectID, &wh.URL, &wh.Secret, &wh.Events, &wh.Active, &wh.LastSuccessAt, &wh.LastFailureAt, &wh.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Webhook{}, ErrNotFound
+	}
+	return wh, err
+}
+
+func (r *PostgresRepository) ListWebhooks(ctx context.Context, projectID string) ([]Webhook, error) {
+	const q = `SELECT id, project_id, url, secret, events, active, last_success_at, last_failure_at, created_at FROM helix_ota.webhooks WHERE project_id=$1 ORDER BY created_at`
+	rows, err := r.pool.Query(ctx, q, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Webhook
+	for rows.Next() {
+		var wh Webhook
+		if err := rows.Scan(&wh.ID, &wh.ProjectID, &wh.URL, &wh.Secret, &wh.Events, &wh.Active, &wh.LastSuccessAt, &wh.LastFailureAt, &wh.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, wh)
+	}
+	return out, rows.Err()
+}
+
+func (r *PostgresRepository) DeleteWebhook(ctx context.Context, webhookID string) error {
+	const q = `DELETE FROM helix_ota.webhooks WHERE id=$1`
+	tag, err := r.pool.Exec(ctx, q, webhookID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) UpdateWebhookTimestamps(ctx context.Context, webhookID string, lastSuccess, lastFailure *time.Time) error {
+	const q = `UPDATE helix_ota.webhooks SET last_success_at=$2, last_failure_at=$3 WHERE id=$1`
+	_, err := r.pool.Exec(ctx, q, webhookID, lastSuccess, lastFailure)
+	return err
+}
+
+func (r *PostgresRepository) UpdateAccount(ctx context.Context, a Account) error {
+	const q = `
+UPDATE helix_ota.accounts SET name=$1, slug=$2, status=$3, updated_at=$4 WHERE account_id=$5`
+	tag, err := r.pool.Exec(ctx, q, a.Name, a.Slug, string(a.Status), a.UpdatedAt, a.AccountID)
+	if err != nil {
+		if isUniqueViolation(err) {
+			return ErrConflict
+		}
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) CreateBranch(ctx context.Context, b Branch) error {
+	const q = `
+INSERT INTO helix_ota.branches (id, project_id, name, description, created_at, updated_at, created_by)
+VALUES ($1,$2,$3,$4,$5,$6,$7)`
+	_, err := r.pool.Exec(ctx, q, b.ID, b.ProjectID, b.Name, b.Description, b.CreatedAt, b.UpdatedAt, b.CreatedBy)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	return err
+}
+
+func (r *PostgresRepository) GetBranch(ctx context.Context, branchID string) (Branch, error) {
+	const q = `
+SELECT id, project_id, name, description, created_at, updated_at, created_by
+FROM helix_ota.branches WHERE id=$1`
+	var b Branch
+	err := r.pool.QueryRow(ctx, q, branchID).
+		Scan(&b.ID, &b.ProjectID, &b.Name, &b.Description, &b.CreatedAt, &b.UpdatedAt, &b.CreatedBy)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Branch{}, ErrNotFound
+	}
+	return b, err
+}
+
+func (r *PostgresRepository) ListBranches(ctx context.Context, projectID string) ([]Branch, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, project_id, name, description, created_at, updated_at, created_by
+FROM helix_ota.branches WHERE project_id=$1 ORDER BY created_at`, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Branch
+	for rows.Next() {
+		var b Branch
+		if serr := rows.Scan(&b.ID, &b.ProjectID, &b.Name, &b.Description, &b.CreatedAt, &b.UpdatedAt, &b.CreatedBy); serr != nil {
+			return nil, serr
+		}
+		out = append(out, b)
+	}
+	return out, rows.Err()
+}
+
+func (r *PostgresRepository) UpdateBranch(ctx context.Context, b Branch) error {
+	const q = `
+UPDATE helix_ota.branches SET name=$1, description=$2, updated_at=$3 WHERE id=$4`
+	tag, err := r.pool.Exec(ctx, q, b.Name, b.Description, b.UpdatedAt, b.ID)
+	if err != nil {
+		if isUniqueViolation(err) {
+			return ErrConflict
+		}
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) DeleteBranch(ctx context.Context, branchID string) error {
+	tag, err := r.pool.Exec(ctx, `DELETE FROM helix_ota.branches WHERE id=$1`, branchID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

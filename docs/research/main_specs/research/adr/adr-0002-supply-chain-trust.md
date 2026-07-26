@@ -6,8 +6,10 @@
 | Title | Supply-chain trust: plain signing vs TUF vs Uptane (and MVP timing) |
 | Revision | 2 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
-| Status | **Proposed** |
+| Last modified | 2026-07-26 |
+| Status | **Accepted** |
+| Accepted | 2026-07-26 |
+| Rationale | MVP ships plain signing + SHA-256 + AVB; TUF (go-tuf/v2) adopted server-side in 1.0.1+ with device enforcement gated on Android-client spike. Signing interfaces designed MVP-forward so Uptane drops in without rework. Decision locked as architectural foundation for US1-US3 implementation. |
 | Decision drivers | Compromise resilience of the OTA trust chain; minimal-wrapping locked strategy; mandated Go stack; Android-15-first phase; verify-before-apply requirement. |
 | Supersedes | — |
 | Superseded by | — |
@@ -159,7 +161,7 @@ Per the TUF and Uptane notes, in order: [tuf-go-tuf §9] [uptane §10]
 
 ## 6. Status
 
-**Proposed.** Pending operator review alongside ADR-0001 (engine selection). The 1.0.1+ adoption steps in §4.3 (especially step 2, the on-device client spike) are themselves gated and must close their **UNVERIFIED** items before device-side TUF enforcement becomes mandatory. [tuf-go-tuf §9] [additions_synthesis §7]
+**Accepted.** **Accepted**: 2026-07-26. Pending operator review alongside ADR-0001 (engine selection). The 1.0.1+ adoption steps in §4.3 (especially step 2, the on-device client spike) are themselves gated and must close their **UNVERIFIED** items before device-side TUF enforcement becomes mandatory. [tuf-go-tuf §9] [additions_synthesis §7]
 
 ## 7. Compliance notes (HelixConstitution)
 

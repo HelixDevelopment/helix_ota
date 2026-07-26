@@ -4,9 +4,11 @@
 |---|---|
 | ADR | ADR-0004 |
 | Title | Transport & compression strategy (HTTP/3 (QUIC) primary, HTTP/2 + gzip fallback, Brotli content compression) |
-| Status | **Proposed** |
+| Status | **Accepted** |
+| Accepted | 2026-07-26 |
+| Rationale | HTTP/3 (QUIC) primary with HTTP/2 fallback via `http3` submodule; Brotli for control-plane JSON with gzip fallback; no content compression on artifact path (byte-identical `ZIP_STORED`); device-pull streaming over HTTPS with mandatory Range. Decision locked as architectural foundation for US1-US3 implementation. |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-07 |
+| Last modified | 2026-07-26 |
 | Revision | 2 |
 | Fixed-summary | Rev 2: corrected master pointers (transport mandate §3; TLS 1.3 §6), re-attributed `FILE_HASH`/`METADATA_HASH` to aosp-update-engine §7 / android-update-engine-api.md §6, softened download-resume claims to UNVERIFIED, and added a §11.4.123 (spikes-as-rock-solid-proof) compliance nod. |
 | Author | Lead architect (research synthesis) |
@@ -136,7 +138,7 @@ Negotiation order at the edge: try HTTP/3 (QUIC/UDP-443) → fall back to HTTP/2
 
 ## 7. Status
 
-**Proposed.** Pending operator review gate alongside ADR-0001..0005. The mandated stack elements (HTTP/3→HTTP/2, Brotli, REST-primary) are locked (D6) and not re-litigated; this ADR's *composition* choices (two-class compression, mandatory Range, native-resume policy, streaming-vs-staged apply) become binding on approval and are gated on closing the §6 spike items before the corresponding code paths are marked stable.
+**Accepted.** **Accepted**: 2026-07-26. Pending operator review gate alongside ADR-0001..0005. The mandated stack elements (HTTP/3→HTTP/2, Brotli, REST-primary) are locked (D6) and not re-litigated; this ADR's *composition* choices (two-class compression, mandatory Range, native-resume policy, streaming-vs-staged apply) become binding on approval and are gated on closing the §6 spike items before the corresponding code paths are marked stable.
 
 ## 8. Compliance notes (HelixConstitution)
 

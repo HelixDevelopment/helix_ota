@@ -12,9 +12,16 @@ import (
 )
 
 // handleHealthz is the liveness probe (endpoints.md / architecture.md). It is
-// unauthenticated and returns 200 while the process is up.
+// unauthenticated and returns 200 while the process is up. When the server is
+// degraded (started with in-memory fallback after a PostgreSQL connection
+// failure), the response includes isDegraded: true so operators can detect the
+// fallback state.
 func (s *Server) handleHealthz(c *gin.Context) {
 	if s.health.Live() {
+		if s.Degraded {
+			c.JSON(http.StatusOK, gin.H{"status": "ok", "isDegraded": true})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		return
 	}

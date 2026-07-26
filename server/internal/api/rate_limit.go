@@ -12,6 +12,11 @@ import (
 )
 
 func maxInflightMiddleware(limit int64) gin.HandlerFunc {
+	// Applied globally in Router() via compositionMiddleware chain — covers every
+	// endpoint including artifact download (handleGetArtifact, handleClientUpdate)
+	// and artifact upload (handleUploadArtifact). The HELIX_MAX_INFLIGHT env var
+	// (default 1000) protects against connection-flood DoS by shedding excess
+	// requests with 429 RATE_LIMITED. Set to 0 to disable.
 	if limit <= 0 {
 		return func(c *gin.Context) { c.Next() }
 	}

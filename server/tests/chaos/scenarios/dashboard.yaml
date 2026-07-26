@@ -1,0 +1,37 @@
+# server/tests/chaos/scenarios/dashboard.yaml
+# §11.4.85 chaos scenario for the manager dashboard API — read-heavy web-UI surface.
+scenario: dashboard_chaos
+component: dashboard
+chaos:
+  - type: process_death
+    target: list_endpoints
+    description: "simulate repository failure on a ListAll call during a dashboard refresh"
+    injection: "injected fault returns ErrInternal for 10 ListGroups calls"
+    recovery: "handler returns 500, subsequent calls succeed after fault cleared"
+    assertion: "dashboard_gets_5xx_with_error_body_no_panic"
+  - type: network_fault
+    target: paginated_list_stream
+    description: "introduce latency jitter (0-300ms) on every LIST response to simulate unstable WAN"
+    injection: "30-second injection of per-response latency jitter"
+    recovery: "responses arrive late but complete, no timeouts below 30s"
+    assertion: "all_responses_eventually_complete_no_connection_drop"
+  - type: input_corruption
+    target: query_parameter_parser
+    description: "send query parameters with SQL injection payloads, XSS payloads, and Unicode homoglyphs"
+    injection: "100 GET requests with filter params containing '; DROP TABLE--, <script>alert(1)</script>' and lookalike characters"
+    recovery: "all parameters safely rejected or sanitised at the query-bind/like-escape layer"
+    assertion: "no_sql_injection_possible_no_xss_reflection_no_500"
+  - type: resource_exhaustion
+    target: filter_sort_cache
+    description: "request extreme page sizes to exhaust response buffer"
+    injection: "GET /devices?limit=999999 combined with 100 concurrent calls"
+    recovery: "server bounds limit to configured max, returns at most the max rows"
+    assertion: "no_oom_no_unbounded_response"
+  - type: state_corruption
+    target: multi_tab_dashboard_consistency
+    description: "two dashboard tabs concurrently modify the same project (one renames, one adds a member)"
+    injection: "10 concurrent PATCH project name + POST project member calls"
+    recovery: "both operations succeed in some serialised order, final project state is consistent"
+    assertion: "consistent_final_state_no_lost_update"
+traces:
+  output: "qa-results/stress_chaos/dashboard/"

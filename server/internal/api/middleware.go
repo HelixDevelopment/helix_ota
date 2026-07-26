@@ -76,6 +76,14 @@ func (s *Server) authMiddleware() gin.HandlerFunc {
 			respondError(c, http.StatusUnauthorized, CodeUnauthenticated, "invalid or expired token")
 			return
 		}
+		// T040: reject a token whose role version is stale — the user's roles
+		// have changed since this token was minted, so the token must be
+		// re-issued with the current role version.
+		if claims.Subject != "" && claims.RoleVersion < s.GetRoleVersion(claims.Subject) {
+			respondError(c, http.StatusUnauthorized, CodeUnauthenticated,
+				"token is stale — roles have changed since this token was issued; re-authenticate")
+			return
+		}
 		c.Set(ctxClaims, claims)
 		// Account scope from the verified, server-minted claim (design §1.3 trust
 		// boundary: the account claim is NEVER self-asserted by the caller — the
@@ -327,4 +335,23 @@ func newRequestID() string {
 		return hex.EncodeToString([]byte(time.Now().UTC().Format(time.RFC3339Nano)))
 	}
 	return hex.EncodeToString(b[:])
+}
+
+// tenantSessionMiddleware sets the PostgreSQL session variable app.tenant_id
+// based on the authenticated request's account context. It runs AFTER
+// authMiddleware (which stores the account_id in the gin context) and BEFORE any
+// handler that executes database queries — the RLS policies (migration 010) read
+// app.tenant_id to enforce tenant isolation. When the account ID is empty
+// (legacy/unscoped token or super-admin), the session variable is set to '' so
+// the RLS policy can apply the correct bypass/legacy path.
+func (s *Server) tenantSessionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		accountID, _ := c.Get(ctxAccountID)
+		tid, _ := accountID.(string)
+		if err := s.repo.SetTenantVariable(c.Request.Context(), tid); err != nil {
+			respondError(c, http.StatusInternalServerError, CodeInternal, "failed to set tenant session")
+			return
+		}
+		c.Next()
+	}
 }

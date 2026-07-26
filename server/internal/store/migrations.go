@@ -14,6 +14,7 @@ type migration struct {
 	Version int64
 	Name    string
 	SQL     string
+	DownSQL string
 }
 
 // registeredMigrations is the ordered schema history for the pgx store backend
@@ -27,8 +28,16 @@ type migration struct {
 // another inline ALTER; the Accounts stream's "002/003" migrations build on
 // this framework.
 var registeredMigrations = []migration{
-	{Version: 1, Name: "baseline", SQL: postgresSchema},
-	{Version: 2, Name: "accounts", SQL: accountsMigrationSQL},
+	{Version: 1, Name: "baseline", SQL: postgresSchema, DownSQL: baselineMigrationDownSQL},
+	{Version: 2, Name: "accounts", SQL: accountsMigrationSQL, DownSQL: accountsMigrationDownSQL},
+	{Version: 3, Name: "rollout_schema", SQL: rolloutSchemaMigrationSQL, DownSQL: rolloutSchemaMigrationDownSQL},
+	{Version: 4, Name: "accounts_status", SQL: accountsStatusMigrationSQL, DownSQL: accountsStatusMigrationDownSQL},
+	{Version: 5, Name: "branches", SQL: branchesMigrationSQL, DownSQL: branchesMigrationDownSQL},
+	{Version: 6, Name: "webhooks", SQL: webhooksMigrationSQL, DownSQL: webhooksMigrationDownSQL},
+	{Version: 7, Name: "project_members", SQL: projectMembersMigrationSQL, DownSQL: projectMembersMigrationDownSQL},
+	{Version: 8, Name: "delta_metadata", SQL: deltaMetadataMigrationSQL, DownSQL: deltaMetadataMigrationDownSQL},
+	{Version: 9, Name: "devices_hardware", SQL: devicesHardwareMigrationSQL, DownSQL: devicesHardwareMigrationDownSQL},
+	{Version: 10, Name: "rls", SQL: rlsMigrationSQL, DownSQL: rlsMigrationDownSQL},
 }
 
 // accountsMigrationSQL is migration 2 ("accounts") — the Accounts M1 tenant
@@ -79,6 +88,163 @@ CREATE INDEX IF NOT EXISTS idx_account_memberships_account ON helix_ota.account_
 -- are migration 003 (a later M1 sub-slice), not this one.
 ALTER TABLE helix_ota.projects ADD COLUMN IF NOT EXISTS account_id TEXT NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_projects_account ON helix_ota.projects (account_id);
+`
+
+const accountsMigrationDownSQL = `
+DROP INDEX IF EXISTS helix_ota.idx_projects_account;
+ALTER TABLE helix_ota.projects DROP COLUMN IF EXISTS account_id;
+DROP TABLE IF EXISTS helix_ota.account_memberships CASCADE;
+DROP TABLE IF EXISTS helix_ota.accounts CASCADE;
+`
+
+const baselineMigrationDownSQL = `
+DROP TABLE IF EXISTS helix_ota.project_access CASCADE;
+DROP TABLE IF EXISTS helix_ota.projects CASCADE;
+DROP TABLE IF EXISTS helix_ota.fabric_evidence CASCADE;
+DROP TABLE IF EXISTS helix_ota.fabric_runs CASCADE;
+DROP TABLE IF EXISTS helix_ota.fabric_leases CASCADE;
+DROP TABLE IF EXISTS helix_ota.fabric_targets CASCADE;
+DROP TABLE IF EXISTS helix_ota.fabric_nodes CASCADE;
+DROP TABLE IF EXISTS helix_ota.idempotency_keys CASCADE;
+DROP TABLE IF EXISTS helix_ota.rollback_history CASCADE;
+DROP TABLE IF EXISTS helix_ota.delta_artifacts CASCADE;
+DROP TABLE IF EXISTS helix_ota.audit_logs CASCADE;
+DROP TABLE IF EXISTS helix_ota.device_group_members CASCADE;
+DROP TABLE IF EXISTS helix_ota.device_groups CASCADE;
+DROP TABLE IF EXISTS helix_ota.telemetry_events CASCADE;
+DROP TABLE IF EXISTS helix_ota.deployments CASCADE;
+DROP TABLE IF EXISTS helix_ota.releases CASCADE;
+DROP TABLE IF EXISTS helix_ota.artifacts CASCADE;
+DROP TABLE IF EXISTS helix_ota.devices CASCADE;
+`
+
+// rolloutSchemaMigrationSQL is migration 3 ("rollout_schema").
+const rolloutSchemaMigrationSQL = `
+ALTER TABLE helix_ota.deployments ADD COLUMN IF NOT EXISTS stage_deadline TIMESTAMPTZ;
+ALTER TABLE helix_ota.deployments ADD COLUMN IF NOT EXISTS last_evaluated_at TIMESTAMPTZ;
+`
+
+const rolloutSchemaMigrationDownSQL = `
+ALTER TABLE helix_ota.deployments DROP COLUMN IF EXISTS stage_deadline;
+ALTER TABLE helix_ota.deployments DROP COLUMN IF EXISTS last_evaluated_at;
+`
+
+// accountsStatusMigrationSQL is migration 4 ("accounts_status").
+const accountsStatusMigrationSQL = `
+ALTER TABLE helix_ota.accounts ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
+ALTER TABLE helix_ota.accounts ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+`
+
+const accountsStatusMigrationDownSQL = `
+ALTER TABLE helix_ota.accounts DROP COLUMN IF EXISTS suspended_at;
+ALTER TABLE helix_ota.accounts DROP COLUMN IF EXISTS archived_at;
+`
+
+// branchesMigrationSQL is migration 5 ("branches").
+const branchesMigrationSQL = `
+CREATE TABLE IF NOT EXISTS helix_ota.branches (
+    id UUID PRIMARY KEY,
+    project_id UUID NOT NULL REFERENCES helix_ota.projects(project_id),
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID,
+    UNIQUE(project_id, name)
+);
+`
+
+const branchesMigrationDownSQL = `
+DROP TABLE IF EXISTS helix_ota.branches CASCADE;
+`
+
+// webhooksMigrationSQL is migration 6 ("webhooks").
+const webhooksMigrationSQL = `
+CREATE TABLE IF NOT EXISTS helix_ota.webhooks (
+    id UUID PRIMARY KEY,
+    project_id UUID NOT NULL REFERENCES helix_ota.projects(project_id),
+    url TEXT NOT NULL,
+    secret TEXT NOT NULL,
+    events TEXT[] NOT NULL DEFAULT '{}',
+    active BOOLEAN NOT NULL DEFAULT true,
+    last_success_at TIMESTAMPTZ,
+    last_failure_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+`
+
+const webhooksMigrationDownSQL = `
+DROP TABLE IF EXISTS helix_ota.webhooks CASCADE;
+`
+
+// projectMembersMigrationSQL is migration 7 ("project_members").
+const projectMembersMigrationSQL = `
+ALTER TABLE helix_ota.project_members ADD COLUMN IF NOT EXISTS added_by UUID;
+ALTER TABLE helix_ota.project_members ADD COLUMN IF NOT EXISTS added_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+`
+
+const projectMembersMigrationDownSQL = `
+ALTER TABLE helix_ota.project_members DROP COLUMN IF EXISTS added_by;
+ALTER TABLE helix_ota.project_members DROP COLUMN IF EXISTS added_at;
+`
+
+// deltaMetadataMigrationSQL is migration 8 ("delta_metadata").
+const deltaMetadataMigrationSQL = `
+CREATE TABLE IF NOT EXISTS helix_ota.delta_metadata (
+    id UUID PRIMARY KEY,
+    artifact_id UUID NOT NULL,
+    base_artifact_id UUID,
+    delta_size BIGINT,
+    algorithm TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+`
+
+const deltaMetadataMigrationDownSQL = `
+DROP TABLE IF EXISTS helix_ota.delta_metadata CASCADE;
+`
+
+// devicesHardwareMigrationSQL is migration 9 ("devices_hardware").
+const devicesHardwareMigrationSQL = `
+ALTER TABLE helix_ota.devices ADD COLUMN IF NOT EXISTS hardware_capabilities JSONB DEFAULT '{}';
+`
+
+const devicesHardwareMigrationDownSQL = `
+ALTER TABLE helix_ota.devices DROP COLUMN IF EXISTS hardware_capabilities;
+`
+
+// rlsMigrationSQL is migration 10 ("rls").
+const rlsMigrationSQL = `
+REVOKE ALL ON helix_ota.accounts, helix_ota.projects, helix_ota.project_members, helix_ota.devices, helix_ota.deployments FROM public;
+GRANT SELECT, INSERT, UPDATE, DELETE ON helix_ota.accounts, helix_ota.projects, helix_ota.project_members, helix_ota.devices, helix_ota.deployments TO app_user;
+
+ALTER TABLE helix_ota.accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.project_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.deployments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON helix_ota.accounts FOR ALL USING (tenant_id = current_setting('app.tenant_id')::UUID);
+CREATE POLICY tenant_isolation ON helix_ota.projects FOR ALL USING (tenant_id = current_setting('app.tenant_id')::UUID);
+CREATE POLICY tenant_isolation ON helix_ota.project_members FOR ALL USING (tenant_id = current_setting('app.tenant_id')::UUID);
+CREATE POLICY tenant_isolation ON helix_ota.devices FOR ALL USING (tenant_id = current_setting('app.tenant_id')::UUID);
+CREATE POLICY tenant_isolation ON helix_ota.deployments FOR ALL USING (tenant_id = current_setting('app.tenant_id')::UUID);
+`
+
+const rlsMigrationDownSQL = `
+DROP POLICY IF EXISTS tenant_isolation ON helix_ota.accounts;
+DROP POLICY IF EXISTS tenant_isolation ON helix_ota.projects;
+DROP POLICY IF EXISTS tenant_isolation ON helix_ota.project_members;
+DROP POLICY IF EXISTS tenant_isolation ON helix_ota.devices;
+DROP POLICY IF EXISTS tenant_isolation ON helix_ota.deployments;
+
+ALTER TABLE helix_ota.accounts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.project_members DISABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.devices DISABLE ROW LEVEL SECURITY;
+ALTER TABLE helix_ota.deployments DISABLE ROW LEVEL SECURITY;
+
+REVOKE SELECT, INSERT, UPDATE, DELETE ON helix_ota.accounts, helix_ota.projects, helix_ota.project_members, helix_ota.devices, helix_ota.deployments FROM app_user;
 `
 
 // schemaMigrationsDDL bootstraps the applied-version ledger. It is deliberately

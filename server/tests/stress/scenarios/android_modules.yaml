@@ -1,0 +1,46 @@
+# server/tests/stress/scenarios/android_modules.yaml
+# §11.4.85 sustained-load + concurrent-contention + boundary stress scenario
+# for the Android OTA client modules (ota-android-agent submodule).
+#
+# Even though the client runs on-device, the stress scenarios here exercise
+# the SERVER's device-registration / update-check / telemetry endpoints at
+# Android-client-typical request rates (100+ iterations, 10+ concurrent
+# devices) so the server's client-facing paths are stress-proven.
+scenario: android_modules_stress
+component: android_modules
+stress:
+  sustained_load:
+    concurrency: 1
+    iterations: 200
+    description: "200 sequential update-checks simulating a fleet polling for updates"
+    assertions:
+      - "p95_latency < 500ms"
+      - "error_rate == 0"
+      - "every_response_is_valid_json"
+  concurrent_contention:
+    parallel_devices: 50
+    description: "50 concurrent device registrations + 50 concurrent update checks"
+    operations_per_device: 3
+    assertions:
+      - "zero_deadlocks"
+      - "zero_lost_updates"
+      - "all_devices_registered"
+      - "all_update_checks_return_2xx_or_304"
+  boundary_conditions:
+    - type: "max_hardware_id_length"
+      description: "device registration with a 1024-byte hardware_id"
+      assertion: "must_not_panic_and_reject_gracefully"
+    - type: "empty_model_field"
+      description: "device registration with model=''"
+      assertion: "must_reject_with_400"
+    - type: "unknown_os_field"
+      description: "tegistration with os='fork_of_android_v999'"
+      assertion: "must_reject_or_accept_cleanly"
+    - type: "zero_content_length"
+      description: "POST with Content-Length: 0"
+      assertion: "must_return_400_no_panic"
+    - type: "max_url_length"
+      description: "GET /devices/by-hardware/ with 4096-char hardware_id"
+      assertion: "must_return_404_or_400_no_panic"
+traces:
+  output: "qa-results/stress_chaos/android_modules/"

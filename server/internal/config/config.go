@@ -42,6 +42,25 @@ const (
 	DefaultArtifactBaseURL = "https://artifacts.helix.example"
 	DefaultRateLimitRPS = 100
 	DefaultAuthRateLimit = 5
+	// DefaultMaxInflight bounds concurrent in-flight requests to protect against
+	// connection-flood DoS attacks; excess requests are shed with 429 RATE_LIMITED.
+	DefaultMaxInflight int64 = 1000
+	// DefaultRolloutPollInterval controls how often the rollout auto-progress
+	// scheduler polls for pending window activations.
+	DefaultRolloutPollInterval = 60 * time.Second
+	// DefaultSigningKeyRotationInterval is the default grace period during which
+	// the previous artifact signing key remains valid alongside the new key
+	// (T043 — credential rotation). Zero means no rotation window is active.
+	DefaultSigningKeyRotationInterval = 0 * time.Hour
+	// DefaultArtifactUploadTimeout bounds the total time a single artifact upload
+	// handler may spend processing. Exceeding the timeout aborts with 504.
+	DefaultArtifactUploadTimeout = 5 * time.Minute
+	// DefaultRolloutEvaluationTimeout bounds the rollout evaluation handler's
+	// maximum execution time. Exceeding the timeout aborts the request.
+	DefaultRolloutEvaluationTimeout = 30 * time.Second
+	// DefaultDBConnectionPoolSize is the maximum number of pgx pool connections.
+	// 0 means use pgxpool defaults (max(4, runtime.NumCPU())).
+	DefaultDBConnectionPoolSize = 0
 )
 
 // Config is the resolved server configuration.
@@ -60,9 +79,13 @@ type Config struct {
 	DeviceTokenTTL time.Duration
 	// MaxUploadBytes caps the artifact upload body size.
 	MaxUploadBytes int64
-	// MaxInflight bounds concurrent in-flight requests (DoS protection); excess
-	// requests are shed with 429 RATE_LIMITED. 0 (default) disables the cap.
+	// MaxInflight bounds concurrent in-flight requests to protect against
+	// connection-flood DoS attacks; excess requests are shed with 429 RATE_LIMITED.
+	// Default: DefaultMaxInflight (1000). Set to 0 to disable the cap.
 	MaxInflight int64
+	// RolloutPollInterval controls how often the rollout auto-progress scheduler
+	// polls for pending window activations.
+	RolloutPollInterval time.Duration
 	// ArtifactBaseURL is the base of the artifact download reference.
 	ArtifactBaseURL string
 
@@ -85,6 +108,25 @@ type Config struct {
 	// configurations that inject the key by other means (e.g. tests); the upload
 	// handler rejects uploads when no trusted key is configured.
 	ArtifactPublicKey []byte
+
+	// PreviousArtifactPublicKey is the PREVIOUS trusted ed25519 public key that
+	// remains valid during the SigningKeyRotationInterval grace period (T043).
+	// When the operator rotates to a new signing key, they set the new key in
+	// HELIX_ARTIFACT_PUBKEY, move the old key here, and set
+	// HELIX_ARTIFACT_SIGNING_KEY_ROTATION_INTERVAL to the grace duration. During
+	// this window artifacts signed by EITHER the current key or this previous key
+	// are accepted. When the interval expires (or is reset to zero), only the
+	// current key is trusted. Supplied base64-encoded via
+	// HELIX_ARTIFACT_PREVIOUS_PUBKEY.
+	PreviousArtifactPublicKey []byte
+
+	// SigningKeyRotationInterval is the grace period during which the PREVIOUS
+	// artifact signing key remains valid alongside the NEW key (T043). During
+	// this window the server accepts artifacts signed by EITHER key, letting the
+	// operator distribute the new public key to build pipelines without downtime.
+	// Zero disables rotation (only the current pubkey is trusted). Supplied via
+	// HELIX_ARTIFACT_SIGNING_KEY_ROTATION_INTERVAL (Go duration format).
+	SigningKeyRotationInterval time.Duration
 
 	// TLSCertFile / TLSKeyFile enable the HTTP/3 (QUIC) + HTTP/2 transport. When
 	// BOTH are set the control plane is served over HTTP/3 with automatic HTTP/2
@@ -125,6 +167,18 @@ type Config struct {
 	// the pgx/PostgreSQL Repository + rollout StoragePort (the production target,
 	// architecture.md §4). Unset = the in-memory implementations (dev/MVP default).
 	DatabaseURL string
+
+	// ArtifactUploadTimeout bounds the total time a single artifact upload handler
+	// may spend processing (multipart parse, signature validation, hash verify,
+	// storage write). Default: DefaultArtifactUploadTimeout (5 min).
+	ArtifactUploadTimeout time.Duration
+	// RolloutEvaluationTimeout bounds the rollout evaluation handler's maximum
+	// execution time. Default: DefaultRolloutEvaluationTimeout (30s).
+	RolloutEvaluationTimeout time.Duration
+	// DBConnectionPoolSize overrides the pgx pool max connection count. 0 means
+	// use pgxpool defaults (max(4, runtime.NumCPU())). Supplied via
+	// HELIX_DB_CONNECTION_POOL_SIZE. Default: DefaultDBConnectionPoolSize (0).
+	DBConnectionPoolSize int
 }
 
 // Load builds a Config from the process environment, applying defaults for any
@@ -174,11 +228,23 @@ func Load() (Config, error) {
 	if c.DeviceTokenTTL < 0 {
 		return Config{}, fmt.Errorf("config: HELIX_DEVICE_TOKEN_TTL must not be negative, got %s", c.DeviceTokenTTL)
 	}
-	if c.MaxInflight, err = getInt64("HELIX_MAX_INFLIGHT", 0); err != nil {
+	if c.MaxInflight, err = getInt64("HELIX_MAX_INFLIGHT", DefaultMaxInflight); err != nil {
 		return Config{}, err
 	}
 	if c.MaxInflight < 0 {
 		return Config{}, fmt.Errorf("config: HELIX_MAX_INFLIGHT must not be negative, got %d", c.MaxInflight)
+	}
+	if c.RolloutPollInterval, err = getDuration("HELIX_ROLLOUT_POLL_INTERVAL", DefaultRolloutPollInterval); err != nil {
+		return Config{}, err
+	}
+	if c.RolloutPollInterval < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_ROLLOUT_POLL_INTERVAL must not be negative, got %s", c.RolloutPollInterval)
+	}
+	if c.SigningKeyRotationInterval, err = getDuration("HELIX_ARTIFACT_SIGNING_KEY_ROTATION_INTERVAL", DefaultSigningKeyRotationInterval); err != nil {
+		return Config{}, err
+	}
+	if c.SigningKeyRotationInterval < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_ARTIFACT_SIGNING_KEY_ROTATION_INTERVAL must not be negative, got %s", c.SigningKeyRotationInterval)
 	}
 	if c.RateLimitRPS, err = getEnvInt("HELIX_RATE_LIMIT_RPS", DefaultRateLimitRPS); err != nil {
 		return Config{}, err
@@ -197,6 +263,24 @@ func Load() (Config, error) {
 	}
 	if c.MaxUploadBytes < 0 {
 		return Config{}, fmt.Errorf("config: HELIX_MAX_UPLOAD_BYTES must not be negative, got %d", c.MaxUploadBytes)
+	}
+	if c.ArtifactUploadTimeout, err = getDuration("HELIX_ARTIFACT_UPLOAD_TIMEOUT", DefaultArtifactUploadTimeout); err != nil {
+		return Config{}, err
+	}
+	if c.ArtifactUploadTimeout < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_ARTIFACT_UPLOAD_TIMEOUT must not be negative, got %s", c.ArtifactUploadTimeout)
+	}
+	if c.RolloutEvaluationTimeout, err = getDuration("HELIX_ROLLOUT_EVALUATION_TIMEOUT", DefaultRolloutEvaluationTimeout); err != nil {
+		return Config{}, err
+	}
+	if c.RolloutEvaluationTimeout < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_ROLLOUT_EVALUATION_TIMEOUT must not be negative, got %s", c.RolloutEvaluationTimeout)
+	}
+	if c.DBConnectionPoolSize, err = getEnvInt("HELIX_DB_CONNECTION_POOL_SIZE", DefaultDBConnectionPoolSize); err != nil {
+		return Config{}, err
+	}
+	if c.DBConnectionPoolSize < 0 {
+		return Config{}, fmt.Errorf("config: HELIX_DB_CONNECTION_POOL_SIZE must not be negative, got %d", c.DBConnectionPoolSize)
 	}
 
 	// SRV-NEW-4 / OTA-065: TLS cert+key form a PAIR — either BOTH are configured
@@ -257,6 +341,15 @@ func Load() (Config, error) {
 			return Config{}, fmt.Errorf("config: HELIX_ARTIFACT_PUBKEY is not valid base64: %w", decErr)
 		}
 		c.ArtifactPublicKey = key
+	}
+
+	// Previous trusted artifact public key for rotation grace period (T043).
+	if raw := os.Getenv("HELIX_ARTIFACT_PREVIOUS_PUBKEY"); raw != "" {
+		key, decErr := base64.StdEncoding.DecodeString(raw)
+		if decErr != nil {
+			return Config{}, fmt.Errorf("config: HELIX_ARTIFACT_PREVIOUS_PUBKEY is not valid base64: %w", decErr)
+		}
+		c.PreviousArtifactPublicKey = key
 	}
 
 	return c, nil

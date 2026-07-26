@@ -243,6 +243,23 @@ type FabricRun struct {
 	EndedAt    *time.Time
 }
 
+// Webhook is a project-scoped callback registration (production operations
+// baseline US1). It carries the destination URL, shared HMAC secret for
+// signature verification, and the set of event types it subscribes to.
+// last_success_at and last_failure_at track the delivery health and are updated
+// by the dispatch engine on each delivery attempt.
+type Webhook struct {
+	ID            string
+	ProjectID     string
+	URL           string
+	Secret        string
+	Events        []string
+	Active        bool
+	LastSuccessAt *time.Time
+	LastFailureAt *time.Time
+	CreatedAt     time.Time
+}
+
 // FabricEvidence is one evidence-ledger row (helix_ota.fabric_evidence). A PASS
 // run MUST link >=1 non-empty artefact (§11.4.69): ByteSize MUST be > 0, enforced
 // by a CHECK in pgx and a guard in memory.
@@ -375,6 +392,17 @@ type AccountMembership struct {
 	GrantedBy string
 }
 
+// Branch is a release-deployment channel scoped to a project (migration 5).
+type Branch struct {
+	ID          string
+	ProjectID   string
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	CreatedBy   string
+}
+
 // Repository is the persistence port for the control plane. Implementations are
 // the in-memory MemoryRepository (MVP/testing) and a future pgx/PostgreSQL one.
 type Repository interface {
@@ -421,9 +449,21 @@ type Repository interface {
 	// ErrNotFound (anti-enumeration, design §4.3).
 	GetProjectForAccount(ctx context.Context, accountID, projectID string) (Project, error)
 
+	// UpdateAccount updates the account's mutable fields (name, slug, status,
+	// updated_at). The account MUST exist; a non-existent account returns ErrNotFound.
+	// Changing name/slug to one already bound to a different account returns ErrConflict.
+	UpdateAccount(ctx context.Context, a Account) error
+
 	// SetAccountMembership grants or updates a user's membership role within an
 	// account. The account MUST exist; a non-existent account returns ErrNotFound.
 	SetAccountMembership(ctx context.Context, m AccountMembership) error
+
+	// Branches (migration 5). A branch belongs to a project and is scoped to it.
+	CreateBranch(ctx context.Context, b Branch) error
+	GetBranch(ctx context.Context, branchID string) (Branch, error)
+	ListBranches(ctx context.Context, projectID string) ([]Branch, error)
+	UpdateBranch(ctx context.Context, b Branch) error
+	DeleteBranch(ctx context.Context, branchID string) error
 
 	// Devices.
 	// Devices.
@@ -520,4 +560,19 @@ type Repository interface {
 	// ByteSize <= 0 returns ErrEvidenceEmpty; an unknown run id returns ErrNotFound.
 	AttachFabricEvidence(ctx context.Context, e FabricEvidence) error
 	ListFabricEvidence(ctx context.Context, runID string) ([]FabricEvidence, error)
+
+	// SetTenantVariable sets a PostgreSQL session variable used by Row-Level
+	// Security policies to enforce tenant isolation. The pgx implementation runs
+	// SET app.tenant_id = $1; the in-memory implementation is a no-op.
+	SetTenantVariable(ctx context.Context, tenantID string) error
+
+	// Webhooks — project-scoped callback registrations for event-driven delivery
+	// (production operations baseline US1). A webhook is registered by project
+	// and fires on specific event types; delivery uses CloudEvents envelopes with
+	// HMAC-SHA256 signatures and exponential-backoff retry.
+	CreateWebhook(ctx context.Context, wh Webhook) error
+	GetWebhook(ctx context.Context, webhookID string) (Webhook, error)
+	ListWebhooks(ctx context.Context, projectID string) ([]Webhook, error)
+	DeleteWebhook(ctx context.Context, webhookID string) error
+	UpdateWebhookTimestamps(ctx context.Context, webhookID string, lastSuccess, lastFailure *time.Time) error
 }

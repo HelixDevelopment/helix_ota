@@ -45,3 +45,18 @@ func (s *Service) Get(ctx context.Context, deploymentID string) (engine.State, e
 func (s *Service) Evaluate(ctx context.Context, deploymentID string, v engine.HealthVerdict) (engine.Decision, error) {
 	return s.engine.Evaluate(ctx, deploymentID, v)
 }
+
+// EvaluableStater is an optional extension to StoragePort for listing deployment
+// ids the scheduler should inspect.
+type EvaluableStater interface {
+	AllDeploymentIDs() []string
+}
+
+// ActiveDeploymentIDs returns the ids of all rollout states currently known to
+// the underlying store. Returns empty when the store does not support listing.
+func (s *Service) ActiveDeploymentIDs() []string {
+	if lister, ok := s.store.(EvaluableStater); ok {
+		return lister.AllDeploymentIDs()
+	}
+	return nil
+}

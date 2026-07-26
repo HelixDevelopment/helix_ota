@@ -3,6 +3,7 @@ module github.com/HelixDevelopment/helix_ota/server
 go 1.26
 
 require (
+	digital.vasic.security v0.0.0-00010101000000-000000000000
 	github.com/HelixDevelopment/ota-artifact-validator v0.1.0
 	github.com/HelixDevelopment/ota-protocol v0.1.0
 	github.com/HelixDevelopment/ota-rollout-engine v0.1.0
@@ -54,7 +55,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	golang.org/x/arch v0.22.0 // indirect
-	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
@@ -71,3 +72,5 @@ replace digital.vasic.http3 => ../submodules/http3
 // during development. Production pins a tagged version. The v0.1.0 require above
 // is the floor; the replace supersedes it for the local build.
 replace github.com/HelixDevelopment/ota-protocol => ../submodules/ota-protocol
+
+replace digital.vasic.security => ../submodules/security

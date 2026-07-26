@@ -1,0 +1,38 @@
+# server/tests/chaos/scenarios/containers.yaml
+# §11.4.85 chaos scenario for the containers / artifact-upload pipeline.
+# Five injection classes covering the multipart artifact upload flow.
+scenario: containers_chaos
+component: containers
+chaos:
+  - type: process_death
+    target: artifact_upload_handler
+    description: "kill the upload handler mid-stream (simulated fault injection)"
+    injection: "close the client connection at 50% of file transfer for 10 uploads"
+    recovery: "server cleans up partial upload state, no orphan files in temp storage"
+    assertion: "partial_uploads_cleaned_no_disk_leak"
+  - type: network_fault
+    target: artifact_download
+    description: "simulate a slow/choppy network during artifact download by a client"
+    injection: "throttle response body write to 1KiB/s for artifact GET requests"
+    recovery: "client may timeout; server cleans up after client disconnect"
+    assertion: "no_server_resource_leak_no_orphan_fds"
+  - type: input_corruption
+    target: multipart_parser
+    description: "send multipart form data with corrupted headers, truncated boundaries, and mixed content-types"
+    injection: "50 corrupted multipart requests with embeeded null bytes + truncated parts"
+    recovery: "every request rejected with 4xx or 415, server stays responsive"
+    assertion: "no_500_no_panic_no_unparsed_multipart_cached"
+  - type: resource_exhaustion
+    target: temp_file_storage
+    description: "upload artifacts until the disk budget is near-exhausted"
+    injection: "50 concurrent uploads of 7MB each against an 8MB MaxUploadBytes limit"
+    recovery: "server rejects over-limit uploads, streams/truncates streaming bodies, never writes beyond budget"
+    assertion: "no_filesystem_fill_no_temp_leak"
+  - type: state_corruption
+    target: artifact_registry
+    description: "concurrent uploads of an artifact with the same name+version from two CI pipelines"
+    injection: "2 concurrent multipart uploads with identical metadata"
+    recovery: "one succeeds (201), one gets conflict (409) or a duplicate is prevented"
+    assertion: "at_most_one_artifact_persisted_per_unique_version_no_duplicate_rows"
+traces:
+  output: "qa-results/stress_chaos/containers/"

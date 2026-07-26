@@ -908,3 +908,47 @@ func TestExports(t *testing.T) {
 	_ = NewApplyPortClient("http://example.com")
 	_, _, _ = generateTestKeypair()
 }
+
+func TestFwEnvManager_ConfigRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	printenvPath := filepath.Join(dir, "fw_printenv")
+	setenvPath := filepath.Join(dir, "fw_setenv")
+	envFile := filepath.Join(dir, "env.data")
+
+	// fw_printenv script: reads key from envFile and prints value
+	if err := os.WriteFile(printenvPath, []byte(fmt.Sprintf(`#!/bin/sh
+val=$(grep "^$1=" %s 2>/dev/null | sed "s/^$1=//")
+if [ -n "$val" ]; then
+  echo -n "$val"
+else
+  echo "not set" >&2
+  exit 1
+fi
+`, envFile)), 0755); err != nil {
+		t.Fatalf("write printenv: %v", err)
+	}
+	// fw_setenv script: writes key=value to envFile
+	if err := os.WriteFile(setenvPath, []byte(fmt.Sprintf(`#!/bin/sh
+if [ $# -ge 2 ]; then
+  echo "$1=$2" >> %s
+fi
+`, envFile)), 0755); err != nil {
+		t.Fatalf("write setenv: %v", err)
+	}
+
+	mgr := NewFwEnvManager(setenvPath, printenvPath)
+
+	// Set a value
+	if err := mgr.SetEnv("BOOT_ORDER", "B A"); err != nil {
+		t.Fatalf("SetEnv: %v", err)
+	}
+
+	// Read back
+	v, err := mgr.GetEnv("BOOT_ORDER")
+	if err != nil {
+		t.Fatalf("GetEnv: %v", err)
+	}
+	if v != "B A" {
+		t.Fatalf("round-trip failed: expected 'B A', got %q", v)
+	}
+}
