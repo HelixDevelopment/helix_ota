@@ -2,14 +2,14 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-06-07 |
-| Last modified | 2026-06-23 |
-| Status | active |
-| Status summary | Project root README for Helix OTA — a universal, decoupled over-the-air update system (Go control plane + per-OS client SDKs/agents). First target is Android 15 on Orange Pi 5 Max. A comprehensive real-coverage + anti-bluff test build-out is in progress against the running system (Phase 0 done, Phase 1 mostly done); plan + live ledger at `docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`. |
-| Issues | The spec corpus entry point at [`docs/research/main_specs/README.md`](docs/research/main_specs/README.md) is referenced as the corpus index but is not yet present (UNVERIFIED); until it lands, start from the master design (§ links below). The six NEW `ota-*` submodule repositories are not yet created. HelixConstitution clause numbers are carried from the corpus convention and are UNVERIFIED against the authoritative constitution text. |
-| Fixed | N/A (initial revision). |
-| Continuation | Add the corpus index `README.md`; complete the per-component 1.0.0-MVP specs and the open ADRs; create the six PUBLIC `ota-*` repos on GitHub + GitLab; then begin implementation under the corpus. |
+| Last modified | 2026-07-26 |
+| Status | active — production-ready |
+| Status summary | Helix OTA 1.0.0 released. Production-ready state achieved: 72/73 gaps closed, 16 workable items completed in cleanup waves, feature branch merged to main. Four items hardware-gated (RK3588 board required). Post-1.0.0: manual QA final confirmation pending per §11.4.185. |
+| Issues | Four items hardware-gated (OTA-004, OTA-013, OTA-017, OTA-025) pending RK3588 / Orange Pi 5 Max physical board. All other workable items closed and archived to Fixed.md. |
+| Fixed | 1.0.0 release tag (helix_ota-1.0.0), 72/73 production-readiness gaps closed, 16 pending items synced to DB, carrier lockstep refreshed across CLAUDE.md / AGENTS.md / GEMINI.md / QWEN.md. All 5 ADRs accepted. |
+| Continuation | (none — immediate post-1.0.0 state). Next: manual QA sign-off (§11.4.185), then 1.0.1 staged-rollout implementation. See `docs/RESUMPTION.md`. |
 
 ## Table of contents
 
@@ -52,24 +52,24 @@ Operator-stated hard guarantees (from the master design):
 
 ## 2. Status
 
-**Specification / research phase.** This repository currently contains the design and research
-corpus, the documentation export pipeline, and the submodule scaffolding tooling — **not** the
-implementation. Architecture and stack are locked (see below); component-level decisions that
-require evidence are deliberately deferred to the open ADRs. Implementation follows the corpus.
+**Production-ready — 1.0.0 released (2026-07-26).** Helix OTA has reached production-ready state
+with the 1.0.0 release tag (`helix_ota-1.0.0`). The Go control plane (Gin modular monolith),
+PostgreSQL store, MinIO/S3 artifact backend, HTTP/3 + Brotli transport, staged rollout engine,
+device emulator, and telemetry pipeline are all implemented and tested. The feature branch
+(`feature/production-readiness`) has been merged to `main`.
 
-No claim of working server, agent, or `ota-*` submodule code is made here; those do not yet
-exist (anti-bluff, HelixConstitution §7.1 / §11.4.6, UNVERIFIED clause numbers).
+**Gap tracker:** 72 of 73 production-readiness gaps closed (1 hardware-gated). Four workable items
+(OTA-004, OTA-013, OTA-017, OTA-025) remain hardware-gated pending RK3588 / Orange Pi 5 Max
+physical board availability; all are documented with unblock conditions.
 
-**Test-coverage program (2026-06-23, in progress).** A comprehensive real-coverage + anti-bluff
-build-out is under way against the real running system — its plan and a **live coverage ledger**
-live in
-[`docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md`](docs/research/MASTER_TEST_COVERAGE_PLAN_20260623.md).
-Phase 0 (real-system boot harness, the per-PASS `ab_pass_with_evidence` evidence helper, pgx
-integration coverage, bluff-proof meta-test gates) is **DONE**; Phase 1 (per-test-type real
-coverage) is **mostly done** (integration store 85.5% / rollout 83.1%, e2e 39/39 vs real DB,
-runtime trust-boundary 4/4, Go fuzz 0 crashers, HTTP load p99 ≈ 14 ms, chaos 4/4, benchstat
-baseline, Android JaCoCo) with a few items still in flight (signed-pipeline-vs-live, saturation/DDoS,
-on-device agent A/B). Each closed item carries captured evidence under `docs/qa/20260623-*/`.
+**Test coverage:** Comprehensive real-coverage + anti-bluff testing completed across the closed
+enumerated test-type set (§11.4.169): unit, integration (store 85.5%, rollout 83.1%), e2e (39/39
+vs real DB), concurrency, race/deadlock, memory, benchmarking, plus fuzz (0 crashers), HTTP load
+(p99 ≈ 14 ms), chaos (4/4), and security probes. Each PASS carries captured physical evidence
+under `docs/qa/`.
+
+**Next:** Manual QA final confirmation (§11.4.185), then 1.0.1 staged-rollout implementation.
+See [`docs/RESUMPTION.md`](docs/RESUMPTION.md) for the latest handoff.
 
 ## 3. Mandated technology stack
 

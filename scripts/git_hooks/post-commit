@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# =============================================================================
+# post-commit — DB Auto-Sync Hook (§11.4.148 / §11.4.93)
+# -----------------------------------------------------------------------------
+# Extracts OTA-IDs from the commit message body and triggers an automated
+# workable-items DB status sync via scripts/sync_workable_items.sh.
+#
+# This hook is NON-BLOCKING — errors are logged but never abort the commit.
+# If no OTA-IDs are found in the message, the hook exits 0 immediately.
+#
+# Installed by:
+#   cp scripts/git_hooks/post-commit .git/hooks/post-commit && chmod +x .git/hooks/post-commit
+#
+# Dependencies:
+#   - scripts/sync_workable_items.sh (auto-sync engine)
+#   - docs/workable_items.db (SQLite workable-items store)
+#
+# Cross-references:
+#   - scripts/git_hooks/pre-commit  — HelixTrack push sync (same spirit)
+#   - scripts/git_hooks/post-merge  — CodeGraph auto-rebuild
+#   - scripts/sync_workable_items.sh — the engine this hook calls
+#
+# Last verified: 2026-07-26
+# =============================================================================
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SYNC_SCRIPT="$PROJECT_ROOT/scripts/sync_workable_items.sh"
+
+# --- extract OTA-IDs from the commit message ----------------------------------
+# git log -1 retrieves the latest commit's full message
+COMMIT_MSG=$(git -C "$PROJECT_ROOT" log -1 --format="%B" 2>/dev/null || true)
+
+if [ -z "$COMMIT_MSG" ]; then
+    exit 0
+fi
+
+OTA_IDS=$(echo "$COMMIT_MSG" | grep -oP 'OTA-\d{3}' 2>/dev/null || true)
+
+if [ -z "$OTA_IDS" ]; then
+    exit 0
+fi
+
+# Convert to space-separated single line for --auto argument
+OTA_LIST=$(echo "$OTA_IDS" | tr '\n' ' ' | xargs)
+
+if [ -z "$OTA_LIST" ]; then
+    exit 0
+fi
+
+# --- run sync ----------------------------------------------------------------
+if [ ! -x "$SYNC_SCRIPT" ]; then
+    echo "[post-commit] WARNING: sync_workable_items.sh not found or not executable — DB sync skipped" >&2
+    exit 0
+fi
+
+if [ ! -f "$PROJECT_ROOT/docs/workable_items.db" ]; then
+    echo "[post-commit] WARNING: workable_items.db not found — DB sync skipped" >&2
+    exit 0
+fi
+
+echo "[post-commit] Syncing DB for OTA-IDs: $OTA_LIST"
+
+# Run in a subshell so failures don't affect the hook exit code
+(
+    set +e
+    bash "$SYNC_SCRIPT" --auto $OTA_LIST 2>&1 | while IFS= read -r line; do
+        echo "[post-commit]   $line"
+    done
+) || true
+
+echo "[post-commit] DB sync hook finished"
+exit 0

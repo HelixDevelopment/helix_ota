@@ -1,5 +1,17 @@
 # Helix OTA — GEMINI.md
 
+| Field | Value |
+|---|---|
+| Revision | 2 |
+| Created | 2026-06-07 |
+| Last modified | 2026-07-26 |
+| Status | active |
+| Status summary | Post-1.0.0 release. 72/73 gaps closed. 16 workable items completed in cleanup waves. Feature branch merged to main. Production-ready. |
+| Issues | No open blocker items. 4 items hardware-gated (RK3588 board required), documented with unblock conditions. |
+| Fixed | 1.0.0 release tag, 16 pending items synced to DB, carrier lockstep refreshed. |
+| Continuation | See `docs/RESUMPTION.md`. Manual QA final confirmation pending per §11.4.185. |
+| Release | helix_ota-1.0.0 |
+
 ## INHERITED FROM constitution/GEMINI.md
 
 All rules in `constitution/GEMINI.md` and the

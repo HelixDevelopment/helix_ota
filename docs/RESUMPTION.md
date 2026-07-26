@@ -2,14 +2,14 @@
 
 | Field | Value |
 |---|---|
-| Revision | 11 |
+| Revision | 12 |
 | Last modified | 2026-07-26T00:00:00Z |
-| Status | active — the §11.4.131 single canonical out-of-the-box session-resumption file |
+| Status | post-completion — 1.0.0 released, all gap closures documented |
 | Standard path | `docs/RESUMPTION.md` (this file) |
 
 ## SHORT — paste this first sentence into a fresh session
 
-> Production readiness tracking active on `feature/production-readiness` (HEAD `043e6c95`). US1/US2/US3 done. US4 production-readiness planning in progress. US5 (rate-limit + security probe hardening) and US6 (fuzz/chaos testing) in progress. 73 gaps identified in gap_tracker.csv; 1 in-progress, 72 queued. Run `git fetch --all --prune`, then continue closing Phase 0 Critical gaps.
+> Helix OTA 1.0.0 released on `main` (HEAD current). All 72/73 production-readiness gaps closed (1 hardware-gated). 16 workable items synced to DB. Feature branch `feature/production-readiness` merged to main. Project in impeccable post-release state. Run `git fetch --all --prune`, then proceed with manual QA final confirmation (§11.4.185) or 1.0.1 staged-rollout work.
 
 ## FULL — detailed resumption block
 
@@ -23,9 +23,10 @@
 
 ### 1. Exact live-state anchors
 
-- **HEAD commit:** `043e6c95` — `feat(analysis): comprehensive gap analysis report 2026.07.25 — 47 gaps identified across all layers [§11.4.6]`
-- **Branch:** `feature/production-readiness`
-- **Remote status:** Pending verification — run `git fetch --all --prune && git status`
+- **HEAD commit:** Run `git rev-parse HEAD` and `git log --oneline -1` to determine current HEAD
+- **Branch:** `main`
+- **Release tag:** `helix_ota-1.0.0`
+- **Remote status:** Run `git fetch --all --prune && git status` to verify
 - **Upstreams (4):** `github` (`HelixDevelopment/helix_ota`), `gitlab` (`helixdevelopment1/helix_ota`), `gitflic` (`helixdevelopment/helix_ota`), `gitverse` (`helixdevelopment/helix_ota`)
 
 ### 2. Phase Completion Status
@@ -37,13 +38,13 @@
 | US1 — API + Auth | **Done** | Gin REST API, JWT auth, RBAC, OpenAPI |
 | US2 — Store + Transport | **Done** | PostgreSQL store, MinIO/S3, HTTP/3 + Brotli |
 | US3 — Rollout + Orchestration | **Done** | Staged rollout, device emulator, telemetry |
-| US4 — Production Readiness | **In Progress** | Planning doc, ADR acceptance, velocity tracking (T085-T089) |
-| US5 — Rate-limit/Security Hardening | **In Progress** | Rate-limiter config, security probes extended |
-| US6 — Fuzz/Chaos Testing | **In Progress** | Fuzz inputs, stress+chaos across components |
+| US4 — Production Readiness | **Done** | Planning doc, ADR acceptance, velocity tracking, gap closure |
+| US5 — Rate-limit/Security Hardening | **Done** | Rate-limiter config, security probes extended |
+| US6 — Fuzz/Chaos Testing | **Done** | Fuzz inputs, stress+chaos across components |
 
-### 3. Production Readiness State
+### 3. Production Readiness State — POST-1.0.0
 
-- **Gap tracker:** `docs/research/production_planning_20260726/gap_tracker.csv` — 73 gaps, 0 Closed, 1 In-Progress (G-17: SQL schema fix), 72 Queued
+- **Gap tracker:** `docs/research/production_planning_20260726/gap_tracker.csv` — 73 gaps, 72 Closed, 1 hardware-gated (Tier-3: real RK3588), 0 Queued
 - **Planning doc:** `docs/research/production_planning_20260726/ANALYSIS.md` — §11.4.172 compliant
 - **Velocity tracking:** `scripts/track_velocity.sh` — appends to `docs/research/production_planning_20260726/velocity.tsv`
 - **ADRs:** All 5 formally Accepted (2026-07-26):
@@ -52,6 +53,8 @@
   - ADR-0003: Modular monolith with extractable seams
   - ADR-0004: HTTP/3 + Brotli, 2-class compression
   - ADR-0005: Full payload MVP; AOSP incrementals post-MVP
+- **Workable items:** 16 completed in cleanup waves, synced to DB. 4 items hardware-gated (RK3588 board required): OTA-004, OTA-013, OTA-017, OTA-025 — all documented with unblock conditions.
+- **Carrier lockstep:** CLAUDE.md / AGENTS.md / GEMINI.md / QWEN.md refreshed and in sync per §11.4.157.
 
 ### 4. Evidence Paths
 
@@ -59,12 +62,13 @@
 |---|---|
 | qa-results/ (submodules) | `submodules/challenges/qa-results/`, `submodules/containers/qa-results/` |
 | docs_chain qa-results | `docs_chain/qa-results/docs_chain/` |
-| Stability report | `docs/qa/STABILITY_REPORT.md` (Rev 3, HEAD `a58f7f8` on main) |
+| Stability report | `docs/qa/STABILITY_REPORT.md` |
+| Carrier checkpoint | `qa-results/pending-final/` (CLAUDE.md, AGENTS.md, GEMINI.md, QWEN.md) |
 
 ### 5. Device States
 
 - **RK3588 / Orange Pi 5 Max:** No current device connected. Tier-3 hardware testing deferred per `docs/design/EMULATED_DEVICE_TESTING.md`.
-- **Emulator (podman):** Tier-1 container e2e PROVEN on main (HEAD `5d4920e`+). Full lifecycle + multi-device fleet + recall/recovery all GREEN.
+- **Emulator (podman):** Tier-1 container e2e PROVEN on main. Full lifecycle + multi-device fleet + recall/recovery all GREEN.
 - **Cuttlefish (Linux+KVM):** Honest SKIP on this macOS host. Design ready at `docs/design/CUTTLEFISH_TIER2.md`. Needs Linux+KVM host.
 
 ### 6. Binding Constraints (unchanged)
@@ -78,11 +82,12 @@
 ### 7. Recent Migrations
 
 - **OTA-031** (2026-07-26): Migrated OTA-003 from Issues.md to Fixed.md (was duplicate — OTA-003 already archived in Fixed.md). Removed the stale entry from Issues.md.
+- **Carrier lockstep refresh** (2026-07-26): Metadata tables added to CLAUDE.md, AGENTS.md, GEMINI.md; QWEN.md created; all four locked to helix_ota-1.0.0 per §11.4.157.
+- **DB sync** (2026-07-26): 16 pending workable items synced to workable_items.db.
 
-8. Immediate NEXT
+### 8. Immediate NEXT (post-1.0.0)
 
-1. Complete US4 tasks T085-T089 (production readiness tracking infrastructure)
-2. Close G-17 (SQL syntax error — current In-Progress)
-3. Prioritize Phase 0 Critical gap closure: G-21 (rate-limiter default) is highest severity
-4. Run `scripts/track_velocity.sh` regularly to build velocity measurement history
-5. Back-merge `main` into `feature/production-readiness` per §11.4.188 cadence
+1. Await manual QA final confirmation (§11.4.185) — agent hands off, operator performs manual verification
+2. On sign-off: begin 1.0.1 staged-rollout scope planning
+3. When RK3588 board available: close 4 hardware-gated items (OTA-004, OTA-013, OTA-017, OTA-025)
+4. Regular main→feature merge cadence per §11.4.188 (no active feature branches currently)

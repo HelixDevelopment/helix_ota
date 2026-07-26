@@ -31,16 +31,6 @@ short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
   reachable over ADB/SSH (or physically attached) for flashing.
 - **WHO:** Operator — attach / provide remote access to the board.
 
-## §5. [OTA-021] HelixTrack bidirectional sync verification
 
-**Status:** Completed (→ Fixed.md)
-**Type:** Task
-
-**Closed:** 2026-06-21
-**Root cause:** HelixTrack push (workable_items.db → HelixTrack API) and pull (HelixTrack API → workable_items.db) scripts existed but had no formal end-to-end verification with rock-solid evidence — the sync was assumed working, not proven.
-**Fix:** End-to-end sync test exercising both directions with 11/11 PASS (push: 5 items synced to HelixTrack API with status/type mapping correctly collapsed; pull: tickets fetched from API and written back into the DB with idempotent update-or-create). Push/pull scripts committed and verified operational. GitFlic bundle-chunk recovery procedure documented in `scripts/reassemble_gitflic_bundle.sh`.
-**Evidence:** `qa-results/helixtrack/20260620T201949Z/sync_output.txt`, `scripts/sync_helixtrack_push.sh`, `scripts/sync_helixtrack_pull.sh`, `docs/helixtrack_sync_state.md`.
-
----
 
 
