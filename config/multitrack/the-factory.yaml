@@ -93,6 +93,50 @@ device_pool:
 lease_policy:
   main_track_devices: ["D1", "D2"]
 
+# §11.4.191 / §11.4.192 logic-group → canonical (track, branch) binding.
+# Every logical group of workable items binds to EXACTLY ONE (track, branch)
+# recorded here ONCE. The DB (§11.4.93 workable_items.db) is the single
+# source of truth for the `canonical_track` + `group_paths` columns (schema
+# v4 — not yet instantiated in this project). This block is the per-host
+# documentation reference; the authoritative runtime binding lives in the DB.
+# Consumer data (§11.4.28(B)) — the engine does NOT parse this section.
+logic_groups:
+  - group_id: ota-control-plane
+    title: "OTA control-plane production readiness"
+    canonical_track: T1
+    canonical_branch: main
+    focus: "core OTA server + android-agent + CLI, production hardening, OTA-001–030 milestone"
+  - group_id: multi-tenant-accounts
+    title: "multi-tenant account system"
+    canonical_track: T1
+    canonical_branch: main
+    focus: "docs/research/accounts design, RBAC model, account management APIs"
+  - group_id: production-readiness
+    title: "production-readiness milestone batch"
+    canonical_track: T1
+    canonical_branch: feature/production-readiness
+    focus: "current in-flight feature branch — operator QA, perf tuning, build hardening (active on /home, NOT on a track drive)"
+  - group_id: accounts-web
+    title: "web dashboard + website — accounts UI"
+    canonical_track: T2
+    canonical_branch: feature/accounts-web
+    focus: "multi-tenant super-admin/user sign-in + account-selection UI surfaces"
+  - group_id: containers-hardening
+    title: "containers-submodule discovery-fix backlog"
+    canonical_track: T3
+    canonical_branch: feature/containers-hardening
+    focus: "~55 confirmed Wave-18b findings, 7 package streams"
+  - group_id: vm-emu-hardening
+    title: "Wave-16/17/18 fix backlog — VM/emu hardening"
+    canonical_track: T4
+    canonical_branch: feature/vm-emu-hardening
+    focus: "process-kill cluster (§11.4.174), fixture-bluff/wrong-endpoint, network reaper + lifecycle deferred"
+  - group_id: website
+    title: "project website (marketing + docs portal)"
+    canonical_track: T2
+    canonical_branch: feature/website
+    focus: "responsive, SEO-optimized, OpenDesign-authored project website (§11.4.190)"
+
 # Claude Toolkit alias roster. NAMES ONLY — never keys/tokens (§11.4.10; keys
 # live in host ~/api_keys.sh outside the repo). Natives FIRST (claude1..claude4),
 # then providers in the operator-mandated priority (deepseek -> xiaomi ->

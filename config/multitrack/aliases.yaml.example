@@ -1,0 +1,159 @@
+# ALIASES.YAML.EXAMPLE — OAuth / auth setup template for multi-track alias roster
+# ==============================================================================
+# This is a TEMPLATE/DOCUMENTATION file — NOT parsed by the engine.
+# The authoritative alias roster lives in <hostname>.yaml's `aliases:` block.
+# This file explains the OAuth/auth setup the aliases depend on.
+#
+# §11.4.187 multi-track ruler · §11.4.10 credentials (names here, keys outside)
+# §11.4.177 project-agnostic tooling · §11.4.28(B) consumer data
+# ==============================================================================
+
+# ---------------------------------------------------------------------------
+# 1. ALIAS ROSTER (in <hostname>.yaml)
+# ---------------------------------------------------------------------------
+# The `aliases:` block lists NAMES ONLY — never keys/tokens. Keys live in the
+# host's ~/api_keys.sh OUTSIDE the repo (§11.4.10, git-ignored, never committed).
+#
+# Two kinds:
+#   native     — a Claude Max subscription alias (claude1..claude4)
+#   provider   — a third-party provider alias (deepseek, xiaomi, opencode, etc.)
+#
+# Example roster block (reference — see the-factory.yaml for the live roster):
+#
+#   aliases:
+#     - name: claude1
+#       kind: native
+#     - name: claude2
+#       kind: native
+#     - name: claude3
+#       kind: native
+#     - name: claude4
+#       kind: native
+#     - name: deepseek
+#       kind: provider
+#     - name: xiaomi
+#       kind: provider
+#     - name: opencode
+#       kind: provider
+#     - name: kimi-for-coding
+#       kind: provider
+#
+# Native aliases are tried FIRST for track binding (native-before-provider).
+# Provider aliases are fallback when every native alias is rate-limited/cooled.
+
+# ---------------------------------------------------------------------------
+# 2. NATIVE ALIAS SETUP (Claude Code OAuth)
+# ---------------------------------------------------------------------------
+# Each native alias (claude1..claude4) is a SEPARATE Claude Max subscription.
+# Setup steps (already completed on the-factory, reproduced here for reference):
+#
+#   # (a) Create per-alias Claude config directory:
+#   mkdir -p ~/.claude-<alias>
+#
+#   # (b) Log in with the OAuth flow for THAT subscription:
+#   CLAUDE_CONFIG_DIR="$HOME/.claude-<alias>" claude login
+#   # This stores the OAuth token in ~/.claude-<alias>/oauth/auth.json
+#
+#   # (c) Export the OAuth token + config dir for engine use:
+#   # Add to ~/api_keys.sh (git-ignored, NEVER committed):
+#   export CLAUDE1_OAUTH_TOKEN="$(jq -r .access_token ~/.claude-claude1/oauth/auth.json)"
+#   export CLAUDE1_CONFIG_DIR="$HOME/.claude-claude1"
+#   # ... repeat for claude2, claude3, claude4
+#
+#   # (d) The engine unsets ANTHROPIC_API_KEY before each spawn
+#   # (§11.4.187 per-subscription auth — prevents API-key billing
+#   # when a subscription alias is expected to use OAuth).
+#
+#   # (e) Verify the token is fresh (tokens expire; the engine's
+#   # fallback monitor detects auth failures and rebinds).
+
+# ---------------------------------------------------------------------------
+# 3. PROVIDER ALIAS SETUP
+# ---------------------------------------------------------------------------
+# Provider aliases use their own API/authentication mechanism.
+# Setup depends on the provider:
+#
+#   deepseek       — DEEPSEEK_API_KEY in ~/api_keys.sh
+#   xiaomi         — XIAOMI_API_KEY in ~/api_keys.sh
+#   opencode       — OPENCODE_API_KEY in ~/api_keys.sh
+#   kimi-for-coding — KIMI_API_KEY in ~/api_keys.sh
+#
+# Each provider's API key is exported in ~/api_keys.sh (NEVER committed).
+# Provider-specific rate-limit signatures are configured in
+# <hostname>.yaml's `fallback:` block (see the-factory.yaml example).
+
+# ---------------------------------------------------------------------------
+# 4. CONDUCTOR ALIAS
+# ---------------------------------------------------------------------------
+# The `conductor:` key in <hostname>.yaml designates one alias as the
+# conductor — its session stays on /home (NEVER bound into a track worktree).
+# Empty string (default) => the /home session is whichever session is unbound.
+#
+#   conductor: ""            # empty => /home session is the conductor
+#   conductor: claude3       # pin conductor to a specific alias
+
+# ---------------------------------------------------------------------------
+# 5. RATE-LIMIT FALLBACK
+# ---------------------------------------------------------------------------
+# When a bound alias hits a rate-limit, the fallback monitor (§11.4.187)
+# detects the signature (configured in <hostname>.yaml's `fallback:` block)
+# and triggers `orchestrator fallback`.
+#
+# Fallback order (built into the engine):
+#   1. Try the next UNBOUND native alias (fresh subscription, least congested)
+#   2. Try the next UNBOUND provider alias (operator-mandated priority)
+#   3. REUSE a healthy native alias already bound to another track
+#      (least-loaded first — an alias MAY hold >1 track)
+#   4. If EVERY alias is cooled (rate-limited), park the track (exit 5)
+#      — bounded park per §11.4.101, never an infinite hang
+#
+# Configured in <hostname>.yaml:
+#   fallback:
+#     signatures:
+#       - '":429'
+#       # The `:429` token matches both the interactive assistant
+#       # `"apiErrorStatus":429` and the headless stream-json
+#       # `"api_error_status":429` rate-limit signatures.
+
+# ---------------------------------------------------------------------------
+# 6. FILE LAYOUT (credentials — NEVER in the repo)
+# ---------------------------------------------------------------------------
+#   ~/api_keys.sh                  # ALL keys/tokens (sourced by .bashrc/.zshrc)
+#   config/multitrack/<host>.yaml  # alias NAMES + track assignments (tracked)
+#   .env                           # HELIX_RELEASE_PREFIX etc. (git-ignored)
+#   .env.example                   # template without values (tracked)
+#
+# Every alias's credentials live in ~/api_keys.sh, discovered by the engine
+# via the alias name-to-config-dir convention (~/.claude-<alias>) and the
+# ANTHROPIC_API_KEY / <PROVIDER>_API_KEY env vars.
+
+# ---------------------------------------------------------------------------
+# 7. TEMPLATE — MINIMAL ALIAS SETUP (~/api_keys.sh fragment)
+# ---------------------------------------------------------------------------
+# This is the canonical structure for ~/api_keys.sh. Values are placeholders.
+# The file is sourced by ~/.bashrc OR referenced by .env at runtime.
+#
+#   #!/usr/bin/env bash
+#   # ~/api_keys.sh — aliases auth (git-ignored, NEVER committed §11.4.10)
+#
+#   # --- native Claude Max subscription aliases (claude1..claude4) ---
+#   export CLAUDE1_CONFIG_DIR="$HOME/.claude-claude1"
+#   export CLAUDE1_OAUTH_TOKEN="<token-from-oauth-auth.json>"
+#
+#   export CLAUDE2_CONFIG_DIR="$HOME/.claude-claude2"
+#   export CLAUDE2_OAUTH_TOKEN="<token-from-oauth-auth.json>"
+#
+#   export CLAUDE3_CONFIG_DIR="$HOME/.claude-claude3"
+#   export CLAUDE3_OAUTH_TOKEN="<token-from-oauth-auth.json>"
+#
+#   export CLAUDE4_CONFIG_DIR="$HOME/.claude-claude4"
+#   export CLAUDE4_OAUTH_TOKEN="<token-from-oauth-auth.json>"
+#
+#   # --- provider aliases ---
+#   export DEEPSEEK_API_KEY="<key>"
+#   export XIAOMI_API_KEY="<key>"
+#   export OPENCODE_API_KEY="<key>"
+#   export KIMI_FOR_CODING_API_KEY="<key>"
+#
+#   # --- project env ---
+#   export HELIX_RELEASE_PREFIX="helix_ota"
