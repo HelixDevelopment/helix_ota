@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01_OPERATOR_DECISIONS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">01_OPERATOR_DECISIONS</h1>
+</header>
+<h1 id="operator-decisions-blocking-resolve-first">01 — Operator
+Decisions (BLOCKING — Resolve FIRST)</h1>
+<p><strong>Revision:</strong> 1 <strong>Parent:</strong>
+<code>00_MASTER_INDEX.md</code> <strong>Status:</strong> OPERATOR-GATED
+— 12 decisions, zero code changes, must be resolved before
+agent-executable work begins on Stages C/D/E/F.</p>
+<hr />
+<h2 id="a-01-a-02-multi-tenant-accounts-design-decisions">§1. A-01 +
+A-02 — Multi-Tenant Accounts Design Decisions</h2>
+<p><strong>Source:</strong>
+<code>docs/research/accounts/30_delivery_plan.md</code> §5, K12 in
+<code>PRODUCTION_READINESS_PLAN.md</code></p>
+<p>These decisions determine the ENTIRE shape of the multi-tenant
+Accounts feature. Without them, M1 (data model + migrations) cannot
+start.</p>
+<h3 id="a-01a-permission-model">A-01a — Permission model</h3>
+<p><strong>Question:</strong> RBAC-first hybrid (accounts→projects, each
+with roles) OR flat tenant-scoping (no project-level RBAC)?
+<strong>Recommendation:</strong> RBAC-first hybrid (matching the
+existing project-role design). <strong>Impact:</strong> Determines
+whether <code>ProjectAccess</code> role tables are per-account-scoped or
+account-global.</p>
+<h3 id="a-01b-identity-source">A-01b — Identity source</h3>
+<p><strong>Question:</strong> Local accounts only (users stored in
+PostgreSQL, bcrypt passwords) OR OAuth2/OIDC federation (Google, GitHub,
+etc.)? <strong>Recommendation:</strong> Local accounts for MVP; OAuth2
+as a follow-up seam. <strong>Impact:</strong> Determines whether we add
+a real <code>User</code> table with password hashing vs an external IdP
+integration.</p>
+<h3 id="a-01c-id-type">A-01c — ID type</h3>
+<p><strong>Question:</strong> TEXT (UUID strings, human-readable) OR
+UUID (native PostgreSQL UUID type)? <strong>Recommendation:</strong>
+TEXT (matches existing <code>device_id</code>, <code>artifact_id</code>,
+etc. — consistent with current codebase). <strong>Impact:</strong>
+Affects every table’s FK column type and the token
+<code>account_id</code> claim format.</p>
+<h3 id="a-02a-per-account-signing-keys">A-02a — Per-account signing
+keys</h3>
+<p><strong>Question:</strong> One global Ed25519 keypair for ALL
+accounts OR per-account keypairs? <strong>Recommendation:</strong>
+Per-account keypairs (stronger tenant isolation; M7 object-storage seam
+design assumes this). <strong>Impact:</strong> Determines the
+signing-key registry design and key rotation strategy.</p>
+<h3 id="a-02b-default-account-backfill">A-02b — Default-account
+backfill</h3>
+<p><strong>Question:</strong> When Accounts lands, what happens to
+existing devices/artifacts/deployments that have no
+<code>account_id</code>? Migrate to a <code>__default__</code> account
+OR require operator to assign? <strong>Recommendation:</strong> Migrate
+to a <code>__default__</code> account (migration 003 in the Accounts
+plan). <strong>Impact:</strong> Determines whether the migration is a
+safe backfill or a destructive blocking operation.</p>
+<hr />
+<h2 id="a-03-marketing-website-design-decisions">§2. A-03 — Marketing
+Website Design Decisions</h2>
+<p><strong>Source:</strong>
+<code>docs/research/website/00_WEBSITE_DESIGN_AND_BUILD_PLAN.md</code>
+§8.6, K13 in <code>PRODUCTION_READINESS_PLAN.md</code></p>
+<h3 id="a-03a-repo-name-and-remote">A-03a — Repo name and remote</h3>
+<p><strong>Question:</strong> New submodule repo name?
+<code>vasic-digital/helix_ota_website</code> (existing, contains
+scaffolds) or new? <strong>Recommendation:</strong> Use existing
+<code>submodules/website</code> (already registered in
+<code>.gitmodules</code>, already has scaffolding at commit
+<code>9abb15e</code>). <strong>Impact:</strong> Zero new repo creation
+if using existing; just build on the scaffold.</p>
+<h3 id="a-03b-containerized-build">A-03b — Containerized build</h3>
+<p><strong>Question:</strong> Build the website via rootless podman
+container (§11.4.173/§11.4.161) OR host-direct <code>npm build</code>?
+<strong>Recommendation:</strong> Containerized build
+(constitution-mandated §11.4.173 for ALL builds).
+<strong>Impact:</strong> Requires a <code>Dockerfile</code> in the
+website repo; build script in
+<code>scripts/remote_deploy/deploy_website.sh</code> already expects
+this.</p>
+<h3 id="a-03c-opendesign-tokens-only-vs-full-component-library">A-03c —
+OpenDesign tokens-only vs full component library</h3>
+<p><strong>Question:</strong> Use only OpenDesign brand tokens
+(tokens.css, Tailwind v4 theme) OR the full
+<code>@open-design/components</code> library?
+<strong>Recommendation:</strong> Tokens-only (the full component library
+pins React 18.3.1 — conflicts with ota-manager’s React 19).
+<strong>Impact:</strong> Determines which npm packages are installed and
+whether component conflicts are an issue.</p>
+<hr />
+<h2 id="a-04-mirror-fork-canonicalization">§3. A-04 — Mirror-Fork
+Canonicalization</h2>
+<p><strong>Source:</strong> PRODUCTION_READINESS_PLAN.md K1,
+CONTINUATION.md</p>
+<p>Three owned submodules have diverged mirrors across GitHub
+(HelixDevelopment org) and GitLab (vasic-digital org). Their gitlinks
+CANNOT be bumped until the canonical mirror is chosen and divergent
+branches are UNION-merged (never force-push §11.4.113).</p>
+<h3 id="affected-submodules">Affected submodules:</h3>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 36%" />
+<col style="width: 32%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Submodule</th>
+<th>GitHub (HelixDevelopment)</th>
+<th>GitLab (vasic-digital)</th>
+<th>Divergence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vision_engine</code></td>
+<td><code>a97df79</code> (main)</td>
+<td><code>b417a40</code> (master)</td>
+<td>master diverges</td>
+</tr>
+<tr>
+<td><code>llm_orchestrator</code></td>
+<td><code>bde36431</code></td>
+<td><code>9c9db1dc</code></td>
+<td>HD has gov-doc commits; VD has original; main-vs-master</td>
+</tr>
+<tr>
+<td><code>llm_provider</code></td>
+<td><code>4749d46</code> (+16.8k lines)</td>
+<td><code>8905a76</code> (+647 lines)</td>
+<td>REAL code fork — different Go files</td>
+</tr>
+</tbody>
+</table>
+<h3 id="decision-per-submodule">Decision per submodule:</h3>
+<ul>
+<li><strong>Which org is canonical?</strong> (HelixDevelopment or
+vasic-digital)</li>
+<li><strong>Which branch is canonical?</strong> (main or master)</li>
+<li><strong>How to reconcile:</strong> UNION-merge divergent branches
+onto canonical, retire non-canonical branch, NEVER force-push.</li>
+</ul>
+<h3 id="fixed-and-preserved-locally">Fixed and preserved locally:</h3>
+<ul>
+<li><code>vision_engine</code>: 6 defect fixes committed locally at
+<code>1ec0c57</code>, publish blocked</li>
+<li><code>llm_orchestrator</code>: 3 defect fixes + 3 RED tests
+preserved to scratchpad, not committed</li>
+<li><code>llm_provider</code>: 1 nil-ctx crash fix preserved to
+scratchpad, not committed</li>
+</ul>
+<hr />
+<h2 id="a-05-ddos-default-posture">§4. A-05 — DDoS Default Posture</h2>
+<p><strong>Source:</strong> PRODUCTION_READINESS_PLAN.md K14</p>
+<p><strong>Question:</strong> What should
+<code>HELIX_MAX_INFLIGHT</code> default to? - <strong>Option A:</strong>
+<code>256</code> (conservative — safe for production, limits concurrent
+requests) - <strong>Option B:</strong> <code>0</code> = UNLIMITED
+(current default — operator must explicitly configure, OOM risk)</p>
+<p><strong>Recommendation:</strong> <code>256</code> (production-safe
+default; operator can raise for high-throughput deployments).
+<strong>Impact:</strong> Affects every deployment. The gap tracker G-21
+claims this is “Closed” (default changed to 1000) but the production
+compose still ships with the old default. This needs the decision to
+settle the ACTUAL number.</p>
+<hr />
+<h2 id="a-06-roll-1-successthreshold0-canary-semantics">§5. A-06 —
+ROLL-1: SuccessThreshold==0 Canary Semantics</h2>
+<p><strong>Source:</strong> PRODUCTION_READINESS_PLAN.md K3</p>
+<p><strong>Question:</strong> When <code>SuccessThreshold</code> is
+<code>0</code> in a rollout phase, any single success passes the canary
+phase with no real gate. Should the engine: - <strong>Option A:</strong>
+Reject <code>SuccessThreshold==0</code> at config-validation time
+(fail-fast, safe) - <strong>Option B:</strong> Document as “by-design
+symmetric canary: any-success-passes” (permissive, operators choose)</p>
+<p><strong>Recommendation:</strong> Option A (reject at validation —
+“when in doubt, halt” per rollout engine design philosophy).
+<strong>Impact:</strong> Affects rollout engine behavior. Breaking
+change if any deployment already uses
+<code>SuccessThreshold==0</code>.</p>
+<hr />
+<h2 id="a-07-ota-signing-metadata-crypto-binding-scope">§6. A-07 — OTA
+Signing Metadata Crypto-Binding Scope</h2>
+<p><strong>Source:</strong> PRODUCTION_READINESS_PLAN.md K4</p>
+<p><strong>Question:</strong> Should the Ed25519 artifact signature
+cover ONLY the SHA-256 payload digest (current) OR the digest PLUS
+targeting metadata (OSType, Board, Version)? - <strong>Option
+A:</strong> Digest only (current — simpler, metadata is
+upload-auth-gated, S4/S5 validate separately) - <strong>Option
+B:</strong> Digest + metadata (crypto-binds targeting — prevents
+relabel-replay attacks)</p>
+<p><strong>Recommendation:</strong> Option B for 1.1.0 (stronger
+supply-chain security); keep Option A for 1.0.0 (already shipped).
+<strong>Impact:</strong> Breaking change to artifact format. Requires
+coordinated client and server update. TUF integration (ADR-0002 §4)
+partially addresses this at a higher level in 1.0.1+.</p>
+<hr />
+<h2 id="a-08-remote-deploy-host-configuration">§7. A-08 — Remote Deploy
+Host Configuration</h2>
+<p><strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code> §6, QD1–QD6</p>
+<h3 id="a-08a-host-identity">A-08a — Host identity</h3>
+<p><strong>Question:</strong> What is the production host IP/hostname?
+(<code>ADDRESS_HXOTA</code> in deploy env) <strong>Current:</strong>
+<code>hxota</code> placeholder in scripts.</p>
+<h3 id="a-08b-ssh-authentication">A-08b — SSH authentication</h3>
+<p><strong>Question:</strong> SSH key auth OR password auth?
+<strong>Recommendation:</strong> SSH key auth
+(<code>HXOTA_SSH_USE_PASSWORD=0</code> + <code>HXOTA_SSH_KEY</code>).
+<strong>Impact:</strong> Password mode leaks secrets via SSHPASS; key
+auth is passwordless and secure.</p>
+<h3 id="a-08c-host-bootstrap-ownership">A-08c — Host bootstrap
+ownership</h3>
+<p><strong>Question:</strong> Who prepares the host? (create
+<code>hxota</code> user, install rootless podman + podman-compose,
+<code>loginctl enable-linger hxota</code>, set
+<code>net.ipv4.ip_unprivileged_port_start=80</code>)
+<strong>Note:</strong> The deploy pipeline NEVER uses root
+(§11.4.161).</p>
+<h3 id="a-08d-svord-product-scope">A-08d — Svord product scope</h3>
+<p><strong>Question:</strong> What is the Mistiq/VADER board ID + OS
+type? <strong>Current:</strong> <code>atmosphere</code> target known
+(<code>os_type=android</code>, <code>board=rk3588_t</code>);
+<code>mistiq_vader</code> is a placeholder in
+<code>deploy/svord/products/mistiq_vader.env.example</code>.</p>
+<hr />
+<h2 id="a-09-lets_encrypt-sftp-submodule-paths">§8. A-09 — lets_encrypt
++ sftp Submodule Paths</h2>
+<p><strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code> §5</p>
+<h3 id="a-09a-lets_encrypt-submodule">A-09a — lets_encrypt
+submodule</h3>
+<p><strong>Question:</strong> Canonical path —
+<code>submodules/lets_encrypt/</code> (grouped) OR repo-root
+<code>lets_encrypt/</code> (flat)? <strong>Recommendation:</strong>
+<code>submodules/lets_encrypt/</code> (grouped, consistent with other
+submodules). <strong>Repo:</strong>
+<code>git@github.com:vasic-digital/lets_encrypt.git</code>
+<strong>Status:</strong> NOT on disk. Must be
+<code>git submodule add</code>’d. <strong>CLI confirmation:</strong> The
+<code>https_certs.sh</code> wrapper calls a placeholder CLI — confirm
+the actual <code>lets_encrypt.sh</code> entrypoint against the submodule
+README before live use (§11.4.99).</p>
+<h3 id="a-09b-sftp-submodule">A-09b — sftp submodule</h3>
+<p><strong>Question:</strong> Canonical path —
+<code>submodules/sftp/</code> (grouped) OR repo-root <code>sftp/</code>
+(flat)? <strong>Recommendation:</strong> <code>submodules/sftp/</code>
+(grouped). <strong>Repo:</strong>
+<code>git@github.com:vasic-digital/sftp.git</code>
+<strong>Status:</strong> NOT on disk. Must be
+<code>git submodule add</code>’d. <strong>CLI confirmation:</strong>
+Same as lets_encrypt — confirm the actual CLI before use.</p>
+<hr />
+<h2 id="a-10-hxota.dev-root-behavior">§9. A-10 — hxota.dev Root
+Behavior</h2>
+<p><strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code> QD5</p>
+<p><strong>Question:</strong> What should <code>hxota.dev</code> serve
+at <code>/</code>? - <strong>Option A:</strong> The console SPA
+(ota-manager — operator/admin login) - <strong>Option B:</strong>
+Redirect to <code>hxota.com</code> (marketing website)</p>
+<p><strong>Recommendation:</strong> Option A (console at <code>/</code>;
+<code>hxota.com</code> is the separate marketing domain).
+<strong>Impact:</strong> Affects nginx proxy configuration in
+<code>deploy/svord/nginx/hxota-proxy.conf</code>.</p>
+<hr />
+<h2 id="a-11-runtime-secret-provisioning-strategy">§10. A-11 —
+Runtime-Secret Provisioning Strategy</h2>
+<p><strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code> QD6</p>
+<p><strong>Question:</strong> How are production secrets provisioned? -
+<strong>Option A:</strong> Operator provides all secrets
+(<code>HXOTA_PG_PASSWORD</code>, <code>HXOTA_TOKEN_SECRET</code>,
+<code>HXOTA_MINIO_USER/PASSWORD</code>,
+<code>HXOTA_ARTIFACT_PUBKEY</code>) in the deploy env file (recommended:
+<code>openssl rand -base64 48</code> for each) - <strong>Option
+B:</strong> Pipeline auto-generates secrets on first deploy and persists
+them</p>
+<p><strong>Recommendation:</strong> Option A (operator-provided; the
+pipeline is fail-closed — refuses to bring up stack with any mandatory
+secret unset). <strong>Impact:</strong> The deploy env file
+(<code>scripts/testing/secrets/.hxota_deploy.env</code>) must be
+populated before <code>deploy.sh</code> runs.</p>
+<hr />
+<h2 id="a-12-multi-track-toolkit-alias-provisioning">§11. A-12 —
+Multi-Track Toolkit Alias Provisioning</h2>
+<p><strong>Source:</strong> PRODUCTION_READINESS_PLAN.md §2.8, K11</p>
+<p><strong>Question:</strong> Will the operator provision OAuth tokens
+for the multi-track headless workers (claude1..claude4)? - <strong>If
+YES:</strong> The automatic multi-track orchestration engine
+(<code>constitution/scripts/multitrack/</code>) engages immediately —
+parallel work streams can proceed. - <strong>If NO:</strong> All work
+runs sequentially in a single session; parallel track acceleration is
+unavailable.</p>
+<p><strong>Note:</strong> The engine IS bootstrapped (rc=0, cwd-hook
+installed, identity resolver live). Only the per-alias OAuth tokens are
+missing — external provisioning, cannot be automated.</p>
+<hr />
+<h2 id="decision-checklist">Decision Checklist</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Answer</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A-01a</td>
+<td>Permission model (RBAC-first hybrid?)</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-01b</td>
+<td>Identity source (local/OAuth2?)</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-01c</td>
+<td>ID type (TEXT/UUID?)</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-02a</td>
+<td>Per-account signing keys?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-02b</td>
+<td>Default-account backfill?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-03a</td>
+<td>Website repo name?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-03b</td>
+<td>Containerized build?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-03c</td>
+<td>OpenDesign tokens-only?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-04</td>
+<td>Mirror-fork canonical org per submodule?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-05</td>
+<td>HELIX_MAX_INFLIGHT default?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-06</td>
+<td>ROLL-1 SuccessThreshold==0 behavior?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-07</td>
+<td>Signing metadata crypto-binding?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-08a</td>
+<td>Production host IP/hostname?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-08b</td>
+<td>SSH key vs password?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-08c</td>
+<td>Host bootstrap owner?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-08d</td>
+<td>Mistiq/VADER board ID + OS type?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-09a</td>
+<td>lets_encrypt submodule path?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-09b</td>
+<td>sftp submodule path?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-10</td>
+<td>hxota.dev root behavior?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-11</td>
+<td>Secret provisioning strategy?</td>
+<td>_________</td>
+<td></td>
+</tr>
+<tr>
+<td>A-12</td>
+<td>Multi-track alias tokens?</td>
+<td>_________</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest Boundary (§11.4.6)</h2>
+<p>Every decision above is a genuine blocking gate. None can be resolved
+by an agent — they require operator knowledge, preference, or external
+action (OAuth token provisioning, hardware, hostnames, security policy).
+Zero code is written under this section.</p>
+</body>
+</html>

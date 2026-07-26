@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>07_SYSTEM_IMAGES</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">07_SYSTEM_IMAGES</h1>
+</header>
+<h1 id="system-images-ota-artifact-pipeline">07 — System Images + OTA
+Artifact Pipeline</h1>
+<p><strong>Revision:</strong> 1 <strong>Parent:</strong>
+<code>00_MASTER_INDEX.md</code> <strong>Prerequisites:</strong> E-01
+(RK3588 hardware), C-07 (object storage seam), F-05 (production stack
+deployed)</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>This stage produces the actual Android 15 AOSP system images for
+Orange Pi 5 Max (RK3588) with the OTA agent pre-installed, builds OTA
+artifacts from image deltas, and sets up the CI/CD pipeline for
+automated artifact building and publishing. This is where the OTA system
+becomes a REAL, FLASHABLE product.</p>
+<hr />
+<h2
+id="g-01-agent-build-android-15-aosp-system-image-with-ota-agent-pre-installed">G-01
+[AGENT] — Build Android 15 AOSP System Image with OTA Agent
+Pre-Installed</h2>
+<p><strong>Effort:</strong> XL <strong>Source:</strong>
+<code>docs/research/main_specs/1.0.0-mvp/client_android/</code>,
+ADR-0001</p>
+<h3 id="what-to-do">What to do:</h3>
+<ol type="1">
+<li><p><strong>Set up AOSP build environment:</strong></p>
+<ul>
+<li>Ubuntu 24.04 host (or containerized AOSP build)</li>
+<li>repo sync Android 15 source for RK3588 (Orange Pi 5 Max BSP)</li>
+<li>Apply vendor HAL patches for the RK3588</li>
+</ul></li>
+<li><p><strong>Integrate OTA agent into system image:</strong></p>
+<ul>
+<li>Build <code>ota-android-agent</code> APK with
+<code>android:sharedUserId="android.uid.system"</code></li>
+<li>Platform-sign the APK with the AOSP platform key</li>
+<li>Place APK under <code>vendor/helix/ota/</code> or
+<code>/system/priv-app/HelixOTA/</code></li>
+<li>Include <code>ota-update-engine-bridge</code> as a library
+dependency</li>
+<li>Add SELinux policies allowing the agent to:
+<ul>
+<li>Access the network (INTERNET permission)</li>
+<li>Call <code>android.os.UpdateEngine</code> (system_api
+permission)</li>
+<li>Read <code>ro.boot.*</code> properties</li>
+<li>Write to download cache</li>
+</ul></li>
+</ul></li>
+<li><p><strong>Configure U-Boot A/B slots:</strong></p>
+<ul>
+<li><code>fw_env.config</code> pointing to the U-Boot environment
+partition</li>
+<li>BOOT_ORDER set to try active slot first, fall back to previous</li>
+<li>bootcount/bootlimit for auto-rollback</li>
+<li><code>helix_slot</code> kernel command-line parameter</li>
+</ul></li>
+<li><p><strong>Configure A/B partition layout:</strong></p>
+<ul>
+<li><code>boot_a</code> / <code>boot_b</code></li>
+<li><code>system_a</code> / <code>system_b</code></li>
+<li><code>vendor_a</code> / <code>vendor_b</code></li>
+<li><code>userdata</code> (shared, not duplicated)</li>
+</ul></li>
+<li><p><strong>Build the image:</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> build/envsetup.sh</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lunch</span> rk3588_t-userdebug</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span></code></pre></div>
+<p>Output: <code>out/target/product/rk3588_t/system.img</code>,
+<code>boot.img</code>, <code>vendor.img</code>, etc.</p></li>
+<li><p><strong>Test boot on hardware:</strong> Flash to Orange Pi 5 Max,
+verify:</p>
+<ul>
+<li>System boots, <code>adb shell</code> works</li>
+<li>OTA agent APK is present:
+<code>adb shell pm list packages | grep helix.ota</code></li>
+<li>A/B slots are correct:
+<code>adb shell getprop ro.boot.slot_suffix</code></li>
+<li>U-Boot env is writable: <code>fw_printenv BOOT_ORDER</code></li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="g-02-agent-platform-sign-ota-agent-apk">G-02 [AGENT] —
+Platform-Sign OTA Agent APK</h2>
+<p><strong>Effort:</strong> M <strong>Source:</strong>
+<code>submodules/ota-android-agent/android/src/main/AndroidManifest.xml</code></p>
+<h3 id="what-to-do-1">What to do:</h3>
+<ol type="1">
+<li><p><strong>Obtain platform signing key:</strong></p>
+<ul>
+<li>Location in AOSP tree:
+<code>build/target/product/security/platform.pk8</code> +
+<code>platform.x509.pem</code></li>
+<li>These keys MUST be secured — they sign system apps with full
+privileges.</li>
+</ul></li>
+<li><p><strong>Sign the APK:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">java</span> <span class="at">-jar</span> out/host/linux-x86/framework/signapk.jar <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  build/target/product/security/platform.x509.pem <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  build/target/product/security/platform.pk8 <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  ota-android-agent.apk <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  ota-android-agent-signed.apk</span></code></pre></div></li>
+<li><p><strong>Verify signature:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">jarsigner</span> <span class="at">-verify</span> <span class="at">-verbose</span> <span class="at">-certs</span> ota-android-agent-signed.apk</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Should show &quot;CN=Android&quot; (platform key)</span></span></code></pre></div></li>
+<li><p><strong>Place in system image:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> ota-android-agent-signed.apk <span class="va">$OUT</span>/system/priv-app/HelixOTA/HelixOTA.apk</span></code></pre></div></li>
+</ol>
+<hr />
+<h2
+id="g-03-agent-generate-ed25519-signing-keypair-distribute-public-key">G-03
+[AGENT] — Generate Ed25519 Signing Keypair + Distribute Public Key</h2>
+<p><strong>Effort:</strong> S (~15 min) <strong>Source:</strong>
+<code>scripts/testing/gen_key.go</code></p>
+<h3 id="what-to-do-2">What to do:</h3>
+<ol type="1">
+<li><p><strong>Generate keypair:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run scripts/testing/gen_key.go</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Output: private.key (64 bytes hex or base64), public.key (32 bytes base64)</span></span></code></pre></div></li>
+<li><p><strong>Secure the private key:</strong></p>
+<ul>
+<li>Store in a hardware security module (HSM) or at minimum an
+encrypted, access-controlled file.</li>
+<li>NEVER commit to git (already in <code>.gitignore</code> —
+<code>.env</code> patterns, <code>*.key</code>).</li>
+<li>Distribute to CI/CD pipeline via secret manager (GitHub Secrets,
+GitLab CI Variables, or local vault).</li>
+</ul></li>
+<li><p><strong>Distribute public key to server:</strong></p>
+<ul>
+<li>Set <code>HELIX_ARTIFACT_PUBKEY=&lt;base64-public-key&gt;</code> in
+the deploy env.</li>
+<li>The server reads this at startup and uses it to verify artifact
+signatures.</li>
+</ul></li>
+<li><p><strong>Distribute public key to devices (for client-side
+verification):</strong></p>
+<ul>
+<li>Embed the public key in the OTA agent’s <code>res/raw/</code> or
+<code>assets/</code> directory.</li>
+<li>Or: device fetches the public key from the server on registration
+(TUF-style — ADR-0002, 1.0.1+).</li>
+</ul></li>
+<li><p><strong>Key rotation plan:</strong></p>
+<ul>
+<li><code>HELIX_ARTIFACT_PREVIOUS_PUBKEY</code> env var for the previous
+key (rotation grace period).</li>
+<li><code>HELIX_ARTIFACT_SIGNING_KEY_ROTATION_INTERVAL</code> for
+automatic rotation schedule.</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="g-04-agent-build-first-ota-artifact-full-payload">G-04 [AGENT] —
+Build First OTA Artifact (Full Payload)</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong>
+<code>scripts/testing/sign_artifact.go</code>, ADR-0005 (full payload
+MVP)</p>
+<h3 id="what-to-do-3">What to do:</h3>
+<ol type="1">
+<li><p><strong>Create full OTA payload:</strong></p>
+<ul>
+<li>For the initial release, the “artifact” is the full system image
+delta (or full image if it’s the first release).</li>
+<li>AOSP <code>ota_from_target_files</code> tool produces the
+<code>payload.bin</code> that <code>update_engine</code> consumes.</li>
+<li>Package as a ZIP_STORED (no compression) container with:
+<ul>
+<li><code>payload.bin</code> — the AOSP update payload</li>
+<li><code>payload_properties.txt</code> — FILE_HASH, FILE_SIZE,
+METADATA_HASH, METADATA_SIZE</li>
+<li><code>META-INF/com/android/metadata</code> — OTA metadata</li>
+</ul></li>
+</ul></li>
+<li><p><strong>Sign the artifact:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run scripts/testing/sign_artifact.go <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--key</span> private.key <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> system-ota-1.0.0.zip <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> system-ota-1.0.0-signed.zip</span></code></pre></div></li>
+<li><p><strong>Verify the signature:</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run scripts/testing/sign_artifact.go <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--key</span> public.key <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--verify</span> system-ota-1.0.0-signed.zip</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → &quot;Signature VALID&quot;</span></span></code></pre></div></li>
+<li><p><strong>Upload to server:</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/artifacts/upload <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-F</span> <span class="st">&quot;file=@system-ota-1.0.0-signed.zip&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-F</span> <span class="st">&#39;metadata={&quot;os_type&quot;:&quot;android&quot;,&quot;target_model&quot;:&quot;rk3588_t&quot;,&quot;version&quot;:&quot;1.0.0&quot;,&quot;size&quot;:&lt;bytes&gt;,&quot;sha256&quot;:&quot;&lt;hash&gt;&quot;}&#39;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># → 201 {&quot;artifact_id&quot;:&quot;...&quot;, &quot;verified&quot;:true}</span></span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="g-05-agent-create-release-deployment-rollout">G-05 [AGENT] —
+Create Release, Deployment, Rollout</h2>
+<p><strong>Effort:</strong> S (~15 min)</p>
+<h3 id="what-to-do-4">What to do:</h3>
+<ol type="1">
+<li><p><strong>Create release:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/releases <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;artifact_id&quot;:&quot;&lt;artifact_id&gt;&quot;,&quot;version&quot;:&quot;1.0.0&quot;,&quot;os_type&quot;:&quot;android&quot;,&quot;target_model&quot;:&quot;rk3588_t&quot;,&quot;min_current_version&quot;:&quot;0.9.0&quot;}&#39;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → 201 {&quot;release_id&quot;:&quot;...&quot;}</span></span></code></pre></div></li>
+<li><p><strong>Create deployment:</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/deployments <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;release_id&quot;:&quot;&lt;release_id&gt;&quot;,&quot;strategy&quot;:&quot;phased&quot;,&quot;group_name&quot;:&quot;all&quot;}&#39;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → 201 {&quot;deployment_id&quot;:&quot;...&quot;}</span></span></code></pre></div></li>
+<li><p><strong>Create rollout (if phased):</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/deployments/<span class="op">&lt;</span>deployment_id<span class="op">&gt;</span>/rollout <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;phases&quot;:[{&quot;percentage&quot;:10,&quot;success_threshold&quot;:5,&quot;duration_minutes&quot;:60},{&quot;percentage&quot;:50,&quot;success_threshold&quot;:50,&quot;duration_minutes&quot;:120},{&quot;percentage&quot;:100,&quot;success_threshold&quot;:200,&quot;duration_minutes&quot;:0}]}&#39;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → 201</span></span></code></pre></div></li>
+<li><p><strong>Verify:</strong> Device polls
+<code>GET /api/v1/client/update</code> → receives update offer.</p></li>
+</ol>
+<hr />
+<h2 id="g-06-agent-cicd-artifact-build-pipeline">G-06 [AGENT] — CI/CD
+Artifact Build Pipeline</h2>
+<p><strong>Effort:</strong> L <strong>Source:</strong> ADR-0001 (AOSP
+build), §11.4.173 (containerized builds)</p>
+<h3 id="what-to-set-up">What to set up:</h3>
+<ol type="1">
+<li><p><strong>Containerized AOSP build:</strong></p>
+<ul>
+<li>Build container with all AOSP dependencies (Ubuntu 24.04, JDK,
+Python, repo tool)</li>
+<li>Mount AOSP source tree as volume or use CI cache</li>
+<li>Run <code>make -j$(nproc)</code> inside container</li>
+<li>Extract output images and OTA payloads</li>
+</ul></li>
+<li><p><strong>Automated signing:</strong></p>
+<ul>
+<li>CI pipeline fetches signing key from secret manager</li>
+<li>Signs the artifact</li>
+<li>NEVER logs or exposes the private key (§11.4.10)</li>
+</ul></li>
+<li><p><strong>Automated upload:</strong></p>
+<ul>
+<li>CI pipeline authenticates to ota-server using <code>helix-ota</code>
+CLI (from C-05)</li>
+<li>Uploads artifact, creates release, optionally creates
+deployment</li>
+</ul></li>
+<li><p><strong>Pipeline triggers:</strong></p>
+<ul>
+<li>On push to <code>main</code> (for release builds)</li>
+<li>On tag <code>helix_ota-v*</code> (for tagged releases)</li>
+<li>Manual trigger (for hotfixes)</li>
+</ul></li>
+<li><p><strong>Artifact retention:</strong></p>
+<ul>
+<li>Keep last N artifacts in S3/MinIO</li>
+<li>Tag artifacts with build number, git commit, timestamp</li>
+</ul></li>
+<li><p><strong>Example pipeline (GitLab CI):</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">build-ota</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image</span><span class="kw">:</span><span class="at"> registry.example.com/aosp-build:latest</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">script</span><span class="kw">:</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> source build/envsetup.sh &amp;&amp; lunch rk3588_t-userdebug</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> make -j$(nproc)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> ./scripts/package_ota.sh out/target/product/rk3588_t</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">artifacts</span><span class="kw">:</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ota-package.zip</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sign-ota</span><span class="kw">:</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">build-ota</span><span class="kw">]</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">script</span><span class="kw">:</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> go run scripts/testing/sign_artifact.go --key $SIGNING_KEY --input ota-package.zip --output signed-ota.zip</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">artifacts</span><span class="kw">:</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">paths</span><span class="kw">:</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> signed-ota.zip</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="fu">publish-ota</span><span class="kw">:</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">sign-ota</span><span class="kw">]</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">script</span><span class="kw">:</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> helix-ota login --server $OTA_SERVER --username $OTA_USER --password $OTA_PASS</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> helix-ota upload signed-ota.zip --version $CI_COMMIT_TAG</span></span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="g-07-agenthardware-flash-system-image-verify-ota-agent">G-07
+[AGENT/HARDWARE] — Flash System Image + Verify OTA Agent</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong> Hardware
+validation</p>
+<h3 id="what-to-do-5">What to do:</h3>
+<ol type="1">
+<li><p><strong>Flash the system image:</strong></p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using RKDevTool or fastboot</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkdeveloptool db rk3588_spl_loader_v1.08.111.bin</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkdeveloptool wl 0 system.img</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkdeveloptool wl 0x4000 vendor.img</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkdeveloptool rd</span></code></pre></div></li>
+<li><p><strong>Boot and verify:</strong></p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Wait for boot</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> wait-for-device</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify Android version</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell getprop ro.build.version.release  <span class="co"># → 15</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify OTA agent is installed</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell pm list packages <span class="kw">|</span> <span class="fu">grep</span> helix.ota  <span class="co"># → digital.vasic.helix.ota.agent</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify A/B slots</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell getprop ro.boot.slot_suffix  <span class="co"># → _a or _b</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify U-Boot env</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell fw_printenv BOOT_ORDER</span></code></pre></div></li>
+<li><p><strong>Verify OTA agent startup:</strong></p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check WorkManager scheduled the poll worker</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell dumpsys jobscheduler <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-A5</span> helix.ota</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check agent logs</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> logcat <span class="at">-s</span> HelixOTA:V</span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="g-08-agenthardware-end-to-end-ota-update-on-real-hardware">G-08
+[AGENT/HARDWARE] — End-to-End OTA Update on Real Hardware</h2>
+<p><strong>Effort:</strong> L (~3h) <strong>Source:</strong> Full OTA
+lifecycle validation</p>
+<h3 id="steps-record-each-with-evidence">Steps (record EACH with
+evidence):</h3>
+<ol type="1">
+<li><strong>Initial state:</strong>
+<ul>
+<li>Device is on version 1.0.0 (base image)</li>
+<li>Device registered with server</li>
+<li>Device is polling for updates</li>
+</ul></li>
+<li><strong>Build OTA artifact for version 1.0.1:</strong>
+<ul>
+<li>Make a small change to the system image (e.g., increment build
+number)</li>
+<li>Build the delta or full OTA payload</li>
+<li>Sign and upload to server</li>
+<li>Create release 1.0.1</li>
+</ul></li>
+<li><strong>Device discovers update:</strong>
+<ul>
+<li>Device polls, receives <code>UpdateAvailable</code> with version
+1.0.1</li>
+<li>Logcat shows: “Update available: 1.0.1”</li>
+</ul></li>
+<li><strong>Device downloads:</strong>
+<ul>
+<li>Downloads the artifact from S3/MinIO (signed URL or direct)</li>
+<li>Logcat shows: “Downloading: X/Y bytes”</li>
+</ul></li>
+<li><strong>Device verifies:</strong>
+<ul>
+<li>SHA-256 hash matches</li>
+<li>Ed25519 signature verifies</li>
+<li>Logcat shows: “Verification: PASS”</li>
+</ul></li>
+<li><strong>Device applies:</strong>
+<ul>
+<li><code>update_engine</code> writes payload to inactive slot</li>
+<li>Logcat shows: “UpdateEngine: IDLE → DOWNLOADING → VERIFYING →
+FINALIZING → FINISHED”</li>
+</ul></li>
+<li><strong>Device reboots:</strong>
+<ul>
+<li><code>update_engine</code> triggers reboot (or agent calls
+<code>PowerManager.reboot()</code>)</li>
+<li>Logcat shows: “Rebooting to new slot”</li>
+</ul></li>
+<li><strong>Post-boot verification:</strong>
+<ul>
+<li>Device boots from the NEW slot (<code>ro.boot.slot_suffix</code>
+changed)</li>
+<li>Verified boot state is GREEN</li>
+<li>App version is 1.0.1</li>
+<li>Agent reports <code>success</code> telemetry to server</li>
+</ul></li>
+<li><strong>Evidence capture:</strong>
+<ul>
+<li>ADB logcat dump (full OTA cycle)</li>
+<li>Server logs showing device lifecycle events</li>
+<li>§11.4.153 video recording (window-scoped MP4, vision-verified)</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="g-09-agenthardware-ab-rollback-test">G-09 [AGENT/HARDWARE] — A/B
+Rollback Test</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong>
+PRODUCTION_READINESS_PLAN.md §5 P2, OTA-017</p>
+<h3 id="steps">Steps:</h3>
+<ol type="1">
+<li><p><strong>Deploy a deliberately broken OTA (version
+1.0.2-broken):</strong></p>
+<ul>
+<li>The broken payload should cause the system to fail to boot (e.g.,
+corrupt <code>system.img</code>)</li>
+</ul></li>
+<li><p><strong>Device applies the broken update:</strong> Same as G-08,
+up to reboot.</p></li>
+<li><p><strong>Device fails to boot:</strong></p>
+<ul>
+<li>U-Boot detects boot failure (bootcount &gt; bootlimit)</li>
+<li>U-Boot switches back to the previous slot</li>
+<li>Device boots from the original slot (1.0.1)</li>
+</ul></li>
+<li><p><strong>Post-rollback verification:</strong></p>
+<ul>
+<li>Device is back on version 1.0.1</li>
+<li>Agent reports <code>rollback</code> telemetry event</li>
+<li>Server marks the deployment status accordingly</li>
+</ul></li>
+<li><p><strong>Evidence:</strong> Video recording of the boot failure +
+auto-rollback.</p></li>
+</ol>
+<hr />
+<h2 id="g-10-agent-artifact-publishing-pipeline">G-10 [AGENT] — Artifact
+Publishing Pipeline</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong>
+<code>scripts/remote_deploy/publish_artifacts.sh</code></p>
+<h3 id="what-to-do-6">What to do:</h3>
+<ol type="1">
+<li><p><strong>Configure SFTP target:</strong></p>
+<ul>
+<li>The protected download area on the remote host (e.g.,
+<code>/srv/artifacts/</code>)</li>
+<li>Served by nginx with authentication (the server generates signed
+URLs)</li>
+</ul></li>
+<li><p><strong>Publish artifacts:</strong></p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/remote_deploy/publish_artifacts.sh <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--artifact</span> system-ota-1.0.0-signed.zip <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hash</span> system-ota-1.0.0-signed.zip.sha256 <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dest</span> /srv/artifacts/android/rk3588_t/</span></code></pre></div></li>
+<li><p><strong>Verify:</strong></p>
+<ul>
+<li>Artifact is reachable at the download URL</li>
+<li>Hash file validates the artifact integrity</li>
+</ul></li>
+<li><p><strong>CDN (optional, future):</strong></p>
+<ul>
+<li>If fleet grows beyond single-host, front with CDN</li>
+<li>Signed URLs still work through CDN (time-limited, IP-restricted if
+needed)</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="verification-checklist">Verification Checklist</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Expected Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G-01</td>
+<td>AOSP build succeeds</td>
+<td>system.img, boot.img, vendor.img produced</td>
+</tr>
+<tr>
+<td>G-02</td>
+<td>APK platform-signed</td>
+<td>jarsigner verifies platform certificate</td>
+</tr>
+<tr>
+<td>G-03</td>
+<td>Keypair generated + distributed</td>
+<td>Server has public key, CI has private key</td>
+</tr>
+<tr>
+<td>G-04</td>
+<td>Artifact built + signed + verified</td>
+<td>go run sign_artifact.go –verify → VALID</td>
+</tr>
+<tr>
+<td>G-05</td>
+<td>Release + deployment created</td>
+<td>GET /client/update returns offer</td>
+</tr>
+<tr>
+<td>G-06</td>
+<td>CI/CD pipeline works</td>
+<td>Push triggers build → sign → upload → release</td>
+</tr>
+<tr>
+<td>G-07</td>
+<td>System image flashed + boots</td>
+<td>adb shell works, helix.ota package present</td>
+</tr>
+<tr>
+<td>G-08</td>
+<td>Full OTA cycle on hardware</td>
+<td>Device updates from 1.0.0 → 1.0.1 successfully</td>
+</tr>
+<tr>
+<td>G-09</td>
+<td>A/B rollback works</td>
+<td>Broken OTA rolls back to previous slot</td>
+</tr>
+<tr>
+<td>G-10</td>
+<td>Artifacts published</td>
+<td>Download URL serves the artifact</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="danger-zones">Danger Zones</h2>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 34%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Danger</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DZ-G1</td>
+<td>Private signing key leaked → attacker signs malicious OTA</td>
+<td>Store in HSM or encrypted vault. Never on CI logs.</td>
+</tr>
+<tr>
+<td>DZ-G2</td>
+<td>OTA bricks device → unrecoverable</td>
+<td>Always test in emulator first. Have recovery image ready.</td>
+</tr>
+<tr>
+<td>DZ-G3</td>
+<td>A/B slot corruption → device stuck in boot loop</td>
+<td>U-Boot bootcount + bootlimit is the safety net. Validate it works
+(G-09).</td>
+</tr>
+<tr>
+<td>DZ-G4</td>
+<td>CI pipeline uploads unsigned artifact</td>
+<td>Mandatory signature verification in upload handler (S3+S4+S5
+reject).</td>
+</tr>
+<tr>
+<td>DZ-G5</td>
+<td>First OTA on a device without fallback → no rollback path</td>
+<td>First release MUST be a full payload. Delta updates only after full
+payload baseline.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest Boundary (§11.4.6)</h2>
+<ul>
+<li>The AOSP build process for RK3588 is vendor-specific and outside the
+scope of this OTA system. Steps G-01/G-02 assume the AOSP build
+environment and vendor HAL are functional.</li>
+<li>The CI/CD pipeline design above is a template — actual
+implementation depends on the CI platform (GitHub Actions, GitLab CI,
+Jenkins).</li>
+<li>G-08 (full OTA cycle) and G-09 (rollback) are the definitive proof
+that the system works. All prior emulator testing (Tier-0/1/2) is
+necessary but NOT sufficient.</li>
+</ul>
+</body>
+</html>

@@ -2,24 +2,25 @@
 
 | Field | Value |
 |---|---|
-| Revision | 12 |
-| Last modified | 2026-07-26T00:00:00Z |
-| Status | post-completion — 1.0.0 released, all gap closures documented |
+| Revision | 13 |
+| Last modified | 2026-07-26T20:25:00Z |
+| Status | active — production completion guide published; 9-doc comprehensive step-by-step plan at `docs/production/completion/`;
 | Standard path | `docs/RESUMPTION.md` (this file) |
 
 ## SHORT — paste this first sentence into a fresh session
 
-> Helix OTA 1.0.0 released on `main` (HEAD current). All 72/73 production-readiness gaps closed (1 hardware-gated). 16 workable items synced to DB. Feature branch `feature/production-readiness` merged to main. Project in impeccable post-release state. Run `git fetch --all --prune`, then proceed with manual QA final confirmation (§11.4.185) or 1.0.1 staged-rollout work.
+> Helix OTA 1.0.0 released on `main`. 72/73 gaps closed. 9-doc comprehensive production completion guide at `docs/production/completion/00_MASTER_INDEX.md` — read THAT FIRST. It enumerates every remaining step (Stages A–I), 12 operator decisions, 8 danger zones, and the full critical path from current state → production deployment. Run `git fetch --all --prune`. Start at `docs/production/completion/01_OPERATOR_DECISIONS.md` to resolve blocking decisions.
 
 ## FULL — detailed resumption block
 
 ### 0. Read FIRST (in order)
 
-1. `docs/research/main_specs/CONTINUATION.md` — the live work-state handoff
-2. `.remember/remember.md` — present but currently empty
-3. `docs/research/production_planning_20260726/ANALYSIS.md` — production readiness planning document (§11.4.172)
-4. `docs/research/production_planning_20260726/gap_tracker.csv` — 73-gap inventory
-5. Then run: `git fetch --all --prune`
+1. **`docs/production/completion/00_MASTER_INDEX.md`** — THE authoritative production completion guide (NEW — 9-doc series, Stages A–I, every remaining step enumerated)
+2. `docs/research/main_specs/CONTINUATION.md` — the live work-state handoff
+3. `.remember/remember.md` — session memory (updated this session)
+4. `docs/research/production_planning_20260726/ANALYSIS.md` — production readiness planning document (§11.4.172)
+5. `docs/research/production_planning_20260726/gap_tracker.csv` — 73-gap inventory
+6. Then run: `git fetch --all --prune`
 
 ### 1. Exact live-state anchors
 
@@ -84,10 +85,15 @@
 - **OTA-031** (2026-07-26): Migrated OTA-003 from Issues.md to Fixed.md (was duplicate — OTA-003 already archived in Fixed.md). Removed the stale entry from Issues.md.
 - **Carrier lockstep refresh** (2026-07-26): Metadata tables added to CLAUDE.md, AGENTS.md, GEMINI.md; QWEN.md created; all four locked to helix_ota-1.0.0 per §11.4.157.
 - **DB sync** (2026-07-26): 16 pending workable items synced to workable_items.db.
+- **Production completion guide** (2026-07-26): 9-doc comprehensive step-by-step guide at `docs/production/completion/`. 40+3 exports (HTML+PDF+DOCX). All files committed and pushed to 4 upstreams.
 
-### 8. Immediate NEXT (post-1.0.0)
+### 8. Immediate NEXT (post-1.0.0 — follow the completion guide)
 
-1. Await manual QA final confirmation (§11.4.185) — agent hands off, operator performs manual verification
-2. On sign-off: begin 1.0.1 staged-rollout scope planning
-3. When RK3588 board available: close 4 hardware-gated items (OTA-004, OTA-013, OTA-017, OTA-025)
-4. Regular main→feature merge cadence per §11.4.188 (no active feature branches currently)
+1. **Read `docs/production/completion/00_MASTER_INDEX.md`** — this is THE plan
+2. **Resolve Stage A** (12 operator decisions in `01_OPERATOR_DECISIONS.md`) — these BLOCK all major work
+3. **Run Stage B** (server hardening) in parallel with operator decisions
+4. **When A-01/A-02 resolved, start Stage C** (multi-tenant Accounts — XL effort, critical path)
+5. **When hardware available, start Stage E** (device-side completion)
+6. **When A-07..A-11 resolved, start Stage F** (deployment infrastructure)
+7. **Stage H-09** (§11.4.185 manual QA) is the FINAL gate — nothing is "production" until it passes
+8. Regular main→feature merge cadence per §11.4.188

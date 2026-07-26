@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>08_TESTING_AND_QA</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">08_TESTING_AND_QA</h1>
+</header>
+<h1 id="full-retest-manual-qa-release-tagging">08 — Full Retest + Manual
+QA + Release Tagging</h1>
+<p><strong>Revision:</strong> 1 <strong>Parent:</strong>
+<code>00_MASTER_INDEX.md</code> <strong>Prerequisites:</strong> All
+prior stages (B through G) must be complete before H-09 (§11.4.185
+Manual QA).</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>This is the FINAL GATE. Nothing is “production” until H-09 passes.
+The full test suite must be GREEN across all components. Every feature
+must have video recording evidence. An independent code review must
+reach zero-finding GO. And a MANUAL QA team confirmation (§11.4.185)
+must occur on real hardware as the absolute final step.</p>
+<hr />
+<h2 id="h-01-agent-full-server-test-suite-re-run">H-01 [AGENT] — Full
+Server Test Suite Re-Run</h2>
+<p><strong>Effort:</strong> M (~1h automated, ~1h review)</p>
+<h3 id="what-to-run">What to run:</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> server</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Build + vet</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./...</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> vet ./...</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gofmt</span> <span class="at">-l</span> . <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-v</span> vendor  <span class="co"># should be empty</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Unit tests (all packages)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-unit.log</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Integration tests (requires PostgreSQL)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="va">POSTGRES_TEST</span><span class="op">=</span>1 <span class="ex">go</span> test <span class="at">-tags</span> integration <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./internal/store/... ./internal/rollout/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-integration.log</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Stress tests</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span> stress <span class="at">-count</span><span class="op">=</span>1 ./internal/api/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-stress.log</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Chaos tests</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span> chaos <span class="at">-count</span><span class="op">=</span>1 ./internal/api/... ./internal/store/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-chaos.log</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Fuzz tests (short run — 30s each)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> fuzz <span class="kw">in</span> <span class="va">$(</span><span class="fu">grep</span> <span class="at">-rl</span> <span class="st">&quot;func Fuzz&quot;</span> internal/<span class="va">)</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="ex">go</span> test <span class="at">-fuzz</span><span class="op">=</span>. <span class="at">-fuzztime</span><span class="op">=</span>30s <span class="va">$(</span><span class="fu">dirname</span> <span class="va">$fuzz)</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Security tests</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span> security <span class="at">-count</span><span class="op">=</span>1 ./internal/api/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-security.log</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Race detector (re-run with higher count)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>5 ./internal/api/... ./internal/store/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-race.log</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Memory tests</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span> memory <span class="at">-count</span><span class="op">=</span>1 ./internal/api/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-memory.log</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Benchmark baseline</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-bench</span><span class="op">=</span>. <span class="at">-benchmem</span> ./internal/api/... ./internal/store/... ./internal/rollout/... <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/server-bench.log</span></code></pre></div>
+<h3 id="acceptance-criteria">Acceptance criteria:</h3>
+<ul>
+<li><code>go build</code> exit 0</li>
+<li><code>go vet</code> exit 0</li>
+<li><code>gofmt -l</code> empty</li>
+<li>ALL test targets GREEN (0 failures)</li>
+<li><code>-race</code> reports 0 data races</li>
+<li>Memory test confirms no leaks</li>
+<li>Benchmarks within 2x of baseline</li>
+</ul>
+<h3 id="evidence">Evidence:</h3>
+<ul>
+<li>All logs committed to
+<code>docs/qa/&lt;date&gt;-full-retest-server/</code></li>
+<li>Summary report:
+<code>docs/qa/&lt;date&gt;-full-retest-server/REPORT.md</code></li>
+</ul>
+<hr />
+<h2 id="h-02-agent-full-ota-brick-test-suite-re-run">H-02 [AGENT] — Full
+OTA Brick Test Suite Re-Run</h2>
+<p><strong>Effort:</strong> M (~30 min automated, ~30 min review)</p>
+<h3 id="what-to-run-1">What to run:</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ota-protocol</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> submodules/ota-protocol</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./...</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-fuzz</span><span class="op">=</span>. <span class="at">-fuzztime</span><span class="op">=</span>30s ./...</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ota-artifact-validator</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../ota-artifact-validator</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./...</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-fuzz</span><span class="op">=</span>. <span class="at">-fuzztime</span><span class="op">=</span>30s ./...</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># ota-rollout-engine</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../ota-rollout-engine</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./...</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span> stress <span class="at">-count</span><span class="op">=</span>1 ./...</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span> chaos <span class="at">-count</span><span class="op">=</span>1 ./...</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># ota-telemetry-schema</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../ota-telemetry-schema</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./...</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-fuzz</span><span class="op">=</span>. <span class="at">-fuzztime</span><span class="op">=</span>30s ./...</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># http3</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../http3</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./...</span></code></pre></div>
+<h3 id="acceptance-criteria-1">Acceptance criteria:</h3>
+<ul>
+<li>ALL test targets GREEN (0 failures in all 5 bricks)</li>
+<li><code>-race</code> clean across all bricks</li>
+<li>Fuzz: 0 crashes in 30s × each fuzz target</li>
+</ul>
+<hr />
+<h2
+id="h-03-agent-end-to-end-signed-artifact-pipeline-against-production">H-03
+[AGENT] — End-to-End Signed Artifact Pipeline Against Production</h2>
+<p><strong>Effort:</strong> M (~1h)</p>
+<h3 id="what-to-run-2">What to run:</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full E2E test against the production server</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/e2e/pipeline_signed.sh https://hxota.dev</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Staged-rollout HALT safety test</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/e2e/rollout_halt_safety.sh https://hxota.dev</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Recall lifecycle test</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/e2e/recall_lifecycle.sh https://hxota.dev</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Telemetry schema live validation</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/e2e/telemetry_schema_live.sh https://hxota.dev</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Security probes</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/security/security_probes.sh https://hxota.dev</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/security/security_probes_extended.sh https://hxota.dev</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/security/trust_boundary_live.sh https://hxota.dev</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/security/saturation_live.sh https://hxota.dev</span></code></pre></div>
+<h3 id="acceptance-criteria-2">Acceptance criteria:</h3>
+<ul>
+<li>All E2E scripts PASS against the LIVE production server</li>
+<li>Signed artifacts are accepted, unsigned are rejected</li>
+<li>Rollout HALT triggers correctly on breach</li>
+<li>Recall correctly terminates active deployment</li>
+<li>Telemetry schema matches server expectations</li>
+</ul>
+<hr />
+<h2 id="h-04-agenthardware-android-agent-real-device-tests">H-04
+[AGENT/HARDWARE] — Android Agent Real-Device Tests</h2>
+<p><strong>Effort:</strong> M (~1h)</p>
+<h3 id="what-to-run-3">What to run:</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> submodules/ota-android-agent</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># JVM unit tests</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./gradlew</span> :core:test</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./gradlew</span> :android:test</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Instrumentation tests (requires device)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">./gradlew</span> :android:connectedAndroidTest</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual stress: force rapid poll cycles</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Observe: no crashes, no ANRs, no memory growth</span></span></code></pre></div>
+<h3 id="acceptance-criteria-3">Acceptance criteria:</h3>
+<ul>
+<li>All JVM tests GREEN</li>
+<li><code>connectedAndroidTest</code> GREEN on real RK3588 device</li>
+<li>Stress manual: 100+ poll cycles, no regression</li>
+</ul>
+<hr />
+<h2 id="h-05-agent-distributed-ddos-resilience-test">H-05 [AGENT] —
+Distributed DDoS Resilience Test</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong>
+PRODUCTION_READINESS_PLAN.md §3 (testing gap)</p>
+<h3 id="what-to-run-4">What to run:</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Multi-source load test against the production stack</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Use the loadtest tool from server/tools/loadtest</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> server</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run tools/loadtest/main.go <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target</span> https://hxota.dev <span class="dt">\</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--concurrency</span> 50 <span class="dt">\</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--duration</span> 60s <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--endpoints</span> /healthz,/api/v1/devices,/api/v1/client/update <span class="dt">\</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--ramp-up</span> 10s</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Slowloris-style test</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify the rate limiter drops connections above threshold</span></span></code></pre></div>
+<h3 id="acceptance-criteria-4">Acceptance criteria:</h3>
+<ul>
+<li>Server stays responsive during load (p95 latency &lt; 500ms at 50
+concurrent)</li>
+<li>Rate limiter activates when threshold exceeded (429 responses)</li>
+<li>No crashes, OOM, or degraded /healthz responses</li>
+<li>Recovery after load ends (latency returns to baseline within
+10s)</li>
+</ul>
+<hr />
+<h2 id="h-06-agent-web-surface-stresschaos-tests">H-06 [AGENT] —
+Web-Surface Stress/Chaos Tests</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong>
+PRODUCTION_READINESS_PLAN.md §3</p>
+<h3 id="what-to-run-5">What to run:</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dashboard Playwright e2e + host-render</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dashboard</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> test:run</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> exec playwright test</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ota-manager vitest + Playwright</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> clients/ota-manager</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> test:run</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> exec playwright test</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.170 host-render verification</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># All screens × {light,dark} × {loaded,empty,error}</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/collect_feature_evidence.sh</span></code></pre></div>
+<h3 id="acceptance-criteria-5">Acceptance criteria:</h3>
+<ul>
+<li>Dashboard: vitest 100% PASS, Playwright 100% PASS, host-render all
+golden-match</li>
+<li>ota-manager: vitest 100% PASS, Playwright 100% PASS, host-render all
+golden-match</li>
+<li>a11y: axe-core 0 critical/serious violations on both apps</li>
+</ul>
+<hr />
+<h2
+id="h-07-agent-complete-11.4.153-per-feature-video-recording-evidence">H-07
+[AGENT] — Complete §11.4.153 Per-Feature Video Recording Evidence</h2>
+<p><strong>Effort:</strong> L (~3h) <strong>Source:</strong>
+Constitution §11.4.153, PRODUCTION_READINESS_PLAN.md OTA-061</p>
+<h3 id="what-to-record">What to record:</h3>
+<p>Every feature row in <code>docs/features/Status.md</code> must have a
+durable, committed MP4 recording that is: - Window-scoped (captures only
+the app window, not whole desktop) — §11.4.154 - Project-prefixed
+filename (<code>helix_ota---*.mp4</code>) — §11.4.155 - Vision-verified
+(OCR/content read-back confirms expected results) — §11.4.158/§11.4.159
+- Durable (committed to the repo, not ephemeral) — §11.4.153</p>
+<h3 id="features-needing-re-recording">Features needing
+(re-)recording:</h3>
+<ol type="1">
+<li>Server: API endpoints (CRUD for all resources), auth flow, health
+probes</li>
+<li>Dashboard: Login, devices, artifacts, releases, deployments,
+rollouts, groups, telemetry, audit</li>
+<li>ota-manager: Login, dashboard, devices, artifacts, etc.</li>
+<li>Emulator: Tier-1 container OTA cycle</li>
+<li>QEMU: A/B slot switch, rollback</li>
+<li>Production: Full OTA cycle on real hardware (G-08 recording)</li>
+</ol>
+<h3 id="process-per-feature">Process per feature:</h3>
+<ol type="1">
+<li><strong>SPECIFY:</strong> What should the recording show (expected
+content specification BEFORE recording)</li>
+<li><strong>RECORD:</strong> Capture window-scoped MP4</li>
+<li><strong>VALIDATE:</strong> Run through vision/OCR bridge — confirm
+expected content is ON SCREEN</li>
+<li><strong>COMMIT:</strong> Save to
+<code>docs/qa/&lt;feature&gt;/helix_ota---&lt;feature&gt;.mp4</code></li>
+</ol>
+<hr />
+<h2 id="h-08-agent-independent-code-review-zero-finding-go">H-08 [AGENT]
+— Independent Code Review → Zero-Finding GO</h2>
+<p><strong>Effort:</strong> M (~2h) <strong>Source:</strong>
+Constitution §11.4.165, §11.4.142</p>
+<h3 id="process">Process:</h3>
+<ol type="1">
+<li><strong>Independent verifier agent</strong> reviews ALL new/changed
+code from Stages B, C, D, E, F, G.</li>
+<li>Verifier iterates: finding → fix → re-verify → repeat until zero
+findings.</li>
+<li>Each round: the verifier is structurally SEPARATE from the generator
+(different agent session).</li>
+<li>Final state: zero-finding GO — no bugs, no style violations, no
+security issues, no test gaps.</li>
+</ol>
+<h3 id="review-scope">Review scope:</h3>
+<ul>
+<li>Every file changed in <code>feature/multi-tenant-accounts</code>
+(Accounts)</li>
+<li>Every file changed in server hardening (Stage B)</li>
+<li>Every file changed in <code>submodules/website</code> (Website)</li>
+<li>Every file changed in device-side (Stage E)</li>
+<li>Every deploy script, compose file, nginx config</li>
+<li>Every migration SQL file</li>
+</ul>
+<hr />
+<h2 id="h-09-operator-11.4.185-manual-qa-team-final-confirmation">H-09
+[OPERATOR] — §11.4.185 Manual QA Team Final Confirmation</h2>
+<p><strong>Effort:</strong> L (operator + QA team time)
+<strong>Source:</strong> Constitution §11.4.185 — MANDATORY FINAL
+GATE</p>
+<h3 id="what-the-qa-team-must-manually-confirm">What the QA team must
+manually confirm:</h3>
+<p><strong>On the production server:</strong> 1. Login as admin, create
+a new account 2. Create a project, add members with different roles 3.
+Upload a signed OTA artifact 4. Create a release, deployment, and staged
+rollout 5. Verify device registration works 6. Verify audit logs capture
+all actions 7. Verify webhook dispatches work 8. Verify rate limiting
+works under load</p>
+<p><strong>On the physical RK3588 device:</strong> 1. Flash the system
+image with OTA agent pre-installed 2. Device boots, OTA agent registers
+with server 3. Device discovers an available update 4. Device downloads,
+verifies, and applies the update 5. Device reboots into the new slot
+successfully 6. Device reports telemetry back to server 7. Deploy a
+deliberately faulty OTA — device auto-rollbacks</p>
+<p><strong>On the dashboard:</strong> 1. Login, navigate all pages 2.
+Verify device list shows the registered devices 3. Verify telemetry
+charts show real data 4. Verify deployment progress updates in
+real-time</p>
+<p><strong>On the website:</strong> 1. Visit
+<code>https://hxota.com</code> 2. Verify all pages load, content is
+correct 3. Verify responsive on mobile/tablet/desktop 4. Verify
+dark/light theme toggle works</p>
+<h3
+id="acceptance-qa-team-signs-off.-this-is-the-final-gate.">Acceptance:
+QA team signs off. THIS IS THE FINAL GATE.</h3>
+<hr />
+<h2 id="h-10-agent-tag-release">H-10 [AGENT] — Tag Release</h2>
+<p><strong>Effort:</strong> S (~15 min) <strong>Source:</strong>
+§11.4.151 (release tagging)</p>
+<h3 id="what-to-do-only-after-h-09-pass">What to do (ONLY after H-09
+PASS):</h3>
+<ol type="1">
+<li><p><strong>Determine version:</strong> If Accounts (Stage C) was
+completed, this is 2.0.0. If only hardening was done, 1.1.0.</p></li>
+<li><p><strong>Tag main repo:</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> helix_ota-2.0.0 <span class="at">-m</span> <span class="st">&quot;Helix OTA 2.0.0 — Multi-tenant Accounts + production deployment&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push github helix_ota-2.0.0</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push gitlab helix_ota-2.0.0</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push gitflic helix_ota-2.0.0</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push gitverse helix_ota-2.0.0</span></code></pre></div></li>
+<li><p><strong>Tag each touched submodule</strong> with the SAME
+prefix:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sub <span class="kw">in</span> submodules/ota-protocol submodules/ota-android-agent submodules/website<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">cd</span> <span class="va">$sub</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">git</span> tag <span class="at">-a</span> helix_ota-2.0.0 <span class="at">-m</span> <span class="st">&quot;Helix OTA 2.0.0&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">git</span> push origin helix_ota-2.0.0</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">cd</span> ../../..</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div></li>
+<li><p><strong>Update RESUMPTION.md, Fixed.md, Issues.md:</strong></p>
+<ul>
+<li>Move any closed items to Fixed.md</li>
+<li>Update RESUMPTION.md to reflect 2.0.0 state</li>
+<li>Update AGENTS.md/GEMINI.md/CLAUDE.md/QWEN.md carrier metadata</li>
+</ul></li>
+<li><p><strong>Push all tracking doc updates:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/commit_all.sh <span class="st">&quot;release: helix_ota-2.0.0&quot;</span></span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="final-acceptance-checklist">Final Acceptance Checklist</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H-01</td>
+<td>Server full test suite</td>
+<td>All GREEN, 0 races</td>
+</tr>
+<tr>
+<td>H-02</td>
+<td>OTA bricks test suite</td>
+<td>All GREEN, 0 crashes</td>
+</tr>
+<tr>
+<td>H-03</td>
+<td>E2E pipeline against production</td>
+<td>All PASS</td>
+</tr>
+<tr>
+<td>H-04</td>
+<td>Android agent real-device</td>
+<td>All GREEN</td>
+</tr>
+<tr>
+<td>H-05</td>
+<td>DDoS resilience</td>
+<td>Server survives, rate limiter works</td>
+</tr>
+<tr>
+<td>H-06</td>
+<td>Web-surface tests</td>
+<td>All GREEN, a11y clean</td>
+</tr>
+<tr>
+<td>H-07</td>
+<td>Video recordings</td>
+<td>All features recorded + verified</td>
+</tr>
+<tr>
+<td>H-08</td>
+<td>Independent code review</td>
+<td>Zero-finding GO</td>
+</tr>
+<tr>
+<td><strong>H-09</strong></td>
+<td><strong>Manual QA confirmation</strong></td>
+<td><strong>QA TEAM SIGN-OFF</strong></td>
+</tr>
+<tr>
+<td>H-10</td>
+<td>Release tagged</td>
+<td>Tag pushed to all 4 upstreams</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest Boundary (§11.4.6)</h2>
+<ul>
+<li>H-09 (§11.4.185) is the SINGLE non-negotiable gate. An agent CANNOT
+self-certify it.</li>
+<li>The manual QA team must perform their confirmation on the REAL
+production deployment with REAL hardware.</li>
+<li>Until H-09 passes, the system is “development-complete” but NOT
+“released.”</li>
+<li>H-10 is the mechanical tagging step — it takes 15 minutes but CANNOT
+run before H-09.</li>
+</ul>
+</body>
+</html>

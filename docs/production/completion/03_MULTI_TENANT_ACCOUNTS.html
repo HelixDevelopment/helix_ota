@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03_MULTI_TENANT_ACCOUNTS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">03_MULTI_TENANT_ACCOUNTS</h1>
+</header>
+<h1 id="multi-tenant-accounts-xl-biggest-feature">03 — Multi-Tenant
+Accounts (XL — Biggest Feature)</h1>
+<p><strong>Revision:</strong> 1 <strong>Parent:</strong>
+<code>00_MASTER_INDEX.md</code> <strong>Prerequisites:</strong> A-01,
+A-02 (Accounts design decisions) MUST be resolved first.
+<strong>Source:</strong>
+<code>docs/research/accounts/30_delivery_plan.md</code> (8 milestones,
+Rev 1, 2026-07-10)</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>The Accounts feature adds a TENANT (account) layer above the current
+Project layer. Every resource (device, artifact, release, deployment,
+telemetry) becomes scoped to an Account. This is the single largest
+feature remaining — estimated XL effort across 8 milestones.</p>
+<p><strong>Critical path:</strong> M1 → M2 → M3 → (M7 object-storage
+seam) → M4/M5/M6 e2e → M8 retest+merge.</p>
+<p><strong>Work-stream setup (§11.4.167):</strong> Develop on branch
+<code>feature/multi-tenant-accounts</code> in an isolated reflink/CoW
+copy with its own <code>.git</code>. Merge <code>main</code> in
+regularly (§11.4.188). NEVER force-push.</p>
+<hr />
+<h2 id="c-01-agent-m1-data-model-migrations-store-scoping-xl">C-01
+[AGENT] — M1: Data Model + Migrations + Store Scoping (XL)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M1</p>
+<h3 id="what-to-build">What to build:</h3>
+<ol type="1">
+<li><strong>New entities in <code>store/store.go</code>:</strong>
+<ul>
+<li><code>Account</code> (account_id, name, slug, status
+active/suspended/archived, timestamps)</li>
+<li><code>User</code> (user_id, username, password_hash — replaces the
+in-memory <code>UserDirectory</code>)</li>
+<li><code>Membership</code> (user_id, account_id, role, is_owner)</li>
+</ul></li>
+<li><strong>Migration 11</strong> (or 3 in the Accounts plan numbering):
+<ul>
+<li>Add <code>account_id TEXT NOT NULL DEFAULT ''</code> to: devices,
+artifacts, releases, deployments, telemetry_events, device_groups,
+audit_logs, delta_artifacts, rollback_history, rollout_states,
+rollout_phases, branches, webhooks, delta_metadata.</li>
+<li>Add per-table composite UNIQUE keys including
+<code>account_id</code>.</li>
+<li>Backfill existing rows:
+<code>UPDATE &lt;table&gt; SET account_id = '__default__' WHERE account_id = ''</code>.</li>
+<li>Create the <code>__default__</code> account.</li>
+</ul></li>
+<li><strong>Store interface extension:</strong>
+<ul>
+<li><code>CreateAccount</code>, <code>GetAccount</code>,
+<code>ListAccounts</code>, <code>UpdateAccount</code>,
+<code>ArchiveAccount</code>, <code>SuspendAccount</code></li>
+<li><code>CreateUser</code>, <code>GetUser</code>,
+<code>GetUserByUsername</code></li>
+<li><code>AddMembership</code>, <code>RemoveMembership</code>,
+<code>ListMemberships</code></li>
+<li>Account-scoped variants of ALL existing methods (e.g.,
+<code>ListDevicesByAccount</code>)</li>
+</ul></li>
+<li><strong>Implement in BOTH backends:</strong>
+<ul>
+<li><code>MemoryRepository</code> — full account isolation (in-memory
+maps keyed by account_id)</li>
+<li><code>PostgresRepository</code> — RLS policies per-account
+(migration with
+<code>ALTER TABLE ... ENABLE ROW LEVEL SECURITY</code>)</li>
+</ul></li>
+<li><strong>Tests:</strong> <code>TestAccountCRUD_Memory</code>,
+<code>TestAccountCRUD_Postgres</code>,
+<code>TestAccountIsolation_Memory</code>,
+<code>TestAccountIsolation_Postgres</code>,
+<code>TestMigration11_Backfill</code>,
+<code>TestDevicesScopedToAccount</code></li>
+</ol>
+<hr />
+<h2
+id="c-02-agent-m2-token-account_id-claim-super-admin-authz-role-vocabulary-l">C-02
+[AGENT] — M2: Token account_id Claim + Super-Admin AuthZ + Role
+Vocabulary (L)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M2</p>
+<h3 id="what-to-build-1">What to build:</h3>
+<ol type="1">
+<li><strong>Token extension:</strong> Add <code>account_id</code> claim
+to access/refresh tokens
+(<code>server/internal/api/token.go</code>).</li>
+<li><strong>Token verification:</strong> <code>authMiddleware</code>
+extracts <code>account_id</code> from token, sets on context.</li>
+<li><strong>Super-admin role:</strong> A <code>super_admin</code> role
+that bypasses account scoping (sees ALL accounts’ data).</li>
+<li><strong>Role vocabulary SSOT:</strong> Single canonical enum for all
+roles across server + both SPAs.</li>
+<li><strong>AuthZ middleware:</strong> <code>requireAccountAccess</code>
+— gate routes by token’s <code>account_id</code>.</li>
+<li><strong>Tests:</strong> <code>TestTokenCarriesAccountId</code>,
+<code>TestSuperAdminBypassesAccountScope</code>,
+<code>TestNonAdminCannotCrossAccount</code></li>
+</ol>
+<hr />
+<h2
+id="c-03-agent-m3-account-scope-every-ota-route-super-admin-api-list-artifacts-l">C-03
+[AGENT] — M3: Account-Scope Every OTA Route + Super-Admin API + List
+Artifacts (L)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M3</p>
+<h3 id="what-to-build-2">What to build:</h3>
+<ol type="1">
+<li><p><strong>Account-scope every existing route:</strong></p>
+<ul>
+<li><code>/api/v1/accounts/:accountId/projects</code> — list projects in
+account</li>
+<li><code>/api/v1/accounts/:accountId/updates</code> — list available
+updates</li>
+<li><code>/api/v1/accounts/:accountId/devices</code> — register device
+for account</li>
+<li>Device registration must bind to the token’s
+<code>account_id</code></li>
+</ul></li>
+<li><p><strong>Super-admin API
+(<code>/api/v1/admin/*</code>):</strong></p>
+<ul>
+<li><code>GET/POST /admin/accounts</code> — list/create accounts</li>
+<li><code>GET/PATCH/DELETE /admin/accounts/:id</code> — manage
+accounts</li>
+<li><code>POST /admin/accounts/:id/suspend</code> — suspend account</li>
+<li><code>POST /admin/accounts/:id/unsuspend</code> — unsuspend
+account</li>
+<li><code>POST /admin/accounts/:id/members</code> — set account
+membership</li>
+</ul></li>
+<li><p><strong>Missing endpoint:</strong> <code>GET /artifacts</code>
+(list artifacts — gap tracker G-07 mentions this was missing).</p></li>
+<li><p><strong>Backward compatibility:</strong> Unscoped routes continue
+to work for <code>__default__</code> account.</p></li>
+<li><p><strong>Tests:</strong> <code>TestAccountScopedRoutes</code>,
+<code>TestSuperAdminAPIFullCRUD</code>,
+<code>TestCrossAccountRejected</code></p></li>
+</ol>
+<hr />
+<h2
+id="c-04-agent-m4-ui-sign-in-split-account-switcher-super-admin-console-l">C-04
+[AGENT] — M4: UI — Sign-In Split + Account Switcher + Super-Admin
+Console (L)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M4</p>
+<h3 id="what-to-build-3">What to build:</h3>
+<ol type="1">
+<li><p><strong>Dashboard (<code>dashboard/</code>):</strong></p>
+<ul>
+<li>Post-login account picker (if user has multiple memberships)</li>
+<li>Account switcher in header (above project switcher)</li>
+<li>Super-admin console: account CRUD, member management,
+suspend/unsuspend</li>
+</ul></li>
+<li><p><strong>ota-manager
+(<code>clients/ota-manager/</code>):</strong></p>
+<ul>
+<li>Same: account picker post-login</li>
+<li>Account switcher in sidebar</li>
+<li>Super-admin console with same capabilities</li>
+</ul></li>
+<li><p><strong>Host-render proof (§11.4.170):</strong> Every new screen,
+light+dark, golden image-diff + OCR layout oracle.</p></li>
+<li><p><strong>Tests:</strong> Playwright/axe a11y, host-render visual
+regression.</p></li>
+</ol>
+<hr />
+<h2 id="c-05-agent-m5-project-side-integration-cli-m">C-05 [AGENT] — M5:
+Project-Side Integration CLI (M)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M5</p>
+<h3 id="what-to-build-4">What to build:</h3>
+<ol type="1">
+<li><strong>New binary:</strong>
+<code>server/cmd/helix-ota/main.go</code> — CLI for CI/CD
+pipelines.</li>
+<li><strong>Commands:</strong>
+<ul>
+<li><code>helix-ota login --server &lt;url&gt; --username &lt;u&gt; --password &lt;p&gt;</code>
+→ token</li>
+<li><code>helix-ota select-account &lt;account-slug&gt;</code> →
+account-scoped token</li>
+<li><code>helix-ota upload &lt;artifact.zip&gt; --project &lt;id&gt;</code>
+→ upload artifact to project</li>
+<li><code>helix-ota create-release --artifact &lt;id&gt; --version &lt;v&gt;</code>
+→ create release</li>
+<li><code>helix-ota create-deployment --release &lt;id&gt; --group &lt;name&gt;</code>
+→ create deployment</li>
+</ul></li>
+<li><strong>Auth:</strong> Reads token from
+<code>~/.config/helix-ota/auth.json</code>, refreshes
+automatically.</li>
+<li><strong>Tests:</strong> <code>TestCLILoginFlow</code>,
+<code>TestCLIUploadArtifact</code>,
+<code>TestCLIFullWorkflow</code></li>
+</ol>
+<hr />
+<h2 id="c-06-agent-m6-device-update-client-setup-wizard-xl">C-06 [AGENT]
+— M6: Device Update Client + Setup Wizard (XL)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M6</p>
+<h3 id="what-to-build-5">What to build:</h3>
+<ol type="1">
+<li><p><strong>ota-android-agent:</strong></p>
+<ul>
+<li>Multi-account production client: device registers to a specific
+account via setup wizard</li>
+<li>Server-minted device identity (device token bound to account)</li>
+<li>Per-account signature verification (public key registry per
+account)</li>
+<li>Setup/notification/consent wizard UI</li>
+</ul></li>
+<li><p><strong>Device registration flow:</strong></p>
+<ul>
+<li>Wizard shows QR code or pairing code</li>
+<li>Operator scans/enters on dashboard to approve</li>
+<li>Device receives token, polls for updates scoped to its account</li>
+</ul></li>
+<li><p><strong>Dependency on M7:</strong> The byte-level “downloads +
+applies exact bytes” e2e proof is gated on the object-storage seam
+landing (M7). M6’s control-plane work lands on schedule; the device-side
+e2e is <code>SKIP-with-reason: object_storage_absent</code> until
+M7.</p></li>
+<li><p><strong>Tests:</strong>
+<code>TestDeviceRegistersToAccount</code>,
+<code>TestDeviceOnlySeesOwnAccountUpdates</code>,
+<code>TestPerAccountSignatureVerify</code></p></li>
+</ol>
+<hr />
+<h2 id="c-07-agent-m7-object-storage-seam-security-hardening-l">C-07
+[AGENT] — M7: Object Storage Seam + Security Hardening (L)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M7</p>
+<h3 id="what-to-build-6">What to build:</h3>
+<ol type="1">
+<li><strong>Real StoragePort implementation:</strong>
+<ul>
+<li><code>s3_storage.go</code> already EXISTS
+(<code>server/internal/store/s3_storage.go</code>, 188 lines).</li>
+<li><code>StorageRef</code> is already a type. Verify it actually stores
+bytes (not just validates-then-discards).</li>
+<li>If placeholder: implement
+<code>Put(ctx, artifactId, reader, size) → StorageRef</code> using MinIO
+client.</li>
+<li>Implement <code>Get(ctx, ref) → io.ReadCloser</code> for
+download.</li>
+<li>Implement <code>SignedURL(ctx, ref, expiry) → string</code> for
+temporary download URLs.</li>
+</ul></li>
+<li><strong>Per-account signing-key registry:</strong>
+<ul>
+<li>Table:
+<code>signing_keys (account_id, key_id, public_key, created_at, expires_at, active)</code></li>
+<li>Routes: <code>POST /admin/accounts/:id/keys</code>,
+<code>GET /accounts/:accountId/keys</code></li>
+<li>Key rotation: support <code>HELIX_ARTIFACT_PREVIOUS_PUBKEY</code>
+per-account.</li>
+</ul></li>
+<li><strong>Secret fail-fast (per-account):</strong>
+<ul>
+<li>Each account MUST have at least one active signing key before
+artifacts can be uploaded.</li>
+</ul></li>
+<li><strong>Tests:</strong> <code>TestS3StoreRoundTrip</code>,
+<code>TestSignedURLExpires</code>,
+<code>TestPerAccountKeyRotation</code></li>
+</ol>
+<hr />
+<h2 id="c-08-agent-m8-full-retest-manual-qa-merge-gate-m">C-08 [AGENT] —
+M8: Full Retest + Manual QA Merge Gate (M)</h2>
+<p><strong>Source:</strong> <code>accounts/30_delivery_plan.md</code> §2
+M8</p>
+<h3 id="what-to-do">What to do:</h3>
+<ol type="1">
+<li><p><strong>Full test sweep</strong> from clean baseline:</p>
+<ul>
+<li><code>cd server &amp;&amp; go test -race -count=1 ./...</code> → ALL
+GREEN</li>
+<li><code>cd submodules/ota-protocol &amp;&amp; go test -race ./...</code>
+→ GREEN</li>
+<li><code>cd submodules/ota-rollout-engine &amp;&amp; go test -race ./...</code>
+→ GREEN</li>
+<li><code>cd submodules/ota-artifact-validator &amp;&amp; go test -race ./...</code>
+→ GREEN</li>
+<li><code>cd submodules/ota-telemetry-schema &amp;&amp; go test -race ./...</code>
+→ GREEN</li>
+<li>PostgreSQL integration tests:
+<code>POSTGRES_TEST=1 go test -tags integration ./server/internal/store/...</code></li>
+<li>Kotlin tests: <code>./gradlew test</code> in ota-android-agent,
+ota-update-engine-bridge</li>
+<li>Dashboard: <code>pnpm test:run</code> + Playwright e2e +
+host-render</li>
+<li>ota-manager: <code>pnpm test:run</code> + vitest</li>
+</ul></li>
+<li><p><strong>Independent code review</strong> (§11.4.125/§11.4.134):
+Independent verifier reviews ALL new code, iterates to zero-finding
+GO.</p></li>
+<li><p><strong>[OPERATOR] §11.4.185 Manual QA final
+confirmation</strong> on:</p>
+<ul>
+<li>Multi-account creation and isolation</li>
+<li>Cross-account access rejection</li>
+<li>Per-account artifact upload and signing</li>
+<li>Device registration to specific account</li>
+<li>OTA update cycle within a single account</li>
+<li>Super-admin operations across accounts</li>
+</ul></li>
+<li><p><strong>Operator approval → merge
+<code>feature/multi-tenant-accounts</code> → <code>main</code></strong>
+(§11.4.167).</p></li>
+</ol>
+<hr />
+<h2 id="dependency-chain-critical-path">Dependency Chain (Critical
+Path)</h2>
+<pre><code>A-01/A-02 resolved
+    │
+    ▼
+C-01 M1 (XL) ──────► C-02 M2 (L) ──────► C-03 M3 (L)
+    │                                           │
+    │                              ┌────────────┘
+    │                              ▼
+    │                         C-07 M7 (L) ── object storage seam
+    │                              │
+    │              ┌───────────────┼───────────────┐
+    │              ▼               ▼               ▼
+    │         C-04 M4 (L)    C-05 M5 (M)    C-06 M6 (XL)
+    │              │               │               │
+    └──────────────┴───────────────┴───────────────┘
+                                                   │
+                                                   ▼
+                                              C-08 M8 (M)
+                                              retest + QA + merge</code></pre>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest Boundary (§11.4.6)</h2>
+<ul>
+<li>The Accounts design (docs <code>00_INDEX.md</code> through
+<code>30_delivery_plan.md</code>) is thorough and complete. Zero
+production code exists for any M1-M8 milestone.</li>
+<li>M1 alone is XL effort — it touches the data model of EVERY table in
+both store backends.</li>
+<li>The object-storage seam (M7) already has scaffolding
+(<code>s3_storage.go</code>) but may still be a placeholder that
+discards bytes after validation. Verify before relying on it.</li>
+<li>This is the LONGEST pole in the production-readiness tent. All other
+stages (except G — System Images) can complete while Accounts is in
+progress.</li>
+<li>The Accounts feature branch should merge <code>main</code> in
+regularly (§11.4.188) to avoid a massive conflict-resolution at the
+end.</li>
+</ul>
+</body>
+</html>

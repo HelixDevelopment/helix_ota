@@ -1,7 +1,32 @@
 # Helix OTA — Continuation
 
-**Revision:** 29
-**Last modified:** 2026-07-10T10:25:00Z
+**Revision:** 30
+**Last modified:** 2026-07-26T20:25:00Z
+
+---
+
+### Latest session (2026-07-26) — Production Completion Guide published
+
+**Directive:** Deep investigation and comprehensive production-readiness analysis. Created exhaustive step-by-step guide at `docs/production/completion/`.
+
+**Summary:** Authored 9-doc comprehensive production completion guide (Stages A–I) covering every remaining step from current state (1.0.0, 72/73 gaps closed) to full production deployment on remote backend with system images incorporating the Helix OTA system. Every gap identified, every danger zone flagged, every operator decision enumerated.
+
+**Key outputs:**
+- `docs/production/completion/00_MASTER_INDEX.md` — Master index, priority matrix, 9 danger zones, stage dependency graph, cumulative effort estimates
+- `docs/production/completion/01_OPERATOR_DECISIONS.md` — 12 operator-gated decisions blocking production (Accounts design, Website design, mirror forks, DDoS posture, deployment config, etc.)
+- `docs/production/completion/02_SERVER_HARDENING.md` — 13 server hardening steps (B-01 through B-13)
+- `docs/production/completion/03_MULTI_TENANT_ACCOUNTS.md` — 8-milestone Accounts feature (C-01 through C-08, XL effort)
+- `docs/production/completion/04_WEBSITE_AND_DASHBOARD.md` — Marketing website + dashboard host-render (D-01 through D-07)
+- `docs/production/completion/05_DEVICE_SIDE.md` — RK3588 hardware validation + ApplyPort completion (E-01 through E-06)
+- `docs/production/completion/06_DEPLOYMENT_INFRA.md` — Remote deployment, monitoring, backups, TLS (F-01 through F-10)
+- `docs/production/completion/07_SYSTEM_IMAGES.md` — AOSP build, OTA artifact pipeline, CI/CD (G-01 through G-10)
+- `docs/production/completion/08_TESTING_AND_QA.md` — Full retest, manual QA, release tagging (H-01 through H-10)
+- `docs/production/completion/09_SUBMODULE_HYGIENE.md` — helix-deps, mirror forks, tracking tools (I-01 through I-11)
+- All 10 .md files exported to HTML + PDF + DOCX (30 exports total), flat alongside sources
+
+**Updated:** `docs/RESUMPTION.md` (Rev 13) — resumption path now points to completion guide first. `.remember/remember.md` updated with session summary. All changes committed to `main` at `d473f3c3`, pushed to all 4 upstreams (github/gitlab/gitflic/gitverse — all match). Working tree clean.
+
+**State:** 72/73 production-readiness gaps closed. The completion guide documents ~80 remaining steps across 9 stages (A–I). Critical path: A (operator decisions) → C (multi-tenant Accounts, XL) → C-07 (object storage) → G (system images) → H (full retest + manual QA). 22 operator-dependent steps.
 
 ---
 

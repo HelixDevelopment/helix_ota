@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>04_WEBSITE_AND_DASHBOARD</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">04_WEBSITE_AND_DASHBOARD</h1>
+</header>
+<h1 id="marketing-website-dashboard-production-readiness">04 — Marketing
+Website + Dashboard Production-Readiness</h1>
+<p><strong>Revision:</strong> 1 <strong>Parent:</strong>
+<code>00_MASTER_INDEX.md</code> <strong>Prerequisites:</strong> A-03
+(website decisions), A-10 (hxota.dev root behavior)</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>The marketing website (§11.4.190 mandate) does NOT exist — only a
+scaffold is registered at <code>submodules/website</code> (commit
+<code>9abb15e</code>). Both the dashboard and ota-manager need §11.4.170
+host-render proof completion for all feature pages.</p>
+<hr />
+<h2 id="d-01-operator-resolve-website-decisions">D-01 [OPERATOR] —
+Resolve Website Decisions</h2>
+<p>Already documented in <code>01_OPERATOR_DECISIONS.md</code> §2 and
+§9. Must be resolved before D-02.</p>
+<hr />
+<h2
+id="d-02-agent-scaffold-angular-22-ssr-tailwind-v4-opendesign-brand-l">D-02
+[AGENT] — Scaffold Angular 22 SSR + Tailwind v4 + OpenDesign Brand
+(L)</h2>
+<p><strong>Source:</strong>
+<code>docs/research/website/00_WEBSITE_DESIGN_AND_BUILD_PLAN.md</code>,
+<code>docs/research/website/01_SCAFFOLD_READINESS_AND_VERIFICATION.md</code></p>
+<h3 id="what-to-build">What to build:</h3>
+<ol type="1">
+<li><p><strong>Use existing submodule:</strong>
+<code>submodules/website</code> (already at commit <code>9abb15e</code>
+in <code>.gitmodules</code>). Check what scaffolding exists:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> submodules/website/</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> submodules/website log <span class="at">--oneline</span> <span class="at">-5</span></span></code></pre></div></li>
+<li><p><strong>Tech stack (from design plan):</strong></p>
+<ul>
+<li>Angular 22 SSR (server-side rendering for SEO)</li>
+<li>Tailwind v4 (matches ota-manager’s Tailwind 4)</li>
+<li>OpenDesign “Helix-green” brand layer (tokens from
+<code>design-systems/helix-ota/</code>)</li>
+<li>Dark/light theme switcher</li>
+<li>i18n support (English primary, extendable)</li>
+</ul></li>
+<li><p><strong>If scaffold is bare/empty:</strong> Full
+<code>ng new</code> in the submodule, configure SSR, install Tailwind
+v4, vendor OpenDesign tokens.</p></li>
+<li><p><strong>If scaffold has content:</strong> Extend and
+harden.</p></li>
+<li><p><strong>Containerized build (§11.4.173):</strong> Add
+<code>Dockerfile</code> that builds the Angular SSR app in a container.
+Wire into <code>scripts/remote_deploy/deploy_website.sh</code>.</p></li>
+</ol>
+<hr />
+<h2 id="d-03-agent-build-content-to-locked-spec-m">D-03 [AGENT] — Build
+Content to Locked Spec (M)</h2>
+<p><strong>Source:</strong>
+<code>docs/research/website/00_WEBSITE_DESIGN_AND_BUILD_PLAN.md</code></p>
+<h3 id="content-spec-locked-do-not-deviate">Content spec (LOCKED — do
+not deviate):</h3>
+<ul>
+<li><strong>Sales email:</strong> <code>contact@hxota.com</code> (no
+other contact method)</li>
+<li><strong>NO pricing</strong> anywhere on the site</li>
+<li><strong>Footer:</strong> “Made with ♥ by Helix Development
+team”</li>
+<li><strong>Roadmap items:</strong> Clearly marked as “Coming Soon” or
+“Planned”</li>
+<li><strong>What to describe:</strong> Only REAL, SHIPPING capabilities:
+<ul>
+<li>Universal OTA update system</li>
+<li>Android A/B seamless updates</li>
+<li>Staged rollout with automatic HALT on failures</li>
+<li>Multi-device fleet management</li>
+<li>Secure artifact signing (Ed25519)</li>
+<li>HTTP/3 + Brotli transport</li>
+<li>REST API + dashboard + CLI</li>
+</ul></li>
+</ul>
+<h3 id="pages">Pages:</h3>
+<ol type="1">
+<li><strong>Home</strong> — hero, value proposition, key features</li>
+<li><strong>Features</strong> — detailed feature descriptions with
+diagrams</li>
+<li><strong>Architecture</strong> — high-level architecture diagram</li>
+<li><strong>Documentation</strong> — links to docs (API, deployment,
+guides)</li>
+<li><strong>Contact</strong> — <code>contact@hxota.com</code> only</li>
+</ol>
+<h3 id="do-not-include">Do NOT include:</h3>
+<ul>
+<li>Pricing or “request a quote” forms</li>
+<li>User testimonials (none exist)</li>
+<li>Benchmarks or performance claims (unmeasured on production)</li>
+<li>Download links (artifacts are behind auth)</li>
+<li>Login/signup (that’s the console, not the marketing site)</li>
+</ul>
+<hr />
+<h2 id="d-04-agent-11.4.190-proofs-responsive-seo-visual-m">D-04 [AGENT]
+— §11.4.190 Proofs: Responsive + SEO + Visual (M)</h2>
+<p><strong>Source:</strong> Constitution §11.4.190</p>
+<h3 id="required-proofs">Required proofs:</h3>
+<ol type="1">
+<li><strong>Responsive:</strong> Host-rendered screenshots across
+breakpoint × browser-engine matrix:
+<ul>
+<li>Breakpoints: 320px (mobile), 768px (tablet), 1024px (desktop),
+1440px (wide)</li>
+<li>Engines: Chromium, Firefox, WebKit (Playwright supports all
+three)</li>
+<li>Layout oracle: OCR-based verification that key elements are visible
+and correctly positioned</li>
+</ul></li>
+<li><strong>SEO audit:</strong> Automated audit meeting a score floor:
+<ul>
+<li>Semantic HTML (proper heading hierarchy, landmarks)</li>
+<li>Per-page <code>&lt;title&gt;</code> +
+<code>&lt;meta name="description"&gt;</code></li>
+<li>OG/Twitter cards</li>
+<li>Canonical URLs</li>
+<li><code>schema.org</code> JSON-LD</li>
+<li><code>robots.txt</code> + <code>sitemap.xml</code></li>
+<li>WCAG AA compliance (axe-core audit, 0 critical/serious
+violations)</li>
+<li>Core Web Vitals (LCP &lt; 2.5s, FID &lt; 100ms, CLS &lt; 0.1)</li>
+</ul></li>
+<li><strong>Light/dark §11.4.170 pixel proof:</strong> Golden image-diff
+for EVERY page in light and dark themes.</li>
+</ol>
+<hr />
+<h2 id="d-05-agent-dashboard-complete-11.4.170-host-render-m">D-05
+[AGENT] — Dashboard: Complete §11.4.170 Host-Render (M)</h2>
+<p><strong>Current state:</strong> Dashboard has strong coverage (26
+goldens, ~13 screen×state × {light,dark}) per
+PRODUCTION_READINESS_PLAN.md §3.</p>
+<p><strong>Gap:</strong> Feature pages (after login) need host-render
+for every screen×state combination.</p>
+<h3 id="what-to-add">What to add:</h3>
+<ol type="1">
+<li><p>Audit which dashboard pages lack host-render goldens:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> dashboard/hostrender/</span></code></pre></div></li>
+<li><p>Add host-render tests for: Devices list, Device detail,
+Artifacts, Releases, Deployments, Rollouts, Groups, Telemetry, Webhooks,
+Branches, Projects, Audit log, Settings.</p></li>
+<li><p>Each page: light+dark, loaded state, empty state, error
+state.</p></li>
+<li><p>Use existing harness pattern from
+<code>dashboard/hostrender/</code>.</p></li>
+</ol>
+<hr />
+<h2 id="d-06-agent-ota-manager-complete-11.4.170-host-render-m">D-06
+[AGENT] — ota-manager: Complete §11.4.170 Host-Render (M)</h2>
+<p><strong>Current state:</strong> ota-manager has only 2 screens
+rendered (LoginPage). Per PRODUCTION_READINESS_PLAN.md §3.</p>
+<h3 id="what-to-add-1">What to add:</h3>
+<ol type="1">
+<li>Host-render tests for: Login (already done), Dashboard, Devices,
+Artifacts, Releases, Deployments, Rollouts, Groups, Telemetry, Webhooks,
+Branches, Projects, Audit log, Settings.</li>
+<li>Each screen: light+dark, loaded state, empty state, error
+state.</li>
+<li>Use existing harness pattern from
+<code>clients/ota-manager/visual/</code>.</li>
+</ol>
+<hr />
+<h2 id="d-07-agent-deploy-website-dashboards-s">D-07 [AGENT] — Deploy
+Website + Dashboards (S)</h2>
+<h3 id="what-to-do">What to do:</h3>
+<ol type="1">
+<li><strong>Website:</strong> Build Angular SSR app, deploy to Firebase
+hosting (target <code>website</code>) or to the remote host’s nginx
+static serving.</li>
+<li><strong>Dashboard:</strong> Build Vite SPA, deploy to Firebase
+hosting (target <code>dashboard</code>) or to remote host.</li>
+<li><strong>ota-manager:</strong> Build Tauri app or serve web version,
+deploy to Firebase hosting (target <code>ota-manager</code>) or remote
+host.</li>
+<li><strong>Verify:</strong> All three are reachable at their domains,
+load correctly, no console errors.</li>
+</ol>
+<hr />
+<h2 id="verification-checklist">Verification Checklist</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Expected Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D-02</td>
+<td>Website scaffold builds</td>
+<td><code>npm run build</code> exits 0</td>
+</tr>
+<tr>
+<td>D-03</td>
+<td>Content matches locked spec</td>
+<td>No pricing, correct email, heart footer</td>
+</tr>
+<tr>
+<td>D-04a</td>
+<td>Responsive screenshots</td>
+<td>All breakpoints × engines render correctly</td>
+</tr>
+<tr>
+<td>D-04b</td>
+<td>SEO audit</td>
+<td>Score ≥ 90, WCAG AA 0 violations</td>
+</tr>
+<tr>
+<td>D-04c</td>
+<td>Light/dark pixel proof</td>
+<td>Golden image-diff GOOD/BAD correctly</td>
+</tr>
+<tr>
+<td>D-05</td>
+<td>Dashboard host-render</td>
+<td>All feature pages, all themes, all states</td>
+</tr>
+<tr>
+<td>D-06</td>
+<td>ota-manager host-render</td>
+<td>All feature pages, all themes, all states</td>
+</tr>
+<tr>
+<td>D-07</td>
+<td>Deployed and reachable</td>
+<td>HTTP 200 on all three targets</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest Boundary (§11.4.6)</h2>
+<p>The <code>submodules/website</code> scaffold exists at commit
+<code>9abb15e</code> but was not inspected this session for content. The
+design plan (<code>docs/research/website/00_*</code>) was read and is
+authoritative for content decisions. The website build is blocked on
+operator decisions A-03 and A-10.</p>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>06_DEPLOYMENT_INFRA</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">06_DEPLOYMENT_INFRA</h1>
+</header>
+<h1 id="deployment-infrastructure-remote-backend">06 — Deployment
+Infrastructure (Remote Backend)</h1>
+<p><strong>Revision:</strong> 1 <strong>Parent:</strong>
+<code>00_MASTER_INDEX.md</code> <strong>Prerequisites:</strong> A-07
+through A-11 (operator deployment decisions) must be resolved. A-09
+(lets_encrypt + sftp) must be resolved.</p>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>Deploy the full Helix OTA stack to the production remote host, with
+TLS, monitoring, backups, and artifact publishing. The scaffolding
+exists at <code>scripts/remote_deploy/</code> +
+<code>deploy/svord/</code>. It has been locally validated (parse gates,
+compose config, container build, redacted dry-runs) but NEVER run
+against a live server.</p>
+<p><strong>Architecture:</strong></p>
+<pre><code>Operator → SSH → Remote host (hxota)
+  ├── podman-compose (rootless)
+  │   ├── postgres:16-alpine
+  │   ├── minio (S3-compatible object storage)
+  │   ├── ota-server (Go/Gin control plane)
+  │   └── nginx proxy (TLS termination, SPA serving)
+  ├── Prometheus + Grafana (monitoring)
+  ├── Promtail → Loki (log aggregation)
+  └── systemd user units (startup, health checks)</code></pre>
+<hr />
+<h2 id="f-01-operator-resolve-deployment-decisions">F-01 [OPERATOR] —
+Resolve Deployment Decisions</h2>
+<p>Already documented in <code>01_OPERATOR_DECISIONS.md</code> §7–§11.
+Must be resolved before any deployment work.</p>
+<hr />
+<h2 id="f-02-operatoragent-bootstrap-remote-host">F-02 [OPERATOR/AGENT]
+— Bootstrap Remote Host</h2>
+<p><strong>Effort:</strong> M (~2h, mostly one-time operator setup)</p>
+<h3 id="one-time-host-preparation-operator">One-time host preparation
+(operator):</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create deploy user</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-m</span> hxota</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> passwd hxota</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install rootless podman + podman-compose</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install podman podman-compose  <span class="co"># Ubuntu 24.04</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable lingering (user services survive logout)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> loginctl enable-linger hxota</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow unprivileged port binding (for ports 80/443)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sysctl net.ipv4.ip_unprivileged_port_start=80</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;net.ipv4.ip_unprivileged_port_start=80&quot;</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /etc/sysctl.d/99-hxota.conf</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up firewall (allow SSH, HTTPS, HTTP)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 22/tcp</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 443/tcp</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 80/tcp</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw enable</span></code></pre></div>
+<h3 id="deploy-directory-structure-agent-via-deploy-scripts">Deploy
+directory structure (agent, via deploy scripts):</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The deploy scripts create this structure on the remote:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">~/hxota-stack/</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> compose.svord.yml</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> stack.env          <span class="er">(</span><span class="fu">chmod</span> 600<span class="kw">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> nginx/</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   └── hxota-proxy.conf</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> certs/</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   └── <span class="op">&lt;</span>domain<span class="op">&gt;</span>/</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>       ├── fullchain.pem</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>       └── privkey.pem</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> srv/</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── website/       <span class="er">(</span><span class="ex">Angular</span> SSR build<span class="kw">)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── console/       <span class="er">(</span><span class="ex">ota-manager</span> build<span class="kw">)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── dashboard/     <span class="er">(</span><span class="ex">dashboard</span> build<span class="kw">)</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   └── acme/          <span class="er">(</span><span class="ex">ACME</span> challenge files<span class="kw">)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> server/</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└──</span> Dockerfile     <span class="er">(</span><span class="ex">build</span> context<span class="kw">)</span></span></code></pre></div>
+<hr />
+<h2 id="f-03-agent-incorporate-lets_encrypt-sftp-submodules">F-03
+[AGENT] — Incorporate lets_encrypt + sftp Submodules</h2>
+<p><strong>Effort:</strong> S (~30 min) <strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code> §5</p>
+<h3 id="what-to-do">What to do:</h3>
+<ol type="1">
+<li><p><strong>Add lets_encrypt submodule:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule add git@github.com:vasic-digital/lets_encrypt.git submodules/lets_encrypt</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> submodules/lets_encrypt <span class="kw">&amp;&amp;</span> <span class="fu">bash</span> upstreams/install_upstreams.sh <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ../..</span></code></pre></div></li>
+<li><p><strong>Add sftp submodule:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule add git@github.com:vasic-digital/sftp.git submodules/sftp</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> submodules/sftp <span class="kw">&amp;&amp;</span> <span class="fu">bash</span> upstreams/install_upstreams.sh <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ../..</span></code></pre></div></li>
+<li><p><strong>Update helix-deps.yaml</strong> with entries for
+both.</p></li>
+<li><p><strong>Confirm CLI entrypoints</strong> (§11.4.99): Read each
+submodule’s README, confirm the actual CLI command. Update
+<code>https_certs.sh</code> and <code>publish_artifacts.sh</code> to use
+the real entrypoints.</p></li>
+<li><p><strong>Update <code>.gitmodules</code></strong> — already done
+by <code>git submodule add</code>.</p></li>
+</ol>
+<hr />
+<h2 id="f-04-agentoperator-provision-tls-certificates">F-04
+[AGENT/OPERATOR] — Provision TLS Certificates</h2>
+<p><strong>Effort:</strong> M (~1h) <strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code> §4</p>
+<h3 id="what-to-do-1">What to do:</h3>
+<ol type="1">
+<li><p><strong>Configure domains:</strong> <code>hxota.dev</code>
+(console + API), <code>hxota.com</code> (website).</p></li>
+<li><p><strong>Issue certs via lets_encrypt:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/remote_deploy/https_certs.sh issue <span class="at">--domain</span> hxota.dev <span class="at">--email</span> admin@hxota.com</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/remote_deploy/https_certs.sh issue <span class="at">--domain</span> hxota.com <span class="at">--email</span> admin@hxota.com</span></code></pre></div></li>
+<li><p><strong>Verify certs:</strong>
+<code>openssl x509 -in certs/hxota.dev/fullchain.pem -text -noout</code></p></li>
+<li><p><strong>Set up auto-renewal:</strong> Cron job running
+<code>https_certs.sh renew</code> weekly.</p></li>
+</ol>
+<hr />
+<h2 id="f-05-agent-deploy-full-stack-to-remote-host">F-05 [AGENT] —
+Deploy Full Stack to Remote Host</h2>
+<p><strong>Effort:</strong> M (~2h) <strong>Source:</strong>
+<code>docs/remote_deploy/REMOTE_DEPLOY.md</code>,
+<code>scripts/remote_deploy/deploy.sh</code></p>
+<h3 id="what-to-do-2">What to do:</h3>
+<ol type="1">
+<li><p><strong>Populate deploy env:</strong> Copy
+<code>scripts/remote_deploy/.hxota_deploy.env.example</code> to
+<code>scripts/testing/secrets/.hxota_deploy.env</code>. Fill in ALL
+values (see A-08, A-11).</p></li>
+<li><p><strong>Run the orchestrator:</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/remote_deploy/deploy.sh</span></code></pre></div>
+<p>This runs the full 6-stage pipeline:</p>
+<ul>
+<li>Preflight (SSH check, remote dir creation)</li>
+<li>Infrastructure (postgres + minio, stack.env)</li>
+<li>API (cross-compile ota-server, rsync, build, bring-up)</li>
+<li>Dashboards (build SPAs, stage into srv/)</li>
+<li>Website (build Angular app, stage into srv/)</li>
+<li>Certs (issue/renew TLS certs)</li>
+<li>Bring-up (podman-compose up -d)</li>
+<li>Health confirm (live 200 check on /healthz + /readyz)</li>
+</ul></li>
+<li><p><strong>Verify stack is healthy:</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/remote_deploy/status.sh</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://hxota.dev/healthz</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://hxota.dev/readyz</span></code></pre></div></li>
+<li><p><strong>If issues:</strong> Check
+<code>podman logs ota-server</code>, <code>podman logs postgres</code>,
+<code>podman logs proxy</code>.</p></li>
+</ol>
+<hr />
+<h2 id="f-06-agent-configure-postgresql-backups">F-06 [AGENT] —
+Configure PostgreSQL Backups</h2>
+<p><strong>Effort:</strong> S (~30 min) <strong>Source:</strong>
+<code>server/deploy/backup.sh</code>, Gap tracker G-57</p>
+<h3 id="what-to-do-3">What to do:</h3>
+<ol type="1">
+<li><p><strong>Review backup script:</strong>
+<code>server/deploy/backup.sh</code> — does <code>pg_dump -Fc</code> and
+uploads to S3/MinIO.</p></li>
+<li><p><strong>Configure S3 credentials</strong> for backup destination
+(MinIO bucket <code>helix-backups</code> or similar).</p></li>
+<li><p><strong>Set up cron job</strong> on the remote host (as
+<code>hxota</code> user):</p>
+<pre class="cron"><code>0 2 * * * /home/hxota/hxota-stack/backup.sh &gt;&gt; /home/hxota/hxota-stack/backup.log 2&gt;&amp;1</code></pre></li>
+<li><p><strong>Test backup + restore:</strong> Run backup, then test
+restore to a clean database per
+<code>server/deploy/restore.md</code>.</p></li>
+<li><p><strong>Verify:</strong> Backup file exists, can be restored,
+data is consistent.</p></li>
+</ol>
+<hr />
+<h2 id="f-07-agent-wire-monitoring-stack-prometheus-grafana-loki">F-07
+[AGENT] — Wire Monitoring Stack (Prometheus + Grafana + Loki)</h2>
+<p><strong>Effort:</strong> M (~2h) <strong>Source:</strong> Gap tracker
+G-60, G-61</p>
+<h3 id="current-state">Current state:</h3>
+<p>Prometheus alert rules exist
+(<code>server/deploy/prometheus/alerts.yml</code>), Grafana dashboard
+JSON exists (<code>server/deploy/grafana/ota-dashboard.json</code>),
+Promtail config exists (<code>server/deploy/promtail.yml</code>). These
+are config FILES — they need to be deployed as running services.</p>
+<h3 id="what-to-do-4">What to do:</h3>
+<ol type="1">
+<li><p><strong>Add monitoring services to compose:</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In deploy/svord/compose.svord.yml</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">prometheus</span><span class="kw">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image</span><span class="kw">:</span><span class="at"> prom/prometheus:latest</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> ./prometheus/alerts.yml:/etc/prometheus/alerts.yml</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> prometheus_data:/prometheus</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">grafana</span><span class="kw">:</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image</span><span class="kw">:</span><span class="at"> grafana/grafana:latest</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> ./grafana/dashboards:/etc/grafana/provisioning/dashboards</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> grafana_data:/var/lib/grafana</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">loki</span><span class="kw">:</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image</span><span class="kw">:</span><span class="at"> grafana/loki:latest</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">promtail</span><span class="kw">:</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image</span><span class="kw">:</span><span class="at"> grafana/promtail:latest</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> ./promtail.yml:/etc/promtail/promtail.yml</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> /var/log:/var/log:ro</span><span class="co">  # or podman logs</span></span></code></pre></div></li>
+<li><p><strong>Configure Prometheus:</strong> Scrape
+<code>ota-server:8080/metrics</code>, postgres exporter.</p></li>
+<li><p><strong>Configure Grafana:</strong> Import the OTA dashboard
+JSON, set up data sources.</p></li>
+<li><p><strong>Configure Promtail:</strong> Ship logs to Loki.</p></li>
+<li><p><strong>Verify:</strong> Alert rules fire correctly (test by
+taking down PostgreSQL). Dashboard shows metrics.</p></li>
+</ol>
+<hr />
+<h2 id="f-08-agent-deploy-dashboard-console-website-spas">F-08 [AGENT] —
+Deploy Dashboard, Console, Website SPAs</h2>
+<p><strong>Effort:</strong> S (~30 min)</p>
+<h3 id="what-to-do-5">What to do:</h3>
+<ol type="1">
+<li><p><strong>Dashboard:</strong> Build and deploy to remote host:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dashboard <span class="kw">&amp;&amp;</span> <span class="ex">pnpm</span> build</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rsync</span> <span class="at">-avz</span> dist/ hxota@<span class="op">&lt;</span>host<span class="op">&gt;</span>:~/hxota-stack/srv/dashboard/</span></code></pre></div></li>
+<li><p><strong>Console (ota-manager):</strong> Build and deploy:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> clients/ota-manager <span class="kw">&amp;&amp;</span> <span class="ex">pnpm</span> build</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rsync</span> <span class="at">-avz</span> dist/ hxota@<span class="op">&lt;</span>host<span class="op">&gt;</span>:~/hxota-stack/srv/console/</span></code></pre></div></li>
+<li><p><strong>Website:</strong> Build Angular SSR and deploy:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/remote_deploy/deploy_website.sh</span></code></pre></div></li>
+<li><p><strong>Reload proxy:</strong>
+<code>podman exec proxy nginx -s reload</code></p></li>
+<li><p><strong>Verify:</strong> Browser access to
+<code>https://hxota.dev/</code>, <code>https://hxota.com/</code>,
+<code>https://hxota.dev/dashboard/</code>.</p></li>
+</ol>
+<hr />
+<h2
+id="f-09-agentoperator-ssh-key-auth-credential-rotation-firewall">F-09
+[AGENT/OPERATOR] — SSH Key Auth + Credential Rotation + Firewall</h2>
+<p><strong>Effort:</strong> M (~1h)</p>
+<h3 id="what-to-do-6">What to do:</h3>
+<ol type="1">
+<li><p><strong>Switch to SSH key auth</strong> (if decided in
+A-08b):</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519 <span class="at">-f</span> ~/.ssh/hxota_prod <span class="at">-C</span> <span class="st">&quot;hxota-prod-deploy&quot;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ssh-copy-id</span> <span class="at">-i</span> ~/.ssh/hxota_prod.pub hxota@<span class="op">&lt;</span>host<span class="op">&gt;</span></span></code></pre></div></li>
+<li><p><strong>Update deploy env:</strong> Set
+<code>HXOTA_SSH_USE_PASSWORD=0</code>,
+<code>HXOTA_SSH_KEY=~/.ssh/hxota_prod</code>.</p></li>
+<li><p><strong>Rotate all credentials:</strong></p>
+<ul>
+<li>PostgreSQL password: <code>openssl rand -base64 48</code></li>
+<li>MinIO access/secret keys: <code>openssl rand -base64 48</code>
+each</li>
+<li>Token secret: <code>openssl rand -base64 48</code></li>
+<li>Update <code>stack.env</code> on remote host, restart stack.</li>
+</ul></li>
+<li><p><strong>Lock down SSH:</strong> Disable password auth, disable
+root login:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sed <span class="at">-i</span> <span class="st">&#39;s/^#PasswordAuthentication yes/PasswordAuthentication no/&#39;</span> /etc/ssh/sshd_config</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sed <span class="at">-i</span> <span class="st">&#39;s/^#PermitRootLogin prohibit-password/PermitRootLogin no/&#39;</span> /etc/ssh/sshd_config</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart sshd</span></code></pre></div></li>
+<li><p><strong>Verify firewall:</strong> Only 22, 80, 443 open.
+<code>sudo ufw status verbose</code>.</p></li>
+</ol>
+<hr />
+<h2 id="f-10-agent-production-smoke-test">F-10 [AGENT] — Production
+Smoke Test</h2>
+<p><strong>Effort:</strong> M (~1h)</p>
+<h3 id="what-to-do-7">What to do:</h3>
+<ol type="1">
+<li><p><strong>Health probes:</strong></p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://hxota.dev/healthz        <span class="co"># → {&quot;status&quot;:&quot;ok&quot;}</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://hxota.dev/readyz          <span class="co"># → {&quot;status&quot;:&quot;ready&quot;}</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://hxota.dev/api/v1/metrics  <span class="co"># → Prometheus metrics</span></span></code></pre></div></li>
+<li><p><strong>Auth:</strong></p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/auth/login <span class="dt">\</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/json&#39;</span> <span class="dt">\</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;username&quot;:&quot;admin@helix.example&quot;,&quot;password&quot;:&quot;&lt;from-deploy-env&gt;&quot;}&#39;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → {&quot;access_token&quot;:&quot;...&quot;, &quot;refresh_token&quot;:&quot;...&quot;}</span></span></code></pre></div></li>
+<li><p><strong>Artifact upload:</strong></p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate test artifact</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run scripts/testing/gen_key.go</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> run scripts/testing/sign_artifact.go <span class="at">--key</span> private.key <span class="at">--input</span> test.bin <span class="at">--output</span> test.zip</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Upload</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/artifacts/upload <span class="dt">\</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">-F</span> <span class="st">&quot;file=@test.zip&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">-F</span> <span class="st">&quot;metadata={</span><span class="dt">\&quot;</span><span class="st">os_type</span><span class="dt">\&quot;</span><span class="st">:</span><span class="dt">\&quot;</span><span class="st">android</span><span class="dt">\&quot;</span><span class="st">,</span><span class="dt">\&quot;</span><span class="st">target_model</span><span class="dt">\&quot;</span><span class="st">:</span><span class="dt">\&quot;</span><span class="st">rk3588_t</span><span class="dt">\&quot;</span><span class="st">,</span><span class="dt">\&quot;</span><span class="st">version</span><span class="dt">\&quot;</span><span class="st">:</span><span class="dt">\&quot;</span><span class="st">1.0.0</span><span class="dt">\&quot;</span><span class="st">}&quot;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># → 201 {&quot;artifact_id&quot;:&quot;...&quot;}</span></span></code></pre></div></li>
+<li><p><strong>Device registration:</strong></p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST https://hxota.dev/api/v1/devices/register <span class="dt">\</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;hardware_id&quot;:&quot;test-device-001&quot;,&quot;model&quot;:&quot;Orange Pi 5 Max&quot;,&quot;os_type&quot;:&quot;android&quot;}&#39;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → 201 {&quot;device_id&quot;:&quot;...&quot;, &quot;token&quot;:&quot;...&quot;}</span></span></code></pre></div></li>
+<li><p><strong>OTA cycle:</strong> Create release → create deployment →
+device update check → 200 with update offer.</p></li>
+<li><p><strong>All 5 smoke tests must PASS</strong> before declaring the
+deployment live.</p></li>
+</ol>
+<hr />
+<h2 id="verification-checklist">Verification Checklist</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Expected Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-02</td>
+<td>Host bootstrapped</td>
+<td>hxota user exists, podman runs rootless, lingering enabled</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Submodules added</td>
+<td>lets_encrypt and sftp directories exist, CLI confirmed</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>TLS certs issued</td>
+<td>HTTPS works on both domains, cert valid 90 days</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Stack deployed</td>
+<td>All 4 services running, /healthz 200, /readyz 200</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Backups configured</td>
+<td>Cron job exists, restore test passes</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Monitoring wired</td>
+<td>Prometheus scraping, Grafana dashboards visible, Loki ingesting</td>
+</tr>
+<tr>
+<td>F-08</td>
+<td>SPAs deployed</td>
+<td>Dashboard, console, website all reachable over HTTPS</td>
+</tr>
+<tr>
+<td>F-09</td>
+<td>Security hardened</td>
+<td>SSH key-only, no password auth, firewall locked down</td>
+</tr>
+<tr>
+<td>F-10</td>
+<td>Smoke test</td>
+<td>All 5 tests PASS (health, auth, upload, register, OTA cycle)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="danger-zones">Danger Zones</h2>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 34%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Danger</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DZ-F1</td>
+<td>Deploying before SEC-1 fail-fast (B-01) is verified</td>
+<td>Verify B-01 first — never deploy with default token secret</td>
+</tr>
+<tr>
+<td>DZ-F2</td>
+<td>Deploying without TLS → credentials travel in plaintext</td>
+<td>TLS certs (F-04) are MANDATORY before any traffic</td>
+</tr>
+<tr>
+<td>DZ-F3</td>
+<td>Rootful podman/docker → violates §11.4.161</td>
+<td>Use ONLY rootless podman; <code>podman info | grep rootless</code>
+must show true</td>
+</tr>
+<tr>
+<td>DZ-F4</td>
+<td>Hardcoded IPs/hostnames in scripts → breaks on host change</td>
+<td>All addresses from deploy env (<code>$ADDRESS_HXOTA</code>), never
+hardcoded</td>
+</tr>
+<tr>
+<td>DZ-F5</td>
+<td>Backup not tested → false sense of security</td>
+<td>Run a FULL restore test before going live</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest Boundary (§11.4.6)</h2>
+<ul>
+<li>The deploy scaffolding (<code>scripts/remote_deploy/</code>) has
+been validated locally (parse + compose config + container build +
+dry-run). Zero live deploys have been performed.</li>
+<li>lets_encrypt and sftp submodules are NOT on disk (verified this
+session). Their CLIs are UNCONFIRMED (§11.4.99) — must be confirmed
+against README before use.</li>
+<li>The monitoring stack configs (Prometheus/Grafana/Loki) exist as
+files but have NOT been deployed as running services.</li>
+<li>The ota-server Docker image build used a STUB binary in local
+validation. The real build requires cross-compilation via
+<code>deploy_api.sh</code>.</li>
+</ul>
+</body>
+</html>
