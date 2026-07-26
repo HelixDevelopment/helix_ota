@@ -1,7 +1,7 @@
 # Helix OTA — Feature Inventory — Status Summary
 
-**Revision:** 13
-**Last modified:** 2026-06-23T09:15:00Z
+**Revision:** 14
+**Last modified:** 2026-07-26T00:00:00Z
 **Companion of:** [`Status.md`](Status.md) (Section 11.4.56 two-audience parity).
 
 > **Video-evidence reconciliation (2026-06-22, §11.4.6 no-bluff).** Earlier revisions

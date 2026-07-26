@@ -373,6 +373,50 @@ else
 fi
 echo
 
+# ---- gate: CM-QA-HANDOFF-CHECKLIST (§11.4.185 substantive) ----
+# Verifies the QA handoff checklist exists and is current (updated since the
+# last tag or at minimum present + non-empty). This gate enforces the physical
+# artifact that the QA team signs off against, closing the loop on §11.4.185.
+echo ">>> gate: CM-QA-HANDOFF-CHECKLIST"
+QA_CHECKLIST="${SCRIPT_DIR}/qa_handoff_checklist.md"
+QA_CHECKLIST_OK=1
+if [[ ! -f "${QA_CHECKLIST}" ]]; then
+    echo "  tests/qa_handoff_checklist.md missing — §11.4.185 QA handoff artifact absent"
+    QA_CHECKLIST_OK=0
+elif [[ ! -s "${QA_CHECKLIST}" ]]; then
+    echo "  tests/qa_handoff_checklist.md is empty — §11.4.185 QA handoff artifact incomplete"
+    QA_CHECKLIST_OK=0
+else
+    LAST_TAG="$(git tag --sort=-creatordate 2>/dev/null | head -1)"
+    if [[ -n "${LAST_TAG}" ]]; then
+        TAG_DATE=$(git log -1 --format="%ct" "${LAST_TAG}" 2>/dev/null)
+        LIST_DATE=$(stat -c "%Y" "${QA_CHECKLIST}" 2>/dev/null)
+        if [[ -n "${TAG_DATE}" ]] && [[ -n "${LIST_DATE}" ]]; then
+            if [[ "${LIST_DATE}" -lt "${TAG_DATE}" ]]; then
+                echo "  qa_handoff_checklist.md last modified before ${LAST_TAG} (may be stale)"
+                QA_CHECKLIST_OK=0
+            else
+                echo "  qa_handoff_checklist.md is current (modified after ${LAST_TAG})"
+            fi
+        else
+            echo "  qa_handoff_checklist.md present (tags/count not readable — existence check only)"
+        fi
+    else
+        echo "  qa_handoff_checklist.md present (no tags yet — existence check only)"
+    fi
+    if ! grep -qF '11.4.185' "${QA_CHECKLIST}"; then
+        echo "  qa_handoff_checklist.md missing §11.4.185 anchor — rewrite may have dropped it"
+        QA_CHECKLIST_OK=0
+    fi
+fi
+if [[ "${QA_CHECKLIST_OK}" -eq 1 ]]; then
+    echo "<<< gate: CM-QA-HANDOFF-CHECKLIST OK"
+else
+    echo "<<< gate: CM-QA-HANDOFF-CHECKLIST FAIL"
+    rc=1
+fi
+echo
+
 # ---- gate: CM-MULTITRACK-WORK-DIVISION (§11.4.176 substantive) ----
 # Documents the multi-track work-division arbitration mechanism.
 echo ">>> gate: CM-MULTITRACK-WORK-DIVISION"

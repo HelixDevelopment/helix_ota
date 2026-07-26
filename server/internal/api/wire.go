@@ -252,11 +252,15 @@ type TelemetryHealth struct {
 }
 
 // TelemetryReport is POST /client/telemetry (TelemetryReport schema): a batch.
+// SchemaVersion identifies the wire-format version of this payload. The server
+// rejects any value that does not match the known current version, so old-agent
+// and future-agent formats are never silently misinterpreted.
 type TelemetryReport struct {
-	DeviceID     string               `json:"device_id"`
-	DeploymentID string               `json:"deployment_id,omitempty"`
-	Events       []TelemetryEventWire `json:"events"`
-	Health       *TelemetryHealth     `json:"health,omitempty"`
+	SchemaVersion int                 `json:"schema_version"`
+	DeviceID      string              `json:"device_id"`
+	DeploymentID  string              `json:"deployment_id,omitempty"`
+	Events        []TelemetryEventWire `json:"events"`
+	Health        *TelemetryHealth    `json:"health,omitempty"`
 }
 
 // TelemetryAck is the 202 body (TelemetryAck schema).

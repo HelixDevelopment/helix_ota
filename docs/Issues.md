@@ -1,23 +1,11 @@
 # Helix OTA — Issues (open workable items)
 
-**Revision:** 10
-**Last modified:** 2026-06-21T19:00:00Z
+**Revision:** 11
+**Last modified:** 2026-07-26T00:00:00Z
 
 This is the canonical open-work tracker (§11.4.15 Status, §11.4.16 Type,
 §11.4.54 OTA-NNN). Closed items migrate to [`Fixed.md`](Fixed.md). The
 short-form companion is [`Issues_Summary.md`](Issues_Summary.md).
-
----
-
-## §3. [OTA-003] Emulator Tier-2 — real Android A/B (update_engine/AVB/dm-verity auto-rollback)
-
-**Status:** Completed (→ Fixed.md)
-**Type:** Task
-
-**Closed:** 2026-06-21
-**Root cause:** The Android emulator CZ_API36_Phone (Android 16 API 36) was bootable on nezha.local (Linux x86_64, 62 GB RAM, KVM) but had no validated OTA lifecycle against the control plane.
-**Fix:** Booted emulator through containers submodule wrapper script. Cross-compiled ota-server for linux/amd64 and deployed to nezha. Full OTA lifecycle validated: admin login → device registration (emu64xa-AABBCCDD registered, device_token minted) → device list → update check → telemetry reporting. All endpoints responding. Emulator is now managed through `scripts/boot_android_emulator.sh` (§11.4.76).
-**Evidence:** `docs/qa/ota-003-validation/STATUS.md` (revision 1, PASS), `docs/qa/ota-003-validation/test1-adb-connectivity.txt` through `test7-final-all-endpoints.txt`.
 
 ---
 

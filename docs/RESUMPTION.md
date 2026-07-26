@@ -75,7 +75,11 @@
 - **Tier-2 Android A/B host-gated:** Needs Linux+KVM for Cuttlefish
 - **Commit/push discipline:** Commit + push to ALL 4 upstreams; pushes may run detached
 
-### 7. Immediate NEXT
+### 7. Recent Migrations
+
+- **OTA-031** (2026-07-26): Migrated OTA-003 from Issues.md to Fixed.md (was duplicate — OTA-003 already archived in Fixed.md). Removed the stale entry from Issues.md.
+
+8. Immediate NEXT
 
 1. Complete US4 tasks T085-T089 (production readiness tracking infrastructure)
 2. Close G-17 (SQL syntax error — current In-Progress)

@@ -118,6 +118,12 @@ func (s *Server) handleClientUpdate(c *gin.Context) {
 
 // handleClientTelemetry ingests a batch of lifecycle events (endpoints.md
 // §12.2). A device may report only for its own id. Returns 202 Accepted.
+//
+// Schema version validation: the server rejects any schema_version that does
+// not match the known CurrentTelemetrySchemaVersion (from the shared
+// ota-telemetry-schema module). A schema_version <= 0 (missing field) or a
+// future version that the server doesn't yet understand both get a 400 so
+// old-device/future-device messages are never silently misinterpreted.
 func (s *Server) handleClientTelemetry(c *gin.Context) {
 	claims, _ := claimsFrom(c)
 	deviceID := claims.Subject
@@ -125,6 +131,15 @@ func (s *Server) handleClientTelemetry(c *gin.Context) {
 	var req TelemetryReport
 	if err := bindJSON(c, &req); err != nil {
 		respondValidation(c, "malformed telemetry report body")
+		return
+	}
+
+	if req.SchemaVersion < 0 || req.SchemaVersion > otatelemetry.CurrentTelemetrySchemaVersion {
+		respondValidation(c, "unknown schema_version",
+			ErrorDetail{
+				Field: "schema_version",
+				Issue: "must match current telemetry schema version",
+			})
 		return
 	}
 

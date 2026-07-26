@@ -73,4 +73,8 @@ replace digital.vasic.http3 => ../submodules/http3
 // is the floor; the replace supersedes it for the local build.
 replace github.com/HelixDevelopment/ota-protocol => ../submodules/ota-protocol
 
+// ota-telemetry-schema is co-developed; built against the local submodule during
+// development. Production pins a tagged version.
+replace github.com/HelixDevelopment/ota-telemetry-schema => ../submodules/ota-telemetry-schema
+
 replace digital.vasic.security => ../submodules/security

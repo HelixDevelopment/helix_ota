@@ -204,8 +204,9 @@ func TestClientTelemetryIngest(t *testing.T) {
 	deploymentID := deps[0].DeploymentID
 
 	report := TelemetryReport{
-		DeviceID:     dev.DeviceID,
-		DeploymentID: deploymentID,
+		SchemaVersion: 1,
+		DeviceID:      dev.DeviceID,
+		DeploymentID:  deploymentID,
 		Events: []TelemetryEventWire{
 			{Event: otaprotocol.EventDownloadStarted, Version: "1.1.0", Timestamp: time.Date(2026, 6, 7, 0, 15, 0, 0, time.UTC)},
 			{Event: otaprotocol.EventSuccess, Version: "1.1.0", Timestamp: time.Date(2026, 6, 7, 0, 20, 0, 0, time.UTC)},
@@ -238,8 +239,9 @@ func TestClientTelemetryWrongDeviceForbidden(t *testing.T) {
 	dev := registerDevice(t, env, DeviceRegistration{HardwareID: "tele-hw", Model: "OrangePi5Max", OS: otaprotocol.OSAndroid})
 
 	report := TelemetryReport{
-		DeviceID:     "some-other-device",
-		DeploymentID: "dep-1",
+		SchemaVersion: 1,
+		DeviceID:      "some-other-device",
+		DeploymentID:  "dep-1",
 		Events: []TelemetryEventWire{
 			{Event: otaprotocol.EventSuccess, Timestamp: time.Now()},
 		},
@@ -256,7 +258,7 @@ func TestClientTelemetryWrongDeviceForbidden(t *testing.T) {
 func TestClientTelemetryEmptyEvents(t *testing.T) {
 	env := newTestEnv(t)
 	dev := registerDevice(t, env, DeviceRegistration{HardwareID: "empty-hw", Model: "OrangePi5Max", OS: otaprotocol.OSAndroid})
-	report := TelemetryReport{DeviceID: dev.DeviceID, DeploymentID: "dep-1", Events: []TelemetryEventWire{}}
+	report := TelemetryReport{SchemaVersion: 1, DeviceID: dev.DeviceID, DeploymentID: "dep-1", Events: []TelemetryEventWire{}}
 	w := env.doJSON(http.MethodPost, "/api/v1/client/telemetry", env.deviceToken(dev.DeviceID), report)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("empty events want 400, got %d", w.Code)
@@ -280,8 +282,9 @@ func TestClientTelemetryCurrentVersion(t *testing.T) {
 	// is the target being downloaded. The RED assertion: device CurrentVersion
 	// SHOULD be 1.5.0 after this but will still be 1.0.0 before the fix.
 	report := TelemetryReport{
-		DeviceID:     dev.DeviceID,
-		DeploymentID: deps[0].DeploymentID,
+		SchemaVersion: 1,
+		DeviceID:      dev.DeviceID,
+		DeploymentID:  deps[0].DeploymentID,
 		Events: []TelemetryEventWire{
 			{
 				Event:          otaprotocol.EventDownloadStarted,
