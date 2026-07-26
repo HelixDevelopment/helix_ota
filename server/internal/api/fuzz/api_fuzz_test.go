@@ -26,6 +26,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -165,13 +166,19 @@ func FuzzDevicesByHardwareID(f *testing.F) {
 			return
 		}
 
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/devices/by-hardware/"+hardwareID, nil)
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("PANIC for hardwareID=%q: %v", hardwareID, r)
+			}
+		}()
+
+		escaped := url.PathEscape(hardwareID)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/devices/by-hardware/"+escaped, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, req)
 
-		// Property: no unhandled panic.
 		if strings.Contains(rec.Body.String(), "goroutine") && strings.Contains(rec.Body.String(), "[recovered]") {
 			t.Errorf("PANIC for hardwareID=%q", hardwareID)
 		}
